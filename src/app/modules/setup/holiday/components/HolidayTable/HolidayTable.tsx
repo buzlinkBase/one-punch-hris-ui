@@ -34,5 +34,5 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
     },
   ];
 
-  return <Table rowKey="id" dataSource={data} columns={columns} loading={loading} pagination={{ pageSize: 10 }} />;
+  return <Table rowKey="id" dataSource={data} columns={columns} loading={loading} pagination={{ pageSize: 10 }} sticky />;
 }

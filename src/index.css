@@ -44,6 +44,29 @@ body {
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding-bottom: 12px;
+	scrollbar-width: none;
+}
+
+.app-sider-menu-scroll:hover {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(29, 160, 129, 0.3) transparent;
+}
+
+.app-sider-menu-scroll::-webkit-scrollbar {
+	width: 4px;
+}
+
+.app-sider-menu-scroll:not(:hover)::-webkit-scrollbar-thumb {
+	background: transparent;
+}
+
+.app-sider-menu-scroll:hover::-webkit-scrollbar-thumb {
+	background: rgba(29, 160, 129, 0.3);
+	border-radius: 4px;
+}
+
+.app-sider-menu-scroll::-webkit-scrollbar-track {
+	background: transparent;
 }
 
 .app-sider-user {
@@ -339,6 +362,29 @@ body {
 	flex: 1;
 	min-height: 0;
 	overflow: auto;
+	scrollbar-width: none;
+}
+
+.app-content-scroll:hover {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(29, 160, 129, 0.3) transparent;
+}
+
+.app-content-scroll::-webkit-scrollbar {
+	width: 6px;
+}
+
+.app-content-scroll:not(:hover)::-webkit-scrollbar-thumb {
+	background: transparent;
+}
+
+.app-content-scroll:hover::-webkit-scrollbar-thumb {
+	background: rgba(29, 160, 129, 0.3);
+	border-radius: 4px;
+}
+
+.app-content-scroll::-webkit-scrollbar-track {
+	background: transparent;
 }
 
 .content-page {

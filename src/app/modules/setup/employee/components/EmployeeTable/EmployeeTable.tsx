@@ -51,6 +51,7 @@ export default function EmployeeTable({ data, loading, onDelete }: Props) {
       columns={columns}
       loading={loading}
       pagination={{ pageSize: 10 }}
+      sticky
     />
   );
 }
