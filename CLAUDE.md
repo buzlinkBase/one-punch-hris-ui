@@ -3,6 +3,7 @@
 React + Vite implementation of the HRIS system. Feature-for-feature equivalent of the Angular `hris` project.
 
 ## Tech Stack
+
 - **React 18** + TypeScript
 - **Vite** — build tool
 - **Ant Design (antd)** — UI component library
@@ -50,6 +51,7 @@ Every feature under `src/app/modules/setup/{feature}/` follows:
 ```
 
 ## Architectural Rules
+
 - Components call the Zustand store hook — never raw API functions directly
 - HTTP calls live in `services/*.api.ts` — never in components or stores directly
 - Stores import from `services/` to make API calls
@@ -57,13 +59,15 @@ Every feature under `src/app/modules/setup/{feature}/` follows:
 - Path alias `@/` maps to `src/`
 
 ## API
+
 Base URL: `VITE_API_URL` env var (default: `http://localhost:1442/`)
 Auth: Bearer token stored in `localStorage` as `auth_token`
 
 ## Commands
+
 ```bash
-npm run dev      # Start dev server (localhost:5173)
-npm run build    # Production build
-npm run preview  # Preview production build
-npm run lint     # ESLint
+pnpm dev      # Start dev server (localhost:5173)
+pnpm build    # Production build
+pnpm preview  # Preview production build
+pnpm lint     # ESLint
 ```
