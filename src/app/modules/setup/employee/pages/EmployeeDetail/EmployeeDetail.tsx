@@ -150,7 +150,7 @@ export default function EmployeeDetail() {
                   <Controller
                     name="employeeNo"
                     control={control}
-                    render={({ field }) => <Input {...field} />}
+                    render={({ field }) => <Input size="middle" {...field} />}
                   />
                 </Form.Item>
                 <Form.Item

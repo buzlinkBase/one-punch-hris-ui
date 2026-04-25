@@ -72,6 +72,7 @@ export default function DepartmentTable({ data, loading, onDelete }: Props) {
         rowKey="id"
         dataSource={filtered}
         columns={columns}
+        size="small"
         loading={loading}
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
