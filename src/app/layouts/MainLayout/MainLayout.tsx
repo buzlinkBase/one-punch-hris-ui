@@ -73,9 +73,21 @@ function getSessionUser(): SessionUser {
 function getNavIcon(key: string): ReactNode {
   const iconMap: Record<string, ReactNode> = {
     timekeeping: <ClockCircleOutlined />,
+    "timekeeping-upload-attendance": <FileTextOutlined />,
+    "timekeeping-raw-logs": <FileTextOutlined />,
+    "timekeeping-unregistered-employees": <UserOutlined />,
+    "timekeeping-attendance-entry": <IdcardOutlined />,
+    "timekeeping-incomplete-punches": <ClockCircleOutlined />,
     "change-schedule": <SwapOutlined />,
+    "change-schedule-work-rotation": <SwapOutlined />,
+    "change-schedule-change-rest-day": <CalendarOutlined />,
+    "change-schedule-change-holiday": <CalendarOutlined />,
     "daily-time-record": <FileTextOutlined />,
+    "daily-time-record-detail": <FileTextOutlined />,
+    "daily-time-record-summary": <BarChartOutlined />,
+    "daily-time-record-for-payroll": <IdcardOutlined />,
     reports: <BarChartOutlined />,
+    "reports-tardiness": <ClockCircleOutlined />,
     setup: <SettingOutlined />,
     "setup-fixed-shift": <FieldTimeOutlined />,
     "setup-flexi-shift": <FieldTimeOutlined />,
@@ -88,6 +100,10 @@ function getNavIcon(key: string): ReactNode {
     "employee-management": <SolutionOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
     security: <SafetyOutlined />,
+    "security-users": <UserOutlined />,
+    "security-roles": <IdcardOutlined />,
+    "security-permissions": <SafetyCertificateOutlined />,
+    "security-audit": <FileTextOutlined />,
   };
 
   return iconMap[key] ?? <FileTextOutlined />;
