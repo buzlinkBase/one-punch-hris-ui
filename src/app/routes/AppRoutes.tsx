@@ -20,6 +20,18 @@ const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/DepartmentList"),
 );
 const Timekeeping = lazy(() => import("@/app/modules/timekeeping/Timekeeping"));
+const UserList = lazy(
+  () => import("@/app/modules/security/users/pages/UserList"),
+);
+const UserDetail = lazy(
+  () => import("@/app/modules/security/users/pages/UserDetail"),
+);
+const RoleList = lazy(
+  () => import("@/app/modules/security/roles/pages/RoleList"),
+);
+const RoleDetail = lazy(
+  () => import("@/app/modules/security/roles/pages/RoleDetail"),
+);
 
 const RouteFallback = () => null;
 
@@ -125,6 +137,54 @@ const appSectionRoute = (path: string, title: string) => {
   return sectionRoute.addChildren([sectionIndexRoute]);
 };
 
+const securityUsersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "security/users",
+  component: MainLayout,
+});
+
+const securityUsersIndexRoute = createRoute({
+  getParentRoute: () => securityUsersRoute,
+  path: "/",
+  component: withSuspense(UserList),
+});
+
+const securityUsersCreateRoute = createRoute({
+  getParentRoute: () => securityUsersRoute,
+  path: "create",
+  component: withSuspense(UserDetail),
+});
+
+const securityUsersDetailRoute = createRoute({
+  getParentRoute: () => securityUsersRoute,
+  path: "$id",
+  component: withSuspense(UserDetail),
+});
+
+const securityRolesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "security/roles",
+  component: MainLayout,
+});
+
+const securityRolesIndexRoute = createRoute({
+  getParentRoute: () => securityRolesRoute,
+  path: "/",
+  component: withSuspense(RoleList),
+});
+
+const securityRolesCreateRoute = createRoute({
+  getParentRoute: () => securityRolesRoute,
+  path: "create",
+  component: withSuspense(RoleDetail),
+});
+
+const securityRolesDetailRoute = createRoute({
+  getParentRoute: () => securityRolesRoute,
+  path: "$id",
+  component: withSuspense(RoleDetail),
+});
+
 const routeTree = rootRoute.addChildren([
   rootIndexRoute,
   loginRoute.addChildren([loginIndexRoute]),
@@ -151,8 +211,16 @@ const routeTree = rootRoute.addChildren([
   appSectionRoute("clients", "Clients"),
   appSectionRoute("employee-management", "Employee Management"),
   appSectionRoute("enroll-biometrics", "Enroll Biometrics"),
-  appSectionRoute("security/users", "Users"),
-  appSectionRoute("security/roles", "Roles"),
+  securityUsersRoute.addChildren([
+    securityUsersIndexRoute,
+    securityUsersCreateRoute,
+    securityUsersDetailRoute,
+  ]),
+  securityRolesRoute.addChildren([
+    securityRolesIndexRoute,
+    securityRolesCreateRoute,
+    securityRolesDetailRoute,
+  ]),
   appSectionRoute("security/permissions", "Permissions"),
   appSectionRoute("security/audit", "Audit"),
 ]);
