@@ -20,6 +20,25 @@ const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/DepartmentList"),
 );
 const Timekeeping = lazy(() => import("@/app/modules/timekeeping/Timekeeping"));
+const RawLogsList = lazy(
+  () => import("@/app/modules/timekeeping/raw-logs/pages/RawLogsList"),
+);
+const IncompletePunchesList = lazy(
+  () =>
+    import("@/app/modules/timekeeping/incomplete-punches/pages/IncompletePunchesList"),
+);
+const UnregisterEmployeeList = lazy(
+  () =>
+    import("@/app/modules/timekeeping/unregistered-employees/pages/UnregisterEmployeeList"),
+);
+const UploadAttendanceList = lazy(
+  () =>
+    import("@/app/modules/timekeeping/upload-attendance/pages/UploadAttendanceList"),
+);
+const AttendanceEntryList = lazy(
+  () =>
+    import("@/app/modules/timekeeping/attendance-entry/pages/AttendanceEntryList"),
+);
 const UserList = lazy(
   () => import("@/app/modules/security/users/pages/UserList"),
 );
@@ -31,6 +50,43 @@ const RoleList = lazy(
 );
 const RoleDetail = lazy(
   () => import("@/app/modules/security/roles/pages/RoleDetail"),
+);
+const TardinessList = lazy(
+  () => import("@/app/modules/reports/tardiness/pages/TardinessList"),
+);
+const ForPayrollList = lazy(
+  () =>
+    import("@/app/modules/daily-time-record/for-payroll/pages/ForPayrollList"),
+);
+const DtrSummaryList = lazy(
+  () => import("@/app/modules/daily-time-record/summary/pages/DtrSummaryList"),
+);
+const DtrDetailList = lazy(
+  () => import("@/app/modules/daily-time-record/detail/pages/DtrDetailList"),
+);
+const ChangeHolidayList = lazy(
+  () =>
+    import("@/app/modules/change-schedule/change-holiday/pages/ChangeHolidayList"),
+);
+const ChangeHolidayDetail = lazy(
+  () =>
+    import("@/app/modules/change-schedule/change-holiday/pages/ChangeHolidayDetail"),
+);
+const ChangeRestDayList = lazy(
+  () =>
+    import("@/app/modules/change-schedule/change-rest-day/pages/ChangeRestDayList"),
+);
+const ChangeRestDayDetail = lazy(
+  () =>
+    import("@/app/modules/change-schedule/change-rest-day/pages/ChangeRestDayDetail"),
+);
+const WorkRotationList = lazy(
+  () =>
+    import("@/app/modules/change-schedule/work-rotation/pages/WorkRotationList"),
+);
+const WorkRotationDetail = lazy(
+  () =>
+    import("@/app/modules/change-schedule/work-rotation/pages/WorkRotationDetail"),
 );
 
 const RouteFallback = () => null;
@@ -121,6 +177,66 @@ const timekeepingIndexRoute = createRoute({
   component: withSuspense(Timekeeping),
 });
 
+const uploadAttendanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "timekeeping/upload-attendance",
+  component: MainLayout,
+});
+
+const uploadAttendanceIndexRoute = createRoute({
+  getParentRoute: () => uploadAttendanceRoute,
+  path: "/",
+  component: withSuspense(UploadAttendanceList),
+});
+
+const attendanceEntryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "timekeeping/attendance-entry",
+  component: MainLayout,
+});
+
+const attendanceEntryIndexRoute = createRoute({
+  getParentRoute: () => attendanceEntryRoute,
+  path: "/",
+  component: withSuspense(AttendanceEntryList),
+});
+
+const rawLogsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "timekeeping/raw-logs",
+  component: MainLayout,
+});
+
+const rawLogsIndexRoute = createRoute({
+  getParentRoute: () => rawLogsRoute,
+  path: "/",
+  component: withSuspense(RawLogsList),
+});
+
+const incompletePunchesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "timekeeping/incomplete-punches",
+  component: MainLayout,
+});
+
+const incompletePunchesIndexRoute = createRoute({
+  getParentRoute: () => incompletePunchesRoute,
+  path: "/",
+  component: withSuspense(IncompletePunchesList),
+});
+
+const unregisterEmployeeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "timekeeping/unregistered-employees",
+  component: MainLayout,
+});
+
+const unregisterEmployeeIndexRoute = createRoute({
+  getParentRoute: () => unregisterEmployeeRoute,
+  path: "/",
+  component: withSuspense(UnregisterEmployeeList),
+});
+
 const appSectionRoute = (path: string, title: string) => {
   const sectionRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -136,6 +252,126 @@ const appSectionRoute = (path: string, title: string) => {
 
   return sectionRoute.addChildren([sectionIndexRoute]);
 };
+
+const changeHolidayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "change-schedule/change-holiday",
+  component: MainLayout,
+});
+
+const changeHolidayIndexRoute = createRoute({
+  getParentRoute: () => changeHolidayRoute,
+  path: "/",
+  component: withSuspense(ChangeHolidayList),
+});
+
+const changeHolidayCreateRoute = createRoute({
+  getParentRoute: () => changeHolidayRoute,
+  path: "create",
+  component: withSuspense(ChangeHolidayDetail),
+});
+
+const changeHolidayDetailRoute = createRoute({
+  getParentRoute: () => changeHolidayRoute,
+  path: "$id",
+  component: withSuspense(ChangeHolidayDetail),
+});
+
+const changeRestDayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "change-schedule/change-rest-day",
+  component: MainLayout,
+});
+
+const changeRestDayIndexRoute = createRoute({
+  getParentRoute: () => changeRestDayRoute,
+  path: "/",
+  component: withSuspense(ChangeRestDayList),
+});
+
+const changeRestDayCreateRoute = createRoute({
+  getParentRoute: () => changeRestDayRoute,
+  path: "create",
+  component: withSuspense(ChangeRestDayDetail),
+});
+
+const changeRestDayDetailRoute = createRoute({
+  getParentRoute: () => changeRestDayRoute,
+  path: "$id",
+  component: withSuspense(ChangeRestDayDetail),
+});
+
+const workRotationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "change-schedule/work-rotation",
+  component: MainLayout,
+});
+
+const workRotationIndexRoute = createRoute({
+  getParentRoute: () => workRotationRoute,
+  path: "/",
+  component: withSuspense(WorkRotationList),
+});
+
+const workRotationCreateRoute = createRoute({
+  getParentRoute: () => workRotationRoute,
+  path: "create",
+  component: withSuspense(WorkRotationDetail),
+});
+
+const workRotationDetailRoute = createRoute({
+  getParentRoute: () => workRotationRoute,
+  path: "$id",
+  component: withSuspense(WorkRotationDetail),
+});
+
+const dtrDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "daily-time-record/detail",
+  component: MainLayout,
+});
+
+const dtrDetailIndexRoute = createRoute({
+  getParentRoute: () => dtrDetailRoute,
+  path: "/",
+  component: withSuspense(DtrDetailList),
+});
+
+const dtrSummaryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "daily-time-record/summary",
+  component: MainLayout,
+});
+
+const dtrSummaryIndexRoute = createRoute({
+  getParentRoute: () => dtrSummaryRoute,
+  path: "/",
+  component: withSuspense(DtrSummaryList),
+});
+
+const forPayrollRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "daily-time-record/for-payroll",
+  component: MainLayout,
+});
+
+const forPayrollIndexRoute = createRoute({
+  getParentRoute: () => forPayrollRoute,
+  path: "/",
+  component: withSuspense(ForPayrollList),
+});
+
+const tardinessRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "reports/tardiness",
+  component: MainLayout,
+});
+
+const tardinessIndexRoute = createRoute({
+  getParentRoute: () => tardinessRoute,
+  path: "/",
+  component: withSuspense(TardinessList),
+});
 
 const securityUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -190,24 +426,33 @@ const routeTree = rootRoute.addChildren([
   loginRoute.addChildren([loginIndexRoute]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
-  appSectionRoute("timekeeping/upload-attendance", "Upload Attendance"),
-  appSectionRoute("timekeeping/raw-logs", "Raw Logs"),
-  appSectionRoute(
-    "timekeeping/unregistered-employees",
-    "Un Registered Employees",
-  ),
-  appSectionRoute("timekeeping/attendance-entry", "Attendance Entry"),
-  appSectionRoute("timekeeping/incomplete-punches", "Incomplete Punches"),
+  uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
+  attendanceEntryRoute.addChildren([attendanceEntryIndexRoute]),
+  rawLogsRoute.addChildren([rawLogsIndexRoute]),
+  incompletePunchesRoute.addChildren([incompletePunchesIndexRoute]),
+  unregisterEmployeeRoute.addChildren([unregisterEmployeeIndexRoute]),
   appSectionRoute("change-schedule", "Change Schedule"),
-  appSectionRoute("change-schedule/work-rotation", "Work Rotation"),
-  appSectionRoute("change-schedule/change-rest-day", "Change Rest Day"),
-  appSectionRoute("change-schedule/change-holiday", "Change Holiday"),
+  workRotationRoute.addChildren([
+    workRotationIndexRoute,
+    workRotationCreateRoute,
+    workRotationDetailRoute,
+  ]),
+  changeRestDayRoute.addChildren([
+    changeRestDayIndexRoute,
+    changeRestDayCreateRoute,
+    changeRestDayDetailRoute,
+  ]),
+  changeHolidayRoute.addChildren([
+    changeHolidayIndexRoute,
+    changeHolidayCreateRoute,
+    changeHolidayDetailRoute,
+  ]),
   appSectionRoute("daily-time-record", "DTR Summary"),
-  appSectionRoute("daily-time-record/detail", "DTR Detail"),
-  appSectionRoute("daily-time-record/summary", "DTR Summary"),
-  appSectionRoute("daily-time-record/for-payroll", "For Payroll"),
+  dtrDetailRoute.addChildren([dtrDetailIndexRoute]),
+  dtrSummaryRoute.addChildren([dtrSummaryIndexRoute]),
+  forPayrollRoute.addChildren([forPayrollIndexRoute]),
   appSectionRoute("reports", "Reports"),
-  appSectionRoute("reports/tardiness", "Tardiness"),
+  tardinessRoute.addChildren([tardinessIndexRoute]),
   appSectionRoute("clients", "Clients"),
   appSectionRoute("employee-management", "Employee Management"),
   appSectionRoute("enroll-biometrics", "Enroll Biometrics"),

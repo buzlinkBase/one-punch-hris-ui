@@ -23,7 +23,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       {
         key: "timekeeping-unregistered-employees",
-        label: "Un Registered Employees",
+        label: "Unregister Employee",
         path: "/timekeeping/unregistered-employees",
       },
       {
@@ -44,7 +44,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     children: [
       {
         key: "change-schedule-work-rotation",
-        label: "Work Rotation",
+        label: "Work Rotation Plan",
         path: "/change-schedule/work-rotation",
       },
       {
