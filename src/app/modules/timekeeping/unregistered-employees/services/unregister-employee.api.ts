@@ -27,7 +27,7 @@ const MOCK_DATA: UnregisterEmployeeResponse[] = Array.from(
   },
 );
 
-let mockEmployees = [...MOCK_DATA];
+const mockEmployees = [...MOCK_DATA];
 
 function applyFilter(
   records: UnregisterEmployeeResponse[],
