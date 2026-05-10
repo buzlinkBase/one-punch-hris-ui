@@ -30,7 +30,4 @@ coverage
 .git
 .gitignore
 docker-compose*.yml
-Dockerfile*
-nginx*.conf
-docker-entrypoint.sh
 README.md
