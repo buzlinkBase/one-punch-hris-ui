@@ -91,7 +91,7 @@ export default function AttendanceEntryList() {
       record.timeLog,
     ]);
 
-    const csv = [header, ...rows]
+    return [header, ...rows]
       .map((line) =>
         line
           .map((value) => `"${String(value).replaceAll('"', '""')}"`)
@@ -116,7 +116,7 @@ export default function AttendanceEntryList() {
       )
       .join("");
 
-    return `<html><head><meta charset=\"utf-8\" /></head><body><table><thead><tr><th>Employee ID</th><th>Employee</th><th>Time Log</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+    return `<html><head><meta charset="utf-8" /></head><body><table><thead><tr><th>Employee ID</th><th>Employee</th><th>Time Log</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
   };
 
   const handleExport = (format: "csv" | "excel") => {
@@ -127,7 +127,22 @@ export default function AttendanceEntryList() {
 
     setIsExporting(true);
 
-    if (format === "excel") {
+    if (format === "csv") {
+      const csv = buildCsv();
+      const element = document.createElement("a");
+      element.setAttribute(
+        "href",
+        `data:text/plain;charset=utf-8,${encodeURIComponent(csv)}`,
+      );
+      element.setAttribute(
+        "download",
+        `attendance-${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      element.style.display = "none";
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } else if (format === "excel") {
       downloadFile(
         buildExcelTable(),
         "application/vnd.ms-excel;charset=utf-8;",
