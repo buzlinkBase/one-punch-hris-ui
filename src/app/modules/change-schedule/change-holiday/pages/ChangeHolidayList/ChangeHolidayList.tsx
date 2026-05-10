@@ -137,7 +137,9 @@ export default function ChangeHolidayList() {
             }
             style={{ width: 280 }}
             filterOption={(input, option) =>
-              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              String(option?.label ?? "")
+                .toLowerCase()
+                .includes(input.toLowerCase())
             }
           />
         </Form.Item>

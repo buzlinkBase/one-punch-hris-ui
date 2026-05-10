@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
   changeHolidayFormSchema,
+  type ChangeHolidayFormInput,
   type ChangeHolidayFormValues,
 } from "../../models/forms/change-holiday-form.schema";
 import {
@@ -74,7 +75,7 @@ export default function ChangeHolidayDetail() {
     reset,
     setValue,
     formState: { errors },
-  } = useForm<ChangeHolidayFormValues>({
+  } = useForm<ChangeHolidayFormInput, unknown, ChangeHolidayFormValues>({
     resolver: zodResolver(changeHolidayFormSchema),
     defaultValues: {
       targetType: "employee",
@@ -247,7 +248,7 @@ export default function ChangeHolidayDetail() {
                         placeholder="Select employee"
                         options={employeeOptions}
                         filterOption={(input, option) =>
-                          (option?.label ?? "")
+                          String(option?.label ?? "")
                             .toLowerCase()
                             .includes(input.toLowerCase())
                         }
@@ -275,7 +276,7 @@ export default function ChangeHolidayDetail() {
                         placeholder="Select payroll group"
                         options={payrollGroupOptions}
                         filterOption={(input, option) =>
-                          (option?.label ?? "")
+                          String(option?.label ?? "")
                             .toLowerCase()
                             .includes(input.toLowerCase())
                         }
@@ -305,7 +306,7 @@ export default function ChangeHolidayDetail() {
                         placeholder="Select employees"
                         options={employeeOptions}
                         filterOption={(input, option) =>
-                          (option?.label ?? "")
+                          String(option?.label ?? "")
                             .toLowerCase()
                             .includes(input.toLowerCase())
                         }
@@ -333,7 +334,7 @@ export default function ChangeHolidayDetail() {
                       placeholder="Select holiday"
                       options={holidayOptions}
                       filterOption={(input, option) =>
-                        (option?.label ?? "")
+                        String(option?.label ?? "")
                           .toLowerCase()
                           .includes(input.toLowerCase())
                       }

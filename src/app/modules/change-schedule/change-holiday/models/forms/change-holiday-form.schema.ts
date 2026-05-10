@@ -36,4 +36,5 @@ export const changeHolidayFormSchema = z
     }
   });
 
+export type ChangeHolidayFormInput = z.input<typeof changeHolidayFormSchema>;
 export type ChangeHolidayFormValues = z.infer<typeof changeHolidayFormSchema>;
