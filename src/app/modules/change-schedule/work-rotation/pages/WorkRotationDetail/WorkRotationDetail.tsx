@@ -68,6 +68,7 @@ export default function WorkRotationDetail() {
     }
   }, [selected, isEdit, reset]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedEmployeeId = watch("employeeId");
   const selectedEmployee = employees.find((e) => e.id === watchedEmployeeId);
 
