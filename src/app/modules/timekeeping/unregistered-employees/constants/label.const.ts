@@ -1,0 +1,21 @@
+export const UNREGISTER_EMPLOYEE_LABEL = {
+  TITLE: "Unregister Employee",
+  SUBTITLE:
+    "Register or unregister employees in biometric devices and monitor status changes.",
+  FROM_DATE: "From Date",
+  TO_DATE: "To Date",
+  FILTER: "Filter",
+  RESET: "Reset",
+  EMPLOYEE_NO: "Employee No.",
+  EMPLOYEE_NAME: "Employee Name",
+  DEPARTMENT: "Department",
+  POSITION: "Position",
+  BIOMETRIC_ID: "Biometric ID",
+  STATUS: "Biometric Status",
+  LAST_ACTION_AT: "Last Action",
+  ACTIONS: "Actions",
+  REGISTER: "Register",
+  UNREGISTER: "Unregister",
+  STATUS_REGISTERED: "Registered",
+  STATUS_UNREGISTERED: "Unregistered",
+};
