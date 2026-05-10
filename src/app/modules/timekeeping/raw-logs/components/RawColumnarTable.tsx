@@ -96,7 +96,7 @@ export default function RawColumnarTable({ data, loading }: Props) {
       title: `Log ${i + 1}`,
       key: `log-${i}`,
       width: 80,
-      render: (_: any, record: RawColumnarAttendanceLog) => (
+      render: (_: unknown, record: RawColumnarAttendanceLog) => (
         <Tooltip title={record.logs[i] || "N/A"}>
           <span>{record.logs[i] || "-"}</span>
         </Tooltip>
