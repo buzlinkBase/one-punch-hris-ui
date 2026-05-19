@@ -2,10 +2,16 @@ version: '3.8'
 
 services:
   hris-frontend:
-    image: hris-react:latest
+    # DOCKER_IMAGE is set in .env on the VPS (e.g. youruser/hris-react:latest)
+    # Falls back to a local build tag when developing locally
+    image: ${DOCKER_IMAGE:-hris-react:latest}
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:1442/}
+        VITE_API_VERSION: ${VITE_API_VERSION:-v1}
+        VITE_APP_NAME: ${VITE_APP_NAME:-One Punch HRIS}
     container_name: hris-frontend
     ports:
       - "80:80"

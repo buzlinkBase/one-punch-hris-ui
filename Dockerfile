@@ -3,6 +3,14 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Build-time env vars baked into the Vite bundle
+ARG VITE_API_URL=http://localhost:1442/
+ARG VITE_API_VERSION=v1
+ARG VITE_APP_NAME="One Punch HRIS"
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_VERSION=$VITE_API_VERSION
+ENV VITE_APP_NAME=$VITE_APP_NAME
+
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 
