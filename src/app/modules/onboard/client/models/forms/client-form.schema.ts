@@ -10,4 +10,5 @@ export const clientFormSchema = z.object({
   unpaidDues: z.coerce.number().min(0, "Unpaid dues cannot be negative"),
 });
 
+export type ClientFormInput = z.input<typeof clientFormSchema>;
 export type ClientFormValues = z.infer<typeof clientFormSchema>;

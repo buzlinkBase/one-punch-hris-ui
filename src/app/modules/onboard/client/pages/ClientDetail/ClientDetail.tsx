@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { CLIENT_LABEL } from "../../constants/label.const";
@@ -25,6 +25,7 @@ import type { DeactivateClient } from "../../models/api/request/deactivate-clien
 import type { UpdateClient } from "../../models/api/request/update-client.model";
 import {
   clientFormSchema,
+  type ClientFormInput,
   type ClientFormValues,
 } from "../../models/forms/client-form.schema";
 
@@ -45,7 +46,7 @@ export default function ClientDetail() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ClientFormValues>({
+  } = useForm<ClientFormInput, unknown, ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
       clientCode: "",
@@ -72,7 +73,7 @@ export default function ClientDetail() {
     }
   }, [isEdit, reset, selected]);
 
-  const onSubmit = async (values: ClientFormValues) => {
+  const onSubmit: SubmitHandler<ClientFormValues> = async (values) => {
     if (isEdit && id) {
       const payload: UpdateClient = {
         id,
@@ -207,7 +208,7 @@ export default function ClientDetail() {
                     control={control}
                     render={({ field }) => (
                       <InputNumber
-                        value={field.value}
+                        value={field.value as number}
                         className="w-full"
                         min={0}
                         precision={2}
