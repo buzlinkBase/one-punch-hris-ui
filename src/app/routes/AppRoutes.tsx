@@ -88,6 +88,12 @@ const WorkRotationDetail = lazy(
   () =>
     import("@/app/modules/change-schedule/work-rotation/pages/WorkRotationDetail"),
 );
+const ClientList = lazy(
+  () => import("@/app/modules/onboard/client/pages/ClientList"),
+);
+const ClientDetail = lazy(
+  () => import("@/app/modules/onboard/client/pages/ClientDetail"),
+);
 
 const RouteFallback = () => null;
 
@@ -373,6 +379,30 @@ const tardinessIndexRoute = createRoute({
   component: withSuspense(TardinessList),
 });
 
+const clientsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "clients",
+  component: MainLayout,
+});
+
+const clientsIndexRoute = createRoute({
+  getParentRoute: () => clientsRoute,
+  path: "/",
+  component: withSuspense(ClientList),
+});
+
+const clientsCreateRoute = createRoute({
+  getParentRoute: () => clientsRoute,
+  path: "create",
+  component: withSuspense(ClientDetail),
+});
+
+const clientsDetailRoute = createRoute({
+  getParentRoute: () => clientsRoute,
+  path: "$id",
+  component: withSuspense(ClientDetail),
+});
+
 const securityUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/users",
@@ -453,7 +483,11 @@ const routeTree = rootRoute.addChildren([
   forPayrollRoute.addChildren([forPayrollIndexRoute]),
   appSectionRoute("reports", "Reports"),
   tardinessRoute.addChildren([tardinessIndexRoute]),
-  appSectionRoute("clients", "Clients"),
+  clientsRoute.addChildren([
+    clientsIndexRoute,
+    clientsCreateRoute,
+    clientsDetailRoute,
+  ]),
   appSectionRoute("employee-management", "Employee Management"),
   appSectionRoute("enroll-biometrics", "Enroll Biometrics"),
   securityUsersRoute.addChildren([
