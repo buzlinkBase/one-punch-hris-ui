@@ -13,6 +13,7 @@ import {
   useCreateDepartment,
   useUpdateDepartment,
 } from "../../hooks/useDepartmentQueries";
+import { useEmployees } from "@/app/modules/setup/employee/hooks/useEmployeeQueries";
 import { DEPARTMENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
@@ -28,6 +29,7 @@ export default function DepartmentDetail() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { data: selected } = useDepartment(isEdit ? id : undefined);
+  const { data: employees = [] } = useEmployees();
   const { mutateAsync: add, isPending: isCreating } = useCreateDepartment();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateDepartment();
 
@@ -38,7 +40,7 @@ export default function DepartmentDetail() {
     formState: { errors },
   } = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
-    defaultValues: { code: "", name: "", branchId: "", headId: "", status: "" },
+    defaultValues: { code: "", name: "", headId: "", status: "Active" },
   });
 
   useEffect(() => {
@@ -46,7 +48,6 @@ export default function DepartmentDetail() {
       reset({
         code: selected.code,
         name: selected.name,
-        branchId: selected.branchId,
         headId: selected.headId,
         status: selected.status,
       });
@@ -98,6 +99,28 @@ export default function DepartmentDetail() {
               name="code"
               control={control}
               render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+          <Form.Item
+            label={DEPARTMENT_LABEL.HEAD}
+            validateStatus={errors.headId ? "error" : ""}
+            help={errors.headId?.message}
+          >
+            <Controller
+              name="headId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  showSearch
+                  placeholder="Select department head"
+                  optionFilterProp="label"
+                  options={employees.map((e) => ({
+                    value: e.id,
+                    label: `${e.firstName} ${e.lastName}`,
+                  }))}
+                />
+              )}
             />
           </Form.Item>
           <Form.Item

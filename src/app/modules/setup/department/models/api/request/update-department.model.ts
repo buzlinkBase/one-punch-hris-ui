@@ -1,8 +1,5 @@
-export interface UpdateDepartment {
+import type { CreateDepartment } from "./create-department.model";
+
+export interface UpdateDepartment extends CreateDepartment {
   id: string;
-  code: string;
-  name: string;
-  branchId: string;
-  headId: string;
-  status: string;
 }
