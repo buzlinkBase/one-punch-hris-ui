@@ -1,6 +1,4 @@
-export interface CommonTimeShift {}
-
-export interface CreateFixedTimeShiftRequest extends CommonTimeShift {
+export interface CreateFixedTimeShiftRequest {
   shiftName: string;
   shiftType: string;
   startTime: string;
@@ -24,7 +22,7 @@ export interface CreateFixedTimeShiftRequest extends CommonTimeShift {
   maxWorkingMinutes: number;
 }
 
-export interface CreateFlexiTimeShiftRequest extends CommonTimeShift {
+export interface CreateFlexiTimeShiftRequest {
   shiftName: string;
   shiftType: string;
   startTime: string;
