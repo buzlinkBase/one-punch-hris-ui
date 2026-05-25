@@ -451,6 +451,62 @@ const securityRolesDetailRoute = createRoute({
   component: withSuspense(RoleDetail),
 });
 
+const PermissionList = lazy(
+  () => import("@/app/modules/security/permissions/pages/PermissionList"),
+);
+const PermissionDetail = lazy(
+  () => import("@/app/modules/security/permissions/pages/PermissionDetail"),
+);
+
+const securityPermissionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "security/permissions",
+  component: MainLayout,
+});
+
+const securityPermissionsIndexRoute = createRoute({
+  getParentRoute: () => securityPermissionsRoute,
+  path: "/",
+  component: withSuspense(PermissionList),
+});
+
+const securityPermissionsCreateRoute = createRoute({
+  getParentRoute: () => securityPermissionsRoute,
+  path: "create",
+  component: withSuspense(PermissionDetail),
+});
+
+const securityPermissionsDetailRoute = createRoute({
+  getParentRoute: () => securityPermissionsRoute,
+  path: "$id",
+  component: withSuspense(PermissionDetail),
+});
+
+const AuditList = lazy(
+  () => import("@/app/modules/security/audit/pages/AuditList"),
+);
+const AuditDetail = lazy(
+  () => import("@/app/modules/security/audit/pages/AuditDetail"),
+);
+
+const securityAuditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "security/audit",
+  component: MainLayout,
+});
+
+const securityAuditIndexRoute = createRoute({
+  getParentRoute: () => securityAuditRoute,
+  path: "/",
+  component: withSuspense(AuditList),
+});
+
+const securityAuditDetailRoute = createRoute({
+  getParentRoute: () => securityAuditRoute,
+  path: "$id",
+  component: withSuspense(AuditDetail),
+});
+
 const routeTree = rootRoute.addChildren([
   rootIndexRoute,
   loginRoute.addChildren([loginIndexRoute]),
@@ -500,8 +556,15 @@ const routeTree = rootRoute.addChildren([
     securityRolesCreateRoute,
     securityRolesDetailRoute,
   ]),
-  appSectionRoute("security/permissions", "Permissions"),
-  appSectionRoute("security/audit", "Audit"),
+  securityPermissionsRoute.addChildren([
+    securityPermissionsIndexRoute,
+    securityPermissionsCreateRoute,
+    securityPermissionsDetailRoute,
+  ]),
+  securityAuditRoute.addChildren([
+    securityAuditIndexRoute,
+    securityAuditDetailRoute,
+  ]),
 ]);
 
 const router = createRouter({
