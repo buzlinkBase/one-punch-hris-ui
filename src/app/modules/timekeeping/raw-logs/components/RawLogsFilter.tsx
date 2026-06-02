@@ -1,4 +1,5 @@
-import { Form, Input, Button, Row, Col } from "antd";
+import { Form, Input, Button, Row, Col, DatePicker } from "antd";
+import dayjs from "dayjs";
 import type { RawLogsFilterRequest } from "../models/api/response/raw-attendance-log.model";
 import { RAW_LOGS_LABEL } from "../constants/label.const";
 
@@ -13,8 +14,8 @@ export default function RawLogsFilter({ onFilter, loading }: Props) {
   const handleFilter = async () => {
     const values = await form.validateFields();
     onFilter({
-      fromDate: values.fromDate || undefined,
-      toDate: values.toDate || undefined,
+      fromDate: values.fromDate ? dayjs(values.fromDate).format("YYYY-MM-DD") : undefined,
+      toDate: values.toDate ? dayjs(values.toDate).format("YYYY-MM-DD") : undefined,
       clientId: values.clientId || undefined,
       employeeId: values.employeeId || undefined,
     });
@@ -29,31 +30,13 @@ export default function RawLogsFilter({ onFilter, loading }: Props) {
     <Form form={form} layout="vertical" className="bg-white p-4 rounded-lg">
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            name="fromDate"
-            label={RAW_LOGS_LABEL.FROM_DATE}
-            rules={[
-              {
-                pattern: /^\d{4}-\d{2}-\d{2}$/,
-                message: "Format: YYYY-MM-DD",
-              },
-            ]}
-          >
-            <Input type="date" />
+          <Form.Item name="fromDate" label={RAW_LOGS_LABEL.FROM_DATE}>
+            <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
           </Form.Item>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            name="toDate"
-            label={RAW_LOGS_LABEL.TO_DATE}
-            rules={[
-              {
-                pattern: /^\d{4}-\d{2}-\d{2}$/,
-                message: "Format: YYYY-MM-DD",
-              },
-            ]}
-          >
-            <Input type="date" />
+          <Form.Item name="toDate" label={RAW_LOGS_LABEL.TO_DATE}>
+            <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
           </Form.Item>
         </Col>
         <Col xs={24} sm={12} md={6}>
