@@ -27,7 +27,11 @@ export const changeHolidayFormSchema = z
       });
     }
 
-    if (value.targetType === "employee-group" && value.employeeIds.length < 1) {
+    if (
+      (value.targetType === "payroll-group" ||
+        value.targetType === "employee-group") &&
+      value.employeeIds.length < 1
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["employeeIds"],

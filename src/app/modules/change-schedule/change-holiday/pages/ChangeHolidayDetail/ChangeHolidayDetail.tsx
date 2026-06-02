@@ -84,6 +84,7 @@ export default function ChangeHolidayDetail() {
   });
 
   const targetType = useWatch({ control, name: "targetType" });
+  const payrollGroupId = useWatch({ control, name: "payrollGroupId" });
   const fromDate = useWatch({ control, name: "fromDate" });
   const toDate = useWatch({ control, name: "toDate" });
 
@@ -115,6 +116,15 @@ export default function ChangeHolidayDetail() {
     label: `${item.employeeNo} - ${item.lastName}, ${item.firstName}`,
   }));
 
+  const filteredEmployeeOptions: SelectProps["options"] = payrollGroupId
+    ? employees
+        .filter((emp) => emp.payrollGroupId === payrollGroupId)
+        .map((item) => ({
+          value: item.id,
+          label: `${item.employeeNo} - ${item.lastName}, ${item.firstName}`,
+        }))
+    : [];
+
   const payrollGroupOptions: SelectProps["options"] = payrollGroups.map(
     (item) => ({
       value: item.id,
@@ -123,19 +133,18 @@ export default function ChangeHolidayDetail() {
   );
 
   const onSubmit = async (values: ChangeHolidayFormValues) => {
+    const employeeIds =
+      values.targetType === "employee"
+        ? values.employeeId
+          ? [values.employeeId]
+          : []
+        : values.employeeIds;
+
     const payload: CreateChangeHoliday = {
-      targetType: values.targetType,
+      employeeIds,
       holidayId: values.holidayId,
-      fromDate: values.fromDate,
-      toDate: values.toDate,
-      employeeId:
-        values.targetType === "employee" ? values.employeeId : undefined,
-      payrollGroupId:
-        values.targetType === "payroll-group"
-          ? values.payrollGroupId
-          : undefined,
-      employeeIds:
-        values.targetType === "employee-group" ? values.employeeIds : undefined,
+      payrollDateFrom: values.fromDate,
+      payrollDateTo: values.toDate,
     };
 
     if (isEdit && id) {
@@ -259,31 +268,69 @@ export default function ChangeHolidayDetail() {
               )}
 
               {targetType === "payroll-group" && (
-                <Form.Item
-                  label={CHANGE_HOLIDAY_LABEL.PAYROLL_GROUP}
-                  validateStatus={errors.payrollGroupId ? "error" : ""}
-                  help={errors.payrollGroupId?.message}
-                >
-                  <Controller
-                    name="payrollGroupId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        showSearch
-                        allowClear
-                        loading={isPayrollGroupsLoading}
-                        placeholder="Select payroll group"
-                        options={payrollGroupOptions}
-                        filterOption={(input, option) =>
-                          String(option?.label ?? "")
-                            .toLowerCase()
-                            .includes(input.toLowerCase())
-                        }
-                      />
-                    )}
-                  />
-                </Form.Item>
+                <>
+                  <Form.Item
+                    label={CHANGE_HOLIDAY_LABEL.PAYROLL_GROUP}
+                    validateStatus={errors.payrollGroupId ? "error" : ""}
+                    help={errors.payrollGroupId?.message}
+                  >
+                    <Controller
+                      name="payrollGroupId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          showSearch
+                          allowClear
+                          loading={isPayrollGroupsLoading}
+                          placeholder="Select payroll group"
+                          options={payrollGroupOptions}
+                          filterOption={(input, option) =>
+                            String(option?.label ?? "")
+                              .toLowerCase()
+                              .includes(input.toLowerCase())
+                          }
+                          onChange={(val) => {
+                            field.onChange(val);
+                            setValue("employeeIds", []);
+                          }}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label={CHANGE_HOLIDAY_LABEL.EMPLOYEE_GROUP}
+                    validateStatus={errors.employeeIds ? "error" : ""}
+                    help={errors.employeeIds?.message as string | undefined}
+                  >
+                    <Controller
+                      name="employeeIds"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          mode="multiple"
+                          value={field.value}
+                          onChange={field.onChange}
+                          showSearch
+                          allowClear
+                          disabled={!payrollGroupId}
+                          loading={isEmployeesLoading}
+                          placeholder={
+                            payrollGroupId
+                              ? "Select employees"
+                              : "Select a payroll group first"
+                          }
+                          options={filteredEmployeeOptions}
+                          filterOption={(input, option) =>
+                            String(option?.label ?? "")
+                              .toLowerCase()
+                              .includes(input.toLowerCase())
+                          }
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                </>
               )}
 
               {targetType === "employee-group" && (

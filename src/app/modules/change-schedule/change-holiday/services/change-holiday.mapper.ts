@@ -5,9 +5,13 @@ export const changeHolidayMapper = {
   toFormValues(response: ChangeHolidayResponse): ChangeHolidayFormValues {
     return {
       targetType: response.targetType,
-      employeeId: response.employeeId,
+      employeeId:
+        response.targetType === "employee" ? response.employeeId : undefined,
       payrollGroupId: response.payrollGroupId,
-      employeeIds: response.employeeIds ?? [],
+      employeeIds:
+        response.targetType !== "employee"
+          ? (response.employeeIds ?? [])
+          : [],
       holidayId: response.holidayId,
       fromDate: response.fromDate,
       toDate: response.toDate,
