@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Form, Input, Button, Select, Typography, Space, Tag, InputNumber } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Typography,
+  Space,
+  Tag,
+  InputNumber,
+} from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
 import { useForm, Controller } from "react-hook-form";
@@ -80,7 +89,9 @@ export default function DeductionDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit ? DEDUCTION_LABEL.EDIT_TITLE : DEDUCTION_LABEL.CREATE_TITLE}
+              {isEdit
+                ? DEDUCTION_LABEL.EDIT_TITLE
+                : DEDUCTION_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               Define deduction master records for payroll computation.

@@ -7,11 +7,11 @@ export const assignAssetFormSchema = z.object({
   model: z.string().min(1, "Model is required"),
   brand: z.string().min(1, "Brand is required"),
   serialNo: z.string().min(1, "Serial number is required"),
-  qty: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+  qty: z.number().int().min(1, "Quantity must be at least 1"),
   issuanceDate: z.string().min(1, "Issuance date is required"),
   returnedDate: z.string().nullable().optional(),
-  remarks: z.string().optional().default(""),
-  file: z.string().optional().default(""),
+  remarks: z.string(),
+  file: z.string(),
 });
 
 export type AssignAssetFormValues = z.infer<typeof assignAssetFormSchema>;
