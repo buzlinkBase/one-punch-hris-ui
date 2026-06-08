@@ -95,6 +95,33 @@ const ClientDetail = lazy(
   () => import("@/app/modules/onboard/client/pages/ClientDetail"),
 );
 
+const AssignAssetList = lazy(
+  () =>
+    import("@/app/modules/employee-management/assign-assets/pages/AssignAssetList"),
+);
+const AssignAssetDetail = lazy(
+  () =>
+    import("@/app/modules/employee-management/assign-assets/pages/AssignAssetDetail"),
+);
+
+const EmployeeDependentList = lazy(
+  () =>
+    import("@/app/modules/employee-management/dependents/pages/EmployeeDependentList"),
+);
+const EmployeeDependentDetail = lazy(
+  () =>
+    import("@/app/modules/employee-management/dependents/pages/EmployeeDependentDetail"),
+);
+
+const EmployeeDocRecordList = lazy(
+  () =>
+    import("@/app/modules/employee-management/doc-records/pages/EmployeeDocRecordList"),
+);
+const EmployeeDocRecordDetail = lazy(
+  () =>
+    import("@/app/modules/employee-management/doc-records/pages/EmployeeDocRecordDetail"),
+);
+
 const RouteFallback = () => null;
 
 const withSuspense = (Component: LazyExoticComponent<ComponentType>) => {
@@ -403,6 +430,78 @@ const clientsDetailRoute = createRoute({
   component: withSuspense(ClientDetail),
 });
 
+const assignAssetsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "employee-management/assign-assets",
+  component: MainLayout,
+});
+
+const assignAssetsIndexRoute = createRoute({
+  getParentRoute: () => assignAssetsRoute,
+  path: "/",
+  component: withSuspense(AssignAssetList),
+});
+
+const assignAssetsCreateRoute = createRoute({
+  getParentRoute: () => assignAssetsRoute,
+  path: "create",
+  component: withSuspense(AssignAssetDetail),
+});
+
+const assignAssetsDetailRoute = createRoute({
+  getParentRoute: () => assignAssetsRoute,
+  path: "$id",
+  component: withSuspense(AssignAssetDetail),
+});
+
+const employeeDependentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "employee-management/dependents",
+  component: MainLayout,
+});
+
+const employeeDependentsIndexRoute = createRoute({
+  getParentRoute: () => employeeDependentsRoute,
+  path: "/",
+  component: withSuspense(EmployeeDependentList),
+});
+
+const employeeDependentsCreateRoute = createRoute({
+  getParentRoute: () => employeeDependentsRoute,
+  path: "create",
+  component: withSuspense(EmployeeDependentDetail),
+});
+
+const employeeDependentsDetailRoute = createRoute({
+  getParentRoute: () => employeeDependentsRoute,
+  path: "$id",
+  component: withSuspense(EmployeeDependentDetail),
+});
+
+const employeeDocRecordsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "employee-management/doc-records",
+  component: MainLayout,
+});
+
+const employeeDocRecordsIndexRoute = createRoute({
+  getParentRoute: () => employeeDocRecordsRoute,
+  path: "/",
+  component: withSuspense(EmployeeDocRecordList),
+});
+
+const employeeDocRecordsCreateRoute = createRoute({
+  getParentRoute: () => employeeDocRecordsRoute,
+  path: "create",
+  component: withSuspense(EmployeeDocRecordDetail),
+});
+
+const employeeDocRecordsDetailRoute = createRoute({
+  getParentRoute: () => employeeDocRecordsRoute,
+  path: "$id",
+  component: withSuspense(EmployeeDocRecordDetail),
+});
+
 const securityUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/users",
@@ -545,6 +644,21 @@ const routeTree = rootRoute.addChildren([
     clientsDetailRoute,
   ]),
   appSectionRoute("employee-management", "Employee Management"),
+  assignAssetsRoute.addChildren([
+    assignAssetsIndexRoute,
+    assignAssetsCreateRoute,
+    assignAssetsDetailRoute,
+  ]),
+  employeeDependentsRoute.addChildren([
+    employeeDependentsIndexRoute,
+    employeeDependentsCreateRoute,
+    employeeDependentsDetailRoute,
+  ]),
+  employeeDocRecordsRoute.addChildren([
+    employeeDocRecordsIndexRoute,
+    employeeDocRecordsCreateRoute,
+    employeeDocRecordsDetailRoute,
+  ]),
   appSectionRoute("enroll-biometrics", "Enroll Biometrics"),
   securityUsersRoute.addChildren([
     securityUsersIndexRoute,

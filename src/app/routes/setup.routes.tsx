@@ -52,6 +52,21 @@ const FlexiTimeShiftDetail = lazy(
     import("@/app/modules/setup/time-shift/flexi/pages/FlexiTimeShiftDetail"),
 );
 
+const DeductionList = lazy(
+  () => import("@/app/modules/setup/deduction/pages/DeductionList"),
+);
+const DeductionDetail = lazy(
+  () => import("@/app/modules/setup/deduction/pages/DeductionDetail"),
+);
+
+const DeductionTypeList = lazy(
+  () => import("@/app/modules/setup/deduction-type/pages/DeductionTypeList"),
+);
+const DeductionTypeDetail = lazy(
+  () =>
+    import("@/app/modules/setup/deduction-type/pages/DeductionTypeDetail"),
+);
+
 export interface SetupRouteConfig {
   path: string;
   component: LazyExoticComponent<ComponentType>;
@@ -85,4 +100,12 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "time-shift/flexi", component: FlexiTimeShiftList },
   { path: "time-shift/flexi/create", component: FlexiTimeShiftDetail },
   { path: "time-shift/flexi/$id", component: FlexiTimeShiftDetail },
+
+  { path: "deduction", component: DeductionList },
+  { path: "deduction/create", component: DeductionDetail },
+  { path: "deduction/$id", component: DeductionDetail },
+
+  { path: "deduction-type", component: DeductionTypeList },
+  { path: "deduction-type/create", component: DeductionTypeDetail },
+  { path: "deduction-type/$id", component: DeductionTypeDetail },
 ];
