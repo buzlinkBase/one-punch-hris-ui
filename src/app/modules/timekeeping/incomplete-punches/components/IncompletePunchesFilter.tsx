@@ -4,10 +4,11 @@ import { INCOMPLETE_PUNCHES_LABEL } from "../constants/label.const";
 
 interface Props {
   onFilter: (filters: IncompletePunchesFilterRequest) => void;
+  onReset?: () => void;
   loading?: boolean;
 }
 
-export default function IncompletePunchesFilter({ onFilter, loading }: Props) {
+export default function IncompletePunchesFilter({ onFilter, onReset, loading }: Props) {
   const [form] = Form.useForm();
 
   const handleFilter = async () => {
@@ -25,10 +26,11 @@ export default function IncompletePunchesFilter({ onFilter, loading }: Props) {
   const handleReset = () => {
     form.resetFields();
     onFilter({});
+    onReset?.();
   };
 
   return (
-    <Form form={form} layout="vertical" className="bg-white p-4 rounded-lg">
+    <Form form={form} layout="vertical">
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Form.Item

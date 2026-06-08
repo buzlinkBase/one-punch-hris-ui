@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Typography } from "antd";
+import { Badge, Button, Card, Typography } from "antd";
+import { FilterOutlined } from "@ant-design/icons";
 import { useIncompletePunches } from "../../hooks/useIncompletePunchesQueries";
 import IncompletePunchesFilter from "../../components/IncompletePunchesFilter";
 import IncompletePunchesTable from "../../components/IncompletePunchesTable";
@@ -9,7 +10,16 @@ import type { IncompletePunchesFilterRequest } from "../../models/api/response/i
 const { Title } = Typography;
 
 export default function IncompletePunchesList() {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<IncompletePunchesFilterRequest>({});
+
+  const activeFilterCount = [
+    filters.fromDate,
+    filters.departmentId,
+    filters.clientId,
+    filters.employeeId,
+    filters.payrollGroupId,
+  ].filter(Boolean).length;
 
   const { data: response, isLoading } = useIncompletePunches(filters);
 
@@ -31,11 +41,30 @@ export default function IncompletePunchesList() {
               {INCOMPLETE_PUNCHES_LABEL.SUBTITLE}
             </p>
           </div>
+          <div className="flex gap-2">
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-4">
-        <IncompletePunchesFilter onFilter={handleFilter} loading={isLoading} />
+        {filtersOpen && (
+          <Card size="small">
+            <IncompletePunchesFilter
+              onFilter={handleFilter}
+              onReset={() => setFiltersOpen(false)}
+              loading={isLoading}
+            />
+          </Card>
+        )}
         <IncompletePunchesTable data={incompletePunches} loading={isLoading} />
       </div>
     </div>

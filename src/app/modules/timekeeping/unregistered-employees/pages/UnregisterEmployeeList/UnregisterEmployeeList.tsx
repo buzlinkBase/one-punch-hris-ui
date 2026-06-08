@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { message, Typography } from "antd";
+import { Badge, Button, Card, message, Typography } from "antd";
+import { FilterOutlined } from "@ant-design/icons";
 import UnregisterEmployeeFilter from "../../components/UnregisterEmployeeFilter";
 import UnregisterEmployeeTable from "../../components/UnregisterEmployeeTable";
 import { UNREGISTER_EMPLOYEE_LABEL } from "../../constants/label.const";
@@ -13,9 +14,12 @@ import type { UnregisterEmployeeFilter as UnregisterEmployeeFilterRequest } from
 const { Title } = Typography;
 
 export default function UnregisterEmployeeList() {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<UnregisterEmployeeFilterRequest>({});
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
+
+  const activeFilterCount = [filters.fromDate].filter(Boolean).length;
 
   const { data: employees = [], isLoading } = useUnregisterEmployees(filters);
   const registerMutation = useRegisterBiometricEmployee();
@@ -63,11 +67,30 @@ export default function UnregisterEmployeeList() {
               {UNREGISTER_EMPLOYEE_LABEL.SUBTITLE}
             </p>
           </div>
+          <div className="flex gap-2">
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-4">
-        <UnregisterEmployeeFilter onFilter={handleFilter} loading={isLoading} />
+        {filtersOpen && (
+          <Card size="small">
+            <UnregisterEmployeeFilter
+              onFilter={handleFilter}
+              onReset={() => setFiltersOpen(false)}
+              loading={isLoading}
+            />
+          </Card>
+        )}
         <UnregisterEmployeeTable
           data={employees}
           loading={isLoading}

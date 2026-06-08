@@ -5,10 +5,11 @@ import { RAW_LOGS_LABEL } from "../constants/label.const";
 
 interface Props {
   onFilter: (filters: RawLogsFilterRequest) => void;
+  onReset?: () => void;
   loading?: boolean;
 }
 
-export default function RawLogsFilter({ onFilter, loading }: Props) {
+export default function RawLogsFilter({ onFilter, onReset, loading }: Props) {
   const [form] = Form.useForm();
 
   const handleFilter = async () => {
@@ -24,10 +25,11 @@ export default function RawLogsFilter({ onFilter, loading }: Props) {
   const handleReset = () => {
     form.resetFields();
     onFilter({});
+    onReset?.();
   };
 
   return (
-    <Form form={form} layout="vertical" className="bg-white p-4 rounded-lg">
+    <Form form={form} layout="vertical">
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Form.Item name="fromDate" label={RAW_LOGS_LABEL.FROM_DATE}>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Alert,
+  Badge,
   Button,
   Card,
   DatePicker,
@@ -30,10 +31,16 @@ import type { UploadAttendanceFilter } from "../../models/api/request/upload-att
 const { Title, Text } = Typography;
 
 export default function UploadAttendanceList() {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filter, setFilter] = useState<UploadAttendanceFilter>({});
   const [pending, setPending] = useState<UploadAttendanceFilter>({});
   const [selectedFile, setSelectedFile] = useState<UploadFile | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
+
+  const activeFilterCount = [
+    filter.fromDate,
+    filter.employeeId,
+  ].filter(Boolean).length;
 
   const { data: records = [], isLoading } = useUploadAttendanceRecords(filter);
   const { data: employees = [] } = useUploadAttendanceEmployees();
@@ -45,6 +52,7 @@ export default function UploadAttendanceList() {
   const handleClear = () => {
     setPending({});
     setFilter({});
+    setFiltersOpen(false);
   };
 
   const handleUpload = async () => {
@@ -73,61 +81,73 @@ export default function UploadAttendanceList() {
               entries in one place.
             </p>
           </div>
+          <div className="flex gap-2">
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </div>
         </div>
       </div>
 
-      <Form layout="inline" className="mb-4 flex flex-wrap gap-2">
-        <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_FROM_DATE}>
-          <DatePicker
-            value={pending.fromDate ? dayjs(pending.fromDate) : null}
-            onChange={(date) =>
-              setPending((current) => ({
-                ...current,
-                fromDate: date?.format("YYYY-MM-DD"),
-              }))
-            }
-          />
-        </Form.Item>
-        <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_TO_DATE}>
-          <DatePicker
-            value={pending.toDate ? dayjs(pending.toDate) : null}
-            onChange={(date) =>
-              setPending((current) => ({
-                ...current,
-                toDate: date?.format("YYYY-MM-DD"),
-              }))
-            }
-          />
-        </Form.Item>
-        <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_EMPLOYEE}>
-          <Select
-            allowClear
-            showSearch
-            optionFilterProp="label"
-            placeholder="All Employees"
-            options={employees}
-            value={pending.employeeId}
-            onChange={(value) =>
-              setPending((current) => ({ ...current, employeeId: value }))
-            }
-            style={{ width: 220 }}
-          />
-        </Form.Item>
-        <Form.Item>
-          <Button
-            type="primary"
-            icon={<FilterOutlined />}
-            onClick={handleSearch}
-          >
-            Filter
-          </Button>
-        </Form.Item>
-        <Form.Item>
-          <Button icon={<ClearOutlined />} onClick={handleClear}>
-            Clear
-          </Button>
-        </Form.Item>
-      </Form>
+      {filtersOpen && (
+        <Card size="small" className="mb-4">
+          <Form layout="vertical">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
+              <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_FROM_DATE} className="mb-0">
+                <DatePicker
+                  style={{ width: "100%" }}
+                  value={pending.fromDate ? dayjs(pending.fromDate) : null}
+                  onChange={(date) =>
+                    setPending((current) => ({
+                      ...current,
+                      fromDate: date?.format("YYYY-MM-DD"),
+                    }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_TO_DATE} className="mb-0">
+                <DatePicker
+                  style={{ width: "100%" }}
+                  value={pending.toDate ? dayjs(pending.toDate) : null}
+                  onChange={(date) =>
+                    setPending((current) => ({
+                      ...current,
+                      toDate: date?.format("YYYY-MM-DD"),
+                    }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_EMPLOYEE} className="mb-0">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All Employees"
+                  options={employees}
+                  value={pending.employeeId}
+                  onChange={(value) =>
+                    setPending((current) => ({ ...current, employeeId: value }))
+                  }
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button icon={<ClearOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
+              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+                Search
+              </Button>
+            </div>
+          </Form>
+        </Card>
+      )}
 
       <Card className="mb-4" title="Raw DTR Log Upload">
         <Space direction="vertical" size="middle" className="w-full">

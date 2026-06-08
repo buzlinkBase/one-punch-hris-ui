@@ -4,10 +4,11 @@ import type { UnregisterEmployeeFilter } from "../models/api/request/unregister-
 
 interface Props {
   onFilter: (filters: UnregisterEmployeeFilter) => void;
+  onReset?: () => void;
   loading?: boolean;
 }
 
-export default function UnregisterEmployeeFilter({ onFilter, loading }: Props) {
+export default function UnregisterEmployeeFilter({ onFilter, onReset, loading }: Props) {
   const [form] = Form.useForm();
 
   const handleFilter = async () => {
@@ -22,10 +23,11 @@ export default function UnregisterEmployeeFilter({ onFilter, loading }: Props) {
   const handleReset = () => {
     form.resetFields();
     onFilter({});
+    onReset?.();
   };
 
   return (
-    <Form form={form} layout="vertical" className="rounded-lg bg-white p-4">
+    <Form form={form} layout="vertical">
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Form.Item

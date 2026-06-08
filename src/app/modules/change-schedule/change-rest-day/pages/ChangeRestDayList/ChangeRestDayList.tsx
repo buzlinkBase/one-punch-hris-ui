@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Typography, Form, Select, DatePicker } from "antd";
+import { Button, Typography, Form, Select, DatePicker, Card, Badge } from "antd";
 import { PlusOutlined, FilterOutlined, ClearOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -33,8 +33,16 @@ const CLIENT_OPTIONS = [
 
 export default function ChangeRestDayList() {
   const navigate = useNavigate();
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filter, setFilter] = useState<ChangeRestDayFilter>({});
   const [pending, setPending] = useState<ChangeRestDayFilter>({});
+
+  const activeFilterCount = [
+    filter.payrollGroupId,
+    filter.employeeId,
+    filter.clientId,
+    filter.fromPayrollDate,
+  ].filter(Boolean).length;
 
   const { data: records = [], isLoading } = useChangeRestDays(filter);
   const { mutate: remove } = useDeleteChangeRestDay();
@@ -44,6 +52,7 @@ export default function ChangeRestDayList() {
   const handleClear = () => {
     setPending({});
     setFilter({});
+    setFiltersOpen(false);
   };
 
   return (
@@ -58,88 +67,96 @@ export default function ChangeRestDayList() {
               Manage employee rest day schedule changes.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              navigate({ to: "/change-schedule/change-rest-day/create" })
-            }
-          >
-            Add Entry
-          </Button>
+          <div className="flex gap-2">
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/change-schedule/change-rest-day/create" })
+              }
+            >
+              Add Entry
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Form layout="inline" className="mb-4 flex flex-wrap gap-2">
-        <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_PAYROLL_GROUP}>
-          <Select
-            allowClear
-            placeholder="All"
-            options={PAYROLL_GROUP_OPTIONS}
-            value={pending.payrollGroupId}
-            onChange={(val) =>
-              setPending((f) => ({ ...f, payrollGroupId: val }))
-            }
-            style={{ width: 180 }}
-          />
-        </Form.Item>
-        <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_EMPLOYEE}>
-          <Select
-            allowClear
-            showSearch
-            placeholder="All"
-            options={EMPLOYEE_OPTIONS}
-            value={pending.employeeId}
-            onChange={(val) => setPending((f) => ({ ...f, employeeId: val }))}
-            style={{ width: 180 }}
-            filterOption={(input, option) =>
-              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-            }
-          />
-        </Form.Item>
-        <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_CLIENT}>
-          <Select
-            allowClear
-            placeholder="All"
-            options={CLIENT_OPTIONS}
-            value={pending.clientId}
-            onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
-            style={{ width: 160 }}
-          />
-        </Form.Item>
-        <Form.Item
-          label={`${CHANGE_REST_DAY_LABEL.FILTER_FROM_PAYROLL_DATE} - ${CHANGE_REST_DAY_LABEL.FILTER_TO_PAYROLL_DATE}`}
-        >
-          <RangePicker
-            value={
-              pending.fromPayrollDate && pending.toPayrollDate
-                ? [dayjs(pending.fromPayrollDate), dayjs(pending.toPayrollDate)]
-                : null
-            }
-            onChange={(dates) =>
-              setPending((f) => ({
-                ...f,
-                fromPayrollDate: dates?.[0]?.format("YYYY-MM-DD"),
-                toPayrollDate: dates?.[1]?.format("YYYY-MM-DD"),
-              }))
-            }
-          />
-        </Form.Item>
-        <Form.Item>
-          <Button
-            icon={<FilterOutlined />}
-            onClick={handleSearch}
-            type="primary"
-          >
-            Search
-          </Button>
-        </Form.Item>
-        <Form.Item>
-          <Button icon={<ClearOutlined />} onClick={handleClear}>
-            Clear
-          </Button>
-        </Form.Item>
-      </Form>
+      {filtersOpen && (
+        <Card size="small" className="mb-4">
+          <Form layout="vertical">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4">
+              <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
+                <Select
+                  allowClear
+                  placeholder="All"
+                  options={PAYROLL_GROUP_OPTIONS}
+                  value={pending.payrollGroupId}
+                  onChange={(val) => setPending((f) => ({ ...f, payrollGroupId: val }))}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_EMPLOYEE} className="mb-0">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All"
+                  options={EMPLOYEE_OPTIONS}
+                  value={pending.employeeId}
+                  onChange={(val) => setPending((f) => ({ ...f, employeeId: val }))}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_CLIENT} className="mb-0">
+                <Select
+                  allowClear
+                  placeholder="All"
+                  options={CLIENT_OPTIONS}
+                  value={pending.clientId}
+                  onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item
+                label={`${CHANGE_REST_DAY_LABEL.FILTER_FROM_PAYROLL_DATE} – ${CHANGE_REST_DAY_LABEL.FILTER_TO_PAYROLL_DATE}`}
+                className="mb-0"
+              >
+                <RangePicker
+                  style={{ width: "100%" }}
+                  value={
+                    pending.fromPayrollDate && pending.toPayrollDate
+                      ? [dayjs(pending.fromPayrollDate), dayjs(pending.toPayrollDate)]
+                      : null
+                  }
+                  onChange={(dates) =>
+                    setPending((f) => ({
+                      ...f,
+                      fromPayrollDate: dates?.[0]?.format("YYYY-MM-DD"),
+                      toPayrollDate: dates?.[1]?.format("YYYY-MM-DD"),
+                    }))
+                  }
+                />
+              </Form.Item>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button icon={<ClearOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
+              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+                Search
+              </Button>
+            </div>
+          </Form>
+        </Card>
+      )}
 
       <ChangeRestDayTable
         data={records}

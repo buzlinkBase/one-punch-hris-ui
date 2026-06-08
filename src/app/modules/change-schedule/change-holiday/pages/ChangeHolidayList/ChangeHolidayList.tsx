@@ -5,6 +5,8 @@ import {
   Select,
   Form,
   DatePicker,
+  Card,
+  Badge,
   type SelectProps,
 } from "antd";
 import { PlusOutlined, FilterOutlined, ClearOutlined } from "@ant-design/icons";
@@ -23,22 +25,17 @@ import type { ChangeHolidayFilter } from "../../models/api/request/change-holida
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const TARGET_TYPE_OPTIONS: SelectProps["options"] = [
-  { value: "employee", label: CHANGE_HOLIDAY_LABEL.TARGET_EMPLOYEE },
-  {
-    value: "payroll-group",
-    label: CHANGE_HOLIDAY_LABEL.TARGET_PAYROLL_GROUP,
-  },
-  {
-    value: "employee-group",
-    label: CHANGE_HOLIDAY_LABEL.TARGET_EMPLOYEE_GROUP,
-  },
-];
-
 export default function ChangeHolidayList() {
   const navigate = useNavigate();
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filter, setFilter] = useState<ChangeHolidayFilter>({});
   const [pending, setPending] = useState<ChangeHolidayFilter>({});
+
+  const activeFilterCount = [
+    filter.payrollGroupId,
+    filter.employeeId,
+    filter.fromPayrollDate,
+  ].filter(Boolean).length;
 
   const { data: records = [], isLoading } = useChangeHolidays(filter);
   const { mutate: remove } = useDeleteChangeHoliday();
@@ -63,6 +60,7 @@ export default function ChangeHolidayList() {
   const handleClear = () => {
     setPending({});
     setFilter({});
+    setFiltersOpen(false);
   };
 
   return (
@@ -78,109 +76,97 @@ export default function ChangeHolidayList() {
               employee group.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              navigate({ to: "/change-schedule/change-holiday/create" })
-            }
-          >
-            Add Entry
-          </Button>
+          <div className="flex gap-2">
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/change-schedule/change-holiday/create" })
+              }
+            >
+              Add Entry
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Form layout="inline" className="mb-4 flex flex-wrap gap-2">
-        <Form.Item label={CHANGE_HOLIDAY_LABEL.TARGET_TYPE}>
-          <Select
-            allowClear
-            placeholder="All"
-            options={TARGET_TYPE_OPTIONS}
-            value={pending.targetType}
-            onChange={(value) =>
-              setPending((state) => ({
-                ...state,
-                targetType: value,
-              }))
-            }
-            style={{ width: 220 }}
-          />
-        </Form.Item>
-        <Form.Item label={CHANGE_HOLIDAY_LABEL.FILTER_PAYROLL_GROUP}>
-          <Select
-            allowClear
-            placeholder="All"
-            options={payrollGroupOptions}
-            value={pending.payrollGroupId}
-            onChange={(value) =>
-              setPending((state) => ({
-                ...state,
-                payrollGroupId: value,
-              }))
-            }
-            style={{ width: 180 }}
-          />
-        </Form.Item>
+      {filtersOpen && (
+        <Card size="small" className="mb-4">
+        <Form layout="vertical">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
+            <Form.Item label={CHANGE_HOLIDAY_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
+              <Select
+                allowClear
+                placeholder="All"
+                options={payrollGroupOptions}
+                value={pending.payrollGroupId}
+                onChange={(value) =>
+                  setPending((state) => ({ ...state, payrollGroupId: value }))
+                }
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
 
-        <Form.Item label={CHANGE_HOLIDAY_LABEL.FILTER_EMPLOYEE}>
-          <Select
-            allowClear
-            showSearch
-            placeholder="All"
-            options={employeeOptions}
-            value={pending.employeeId}
-            onChange={(value) =>
-              setPending((state) => ({
-                ...state,
-                employeeId: value,
-              }))
-            }
-            style={{ width: 280 }}
-            filterOption={(input, option) =>
-              String(option?.label ?? "")
-                .toLowerCase()
-                .includes(input.toLowerCase())
-            }
-          />
-        </Form.Item>
+            <Form.Item label={CHANGE_HOLIDAY_LABEL.FILTER_EMPLOYEE} className="mb-0">
+              <Select
+                allowClear
+                showSearch={{ optionFilterProp: "label" }}
+                placeholder="All"
+                options={employeeOptions}
+                value={pending.employeeId}
+                onChange={(value) =>
+                  setPending((state) => ({ ...state, employeeId: value }))
+                }
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
 
-        <Form.Item
-          label={`${CHANGE_HOLIDAY_LABEL.FILTER_FROM_PAYROLL_DATE} - ${CHANGE_HOLIDAY_LABEL.FILTER_TO_PAYROLL_DATE}`}
-        >
-          <RangePicker
-            value={
-              pending.fromPayrollDate && pending.toPayrollDate
-                ? [dayjs(pending.fromPayrollDate), dayjs(pending.toPayrollDate)]
-                : null
-            }
-            onChange={(dates) =>
-              setPending((state) => ({
-                ...state,
-                fromPayrollDate: dates?.[0]?.format("YYYY-MM-DD"),
-                toPayrollDate: dates?.[1]?.format("YYYY-MM-DD"),
-              }))
-            }
-          />
-        </Form.Item>
+            <Form.Item
+              label={`${CHANGE_HOLIDAY_LABEL.FILTER_FROM_PAYROLL_DATE} – ${CHANGE_HOLIDAY_LABEL.FILTER_TO_PAYROLL_DATE}`}
+              className="mb-0"
+            >
+              <RangePicker
+                style={{ width: "100%" }}
+                value={
+                  pending.fromPayrollDate && pending.toPayrollDate
+                    ? [dayjs(pending.fromPayrollDate), dayjs(pending.toPayrollDate)]
+                    : null
+                }
+                onChange={(dates) =>
+                  setPending((state) => ({
+                    ...state,
+                    fromPayrollDate: dates?.[0]?.format("YYYY-MM-DD"),
+                    toPayrollDate: dates?.[1]?.format("YYYY-MM-DD"),
+                  }))
+                }
+              />
+            </Form.Item>
+          </div>
 
-        <Form.Item>
-          <Button
-            icon={<FilterOutlined />}
-            onClick={handleSearch}
-            type="primary"
-          >
-            Search
-          </Button>
-        </Form.Item>
-        <Form.Item>
-          <Button icon={<ClearOutlined />} onClick={handleClear}>
-            Clear
-          </Button>
-        </Form.Item>
-      </Form>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button icon={<ClearOutlined />} onClick={handleClear}>
+              Clear
+            </Button>
+            <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+              Search
+            </Button>
+          </div>
+        </Form>
+        </Card>
+      )}
 
       <ChangeHolidayTable
         data={records}
+        employees={employees}
         loading={isLoading}
         onDelete={remove}
       />

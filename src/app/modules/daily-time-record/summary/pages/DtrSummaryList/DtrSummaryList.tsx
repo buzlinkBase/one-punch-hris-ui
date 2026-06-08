@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, Select, Button, Typography, DatePicker } from "antd";
+import { Form, Select, Button, Typography, DatePicker, Card, Badge } from "antd";
 import { FilterOutlined, ClearOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useDtrSummaryRecords } from "../../hooks/useDtrSummaryQueries";
@@ -35,8 +35,17 @@ const PAYROLL_GROUP_OPTIONS = [
 ];
 
 export default function DtrSummaryList() {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filter, setFilter] = useState<DtrSummaryFilter>({});
   const [pending, setPending] = useState<DtrSummaryFilter>({});
+
+  const activeFilterCount = [
+    filter.fromDate,
+    filter.departmentId,
+    filter.clientId,
+    filter.employeeId,
+    filter.payrollGroupId,
+  ].filter(Boolean).length;
 
   const { data: records = [], isLoading } = useDtrSummaryRecords(filter);
 
@@ -45,6 +54,7 @@ export default function DtrSummaryList() {
   const handleClear = () => {
     setPending({});
     setFilter({});
+    setFiltersOpen(false);
   };
 
   return (
@@ -60,87 +70,97 @@ export default function DtrSummaryList() {
               period.
             </p>
           </div>
+          <div className="flex gap-2">
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </div>
         </div>
       </div>
 
-      <Form layout="inline" className="mb-4 flex flex-wrap gap-2">
-        <Form.Item
-          label={`${DTR_SUMMARY_LABEL.FILTER_FROM_DATE} - ${DTR_SUMMARY_LABEL.FILTER_TO_DATE}`}
-        >
-          <RangePicker
-            value={
-              pending.fromDate && pending.toDate
-                ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
-                : null
-            }
-            onChange={(dates) =>
-              setPending((f) => ({
-                ...f,
-                fromDate: dates?.[0]?.format("YYYY-MM-DD"),
-                toDate: dates?.[1]?.format("YYYY-MM-DD"),
-              }))
-            }
-          />
-        </Form.Item>
-        <Form.Item label={DTR_SUMMARY_LABEL.FILTER_DEPARTMENT}>
-          <Select
-            allowClear
-            placeholder="All Departments"
-            options={DEPARTMENT_OPTIONS}
-            value={pending.departmentId}
-            onChange={(val) => setPending((f) => ({ ...f, departmentId: val }))}
-            style={{ width: 180 }}
-          />
-        </Form.Item>
-        <Form.Item label={DTR_SUMMARY_LABEL.FILTER_CLIENT}>
-          <Select
-            allowClear
-            placeholder="All Clients"
-            options={CLIENT_OPTIONS}
-            value={pending.clientId}
-            onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
-            style={{ width: 160 }}
-          />
-        </Form.Item>
-        <Form.Item label={DTR_SUMMARY_LABEL.FILTER_EMPLOYEE}>
-          <Select
-            allowClear
-            placeholder="All Employees"
-            options={EMPLOYEE_OPTIONS}
-            value={pending.employeeId}
-            onChange={(val) => setPending((f) => ({ ...f, employeeId: val }))}
-            style={{ width: 200 }}
-            showSearch
-            optionFilterProp="label"
-          />
-        </Form.Item>
-        <Form.Item label={DTR_SUMMARY_LABEL.FILTER_PAYROLL_GROUP}>
-          <Select
-            allowClear
-            placeholder="All Payroll Groups"
-            options={PAYROLL_GROUP_OPTIONS}
-            value={pending.payrollGroupId}
-            onChange={(val) =>
-              setPending((f) => ({ ...f, payrollGroupId: val }))
-            }
-            style={{ width: 180 }}
-          />
-        </Form.Item>
-        <Form.Item>
-          <Button
-            type="primary"
-            icon={<FilterOutlined />}
-            onClick={handleSearch}
-          >
-            Filter
-          </Button>
-        </Form.Item>
-        <Form.Item>
-          <Button icon={<ClearOutlined />} onClick={handleClear}>
-            Clear
-          </Button>
-        </Form.Item>
-      </Form>
+      {filtersOpen && (
+        <Card size="small" className="mb-4">
+          <Form layout="vertical">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
+              <Form.Item
+                label={`${DTR_SUMMARY_LABEL.FILTER_FROM_DATE} – ${DTR_SUMMARY_LABEL.FILTER_TO_DATE}`}
+                className="mb-0"
+              >
+                <RangePicker
+                  style={{ width: "100%" }}
+                  value={
+                    pending.fromDate && pending.toDate
+                      ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                      : null
+                  }
+                  onChange={(dates) =>
+                    setPending((f) => ({
+                      ...f,
+                      fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                      toDate: dates?.[1]?.format("YYYY-MM-DD"),
+                    }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label={DTR_SUMMARY_LABEL.FILTER_DEPARTMENT} className="mb-0">
+                <Select
+                  allowClear
+                  placeholder="All Departments"
+                  options={DEPARTMENT_OPTIONS}
+                  value={pending.departmentId}
+                  onChange={(val) => setPending((f) => ({ ...f, departmentId: val }))}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item label={DTR_SUMMARY_LABEL.FILTER_CLIENT} className="mb-0">
+                <Select
+                  allowClear
+                  placeholder="All Clients"
+                  options={CLIENT_OPTIONS}
+                  value={pending.clientId}
+                  onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item label={DTR_SUMMARY_LABEL.FILTER_EMPLOYEE} className="mb-0">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All Employees"
+                  options={EMPLOYEE_OPTIONS}
+                  value={pending.employeeId}
+                  onChange={(val) => setPending((f) => ({ ...f, employeeId: val }))}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item label={DTR_SUMMARY_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
+                <Select
+                  allowClear
+                  placeholder="All Payroll Groups"
+                  options={PAYROLL_GROUP_OPTIONS}
+                  value={pending.payrollGroupId}
+                  onChange={(val) => setPending((f) => ({ ...f, payrollGroupId: val }))}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button icon={<ClearOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
+              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+                Search
+              </Button>
+            </div>
+          </Form>
+        </Card>
+      )}
 
       <DtrSummaryTable data={records} loading={isLoading} />
     </div>

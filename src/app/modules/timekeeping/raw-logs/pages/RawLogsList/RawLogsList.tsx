@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Tabs, Typography } from "antd";
+import { Badge, Button, Card, Tabs, Typography } from "antd";
+import { FilterOutlined } from "@ant-design/icons";
 import {
   useRawAttendanceLogs,
   useRawColumnarLogs,
@@ -17,8 +18,15 @@ import type { RawLogsFilterRequest } from "../../models/api/response/raw-attenda
 const { Title } = Typography;
 
 export default function RawLogsList() {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<RawLogsFilterRequest>({});
   const [activeTab, setActiveTab] = useState("raw-attendance");
+
+  const activeFilterCount = [
+    filters.fromDate,
+    filters.clientId,
+    filters.employeeId,
+  ].filter(Boolean).length;
 
   const { data: rawAttendanceLogs = [], isLoading: rawAttendanceLoading } =
     useRawAttendanceLogs(filters);
@@ -49,11 +57,30 @@ export default function RawLogsList() {
             </Title>
             <p className="page-toolbar-subtitle">{RAW_LOGS_LABEL.SUBTITLE}</p>
           </div>
+          <div className="flex gap-2">
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-4">
-        <RawLogsFilter onFilter={handleFilter} loading={isAnyLoading} />
+        {filtersOpen && (
+          <Card size="small">
+            <RawLogsFilter
+              onFilter={handleFilter}
+              onReset={() => setFiltersOpen(false)}
+              loading={isAnyLoading}
+            />
+          </Card>
+        )}
 
         <Tabs
           activeKey={activeTab}
