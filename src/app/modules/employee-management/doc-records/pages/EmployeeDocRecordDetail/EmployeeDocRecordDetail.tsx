@@ -40,7 +40,7 @@ export default function EmployeeDocRecordDetail() {
   const { mutateAsync: add, isPending: isCreating } = useCreateEmployeeDocRecord();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployeeDocRecord();
 
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [uploadedFile, setUploadedFile] = useState<UploadFile | null>(null);
 
   const employeeOptions = employees.map((e) => ({
     value: e.id,
@@ -71,18 +71,14 @@ export default function EmployeeDocRecordDetail() {
         description: selected.description,
         file: selected.file,
       });
-      if (selected.file) {
-        setFileList([
-          {
-            uid: "-1",
-            name: selected.file.split("/").pop() ?? "document",
-            status: "done",
-            url: selected.file,
-          },
-        ]);
-      }
     }
   }, [selected, isEdit, reset]);
+
+  const fileList: UploadFile[] = uploadedFile
+    ? [uploadedFile]
+    : selected?.file
+      ? [{ uid: "-1", name: selected.file.split("/").pop() ?? "document", status: "done", url: selected.file }]
+      : [];
 
   const uploadProps: UploadProps = {
     beforeUpload: (file) => {
@@ -97,12 +93,12 @@ export default function EmployeeDocRecordDetail() {
       }
       const url = URL.createObjectURL(file);
       setValue("file", url);
-      setFileList([{ uid: file.uid, name: file.name, status: "done", url }]);
+      setUploadedFile({ uid: file.uid, name: file.name, status: "done", url });
       return false;
     },
     fileList,
     onRemove: () => {
-      setFileList([]);
+      setUploadedFile(null);
       setValue("file", "");
     },
     maxCount: 1,

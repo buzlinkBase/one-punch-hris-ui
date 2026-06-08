@@ -46,7 +46,7 @@ export default function AssignAssetDetail() {
   const { mutateAsync: add, isPending: isCreating } = useCreateAssignAsset();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateAssignAsset();
 
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [uploadedFile, setUploadedFile] = useState<UploadFile | null>(null);
 
   const employeeOptions = employees.map((e) => ({
     value: e.id,
@@ -91,18 +91,14 @@ export default function AssignAssetDetail() {
         remarks: selected.remarks,
         file: selected.file,
       });
-      if (selected.file) {
-        setFileList([
-          {
-            uid: "-1",
-            name: selected.file.split("/").pop() ?? "attachment",
-            status: "done",
-            url: selected.file,
-          },
-        ]);
-      }
     }
   }, [selected, isEdit, reset]);
+
+  const fileList: UploadFile[] = uploadedFile
+    ? [uploadedFile]
+    : selected?.file
+      ? [{ uid: "-1", name: selected.file.split("/").pop() ?? "attachment", status: "done", url: selected.file }]
+      : [];
 
   const uploadProps: UploadProps = {
     beforeUpload: (file) => {
@@ -115,12 +111,12 @@ export default function AssignAssetDetail() {
       }
       const url = URL.createObjectURL(file);
       setValue("file", url);
-      setFileList([{ uid: file.uid, name: file.name, status: "done", url }]);
+      setUploadedFile({ uid: file.uid, name: file.name, status: "done", url });
       return false;
     },
     fileList,
     onRemove: () => {
-      setFileList([]);
+      setUploadedFile(null);
       setValue("file", "");
     },
     maxCount: 1,
