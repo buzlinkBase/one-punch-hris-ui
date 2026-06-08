@@ -123,13 +123,31 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
       { key: "setup-employee", label: "Employee", path: "/setup/employee" },
+      { key: "setup-deduction-type", label: "Deduction Type", path: "/setup/deduction-type" },
+      { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
     ],
   },
   { key: "clients", label: "Clients", path: "/clients" },
   {
     key: "employee-management",
     label: "Employee Management",
-    path: "/employee-management",
+    children: [
+      {
+        key: "employee-management-assign-assets",
+        label: "Assign Assets",
+        path: "/employee-management/assign-assets",
+      },
+      {
+        key: "employee-management-dependents",
+        label: "Dependents",
+        path: "/employee-management/dependents",
+      },
+      {
+        key: "employee-management-doc-records",
+        label: "Document Records",
+        path: "/employee-management/doc-records",
+      },
+    ],
   },
   {
     key: "enroll-biometrics",
