@@ -166,7 +166,6 @@ export default function ChangeHolidayList() {
 
       <ChangeHolidayTable
         data={records}
-        employees={employees}
         loading={isLoading}
         onDelete={remove}
       />

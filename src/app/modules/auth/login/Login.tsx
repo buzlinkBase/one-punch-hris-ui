@@ -1,9 +1,12 @@
-import { Card, Form, Input, Button, Typography } from "antd";
+import { Card, Form, Input, Button, Typography, notification } from "antd";
 import { SafetyCertificateOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import { loginFormSchema, type LoginFormValues } from "./login-form.schema";
+import { authApi } from "./services/auth.api";
+import type { ApiResponse } from "@/shared/types/api-response.model";
 
 const { Title, Text } = Typography;
 
@@ -15,13 +18,26 @@ export default function Login() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
-    defaultValues: { username: "", password: "" },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    // TODO: call auth API, store token, redirect
-    console.log("Login:", values);
-    navigate({ to: "/setup/department" });
+    try {
+      const result = await authApi.login(values);
+      localStorage.setItem("auth_token", result.accessToken);
+      localStorage.setItem("auth_refresh_token", result.refreshToken);
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({ email: values.email }),
+      );
+      navigate({ to: "/setup/department" });
+    } catch (err) {
+      const description =
+        axios.isAxiosError(err)
+          ? ((err.response?.data as ApiResponse<unknown>)?.message ?? "Invalid email or password.")
+          : "An unexpected error occurred.";
+      notification.error({ message: "Login failed", description });
+    }
   };
 
   return (
@@ -44,16 +60,16 @@ export default function Login() {
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item
-          label="Username"
-          validateStatus={errors.username ? "error" : ""}
-          help={errors.username?.message}
+          label="Email"
+          validateStatus={errors.email ? "error" : ""}
+          help={errors.email?.message}
           className="login-form-item"
         >
           <Controller
-            name="username"
+            name="email"
             control={control}
             render={({ field }) => (
-              <Input {...field} placeholder="Enter username" size="large" />
+              <Input {...field} placeholder="Enter email" size="large" />
             )}
           />
         </Form.Item>

@@ -212,6 +212,8 @@ export default function MainLayout() {
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_refresh_token");
+    localStorage.removeItem("auth_user");
     navigate({ to: "/login", replace: true });
   };
 

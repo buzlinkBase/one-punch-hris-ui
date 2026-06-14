@@ -3,7 +3,7 @@ import type { PayrollGroupResponse } from "../models/api/response/payroll-group-
 import type { CreatePayrollGroup } from "../models/api/request/create-payroll-group.model";
 import type { UpdatePayrollGroup } from "../models/api/request/update-payroll-group.model";
 
-const ENDPOINT = "payroll-groups";
+const ENDPOINT = "payrollgroups";
 
 const MOCK_PAYROLL_GROUPS: PayrollGroupResponse[] = Array.from(
   { length: 24 },
