@@ -3,7 +3,7 @@ import { applyAuthInterceptor } from "./interceptors/auth.interceptor";
 import { applyErrorInterceptor } from "./interceptors/error.interceptor";
 
 const axiosInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL ?? "http://localhost:1442/"}/`,
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:1442/",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
