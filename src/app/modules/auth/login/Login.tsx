@@ -1,4 +1,4 @@
-import { Card, Form, Input, Button, Typography, notification } from "antd";
+import { Card, Form, Input, Button, Typography } from "antd";
 import { SafetyCertificateOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
@@ -6,7 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { loginFormSchema, type LoginFormValues } from "./login-form.schema";
 import { authApi } from "./services/auth.api";
+import { getNotify } from "@/shared/components/NotificationProvider";
 import type { ApiResponse } from "@/shared/types/api-response.model";
+import { authStorage } from "@/core/auth/auth-storage";
 
 const { Title, Text } = Typography;
 
@@ -24,19 +26,23 @@ export default function Login() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const result = await authApi.login(values);
-      localStorage.setItem("auth_token", result.accessToken);
-      localStorage.setItem("auth_refresh_token", result.refreshToken);
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({ email: values.email }),
+      authStorage.save(
+        result.accessToken,
+        result.refreshToken,
+        { email: values.email },
+        result.expiry,
       );
       navigate({ to: "/setup/department" });
     } catch (err) {
-      const description =
-        axios.isAxiosError(err)
-          ? ((err.response?.data as ApiResponse<unknown>)?.message ?? "Invalid email or password.")
-          : "An unexpected error occurred.";
-      notification.error({ message: "Login failed", description });
+      const description = axios.isAxiosError(err)
+        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
+            ?.errorMessage ?? "Invalid email or password.")
+        : "An unexpected error occurred.";
+      getNotify().error({
+        message: "Login failed",
+        description,
+        placement: "topRight",
+      });
     }
   };
 
