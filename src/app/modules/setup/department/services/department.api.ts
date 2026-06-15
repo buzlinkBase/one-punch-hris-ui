@@ -3,7 +3,7 @@ import type { DepartmentResponse } from "../models/api/response/department-respo
 import type { CreateDepartment } from "../models/api/request/create-department.model";
 import type { UpdateDepartment } from "../models/api/request/update-department.model";
 
-const ENDPOINT = "departments";
+const ENDPOINT = `${import.meta.env.VITE_PREFIX_HRMS}/api/${import.meta.env.VITE_API_VERSION}/departments`;
 
 const MOCK_DEPARTMENTS: DepartmentResponse[] = Array.from(
   { length: 24 },
