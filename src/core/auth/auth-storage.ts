@@ -32,7 +32,10 @@ export const authStorage = {
 
   isExpired(): boolean {
     const expiry = localStorage.getItem(KEYS.expiry);
-    return expiry ? new Date(expiry) < new Date() : false;
+    if (!expiry) return false;
+    // treat as expired 60s before actual expiry for proactive refresh
+    const expiryMs = new Date(expiry).getTime() - 60_000;
+    return Date.now() >= expiryMs;
   },
 
   clear() {
