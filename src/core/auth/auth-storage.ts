@@ -1,9 +1,13 @@
+import { decodeJwt } from "./jwt.util";
+
 const KEYS = {
   token: "auth_token",
   refreshToken: "auth_refresh_token",
   user: "auth_user",
   expiry: "auth_expiry",
 } as const;
+
+const EXPIRY_BUFFER_MS = 60_000;
 
 export interface AuthUser {
   email: string;
@@ -30,12 +34,22 @@ export const authStorage = {
     return raw ? (JSON.parse(raw) as AuthUser) : null;
   },
 
-  isExpired(): boolean {
+  isAccessTokenExpired(): boolean {
+    const token = localStorage.getItem(KEYS.token);
+    if (!token) return true;
+
+    const payload = decodeJwt(token);
+
+    if (!payload?.exp) return false;
+
+    const expiryMs = payload.exp * 1000 - EXPIRY_BUFFER_MS;
+    return Date.now() >= expiryMs;
+  },
+
+  isRefreshTokenExpired(): boolean {
     const expiry = localStorage.getItem(KEYS.expiry);
     if (!expiry) return false;
-    // treat as expired 60s before actual expiry for proactive refresh
-    const expiryMs = new Date(expiry).getTime() - 60_000;
-    return Date.now() >= expiryMs;
+    return Date.now() >= new Date(expiry).getTime();
   },
 
   clear() {
