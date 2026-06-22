@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { loginFormSchema, type LoginFormValues } from "./login-form.schema";
 import { authApi } from "./services/auth.api";
-import { getNotify } from "@/shared/components/NotificationProvider";
+import { getNotify } from "@/shared/utils/notify";
 import type { ApiResponse } from "@/shared/types/api-response.model";
 import { authStorage } from "@/core/auth/auth-storage";
 
