@@ -41,7 +41,12 @@ export async function refreshAccessToken(): Promise<string> {
 
     const { accessToken, refreshToken: newRefreshToken, expiry } = data.data;
     const user = authStorage.getUser();
-    authStorage.save(accessToken, newRefreshToken, user ?? { email: "" }, expiry);
+    authStorage.save(
+      accessToken,
+      newRefreshToken,
+      user ?? { email: "" },
+      expiry,
+    );
 
     flushQueue(accessToken);
     return accessToken;
