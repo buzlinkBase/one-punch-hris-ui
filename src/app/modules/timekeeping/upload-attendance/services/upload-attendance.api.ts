@@ -1,8 +1,9 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { UploadAttendanceFilter } from "../models/api/request/upload-attendance-filter.model";
 import type { UploadAttendanceResponse } from "../models/api/response/upload-attendance-response.model";
 
-const ENDPOINT = "timekeeping/upload-attendance";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "attendance/upload-att-log");
 
 const EMPLOYEES = Array.from({ length: 20 }, (_, i) => ({
   id: `emp-${1001 + i}`,

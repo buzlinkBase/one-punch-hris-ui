@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { FixedTimeShiftResponse } from "../models/api/response/fixed-time-shift-response.model";
 import type { CreateFixedTimeShift } from "../models/api/request/create-fixed-time-shift.model";
 import type { UpdateFixedTimeShift } from "../models/api/request/update-fixed-time-shift.model";
 
-const ENDPOINT = "time-shifts/fixed";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timeshifts");
 
 const MOCK_FIXED_TIME_SHIFTS: FixedTimeShiftResponse[] = Array.from(
   { length: 24 },

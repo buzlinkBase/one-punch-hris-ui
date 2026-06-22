@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DepartmentResponse } from "../models/api/response/department-response.model";
 import type { CreateDepartment } from "../models/api/request/create-department.model";
 import type { UpdateDepartment } from "../models/api/request/update-department.model";
 
-const ENDPOINT = `${import.meta.env.VITE_PREFIX_HRMS}/api/${import.meta.env.VITE_API_VERSION}/departments`;
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "departments");
 
 const MOCK_DEPARTMENTS: DepartmentResponse[] = Array.from(
   { length: 24 },

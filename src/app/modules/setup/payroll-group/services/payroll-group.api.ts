@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { PayrollGroupResponse } from "../models/api/response/payroll-group-response.model";
 import type { CreatePayrollGroup } from "../models/api/request/create-payroll-group.model";
 import type { UpdatePayrollGroup } from "../models/api/request/update-payroll-group.model";
 
-const ENDPOINT = "payrollgroups";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrollgroups");
 
 const MOCK_PAYROLL_GROUPS: PayrollGroupResponse[] = Array.from(
   { length: 24 },

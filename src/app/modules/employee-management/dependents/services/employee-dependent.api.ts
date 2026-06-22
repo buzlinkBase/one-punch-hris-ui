@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { EmployeeDependentResponse } from "../models/api/response/employee-dependent-response.model";
 import type { CreateEmployeeDependent } from "../models/api/request/create-employee-dependent.model";
 import type { UpdateEmployeeDependent } from "../models/api/request/update-employee-dependent.model";
 
-const ENDPOINT = "employeedependents";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "employeedependents");
 
 const RELATIONSHIPS = ["Spouse", "Son", "Daughter", "Father", "Mother", "Brother", "Sister"];
 const GENDERS = ["Male", "Female"];

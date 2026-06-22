@@ -1,10 +1,11 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { ChangeRestDayResponse } from "../models/api/response/change-rest-day-response.model";
 import type { CreateChangeRestDay } from "../models/api/request/create-change-rest-day.model";
 import type { UpdateChangeRestDay } from "../models/api/request/update-change-rest-day.model";
 import type { ChangeRestDayFilter } from "../models/api/request/change-rest-day-filter.model";
 
-const ENDPOINT = "change-schedule/change-rest-day";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "restdaydates");
 
 const HOLIDAY_NAMES = [
   "New Year's Day",

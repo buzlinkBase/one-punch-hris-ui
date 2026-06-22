@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { EmployeeResponse } from "../models/api/response/employee-response.model";
 import type { CreateEmployee } from "../models/api/request/create-employee.model";
 import type { UpdateEmployee } from "../models/api/request/update-employee.model";
 
-const ENDPOINT = "employees";
+const BASE_URL = buildApiUrl(API_PREFIX.hrms, "employees");
 
 const paymentMethods: EmployeeResponse["paymentMethod"][] = ["ATM", "Cash"];
 const salaryTypes: EmployeeResponse["salaryType"][] = [
@@ -49,7 +50,7 @@ const MOCK_EMPLOYEES: EmployeeResponse[] = Array.from(
 export const employeeApi = {
   async getAll(): Promise<EmployeeResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<EmployeeResponse[]>(ENDPOINT);
+      const data = await httpClient.getUnwrapped<EmployeeResponse[]>(BASE_URL);
       return data.length ? data : MOCK_EMPLOYEES;
     } catch {
       return MOCK_EMPLOYEES;
@@ -59,7 +60,7 @@ export const employeeApi = {
   async getById(id: string): Promise<EmployeeResponse> {
     try {
       return await httpClient.getUnwrapped<EmployeeResponse>(
-        `${ENDPOINT}/${id}`,
+        `${BASE_URL}/${id}`,
       );
     } catch {
       const match = MOCK_EMPLOYEES.find((item) => item.id === id);
@@ -69,14 +70,14 @@ export const employeeApi = {
   },
 
   create(data: CreateEmployee): Promise<EmployeeResponse> {
-    return httpClient.postUnwrapped<EmployeeResponse>(ENDPOINT, data);
+    return httpClient.postUnwrapped<EmployeeResponse>(BASE_URL, data);
   },
 
   update(data: UpdateEmployee): Promise<EmployeeResponse> {
-    return httpClient.put<EmployeeResponse>(`${ENDPOINT}/${data.id}`, data);
+    return httpClient.put<EmployeeResponse>(`${BASE_URL}/${data.id}`, data);
   },
 
   remove(id: string): Promise<void> {
-    return httpClient.delete<void>(`${ENDPOINT}/${id}`);
+    return httpClient.delete<void>(`${BASE_URL}/${id}`);
   },
 };

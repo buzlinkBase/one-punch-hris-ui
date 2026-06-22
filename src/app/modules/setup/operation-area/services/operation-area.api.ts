@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { OperationAreaResponse } from "../models/api/response/operation-area-response.model";
 import type { CreateOperationArea } from "../models/api/request/create-operation-area.model";
 import type { UpdateOperationArea } from "../models/api/request/update-operation-area.model";
 
-const ENDPOINT = "operation-areas";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "costcenters");
 
 const MOCK_OPERATION_AREAS: OperationAreaResponse[] = Array.from(
   { length: 24 },

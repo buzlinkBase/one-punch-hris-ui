@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { FlexiTimeShiftResponse } from "../models/api/response/flexi-time-shift-response.model";
 import type { CreateFlexiTimeShift } from "../models/api/request/create-flexi-time-shift.model";
 import type { UpdateFlexiTimeShift } from "../models/api/request/update-flexi-time-shift.model";
 
-const ENDPOINT = "time-shifts/flexi";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timeshifts");
 
 const MOCK_FLEXI_TIME_SHIFTS: FlexiTimeShiftResponse[] = Array.from(
   { length: 24 },
