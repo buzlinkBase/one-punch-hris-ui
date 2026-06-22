@@ -59,7 +59,9 @@ export const useChangeHolidayStore = create<ChangeHolidayStore>((set) => ({
     try {
       const updated = await changeHolidayApi.update(data);
       set((s) => ({
-        records: s.records.map((r) => (r.id === updated.id ? updated : r)),
+        records: s.records.map((r) =>
+          r.batchId === updated.batchId ? updated : r,
+        ),
         selected: updated,
         loading: false,
       }));
@@ -73,7 +75,7 @@ export const useChangeHolidayStore = create<ChangeHolidayStore>((set) => ({
     try {
       await changeHolidayApi.remove(id);
       set((s) => ({
-        records: s.records.filter((r) => r.id !== id),
+        records: s.records.filter((r) => r.batchId !== id),
         loading: false,
       }));
     } catch (err) {

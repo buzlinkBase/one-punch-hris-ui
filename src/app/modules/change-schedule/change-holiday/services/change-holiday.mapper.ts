@@ -4,15 +4,11 @@ import type { ChangeHolidayFormValues } from "../models/forms/change-holiday-for
 export const changeHolidayMapper = {
   toFormValues(response: ChangeHolidayResponse): ChangeHolidayFormValues {
     return {
-      targetType: response.targetType,
-      employeeId:
-        response.targetType === "employee" ? response.employeeId : undefined,
-      payrollGroupId: response.payrollGroupId,
-      employeeIds:
-        response.targetType !== "employee"
-          ? (response.employeeIds ?? [])
-          : [],
-      holidayId: response.holidayId,
+      targetType: "employee",
+      employeeId: undefined,
+      payrollGroupId: undefined,
+      employeeIds: [],
+      holidayId: "",
       fromDate: response.fromDate,
       toDate: response.toDate,
     };

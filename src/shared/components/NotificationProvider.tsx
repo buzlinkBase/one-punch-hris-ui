@@ -1,15 +1,13 @@
+import { useEffect } from "react";
 import { notification } from "antd";
-import type { NotificationInstance } from "antd/es/notification/interface";
-
-let _notify: NotificationInstance | null = null;
-
-export function getNotify(): NotificationInstance {
-  if (!_notify) throw new Error("NotificationProvider is not mounted.");
-  return _notify;
-}
+import { setNotify } from "@/shared/utils/notify";
 
 export function NotificationProvider() {
   const [api, contextHolder] = notification.useNotification();
-  _notify = api;
+
+  useEffect(() => {
+    setNotify(api);
+  }, [api]);
+
   return <>{contextHolder}</>;
 }
