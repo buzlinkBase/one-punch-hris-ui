@@ -36,7 +36,7 @@ export function useUpdateChangeHoliday() {
   return useMutation({
     mutationFn: (data: UpdateChangeHoliday) => changeHolidayApi.update(data),
     onSuccess: (updated) => {
-      queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
+      queryClient.setQueryData([...QUERY_KEY, updated.batchId], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });

@@ -201,18 +201,14 @@ export default function ChangeHolidayDetail() {
             loading={isRecordLoading}
           >
             <Descriptions size="small" column={3}>
-              <Descriptions.Item label={CHANGE_HOLIDAY_LABEL.TARGET_TYPE}>
-                {selected.targetType === "employee"
-                  ? CHANGE_HOLIDAY_LABEL.TARGET_EMPLOYEE
-                  : selected.targetType === "payroll-group"
-                    ? CHANGE_HOLIDAY_LABEL.TARGET_PAYROLL_GROUP
-                    : CHANGE_HOLIDAY_LABEL.TARGET_EMPLOYEE_GROUP}
-              </Descriptions.Item>
-              <Descriptions.Item label={CHANGE_HOLIDAY_LABEL.TARGET}>
-                {selected.targetLabel}
+              <Descriptions.Item label={CHANGE_HOLIDAY_LABEL.EMPLOYEE}>
+                {selected.fullName}
               </Descriptions.Item>
               <Descriptions.Item label={CHANGE_HOLIDAY_LABEL.HOLIDAY_NAME}>
                 {selected.holidayName}
+              </Descriptions.Item>
+              <Descriptions.Item label={CHANGE_HOLIDAY_LABEL.CLIENT}>
+                {selected.clientName}
               </Descriptions.Item>
             </Descriptions>
           </Card>
