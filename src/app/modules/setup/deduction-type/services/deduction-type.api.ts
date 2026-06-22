@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DeductionTypeResponse } from "../models/api/response/deduction-type-response.model";
 import type { CreateDeductionType } from "../models/api/request/create-deduction-type.model";
 import type { UpdateDeductionType } from "../models/api/request/update-deduction-type.model";
 
-const ENDPOINT = "deduction-types";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "deductiontypes");
 
 const MOCK_DEDUCTION_TYPES: DeductionTypeResponse[] = [
   { id: "dt-1", code: "GOV", name: "Government", status: "ACTIVE" },

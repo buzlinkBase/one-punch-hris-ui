@@ -1,8 +1,9 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
 import type { DtrDetailFilter } from "../models/api/request/dtr-detail-filter.model";
 
-const ENDPOINT = "daily-time-record/detail";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/load-summary");
 
 const WORK_TYPES = ["Regular", "Rest Day", "Holiday", "Special Holiday"];
 const TIME_SHIFTS = [

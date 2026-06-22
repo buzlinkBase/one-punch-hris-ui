@@ -1,7 +1,8 @@
 import httpClient from '@/core/http/http-client';
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { AuditResponse } from '../models/api/response/audit-response.model';
 
-const ENDPOINT = 'audit-logs';
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "audit-logs");
 
 const MOCK_AUDITS: AuditResponse[] = [
   {

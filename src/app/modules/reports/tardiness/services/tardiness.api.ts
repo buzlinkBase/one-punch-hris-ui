@@ -1,8 +1,9 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { TardinessResponse } from "../models/api/response/tardiness-response.model";
 import type { TardinessFilter } from "../models/api/request/tardiness-filter.model";
 
-const ENDPOINT = "reports/tardiness";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "reports/tardiness");
 
 const MOCK_TARDINESS: TardinessResponse[] = Array.from(
   { length: 20 },

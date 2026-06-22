@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { AssignAssetResponse } from "../models/api/response/assign-asset-response.model";
 import type { CreateAssignAsset } from "../models/api/request/create-assign-asset.model";
 import type { UpdateAssignAsset } from "../models/api/request/update-assign-asset.model";
 
-const ENDPOINT = "employee-assign-assets";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "employeeassignassets");
 
 const ASSET_TYPES = [
   "Laptop",
@@ -26,7 +27,8 @@ const MOCK_ASSIGN_ASSETS: AssignAssetResponse[] = Array.from(
     serialNo: `SN-${String(100000 + i).padStart(6, "0")}`,
     qty: (i % 3) + 1,
     issuanceDate: `2025-${String((i % 12) + 1).padStart(2, "0")}-15`,
-    returnedDate: i % 4 === 0 ? `2026-${String((i % 12) + 1).padStart(2, "0")}-15` : null,
+    returnedDate:
+      i % 4 === 0 ? `2026-${String((i % 12) + 1).padStart(2, "0")}-15` : null,
     remarks: i % 3 === 0 ? "Handle with care" : "",
     file: "",
   }),
@@ -35,8 +37,9 @@ const MOCK_ASSIGN_ASSETS: AssignAssetResponse[] = Array.from(
 export const assignAssetApi = {
   async getAll(): Promise<AssignAssetResponse[]> {
     try {
-      const data =
-        await httpClient.getUnwrapped<AssignAssetResponse[]>(ENDPOINT);
+      const data = await httpClient.getUnwrapped<AssignAssetResponse[]>(
+        `${ENDPOINT}/employee`,
+      );
       return data.length ? data : MOCK_ASSIGN_ASSETS;
     } catch {
       return MOCK_ASSIGN_ASSETS;
@@ -46,7 +49,7 @@ export const assignAssetApi = {
   async getById(id: string): Promise<AssignAssetResponse> {
     try {
       return await httpClient.getUnwrapped<AssignAssetResponse>(
-        `${ENDPOINT}/${id}`,
+        `${ENDPOINT}?id=${id}`,
       );
     } catch {
       const match = MOCK_ASSIGN_ASSETS.find((item) => item.id === id);

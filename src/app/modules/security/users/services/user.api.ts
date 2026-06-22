@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { UserResponse } from "../models/api/response/user-response.model";
 import type { CreateUser } from "../models/api/request/create-user.model";
 import type { UpdateUser } from "../models/api/request/update-user.model";
 
-const ENDPOINT = "users";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "users");
 
 const userTypes: UserResponse["userType"][] = ["Administrator", "HR", "Employee"];
 

@@ -1,4 +1,5 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type {
   RawAttendanceLog,
   RawColumnarAttendanceLog,
@@ -8,7 +9,7 @@ import type {
   RawLogsResponse,
 } from "../models/api/response/raw-attendance-log.model";
 
-const ENDPOINT = "timekeeping/raw-logs";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timekeeping/raw-logs");
 
 // Mock data generation
 const generateMockRawLogs = (): RawAttendanceLog[] => {

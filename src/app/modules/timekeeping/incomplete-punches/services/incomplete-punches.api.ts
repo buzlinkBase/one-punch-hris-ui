@@ -1,11 +1,12 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type {
   IncompletePunch,
   IncompletePunchesFilterRequest,
   IncompletePunchesResponse,
 } from "../models/api/response/incomplete-punch.model";
 
-const ENDPOINT = "timekeeping/incomplete-punches";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timekeeping/incomplete-punches");
 
 const generateMockIncompletePunches = (): IncompletePunch[] => {
   const statuses: IncompletePunch["status"][] = [

@@ -1,10 +1,11 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { CreateClient } from "../models/api/request/create-client.model";
 import type { DeactivateClient } from "../models/api/request/deactivate-client.model";
 import type { UpdateClient } from "../models/api/request/update-client.model";
 import type { ClientResponse } from "../models/api/response/client-response.model";
 
-const ENDPOINT = "clients";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "clients");
 
 const INITIAL_CLIENTS: ClientResponse[] = Array.from(
   { length: 18 },

@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { EmployeeDocRecordResponse } from "../models/api/response/employee-doc-record-response.model";
 import type { CreateEmployeeDocRecord } from "../models/api/request/create-employee-doc-record.model";
 import type { UpdateEmployeeDocRecord } from "../models/api/request/update-employee-doc-record.model";
 
-const ENDPOINT = "employeedocrecords";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "employeedocrecords");
 
 const RECORD_TYPES = [
   "Employment Contract",

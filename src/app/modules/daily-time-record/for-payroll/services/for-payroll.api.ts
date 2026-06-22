@@ -1,8 +1,9 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { ForPayrollResponse } from "../models/api/response/for-payroll-response.model";
 import type { ForPayrollFilter } from "../models/api/request/for-payroll-filter.model";
 
-const ENDPOINT = "daily-time-record/for-payroll";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/generate");
 
 const MOCK_DATA: ForPayrollResponse[] = Array.from({ length: 20 }, (_, i) => ({
   id: `fp-${i + 1}`,
