@@ -3,6 +3,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "@tanstack/react-router";
 import { ConfigProvider } from "antd";
 import { theme } from "antd";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import router from "@/app/routes/AppRoutes";
 import { queryClient } from "@/core/query-client";
 import { THEME_CONFIG } from "@/core/theme.config";
@@ -10,6 +11,7 @@ import { NotificationProvider } from "@/shared/components/NotificationProvider";
 
 export default function App() {
   return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <ConfigProvider
       theme={{
         algorithm: theme.defaultAlgorithm,
@@ -53,5 +55,6 @@ export default function App() {
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ConfigProvider>
+    </GoogleOAuthProvider>
   );
 }

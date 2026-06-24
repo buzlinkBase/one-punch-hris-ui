@@ -1,4 +1,4 @@
-import { Card, Form, Input, Button, Typography, Divider } from "antd";
+import { Card, Form, Input, Button, Typography, Divider, notification } from "antd";
 import { SafetyCertificateOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
@@ -9,6 +9,7 @@ import { authApi } from "./services/auth.api";
 import { getNotify } from "@/shared/utils/notify";
 import type { ApiResponse } from "@/shared/types/api-response.model";
 import { authStorage } from "@/core/auth/auth-storage";
+import { useGoogleLogin } from "@react-oauth/google";
 
 const { Title, Text } = Typography;
 
@@ -55,9 +56,25 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}auth/api/${import.meta.env.VITE_API_VERSION}/users/login-google`;
-  };
+  const handleGoogleLogin = useGoogleLogin({
+    flow: "auth-code",
+    onSuccess: async ({ code }) => {
+      try { 
+        const result = await authApi.loginWithGoogle(code);
+        localStorage.setItem("auth_token", result.accessToken);
+        localStorage.setItem("auth_refresh_token", result.refreshToken);
+        localStorage.setItem("auth_user", JSON.stringify({ email: "" }));
+        navigate({ to: "/setup/department" });
+      } catch (err) {
+        const description =
+          axios.isAxiosError(err)
+            ? ((err.response?.data as ApiResponse<unknown>)?.message ?? "Google login failed.")
+            : "An unexpected error occurred.";
+        notification.error({ message: "Login failed", description });
+      }
+    },
+    onError: () => notification.error({ message: "Login failed", description: "Google authentication was unsuccessful." }),
+  });
 
   return (
     <Card className="auth-card login-card border-0">
