@@ -9,4 +9,7 @@ export const authApi = {
   login(data: LoginRequest): Promise<LoginResponse> {
     return httpClient.postUnwrapped<LoginResponse>(`${BASE_URL}/login`, data);
   },
+  loginWithGoogle(code: string): Promise<LoginResponse> {
+    return httpClient.postUnwrapped<LoginResponse>(`${BASE_URL}/login-google-callback`, { code });
+  },
 };
