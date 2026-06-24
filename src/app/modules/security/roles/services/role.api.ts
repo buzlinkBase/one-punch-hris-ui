@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { RoleResponse } from "../models/api/response/role-response.model";
 import type { CreateRole } from "../models/api/request/create-role.model";
 import type { UpdateRole } from "../models/api/request/update-role.model";
 
-const ENDPOINT = "roles";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "roles");
 
 const MOCK_ROLES: RoleResponse[] = [
   { id: "role-1", roleName: "Administrator", status: "ACTIVE" },

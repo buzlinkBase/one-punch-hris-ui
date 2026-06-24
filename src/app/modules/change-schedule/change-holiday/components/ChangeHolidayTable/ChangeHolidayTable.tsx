@@ -4,52 +4,29 @@ import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { ChangeHolidayResponse } from "../../models/api/response/change-holiday-response.model";
-import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 import { CHANGE_HOLIDAY_LABEL } from "../../constants/label.const";
-
-interface FlatRow extends ChangeHolidayResponse {
-  _rowKey: string;
-  _employeeId: string;
-}
 
 interface Props {
   data: ChangeHolidayResponse[];
-  employees: EmployeeResponse[];
   loading?: boolean;
-  onDelete?: (id: string) => void;
+  onDelete?: (batchId: string) => void;
 }
 
-export default function ChangeHolidayTable({ data, employees, loading, onDelete }: Props) {
+export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  const employeeMap = new Map(
-    employees.map((e) => [e.id, `${e.employeeNo} - ${e.lastName}, ${e.firstName}`]),
+  const filtered = data.filter((item) =>
+    [item.fullName, item.holidayName, item.clientName, item.fromDate, item.toDate].some(
+      (val) => String(val ?? "").toLowerCase().includes(search.toLowerCase()),
+    ),
   );
 
-  const flatRows: FlatRow[] = data.flatMap((record) =>
-    (record.employeeIds ?? []).map((employeeId) => ({
-      ...record,
-      _rowKey: `${record.id}-${employeeId}`,
-      _employeeId: employeeId,
-    })),
-  );
-
-  const filtered = flatRows.filter((item) => {
-    const employeeName = employeeMap.get(item._employeeId) ?? "";
-    return (
-      employeeName.toLowerCase().includes(search.toLowerCase()) ||
-      [item.holidayName, item.clientName, item.fromDate, item.toDate].some(
-        (val) => String(val ?? "").toLowerCase().includes(search.toLowerCase()),
-      )
-    );
-  });
-
-  const columns: ColumnsType<FlatRow> = [
+  const columns: ColumnsType<ChangeHolidayResponse> = [
     {
       title: CHANGE_HOLIDAY_LABEL.EMPLOYEE,
-      key: "employee",
-      render: (_, record) => employeeMap.get(record._employeeId) ?? record._employeeId,
+      dataIndex: "fullName",
+      key: "fullName",
     },
     {
       title: CHANGE_HOLIDAY_LABEL.HOLIDAY_NAME,
@@ -81,7 +58,7 @@ export default function ChangeHolidayTable({ data, employees, loading, onDelete 
           <Button
             type="link"
             onClick={() =>
-              navigate({ to: `/change-schedule/change-holiday/${record.id}` })
+              navigate({ to: `/change-schedule/change-holiday/${record.batchId}` })
             }
           >
             Edit
@@ -89,7 +66,7 @@ export default function ChangeHolidayTable({ data, employees, loading, onDelete 
           {onDelete && (
             <Popconfirm
               title="Delete this record?"
-              onConfirm={() => onDelete(record.id)}
+              onConfirm={() => onDelete(record.batchId)}
               okText="Yes"
               cancelText="No"
             >
@@ -114,7 +91,7 @@ export default function ChangeHolidayTable({ data, employees, loading, onDelete 
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey="_rowKey"
+        rowKey="batchId"
         dataSource={filtered}
         columns={columns}
         size="small"

@@ -1,8 +1,9 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { AttendanceEntryFilter } from "../models/api/request/attendance-entry-filter.model";
 import type { AttendanceEntryResponse } from "../models/api/response/attendance-entry-response.model";
 
-const ENDPOINT = "timekeeping/attendance-entry";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/generate");
 
 const EMPLOYEES = Array.from({ length: 20 }, (_, i) => ({
   id: `emp-${1001 + i}`,

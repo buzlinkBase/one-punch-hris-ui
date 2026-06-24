@@ -1,9 +1,10 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { HolidayResponse } from "../models/api/response/holiday-response.model";
 import type { CreateHoliday } from "../models/api/request/create-holiday.model";
 import type { UpdateHoliday } from "../models/api/request/update-holiday.model";
 
-const ENDPOINT = "holidays";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "holidays");
 
 const holidayTypes: HolidayResponse["type"][] = [
   "Regular",

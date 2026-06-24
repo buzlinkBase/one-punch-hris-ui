@@ -1,9 +1,10 @@
 import httpClient from '@/core/http/http-client';
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { PermissionResponse } from '../models/api/response/permission-response.model';
 import type { CreatePermission } from '../models/api/request/create-permission.model';
 import type { UpdatePermission } from '../models/api/request/update-permission.model';
 
-const ENDPOINT = 'permissions';
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "permissions");
 
 const MOCK_PERMISSIONS: PermissionResponse[] = [
   // Department

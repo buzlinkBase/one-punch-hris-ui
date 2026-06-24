@@ -1,10 +1,11 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { WorkRotationResponse } from "../models/api/response/work-rotation-response.model";
 import type { CreateWorkRotation } from "../models/api/request/create-work-rotation.model";
 import type { UpdateWorkRotation } from "../models/api/request/update-work-rotation.model";
 import type { WorkRotationFilter } from "../models/api/request/work-rotation-filter.model";
 
-const ENDPOINT = "change-schedule/work-rotation";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "workscheduleplans");
 
 const TIME_SHIFT_NAMES = [
   "Morning Shift (6AM-3PM)",

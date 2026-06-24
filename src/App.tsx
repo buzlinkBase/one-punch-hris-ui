@@ -6,6 +6,7 @@ import { theme } from "antd";
 import router from "@/app/routes/AppRoutes";
 import { queryClient } from "@/core/query-client";
 import { THEME_CONFIG } from "@/core/theme.config";
+import { NotificationProvider } from "@/shared/components/NotificationProvider";
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
       }}
     >
       <QueryClientProvider client={queryClient}>
+        <NotificationProvider />
         <RouterProvider router={router} />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

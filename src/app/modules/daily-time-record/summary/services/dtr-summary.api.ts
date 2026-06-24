@@ -1,8 +1,9 @@
 import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DtrSummaryResponse } from "../models/api/response/dtr-summary-response.model";
 import type { DtrSummaryFilter } from "../models/api/request/dtr-summary-filter.model";
 
-const ENDPOINT = "daily-time-record/summary";
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/load-summary");
 
 const r = (max: number, offset = 0) =>
   parseFloat(((offset * 0.13) % max).toFixed(2));
