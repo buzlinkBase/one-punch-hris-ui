@@ -16,6 +16,7 @@ import AuthLayout from "@/app/layouts/AuthLayout";
 import { setupRoutes } from "./setup.routes";
 
 const Login = lazy(() => import("@/app/modules/auth/login/Login"));
+const Register = lazy(() => import("@/app/modules/auth/register/Register"));
 const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/DepartmentList"),
 );
@@ -176,6 +177,18 @@ const loginIndexRoute = createRoute({
   getParentRoute: () => loginRoute,
   path: "/",
   component: withSuspense(Login),
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "register",
+  component: AuthLayout,
+});
+
+const registerIndexRoute = createRoute({
+  getParentRoute: () => registerRoute,
+  path: "/",
+  component: withSuspense(Register),
 });
 
 const setupRoute = createRoute({
@@ -609,6 +622,7 @@ const securityAuditDetailRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   rootIndexRoute,
   loginRoute.addChildren([loginIndexRoute]),
+  registerRoute.addChildren([registerIndexRoute]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),

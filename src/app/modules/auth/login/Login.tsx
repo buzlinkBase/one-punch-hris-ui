@@ -1,6 +1,6 @@
 import { Card, Form, Input, Button, Typography, Divider, notification } from "antd";
 import { SafetyCertificateOutlined } from "@ant-design/icons";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -153,6 +153,11 @@ export default function Login() {
           Continue with Google
         </Button>
       </Form>
+
+      <div style={{ textAlign: "center", marginTop: 16 }}>
+        <Text type="secondary">Don't have an account? </Text>
+        <Link to="/register">Create account</Link>
+      </div>
     </Card>
   );
 }
