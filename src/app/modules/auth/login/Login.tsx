@@ -111,7 +111,14 @@ export default function Login() {
         </Form.Item>
 
         <Form.Item
-          label="Password"
+          label={
+            <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+              <span>Password</span>
+              <Link to="/forgot-password" style={{ fontWeight: "normal", fontSize: 13,marginLeft:'5px' }}>
+                Forgot password?
+              </Link>
+            </div>
+          }
           validateStatus={errors.password ? "error" : ""}
           help={errors.password?.message}
           className="login-form-item"
