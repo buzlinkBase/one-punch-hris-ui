@@ -125,6 +125,12 @@ jobs:
             VITE_API_URL=${{ vars.VITE_API_URL }}
             VITE_API_VERSION=${{ vars.VITE_API_VERSION }}
             VITE_APP_NAME=${{ vars.VITE_APP_NAME }}
+            VITE_GOOGLE_CLIENT_ID=${{ vars.VITE_GOOGLE_CLIENT_ID }}
+            VITE_PREFIX_AUTH=${{ vars.VITE_PREFIX_AUTH }}
+            VITE_PREFIX_HRMS=${{ vars.VITE_PREFIX_HRMS }}
+            VITE_PREFIX_ADMS=${{ vars.VITE_PREFIX_ADMS }}
+            VITE_PREFIX_TENANTS=${{ vars.VITE_PREFIX_TENANTS }}
+            VITE_PREFIX_NOTIFICATIONS=${{ vars.VITE_PREFIX_NOTIFICATIONS }}
           # Layer cache from the registry for faster rebuilds
           cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache,mode=max
