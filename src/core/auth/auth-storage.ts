@@ -2,9 +2,7 @@ import { decodeJwt } from "./jwt.util";
 
 const KEYS = {
   token: "auth_token",
-  refreshToken: "auth_refresh_token",
   user: "auth_user",
-  expiry: "auth_expiry",
   name: "name",
   role: "role",
 } as const;
@@ -18,19 +16,13 @@ export interface AuthUser {
 }
 
 export const authStorage = {
-  save(token: string, refreshToken: string, user: AuthUser, expiry?: string) {
+  save(token: string, user: AuthUser) {
     localStorage.setItem(KEYS.token, token);
-    localStorage.setItem(KEYS.refreshToken, refreshToken);
     localStorage.setItem(KEYS.user, JSON.stringify(user));
-    if (expiry) localStorage.setItem(KEYS.expiry, expiry);
   },
 
   getToken(): string | null {
     return localStorage.getItem(KEYS.token);
-  },
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem(KEYS.refreshToken);
   },
 
   getUser(): AuthUser | null {
@@ -44,16 +36,12 @@ export const authStorage = {
 
     const payload = decodeJwt(token);
 
+    console.log("Token payload:", payload);
+
     if (!payload?.exp) return false;
 
     const expiryMs = payload.exp * 1000 - EXPIRY_BUFFER_MS;
     return Date.now() >= expiryMs;
-  },
-
-  isRefreshTokenExpired(): boolean {
-    const expiry = localStorage.getItem(KEYS.expiry);
-    if (!expiry) return false;
-    return Date.now() >= new Date(expiry).getTime();
   },
 
   clear() {

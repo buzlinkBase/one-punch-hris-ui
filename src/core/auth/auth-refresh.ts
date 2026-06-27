@@ -5,8 +5,9 @@ const REFRESH_ENDPOINT = `${import.meta.env.VITE_PREFIX_AUTH}/api/${import.meta.
 
 interface RefreshResponse {
   accessToken: string;
-  refreshToken: string;
-  expiry: string;
+  email: string;
+  name: string;
+  role: string;
 }
 
 let isRefreshing = false;
@@ -31,21 +32,21 @@ export async function refreshAccessToken(): Promise<string> {
   isRefreshing = true;
 
   try {
-    const refreshToken = authStorage.getRefreshToken();
-    if (!refreshToken) throw new Error("No refresh token");
-
     const { data } = await axios.post<{ data: RefreshResponse }>(
       `${import.meta.env.VITE_API_URL}${REFRESH_ENDPOINT}`,
-      { refreshToken },
+      undefined,
+      { withCredentials: true },
     );
 
-    const { accessToken, refreshToken: newRefreshToken, expiry } = data.data;
+    const { accessToken, email, name, role } = data.data;
     const user = authStorage.getUser();
     authStorage.save(
       accessToken,
-      newRefreshToken,
-      user ?? { email: "" },
-      expiry,
+      user ?? {
+        email,
+        name,
+        role,
+      },
     );
 
     flushQueue(accessToken);

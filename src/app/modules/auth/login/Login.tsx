@@ -56,13 +56,12 @@ export default function Login() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const result = await authApi.login(values);
-      authStorage.save(
-        result.accessToken,
-        result.refreshToken,
-        { email: values.email, name: result.name, role: result.role },
-        result.expiry,
-      );
-      navigate({ to: "/setup/department" });
+      authStorage.save(result.accessToken, {
+        email: values.email,
+        name: result.name,
+        role: result.role,
+      });
+      navigate({ to: "/dashboard" });
     } catch (err) {
       const description = axios.isAxiosError(err)
         ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
@@ -81,12 +80,12 @@ export default function Login() {
     onSuccess: async ({ code }) => {
       try {
         const result = await authApi.loginWithGoogle(code);
-        authStorage.save(
-        result.accessToken,
-        result.refreshToken,
-        { email: result.email, name: result.name, role: result.role },
-        result.expiry );
-        navigate({ to: "/setup/department" });
+        authStorage.save(result.accessToken, {
+          email: result.email,
+          name: result.name,
+          role: result.role,
+        });
+        navigate({ to: "/dashboard" });
       } catch (err) {
         const description = axios.isAxiosError(err)
           ? ((err.response?.data as ApiResponse<unknown>)?.message ??

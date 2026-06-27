@@ -7,6 +7,11 @@ export interface NavItem {
 
 export const NAVIGATION_ITEMS: NavItem[] = [
   {
+    key: "dashboard",
+    label: "Dashboard",
+    path: "/dashboard",
+  },
+  {
     key: "timekeeping",
     label: "Time Keeping",
     path: "/timekeeping",
@@ -123,7 +128,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
       { key: "setup-employee", label: "Employee", path: "/setup/employee" },
-      { key: "setup-deduction-type", label: "Deduction Type", path: "/setup/deduction-type" },
+      {
+        key: "setup-deduction-type",
+        label: "Deduction Type",
+        path: "/setup/deduction-type",
+      },
       { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
     ],
   },
