@@ -35,9 +35,9 @@ type NavWithTrail = {
 };
 
 interface SessionUser {
-  fullName: string;
+  name: string;
   role: string;
-  email?: string;
+  email: string;
 }
 
 function getInitials(name: string): string {
@@ -50,7 +50,7 @@ function getInitials(name: string): string {
 
 function getSessionUser(): SessionUser {
   const fallbackUser: SessionUser = {
-    fullName: "Current User",
+    name: "Current User",
     role: "HR Administrator",
     email: "user@onepunch.local",
   };
@@ -61,7 +61,7 @@ function getSessionUser(): SessionUser {
   try {
     const parsed = JSON.parse(stored) as Partial<SessionUser>;
     return {
-      fullName: parsed.fullName?.trim() || fallbackUser.fullName,
+      name: parsed.name?.trim() || fallbackUser.name,
       role: parsed.role?.trim() || fallbackUser.role,
       email: parsed.email?.trim() || fallbackUser.email,
     };
@@ -261,8 +261,8 @@ export default function MainLayout() {
         <div className="app-sider-user">
           {collapsed ? (
             <div className="side-user-collapsed">
-              <div className="side-user-avatar" title={sessionUser.fullName}>
-                {getInitials(sessionUser.fullName)}
+              <div className="side-user-avatar" title={sessionUser.name}>
+                {getInitials(sessionUser.name)}
               </div>
               <Button
                 type="text"
@@ -276,10 +276,10 @@ export default function MainLayout() {
           ) : (
             <div className="side-user-chip">
               <div className="side-user-avatar">
-                {getInitials(sessionUser.fullName)}
+                {getInitials(sessionUser.name)}
               </div>
               <div className="side-user-meta">
-                <p className="side-user-name">{sessionUser.fullName}</p>
+                <p className="side-user-name">{sessionUser.name}</p>
                 <p className="side-user-subtitle">
                   {sessionUser.role}
                   {sessionUser.email ? ` · ${sessionUser.email}` : ""}
