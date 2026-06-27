@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Card,
   Form,
@@ -8,7 +9,7 @@ import {
   notification,
 } from "antd";
 import { SafetyCertificateOutlined } from "@ant-design/icons";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -44,6 +45,10 @@ const GoogleIcon = () => (
 
 export default function Login() {
   const navigate = useNavigate();
+
+  // Safely grab the query parameters from the active route using TanStack Router
+  const searchParams = useSearch({ from: "/login" }) as Record<string, string>;
+
   const {
     control,
     handleSubmit,
@@ -100,6 +105,16 @@ export default function Login() {
         description: "Google authentication was unsuccessful.",
       }),
   });
+
+  // Watch for the 'provider=google' query parameter to auto-click the Google sign-in
+  useEffect(() => {
+    if (searchParams?.provider === "google") {
+      const timer = setTimeout(() => {
+        handleGoogleLogin();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, handleGoogleLogin]);
 
   return (
     <Card className="auth-card login-card border-0">
