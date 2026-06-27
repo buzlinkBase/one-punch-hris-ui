@@ -5,12 +5,16 @@ const KEYS = {
   refreshToken: "auth_refresh_token",
   user: "auth_user",
   expiry: "auth_expiry",
+  name: "name",
+  role: "role",
 } as const;
 
 const EXPIRY_BUFFER_MS = 60_000;
 
 export interface AuthUser {
   email: string;
+  name: string;
+  role: string;
 }
 
 export const authStorage = {

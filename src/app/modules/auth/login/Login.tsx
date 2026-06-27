@@ -59,7 +59,7 @@ export default function Login() {
       authStorage.save(
         result.accessToken,
         result.refreshToken,
-        { email: values.email },
+        { email: values.email, name: result.name, role: result.role },
         result.expiry,
       );
       navigate({ to: "/setup/department" });
@@ -81,9 +81,11 @@ export default function Login() {
     onSuccess: async ({ code }) => {
       try {
         const result = await authApi.loginWithGoogle(code);
-        localStorage.setItem("auth_token", result.accessToken);
-        localStorage.setItem("auth_refresh_token", result.refreshToken);
-        localStorage.setItem("auth_user", JSON.stringify({ email: "" }));
+        authStorage.save(
+        result.accessToken,
+        result.refreshToken,
+        { email: result.email, name: result.name, role: result.role },
+        result.expiry );
         navigate({ to: "/setup/department" });
       } catch (err) {
         const description = axios.isAxiosError(err)

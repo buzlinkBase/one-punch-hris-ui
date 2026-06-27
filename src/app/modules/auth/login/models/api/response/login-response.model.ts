@@ -4,4 +4,7 @@ export interface LoginResponse {
   refreshToken: string;
   tenants: string[];
   expiry: string;
+  email: string;
+  name: string;
+  role: string;
 }
