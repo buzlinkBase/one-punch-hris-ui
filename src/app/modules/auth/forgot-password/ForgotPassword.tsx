@@ -1,10 +1,9 @@
-import { Card, Form, Input, Button, Typography, notification, Result } from "antd";
+import { Card, Form, Input, Button, Typography, notification } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { useState } from "react";
 import {
   forgotPasswordFormSchema,
   type ForgotPasswordFormValues,
@@ -16,7 +15,6 @@ const { Title, Text } = Typography;
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  const [sent, setSent] = useState(false);
   const { mutateAsync: forgotPassword, isPending } = useForgotPasswordMutation();
 
   const {
@@ -31,7 +29,7 @@ export default function ForgotPassword() {
   const onSubmit = async (values: ForgotPasswordFormValues) => {
     try {
       await forgotPassword(values);
-      setSent(true);
+      navigate({ to: "/reset-password" });
     } catch (err) {
       const description = axios.isAxiosError(err)
         ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
@@ -44,23 +42,6 @@ export default function ForgotPassword() {
       });
     }
   };
-
-  if (sent) {
-    return (
-      <Card className="auth-card login-card border-0">
-        <Result
-          status="success"
-          title="Check your email"
-          subTitle="If an account exists for that email, we've sent password reset instructions."
-          extra={
-            <Button type="primary" block size="large" onClick={() => navigate({ to: "/login" })}>
-              Back to Sign In
-            </Button>
-          }
-        />
-      </Card>
-    );
-  }
 
   return (
     <Card className="auth-card login-card border-0">
