@@ -151,10 +151,14 @@ jobs:
             cd "/opt/hris-react/$BRANCH"
 
             # Pull the newly published image for this branch
-            DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" docker compose -p "hris-$BRANCH" pull
+            DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" \
+            HOST_PORT="${{ vars.HOST_PORT }}" \
+            docker compose -p "hris-$BRANCH" pull
 
             # Zero-downtime restart: bring up new container, remove old
-            DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" docker compose -p "hris-$BRANCH" up -d --remove-orphans
+            DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" \
+            HOST_PORT="${{ vars.HOST_PORT }}" \
+            docker compose -p "hris-$BRANCH" up -d --remove-orphans
 
             # Clean up dangling images to free disk space
             docker image prune -f
