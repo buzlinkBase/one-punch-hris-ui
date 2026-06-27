@@ -6,6 +6,8 @@ import type { RegisterRequest } from "@/app/modules/auth/register/models/api/req
 import type { RegisterResponse } from "@/app/modules/auth/register/models/api/response/register-response.model";
 import type { ForgotPasswordRequest } from "@/app/modules/auth/forgot-password/models/api/request/forgot-password-request.model";
 import type { ForgotPasswordResponse } from "@/app/modules/auth/forgot-password/models/api/response/forgot-password-response.model";
+import type { ResetPasswordRequest } from "@/app/modules/auth/reset-password/models/api/request/reset-password-request.model";
+import type { ResetPasswordResponse } from "@/app/modules/auth/reset-password/models/api/response/reset-password-response.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.auth, "users");
 
@@ -21,5 +23,8 @@ export const authApi = {
   },
   forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
     return httpClient.postUnwrapped<ForgotPasswordResponse>(`${BASE_URL}/forgot-password`, data);
+  },
+  resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+    return httpClient.postUnwrapped<ResetPasswordResponse>(`${BASE_URL}/reset-password`, data);
   },
 };
