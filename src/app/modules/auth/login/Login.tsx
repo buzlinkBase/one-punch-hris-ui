@@ -45,7 +45,7 @@ const GoogleIcon = () => (
 
 export default function Login() {
   const navigate = useNavigate();
-  
+
   // Safely grab the query parameters from the active route using TanStack Router
   const searchParams = useSearch({ from: "/login" }) as Record<string, string>;
 
