@@ -5,6 +5,9 @@ const REFRESH_ENDPOINT = `${import.meta.env.VITE_PREFIX_AUTH}/api/${import.meta.
 
 interface RefreshResponse {
   accessToken: string;
+  email: string;
+  name: string;
+  role: string;
 }
 
 let isRefreshing = false;
@@ -35,9 +38,16 @@ export async function refreshAccessToken(): Promise<string> {
       { withCredentials: true },
     );
 
-    const { accessToken } = data.data;
+    const { accessToken, email, name, role } = data.data;
     const user = authStorage.getUser();
-    authStorage.save(accessToken, user ?? { email: "" });
+    authStorage.save(
+      accessToken,
+      user ?? {
+        email,
+        name,
+        role,
+      },
+    );
 
     flushQueue(accessToken);
     return accessToken;
