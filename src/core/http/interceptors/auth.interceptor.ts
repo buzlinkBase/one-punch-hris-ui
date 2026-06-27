@@ -7,12 +7,6 @@ export function applyAuthInterceptor(instance: AxiosInstance): void {
     let token = authStorage.getToken();
 
     if (token && authStorage.isAccessTokenExpired()) {
-      if (authStorage.isRefreshTokenExpired()) {
-        authStorage.clear();
-        window.location.href = "/login";
-        return Promise.reject(new Error("Session expired"));
-      }
-
       token = await refreshAccessToken();
     }
 

@@ -17,7 +17,10 @@ import { setupRoutes } from "./setup.routes";
 
 const Login = lazy(() => import("@/app/modules/auth/login/Login"));
 const Register = lazy(() => import("@/app/modules/auth/register/Register"));
-const ForgotPassword = lazy(() => import("@/app/modules/auth/forgot-password/ForgotPassword"));
+const ForgotPassword = lazy(
+  () => import("@/app/modules/auth/forgot-password/ForgotPassword"),
+);
+const Dashboard = lazy(() => import("@/app/modules/dashboard/Dashboard"));
 const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/DepartmentList"),
 );
@@ -202,6 +205,18 @@ const forgotPasswordIndexRoute = createRoute({
   getParentRoute: () => forgotPasswordRoute,
   path: "/",
   component: withSuspense(ForgotPassword),
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "dashboard",
+  component: MainLayout,
+});
+
+const dashboardIndexRoute = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "/",
+  component: withSuspense(Dashboard),
 });
 
 const setupRoute = createRoute({
@@ -637,6 +652,7 @@ const routeTree = rootRoute.addChildren([
   loginRoute.addChildren([loginIndexRoute]),
   registerRoute.addChildren([registerIndexRoute]),
   forgotPasswordRoute.addChildren([forgotPasswordIndexRoute]),
+  dashboardRoute.addChildren([dashboardIndexRoute]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
