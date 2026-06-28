@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -17,17 +17,51 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
   const [search, setSearch] = useState("");
 
   const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
-      String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
+    [item.description, item.holDate, item.holType, item.workType, item.status].some(
+      (val) => String(val ?? "").toLowerCase().includes(search.toLowerCase()),
     ),
   );
 
   const columns: ColumnsType<HolidayResponse> = [
-    { title: HOLIDAY_LABEL.NAME, dataIndex: "name", key: "name" },
-    { title: HOLIDAY_LABEL.DATE, dataIndex: "date", key: "date" },
-    { title: HOLIDAY_LABEL.TYPE, dataIndex: "type", key: "type" },
+    { title: HOLIDAY_LABEL.DESCRIPTION, dataIndex: "description", key: "description" },
+    {
+      title: HOLIDAY_LABEL.HOL_DATE,
+      dataIndex: "holDate",
+      key: "holDate",
+      sorter: (a, b) => a.holDate.localeCompare(b.holDate),
+    },
+    {
+      title: HOLIDAY_LABEL.HOL_TYPE,
+      dataIndex: "holType",
+      key: "holType",
+      render: (v: string) => (
+        <Tag color={v === "LEGAL" ? "blue" : "orange"}>
+          {v === "LEGAL" ? "Legal" : "Special"}
+        </Tag>
+      ),
+    },
+    {
+      title: HOLIDAY_LABEL.WORK_TYPE,
+      dataIndex: "workType",
+      key: "workType",
+      render: (v: string) => (
+        <Tag color={v === "NonWorking" ? "red" : "green"}>
+          {v === "NonWorking" ? "Non-Working" : "Working"}
+        </Tag>
+      ),
+    },
+    {
+      title: HOLIDAY_LABEL.IS_PAID,
+      dataIndex: "isPaid",
+      key: "isPaid",
+      render: (v: boolean) => <Tag color={v ? "green" : "default"}>{v ? "Paid" : "Unpaid"}</Tag>,
+    },
+    {
+      title: HOLIDAY_LABEL.IS_RECURING,
+      dataIndex: "isRecuring",
+      key: "isRecuring",
+      render: (v: boolean) => v ? "Yes" : "No",
+    },
     { title: HOLIDAY_LABEL.STATUS, dataIndex: "status", key: "status" },
     {
       title: "Actions",
@@ -75,7 +109,7 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
         columns={columns}
         size="small"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{ pageSize: 15 }}
         scroll={{ x: "max-content" }}
         sticky
       />
