@@ -14,7 +14,7 @@ import {
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, Controller, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   payrollGroupFormSchema,
@@ -52,7 +52,7 @@ export default function PayrollGroupDetail() {
     reset,
     formState: { errors },
   } = useForm<PayrollGroupFormValues>({
-    resolver: zodResolver(payrollGroupFormSchema),
+    resolver: zodResolver(payrollGroupFormSchema) as Resolver<PayrollGroupFormValues>,
     defaultValues: {
       code: "",
       name: "",

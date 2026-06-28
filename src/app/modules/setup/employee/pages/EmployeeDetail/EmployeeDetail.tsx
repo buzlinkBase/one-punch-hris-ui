@@ -22,6 +22,7 @@ import {
   employeeFormSchema,
   type EmployeeFormValues,
 } from "../../models/forms/employee-form.schema";
+import type { DayName } from "../../models/api/response/employee-response.model";
 import {
   useEmployee,
   useCreateEmployee,
@@ -117,10 +118,14 @@ export default function EmployeeDetail() {
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: EmployeeFormValues) => {
+    const payload = {
+      ...values,
+      restDays: values.restDays?.map((d) => ({ dayName: d as DayName })),
+    };
     if (isEdit && id) {
-      await update({ id, ...values });
+      await update({ id, ...payload });
     } else {
-      await add(values);
+      await add(payload);
     }
     navigate({ to: "/setup/employee" });
   };
