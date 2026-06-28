@@ -1,14 +1,5 @@
-import axios from "axios";
 import { authStorage } from "./auth-storage";
-
-const REFRESH_ENDPOINT = `${import.meta.env.VITE_PREFIX_AUTH}/api/${import.meta.env.VITE_API_VERSION}/users/refresh`;
-
-interface RefreshResponse {
-  accessToken: string;
-  email: string;
-  name: string;
-  role: string;
-}
+import { authApi } from "@/app/modules/auth/login/services/auth.api";
 
 let isRefreshing = false;
 let queue: Array<(token: string) => void> = [];
@@ -32,13 +23,7 @@ export async function refreshAccessToken(): Promise<string> {
   isRefreshing = true;
 
   try {
-    const { data } = await axios.post<{ data: RefreshResponse }>(
-      `${import.meta.env.VITE_API_URL}${REFRESH_ENDPOINT}`,
-      undefined,
-      { withCredentials: true },
-    );
-
-    const { accessToken, email, name, role } = data.data;
+    const { accessToken, email, name, role } = await authApi.refresh();
     const user = authStorage.getUser();
     authStorage.save(
       accessToken,

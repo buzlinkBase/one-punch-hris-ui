@@ -13,6 +13,14 @@ export interface AuthUser {
   email: string;
   name: string;
   role: string;
+  tenantId?: string | null;
+  tenantName?: string | null;
+  tenants?: string[];
+}
+
+export interface TenantClaims {
+  tenantId: string | null;
+  tenantName: string | null;
 }
 
 export const authStorage = {
@@ -28,6 +36,36 @@ export const authStorage = {
   getUser(): AuthUser | null {
     const raw = localStorage.getItem(KEYS.user);
     return raw ? (JSON.parse(raw) as AuthUser) : null;
+  },
+
+  getTenants(): string[] {
+    return this.getUser()?.tenants ?? [];
+  },
+
+  getTenantId(): string | null {
+    return this.getUser()?.tenantId ?? null;
+  },
+
+  getTenantName(): string | null {
+    return this.getUser()?.tenantName ?? null;
+  },
+
+  setTenant(tenantId: string, tenantName?: string | null) {
+    const user = this.getUser();
+    if (!user) return;
+    localStorage.setItem(
+      KEYS.user,
+      JSON.stringify({ ...user, tenantId, tenantName: tenantName ?? null }),
+    );
+  },
+
+  /** Decodes the `tenantId`/`tenantName` claims off any access token (e.g. a fresh one from an API response, not yet saved). */
+  getTenantClaims(token: string): TenantClaims {
+    const payload = decodeJwt<{ tenantId?: string; tenantName?: string }>(token);
+    return {
+      tenantId: payload?.tenantId ?? null,
+      tenantName: payload?.tenantName ?? null,
+    };
   },
 
   isAccessTokenExpired(): boolean {
