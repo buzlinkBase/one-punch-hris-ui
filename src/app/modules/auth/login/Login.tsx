@@ -18,6 +18,7 @@ import { authApi } from "./services/auth.api";
 import { getNotify } from "@/shared/utils/notify";
 import type { ApiResponse } from "@/shared/types/api-response.model";
 import { authStorage } from "@/core/auth/auth-storage";
+import { resolveTenantDestination } from "@/core/auth/tenant-routing";
 import { useGoogleLogin } from "@react-oauth/google";
 
 const { Title, Text } = Typography;
@@ -58,6 +59,11 @@ export default function Login() {
     defaultValues: { email: "", password: "" },
   });
 
+  const proceedAfterLogin = async () => {
+    const destination = await resolveTenantDestination();
+    navigate({ to: destination ?? "/dashboard" });
+  };
+
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const result = await authApi.login(values);
@@ -65,8 +71,9 @@ export default function Login() {
         email: values.email,
         name: result.name,
         role: result.role,
+        tenants: result.tenants,
       });
-      navigate({ to: "/dashboard" });
+      await proceedAfterLogin();
     } catch (err) {
       const description = axios.isAxiosError(err)
         ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
@@ -89,8 +96,9 @@ export default function Login() {
           email: result.email,
           name: result.name,
           role: result.role,
+          tenants: result.tenants,
         });
-        navigate({ to: "/dashboard" });
+        await proceedAfterLogin();
       } catch (err) {
         const description = axios.isAxiosError(err)
           ? ((err.response?.data as ApiResponse<unknown>)?.message ??

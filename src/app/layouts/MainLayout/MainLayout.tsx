@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Button, Input, Layout, Menu } from "antd";
+import { Button, Input, Layout, Menu, Select, notification } from "antd";
 import {
   ApartmentOutlined,
   BarChartOutlined,
@@ -23,6 +23,8 @@ import {
 } from "@ant-design/icons";
 import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { NAVIGATION_ITEMS } from "@/shared/constants/navigation.const";
+import { authStorage } from "@/core/auth/auth-storage";
+import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import type { MenuProps } from "antd";
 
 const { Header, Sider, Content } = Layout;
@@ -38,6 +40,8 @@ interface SessionUser {
   name: string;
   role: string;
   email: string;
+  tenantId: string | null;
+  tenants: string[];
 }
 
 function getInitials(name: string): string {
@@ -53,21 +57,20 @@ function getSessionUser(): SessionUser {
     name: "Current User",
     role: "HR Administrator",
     email: "user@onepunch.local",
+    tenantId: null,
+    tenants: [],
   };
 
-  const stored = localStorage.getItem("auth_user");
+  const stored = authStorage.getUser();
   if (!stored) return fallbackUser;
 
-  try {
-    const parsed = JSON.parse(stored) as Partial<SessionUser>;
-    return {
-      name: parsed.name?.trim() || fallbackUser.name,
-      role: parsed.role?.trim() || fallbackUser.role,
-      email: parsed.email?.trim() || fallbackUser.email,
-    };
-  } catch {
-    return fallbackUser;
-  }
+  return {
+    name: stored.name?.trim() || fallbackUser.name,
+    role: stored.role?.trim() || fallbackUser.role,
+    email: stored.email?.trim() || fallbackUser.email,
+    tenantId: stored.tenantId ?? null,
+    tenants: stored.tenants ?? [],
+  };
 }
 
 function getNavIcon(key: string): ReactNode {
@@ -217,6 +220,25 @@ export default function MainLayout() {
     navigate({ to: "/login", replace: true });
   };
 
+  const handleSwitchTenant = async (tenantId: string) => {
+    try {
+      const result = await authApi.selectTenant(tenantId);
+      const claims = authStorage.getTenantClaims(result.accessToken);
+      const user = authStorage.getUser();
+      authStorage.save(result.accessToken, {
+        ...user!,
+        tenantId: claims.tenantId ?? tenantId,
+        tenantName: claims.tenantName,
+      });
+      window.location.assign("/dashboard");
+    } catch {
+      notification.error({
+        message: "Switch failed",
+        description: "Could not switch to the selected client. Please try again.",
+      });
+    }
+  };
+
   const toggleCollapsed = () => {
     setCollapsed((prev) => !prev);
   };
@@ -323,7 +345,20 @@ export default function MainLayout() {
               {/* <h1 className="header-context-title">{headerContext.title}</h1> */}
             </div>
 
-            <div className="header-search-wrap">
+            <div className="header-search-wrap" style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              {sessionUser.tenants.length > 1 && (
+                <Select
+                  value={sessionUser.tenantId ?? undefined}
+                  options={sessionUser.tenants.map((tenantId) => ({
+                    value: tenantId,
+                    label: tenantId,
+                  }))}
+                  onChange={handleSwitchTenant}
+                  placeholder="Select client"
+                  suffixIcon={<BankOutlined />}
+                  style={{ minWidth: 180 }}
+                />
+              )}
               <Input
                 className="header-search"
                 prefix={<SearchOutlined />}
