@@ -83,63 +83,63 @@ export default function PositionDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div className="form-grid-2">
-            <Form.Item
-              label={POSITION_LABEL.CODE}
-              validateStatus={errors.code ? "error" : ""}
-              help={errors.code?.message}
-            >
-              <Controller
-                name="code"
-                control={control}
-                render={({ field }) => <Input {...field} />}
-              />
-            </Form.Item>
+          <Form.Item
+            label={POSITION_LABEL.CODE}
+            validateStatus={errors.code ? "error" : ""}
+            help={errors.code?.message}
+          >
+            <Controller
+              name="code"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
 
-            <Form.Item
-              label={POSITION_LABEL.NAME}
-              validateStatus={errors.name ? "error" : ""}
-              help={errors.name?.message}
-            >
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }) => <Input {...field} />}
-              />
-            </Form.Item>
+          <Form.Item
+            label={POSITION_LABEL.NAME}
+            validateStatus={errors.name ? "error" : ""}
+            help={errors.name?.message}
+          >
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
 
-            <Form.Item
-              label={POSITION_LABEL.RATE}
-              validateStatus={errors.rate ? "error" : ""}
-              help={errors.rate?.message}
-            >
-              <Controller
-                name="rate"
-                control={control}
-                render={({ field }) => (
-                  <InputNumber
-                    {...field}
-                    className="w-full"
-                    min={0}
-                    precision={2}
-                    formatter={(v) => `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                  />
-                )}
-              />
-            </Form.Item>
+          <Form.Item
+            label={POSITION_LABEL.RATE}
+            validateStatus={errors.rate ? "error" : ""}
+            help={errors.rate?.message}
+          >
+            <Controller
+              name="rate"
+              control={control}
+              render={({ field }) => (
+                <InputNumber
+                  {...field}
+                  className="w-full"
+                  min={0}
+                  precision={2}
+                  formatter={(v) => `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                />
+              )}
+            />
+          </Form.Item>
 
-            <Form.Item
-              label={POSITION_LABEL.STATUS}
-              validateStatus={errors.status ? "error" : ""}
-              help={errors.status?.message}
-            >
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => <Select {...field} options={STATUS_OPTIONS} />}
-              />
-            </Form.Item>
-          </div>
+          <Form.Item
+            label={POSITION_LABEL.STATUS}
+            validateStatus={errors.status ? "error" : ""}
+            help={errors.status?.message}
+          >
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
+              )}
+            />
+          </Form.Item>
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">

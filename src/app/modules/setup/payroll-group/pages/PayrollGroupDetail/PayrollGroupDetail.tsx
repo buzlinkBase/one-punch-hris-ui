@@ -112,59 +112,57 @@ export default function PayrollGroupDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div className="form-grid-2">
-            <Form.Item
-              label={PAYROLL_GROUP_LABEL.CODE}
-              validateStatus={errors.code ? "error" : ""}
-              help={errors.code?.message}
-            >
-              <Controller
-                name="code"
-                control={control}
-                render={({ field }) => <Input {...field} />}
-              />
-            </Form.Item>
+          <Form.Item
+            label={PAYROLL_GROUP_LABEL.CODE}
+            validateStatus={errors.code ? "error" : ""}
+            help={errors.code?.message}
+          >
+            <Controller
+              name="code"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
 
-            <Form.Item
-              label={PAYROLL_GROUP_LABEL.NAME}
-              validateStatus={errors.name ? "error" : ""}
-              help={errors.name?.message}
-            >
-              <Controller
-                name="name"
-                control={control}
-                render={({ field }) => <Input {...field} />}
-              />
-            </Form.Item>
+          <Form.Item
+            label={PAYROLL_GROUP_LABEL.NAME}
+            validateStatus={errors.name ? "error" : ""}
+            help={errors.name?.message}
+          >
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
 
-            <Form.Item
-              label={PAYROLL_GROUP_LABEL.PAYROLL_FREQUENCY}
-              validateStatus={errors.payrollFrequency ? "error" : ""}
-              help={errors.payrollFrequency?.message}
-            >
-              <Controller
-                name="payrollFrequency"
-                control={control}
-                render={({ field }) => (
-                  <Select {...field} options={PAYROLL_FREQUENCY_OPTIONS} />
-                )}
-              />
-            </Form.Item>
+          <Form.Item
+            label={PAYROLL_GROUP_LABEL.PAYROLL_FREQUENCY}
+            validateStatus={errors.payrollFrequency ? "error" : ""}
+            help={errors.payrollFrequency?.message}
+          >
+            <Controller
+              name="payrollFrequency"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} options={PAYROLL_FREQUENCY_OPTIONS} placeholder="Select frequency" />
+              )}
+            />
+          </Form.Item>
 
-            <Form.Item
-              label={PAYROLL_GROUP_LABEL.STATUS}
-              validateStatus={errors.status ? "error" : ""}
-              help={errors.status?.message}
-            >
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select {...field} options={STATUS_OPTIONS} />
-                )}
-              />
-            </Form.Item>
-          </div>
+          <Form.Item
+            label={PAYROLL_GROUP_LABEL.STATUS}
+            validateStatus={errors.status ? "error" : ""}
+            help={errors.status?.message}
+          >
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
+              )}
+            />
+          </Form.Item>
 
           {/* Cutoff Days */}
           <Card

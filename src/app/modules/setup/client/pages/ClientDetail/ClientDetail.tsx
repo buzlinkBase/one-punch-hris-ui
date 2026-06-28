@@ -110,7 +110,7 @@ export default function ClientDetail() {
             <Controller
               name="status"
               control={control}
-              render={({ field }) => <Select {...field} options={STATUS_OPTIONS} />}
+              render={({ field }) => <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />}
             />
           </Form.Item>
 

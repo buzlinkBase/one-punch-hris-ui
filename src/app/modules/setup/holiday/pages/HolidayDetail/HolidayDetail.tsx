@@ -173,7 +173,7 @@ export default function HolidayDetail() {
                 name="holType"
                 control={control}
                 render={({ field }) => (
-                  <Select {...field} options={HOLIDAY_TYPE_OPTIONS} />
+                  <Select {...field} options={HOLIDAY_TYPE_OPTIONS} placeholder="Select type" />
                 )}
               />
             </Form.Item>
@@ -191,7 +191,7 @@ export default function HolidayDetail() {
                   name="workType"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} options={WORK_TYPE_OPTIONS} />
+                    <Select {...field} options={WORK_TYPE_OPTIONS} placeholder="Select work type" />
                   )}
                 />
               )}
@@ -228,7 +228,7 @@ export default function HolidayDetail() {
                 name="status"
                 control={control}
                 render={({ field }) => (
-                  <Select {...field} options={STATUS_OPTIONS} />
+                  <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
                 )}
               />
             </Form.Item>
