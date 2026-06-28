@@ -1,15 +1,23 @@
 export const HOLIDAY_LABEL = {
   TITLE: 'Holiday',
-  NAME: 'Holiday Name',
-  DATE: 'Date',
-  TYPE: 'Type',
+  DESCRIPTION: 'Description',
+  HOL_TYPE: 'Holiday Type',
+  WORK_TYPE: 'Work Type',
+  HOL_DATE: 'Holiday Date',
+  IS_RECURING: 'Recurring',
+  IS_PAID: 'Paid Holiday',
+  AREA: 'Area (Localized)',
   STATUS: 'Status',
   CREATE_TITLE: 'Create Holiday',
   EDIT_TITLE: 'Edit Holiday',
 };
 
 export const HOLIDAY_TYPE_OPTIONS = [
-  { value: 'Regular', label: 'Regular' },
-  { value: 'Special Non-Working', label: 'Special Non-Working' },
-  { value: 'Special Working', label: 'Special Working' },
+  { value: 'LEGAL', label: 'Legal Holiday' },
+  { value: 'SPECIAL', label: 'Special Holiday' },
+];
+
+export const WORK_TYPE_OPTIONS = [
+  { value: 'NonWorking', label: 'Non-Working' },
+  { value: 'Working', label: 'Working' },
 ];

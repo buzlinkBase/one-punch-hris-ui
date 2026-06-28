@@ -1,4 +1,5 @@
 import { decodeJwt } from "./jwt.util";
+import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 
 const KEYS = {
   token: "auth_token",
@@ -13,6 +14,14 @@ export interface AuthUser {
   email: string;
   name: string;
   role: string;
+  tenantId?: string | null;
+  tenantName?: string | null;
+  tenants?: TenantSummary[];
+}
+
+export interface TenantClaims {
+  tenantId: string | null;
+  tenantName: string | null;
 }
 
 export const authStorage = {
@@ -30,13 +39,43 @@ export const authStorage = {
     return raw ? (JSON.parse(raw) as AuthUser) : null;
   },
 
+  getTenants(): TenantSummary[] {
+    return this.getUser()?.tenants ?? [];
+  },
+
+  getTenantId(): string | null {
+    return this.getUser()?.tenantId ?? null;
+  },
+
+  getTenantName(): string | null {
+    return this.getUser()?.tenantName ?? null;
+  },
+
+  setTenant(tenantId: string, tenantName?: string | null) {
+    const user = this.getUser();
+    if (!user) return;
+    localStorage.setItem(
+      KEYS.user,
+      JSON.stringify({ ...user, tenantId, tenantName: tenantName ?? null }),
+    );
+  },
+
+  /** Decodes the `tenantId`/`tenantName` claims off any access token (e.g. a fresh one from an API response, not yet saved). */
+  getTenantClaims(token: string): TenantClaims {
+    const payload = decodeJwt<{ tenantId?: string; tenantName?: string }>(
+      token,
+    );
+    return {
+      tenantId: payload?.tenantId ?? null,
+      tenantName: payload?.tenantName ?? null,
+    };
+  },
+
   isAccessTokenExpired(): boolean {
     const token = localStorage.getItem(KEYS.token);
     if (!token) return true;
 
     const payload = decodeJwt(token);
-
-    console.log("Token payload:", payload);
 
     if (!payload?.exp) return false;
 

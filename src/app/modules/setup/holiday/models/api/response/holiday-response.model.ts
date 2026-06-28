@@ -1,9 +1,16 @@
-export type HolidayType = 'Regular' | 'Special Non-Working' | 'Special Working';
+import type { HolidayType, HolidayWorkType } from '../request/create-holiday.model';
+
+export type { HolidayType, HolidayWorkType };
 
 export interface HolidayResponse {
   id: string;
-  name: string;
-  date: string;
-  type: HolidayType;
+  description: string;
+  holType: HolidayType;
+  workType: HolidayWorkType;
+  holDate: string;
+  holYear: number;
+  isRecuring: boolean;
+  isPaid: boolean;
+  areaId?: string | null;
   status: string;
 }
