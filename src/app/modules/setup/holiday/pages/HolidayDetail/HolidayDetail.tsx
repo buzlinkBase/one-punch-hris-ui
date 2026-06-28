@@ -13,7 +13,7 @@ import {
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
-import { useForm, Controller, useWatch } from "react-hook-form";
+import { useForm, Controller, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
@@ -59,7 +59,7 @@ export default function HolidayDetail() {
     setValue,
     formState: { errors },
   } = useForm<HolidayFormValues>({
-    resolver: zodResolver(holidayFormSchema),
+    resolver: zodResolver(holidayFormSchema) as Resolver<HolidayFormValues>,
     defaultValues: {
       description: "",
       holType: "LEGAL",

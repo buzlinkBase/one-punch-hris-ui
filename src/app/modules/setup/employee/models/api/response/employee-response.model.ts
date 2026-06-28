@@ -30,7 +30,7 @@ export type DayName =
   | 'Sunday';
 
 export interface RestDayModel {
-  id: string;
+  id?: string;
   dayName: DayName;
 }
 

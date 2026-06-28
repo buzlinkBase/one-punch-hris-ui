@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Form, Input, InputNumber, Button, Select, Typography, Space, Tag } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   positionFormSchema,
@@ -37,7 +37,7 @@ export default function PositionDetail() {
     reset,
     formState: { errors },
   } = useForm<PositionFormValues>({
-    resolver: zodResolver(positionFormSchema),
+    resolver: zodResolver(positionFormSchema) as Resolver<PositionFormValues>,
     defaultValues: { code: "", name: "", rate: 0, status: "ACTIVE" },
   });
 

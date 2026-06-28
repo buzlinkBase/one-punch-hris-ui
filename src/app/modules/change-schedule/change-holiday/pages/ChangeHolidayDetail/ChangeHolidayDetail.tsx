@@ -160,7 +160,7 @@ export default function ChangeHolidayDetail() {
 
   const holidayOptions = holidays.map((h) => ({
     value: h.id,
-    label: `${h.name} (${h.date})`,
+    label: `${h.description} (${h.holDate})`,
   }));
 
   return (
