@@ -25,6 +25,7 @@ import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { NAVIGATION_ITEMS } from "@/shared/constants/navigation.const";
 import { authStorage } from "@/core/auth/auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import type { MenuProps } from "antd";
 
 const { Header, Sider, Content } = Layout;
@@ -41,7 +42,7 @@ interface SessionUser {
   role: string;
   email: string;
   tenantId: string | null;
-  tenants: string[];
+  tenants: TenantSummary[];
 }
 
 function getInitials(name: string): string {
@@ -349,9 +350,9 @@ export default function MainLayout() {
               {sessionUser.tenants.length > 1 && (
                 <Select
                   value={sessionUser.tenantId ?? undefined}
-                  options={sessionUser.tenants.map((tenantId) => ({
-                    value: tenantId,
-                    label: tenantId,
+                  options={sessionUser.tenants.map((tenant) => ({
+                    value: tenant.tenantId,
+                    label: tenant.name,
                   }))}
                   onChange={handleSwitchTenant}
                   placeholder="Select client"

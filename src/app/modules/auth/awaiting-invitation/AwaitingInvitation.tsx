@@ -51,7 +51,7 @@ export default function AwaitingInvitation() {
       authStorage.save(result.accessToken, {
         ...user!,
         tenants: result.tenants,
-        tenantId: claims.tenantId ?? result.tenants[0] ?? null,
+        tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
         tenantName: claims.tenantName,
       });
       navigate({ to: "/dashboard" });

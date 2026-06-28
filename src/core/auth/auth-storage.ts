@@ -1,4 +1,5 @@
 import { decodeJwt } from "./jwt.util";
+import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 
 const KEYS = {
   token: "auth_token",
@@ -15,7 +16,7 @@ export interface AuthUser {
   role: string;
   tenantId?: string | null;
   tenantName?: string | null;
-  tenants?: string[];
+  tenants?: TenantSummary[];
 }
 
 export interface TenantClaims {
@@ -38,7 +39,7 @@ export const authStorage = {
     return raw ? (JSON.parse(raw) as AuthUser) : null;
   },
 
-  getTenants(): string[] {
+  getTenants(): TenantSummary[] {
     return this.getUser()?.tenants ?? [];
   },
 
