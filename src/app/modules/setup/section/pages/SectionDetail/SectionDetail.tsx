@@ -93,7 +93,11 @@ export default function SectionDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item label={SECTION_LABEL.DEPARTMENT}>
+          <Form.Item
+            label={SECTION_LABEL.DEPARTMENT}
+            validateStatus={errors.departmentId ? "error" : ""}
+            help={errors.departmentId?.message}
+          >
             <Controller
               name="departmentId"
               control={control}
@@ -145,7 +149,7 @@ export default function SectionDetail() {
             <Controller
               name="status"
               control={control}
-              render={({ field }) => <Select {...field} options={STATUS_OPTIONS} />}
+              render={({ field }) => <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />}
             />
           </Form.Item>
 
