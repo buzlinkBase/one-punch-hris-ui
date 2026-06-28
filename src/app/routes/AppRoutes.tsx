@@ -10,10 +10,13 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  redirect,
 } from "@tanstack/react-router";
 import MainLayout from "@/app/layouts/MainLayout";
 import AuthLayout from "@/app/layouts/AuthLayout";
 import { setupRoutes } from "./setup.routes";
+import { authStorage } from "@/core/auth/auth-storage";
+import { resolveTenantDestination } from "@/core/auth/tenant-routing";
 
 const Login = lazy(() => import("@/app/modules/auth/login/Login"));
 const Register = lazy(() => import("@/app/modules/auth/register/Register"));
@@ -96,6 +99,15 @@ const WorkRotationDetail = lazy(
   () =>
     import("@/app/modules/change-schedule/work-rotation/pages/WorkRotationDetail"),
 );
+const SelectTenant = lazy(
+  () => import("@/app/modules/auth/select-tenant/SelectTenant"),
+);
+const CreateTenant = lazy(
+  () => import("@/app/modules/auth/create-tenant/CreateTenant"),
+);
+const AwaitingInvitation = lazy(
+  () => import("@/app/modules/auth/awaiting-invitation/AwaitingInvitation"),
+);
 const ClientList = lazy(
   () => import("@/app/modules/onboard/client/pages/ClientList"),
 );
@@ -163,7 +175,18 @@ const ComingSoon = ({ title }: { title: string }) => (
   </div>
 );
 
+const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
+const TENANT_FLOW_PATHS = ["/select-tenant", "/create-tenant", "/awaiting-invitation"];
+
 const rootRoute = createRootRoute({
+  beforeLoad: async ({ location }) => {
+    if (PUBLIC_PATHS.includes(location.pathname)) return;
+    if (!authStorage.getToken()) throw redirect({ to: "/login" });
+    if (TENANT_FLOW_PATHS.includes(location.pathname)) return;
+
+    const destination = await resolveTenantDestination();
+    if (destination) throw redirect({ to: destination });
+  },
   component: () => <Outlet />,
   notFoundComponent: () => <Navigate to="/login" replace />,
 });
@@ -220,6 +243,42 @@ const resetPasswordIndexRoute = createRoute({
   getParentRoute: () => resetPasswordRoute,
   path: "/",
   component: withSuspense(ResetPassword),
+});
+
+const selectTenantRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "select-tenant",
+  component: AuthLayout,
+});
+
+const selectTenantIndexRoute = createRoute({
+  getParentRoute: () => selectTenantRoute,
+  path: "/",
+  component: withSuspense(SelectTenant),
+});
+
+const createTenantRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "create-tenant",
+  component: AuthLayout,
+});
+
+const createTenantIndexRoute = createRoute({
+  getParentRoute: () => createTenantRoute,
+  path: "/",
+  component: withSuspense(CreateTenant),
+});
+
+const awaitingInvitationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "awaiting-invitation",
+  component: AuthLayout,
+});
+
+const awaitingInvitationIndexRoute = createRoute({
+  getParentRoute: () => awaitingInvitationRoute,
+  path: "/",
+  component: withSuspense(AwaitingInvitation),
 });
 
 const dashboardRoute = createRoute({
@@ -668,6 +727,9 @@ const routeTree = rootRoute.addChildren([
   registerRoute.addChildren([registerIndexRoute]),
   forgotPasswordRoute.addChildren([forgotPasswordIndexRoute]),
   resetPasswordRoute.addChildren([resetPasswordIndexRoute]),
+  selectTenantRoute.addChildren([selectTenantIndexRoute]),
+  createTenantRoute.addChildren([createTenantIndexRoute]),
+  awaitingInvitationRoute.addChildren([awaitingInvitationIndexRoute]),
   dashboardRoute.addChildren([dashboardIndexRoute]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
