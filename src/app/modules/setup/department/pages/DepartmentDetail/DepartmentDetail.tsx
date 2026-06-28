@@ -40,7 +40,7 @@ export default function DepartmentDetail() {
     formState: { errors },
   } = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
-    defaultValues: { code: "", name: "", headId: "", status: "Active" },
+    defaultValues: { code: "", name: "", headId:  null, status: "Active" },
   });
 
   useEffect(() => {
@@ -112,7 +112,10 @@ export default function DepartmentDetail() {
               render={({ field }) => (
                 <Select
                   {...field}
+                  value={field.value ?? null}
+                  onChange={(val) => field.onChange(val ?? null)}
                   showSearch
+                  allowClear
                   placeholder="Select department head"
                   optionFilterProp="label"
                   options={employees.map((e) => ({

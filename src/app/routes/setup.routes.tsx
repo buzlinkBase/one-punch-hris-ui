@@ -67,6 +67,20 @@ const DeductionTypeDetail = lazy(
     import("@/app/modules/setup/deduction-type/pages/DeductionTypeDetail"),
 );
 
+const ClientList = lazy(
+  () => import("@/app/modules/setup/client/pages/ClientList"),
+);
+const ClientDetail = lazy(
+  () => import("@/app/modules/setup/client/pages/ClientDetail"),
+);
+
+const SectionList = lazy(
+  () => import("@/app/modules/setup/section/pages/SectionList"),
+);
+const SectionDetail = lazy(
+  () => import("@/app/modules/setup/section/pages/SectionDetail"),
+);
+
 export interface SetupRouteConfig {
   path: string;
   component: LazyExoticComponent<ComponentType>;
@@ -108,4 +122,12 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "deduction-type", component: DeductionTypeList },
   { path: "deduction-type/create", component: DeductionTypeDetail },
   { path: "deduction-type/$id", component: DeductionTypeDetail },
+
+  { path: "client", component: ClientList },
+  { path: "client/create", component: ClientDetail },
+  { path: "client/$id", component: ClientDetail },
+
+  { path: "section", component: SectionList },
+  { path: "section/create", component: SectionDetail },
+  { path: "section/$id", component: SectionDetail },
 ];
