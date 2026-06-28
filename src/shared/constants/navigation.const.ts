@@ -111,16 +111,19 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Flexi Time Shift",
         path: "/setup/time-shift/flexi",
       },
+      { key: "setup-branch", label: "Branch", path: "/setup/branch" },
       {
         key: "setup-department",
         label: "Department",
         path: "/setup/department",
       },
+      { key: "setup-section", label: "Section", path: "/setup/section" },
       {
         key: "setup-operation-area",
         label: "Operation Area",
         path: "/setup/operation-area",
       },
+      { key: "setup-position", label: "Position", path: "/setup/position" },
       {
         key: "setup-payroll-group",
         label: "Payroll Group",
@@ -128,16 +131,13 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
       { key: "setup-employee", label: "Employee", path: "/setup/employee" },
-      {
-        key: "setup-deduction-type",
-        label: "Deduction Type",
-        path: "/setup/deduction-type",
-      },
-      { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
-      { key: "setup-client", label: "Client", path: "/setup/client" },
-      { key: "setup-section", label: "Section", path: "/setup/section" },
-      { key: "setup-branch", label: "Branch", path: "/setup/branch" },
-      { key: "setup-position", label: "Position", path: "/setup/position" },
+      // {
+      //   key: "setup-deduction-type",
+      //   label: "Deduction Type",
+      //   path: "/setup/deduction-type",
+      // },
+      // { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
+      { key: "setup-client", label: "Client", path: "/setup/client" }, 
     ],
   },
   {
