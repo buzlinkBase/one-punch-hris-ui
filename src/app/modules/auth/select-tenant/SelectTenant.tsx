@@ -6,12 +6,13 @@ import axios from "axios";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { authStorage } from "@/core/auth/auth-storage";
 import type { ApiResponse } from "@/shared/types/api-response.model";
+import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 
 const { Title, Text } = Typography;
 
 export default function SelectTenant() {
   const navigate = useNavigate();
-  const [tenants] = useState<string[]>(() => authStorage.getTenants());
+  const [tenants] = useState<TenantSummary[]>(() => authStorage.getTenants());
   const [loadingTenant, setLoadingTenant] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,18 +65,18 @@ export default function SelectTenant() {
 
       <List
         dataSource={tenants}
-        renderItem={(tenantId) => (
+        renderItem={(tenant) => (
           <List.Item>
             <Button
               block
               size="large"
               icon={<BankOutlined />}
-              loading={loadingTenant === tenantId}
-              disabled={loadingTenant !== null && loadingTenant !== tenantId}
-              onClick={() => handleSelect(tenantId)}
+              loading={loadingTenant === tenant.tenantId}
+              disabled={loadingTenant !== null && loadingTenant !== tenant.tenantId}
+              onClick={() => handleSelect(tenant.tenantId)}
               style={{ justifyContent: "flex-start" }}
             >
-              {tenantId}
+              {tenant.name}
             </Button>
           </List.Item>
         )}

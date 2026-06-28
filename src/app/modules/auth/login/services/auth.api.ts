@@ -74,7 +74,9 @@ export const authApi = {
       const user = authStorage.getUser();
       return {
         accessToken: authStorage.getToken() ?? "",
-        tenants: [`tenant-${Date.now()}`],
+        tenants: [
+          { tenantId: `tenant-${Date.now()}`, name: data.tenantName, type: "ORGANIZATION" },
+        ],
         email: user?.email ?? "",
         name: user?.name ?? "",
         role: user?.role ?? "",

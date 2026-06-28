@@ -22,13 +22,14 @@ export async function resolveTenantDestination(): Promise<TenantRedirect> {
   if (tenants.length > 1) return "/select-tenant";
 
   if (tenants.length === 1) {
-    const result = await authApi.selectTenant(tenants[0]);
+    const [tenant] = tenants;
+    const result = await authApi.selectTenant(tenant.tenantId);
     const claims = authStorage.getTenantClaims(result.accessToken);
     const user = authStorage.getUser();
     authStorage.save(result.accessToken, {
       ...user!,
-      tenantId: claims.tenantId ?? tenants[0],
-      tenantName: claims.tenantName,
+      tenantId: claims.tenantId ?? tenant.tenantId,
+      tenantName: claims.tenantName ?? tenant.name,
     });
     return null;
   }
