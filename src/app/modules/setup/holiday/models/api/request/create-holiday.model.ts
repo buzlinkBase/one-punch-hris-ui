@@ -1,8 +1,13 @@
-import type { HolidayType } from '../response/holiday-response.model';
+export type HolidayType = 'SPECIAL' | 'LEGAL';
+export type HolidayWorkType = 'Working' | 'NonWorking';
 
 export interface CreateHoliday {
-  name: string;
-  date: string;
-  type: HolidayType;
+  description: string;
+  holType: HolidayType;
+  workType: HolidayWorkType;
+  holDate: string;
+  isRecuring: boolean;
+  isPaid: boolean;
+  areaId?: string | null;
   status: string;
 }

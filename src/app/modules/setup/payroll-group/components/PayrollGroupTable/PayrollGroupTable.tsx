@@ -4,7 +4,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { PayrollGroupResponse } from "../../models/api/response/payroll-group-response.model";
-import { PAYROLL_GROUP_LABEL } from "../../constants/label.const";
+import { PAYROLL_GROUP_LABEL, PAYROLL_FREQUENCY_OPTIONS } from "../../constants/label.const";
 
 interface Props {
   data: PayrollGroupResponse[];
@@ -12,15 +12,16 @@ interface Props {
   onDelete?: (id: string) => void;
 }
 
+const freqLabel = (value: string) =>
+  PAYROLL_FREQUENCY_OPTIONS.find((o) => o.value === value)?.label ?? value;
+
 export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
-      String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
+    [item.code, item.name, item.payrollFrequency, item.status].some((val) =>
+      String(val ?? "").toLowerCase().includes(search.toLowerCase()),
     ),
   );
 
@@ -28,9 +29,18 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
     { title: PAYROLL_GROUP_LABEL.CODE, dataIndex: "code", key: "code" },
     { title: PAYROLL_GROUP_LABEL.NAME, dataIndex: "name", key: "name" },
     {
-      title: PAYROLL_GROUP_LABEL.DESCRIPTION,
-      dataIndex: "description",
-      key: "description",
+      title: PAYROLL_GROUP_LABEL.PAYROLL_FREQUENCY,
+      dataIndex: "payrollFrequency",
+      key: "payrollFrequency",
+      render: (v: string) => freqLabel(v),
+    },
+    {
+      title: PAYROLL_GROUP_LABEL.CUTOFF_DAYS,
+      key: "cutoffDays",
+      render: (_, record) =>
+        record.cutoffDays?.length
+          ? record.cutoffDays.map((c) => c.label || `Day ${c.day}${c.isEndOfMonth ? " (EOM)" : ""}`).join(", ")
+          : "—",
     },
     { title: PAYROLL_GROUP_LABEL.STATUS, dataIndex: "status", key: "status" },
     {
