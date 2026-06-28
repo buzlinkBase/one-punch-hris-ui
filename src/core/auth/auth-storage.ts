@@ -62,7 +62,9 @@ export const authStorage = {
 
   /** Decodes the `tenantId`/`tenantName` claims off any access token (e.g. a fresh one from an API response, not yet saved). */
   getTenantClaims(token: string): TenantClaims {
-    const payload = decodeJwt<{ tenantId?: string; tenantName?: string }>(token);
+    const payload = decodeJwt<{ tenantId?: string; tenantName?: string }>(
+      token,
+    );
     return {
       tenantId: payload?.tenantId ?? null,
       tenantName: payload?.tenantName ?? null,
@@ -74,8 +76,6 @@ export const authStorage = {
     if (!token) return true;
 
     const payload = decodeJwt(token);
-
-    console.log("Token payload:", payload);
 
     if (!payload?.exp) return false;
 
