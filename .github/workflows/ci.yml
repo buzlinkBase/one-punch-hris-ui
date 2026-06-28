@@ -6,6 +6,8 @@ on:
       - main
       - dev
       - production
+      - 'feature/**'
+      - 'hotfix/**'
   pull_request:
     branches:
       - main
@@ -24,6 +26,8 @@ env:
 
 permissions:
   contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
   # ─── Job 1: ESLint static analysis ────────────────────────────────────────
@@ -64,40 +68,34 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec tsc -b --noEmit
 
-  # ─── Job 3: Derive this branch's release tag from package.json ────────────
-  version-tag:
-    name: Version & Tag
+  # ─── Job 3: Verify the app actually builds ────────────────────────────────
+  build:
+    name: Build Check
     runs-on: ubuntu-latest
     needs: [lint, type-check]
-    if: github.event_name == 'push'
-    outputs:
-      version: ${{ steps.read.outputs.version }}
-      tag: ${{ steps.read.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read version and compute branch-scoped tag
-        id: read
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="${GITHUB_REF_NAME}-v${VERSION}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
-      - name: Create git tag if it doesn't exist yet
-        run: |
-          if git rev-parse "${{ steps.read.outputs.tag }}" >/dev/null 2>&1; then
-            echo "Tag ${{ steps.read.outputs.tag }} already exists, skipping"
-          else
-            git tag "${{ steps.read.outputs.tag }}"
-            git push origin "${{ steps.read.outputs.tag }}"
-          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
 
-  # ─── Job 4: Build Docker image and push to Docker Hub ─────────────────────
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  # ─── Job 4: Build Docker image and push to Docker Hub ──────────────────────
+  # NOTE: versioning (semantic-release) removed for now — revisit once
+  # deployment is stable. Images are tagged by branch + commit SHA only.
   docker-publish:
     name: Docker Publish
     runs-on: ubuntu-latest
-    needs: [version-tag]
+    needs: [build]
+    if: github.event_name == 'push' && contains(fromJSON('["dev","production"]'), github.ref_name)
     environment: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
@@ -118,13 +116,18 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ env.DOCKER_IMAGE }}:${{ needs.version-tag.outputs.tag }}
             ${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}-latest
             ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL }}
             VITE_API_VERSION=${{ vars.VITE_API_VERSION }}
             VITE_APP_NAME=${{ vars.VITE_APP_NAME }}
+            VITE_GOOGLE_CLIENT_ID=${{ vars.VITE_GOOGLE_CLIENT_ID }}
+            VITE_PREFIX_AUTH=${{ vars.VITE_PREFIX_AUTH }}
+            VITE_PREFIX_HRMS=${{ vars.VITE_PREFIX_HRMS }}
+            VITE_PREFIX_ADMS=${{ vars.VITE_PREFIX_ADMS }}
+            VITE_PREFIX_TENANTS=${{ vars.VITE_PREFIX_TENANTS }}
+            VITE_PREFIX_NOTIFICATIONS=${{ vars.VITE_PREFIX_NOTIFICATIONS }}
           # Layer cache from the registry for faster rebuilds
           cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache,mode=max
@@ -133,7 +136,7 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    needs: [version-tag, docker-publish]
+    needs: [docker-publish]
     environment: ${{ github.ref_name }}
     steps:
       - name: Deploy via SSH
@@ -147,11 +150,15 @@ jobs:
             BRANCH="${{ github.ref_name }}"
             cd "/opt/hris-react/$BRANCH"
 
-            # Pull the newly published image for this branch's release
-            DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}:${{ needs.version-tag.outputs.tag }}" docker compose -p "hris-$BRANCH" pull
+            # Pull the newly published image for this branch
+            DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" \
+            HOST_PORT="${{ vars.HOST_PORT }}" \
+            docker compose -p "hris-$BRANCH" pull
 
             # Zero-downtime restart: bring up new container, remove old
-            DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}:${{ needs.version-tag.outputs.tag }}" docker compose -p "hris-$BRANCH" up -d --remove-orphans
+            DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" \
+            HOST_PORT="${{ vars.HOST_PORT }}" \
+            docker compose -p "hris-$BRANCH" up -d --remove-orphans
 
             # Clean up dangling images to free disk space
             docker image prune -f
