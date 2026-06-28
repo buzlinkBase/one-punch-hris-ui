@@ -47,6 +47,7 @@ import { useFlexiTimeShifts } from "@/app/modules/setup/time-shift/flexi/hooks/u
 import { useClients } from "@/app/modules/setup/client/hooks/useClientQueries";
 import { useSections } from "@/app/modules/setup/section/hooks/useSectionQueries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/useBranchQueries";
+import { usePositions } from "@/app/modules/setup/position/hooks/usePositionQueries";
 
 const { Title } = Typography;
 
@@ -96,6 +97,7 @@ export default function EmployeeDetail() {
   const { data: clients = [], isLoading: isClientsLoading } = useClients();
   const { data: sections = [], isLoading: isSectionsLoading } = useSections();
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
+  const { data: positions = [], isLoading: isPositionsLoading } = usePositions();
 
   const {
     control,
@@ -134,7 +136,8 @@ export default function EmployeeDetail() {
     isFlexiShiftsLoading ||
     isClientsLoading ||
     isSectionsLoading ||
-    isBranchesLoading;
+    isBranchesLoading ||
+    isPositionsLoading;
 
   const departmentOptions = departments.map((d) => ({ value: d.id, label: `${d.code} - ${d.name}` }));
   const areaOptions = operationAreas.map((a) => ({ value: a.id, label: `${a.code} - ${a.name}` }));
@@ -145,6 +148,7 @@ export default function EmployeeDetail() {
   ];
   const clientOptions = clients.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` }));
   const branchOptions = branches.map((b) => ({ value: b.id, label: `${b.code} - ${b.name}` }));
+  const positionOptions = positions.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }));
   const sectionOptions = sections
     .filter((s) => !watchedDepartmentId || s.departmentId === watchedDepartmentId)
     .map((s) => ({ value: s.id, label: `${s.code} - ${s.name}` }));
@@ -298,7 +302,7 @@ export default function EmployeeDetail() {
 
                 <Form.Item label={EMPLOYEE_LABEL.POSITION}>
                   <Controller name="positionId" control={control} render={({ field }) => (
-                    <Input {...field} value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value || null)} allowClear placeholder="Position ID" />
+                    <Select {...field} value={field.value ?? undefined} onChange={(v) => field.onChange(v ?? null)} options={positionOptions} loading={isPositionsLoading} allowClear showSearch filterOption={filterByLabel} placeholder="Select position" />
                   )} />
                 </Form.Item>
 

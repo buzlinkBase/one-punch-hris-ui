@@ -137,6 +137,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       { key: "setup-client", label: "Client", path: "/setup/client" },
       { key: "setup-section", label: "Section", path: "/setup/section" },
       { key: "setup-branch", label: "Branch", path: "/setup/branch" },
+      { key: "setup-position", label: "Position", path: "/setup/position" },
     ],
   },
   {
