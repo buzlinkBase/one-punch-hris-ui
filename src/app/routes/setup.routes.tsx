@@ -81,6 +81,13 @@ const SectionDetail = lazy(
   () => import("@/app/modules/setup/section/pages/SectionDetail"),
 );
 
+const BranchList = lazy(
+  () => import("@/app/modules/setup/branch/pages/BranchList"),
+);
+const BranchDetail = lazy(
+  () => import("@/app/modules/setup/branch/pages/BranchDetail"),
+);
+
 export interface SetupRouteConfig {
   path: string;
   component: LazyExoticComponent<ComponentType>;
@@ -130,4 +137,8 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "section", component: SectionList },
   { path: "section/create", component: SectionDetail },
   { path: "section/$id", component: SectionDetail },
+
+  { path: "branch", component: BranchList },
+  { path: "branch/create", component: BranchDetail },
+  { path: "branch/$id", component: BranchDetail },
 ];

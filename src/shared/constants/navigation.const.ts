@@ -136,6 +136,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
       { key: "setup-client", label: "Client", path: "/setup/client" },
       { key: "setup-section", label: "Section", path: "/setup/section" },
+      { key: "setup-branch", label: "Branch", path: "/setup/branch" },
     ],
   },
   {
