@@ -200,6 +200,11 @@ const rootIndexRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "login",
+  beforeLoad: async () => {
+    if (!authStorage.getToken()) return;
+    const destination = await resolveTenantDestination();
+    throw redirect({ to: destination ?? "/dashboard" });
+  },
   component: AuthLayout,
 });
 
@@ -212,6 +217,11 @@ const loginIndexRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "register",
+  beforeLoad: async () => {
+    if (!authStorage.getToken()) return;
+    const destination = await resolveTenantDestination();
+    throw redirect({ to: destination ?? "/dashboard" });
+  },
   component: AuthLayout,
 });
 
