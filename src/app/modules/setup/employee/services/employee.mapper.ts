@@ -17,7 +17,7 @@ export const employeeMapper = {
       contact: response.contact ?? '',
       address1: response.address1 ?? '',
       address2: response.address2 ?? '',
-      bioId: response.bioId ?? 0,
+      bioId: response.bioId ?? null,
       employeeNo: response.employeeNo,
       departmentId: response.departmentId ?? null,
       areaId: response.areaId ?? null,
@@ -48,19 +48,20 @@ export const employeeMapper = {
       phicNo: response.phicNo ?? '',
       hdmfNo: response.hdmfNo ?? '',
       tin: response.tin ?? '',
-      settings: response.settings ?? {
-        isEligibleForOvertime: false,
-        isEligibleForHolidayPay: false,
-        isEligibleForNightDifferential: false,
-        isEligibleForLeaveCredits: false,
-        isEligibleFor13thMonth: false,
+      settings: {
+        id: response.settings?.id,
+        isEligibleForOvertime: response.settings?.isEligibleForOvertime ?? false,
+        isEligibleForHolidayPay: response.settings?.isEligibleForHolidayPay ?? false,
+        isEligibleForNightDifferential: response.settings?.isEligibleForNightDifferential ?? false,
+        isEligibleForLeaveCredits: response.settings?.isEligibleForLeaveCredits ?? false,
+        isEligibleFor13thMonth: response.settings?.isEligibleFor13thMonth ?? false,
       },
     };
   },
 
   toDefaultValues(): Partial<EmployeeFormValues> {
     return {
-      bioId: 0,
+      bioId: null,
       dateRegistered: dayjs().toISOString(),
       modeOfPayment: 'ATM',
       salaryType: 'MONTHLY_VARIABLE',

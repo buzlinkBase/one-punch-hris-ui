@@ -16,8 +16,8 @@ export const employeeFormSchema = z.object({
   address2: z.string().optional(),
 
   // Employment
-  bioId: z.coerce.number().default(0),
-  employeeNo: z.string().min(1, 'Employee number is required'),
+  bioId: z.number().nullable().optional(),
+  employeeNo: z.string().optional(),
   departmentId: z.string().nullable().optional(),
   areaId: z.string().nullable().optional(),
   payrollGroupId: z.string().nullable().optional(),
@@ -30,7 +30,7 @@ export const employeeFormSchema = z.object({
   employmentStatus: z.enum(['Probationary', 'Regular', 'Contractual', 'ProjectBased', 'Seasonal', 'Casual', 'PartTime', 'Term', 'Internship']),
   hiringEntity: z.string().optional(),
   dateRegistered: z.string().min(1, 'Date registered is required'),
-  hireDate: z.string().min(1, 'Hire date is required'),
+  hireDate: z.string().nullable().optional(),
   contractStart: z.string().nullable().optional(),
   contractEnd: z.string().nullable().optional(),
   dateResigned: z.string().nullable().optional(),
@@ -54,6 +54,7 @@ export const employeeFormSchema = z.object({
 
   // Settings
   settings: z.object({
+    id: z.string().optional(),
     isEligibleForOvertime: z.boolean(),
     isEligibleForHolidayPay: z.boolean(),
     isEligibleForNightDifferential: z.boolean(),

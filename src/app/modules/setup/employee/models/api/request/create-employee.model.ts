@@ -8,8 +8,8 @@ import type {
 } from '../response/employee-response.model';
 
 export interface CreateEmployee {
-  bioId: number;
-  employeeNo: string;
+  bioId?: number | null;
+  employeeNo?: string;
   departmentId?: string | null;
   payrollGroupId?: string | null;
   clientId?: string | null;
@@ -20,7 +20,7 @@ export interface CreateEmployee {
   jobLevel: JobLevel;
   timeShiftId?: string | null;
   dateRegistered: string;
-  hireDate: string;
+  hireDate?: string | null;
   contractStart?: string | null;
   contractEnd?: string | null;
   civilStatus?: string;
