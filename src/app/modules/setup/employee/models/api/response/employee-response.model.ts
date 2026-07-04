@@ -45,7 +45,7 @@ export interface EmployeeSettingModel {
 
 export interface EmployeeResponse {
   id: string;
-  bioId: number;
+  bioId?: number | null;
   employeeNo: string;
   departmentId?: string | null;
   payrollGroupId?: string | null;

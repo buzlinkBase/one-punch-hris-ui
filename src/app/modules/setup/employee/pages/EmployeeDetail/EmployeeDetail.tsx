@@ -122,12 +122,9 @@ export default function EmployeeDetail() {
       ...values,
       restDays: values.restDays?.map((d) => ({ dayName: d as DayName })),
     };
-    if (isEdit && id) {
-      await update({ id, ...payload });
-    } else {
-      await add(payload);
-    }
-    navigate({ to: "/setup/employee" });
+   if (isEdit && id) await update({ id, ...payload });
+      else await add(payload);
+      navigate({ to: "/setup/employee" });
   };
 
   const isSubmitting = isUpdating || isCreating;
@@ -259,13 +256,13 @@ export default function EmployeeDetail() {
           <section id="emp-employment" className="form-section-anchor">
             <Card className="form-section-card" title="Employment Details">
               <div className="form-grid-2">
-                <Form.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO} validateStatus={errors.employeeNo ? "error" : ""} help={errors.employeeNo?.message}>
+                <Form.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
                   <Controller name="employeeNo" control={control} render={({ field }) => <Input {...field} />} />
                 </Form.Item>
 
                 <Form.Item label={EMPLOYEE_LABEL.BIO_ID}>
                   <Controller name="bioId" control={control} render={({ field }) => (
-                    <InputNumber {...field} className="w-full" min={0} placeholder="0" />
+                    <InputNumber {...field} className="w-full" min={0} placeholder="" />
                   )} />
                 </Form.Item>
 
@@ -343,8 +340,8 @@ export default function EmployeeDetail() {
                   <Controller name="dateRegistered" control={control} render={({ field }) => datePicker(field.value, (v) => field.onChange(v ?? ""), false)} />
                 </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.HIRE_DATE} validateStatus={errors.hireDate ? "error" : ""} help={errors.hireDate?.message}>
-                  <Controller name="hireDate" control={control} render={({ field }) => datePicker(field.value, (v) => field.onChange(v ?? ""), false)} />
+                <Form.Item label={EMPLOYEE_LABEL.HIRE_DATE}>
+                  <Controller name="hireDate" control={control} render={({ field }) => datePicker(field.value, field.onChange)} />
                 </Form.Item>
 
                 <Form.Item label={EMPLOYEE_LABEL.CONTRACT_START}>

@@ -17,7 +17,7 @@ export const employeeMapper = {
       contact: response.contact ?? '',
       address1: response.address1 ?? '',
       address2: response.address2 ?? '',
-      bioId: response.bioId ?? 0,
+      bioId: response.bioId ?? null,
       employeeNo: response.employeeNo,
       departmentId: response.departmentId ?? null,
       areaId: response.areaId ?? null,
@@ -60,7 +60,7 @@ export const employeeMapper = {
 
   toDefaultValues(): Partial<EmployeeFormValues> {
     return {
-      bioId: 0,
+      bioId: null,
       dateRegistered: dayjs().toISOString(),
       modeOfPayment: 'ATM',
       salaryType: 'MONTHLY_VARIABLE',
