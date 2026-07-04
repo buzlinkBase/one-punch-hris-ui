@@ -48,12 +48,13 @@ export const employeeMapper = {
       phicNo: response.phicNo ?? '',
       hdmfNo: response.hdmfNo ?? '',
       tin: response.tin ?? '',
-      settings: response.settings ?? {
-        isEligibleForOvertime: false,
-        isEligibleForHolidayPay: false,
-        isEligibleForNightDifferential: false,
-        isEligibleForLeaveCredits: false,
-        isEligibleFor13thMonth: false,
+      settings: {
+        id: response.settings?.id,
+        isEligibleForOvertime: response.settings?.isEligibleForOvertime ?? false,
+        isEligibleForHolidayPay: response.settings?.isEligibleForHolidayPay ?? false,
+        isEligibleForNightDifferential: response.settings?.isEligibleForNightDifferential ?? false,
+        isEligibleForLeaveCredits: response.settings?.isEligibleForLeaveCredits ?? false,
+        isEligibleFor13thMonth: response.settings?.isEligibleFor13thMonth ?? false,
       },
     };
   },

@@ -118,13 +118,21 @@ export default function EmployeeDetail() {
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: EmployeeFormValues) => {
+    const selectedDays = values.restDays ?? [];
     const payload = {
       ...values,
-      restDays: values.restDays?.map((d) => ({ dayName: d as DayName })),
+      restDays: selectedDays.map((dayName) => {
+        const existing = selected?.restDays?.find((r) => r.dayName === dayName);
+        return { id: existing?.id, dayName: dayName as DayName };
+      }),
     };
-   if (isEdit && id) await update({ id, ...payload });
+    try {
+      if (isEdit && id) await update({ id, ...payload });
       else await add(payload);
       navigate({ to: "/setup/employee" });
+    } catch {
+      // error notification is handled by the global error interceptor
+    }
   };
 
   const isSubmitting = isUpdating || isCreating;
@@ -330,12 +338,6 @@ export default function EmployeeDetail() {
                   <Controller name="hiringEntity" control={control} render={({ field }) => <Input {...field} />} />
                 </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.STATUS} validateStatus={errors.status ? "error" : ""} help={errors.status?.message}>
-                  <Controller name="status" control={control} render={({ field }) => (
-                    <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
-                  )} />
-                </Form.Item>
-
                 <Form.Item label={EMPLOYEE_LABEL.DATE_REGISTERED} validateStatus={errors.dateRegistered ? "error" : ""} help={errors.dateRegistered?.message}>
                   <Controller name="dateRegistered" control={control} render={({ field }) => datePicker(field.value, (v) => field.onChange(v ?? ""), false)} />
                 </Form.Item>
@@ -361,9 +363,15 @@ export default function EmployeeDetail() {
                     <Checkbox.Group
                       options={REST_DAY_OPTIONS}
                       value={field.value ?? []}
-                      onChange={field.onChange}
+                      onChange={(checkedValues) => field.onChange(checkedValues as string[])}
                       className="flex gap-4 flex-wrap"
                     />
+                  )} />
+                </Form.Item>
+
+                <Form.Item label={EMPLOYEE_LABEL.STATUS} validateStatus={errors.status ? "error" : ""} help={errors.status?.message}>
+                  <Controller name="status" control={control} render={({ field }) => (
+                    <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
                   )} />
                 </Form.Item>
               </div>

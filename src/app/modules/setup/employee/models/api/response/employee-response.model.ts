@@ -1,3 +1,5 @@
+import { set } from "node_modules/zod/v4/mini/external.d.cts";
+
 export type ModeOfPayment = 'Cash' | 'ATM';
 export type SalaryType = 'DAILY' | 'MONTHLY_VARIABLE' | 'MONTHLY_FIXED';
 export type EmploymentStatus =
