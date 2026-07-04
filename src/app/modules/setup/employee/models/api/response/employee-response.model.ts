@@ -1,35 +1,35 @@
 import { set } from "node_modules/zod/v4/mini/external.d.cts";
 
-export type ModeOfPayment = 'Cash' | 'ATM';
-export type SalaryType = 'DAILY' | 'MONTHLY_VARIABLE' | 'MONTHLY_FIXED';
+export type ModeOfPayment = "Cash" | "ATM";
+export type SalaryType = "DAILY" | "MONTHLY_VARIABLE" | "MONTHLY_FIXED";
 export type EmploymentStatus =
-  | 'Probationary'
-  | 'Regular'
-  | 'Contractual'
-  | 'ProjectBased'
-  | 'Seasonal'
-  | 'Casual'
-  | 'PartTime'
-  | 'Term'
-  | 'Internship';
+  | "Probationary"
+  | "Regular"
+  | "Contractual"
+  | "ProjectBased"
+  | "Seasonal"
+  | "Casual"
+  | "PartTime"
+  | "Term"
+  | "Internship";
 export type JobLevel =
-  | 'Managerial'
-  | 'Supervisory'
-  | 'Executive'
-  | 'RankandFile'
-  | 'EntryLevel'
-  | 'TechnicalSpecialist'
-  | 'Contractual'
-  | 'FieldStaff';
+  | "Managerial"
+  | "Supervisory"
+  | "Executive"
+  | "RankandFile"
+  | "EntryLevel"
+  | "TechnicalSpecialist"
+  | "Contractual"
+  | "FieldStaff";
 
 export type DayName =
-  | 'Monday'
-  | 'Tuesday'
-  | 'Wednesday'
-  | 'Thursday'
-  | 'Friday'
-  | 'Saturday'
-  | 'Sunday';
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday";
 
 export interface RestDayModel {
   id?: string;

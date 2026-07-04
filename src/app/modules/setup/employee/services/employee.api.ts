@@ -61,9 +61,12 @@ const MOCK_EMPLOYEES: EmployeeResponse[] = Array.from(
 export const employeeApi = {
   async getAll(): Promise<EmployeeResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<PaginatedResponse<EmployeeResponse[]>>(BASE_URL);
+      const data =
+        await httpClient.getUnwrapped<PaginatedResponse<EmployeeResponse[]>>(
+          BASE_URL,
+        );
       return data.data.length ? data.data : MOCK_EMPLOYEES;
-    } catch(e) {
+    } catch {
       return MOCK_EMPLOYEES;
     }
   },

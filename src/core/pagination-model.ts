@@ -1,9 +1,9 @@
 export interface PageMetaData {
   currentPage: number;
-  totalCount: number; 
+  totalCount: number;
   totalPages: number;
   hasPrevious: boolean;
-  hasNext: boolean; 
+  hasNext: boolean;
 }
 
 export interface PaginatedResponse<T> {
