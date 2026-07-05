@@ -208,12 +208,14 @@ function getTenantStateTag(state: string): { color: string; show: boolean } {
     case "created":
     case "active":
       return { color: "", show: false };
-    case "pending":
+    case "provisioning":
       return { color: "orange", show: true };
     case "suspended":
       return { color: "red", show: true };
-    case "invited":
-      return { color: "blue", show: true };
+    case "expired":
+      return { color: "red", show: true };
+    case "Deactivated":
+      return { color: "orange", show: true };
     default:
       return { color: "default", show: true };
   }
@@ -357,8 +359,8 @@ export default function MainLayout() {
                   <>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="m-0 text-xs font-semibold text-gray-800 truncate leading-snug">
-                        {sessionUser.tenantName
-                          ?? sessionUser.tenants.find((t) => t.tenantId === sessionUser.tenantId)?.name
+                        {sessionUser.tenants.find((t) => t.tenantId === sessionUser.tenantId)?.name
+                          ?? sessionUser.tenantName
                           ?? "Select workspace"}
                       </p>
                       <p className="m-0 text-[11px] text-gray-400 leading-snug">Switch workspace</p>
