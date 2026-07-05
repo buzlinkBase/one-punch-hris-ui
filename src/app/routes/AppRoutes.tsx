@@ -17,6 +17,7 @@ import AuthLayout from "@/app/layouts/AuthLayout";
 import { setupRoutes } from "./setup.routes";
 import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
+import { refreshAccessToken } from "@/core/auth/auth-refresh";
 
 const Login = lazy(() => import("@/app/modules/auth/login/Login"));
 const Register = lazy(() => import("@/app/modules/auth/register/Register"));
@@ -178,6 +179,33 @@ const ComingSoon = ({ title }: { title: string }) => (
 const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
 const TENANT_FLOW_PATHS = ["/select-tenant", "/create-tenant", "/awaiting-invitation"];
 
+// Returns the destination path if the user should be auto-redirected, null if they should stay on login.
+async function attemptAutoRedirect(): Promise<string | null> {
+  const token = authStorage.getToken();
+  if (!token) return null;
+
+  if (!authStorage.isAccessTokenExpired()) {
+    const destination = await resolveTenantDestination();
+    return destination ?? "/dashboard";
+  }
+
+  // Token expired — try a silent refresh before giving up
+  let refreshed = false;
+  try {
+    await refreshAccessToken();
+    refreshed = true;
+  } catch {
+    // refresh failed: authStorage already cleared by refreshAccessToken
+  }
+
+  if (refreshed) {
+    const destination = await resolveTenantDestination();
+    return destination ?? "/dashboard";
+  }
+
+  return null;
+}
+
 const rootRoute = createRootRoute({
   beforeLoad: async ({ location }) => {
     if (PUBLIC_PATHS.includes(location.pathname)) return;
@@ -194,16 +222,19 @@ const rootRoute = createRootRoute({
 const rootIndexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => <Navigate to="/login" replace />,
+  beforeLoad: async () => {
+    const destination = await attemptAutoRedirect();
+    throw redirect({ to: destination ?? "/login" });
+  },
+  component: () => null,
 });
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "login",
   beforeLoad: async () => {
-    if (!authStorage.getToken()) return;
-    const destination = await resolveTenantDestination();
-    throw redirect({ to: destination ?? "/dashboard" });
+    const destination = await attemptAutoRedirect();
+    if (destination) throw redirect({ to: destination });
   },
   component: AuthLayout,
 });
