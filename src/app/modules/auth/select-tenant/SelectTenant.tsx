@@ -31,6 +31,7 @@ export default function SelectTenant() {
         ...user!,
         tenantId: claims.tenantId ?? tenantId,
         tenantName: claims.tenantName,
+        tenants: result.tenants ?? user?.tenants,
       });
       navigate({ to: "/dashboard" });
     } catch (err) {

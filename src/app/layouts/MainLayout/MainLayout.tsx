@@ -1,17 +1,20 @@
 import { useState, type ReactNode } from "react";
-import { Button, Input, Layout, Menu, Select, notification } from "antd";
+import { Button, Dropdown, Input, Layout, Menu, Spin, Tag, notification } from "antd";
 import {
   ApartmentOutlined,
   BarChartOutlined,
   BankOutlined,
   CalendarOutlined,
+  CheckOutlined,
   ClockCircleOutlined,
+  DownOutlined,
   FileTextOutlined,
   FieldTimeOutlined,
   IdcardOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
+  PlusOutlined,
   SearchOutlined,
   SafetyCertificateOutlined,
   SafetyOutlined,
@@ -42,6 +45,7 @@ interface SessionUser {
   role: string;
   email: string;
   tenantId: string | null;
+  tenantName: string | null;
   tenants: TenantSummary[];
 }
 
@@ -59,6 +63,7 @@ function getSessionUser(): SessionUser {
     role: "HR Administrator",
     email: "user@onepunch.local",
     tenantId: null,
+    tenantName: null,
     tenants: [],
   };
 
@@ -70,6 +75,7 @@ function getSessionUser(): SessionUser {
     role: stored.role?.trim() || fallbackUser.role,
     email: stored.email?.trim() || fallbackUser.email,
     tenantId: stored.tenantId ?? null,
+    tenantName: stored.tenantName ?? null,
     tenants: stored.tenants ?? [],
   };
 }
@@ -197,8 +203,25 @@ function resolveActiveMenuKey(
   return match?.path ?? pathname;
 }
 
+function getTenantStateTag(state: string): { color: string; show: boolean } {
+  switch (state?.toLowerCase()) {
+    case "created":
+    case "active":
+      return { color: "", show: false };
+    case "pending":
+      return { color: "orange", show: true };
+    case "suspended":
+      return { color: "red", show: true };
+    case "invited":
+      return { color: "blue", show: true };
+    default:
+      return { color: "default", show: true };
+  }
+}
+
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const sessionUser = getSessionUser();
@@ -222,6 +245,7 @@ export default function MainLayout() {
   };
 
   const handleSwitchTenant = async (tenantId: string) => {
+    setSwitchingTenant(tenantId);
     try {
       const result = await authApi.selectTenant(tenantId);
       const claims = authStorage.getTenantClaims(result.accessToken);
@@ -230,6 +254,7 @@ export default function MainLayout() {
         ...user!,
         tenantId: claims.tenantId ?? tenantId,
         tenantName: claims.tenantName,
+        tenants: result.tenants ?? user?.tenants,
       });
       window.location.assign("/dashboard");
     } catch {
@@ -237,6 +262,7 @@ export default function MainLayout() {
         message: "Switch failed",
         description: "Could not switch to the selected client. Please try again.",
       });
+      setSwitchingTenant(null);
     }
   };
 
@@ -270,6 +296,80 @@ export default function MainLayout() {
             )}
           </div>
         </div>
+        {sessionUser.tenants.length > 0 && (
+          <div className="mx-3 mb-2 border-b border-gray-100 pb-2">
+            {!collapsed && (
+              <p className="m-0 px-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                Select Tenant
+              </p>
+            )}
+            <Dropdown
+              menu={{
+                style: { minWidth: 224 },
+                items: [
+                  ...sessionUser.tenants.map((t) => {
+                    const isActive = t.tenantId === sessionUser.tenantId;
+                    const stateTag = getTenantStateTag(t.state);
+                    return {
+                      key: t.tenantId,
+                      disabled: switchingTenant !== null || isActive,
+                      onClick: isActive ? undefined : () => void handleSwitchTenant(t.tenantId),
+                      icon: isActive
+                        ? <CheckOutlined style={{ color: "#1DA081" }} />
+                        : <BankOutlined style={{ color: "#bfbfbf" }} />,
+                      label: (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                          <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? "#1DA081" : undefined }}>
+                            {t.name}
+                          </span>
+                          {stateTag.show && (
+                            <Tag color={stateTag.color} style={{ margin: 0, fontSize: 10, lineHeight: "16px", padding: "0 5px", flexShrink: 0 }}>
+                              {t.state}
+                            </Tag>
+                          )}
+                        </div>
+                      ),
+                    };
+                  }),
+                  { type: "divider" as const },
+                  {
+                    key: "__create-tenant",
+                    icon: <PlusOutlined style={{ color: "#1DA081" }} />,
+                    label: <span style={{ color: "#1DA081", fontWeight: 500, fontSize: 13 }}>New workspace</span>,
+                    onClick: () => { window.location.href = "/create-tenant"; },
+                  },
+                ],
+              }}
+              trigger={["click"]}
+              placement="bottomLeft"
+            >
+              <button
+                type="button"
+                className={`flex items-center w-full rounded-xl px-2 py-2 cursor-pointer bg-transparent border-0 transition-colors hover:bg-emerald-50 ${collapsed ? "justify-center" : "gap-3"}`}
+              >
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  {switchingTenant
+                    ? <Spin size="small" />
+                    : <BankOutlined style={{ color: "#1DA081", fontSize: 14 }} />
+                  }
+                </div>
+                {!collapsed && (
+                  <>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="m-0 text-xs font-semibold text-gray-800 truncate leading-snug">
+                        {sessionUser.tenantName
+                          ?? sessionUser.tenants.find((t) => t.tenantId === sessionUser.tenantId)?.name
+                          ?? "Select workspace"}
+                      </p>
+                      <p className="m-0 text-[11px] text-gray-400 leading-snug">Switch workspace</p>
+                    </div>
+                    <DownOutlined style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0 }} />
+                  </>
+                )}
+              </button>
+            </Dropdown>
+          </div>
+        )}
         <div className="app-sider-menu-scroll">
           <Menu
             theme="light"
@@ -347,19 +447,6 @@ export default function MainLayout() {
             </div>
 
             <div className="header-search-wrap" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              {sessionUser.tenants.length > 1 && (
-                <Select
-                  value={sessionUser.tenantId ?? undefined}
-                  options={sessionUser.tenants.map((tenant) => ({
-                    value: tenant.tenantId,
-                    label: tenant.name,
-                  }))}
-                  onChange={handleSwitchTenant}
-                  placeholder="Select client"
-                  suffixIcon={<BankOutlined />}
-                  style={{ minWidth: 180 }}
-                />
-              )}
               <Input
                 className="header-search"
                 prefix={<SearchOutlined />}
@@ -370,7 +457,7 @@ export default function MainLayout() {
             </div>
           </div>
         </Header>
-        <Content className="app-content-surface app-content-scroll m-6 p-6 rounded-2xl min-h-[280px] relative">
+        <Content className="app-content-surface app-content-scroll m-6 p-6 rounded-2xl min-h-70 relative">
           <Outlet />
         </Content>
       </Layout>
