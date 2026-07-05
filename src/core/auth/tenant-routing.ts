@@ -30,6 +30,7 @@ export async function resolveTenantDestination(): Promise<TenantRedirect> {
       ...user!,
       tenantId: claims.tenantId ?? tenant.tenantId,
       tenantName: claims.tenantName ?? tenant.name,
+      tenants: result.tenants ?? user?.tenants,
     });
     return null;
   }

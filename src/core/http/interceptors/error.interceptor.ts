@@ -1,5 +1,6 @@
 import type { AxiosInstance, AxiosError } from "axios";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
+import { authStorage } from "@/core/auth/auth-storage";
 import { getNotify } from "@/shared/utils/notify";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 
@@ -9,7 +10,14 @@ export function applyErrorInterceptor(instance: AxiosInstance): void {
     async (error: AxiosError<ErrorResponse>) => {
       const original = error.config as typeof error.config & { _retry?: boolean };
 
-      if (error.response?.status === 401 && !original?._retry) {
+      // Only attempt refresh when the token is actually expired.
+      // A 401 from business logic (e.g. wrong tenant, insufficient permission) must
+      // fall through to the notification — not trigger a logout via refreshAccessToken.
+      if (
+        error.response?.status === 401 &&
+        !original?._retry &&
+        authStorage.isAccessTokenExpired()
+      ) {
         original._retry = true;
         try {
           const token = await refreshAccessToken();
