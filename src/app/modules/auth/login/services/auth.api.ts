@@ -74,9 +74,7 @@ export const authApi = {
       const user = authStorage.getUser();
       return {
         accessToken: authStorage.getToken() ?? "",
-        tenants: [
-          { tenantId: `tenant-${Date.now()}`, name: data.tenantName, type: "ORGANIZATION" },
-        ],
+        tenants: [],
         email: user?.email ?? "",
         name: user?.name ?? "",
         role: user?.role ?? "",
@@ -99,7 +97,9 @@ export const authApi = {
       return null;
     }
   },
-  acceptInvitation(data: AcceptInvitationRequest): Promise<AcceptInvitationResponse> {
+  acceptInvitation(
+    data: AcceptInvitationRequest,
+  ): Promise<AcceptInvitationResponse> {
     return httpClient.postUnwrapped<AcceptInvitationResponse>(
       `${INVITATIONS_URL}/accept`,
       data,
