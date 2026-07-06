@@ -338,7 +338,7 @@ export default function MainLayout() {
                     key: "__create-tenant",
                     icon: <PlusOutlined style={{ color: "#1DA081" }} />,
                     label: <span style={{ color: "#1DA081", fontWeight: 500, fontSize: 13 }}>New workspace</span>,
-                    onClick: () => { window.location.href = "/create-tenant"; },
+                    onClick: () => navigate({ to: "/create-tenant" }),
                   },
                 ],
               }}
