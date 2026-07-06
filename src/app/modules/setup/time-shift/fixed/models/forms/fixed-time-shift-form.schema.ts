@@ -22,7 +22,7 @@ export const fixedTimeShiftFormSchema = z.object({
   minimumWorkMinutes: z.number().min(0),
   withOT: z.boolean(),
   otRequireTimeIn: z.boolean(),
-  otStart: z.string().default("00:00:00"),
+  otStart: z.string(),
   overTimeThreshold: z.number().min(0),
 });
 

@@ -153,8 +153,8 @@ export default function EmployeeDetail() {
   const areaOptions = operationAreas.map((a) => ({ value: a.id, label: `${a.code} - ${a.name}` }));
   const payrollGroupOptions = payrollGroups.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }));
   const timeShiftOptions = [
-    ...fixedShifts.map((s) => ({ value: s.id, label: `${s.code} - ${s.name} (Fixed)` })),
-    ...flexiShifts.map((s) => ({ value: s.id, label: `${s.code} - ${s.name} (Flexi)` })),
+    ...fixedShifts.map((s) => ({ value: s.id, label: `${s.shiftName} (Fixed)` })),
+    ...flexiShifts.map((s) => ({ value: s.id, label: `${s.shiftName} (Flexi)` })),
   ];
   const clientOptions = clients.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` }));
   const branchOptions = branches.map((b) => ({ value: b.id, label: `${b.code} - ${b.name}` }));
