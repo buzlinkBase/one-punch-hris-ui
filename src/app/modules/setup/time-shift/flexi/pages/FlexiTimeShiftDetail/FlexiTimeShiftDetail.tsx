@@ -14,7 +14,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fromTimeSpan, toTimeSpan, toOptionalTimeSpan } from "@/shared/utils/time-span.util";
+import { fromTimeSpan, toTimeSpan } from "@/shared/utils/time-span.util";
+import { TimeSpanPicker } from "@/shared/components/TimeSpanPicker";
 import {
   flexiTimeShiftFormSchema,
   type FlexiTimeShiftFormValues,
@@ -41,6 +42,18 @@ function SectionHeader({ children }: { children: ReactNode }) {
   );
 }
 
+function addHoursToTimeSpan(timeSpan: string, hours: number): string {
+  const [h, m, s] = timeSpan.split(":").map(Number);
+  const totalSeconds = h * 3600 + m * 60 + (s || 0) + hours * 3600;
+  const dayOffset = Math.floor(totalSeconds / 86400);
+  const rem = totalSeconds % 86400;
+  const rh = String(Math.floor(rem / 3600)).padStart(2, "0");
+  const rm = String(Math.floor((rem % 3600) / 60)).padStart(2, "0");
+  const rs = String(rem % 60).padStart(2, "0");
+  const time = `${rh}:${rm}:${rs}`;
+  return dayOffset > 0 ? `${dayOffset}.${time}` : time;
+}
+
 export default function FlexiTimeShiftDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
@@ -53,6 +66,7 @@ export default function FlexiTimeShiftDetail() {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FlexiTimeShiftFormValues>({
     resolver: zodResolver(flexiTimeShiftFormSchema),
@@ -64,18 +78,25 @@ export default function FlexiTimeShiftDetail() {
       lunchStartTime: null,
       lunchEndTime: null,
       breakDurationMinutes: 0,
-      minimumWorkMinutes: 480,
-      maxWorkingMinutes: 600,
+      minimumWorkMinutes: 0,
+      maxWorkingMinutes: 480,
       withOT: false,
       overTimeThreshold: 60,
     },
   });
 
+  const startTime = useWatch({ control, name: "startTime" });
   const unpaidLunchBreak = useWatch({ control, name: "unpaidLunchBreak" });
   const withOT = useWatch({ control, name: "withOT" });
 
   useEffect(() => {
+    if (isEdit || !startTime) return;
+    setValue("endTime", addHoursToTimeSpan(startTime, 16));
+  }, [startTime, isEdit, setValue]);
+
+  useEffect(() => {
     if (isEdit && selected) {
+      // TimeSpanPicker stores "d.HH:mm:ss" — pass API values through directly.
       reset({
         shiftName: selected.shiftName,
         startTime: selected.startTime,
@@ -93,18 +114,19 @@ export default function FlexiTimeShiftDetail() {
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: FlexiTimeShiftFormValues) => {
+    // All time values from TimeSpanPicker are already in "HH:mm:ss" or "d.HH:mm:ss" — pass through directly.
     const payload: CreateFlexiTimeShift = {
       shiftName: values.shiftName,
       shiftType: "FLEXI",
       startTime: values.startTime,
       endTime: values.endTime,
-      withAMBreak: "NONE",
+      withAMBreak: "UNPAID_BREAK",
       amStartTime: null,
       amEndTime: null,
       withLunchBreak: values.unpaidLunchBreak ? "UNPAID_BREAK" : "PAID_BREAK",
       lunchStartTime: values.unpaidLunchBreak ? (values.lunchStartTime ?? null) : null,
       lunchEndTime: values.unpaidLunchBreak ? (values.lunchEndTime ?? null) : null,
-      withPMBreak: "NONE",
+      withPMBreak: "UNPAID_BREAK",
       pmStartTime: null,
       pmEndTime: null,
       gracePeriodMinutes: 0,
@@ -164,6 +186,7 @@ export default function FlexiTimeShiftDetail() {
 
           <SectionHeader>Flexible Window</SectionHeader>
           <div className="form-grid-2">
+            {/* startTime is the day-0 anchor — no +1 day needed */}
             <Form.Item
               label={FLEXI_TIME_SHIFT_LABEL.START_TIME}
               validateStatus={errors.startTime ? "error" : ""}
@@ -191,12 +214,7 @@ export default function FlexiTimeShiftDetail() {
                 name="endTime"
                 control={control}
                 render={({ field }) => (
-                  <TimePicker
-                    className="w-full"
-                    value={fromTimeSpan(field.value)}
-                    onChange={(val) => field.onChange(toTimeSpan(val))}
-                    format="HH:mm"
-                  />
+                  <TimeSpanPicker value={field.value} onChange={field.onChange} />
                 )}
               />
             </Form.Item>
@@ -228,8 +246,11 @@ export default function FlexiTimeShiftDetail() {
             </Form.Item>
           </div>
 
-          <SectionHeader>Lunch Break</SectionHeader>
-          <Form.Item label={FLEXI_TIME_SHIFT_LABEL.UNPAID_LUNCH_BREAK}>
+          <SectionHeader>Break</SectionHeader>
+          <Form.Item
+            label={FLEXI_TIME_SHIFT_LABEL.UNPAID_LUNCH_BREAK}
+            extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Off = No break window · On = Enforce allowable break period</span>}
+          >
             <Controller
               name="unpaidLunchBreak"
               control={control}
@@ -240,31 +261,24 @@ export default function FlexiTimeShiftDetail() {
           </Form.Item>
           {unpaidLunchBreak && (
             <div className="form-grid-2">
-              <Form.Item label={FLEXI_TIME_SHIFT_LABEL.LUNCH_START}>
+              <Form.Item
+                label={FLEXI_TIME_SHIFT_LABEL.BREAK_PERIOD_START}
+                extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Breaks taken outside this window are unauthorized and will be deducted from working hours.</span>}
+              >
                 <Controller
                   name="lunchStartTime"
                   control={control}
                   render={({ field }) => (
-                    <TimePicker
-                      className="w-full"
-                      value={fromTimeSpan(field.value)}
-                      onChange={(val) => field.onChange(toOptionalTimeSpan(val))}
-                      format="HH:mm"
-                    />
+                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
                   )}
                 />
               </Form.Item>
-              <Form.Item label={FLEXI_TIME_SHIFT_LABEL.LUNCH_END}>
+              <Form.Item label={FLEXI_TIME_SHIFT_LABEL.BREAK_PERIOD_END}>
                 <Controller
                   name="lunchEndTime"
                   control={control}
                   render={({ field }) => (
-                    <TimePicker
-                      className="w-full"
-                      value={fromTimeSpan(field.value)}
-                      onChange={(val) => field.onChange(toOptionalTimeSpan(val))}
-                      format="HH:mm"
-                    />
+                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
                   )}
                 />
               </Form.Item>

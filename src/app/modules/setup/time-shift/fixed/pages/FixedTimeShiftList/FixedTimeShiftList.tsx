@@ -12,7 +12,8 @@ const { Title } = Typography;
 
 export default function FixedTimeShiftList() {
   const navigate = useNavigate();
-  const { data: shifts = [], isLoading } = useFixedTimeShifts();
+  const { data: allShifts = [], isLoading } = useFixedTimeShifts();
+  const shifts = allShifts.filter((s) => s.shiftType === "FIXED");
   const { mutate: remove } = useDeleteFixedTimeShift();
 
   return (

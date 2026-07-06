@@ -12,7 +12,8 @@ const { Title } = Typography;
 
 export default function FlexiTimeShiftList() {
   const navigate = useNavigate();
-  const { data: shifts = [], isLoading } = useFlexiTimeShifts();
+  const { data: allShifts = [], isLoading } = useFlexiTimeShifts();
+  const shifts = allShifts.filter((s) => s.shiftType === "FLEXI");
   const { mutate: remove } = useDeleteFlexiTimeShift();
 
   return (

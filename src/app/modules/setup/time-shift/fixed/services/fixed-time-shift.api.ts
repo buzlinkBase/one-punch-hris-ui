@@ -60,7 +60,7 @@ const MOCK_FIXED_TIME_SHIFTS: FixedTimeShiftResponse[] = [
     shiftName: "Night Shift",
     shiftType: "FIXED",
     startTime: "22:00:00",
-    endTime: "06:00:00",
+    endTime: "1.06:00:00",
     withLunchBreak: "UNPAID_BREAK",
     lunchStartTime: "02:00:00",
     lunchEndTime: "03:00:00",
