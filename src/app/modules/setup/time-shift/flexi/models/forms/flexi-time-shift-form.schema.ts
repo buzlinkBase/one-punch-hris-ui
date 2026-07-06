@@ -1,12 +1,20 @@
-import { z } from 'zod';
+import { z } from "zod";
+
+const timeSpan = z.string().min(1, "Time is required");
+const optionalTimeSpan = z.string().nullable().optional();
 
 export const flexiTimeShiftFormSchema = z.object({
-  code: z.string().min(1, 'Code is required'),
-  name: z.string().min(1, 'Name is required'),
-  coreTimeStart: z.string().min(1, 'Core time start is required'),
-  coreTimeEnd: z.string().min(1, 'Core time end is required'),
-  workDuration: z.number().min(1, 'Work duration is required'),
-  status: z.string().min(1, 'Status is required'),
+  shiftName: z.string().min(1, "Shift name is required"),
+  startTime: timeSpan,
+  endTime: timeSpan,
+  unpaidLunchBreak: z.boolean(),
+  lunchStartTime: optionalTimeSpan,
+  lunchEndTime: optionalTimeSpan,
+  breakDurationMinutes: z.number().min(0),
+  minimumWorkMinutes: z.number().min(0),
+  maxWorkingMinutes: z.number().min(0),
+  withOT: z.boolean(),
+  overTimeThreshold: z.number().min(0),
 });
 
 export type FlexiTimeShiftFormValues = z.infer<typeof flexiTimeShiftFormSchema>;
