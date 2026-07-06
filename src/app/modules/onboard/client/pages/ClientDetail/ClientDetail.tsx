@@ -99,7 +99,7 @@ export default function ClientDetail() {
     };
 
     await deactivate(payload);
-    navigate({ to: "/clients" });
+    navigate({ to:'/clients' });
   };
 
   const isSubmitting = isCreating || isUpdating;
