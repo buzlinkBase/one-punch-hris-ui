@@ -32,12 +32,15 @@ export const authApi = {
       .then((r) => r.data.data);
   },
   login(data: LoginRequest): Promise<LoginResponse> {
-    return httpClient.postUnwrapped<LoginResponse>(`${USERS_URL}/login`, data);
+    return httpClient.postUnwrapped<LoginResponse>(`${USERS_URL}/login`, data, {
+      _skipErrorNotification: true,
+    });
   },
   loginWithGoogle(code: string): Promise<LoginResponse> {
     return httpClient.postUnwrapped<LoginResponse>(
       `${USERS_URL}/login-google-callback`,
       { code },
+      { _skipErrorNotification: true },
     );
   },
   selectTenant(tenantId: string): Promise<LoginResponse> {
