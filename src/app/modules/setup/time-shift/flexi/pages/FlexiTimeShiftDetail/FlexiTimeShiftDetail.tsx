@@ -1,18 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   Form,
   Input,
   Button,
-  Select,
   InputNumber,
+  Switch,
+  TimePicker,
   Typography,
   Space,
   Tag,
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { fromTimeSpan, toTimeSpan } from "@/shared/utils/time-span.util";
+import { TimeSpanPicker } from "@/shared/components/TimeSpanPicker";
 import {
   flexiTimeShiftFormSchema,
   type FlexiTimeShiftFormValues,
@@ -24,12 +27,32 @@ import {
 } from "../../hooks/useFlexiTimeShiftQueries";
 import { FLEXI_TIME_SHIFT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import type { CreateFlexiTimeShift } from "../../models/api/request/create-flexi-time-shift.model";
 
 const { Title } = Typography;
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-];
+
+function SectionHeader({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 12px" }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        {children}
+      </span>
+      <div style={{ flex: 1, height: 1, backgroundColor: "#e5e7eb" }} />
+    </div>
+  );
+}
+
+function addHoursToTimeSpan(timeSpan: string, hours: number): string {
+  const [h, m, s] = timeSpan.split(":").map(Number);
+  const totalSeconds = h * 3600 + m * 60 + (s || 0) + hours * 3600;
+  const dayOffset = Math.floor(totalSeconds / 86400);
+  const rem = totalSeconds % 86400;
+  const rh = String(Math.floor(rem / 3600)).padStart(2, "0");
+  const rm = String(Math.floor((rem % 3600) / 60)).padStart(2, "0");
+  const rs = String(rem % 60).padStart(2, "0");
+  const time = `${rh}:${rm}:${rs}`;
+  return dayOffset > 0 ? `${dayOffset}.${time}` : time;
+}
 
 export default function FlexiTimeShiftDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -37,42 +60,87 @@ export default function FlexiTimeShiftDetail() {
   const navigate = useNavigate();
   const { data: selected } = useFlexiTimeShift(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateFlexiTimeShift();
-  const { mutateAsync: update, isPending: isUpdating } =
-    useUpdateFlexiTimeShift();
+  const { mutateAsync: update, isPending: isUpdating } = useUpdateFlexiTimeShift();
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FlexiTimeShiftFormValues>({
     resolver: zodResolver(flexiTimeShiftFormSchema),
     defaultValues: {
-      code: "",
-      name: "",
-      coreTimeStart: "",
-      coreTimeEnd: "",
-      workDuration: 8,
-      status: "",
+      shiftName: "",
+      startTime: "06:00:00",
+      endTime: "22:00:00",
+      unpaidLunchBreak: false,
+      lunchStartTime: null,
+      lunchEndTime: null,
+      breakDurationMinutes: 0,
+      minimumWorkMinutes: 0,
+      maxWorkingMinutes: 480,
+      withOT: false,
+      overTimeThreshold: 60,
     },
   });
 
+  const startTime = useWatch({ control, name: "startTime" });
+  const unpaidLunchBreak = useWatch({ control, name: "unpaidLunchBreak" });
+  const withOT = useWatch({ control, name: "withOT" });
+
+  useEffect(() => {
+    if (isEdit || !startTime) return;
+    setValue("endTime", addHoursToTimeSpan(startTime, 16));
+  }, [startTime, isEdit, setValue]);
+
   useEffect(() => {
     if (isEdit && selected) {
+      // TimeSpanPicker stores "d.HH:mm:ss" — pass API values through directly.
       reset({
-        code: selected.code,
-        name: selected.name,
-        coreTimeStart: selected.coreTimeStart,
-        coreTimeEnd: selected.coreTimeEnd,
-        workDuration: selected.workDuration,
-        status: selected.status,
+        shiftName: selected.shiftName,
+        startTime: selected.startTime,
+        endTime: selected.endTime,
+        unpaidLunchBreak: selected.withLunchBreak === "UNPAID_BREAK",
+        lunchStartTime: selected.lunchStartTime,
+        lunchEndTime: selected.lunchEndTime,
+        breakDurationMinutes: selected.breakDurationMinutes,
+        minimumWorkMinutes: selected.minimumWorkMinutes,
+        maxWorkingMinutes: selected.maxWorkingMinutes,
+        withOT: selected.withOT,
+        overTimeThreshold: selected.overTimeThreshold,
       });
     }
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: FlexiTimeShiftFormValues) => {
-    if (isEdit && id) await update({ id, ...values });
-    else await add(values);
+    // All time values from TimeSpanPicker are already in "HH:mm:ss" or "d.HH:mm:ss" — pass through directly.
+    const payload: CreateFlexiTimeShift = {
+      shiftName: values.shiftName,
+      shiftType: "FLEXI",
+      startTime: values.startTime,
+      endTime: values.endTime,
+      withAMBreak: "UNPAID_BREAK",
+      amStartTime: null,
+      amEndTime: null,
+      withLunchBreak: values.unpaidLunchBreak ? "UNPAID_BREAK" : "PAID_BREAK",
+      lunchStartTime: values.unpaidLunchBreak ? (values.lunchStartTime ?? null) : null,
+      lunchEndTime: values.unpaidLunchBreak ? (values.lunchEndTime ?? null) : null,
+      withPMBreak: "UNPAID_BREAK",
+      pmStartTime: null,
+      pmEndTime: null,
+      gracePeriodMinutes: 0,
+      breakDurationMinutes: values.breakDurationMinutes,
+      withOT: values.withOT,
+      otRequireTimeIn: false,
+      otStart: "00:00:00",
+      overTimeThreshold: values.withOT ? values.overTimeThreshold : 0,
+      minimumWorkMinutes: values.minimumWorkMinutes,
+      maxWorkingMinutes: values.maxWorkingMinutes,
+    };
+
+    if (isEdit && id) await update({ id, ...payload });
+    else await add(payload);
     navigate({ to: "/setup/time-shift/flexi" });
   };
 
@@ -82,12 +150,10 @@ export default function FlexiTimeShiftDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit
-                ? FLEXI_TIME_SHIFT_LABEL.EDIT_TITLE
-                : FLEXI_TIME_SHIFT_LABEL.CREATE_TITLE}
+              {isEdit ? FLEXI_TIME_SHIFT_LABEL.EDIT_TITLE : FLEXI_TIME_SHIFT_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Configure flexi shift windows and required core working hours.
+              Configure flexible shift windows and required working hours.
             </p>
           </div>
           <Space>
@@ -103,84 +169,166 @@ export default function FlexiTimeShiftDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+
           <Form.Item
-            label={FLEXI_TIME_SHIFT_LABEL.CODE}
-            validateStatus={errors.code ? "error" : ""}
-            help={errors.code?.message}
+            label={FLEXI_TIME_SHIFT_LABEL.SHIFT_NAME}
+            validateStatus={errors.shiftName ? "error" : ""}
+            help={errors.shiftName?.message}
           >
             <Controller
-              name="code"
-              control={control}
-              render={({ field }) => <Input {...field} />}
-            />
-          </Form.Item>
-          <Form.Item
-            label={FLEXI_TIME_SHIFT_LABEL.NAME}
-            validateStatus={errors.name ? "error" : ""}
-            help={errors.name?.message}
-          >
-            <Controller
-              name="name"
-              control={control}
-              render={({ field }) => <Input {...field} />}
-            />
-          </Form.Item>
-          <div className="form-grid-2">
-            <Form.Item
-              label={FLEXI_TIME_SHIFT_LABEL.CORE_TIME_START}
-              validateStatus={errors.coreTimeStart ? "error" : ""}
-              help={errors.coreTimeStart?.message}
-            >
-              <Controller
-                name="coreTimeStart"
-                control={control}
-                render={({ field }) => <Input {...field} placeholder="HH:MM" />}
-              />
-            </Form.Item>
-            <Form.Item
-              label={FLEXI_TIME_SHIFT_LABEL.CORE_TIME_END}
-              validateStatus={errors.coreTimeEnd ? "error" : ""}
-              help={errors.coreTimeEnd?.message}
-            >
-              <Controller
-                name="coreTimeEnd"
-                control={control}
-                render={({ field }) => <Input {...field} placeholder="HH:MM" />}
-              />
-            </Form.Item>
-            <Form.Item
-              label={FLEXI_TIME_SHIFT_LABEL.WORK_DURATION}
-              validateStatus={errors.workDuration ? "error" : ""}
-              help={errors.workDuration?.message}
-            >
-              <Controller
-                name="workDuration"
-                control={control}
-                render={({ field }) => (
-                  <InputNumber className="w-full" {...field} min={1} />
-                )}
-              />
-            </Form.Item>
-          </div>
-          <Form.Item
-            label={FLEXI_TIME_SHIFT_LABEL.STATUS}
-            validateStatus={errors.status ? "error" : ""}
-            help={errors.status?.message}
-          >
-            <Controller
-              name="status"
+              name="shiftName"
               control={control}
               render={({ field }) => (
-                <Select {...field} options={STATUS_OPTIONS} />
+                <Input {...field} placeholder="e.g. Flexible Day Shift" />
               )}
             />
           </Form.Item>
 
+          <SectionHeader>Flexible Window</SectionHeader>
+          <div className="form-grid-2">
+            {/* startTime is the day-0 anchor — no +1 day needed */}
+            <Form.Item
+              label={FLEXI_TIME_SHIFT_LABEL.START_TIME}
+              validateStatus={errors.startTime ? "error" : ""}
+              help={errors.startTime?.message}
+            >
+              <Controller
+                name="startTime"
+                control={control}
+                render={({ field }) => (
+                  <TimePicker
+                    className="w-full"
+                    value={fromTimeSpan(field.value)}
+                    onChange={(val) => field.onChange(toTimeSpan(val))}
+                    format="HH:mm"
+                  />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label={FLEXI_TIME_SHIFT_LABEL.END_TIME}
+              validateStatus={errors.endTime ? "error" : ""}
+              help={errors.endTime?.message}
+            >
+              <Controller
+                name="endTime"
+                control={control}
+                render={({ field }) => (
+                  <TimeSpanPicker value={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label={FLEXI_TIME_SHIFT_LABEL.MIN_WORKING}
+              validateStatus={errors.minimumWorkMinutes ? "error" : ""}
+              help={errors.minimumWorkMinutes?.message}
+            >
+              <Controller
+                name="minimumWorkMinutes"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label={FLEXI_TIME_SHIFT_LABEL.MAX_WORKING}
+              validateStatus={errors.maxWorkingMinutes ? "error" : ""}
+              help={errors.maxWorkingMinutes?.message}
+            >
+              <Controller
+                name="maxWorkingMinutes"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                )}
+              />
+            </Form.Item>
+          </div>
+
+          <SectionHeader>Break</SectionHeader>
+          <Form.Item
+            label={FLEXI_TIME_SHIFT_LABEL.UNPAID_LUNCH_BREAK}
+            extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Off = No break window · On = Enforce allowable break period</span>}
+          >
+            <Controller
+              name="unpaidLunchBreak"
+              control={control}
+              render={({ field }) => (
+                <Switch checked={field.value} onChange={field.onChange} />
+              )}
+            />
+          </Form.Item>
+          {unpaidLunchBreak && (
+            <div className="form-grid-2">
+              <Form.Item
+                label={FLEXI_TIME_SHIFT_LABEL.BREAK_PERIOD_START}
+                extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Breaks taken outside this window are unauthorized and will be deducted from working hours.</span>}
+              >
+                <Controller
+                  name="lunchStartTime"
+                  control={control}
+                  render={({ field }) => (
+                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                  )}
+                />
+              </Form.Item>
+              <Form.Item label={FLEXI_TIME_SHIFT_LABEL.BREAK_PERIOD_END}>
+                <Controller
+                  name="lunchEndTime"
+                  control={control}
+                  render={({ field }) => (
+                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                  )}
+                />
+              </Form.Item>
+              <Form.Item
+                label={FLEXI_TIME_SHIFT_LABEL.BREAK_DURATION}
+                validateStatus={errors.breakDurationMinutes ? "error" : ""}
+                help={errors.breakDurationMinutes?.message}
+              >
+                <Controller
+                  name="breakDurationMinutes"
+                  control={control}
+                  render={({ field }) => (
+                    <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                  )}
+                />
+              </Form.Item>
+            </div>
+          )}
+
+          <SectionHeader>Overtime</SectionHeader>
+          <Form.Item label={FLEXI_TIME_SHIFT_LABEL.ALLOW_OT}>
+            <Controller
+              name="withOT"
+              control={control}
+              render={({ field }) => (
+                <Switch checked={field.value} onChange={field.onChange} />
+              )}
+            />
+          </Form.Item>
+          {withOT && (
+            <div className="form-grid-2">
+              <Form.Item
+                label={FLEXI_TIME_SHIFT_LABEL.OT_THRESHOLD}
+                validateStatus={errors.overTimeThreshold ? "error" : ""}
+                help={errors.overTimeThreshold?.message}
+              >
+                <Controller
+                  name="overTimeThreshold"
+                  control={control}
+                  render={({ field }) => (
+                    <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                  )}
+                />
+              </Form.Item>
+            </div>
+          )}
+
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button
-                onClick={() => navigate({ to: "/setup/time-shift/flexi" })}
-              >
+              <Button onClick={() => navigate({ to: "/setup/time-shift/flexi" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <Button
