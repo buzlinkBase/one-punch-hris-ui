@@ -66,7 +66,9 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
+      - name: Check formatting
+        run: |
+          pnpm format:check || (echo "" && echo "Formatting issues found. Run 'pnpm format' locally to fix, then commit the changes." && exit 1)
 
   # ─── Job 3: TypeScript type-check ─────────────────────────────────────────
   type-check:
