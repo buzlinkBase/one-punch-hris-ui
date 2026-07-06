@@ -152,9 +152,20 @@ export default function EmployeeDetail() {
   const departmentOptions = departments.map((d) => ({ value: d.id, label: `${d.code} - ${d.name}` }));
   const areaOptions = operationAreas.map((a) => ({ value: a.id, label: `${a.code} - ${a.name}` }));
   const payrollGroupOptions = payrollGroups.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }));
+  const formatShiftTime = (t: string) => {
+    const dot = t.indexOf(".");
+    const hasDayOffset = dot > 0 && dot < t.lastIndexOf(":");
+    const timePart = hasDayOffset ? t.slice(dot + 1) : t;
+    const [h, m] = timePart.split(":");
+    return hasDayOffset ? `+1d ${h}:${m}` : `${h}:${m}`;
+  };
   const timeShiftOptions = [
-    ...fixedShifts.map((s) => ({ value: s.id, label: `${s.shiftName} (Fixed)` })),
-    ...flexiShifts.map((s) => ({ value: s.id, label: `${s.shiftName} (Flexi)` })),
+    ...fixedShifts
+      .filter((s) => s.shiftType === "FIXED")
+      .map((s) => ({ value: s.id, label: `${s.shiftName} (Fixed)`, shiftName: s.shiftName, shiftType: "FIXED" as const, startTime: s.startTime, endTime: s.endTime })),
+    ...flexiShifts
+      .filter((s) => s.shiftType === "FLEXI")
+      .map((s) => ({ value: s.id, label: `${s.shiftName} (Flexi)`, shiftName: s.shiftName, shiftType: "FLEXI" as const, startTime: s.startTime, endTime: s.endTime })),
   ];
   const clientOptions = clients.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` }));
   const branchOptions = branches.map((b) => ({ value: b.id, label: `${b.code} - ${b.name}` }));
@@ -324,7 +335,38 @@ export default function EmployeeDetail() {
 
                 <Form.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
                   <Controller name="timeShiftId" control={control} render={({ field }) => (
-                    <Select {...field} value={field.value ?? undefined} onChange={(v) => field.onChange(v ?? null)} options={timeShiftOptions} loading={isRefLoading} allowClear showSearch filterOption={filterByLabel} placeholder="Select time shift" />
+                    <Select
+                      {...field}
+                      value={field.value ?? undefined}
+                      onChange={(v) => field.onChange(v ?? null)}
+                      options={timeShiftOptions}
+                      loading={isRefLoading}
+                      allowClear
+                      showSearch
+                      filterOption={filterByLabel}
+                      placeholder="Select time shift"
+                      optionRender={(opt) => {
+                        const o = opt.data as typeof timeShiftOptions[number];
+                        const isFixed = o.shiftType === "FIXED";
+                        return (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontWeight: 500 }}>{o.shiftName}</span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                              <span style={{ fontSize: 11, color: "#6b7280" }}>
+                                {formatShiftTime(o.startTime)} – {formatShiftTime(o.endTime)}
+                              </span>
+                              <span style={{
+                                fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 4,
+                                background: isFixed ? "#d1fae5" : "#ede9fe",
+                                color: isFixed ? "#065f46" : "#5b21b6",
+                              }}>
+                                {isFixed ? "Fixed" : "Flexi"}
+                              </span>
+                            </span>
+                          </div>
+                        );
+                      }}
+                    />
                   )} />
                 </Form.Item>
 
