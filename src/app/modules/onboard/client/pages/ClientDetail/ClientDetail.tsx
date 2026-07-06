@@ -106,7 +106,7 @@ export default function ClientDetail() {
   const canDeactivate = Boolean(
     isEdit &&
     selected &&
-    selected.status === "ACTIVE" &&
+    selected.status === 'ACTIVE' &&
     selected.unpaidDues > 0,
   );
 
