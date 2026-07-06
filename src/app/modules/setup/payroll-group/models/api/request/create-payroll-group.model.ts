@@ -4,7 +4,7 @@ export interface CutoffModel {
   label: string;
 }
 
-export type PayrollFrequency = 'DAILY' | 'WEEKLY' | 'SEMI_MONTHLY' | 'MONTHLY';
+export type PayrollFrequency = "DAILY" | "WEEKLY" | "SEMI_MONTHLY" | "MONTHLY";
 
 export interface CreatePayrollGroup {
   code: string;

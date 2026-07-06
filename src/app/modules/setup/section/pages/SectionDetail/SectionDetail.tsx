@@ -24,8 +24,13 @@ const STATUS_OPTIONS = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
-const filterByLabel = (input: string, option?: { label?: string | number | boolean }) =>
-  String(option?.label ?? "").toLowerCase().includes(input.toLowerCase());
+const filterByLabel = (
+  input: string,
+  option?: { label?: string | number | boolean },
+) =>
+  String(option?.label ?? "")
+    .toLowerCase()
+    .includes(input.toLowerCase());
 
 export default function SectionDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -34,7 +39,8 @@ export default function SectionDetail() {
   const { data: selected } = useSection(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateSection();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateSection();
-  const { data: departments = [], isLoading: isDepartmentsLoading } = useDepartments();
+  const { data: departments = [], isLoading: isDepartmentsLoading } =
+    useDepartments();
 
   const {
     control,
@@ -149,7 +155,13 @@ export default function SectionDetail() {
             <Controller
               name="status"
               control={control}
-              render={({ field }) => <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={STATUS_OPTIONS}
+                  placeholder="Select status"
+                />
+              )}
             />
           </Form.Item>
 

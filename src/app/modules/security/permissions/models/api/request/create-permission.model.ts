@@ -1,4 +1,4 @@
-import type { PermissionAction } from '../response/permission-response.model';
+import type { PermissionAction } from "../response/permission-response.model";
 
 export interface CreatePermission {
   code: string;

@@ -87,11 +87,11 @@ export default function WorkRotationDetail() {
   const timeShiftOptions = [
     ...fixedShifts.map((s) => ({
       value: s.id,
-      label: `[Fixed] ${s.name} (${s.timeIn} – ${s.timeOut})`,
+      label: `[Fixed] ${s.shiftName} (${s.startTime} – ${s.endTime})`,
     })),
     ...flexiShifts.map((s) => ({
       value: s.id,
-      label: `[Flexi] ${s.name}`,
+      label: `[Flexi] ${s.shiftName}`,
     })),
   ];
 

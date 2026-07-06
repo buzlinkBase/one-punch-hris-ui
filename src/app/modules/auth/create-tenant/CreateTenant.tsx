@@ -1,22 +1,21 @@
 import { useEffect } from "react";
 import { Card, Form, Input, Button, Typography, notification } from "antd";
-import { BankOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, BankOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import {
   createTenantFormSchema,
   type CreateTenantFormValues,
 } from "./create-tenant-form.schema";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { authStorage } from "@/core/auth/auth-storage";
-import type { ApiResponse } from "@/shared/types/api-response.model";
 
 const { Title, Text } = Typography;
 
 export default function CreateTenant() {
   const navigate = useNavigate();
+  const hasExistingTenants = (authStorage.getTenants().length ?? 0) > 0;
 
   const {
     control,
@@ -44,15 +43,11 @@ export default function CreateTenant() {
         tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
         tenantName: claims.tenantName,
       });
-      navigate({ to: "/dashboard" });
-    } catch (err) {
-      const description = axios.isAxiosError(err)
-        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ?? "Failed to create organization. Please try again.")
-        : "An unexpected error occurred.";
+      window.location.assign("/dashboard");
+    } catch {
       notification.error({
         message: "Creation failed",
-        description,
+        description: "Failed to create workspace. Please try again.",
         placement: "topRight",
       });
     }
@@ -60,22 +55,37 @@ export default function CreateTenant() {
 
   return (
     <Card className="auth-card login-card border-0">
+      {hasExistingTenants && (
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate({ to: "/dashboard" })}
+          style={{ marginBottom: 12, padding: 0, color: "#6b7280" }}
+        >
+          Back to dashboard
+        </Button>
+      )}
       <div className="login-header">
-        <div className="login-icon-placeholder" aria-label="App icon placeholder">
+        <div
+          className="login-icon-placeholder"
+          aria-label="App icon placeholder"
+        >
           <BankOutlined />
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
         <Title level={3} className="login-title">
-          Create Your Organization
+          {hasExistingTenants ? "New Workspace" : "Create Your Organization"}
         </Title>
         <Text className="login-subtitle">
-          You don't have an organization yet. Create one to get started.
+          {hasExistingTenants
+            ? "Set up a new workspace to manage a separate organization."
+            : "You don't have an organization yet. Create one to get started."}
         </Text>
       </div>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item
-          label="Organization Name"
+          label="Workspace Name"
           validateStatus={errors.tenantName ? "error" : ""}
           help={errors.tenantName?.message}
           className="login-form-item"
@@ -84,7 +94,11 @@ export default function CreateTenant() {
             name="tenantName"
             control={control}
             render={({ field }) => (
-              <Input {...field} placeholder="Enter organization name" size="large" />
+              <Input
+                {...field}
+                placeholder="Enter workspace name"
+                size="large"
+              />
             )}
           />
         </Form.Item>
@@ -97,7 +111,7 @@ export default function CreateTenant() {
             block
             size="large"
           >
-            Create Organization
+            {hasExistingTenants ? "Create Workspace" : "Create Organization"}
           </Button>
         </Form.Item>
       </Form>

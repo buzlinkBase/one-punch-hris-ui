@@ -62,7 +62,9 @@ export const useDeductionStore = create<DeductionStore>((set) => ({
     try {
       const updated = await deductionApi.update(data);
       set((s) => ({
-        deductions: s.deductions.map((d) => (d.id === updated.id ? updated : d)),
+        deductions: s.deductions.map((d) =>
+          d.id === updated.id ? updated : d,
+        ),
         selected: updated,
         loading: false,
       }));

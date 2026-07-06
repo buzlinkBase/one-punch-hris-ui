@@ -18,7 +18,9 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
 
   const filtered = data.filter((item) =>
     Object.values(item).some((val) =>
-      String(val ?? "").toLowerCase().includes(search.toLowerCase()),
+      String(val ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
     ),
   );
 

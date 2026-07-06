@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { employeeApi } from '../services/employee.api';
-import type { EmployeeResponse } from '../models/api/response/employee-response.model';
-import type { CreateEmployee } from '../models/api/request/create-employee.model';
-import type { UpdateEmployee } from '../models/api/request/update-employee.model';
+import { create } from "zustand";
+import { employeeApi } from "../services/employee.api";
+import type { EmployeeResponse } from "../models/api/response/employee-response.model";
+import type { CreateEmployee } from "../models/api/request/create-employee.model";
+import type { UpdateEmployee } from "../models/api/request/update-employee.model";
 
 interface EmployeeStore {
   employees: EmployeeResponse[];

@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { auditApi } from '../services/audit.api';
+import { useQuery } from "@tanstack/react-query";
+import { auditApi } from "../services/audit.api";
 
-const QUERY_KEY = ['audit-logs'];
+const QUERY_KEY = ["audit-logs"];
 
 export function useAuditLogs() {
   return useQuery({

@@ -1,7 +1,10 @@
 import { Button, Typography } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
-import { usePositions, useDeletePosition } from "../../hooks/usePositionQueries";
+import {
+  usePositions,
+  useDeletePosition,
+} from "../../hooks/usePositionQueries";
 import PositionTable from "../../components/PositionTable";
 import { POSITION_LABEL } from "../../constants/label.const";
 

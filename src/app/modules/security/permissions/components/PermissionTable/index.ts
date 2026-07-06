@@ -1,1 +1,1 @@
-export { default } from './PermissionTable';
+export { default } from "./PermissionTable";

@@ -26,7 +26,10 @@ import {
   useUpdateEmployeeDocRecord,
 } from "../../hooks/useEmployeeDocRecordQueries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/useEmployeeQueries";
-import { EMPLOYEE_DOC_RECORD_LABEL, DOC_RECORD_TYPE_OPTIONS } from "../../constants/label.const";
+import {
+  EMPLOYEE_DOC_RECORD_LABEL,
+  DOC_RECORD_TYPE_OPTIONS,
+} from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
@@ -37,8 +40,10 @@ export default function EmployeeDocRecordDetail() {
   const navigate = useNavigate();
   const { data: selected } = useEmployeeDocRecord(isEdit ? id : undefined);
   const { data: employees = [] } = useEmployees();
-  const { mutateAsync: add, isPending: isCreating } = useCreateEmployeeDocRecord();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployeeDocRecord();
+  const { mutateAsync: add, isPending: isCreating } =
+    useCreateEmployeeDocRecord();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateEmployeeDocRecord();
 
   const [uploadedFile, setUploadedFile] = useState<UploadFile | null>(null);
 
@@ -77,7 +82,14 @@ export default function EmployeeDocRecordDetail() {
   const fileList: UploadFile[] = uploadedFile
     ? [uploadedFile]
     : selected?.file
-      ? [{ uid: "-1", name: selected.file.split("/").pop() ?? "document", status: "done", url: selected.file }]
+      ? [
+          {
+            uid: "-1",
+            name: selected.file.split("/").pop() ?? "document",
+            status: "done",
+            url: selected.file,
+          },
+        ]
       : [];
 
   const uploadProps: UploadProps = {
@@ -86,7 +98,8 @@ export default function EmployeeDocRecordDetail() {
         file.type === "application/pdf" ||
         file.type.startsWith("image/") ||
         file.type === "application/msword" ||
-        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
       if (!isAllowed) {
         message.error("Only PDF, Word documents, or image files are allowed.");
         return Upload.LIST_IGNORE;
@@ -132,7 +145,11 @@ export default function EmployeeDocRecordDetail() {
             <Tag color={isEdit ? "processing" : "success"}>
               {isEdit ? "Editing" : "New Record"}
             </Tag>
-            <Button onClick={() => navigate({ to: "/employee-management/doc-records" })}>
+            <Button
+              onClick={() =>
+                navigate({ to: "/employee-management/doc-records" })
+              }
+            >
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
           </Space>
@@ -191,7 +208,11 @@ export default function EmployeeDocRecordDetail() {
               name="description"
               control={control}
               render={({ field }) => (
-                <Input.TextArea {...field} rows={3} placeholder="Enter document description" />
+                <Input.TextArea
+                  {...field}
+                  rows={3}
+                  placeholder="Enter document description"
+                />
               )}
             />
           </Form.Item>
@@ -208,7 +229,11 @@ export default function EmployeeDocRecordDetail() {
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button onClick={() => navigate({ to: "/employee-management/doc-records" })}>
+              <Button
+                onClick={() =>
+                  navigate({ to: "/employee-management/doc-records" })
+                }
+              >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <Button

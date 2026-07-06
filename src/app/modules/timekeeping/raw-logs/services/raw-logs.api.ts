@@ -81,9 +81,7 @@ const generateMockCleanRowLogs = (): CleanAttendanceLogRow[] => {
       },
       log: `${String((i % 8) + 6).padStart(2, "0")}:${String((i % 60) * 10).padStart(2, "0")}`,
       status: ["COMPLETE", "INCOMPLETE", "FLAGGED"][i % 3] as
-        | "COMPLETE"
-        | "INCOMPLETE"
-        | "FLAGGED",
+        "COMPLETE" | "INCOMPLETE" | "FLAGGED",
     });
   }
   return logs;
@@ -115,9 +113,7 @@ const generateMockCleanColumnarLogs = (): CleanAttendanceLogColumnar[] => {
       },
       logs: logEntries,
       status: ["COMPLETE", "INCOMPLETE", "FLAGGED"][i % 3] as
-        | "COMPLETE"
-        | "INCOMPLETE"
-        | "FLAGGED",
+        "COMPLETE" | "INCOMPLETE" | "FLAGGED",
     });
   }
   return logs;

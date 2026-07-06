@@ -26,7 +26,8 @@ export default function AssignAssetList() {
               {ASSIGN_ASSET_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Track company assets issued to employees including issuance and return dates.
+              Track company assets issued to employees including issuance and
+              return dates.
             </p>
           </div>
           <Button

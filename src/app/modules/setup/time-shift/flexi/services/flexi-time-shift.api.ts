@@ -6,23 +6,56 @@ import type { UpdateFlexiTimeShift } from "../models/api/request/update-flexi-ti
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timeshifts");
 
-const MOCK_FLEXI_TIME_SHIFTS: FlexiTimeShiftResponse[] = Array.from(
-  { length: 24 },
-  (_, i) => {
-    const coreStart = 9 + (i % 4);
-    const coreEnd = coreStart + 4;
-
-    return {
-      id: `flx-${i + 1}`,
-      code: `FLX${String(i + 1).padStart(3, "0")}`,
-      name: `Flexi Shift ${i + 1}`,
-      coreTimeStart: `${String(coreStart).padStart(2, "0")}:00`,
-      coreTimeEnd: `${String(coreEnd).padStart(2, "0")}:00`,
-      workDuration: i % 5 === 0 ? 6 : 8,
-      status: i % 8 === 0 ? "INACTIVE" : "ACTIVE",
-    };
+const MOCK_FLEXI_TIME_SHIFTS: FlexiTimeShiftResponse[] = [
+  {
+    id: "flx-001",
+    shiftName: "Standard Flexi",
+    shiftType: "FLEXI",
+    startTime: "06:00:00",
+    endTime: "22:00:00",
+    withAMBreak: "NONE",
+    amStartTime: null,
+    amEndTime: null,
+    withLunchBreak: "UNPAID_BREAK",
+    lunchStartTime: "12:00:00",
+    lunchEndTime: "13:00:00",
+    withPMBreak: "NONE",
+    pmStartTime: null,
+    pmEndTime: null,
+    gracePeriodMinutes: 0,
+    breakDurationMinutes: 60,
+    withOT: true,
+    otRequireTimeIn: false,
+    otStart: "00:00:00",
+    overTimeThreshold: 60,
+    minimumWorkMinutes: 480,
+    maxWorkingMinutes: 600,
   },
-);
+  {
+    id: "flx-002",
+    shiftName: "Core Hours Flexi",
+    shiftType: "FLEXI",
+    startTime: "07:00:00",
+    endTime: "20:00:00",
+    withAMBreak: "NONE",
+    amStartTime: null,
+    amEndTime: null,
+    withLunchBreak: "PAID_BREAK",
+    lunchStartTime: null,
+    lunchEndTime: null,
+    withPMBreak: "NONE",
+    pmStartTime: null,
+    pmEndTime: null,
+    gracePeriodMinutes: 0,
+    breakDurationMinutes: 0,
+    withOT: false,
+    otRequireTimeIn: false,
+    otStart: "00:00:00",
+    overTimeThreshold: 0,
+    minimumWorkMinutes: 480,
+    maxWorkingMinutes: 600,
+  },
+];
 
 export const flexiTimeShiftApi = {
   async getAll(): Promise<FlexiTimeShiftResponse[]> {

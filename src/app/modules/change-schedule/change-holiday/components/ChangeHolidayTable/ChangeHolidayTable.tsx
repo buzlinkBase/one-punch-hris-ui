@@ -17,8 +17,16 @@ export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
   const [search, setSearch] = useState("");
 
   const filtered = data.filter((item) =>
-    [item.fullName, item.holidayName, item.clientName, item.fromDate, item.toDate].some(
-      (val) => String(val ?? "").toLowerCase().includes(search.toLowerCase()),
+    [
+      item.fullName,
+      item.holidayName,
+      item.clientName,
+      item.fromDate,
+      item.toDate,
+    ].some((val) =>
+      String(val ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
     ),
   );
 
@@ -58,7 +66,9 @@ export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
           <Button
             type="link"
             onClick={() =>
-              navigate({ to: `/change-schedule/change-holiday/${record.batchId}` })
+              navigate({
+                to: `/change-schedule/change-holiday/${record.batchId}`,
+              })
             }
           >
             Edit

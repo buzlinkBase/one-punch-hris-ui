@@ -1,29 +1,29 @@
-import { useState } from 'react';
-import { Table, Button, Space, Popconfirm, Input, Tag, Select } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import { useNavigate } from '@tanstack/react-router';
-import type { PermissionResponse } from '../../models/api/response/permission-response.model';
+import { useState } from "react";
+import { Table, Button, Space, Popconfirm, Input, Tag, Select } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import { useNavigate } from "@tanstack/react-router";
+import type { PermissionResponse } from "../../models/api/response/permission-response.model";
 import {
   PERMISSION_LABEL,
   PERMISSION_ACTION_COLORS,
   PERMISSION_MODULE_OPTIONS,
-} from '../../constants/label.const';
+} from "../../constants/label.const";
 
 const MODULE_FILTER_OPTIONS = [
-  { value: '', label: 'All Modules' },
+  { value: "", label: "All Modules" },
   ...PERMISSION_MODULE_OPTIONS,
 ];
 
 const ACTION_FILTER_OPTIONS = [
-  { value: '', label: 'All Actions' },
-  { value: 'CREATE', label: 'Create' },
-  { value: 'READ', label: 'Read' },
-  { value: 'UPDATE', label: 'Update' },
-  { value: 'DELETE', label: 'Delete' },
-  { value: 'EXPORT', label: 'Export' },
-  { value: 'APPROVE', label: 'Approve' },
-  { value: 'REJECT', label: 'Reject' },
+  { value: "", label: "All Actions" },
+  { value: "CREATE", label: "Create" },
+  { value: "READ", label: "Read" },
+  { value: "UPDATE", label: "Update" },
+  { value: "DELETE", label: "Delete" },
+  { value: "EXPORT", label: "Export" },
+  { value: "APPROVE", label: "Approve" },
+  { value: "REJECT", label: "Reject" },
 ];
 
 interface Props {
@@ -34,15 +34,15 @@ interface Props {
 
 export default function PermissionTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [moduleFilter, setModuleFilter] = useState('');
-  const [actionFilter, setActionFilter] = useState('');
+  const [search, setSearch] = useState("");
+  const [moduleFilter, setModuleFilter] = useState("");
+  const [actionFilter, setActionFilter] = useState("");
 
   const filtered = data.filter((item) => {
     const matchesSearch =
       !search ||
       Object.values(item).some((val) =>
-        String(val ?? '')
+        String(val ?? "")
           .toLowerCase()
           .includes(search.toLowerCase()),
       );
@@ -54,51 +54,51 @@ export default function PermissionTable({ data, loading, onDelete }: Props) {
   const columns: ColumnsType<PermissionResponse> = [
     {
       title: PERMISSION_LABEL.CODE,
-      dataIndex: 'code',
-      key: 'code',
+      dataIndex: "code",
+      key: "code",
       width: 160,
       render: (val: string) => <code>{val}</code>,
     },
     {
       title: PERMISSION_LABEL.NAME,
-      dataIndex: 'name',
-      key: 'name',
+      dataIndex: "name",
+      key: "name",
       width: 200,
     },
     {
       title: PERMISSION_LABEL.MODULE,
-      dataIndex: 'module',
-      key: 'module',
+      dataIndex: "module",
+      key: "module",
       width: 160,
     },
     {
       title: PERMISSION_LABEL.ACTION,
-      dataIndex: 'action',
-      key: 'action',
+      dataIndex: "action",
+      key: "action",
       width: 110,
       render: (val: string) => (
-        <Tag color={PERMISSION_ACTION_COLORS[val] ?? 'default'}>{val}</Tag>
+        <Tag color={PERMISSION_ACTION_COLORS[val] ?? "default"}>{val}</Tag>
       ),
     },
     {
       title: PERMISSION_LABEL.DESCRIPTION,
-      dataIndex: 'description',
-      key: 'description',
+      dataIndex: "description",
+      key: "description",
       ellipsis: true,
     },
     {
       title: PERMISSION_LABEL.STATUS,
-      dataIndex: 'status',
-      key: 'status',
+      dataIndex: "status",
+      key: "status",
       width: 100,
       render: (val: string) => (
-        <Tag color={val === 'ACTIVE' ? 'success' : 'default'}>{val}</Tag>
+        <Tag color={val === "ACTIVE" ? "success" : "default"}>{val}</Tag>
       ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      fixed: 'right',
+      title: "Actions",
+      key: "actions",
+      fixed: "right",
       width: 140,
       render: (_, record) => (
         <Space>
@@ -158,7 +158,7 @@ export default function PermissionTable({ data, loading, onDelete }: Props) {
         size="small"
         loading={loading}
         pagination={{ pageSize: 10, showTotal: (total) => `${total} records` }}
-        scroll={{ x: 'max-content' }}
+        scroll={{ x: "max-content" }}
         sticky
       />
     </div>

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Button, Typography, Select, Form, DatePicker, Card, Badge } from "antd";
+import {
+  Button,
+  Typography,
+  Select,
+  Form,
+  DatePicker,
+  Card,
+  Badge,
+} from "antd";
 import { PlusOutlined, FilterOutlined, ClearOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -88,33 +96,49 @@ export default function WorkRotationList() {
         <Card size="small" className="mb-4">
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-              <Form.Item label={WORK_ROTATION_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
+              <Form.Item
+                label={WORK_ROTATION_LABEL.FILTER_PAYROLL_GROUP}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All"
                   options={PAYROLL_GROUP_OPTIONS}
                   value={pending.payrollGroupId}
-                  onChange={(val) => setPending((f) => ({ ...f, payrollGroupId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, payrollGroupId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={WORK_ROTATION_LABEL.FILTER_CLIENT} className="mb-0">
+              <Form.Item
+                label={WORK_ROTATION_LABEL.FILTER_CLIENT}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All"
                   options={CLIENT_OPTIONS}
                   value={pending.clientId}
-                  onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, clientId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={WORK_ROTATION_LABEL.PAYROLL_DATE} className="mb-0">
+              <Form.Item
+                label={WORK_ROTATION_LABEL.PAYROLL_DATE}
+                className="mb-0"
+              >
                 <RangePicker
                   format="YYYY-MM-DD"
                   style={{ width: "100%" }}
                   value={
                     pending.fromPayrollDate && pending.toPayrollDate
-                      ? [dayjs(pending.fromPayrollDate), dayjs(pending.toPayrollDate)]
+                      ? [
+                          dayjs(pending.fromPayrollDate),
+                          dayjs(pending.toPayrollDate),
+                        ]
                       : null
                   }
                   onChange={(dates) =>
@@ -131,7 +155,11 @@ export default function WorkRotationList() {
               <Button icon={<ClearOutlined />} onClick={handleClear}>
                 Clear
               </Button>
-              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+              <Button
+                icon={<FilterOutlined />}
+                type="primary"
+                onClick={handleSearch}
+              >
                 Search
               </Button>
             </div>

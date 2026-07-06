@@ -13,32 +13,34 @@ interface EmployeeDependentState {
   setSelected: (item: EmployeeDependentResponse | null) => void;
 }
 
-export const useEmployeeDependentStore = create<EmployeeDependentState>((set) => ({
-  items: [],
-  selected: null,
-  loading: false,
+export const useEmployeeDependentStore = create<EmployeeDependentState>(
+  (set) => ({
+    items: [],
+    selected: null,
+    loading: false,
 
-  loadAll: async () => {
-    set({ loading: true });
-    const items = await employeeDependentApi.getAll();
-    set({ items, loading: false });
-  },
+    loadAll: async () => {
+      set({ loading: true });
+      const items = await employeeDependentApi.getAll();
+      set({ items, loading: false });
+    },
 
-  loadById: async (id) => {
-    set({ loading: true });
-    const selected = await employeeDependentApi.getById(id);
-    set({ selected, loading: false });
-  },
+    loadById: async (id) => {
+      set({ loading: true });
+      const selected = await employeeDependentApi.getById(id);
+      set({ selected, loading: false });
+    },
 
-  add: async (data) => {
-    const created = await employeeDependentApi.create(data);
-    set((state) => ({ items: [...state.items, created] }));
-  },
+    add: async (data) => {
+      const created = await employeeDependentApi.create(data);
+      set((state) => ({ items: [...state.items, created] }));
+    },
 
-  remove: async (id) => {
-    await employeeDependentApi.remove(id);
-    set((state) => ({ items: state.items.filter((d) => d.id !== id) }));
-  },
+    remove: async (id) => {
+      await employeeDependentApi.remove(id);
+      set((state) => ({ items: state.items.filter((d) => d.id !== id) }));
+    },
 
-  setSelected: (selected) => set({ selected }),
-}));
+    setSelected: (selected) => set({ selected }),
+  }),
+);

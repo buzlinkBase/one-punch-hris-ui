@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Button, Typography, Form, Select, DatePicker, Card, Badge } from "antd";
+import {
+  Button,
+  Typography,
+  Form,
+  Select,
+  DatePicker,
+  Card,
+  Badge,
+} from "antd";
 import { PlusOutlined, FilterOutlined, ClearOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -94,34 +102,49 @@ export default function ChangeRestDayList() {
         <Card size="small" className="mb-4">
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4">
-              <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
+              <Form.Item
+                label={CHANGE_REST_DAY_LABEL.FILTER_PAYROLL_GROUP}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All"
                   options={PAYROLL_GROUP_OPTIONS}
                   value={pending.payrollGroupId}
-                  onChange={(val) => setPending((f) => ({ ...f, payrollGroupId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, payrollGroupId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_EMPLOYEE} className="mb-0">
+              <Form.Item
+                label={CHANGE_REST_DAY_LABEL.FILTER_EMPLOYEE}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   showSearch={{ optionFilterProp: "label" }}
                   placeholder="All"
                   options={EMPLOYEE_OPTIONS}
                   value={pending.employeeId}
-                  onChange={(val) => setPending((f) => ({ ...f, employeeId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, employeeId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={CHANGE_REST_DAY_LABEL.FILTER_CLIENT} className="mb-0">
+              <Form.Item
+                label={CHANGE_REST_DAY_LABEL.FILTER_CLIENT}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All"
                   options={CLIENT_OPTIONS}
                   value={pending.clientId}
-                  onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, clientId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
@@ -133,7 +156,10 @@ export default function ChangeRestDayList() {
                   style={{ width: "100%" }}
                   value={
                     pending.fromPayrollDate && pending.toPayrollDate
-                      ? [dayjs(pending.fromPayrollDate), dayjs(pending.toPayrollDate)]
+                      ? [
+                          dayjs(pending.fromPayrollDate),
+                          dayjs(pending.toPayrollDate),
+                        ]
                       : null
                   }
                   onChange={(dates) =>
@@ -150,7 +176,11 @@ export default function ChangeRestDayList() {
               <Button icon={<ClearOutlined />} onClick={handleClear}>
                 Clear
               </Button>
-              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+              <Button
+                icon={<FilterOutlined />}
+                type="primary"
+                onClick={handleSearch}
+              >
                 Search
               </Button>
             </div>

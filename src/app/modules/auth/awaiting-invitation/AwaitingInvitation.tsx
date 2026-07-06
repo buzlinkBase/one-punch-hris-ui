@@ -45,7 +45,9 @@ export default function AwaitingInvitation() {
 
     setAccepting(true);
     try {
-      const result = await authApi.acceptInvitation({ token: invitation.token });
+      const result = await authApi.acceptInvitation({
+        token: invitation.token,
+      });
       const claims = authStorage.getTenantClaims(result.accessToken);
       const user = authStorage.getUser();
       authStorage.save(result.accessToken, {
@@ -82,7 +84,10 @@ export default function AwaitingInvitation() {
   return (
     <Card className="auth-card login-card border-0">
       <div className="login-header">
-        <div className="login-icon-placeholder" aria-label="App icon placeholder">
+        <div
+          className="login-icon-placeholder"
+          aria-label="App icon placeholder"
+        >
           <ClockCircleOutlined />
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
@@ -107,7 +112,12 @@ export default function AwaitingInvitation() {
         >
           Accept Invitation
         </Button>
-        <Button block size="large" loading={checking} onClick={handleCheckAgain}>
+        <Button
+          block
+          size="large"
+          loading={checking}
+          onClick={handleCheckAgain}
+        >
           Check again
         </Button>
       </Space>

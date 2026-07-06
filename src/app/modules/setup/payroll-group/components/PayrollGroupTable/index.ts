@@ -1,1 +1,1 @@
-export { default } from './PayrollGroupTable';
+export { default } from "./PayrollGroupTable";

@@ -18,14 +18,20 @@ export default function SectionTable({ data, loading, onDelete }: Props) {
 
   const filtered = data.filter((item) =>
     Object.values(item).some((val) =>
-      String(val ?? "").toLowerCase().includes(search.toLowerCase()),
+      String(val ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
     ),
   );
 
   const columns: ColumnsType<SectionResponse> = [
     { title: SECTION_LABEL.CODE, dataIndex: "code", key: "code" },
     { title: SECTION_LABEL.NAME, dataIndex: "name", key: "name" },
-    { title: SECTION_LABEL.DEPARTMENT, dataIndex: "departmentName", key: "departmentName" },
+    {
+      title: SECTION_LABEL.DEPARTMENT,
+      dataIndex: "departmentName",
+      key: "departmentName",
+    },
     { title: SECTION_LABEL.STATUS, dataIndex: "status", key: "status" },
     {
       title: "Actions",
@@ -47,7 +53,9 @@ export default function SectionTable({ data, loading, onDelete }: Props) {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>Delete</Button>
+              <Button type="link" danger>
+                Delete
+              </Button>
             </Popconfirm>
           )}
         </Space>

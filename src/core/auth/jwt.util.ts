@@ -3,7 +3,9 @@ export interface JwtPayload {
   [key: string]: unknown;
 }
 
-export function decodeJwt<T extends JwtPayload = JwtPayload>(token: string): T | null {
+export function decodeJwt<T extends JwtPayload = JwtPayload>(
+  token: string,
+): T | null {
   try {
     const payload = token.split(".")[1];
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");

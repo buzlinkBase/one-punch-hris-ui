@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Form, Input, InputNumber, Button, Select, Typography, Space, Tag } from "antd";
+import {
+  Form,
+  Input,
+  InputNumber,
+  Button,
+  Select,
+  Typography,
+  Space,
+  Tag,
+} from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
 import { useForm, Controller, type Resolver } from "react-hook-form";
@@ -121,7 +130,9 @@ export default function PositionDetail() {
                   className="w-full"
                   min={0}
                   precision={2}
-                  formatter={(v) => `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                  formatter={(v) =>
+                    `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
                 />
               )}
             />
@@ -136,7 +147,11 @@ export default function PositionDetail() {
               name="status"
               control={control}
               render={({ field }) => (
-                <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
+                <Select
+                  {...field}
+                  options={STATUS_OPTIONS}
+                  placeholder="Select status"
+                />
               )}
             />
           </Form.Item>

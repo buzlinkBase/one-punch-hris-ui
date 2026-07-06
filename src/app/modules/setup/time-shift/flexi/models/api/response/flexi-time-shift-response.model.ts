@@ -1,9 +1,29 @@
+import type {
+  BreakMode,
+  TimeShiftType,
+} from "../request/create-flexi-time-shift.model";
+
 export interface FlexiTimeShiftResponse {
   id: string;
-  code: string;
-  name: string;
-  coreTimeStart: string;
-  coreTimeEnd: string;
-  workDuration: number;
-  status: string;
+  shiftName: string;
+  shiftType: TimeShiftType;
+  startTime: string;
+  endTime: string;
+  withAMBreak: BreakMode;
+  amStartTime: string | null;
+  amEndTime: string | null;
+  withLunchBreak: BreakMode;
+  lunchStartTime: string | null;
+  lunchEndTime: string | null;
+  withPMBreak: BreakMode;
+  pmStartTime: string | null;
+  pmEndTime: string | null;
+  gracePeriodMinutes: number;
+  breakDurationMinutes: number;
+  withOT: boolean;
+  otRequireTimeIn: boolean;
+  otStart: string;
+  overTimeThreshold: number;
+  minimumWorkMinutes: number;
+  maxWorkingMinutes: number;
 }

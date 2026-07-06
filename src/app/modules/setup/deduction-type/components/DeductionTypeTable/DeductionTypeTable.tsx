@@ -25,7 +25,12 @@ export default function DeductionTypeTable({ data, loading, onDelete }: Props) {
   );
 
   const columns: ColumnsType<DeductionTypeResponse> = [
-    { title: DEDUCTION_TYPE_LABEL.CODE, dataIndex: "code", key: "code", width: 120 },
+    {
+      title: DEDUCTION_TYPE_LABEL.CODE,
+      dataIndex: "code",
+      key: "code",
+      width: 120,
+    },
     { title: DEDUCTION_TYPE_LABEL.NAME, dataIndex: "name", key: "name" },
     {
       title: DEDUCTION_TYPE_LABEL.STATUS,

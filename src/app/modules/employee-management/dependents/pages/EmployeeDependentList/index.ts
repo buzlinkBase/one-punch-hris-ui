@@ -1,1 +1,1 @@
-export { default } from './EmployeeDependentList';
+export { default } from "./EmployeeDependentList";

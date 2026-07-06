@@ -2,10 +2,7 @@ import { authStorage } from "./auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 
 export type TenantRedirect =
-  | "/select-tenant"
-  | "/create-tenant"
-  | "/awaiting-invitation"
-  | null;
+  "/select-tenant" | "/create-tenant" | "/awaiting-invitation" | null;
 
 /** Resolves where the user should land based on tenant state. `null` means the current tenant context is already resolved. */
 export async function resolveTenantDestination(): Promise<TenantRedirect> {
@@ -30,6 +27,7 @@ export async function resolveTenantDestination(): Promise<TenantRedirect> {
       ...user!,
       tenantId: claims.tenantId ?? tenant.tenantId,
       tenantName: claims.tenantName ?? tenant.name,
+      tenants: result.tenants ?? user?.tenants,
     });
     return null;
   }

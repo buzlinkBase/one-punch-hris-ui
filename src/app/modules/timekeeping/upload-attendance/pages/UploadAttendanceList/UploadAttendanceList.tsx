@@ -37,10 +37,9 @@ export default function UploadAttendanceList() {
   const [selectedFile, setSelectedFile] = useState<UploadFile | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const activeFilterCount = [
-    filter.fromDate,
-    filter.employeeId,
-  ].filter(Boolean).length;
+  const activeFilterCount = [filter.fromDate, filter.employeeId].filter(
+    Boolean,
+  ).length;
 
   const { data: records = [], isLoading } = useUploadAttendanceRecords(filter);
   const { data: employees = [] } = useUploadAttendanceEmployees();
@@ -99,7 +98,10 @@ export default function UploadAttendanceList() {
         <Card size="small" className="mb-4">
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-              <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_FROM_DATE} className="mb-0">
+              <Form.Item
+                label={UPLOAD_ATTENDANCE_LABEL.FILTER_FROM_DATE}
+                className="mb-0"
+              >
                 <DatePicker
                   style={{ width: "100%" }}
                   value={pending.fromDate ? dayjs(pending.fromDate) : null}
@@ -111,7 +113,10 @@ export default function UploadAttendanceList() {
                   }
                 />
               </Form.Item>
-              <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_TO_DATE} className="mb-0">
+              <Form.Item
+                label={UPLOAD_ATTENDANCE_LABEL.FILTER_TO_DATE}
+                className="mb-0"
+              >
                 <DatePicker
                   style={{ width: "100%" }}
                   value={pending.toDate ? dayjs(pending.toDate) : null}
@@ -123,7 +128,10 @@ export default function UploadAttendanceList() {
                   }
                 />
               </Form.Item>
-              <Form.Item label={UPLOAD_ATTENDANCE_LABEL.FILTER_EMPLOYEE} className="mb-0">
+              <Form.Item
+                label={UPLOAD_ATTENDANCE_LABEL.FILTER_EMPLOYEE}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   showSearch={{ optionFilterProp: "label" }}
@@ -141,7 +149,11 @@ export default function UploadAttendanceList() {
               <Button icon={<ClearOutlined />} onClick={handleClear}>
                 Clear
               </Button>
-              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+              <Button
+                icon={<FilterOutlined />}
+                type="primary"
+                onClick={handleSearch}
+              >
                 Search
               </Button>
             </div>

@@ -1,0 +1,1 @@
+pnpm exec tsc -b --noEmit || (echo "" && echo "Type check failed. Fix the TypeScript errors above before pushing." && exit 1)

@@ -1,1 +1,1 @@
-export { default } from './AssignAssetTable';
+export { default } from "./AssignAssetTable";

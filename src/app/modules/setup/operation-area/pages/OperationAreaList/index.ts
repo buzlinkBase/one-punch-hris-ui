@@ -1,1 +1,1 @@
-export { default } from './OperationAreaList';
+export { default } from "./OperationAreaList";

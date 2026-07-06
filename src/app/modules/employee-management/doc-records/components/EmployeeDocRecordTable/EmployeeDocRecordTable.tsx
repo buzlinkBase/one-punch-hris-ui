@@ -1,11 +1,23 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input, Select, Tag, Typography } from "antd";
+import {
+  Table,
+  Button,
+  Space,
+  Popconfirm,
+  Input,
+  Select,
+  Tag,
+  Typography,
+} from "antd";
 import { SearchOutlined, PaperClipOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { EmployeeDocRecordResponse } from "../../models/api/response/employee-doc-record-response.model";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
-import { EMPLOYEE_DOC_RECORD_LABEL, DOC_RECORD_TYPE_OPTIONS } from "../../constants/label.const";
+import {
+  EMPLOYEE_DOC_RECORD_LABEL,
+  DOC_RECORD_TYPE_OPTIONS,
+} from "../../constants/label.const";
 
 const { Text } = Typography;
 
@@ -21,14 +33,22 @@ const TYPE_FILTER_OPTIONS = [
   ...DOC_RECORD_TYPE_OPTIONS,
 ];
 
-export default function EmployeeDocRecordTable({ data, employees, loading, onDelete }: Props) {
+export default function EmployeeDocRecordTable({
+  data,
+  employees,
+  loading,
+  onDelete,
+}: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [employeeFilter, setEmployeeFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
 
   const employeeMap = new Map(
-    employees.map((e) => [e.id, `${e.firstName} ${e.lastName} (${e.employeeNo})`]),
+    employees.map((e) => [
+      e.id,
+      `${e.firstName} ${e.lastName} (${e.employeeNo})`,
+    ]),
   );
 
   const employeeOptions = [
@@ -41,10 +61,11 @@ export default function EmployeeDocRecordTable({ data, employees, loading, onDel
 
   const filtered = data.filter((item) => {
     const empName = employeeMap.get(item.employeeId) ?? "";
-    const matchesSearch = [item.recordType, item.description, empName].some((val) =>
-      val.toLowerCase().includes(search.toLowerCase()),
+    const matchesSearch = [item.recordType, item.description, empName].some(
+      (val) => val.toLowerCase().includes(search.toLowerCase()),
     );
-    const matchesEmployee = !employeeFilter || item.employeeId === employeeFilter;
+    const matchesEmployee =
+      !employeeFilter || item.employeeId === employeeFilter;
     const matchesType = !typeFilter || item.recordType === typeFilter;
     return matchesSearch && matchesEmployee && matchesType;
   });

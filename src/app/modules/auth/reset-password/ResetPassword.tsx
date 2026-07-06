@@ -1,4 +1,13 @@
-import { Card, Form, Input, Button, Typography, notification, Result, Alert } from "antd";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Typography,
+  notification,
+  Result,
+  Alert,
+} from "antd";
 import { KeyOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
@@ -72,7 +81,10 @@ export default function ResetPassword() {
   return (
     <Card className="auth-card login-card border-0">
       <div className="login-header">
-        <div className="login-icon-placeholder" aria-label="App icon placeholder">
+        <div
+          className="login-icon-placeholder"
+          aria-label="App icon placeholder"
+        >
           <KeyOutlined />
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>

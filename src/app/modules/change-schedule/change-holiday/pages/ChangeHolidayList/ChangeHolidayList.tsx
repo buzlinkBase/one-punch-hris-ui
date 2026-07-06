@@ -101,66 +101,79 @@ export default function ChangeHolidayList() {
 
       {filtersOpen && (
         <Card size="small" className="mb-4">
-        <Form layout="vertical">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-            <Form.Item label={CHANGE_HOLIDAY_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
-              <Select
-                allowClear
-                placeholder="All"
-                options={payrollGroupOptions}
-                value={pending.payrollGroupId}
-                onChange={(value) =>
-                  setPending((state) => ({ ...state, payrollGroupId: value }))
-                }
-                style={{ width: "100%" }}
-              />
-            </Form.Item>
+          <Form layout="vertical">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
+              <Form.Item
+                label={CHANGE_HOLIDAY_LABEL.FILTER_PAYROLL_GROUP}
+                className="mb-0"
+              >
+                <Select
+                  allowClear
+                  placeholder="All"
+                  options={payrollGroupOptions}
+                  value={pending.payrollGroupId}
+                  onChange={(value) =>
+                    setPending((state) => ({ ...state, payrollGroupId: value }))
+                  }
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
 
-            <Form.Item label={CHANGE_HOLIDAY_LABEL.FILTER_EMPLOYEE} className="mb-0">
-              <Select
-                allowClear
-                showSearch={{ optionFilterProp: "label" }}
-                placeholder="All"
-                options={employeeOptions}
-                value={pending.employeeId}
-                onChange={(value) =>
-                  setPending((state) => ({ ...state, employeeId: value }))
-                }
-                style={{ width: "100%" }}
-              />
-            </Form.Item>
+              <Form.Item
+                label={CHANGE_HOLIDAY_LABEL.FILTER_EMPLOYEE}
+                className="mb-0"
+              >
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All"
+                  options={employeeOptions}
+                  value={pending.employeeId}
+                  onChange={(value) =>
+                    setPending((state) => ({ ...state, employeeId: value }))
+                  }
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
 
-            <Form.Item
-              label={`${CHANGE_HOLIDAY_LABEL.FILTER_FROM_PAYROLL_DATE} – ${CHANGE_HOLIDAY_LABEL.FILTER_TO_PAYROLL_DATE}`}
-              className="mb-0"
-            >
-              <RangePicker
-                style={{ width: "100%" }}
-                value={
-                  pending.fromPayrollDate && pending.toPayrollDate
-                    ? [dayjs(pending.fromPayrollDate), dayjs(pending.toPayrollDate)]
-                    : null
-                }
-                onChange={(dates) =>
-                  setPending((state) => ({
-                    ...state,
-                    fromPayrollDate: dates?.[0]?.format("YYYY-MM-DD"),
-                    toPayrollDate: dates?.[1]?.format("YYYY-MM-DD"),
-                  }))
-                }
-              />
-            </Form.Item>
-          </div>
+              <Form.Item
+                label={`${CHANGE_HOLIDAY_LABEL.FILTER_FROM_PAYROLL_DATE} – ${CHANGE_HOLIDAY_LABEL.FILTER_TO_PAYROLL_DATE}`}
+                className="mb-0"
+              >
+                <RangePicker
+                  style={{ width: "100%" }}
+                  value={
+                    pending.fromPayrollDate && pending.toPayrollDate
+                      ? [
+                          dayjs(pending.fromPayrollDate),
+                          dayjs(pending.toPayrollDate),
+                        ]
+                      : null
+                  }
+                  onChange={(dates) =>
+                    setPending((state) => ({
+                      ...state,
+                      fromPayrollDate: dates?.[0]?.format("YYYY-MM-DD"),
+                      toPayrollDate: dates?.[1]?.format("YYYY-MM-DD"),
+                    }))
+                  }
+                />
+              </Form.Item>
+            </div>
 
-          <div className="flex justify-end gap-2 mt-4">
-            <Button icon={<ClearOutlined />} onClick={handleClear}>
-              Clear
-            </Button>
-            <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
-              Search
-            </Button>
-          </div>
-        </Form>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button icon={<ClearOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
+              <Button
+                icon={<FilterOutlined />}
+                type="primary"
+                onClick={handleSearch}
+              >
+                Search
+              </Button>
+            </div>
+          </Form>
         </Card>
       )}
 

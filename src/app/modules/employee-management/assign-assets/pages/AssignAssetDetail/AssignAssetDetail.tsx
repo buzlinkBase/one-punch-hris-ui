@@ -97,14 +97,20 @@ export default function AssignAssetDetail() {
   const fileList: UploadFile[] = uploadedFile
     ? [uploadedFile]
     : selected?.file
-      ? [{ uid: "-1", name: selected.file.split("/").pop() ?? "attachment", status: "done", url: selected.file }]
+      ? [
+          {
+            uid: "-1",
+            name: selected.file.split("/").pop() ?? "attachment",
+            status: "done",
+            url: selected.file,
+          },
+        ]
       : [];
 
   const uploadProps: UploadProps = {
     beforeUpload: (file) => {
       const isAllowed =
-        file.type === "application/pdf" ||
-        file.type.startsWith("image/");
+        file.type === "application/pdf" || file.type.startsWith("image/");
       if (!isAllowed) {
         message.error("Only PDF or image files are allowed.");
         return Upload.LIST_IGNORE;
@@ -217,9 +223,7 @@ export default function AssignAssetDetail() {
             <Controller
               name="assetDescription"
               control={control}
-              render={({ field }) => (
-                <Input.TextArea {...field} rows={2} />
-              )}
+              render={({ field }) => <Input.TextArea {...field} rows={2} />}
             />
           </Form.Item>
 
@@ -273,11 +277,7 @@ export default function AssignAssetDetail() {
                 name="qty"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber
-                    {...field}
-                    min={1}
-                    style={{ width: "100%" }}
-                  />
+                  <InputNumber {...field} min={1} style={{ width: "100%" }} />
                 )}
               />
             </Form.Item>
@@ -331,9 +331,7 @@ export default function AssignAssetDetail() {
             <Controller
               name="remarks"
               control={control}
-              render={({ field }) => (
-                <Input.TextArea {...field} rows={3} />
-              )}
+              render={({ field }) => <Input.TextArea {...field} rows={3} />}
             />
           </Form.Item>
 

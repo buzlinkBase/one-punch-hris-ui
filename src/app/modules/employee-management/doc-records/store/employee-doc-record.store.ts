@@ -13,32 +13,34 @@ interface EmployeeDocRecordState {
   setSelected: (item: EmployeeDocRecordResponse | null) => void;
 }
 
-export const useEmployeeDocRecordStore = create<EmployeeDocRecordState>((set) => ({
-  items: [],
-  selected: null,
-  loading: false,
+export const useEmployeeDocRecordStore = create<EmployeeDocRecordState>(
+  (set) => ({
+    items: [],
+    selected: null,
+    loading: false,
 
-  loadAll: async () => {
-    set({ loading: true });
-    const items = await employeeDocRecordApi.getAll();
-    set({ items, loading: false });
-  },
+    loadAll: async () => {
+      set({ loading: true });
+      const items = await employeeDocRecordApi.getAll();
+      set({ items, loading: false });
+    },
 
-  loadById: async (id) => {
-    set({ loading: true });
-    const selected = await employeeDocRecordApi.getById(id);
-    set({ selected, loading: false });
-  },
+    loadById: async (id) => {
+      set({ loading: true });
+      const selected = await employeeDocRecordApi.getById(id);
+      set({ selected, loading: false });
+    },
 
-  add: async (data) => {
-    const created = await employeeDocRecordApi.create(data);
-    set((state) => ({ items: [...state.items, created] }));
-  },
+    add: async (data) => {
+      const created = await employeeDocRecordApi.create(data);
+      set((state) => ({ items: [...state.items, created] }));
+    },
 
-  remove: async (id) => {
-    await employeeDocRecordApi.remove(id);
-    set((state) => ({ items: state.items.filter((r) => r.id !== id) }));
-  },
+    remove: async (id) => {
+      await employeeDocRecordApi.remove(id);
+      set((state) => ({ items: state.items.filter((r) => r.id !== id) }));
+    },
 
-  setSelected: (selected) => set({ selected }),
-}));
+    setSelected: (selected) => set({ selected }),
+  }),
+);

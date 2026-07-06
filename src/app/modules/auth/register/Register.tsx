@@ -31,7 +31,10 @@ export default function Register() {
     },
   });
 
-  const onSubmit = async ({ confirmPassword: _, ...values }: RegisterFormValues) => {
+  const onSubmit = async ({
+    confirmPassword: _,
+    ...values
+  }: RegisterFormValues) => {
     try {
       await register(values);
       notification.success({
@@ -56,7 +59,10 @@ export default function Register() {
   return (
     <Card className="auth-card login-card border-0">
       <div className="login-header">
-        <div className="login-icon-placeholder" aria-label="App icon placeholder">
+        <div
+          className="login-icon-placeholder"
+          aria-label="App icon placeholder"
+        >
           <UserAddOutlined />
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
@@ -69,7 +75,9 @@ export default function Register() {
       </div>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0 16px" }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0 16px" }}
+        >
           <Form.Item
             label="First Name"
             validateStatus={errors.name ? "error" : ""}
@@ -83,7 +91,7 @@ export default function Register() {
                 <Input {...field} placeholder="Name" size="large" />
               )}
             />
-          </Form.Item> 
+          </Form.Item>
         </div>
 
         <Form.Item
@@ -111,7 +119,11 @@ export default function Register() {
             name="password"
             control={control}
             render={({ field }) => (
-              <Input.Password {...field} placeholder="Min. 8 characters" size="large" />
+              <Input.Password
+                {...field}
+                placeholder="Min. 8 characters"
+                size="large"
+              />
             )}
           />
         </Form.Item>
@@ -126,7 +138,11 @@ export default function Register() {
             name="confirmPassword"
             control={control}
             render={({ field }) => (
-              <Input.Password {...field} placeholder="Re-enter password" size="large" />
+              <Input.Password
+                {...field}
+                placeholder="Re-enter password"
+                size="large"
+              />
             )}
           />
         </Form.Item>

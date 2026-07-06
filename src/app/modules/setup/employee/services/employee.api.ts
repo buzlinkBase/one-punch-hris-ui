@@ -4,6 +4,7 @@ import type { EmployeeResponse } from "../models/api/response/employee-response.
 import type { CreateEmployee } from "../models/api/request/create-employee.model";
 import type { UpdateEmployee } from "../models/api/request/update-employee.model";
 import dayjs from "dayjs";
+import type { PaginatedResponse } from "@/core/pagination-model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "employees");
 
@@ -60,8 +61,11 @@ const MOCK_EMPLOYEES: EmployeeResponse[] = Array.from(
 export const employeeApi = {
   async getAll(): Promise<EmployeeResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<EmployeeResponse[]>(BASE_URL);
-      return data.length ? data : MOCK_EMPLOYEES;
+      const data =
+        await httpClient.getUnwrapped<PaginatedResponse<EmployeeResponse[]>>(
+          BASE_URL,
+        );
+      return data.data.length ? data.data : MOCK_EMPLOYEES;
     } catch {
       return MOCK_EMPLOYEES;
     }

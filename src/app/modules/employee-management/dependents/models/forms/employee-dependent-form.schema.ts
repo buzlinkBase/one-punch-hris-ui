@@ -8,4 +8,6 @@ export const employeeDependentFormSchema = z.object({
   dob: z.string().min(1, "Date of birth is required"),
 });
 
-export type EmployeeDependentFormValues = z.infer<typeof employeeDependentFormSchema>;
+export type EmployeeDependentFormValues = z.infer<
+  typeof employeeDependentFormSchema
+>;

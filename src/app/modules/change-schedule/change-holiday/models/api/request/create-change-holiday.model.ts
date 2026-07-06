@@ -1,7 +1,5 @@
 export type ChangeHolidayTargetType =
-  | "employee"
-  | "payroll-group"
-  | "employee-group";
+  "employee" | "payroll-group" | "employee-group";
 
 export interface CreateChangeHoliday {
   employeeIds: string[];

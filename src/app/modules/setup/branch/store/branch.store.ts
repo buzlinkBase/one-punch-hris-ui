@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { branchApi } from '../services/branch.api';
-import type { BranchResponse } from '../models/api/response/branch-response.model';
-import type { CreateBranch } from '../models/api/request/create-branch.model';
-import type { UpdateBranch } from '../models/api/request/update-branch.model';
+import { create } from "zustand";
+import { branchApi } from "../services/branch.api";
+import type { BranchResponse } from "../models/api/response/branch-response.model";
+import type { CreateBranch } from "../models/api/request/create-branch.model";
+import type { UpdateBranch } from "../models/api/request/update-branch.model";
 
 interface BranchStore {
   branches: BranchResponse[];
@@ -28,21 +28,27 @@ export const useBranchStore = create<BranchStore>((set) => ({
     try {
       const branches = await branchApi.getAll();
       set({ branches, loading: false });
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   loadById: async (id) => {
     set({ loading: true, error: null });
     try {
       const selected = await branchApi.getById(id);
       set({ selected, loading: false });
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   add: async (data) => {
     set({ loading: true, error: null });
     try {
       const branch = await branchApi.create(data);
       set((s) => ({ branches: [...s.branches, branch], loading: false }));
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   update: async (data) => {
     set({ loading: true, error: null });
@@ -53,14 +59,21 @@ export const useBranchStore = create<BranchStore>((set) => ({
         selected: updated,
         loading: false,
       }));
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   remove: async (id) => {
     set({ loading: true, error: null });
     try {
       await branchApi.remove(id);
-      set((s) => ({ branches: s.branches.filter((b) => b.id !== id), loading: false }));
-    } catch (err) { set({ error: String(err), loading: false }); }
+      set((s) => ({
+        branches: s.branches.filter((b) => b.id !== id),
+        loading: false,
+      }));
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   setSelected: (branch) => set({ selected: branch }),
   clearError: () => set({ error: null }),

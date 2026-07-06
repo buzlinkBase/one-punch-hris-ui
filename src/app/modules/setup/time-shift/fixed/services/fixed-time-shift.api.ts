@@ -6,24 +6,80 @@ import type { UpdateFixedTimeShift } from "../models/api/request/update-fixed-ti
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timeshifts");
 
-const MOCK_FIXED_TIME_SHIFTS: FixedTimeShiftResponse[] = Array.from(
-  { length: 24 },
-  (_, i) => {
-    const startHour = (6 + (i % 8) * 2) % 24;
-    const endHour = (startHour + 9) % 24;
-
-    return {
-      id: `fts-${i + 1}`,
-      code: `FTS${String(i + 1).padStart(3, "0")}`,
-      name: `Fixed Shift ${i + 1}`,
-      timeIn: `${String(startHour).padStart(2, "0")}:00`,
-      timeOut: `${String(endHour).padStart(2, "0")}:00`,
-      breakDuration: i % 3 === 0 ? 90 : 60,
-      workDuration: i % 4 === 0 ? 9 : 8,
-      status: i % 7 === 0 ? "INACTIVE" : "ACTIVE",
-    };
+const MOCK_FIXED_TIME_SHIFTS: FixedTimeShiftResponse[] = [
+  {
+    id: "fts-001",
+    shiftName: "Regular Day Shift",
+    shiftType: "FIXED",
+    startTime: "08:00:00",
+    endTime: "17:00:00",
+    withLunchBreak: "UNPAID_BREAK",
+    lunchStartTime: "12:00:00",
+    lunchEndTime: "13:00:00",
+    breakDurationMinutes: 60,
+    withAMBreak: "NONE",
+    amStartTime: null,
+    amEndTime: null,
+    withPMBreak: "NONE",
+    pmStartTime: null,
+    pmEndTime: null,
+    gracePeriodMinutes: 15,
+    maxWorkingMinutes: 480,
+    minimumWorkMinutes: 0,
+    withOT: true,
+    otRequireTimeIn: false,
+    otStart: "17:00:00",
+    overTimeThreshold: 60,
   },
-);
+  {
+    id: "fts-002",
+    shiftName: "Morning Shift",
+    shiftType: "FIXED",
+    startTime: "06:00:00",
+    endTime: "14:00:00",
+    withLunchBreak: "PAID_BREAK",
+    lunchStartTime: "10:00:00",
+    lunchEndTime: "10:30:00",
+    breakDurationMinutes: 30,
+    withAMBreak: "NONE",
+    amStartTime: null,
+    amEndTime: null,
+    withPMBreak: "NONE",
+    pmStartTime: null,
+    pmEndTime: null,
+    gracePeriodMinutes: 10,
+    maxWorkingMinutes: 480,
+    minimumWorkMinutes: 0,
+    withOT: false,
+    otRequireTimeIn: false,
+    otStart: "00:00:00",
+    overTimeThreshold: 0,
+  },
+  {
+    id: "fts-003",
+    shiftName: "Night Shift",
+    shiftType: "FIXED",
+    startTime: "22:00:00",
+    endTime: "1.06:00:00",
+    withLunchBreak: "UNPAID_BREAK",
+    lunchStartTime: "02:00:00",
+    lunchEndTime: "03:00:00",
+    breakDurationMinutes: 60,
+    withAMBreak: "PAID_BREAK",
+    amStartTime: "00:00:00",
+    amEndTime: "00:15:00",
+    withPMBreak: "PAID_BREAK",
+    pmStartTime: "04:00:00",
+    pmEndTime: "04:15:00",
+    gracePeriodMinutes: 15,
+    maxWorkingMinutes: 480,
+    minimumWorkMinutes: 0,
+    withOT: true,
+    otRequireTimeIn: true,
+    otStart: "06:00:00",
+    overTimeThreshold: 60,
+  },
+];
 
 export const fixedTimeShiftApi = {
   async getAll(): Promise<FixedTimeShiftResponse[]> {

@@ -1,5 +1,5 @@
-export type HolidayType = 'SPECIAL' | 'LEGAL';
-export type HolidayWorkType = 'Working' | 'NonWorking';
+export type HolidayType = "SPECIAL" | "LEGAL";
+export type HolidayWorkType = "Working" | "NonWorking";
 
 export interface CreateHoliday {
   description: string;
