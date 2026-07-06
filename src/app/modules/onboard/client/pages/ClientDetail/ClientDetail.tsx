@@ -99,14 +99,14 @@ export default function ClientDetail() {
     };
 
     await deactivate(payload);
-    navigate({ to:'/clients' });
+    navigate({ to: "/clients" });
   };
 
   const isSubmitting = isCreating || isUpdating;
   const canDeactivate = Boolean(
     isEdit &&
     selected &&
-    selected.status === 'ACTIVE' &&
+    selected.status === "ACTIVE" &&
     selected.unpaidDues > 0,
   );
 
