@@ -6,7 +6,11 @@ import type { UpdateUser } from "../models/api/request/update-user.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "users");
 
-const userTypes: UserResponse["userType"][] = ["Administrator", "HR", "Employee"];
+const userTypes: UserResponse["userType"][] = [
+  "Administrator",
+  "HR",
+  "Employee",
+];
 
 const MOCK_USERS: UserResponse[] = Array.from({ length: 20 }, (_, i) => ({
   id: `user-${1001 + i}`,

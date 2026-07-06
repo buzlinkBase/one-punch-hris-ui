@@ -28,7 +28,12 @@ const GENDER_FILTER_OPTIONS = [
   ...GENDER_OPTIONS,
 ];
 
-export default function EmployeeDependentTable({ data, employees, loading, onDelete }: Props) {
+export default function EmployeeDependentTable({
+  data,
+  employees,
+  loading,
+  onDelete,
+}: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [employeeFilter, setEmployeeFilter] = useState("");
@@ -36,7 +41,10 @@ export default function EmployeeDependentTable({ data, employees, loading, onDel
   const [genderFilter, setGenderFilter] = useState("");
 
   const employeeMap = new Map(
-    employees.map((e) => [e.id, `${e.firstName} ${e.lastName} (${e.employeeNo})`]),
+    employees.map((e) => [
+      e.id,
+      `${e.firstName} ${e.lastName} (${e.employeeNo})`,
+    ]),
   );
 
   const employeeOptions = [
@@ -49,13 +57,20 @@ export default function EmployeeDependentTable({ data, employees, loading, onDel
 
   const filtered = data.filter((item) => {
     const empName = employeeMap.get(item.employeeId) ?? "";
-    const matchesSearch = [item.fullName, item.relationship, item.gender, empName].some((val) =>
-      val.toLowerCase().includes(search.toLowerCase()),
-    );
-    const matchesEmployee = !employeeFilter || item.employeeId === employeeFilter;
-    const matchesRelationship = !relationshipFilter || item.relationship === relationshipFilter;
+    const matchesSearch = [
+      item.fullName,
+      item.relationship,
+      item.gender,
+      empName,
+    ].some((val) => val.toLowerCase().includes(search.toLowerCase()));
+    const matchesEmployee =
+      !employeeFilter || item.employeeId === employeeFilter;
+    const matchesRelationship =
+      !relationshipFilter || item.relationship === relationshipFilter;
     const matchesGender = !genderFilter || item.gender === genderFilter;
-    return matchesSearch && matchesEmployee && matchesRelationship && matchesGender;
+    return (
+      matchesSearch && matchesEmployee && matchesRelationship && matchesGender
+    );
   });
 
   const columns: ColumnsType<EmployeeDependentResponse> = [

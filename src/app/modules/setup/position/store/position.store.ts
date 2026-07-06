@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { positionApi } from '../services/position.api';
-import type { PositionResponse } from '../models/api/response/position-response.model';
-import type { CreatePosition } from '../models/api/request/create-position.model';
-import type { UpdatePosition } from '../models/api/request/update-position.model';
+import { create } from "zustand";
+import { positionApi } from "../services/position.api";
+import type { PositionResponse } from "../models/api/response/position-response.model";
+import type { CreatePosition } from "../models/api/request/create-position.model";
+import type { UpdatePosition } from "../models/api/request/update-position.model";
 
 interface PositionStore {
   positions: PositionResponse[];
@@ -28,21 +28,27 @@ export const usePositionStore = create<PositionStore>((set) => ({
     try {
       const positions = await positionApi.getAll();
       set({ positions, loading: false });
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   loadById: async (id) => {
     set({ loading: true, error: null });
     try {
       const selected = await positionApi.getById(id);
       set({ selected, loading: false });
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   add: async (data) => {
     set({ loading: true, error: null });
     try {
       const position = await positionApi.create(data);
       set((s) => ({ positions: [...s.positions, position], loading: false }));
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   update: async (data) => {
     set({ loading: true, error: null });
@@ -53,14 +59,21 @@ export const usePositionStore = create<PositionStore>((set) => ({
         selected: updated,
         loading: false,
       }));
-    } catch (err) { set({ error: String(err), loading: false }); }
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   remove: async (id) => {
     set({ loading: true, error: null });
     try {
       await positionApi.remove(id);
-      set((s) => ({ positions: s.positions.filter((p) => p.id !== id), loading: false }));
-    } catch (err) { set({ error: String(err), loading: false }); }
+      set((s) => ({
+        positions: s.positions.filter((p) => p.id !== id),
+        loading: false,
+      }));
+    } catch (err) {
+      set({ error: String(err), loading: false });
+    }
   },
   setSelected: (position) => set({ selected: position }),
   clearError: () => set({ error: null }),

@@ -1,4 +1,12 @@
-import { Card, Form, Input, Button, Typography, notification, Result } from "antd";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Typography,
+  notification,
+  Result,
+} from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
@@ -17,7 +25,8 @@ const { Title, Text } = Typography;
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [sent, setSent] = useState(false);
-  const { mutateAsync: forgotPassword, isPending } = useForgotPasswordMutation();
+  const { mutateAsync: forgotPassword, isPending } =
+    useForgotPasswordMutation();
 
   const {
     control,
@@ -53,7 +62,12 @@ export default function ForgotPassword() {
           title="Check your email"
           subTitle="If an account exists for that email, we've sent password reset instructions."
           extra={
-            <Button type="primary" block size="large" onClick={() => navigate({ to: "/login" })}>
+            <Button
+              type="primary"
+              block
+              size="large"
+              onClick={() => navigate({ to: "/login" })}
+            >
               Back to Sign In
             </Button>
           }
@@ -65,7 +79,10 @@ export default function ForgotPassword() {
   return (
     <Card className="auth-card login-card border-0">
       <div className="login-header">
-        <div className="login-icon-placeholder" aria-label="App icon placeholder">
+        <div
+          className="login-icon-placeholder"
+          aria-label="App icon placeholder"
+        >
           <LockOutlined />
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>

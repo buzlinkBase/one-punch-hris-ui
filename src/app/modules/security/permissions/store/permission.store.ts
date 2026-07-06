@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { permissionApi } from '../services/permission.api';
-import type { PermissionResponse } from '../models/api/response/permission-response.model';
-import type { CreatePermission } from '../models/api/request/create-permission.model';
-import type { UpdatePermission } from '../models/api/request/update-permission.model';
+import { create } from "zustand";
+import { permissionApi } from "../services/permission.api";
+import type { PermissionResponse } from "../models/api/response/permission-response.model";
+import type { CreatePermission } from "../models/api/request/create-permission.model";
+import type { UpdatePermission } from "../models/api/request/update-permission.model";
 
 interface PermissionStore {
   permissions: PermissionResponse[];
@@ -48,7 +48,10 @@ export const usePermissionStore = create<PermissionStore>((set) => ({
     set({ loading: true, error: null });
     try {
       const permission = await permissionApi.create(data);
-      set((s) => ({ permissions: [...s.permissions, permission], loading: false }));
+      set((s) => ({
+        permissions: [...s.permissions, permission],
+        loading: false,
+      }));
     } catch (err) {
       set({ error: String(err), loading: false });
     }
@@ -59,7 +62,9 @@ export const usePermissionStore = create<PermissionStore>((set) => ({
     try {
       const updated = await permissionApi.update(data);
       set((s) => ({
-        permissions: s.permissions.map((p) => (p.id === updated.id ? updated : p)),
+        permissions: s.permissions.map((p) =>
+          p.id === updated.id ? updated : p,
+        ),
         selected: updated,
         loading: false,
       }));

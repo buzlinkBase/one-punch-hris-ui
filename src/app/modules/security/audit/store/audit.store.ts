@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { auditApi } from '../services/audit.api';
-import type { AuditResponse } from '../models/api/response/audit-response.model';
+import { create } from "zustand";
+import { auditApi } from "../services/audit.api";
+import type { AuditResponse } from "../models/api/response/audit-response.model";
 
 interface AuditStore {
   audits: AuditResponse[];

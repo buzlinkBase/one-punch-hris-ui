@@ -29,13 +29,20 @@ function formatBreakMode(value: string | null | undefined): string {
   return value;
 }
 
-export default function FixedTimeShiftTable({ data, loading, onDelete }: Props) {
+export default function FixedTimeShiftTable({
+  data,
+  loading,
+  onDelete,
+}: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const filtered = data.filter((item) =>
-    [item.shiftName, item.startTime, item.endTime]
-      .some((val) => String(val ?? "").toLowerCase().includes(search.toLowerCase())),
+    [item.shiftName, item.startTime, item.endTime].some((val) =>
+      String(val ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+    ),
   );
 
   const columns: ColumnsType<FixedTimeShiftResponse> = [
@@ -116,7 +123,9 @@ export default function FixedTimeShiftTable({ data, loading, onDelete }: Props) 
         <Space>
           <Button
             type="link"
-            onClick={() => navigate({ to: `/setup/time-shift/fixed/${record.id}` })}
+            onClick={() =>
+              navigate({ to: `/setup/time-shift/fixed/${record.id}` })
+            }
           >
             Edit
           </Button>

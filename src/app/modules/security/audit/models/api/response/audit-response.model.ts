@@ -1,15 +1,15 @@
 export type AuditAction =
-  | 'LOGIN'
-  | 'LOGOUT'
-  | 'CREATE'
-  | 'UPDATE'
-  | 'DELETE'
-  | 'VIEW'
-  | 'EXPORT'
-  | 'APPROVE'
-  | 'REJECT';
+  | "LOGIN"
+  | "LOGOUT"
+  | "CREATE"
+  | "UPDATE"
+  | "DELETE"
+  | "VIEW"
+  | "EXPORT"
+  | "APPROVE"
+  | "REJECT";
 
-export type AuditStatus = 'SUCCESS' | 'FAILED';
+export type AuditStatus = "SUCCESS" | "FAILED";
 
 export interface AuditResponse {
   id: string;

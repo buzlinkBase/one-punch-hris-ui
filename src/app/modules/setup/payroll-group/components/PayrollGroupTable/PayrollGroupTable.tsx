@@ -4,7 +4,10 @@ import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { PayrollGroupResponse } from "../../models/api/response/payroll-group-response.model";
-import { PAYROLL_GROUP_LABEL, PAYROLL_FREQUENCY_OPTIONS } from "../../constants/label.const";
+import {
+  PAYROLL_GROUP_LABEL,
+  PAYROLL_FREQUENCY_OPTIONS,
+} from "../../constants/label.const";
 
 interface Props {
   data: PayrollGroupResponse[];
@@ -21,7 +24,9 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
 
   const filtered = data.filter((item) =>
     [item.code, item.name, item.payrollFrequency, item.status].some((val) =>
-      String(val ?? "").toLowerCase().includes(search.toLowerCase()),
+      String(val ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
     ),
   );
 
@@ -39,7 +44,12 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
       key: "cutoffDays",
       render: (_, record) =>
         record.cutoffDays?.length
-          ? record.cutoffDays.map((c) => c.label || `Day ${c.day}${c.isEndOfMonth ? " (EOM)" : ""}`).join(", ")
+          ? record.cutoffDays
+              .map(
+                (c) =>
+                  c.label || `Day ${c.day}${c.isEndOfMonth ? " (EOM)" : ""}`,
+              )
+              .join(", ")
           : "—",
     },
     { title: PAYROLL_GROUP_LABEL.STATUS, dataIndex: "status", key: "status" },

@@ -52,7 +52,10 @@ export default function SelectTenant() {
   return (
     <Card className="auth-card login-card border-0">
       <div className="login-header">
-        <div className="login-icon-placeholder" aria-label="App icon placeholder">
+        <div
+          className="login-icon-placeholder"
+          aria-label="App icon placeholder"
+        >
           <BankOutlined />
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
@@ -73,7 +76,9 @@ export default function SelectTenant() {
               size="large"
               icon={<BankOutlined />}
               loading={loadingTenant === tenant.tenantId}
-              disabled={loadingTenant !== null && loadingTenant !== tenant.tenantId}
+              disabled={
+                loadingTenant !== null && loadingTenant !== tenant.tenantId
+              }
               onClick={() => handleSelect(tenant.tenantId)}
               style={{ justifyContent: "flex-start" }}
             >

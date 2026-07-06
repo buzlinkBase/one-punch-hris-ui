@@ -7,4 +7,6 @@ export const employeeDocRecordFormSchema = z.object({
   file: z.string(),
 });
 
-export type EmployeeDocRecordFormValues = z.infer<typeof employeeDocRecordFormSchema>;
+export type EmployeeDocRecordFormValues = z.infer<
+  typeof employeeDocRecordFormSchema
+>;

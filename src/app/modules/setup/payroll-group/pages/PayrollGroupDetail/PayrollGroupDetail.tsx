@@ -14,7 +14,12 @@ import {
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
-import { useForm, Controller, useFieldArray, type Resolver } from "react-hook-form";
+import {
+  useForm,
+  Controller,
+  useFieldArray,
+  type Resolver,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   payrollGroupFormSchema,
@@ -44,7 +49,8 @@ export default function PayrollGroupDetail() {
   const navigate = useNavigate();
   const { data: selected } = usePayrollGroup(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreatePayrollGroup();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdatePayrollGroup();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdatePayrollGroup();
 
   const {
     control,
@@ -52,7 +58,9 @@ export default function PayrollGroupDetail() {
     reset,
     formState: { errors },
   } = useForm<PayrollGroupFormValues>({
-    resolver: zodResolver(payrollGroupFormSchema) as Resolver<PayrollGroupFormValues>,
+    resolver: zodResolver(
+      payrollGroupFormSchema,
+    ) as Resolver<PayrollGroupFormValues>,
     defaultValues: {
       code: "",
       name: "",
@@ -145,7 +153,11 @@ export default function PayrollGroupDetail() {
               name="payrollFrequency"
               control={control}
               render={({ field }) => (
-                <Select {...field} options={PAYROLL_FREQUENCY_OPTIONS} placeholder="Select frequency" />
+                <Select
+                  {...field}
+                  options={PAYROLL_FREQUENCY_OPTIONS}
+                  placeholder="Select frequency"
+                />
               )}
             />
           </Form.Item>
@@ -159,7 +171,11 @@ export default function PayrollGroupDetail() {
               name="status"
               control={control}
               render={({ field }) => (
-                <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
+                <Select
+                  {...field}
+                  options={STATUS_OPTIONS}
+                  placeholder="Select status"
+                />
               )}
             />
           </Form.Item>
@@ -172,21 +188,27 @@ export default function PayrollGroupDetail() {
               <Button
                 size="small"
                 icon={<PlusOutlined />}
-                onClick={() => append({ day: 15, isEndOfMonth: false, label: "" })}
+                onClick={() =>
+                  append({ day: 15, isEndOfMonth: false, label: "" })
+                }
               >
                 Add Cutoff
               </Button>
             }
           >
             {fields.length === 0 && (
-              <p className="text-gray-400 text-sm">No cutoff days configured.</p>
+              <p className="text-gray-400 text-sm">
+                No cutoff days configured.
+              </p>
             )}
             {fields.map((field, index) => (
               <div key={field.id} className="flex items-start gap-3 mb-3">
                 <Form.Item
                   label="Day"
                   className="mb-0 w-24"
-                  validateStatus={errors.cutoffDays?.[index]?.day ? "error" : ""}
+                  validateStatus={
+                    errors.cutoffDays?.[index]?.day ? "error" : ""
+                  }
                   help={errors.cutoffDays?.[index]?.day?.message}
                 >
                   <Controller

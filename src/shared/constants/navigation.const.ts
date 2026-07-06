@@ -137,7 +137,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       //   path: "/setup/deduction-type",
       // },
       // { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
-      { key: "setup-client", label: "Client", path: "/setup/client" }, 
+      { key: "setup-client", label: "Client", path: "/setup/client" },
     ],
   },
   {

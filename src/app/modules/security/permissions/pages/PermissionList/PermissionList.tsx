@@ -1,12 +1,12 @@
-import { Button, Typography } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { useNavigate } from '@tanstack/react-router';
+import { Button, Typography } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
 import {
   usePermissions,
   useDeletePermission,
-} from '../../hooks/usePermissionQueries';
-import PermissionTable from '../../components/PermissionTable';
-import { PERMISSION_LABEL } from '../../constants/label.const';
+} from "../../hooks/usePermissionQueries";
+import PermissionTable from "../../components/PermissionTable";
+import { PERMISSION_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
 
@@ -24,13 +24,14 @@ export default function PermissionList() {
               {PERMISSION_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Define granular access rights assigned to roles across all system modules.
+              Define granular access rights assigned to roles across all system
+              modules.
             </p>
           </div>
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => navigate({ to: '/security/permissions/create' })}
+            onClick={() => navigate({ to: "/security/permissions/create" })}
           >
             Add Permission
           </Button>

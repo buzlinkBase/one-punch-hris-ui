@@ -22,13 +22,20 @@ function formatTimeSpan(value: string | null | undefined): string {
   return hasDayOffset ? `+1d ${formatted}` : formatted;
 }
 
-export default function FlexiTimeShiftTable({ data, loading, onDelete }: Props) {
+export default function FlexiTimeShiftTable({
+  data,
+  loading,
+  onDelete,
+}: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const filtered = data.filter((item) =>
-    [item.shiftName, item.startTime, item.endTime]
-      .some((val) => String(val ?? "").toLowerCase().includes(search.toLowerCase())),
+    [item.shiftName, item.startTime, item.endTime].some((val) =>
+      String(val ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+    ),
   );
 
   const columns: ColumnsType<FlexiTimeShiftResponse> = [
@@ -95,7 +102,9 @@ export default function FlexiTimeShiftTable({ data, loading, onDelete }: Props) 
         <Space>
           <Button
             type="link"
-            onClick={() => navigate({ to: `/setup/time-shift/flexi/${record.id}` })}
+            onClick={() =>
+              navigate({ to: `/setup/time-shift/flexi/${record.id}` })
+            }
           >
             Edit
           </Button>

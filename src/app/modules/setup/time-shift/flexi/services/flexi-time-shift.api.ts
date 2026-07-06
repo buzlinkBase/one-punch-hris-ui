@@ -60,7 +60,8 @@ const MOCK_FLEXI_TIME_SHIFTS: FlexiTimeShiftResponse[] = [
 export const flexiTimeShiftApi = {
   async getAll(): Promise<FlexiTimeShiftResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<FlexiTimeShiftResponse[]>(ENDPOINT);
+      const data =
+        await httpClient.getUnwrapped<FlexiTimeShiftResponse[]>(ENDPOINT);
       return data.length ? data : MOCK_FLEXI_TIME_SHIFTS;
     } catch {
       return MOCK_FLEXI_TIME_SHIFTS;
@@ -68,7 +69,9 @@ export const flexiTimeShiftApi = {
   },
   async getById(id: string): Promise<FlexiTimeShiftResponse> {
     try {
-      return await httpClient.getUnwrapped<FlexiTimeShiftResponse>(`${ENDPOINT}/${id}`);
+      return await httpClient.getUnwrapped<FlexiTimeShiftResponse>(
+        `${ENDPOINT}/${id}`,
+      );
     } catch {
       const match = MOCK_FLEXI_TIME_SHIFTS.find((item) => item.id === id);
       if (match) return match;
@@ -79,7 +82,10 @@ export const flexiTimeShiftApi = {
     return httpClient.postUnwrapped<FlexiTimeShiftResponse>(ENDPOINT, data);
   },
   update(data: UpdateFlexiTimeShift): Promise<FlexiTimeShiftResponse> {
-    return httpClient.put<FlexiTimeShiftResponse>(`${ENDPOINT}/${data.id}`, data);
+    return httpClient.put<FlexiTimeShiftResponse>(
+      `${ENDPOINT}/${data.id}`,
+      data,
+    );
   },
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/${id}`);

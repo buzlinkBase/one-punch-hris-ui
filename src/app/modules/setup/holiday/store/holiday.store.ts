@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { holidayApi } from '../services/holiday.api';
-import type { HolidayResponse } from '../models/api/response/holiday-response.model';
-import type { CreateHoliday } from '../models/api/request/create-holiday.model';
-import type { UpdateHoliday } from '../models/api/request/update-holiday.model';
+import { create } from "zustand";
+import { holidayApi } from "../services/holiday.api";
+import type { HolidayResponse } from "../models/api/response/holiday-response.model";
+import type { CreateHoliday } from "../models/api/request/create-holiday.model";
+import type { UpdateHoliday } from "../models/api/request/update-holiday.model";
 
 interface HolidayStore {
   holidays: HolidayResponse[];
@@ -67,7 +67,10 @@ export const useHolidayStore = create<HolidayStore>((set) => ({
     set({ loading: true, error: null });
     try {
       await holidayApi.remove(id);
-      set((s) => ({ holidays: s.holidays.filter((h) => h.id !== id), loading: false }));
+      set((s) => ({
+        holidays: s.holidays.filter((h) => h.id !== id),
+        loading: false,
+      }));
     } catch (err) {
       set({ error: String(err), loading: false });
     }

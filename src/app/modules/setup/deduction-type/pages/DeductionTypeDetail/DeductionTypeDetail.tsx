@@ -29,7 +29,8 @@ export default function DeductionTypeDetail() {
   const navigate = useNavigate();
   const { data: selected } = useDeductionType(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateDeductionType();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdateDeductionType();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateDeductionType();
 
   const {
     control,

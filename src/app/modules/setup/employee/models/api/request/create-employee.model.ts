@@ -5,7 +5,7 @@ import type {
   JobLevel,
   RestDayModel,
   EmployeeSettingModel,
-} from '../response/employee-response.model';
+} from "../response/employee-response.model";
 
 export interface CreateEmployee {
   bioId?: number | null;

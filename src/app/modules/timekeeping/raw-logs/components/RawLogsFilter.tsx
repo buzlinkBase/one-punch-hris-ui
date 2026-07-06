@@ -15,8 +15,12 @@ export default function RawLogsFilter({ onFilter, onReset, loading }: Props) {
   const handleFilter = async () => {
     const values = await form.validateFields();
     onFilter({
-      fromDate: values.fromDate ? dayjs(values.fromDate).format("YYYY-MM-DD") : undefined,
-      toDate: values.toDate ? dayjs(values.toDate).format("YYYY-MM-DD") : undefined,
+      fromDate: values.fromDate
+        ? dayjs(values.fromDate).format("YYYY-MM-DD")
+        : undefined,
+      toDate: values.toDate
+        ? dayjs(values.toDate).format("YYYY-MM-DD")
+        : undefined,
       clientId: values.clientId || undefined,
       employeeId: values.employeeId || undefined,
     });

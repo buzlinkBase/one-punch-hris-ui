@@ -1,25 +1,25 @@
-import { useEffect } from 'react';
-import { Form, Input, Button, Select, Typography, Space, Tag } from 'antd';
-import { useNavigate } from '@tanstack/react-router';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouteParams } from '@/shared/hooks/useRouteParams';
+import { useEffect } from "react";
+import { Form, Input, Button, Select, Typography, Space, Tag } from "antd";
+import { useNavigate } from "@tanstack/react-router";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouteParams } from "@/shared/hooks/useRouteParams";
 import {
   permissionFormSchema,
   type PermissionFormValues,
-} from '../../models/forms/permission-form.schema';
+} from "../../models/forms/permission-form.schema";
 import {
   usePermission,
   useCreatePermission,
   useUpdatePermission,
-} from '../../hooks/usePermissionQueries';
+} from "../../hooks/usePermissionQueries";
 import {
   PERMISSION_LABEL,
   PERMISSION_ACTION_OPTIONS,
   PERMISSION_MODULE_OPTIONS,
   PERMISSION_STATUS_OPTIONS,
-} from '../../constants/label.const';
-import { NAVIGATION_BUTTON_LABEL } from '@/shared/constants/navigation.const';
+} from "../../constants/label.const";
+import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
 
@@ -39,12 +39,12 @@ export default function PermissionDetail() {
   } = useForm<PermissionFormValues>({
     resolver: zodResolver(permissionFormSchema),
     defaultValues: {
-      code: '',
-      name: '',
-      module: '',
-      action: 'READ',
-      description: '',
-      status: 'ACTIVE',
+      code: "",
+      name: "",
+      module: "",
+      action: "READ",
+      description: "",
+      status: "ACTIVE",
     },
   });
 
@@ -67,7 +67,7 @@ export default function PermissionDetail() {
     } else {
       await add(values);
     }
-    navigate({ to: '/security/permissions' });
+    navigate({ to: "/security/permissions" });
   };
 
   return (
@@ -81,14 +81,15 @@ export default function PermissionDetail() {
                 : PERMISSION_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Configure a granular access right for a specific module and action.
+              Configure a granular access right for a specific module and
+              action.
             </p>
           </div>
           <Space>
-            <Tag color={isEdit ? 'processing' : 'success'}>
-              {isEdit ? 'Editing' : 'New Record'}
+            <Tag color={isEdit ? "processing" : "success"}>
+              {isEdit ? "Editing" : "New Record"}
             </Tag>
-            <Button onClick={() => navigate({ to: '/security/permissions' })}>
+            <Button onClick={() => navigate({ to: "/security/permissions" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
           </Space>
@@ -99,7 +100,7 @@ export default function PermissionDetail() {
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <Form.Item
             label={PERMISSION_LABEL.CODE}
-            validateStatus={errors.code ? 'error' : ''}
+            validateStatus={errors.code ? "error" : ""}
             help={errors.code?.message}
           >
             <Controller
@@ -109,10 +110,8 @@ export default function PermissionDetail() {
                 <Input
                   {...field}
                   placeholder="e.g. DEPT_CREATE"
-                  style={{ textTransform: 'uppercase' }}
-                  onChange={(e) =>
-                    field.onChange(e.target.value.toUpperCase())
-                  }
+                  style={{ textTransform: "uppercase" }}
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                 />
               )}
             />
@@ -120,7 +119,7 @@ export default function PermissionDetail() {
 
           <Form.Item
             label={PERMISSION_LABEL.NAME}
-            validateStatus={errors.name ? 'error' : ''}
+            validateStatus={errors.name ? "error" : ""}
             help={errors.name?.message}
           >
             <Controller
@@ -134,7 +133,7 @@ export default function PermissionDetail() {
 
           <Form.Item
             label={PERMISSION_LABEL.MODULE}
-            validateStatus={errors.module ? 'error' : ''}
+            validateStatus={errors.module ? "error" : ""}
             help={errors.module?.message}
           >
             <Controller
@@ -154,7 +153,7 @@ export default function PermissionDetail() {
 
           <Form.Item
             label={PERMISSION_LABEL.ACTION}
-            validateStatus={errors.action ? 'error' : ''}
+            validateStatus={errors.action ? "error" : ""}
             help={errors.action?.message}
           >
             <Controller
@@ -172,7 +171,7 @@ export default function PermissionDetail() {
 
           <Form.Item
             label={PERMISSION_LABEL.DESCRIPTION}
-            validateStatus={errors.description ? 'error' : ''}
+            validateStatus={errors.description ? "error" : ""}
             help={errors.description?.message}
           >
             <Controller
@@ -190,7 +189,7 @@ export default function PermissionDetail() {
 
           <Form.Item
             label={PERMISSION_LABEL.STATUS}
-            validateStatus={errors.status ? 'error' : ''}
+            validateStatus={errors.status ? "error" : ""}
             help={errors.status?.message}
           >
             <Controller
@@ -208,9 +207,7 @@ export default function PermissionDetail() {
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button
-                onClick={() => navigate({ to: '/security/permissions' })}
-              >
+              <Button onClick={() => navigate({ to: "/security/permissions" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <Button

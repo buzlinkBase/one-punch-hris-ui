@@ -1,1 +1,1 @@
-export { default } from './FlexiTimeShiftDetail';
+export { default } from "./FlexiTimeShiftDetail";

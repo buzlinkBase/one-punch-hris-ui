@@ -77,34 +77,49 @@ export default function TardinessList() {
         <Card size="small" className="mb-4">
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-              <Form.Item label={TARDINESS_LABEL.FILTER_DEPARTMENT} className="mb-0">
+              <Form.Item
+                label={TARDINESS_LABEL.FILTER_DEPARTMENT}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All Departments"
                   options={DEPARTMENT_OPTIONS}
                   value={pending.departmentId}
-                  onChange={(val) => setPending((f) => ({ ...f, departmentId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, departmentId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={TARDINESS_LABEL.FILTER_EMPLOYEE} className="mb-0">
+              <Form.Item
+                label={TARDINESS_LABEL.FILTER_EMPLOYEE}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   showSearch={{ optionFilterProp: "label" }}
                   placeholder="All Employees"
                   options={EMPLOYEE_OPTIONS}
                   value={pending.employeeId}
-                  onChange={(val) => setPending((f) => ({ ...f, employeeId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, employeeId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={TARDINESS_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
+              <Form.Item
+                label={TARDINESS_LABEL.FILTER_PAYROLL_GROUP}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All Payroll Groups"
                   options={PAYROLL_GROUP_OPTIONS}
                   value={pending.payrollGroupId}
-                  onChange={(val) => setPending((f) => ({ ...f, payrollGroupId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, payrollGroupId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
@@ -113,7 +128,11 @@ export default function TardinessList() {
               <Button icon={<ClearOutlined />} onClick={handleClear}>
                 Clear
               </Button>
-              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+              <Button
+                icon={<FilterOutlined />}
+                type="primary"
+                onClick={handleSearch}
+              >
                 Search
               </Button>
             </div>

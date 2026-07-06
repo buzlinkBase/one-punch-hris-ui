@@ -66,7 +66,10 @@ export default function CreateTenant() {
         </Button>
       )}
       <div className="login-header">
-        <div className="login-icon-placeholder" aria-label="App icon placeholder">
+        <div
+          className="login-icon-placeholder"
+          aria-label="App icon placeholder"
+        >
           <BankOutlined />
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
@@ -91,7 +94,11 @@ export default function CreateTenant() {
             name="tenantName"
             control={control}
             render={({ field }) => (
-              <Input {...field} placeholder="Enter workspace name" size="large" />
+              <Input
+                {...field}
+                placeholder="Enter workspace name"
+                size="large"
+              />
             )}
           />
         </Form.Item>

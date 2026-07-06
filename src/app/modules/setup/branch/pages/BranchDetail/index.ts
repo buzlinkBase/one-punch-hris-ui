@@ -1,1 +1,1 @@
-export { default } from './BranchDetail';
+export { default } from "./BranchDetail";

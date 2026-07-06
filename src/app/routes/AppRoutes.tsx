@@ -176,8 +176,18 @@ const ComingSoon = ({ title }: { title: string }) => (
   </div>
 );
 
-const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password", "/reset-password"];
-const TENANT_FLOW_PATHS = ["/select-tenant", "/create-tenant", "/awaiting-invitation"];
+const PUBLIC_PATHS = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+];
+const TENANT_FLOW_PATHS = [
+  "/select-tenant",
+  "/create-tenant",
+  "/awaiting-invitation",
+];
 
 // Returns the destination path if the user should be auto-redirected, null if they should stay on login.
 async function attemptAutoRedirect(): Promise<string | null> {

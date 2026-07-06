@@ -35,10 +35,9 @@ export default function AttendanceEntryList() {
   const [isExporting, setIsExporting] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const activeFilterCount = [
-    filter.fromDate,
-    filter.employeeId,
-  ].filter(Boolean).length;
+  const activeFilterCount = [filter.fromDate, filter.employeeId].filter(
+    Boolean,
+  ).length;
 
   const { data: records = [], isLoading } = useAttendanceEntryRecords(filter);
   const {
@@ -226,7 +225,10 @@ export default function AttendanceEntryList() {
         <Card size="small" className="mb-4">
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-              <Form.Item label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_FROM} className="mb-0">
+              <Form.Item
+                label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_FROM}
+                className="mb-0"
+              >
                 <DatePicker
                   style={{ width: "100%" }}
                   value={pending.fromDate ? dayjs(pending.fromDate) : null}
@@ -238,7 +240,10 @@ export default function AttendanceEntryList() {
                   }
                 />
               </Form.Item>
-              <Form.Item label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_TO} className="mb-0">
+              <Form.Item
+                label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_TO}
+                className="mb-0"
+              >
                 <DatePicker
                   style={{ width: "100%" }}
                   value={pending.toDate ? dayjs(pending.toDate) : null}
@@ -250,7 +255,10 @@ export default function AttendanceEntryList() {
                   }
                 />
               </Form.Item>
-              <Form.Item label={ATTENDANCE_ENTRY_LABEL.FILTER_EMPLOYEE} className="mb-0">
+              <Form.Item
+                label={ATTENDANCE_ENTRY_LABEL.FILTER_EMPLOYEE}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   showSearch={{ optionFilterProp: "label" }}
@@ -268,7 +276,11 @@ export default function AttendanceEntryList() {
               <Button icon={<ClearOutlined />} onClick={handleClear}>
                 Clear
               </Button>
-              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+              <Button
+                icon={<FilterOutlined />}
+                type="primary"
+                onClick={handleSearch}
+              >
                 Search
               </Button>
             </div>

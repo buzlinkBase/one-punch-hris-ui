@@ -5,7 +5,10 @@ import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { AssignAssetResponse } from "../../models/api/response/assign-asset-response.model";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
-import { ASSIGN_ASSET_LABEL, ASSET_TYPE_OPTIONS } from "../../constants/label.const";
+import {
+  ASSIGN_ASSET_LABEL,
+  ASSET_TYPE_OPTIONS,
+} from "../../constants/label.const";
 
 interface Props {
   data: AssignAssetResponse[];
@@ -38,7 +41,10 @@ export default function AssignAssetTable({
   const [statusFilter, setStatusFilter] = useState("");
 
   const employeeMap = new Map(
-    employees.map((e) => [e.id, `${e.firstName} ${e.lastName} (${e.employeeNo})`]),
+    employees.map((e) => [
+      e.id,
+      `${e.firstName} ${e.lastName} (${e.employeeNo})`,
+    ]),
   );
 
   const employeeOptions = [
@@ -59,7 +65,8 @@ export default function AssignAssetTable({
       item.serialNo,
       empName,
     ].some((val) => val.toLowerCase().includes(search.toLowerCase()));
-    const matchesEmployee = !employeeFilter || item.employeeId === employeeFilter;
+    const matchesEmployee =
+      !employeeFilter || item.employeeId === employeeFilter;
     const matchesType = !typeFilter || item.assetType === typeFilter;
     const matchesStatus =
       !statusFilter ||
@@ -153,7 +160,9 @@ export default function AssignAssetTable({
           <Button
             type="link"
             onClick={() =>
-              navigate({ to: `/employee-management/assign-assets/${record.id}` })
+              navigate({
+                to: `/employee-management/assign-assets/${record.id}`,
+              })
             }
           >
             Edit

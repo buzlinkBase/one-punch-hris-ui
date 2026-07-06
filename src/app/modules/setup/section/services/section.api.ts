@@ -26,7 +26,9 @@ export const sectionApi = {
   },
   async getById(id: string): Promise<SectionResponse> {
     try {
-      return await httpClient.getUnwrapped<SectionResponse>(`${ENDPOINT}/${id}`);
+      return await httpClient.getUnwrapped<SectionResponse>(
+        `${ENDPOINT}/${id}`,
+      );
     } catch {
       const match = MOCK_SECTIONS.find((item) => item.id === id);
       if (match) return match;

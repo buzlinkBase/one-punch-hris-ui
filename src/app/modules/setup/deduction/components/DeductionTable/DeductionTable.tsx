@@ -40,9 +40,13 @@ export default function DeductionTable({
 
   const filtered = data.filter((item) => {
     const typeName = typeMap.get(item.deductionTypeId) ?? "";
-    const matchesSearch = [item.code, item.name, typeName, String(item.amount), item.status].some(
-      (val) => val.toLowerCase().includes(search.toLowerCase()),
-    );
+    const matchesSearch = [
+      item.code,
+      item.name,
+      typeName,
+      String(item.amount),
+      item.status,
+    ].some((val) => val.toLowerCase().includes(search.toLowerCase()));
     const matchesType = !typeFilter || item.deductionTypeId === typeFilter;
     const matchesStatus = !statusFilter || item.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;

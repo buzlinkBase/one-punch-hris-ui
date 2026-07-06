@@ -33,8 +33,24 @@ const { Title } = Typography;
 
 function SectionHeader({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 12px" }}>
-      <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        margin: "20px 0 12px",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#6b7280",
+          whiteSpace: "nowrap",
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+        }}
+      >
         {children}
       </span>
       <div style={{ flex: 1, height: 1, backgroundColor: "#e5e7eb" }} />
@@ -60,7 +76,8 @@ export default function FlexiTimeShiftDetail() {
   const navigate = useNavigate();
   const { data: selected } = useFlexiTimeShift(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateFlexiTimeShift();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdateFlexiTimeShift();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateFlexiTimeShift();
 
   const {
     control,
@@ -124,8 +141,12 @@ export default function FlexiTimeShiftDetail() {
       amStartTime: null,
       amEndTime: null,
       withLunchBreak: values.unpaidLunchBreak ? "UNPAID_BREAK" : "PAID_BREAK",
-      lunchStartTime: values.unpaidLunchBreak ? (values.lunchStartTime ?? null) : null,
-      lunchEndTime: values.unpaidLunchBreak ? (values.lunchEndTime ?? null) : null,
+      lunchStartTime: values.unpaidLunchBreak
+        ? (values.lunchStartTime ?? null)
+        : null,
+      lunchEndTime: values.unpaidLunchBreak
+        ? (values.lunchEndTime ?? null)
+        : null,
       withPMBreak: "UNPAID_BREAK",
       pmStartTime: null,
       pmEndTime: null,
@@ -150,7 +171,9 @@ export default function FlexiTimeShiftDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit ? FLEXI_TIME_SHIFT_LABEL.EDIT_TITLE : FLEXI_TIME_SHIFT_LABEL.CREATE_TITLE}
+              {isEdit
+                ? FLEXI_TIME_SHIFT_LABEL.EDIT_TITLE
+                : FLEXI_TIME_SHIFT_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               Configure flexible shift windows and required working hours.
@@ -169,7 +192,6 @@ export default function FlexiTimeShiftDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-
           <Form.Item
             label={FLEXI_TIME_SHIFT_LABEL.SHIFT_NAME}
             validateStatus={errors.shiftName ? "error" : ""}
@@ -214,7 +236,10 @@ export default function FlexiTimeShiftDetail() {
                 name="endTime"
                 control={control}
                 render={({ field }) => (
-                  <TimeSpanPicker value={field.value} onChange={field.onChange} />
+                  <TimeSpanPicker
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </Form.Item>
@@ -227,7 +252,12 @@ export default function FlexiTimeShiftDetail() {
                 name="minimumWorkMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                  <InputNumber
+                    className="w-full"
+                    {...field}
+                    min={0}
+                    suffix="min"
+                  />
                 )}
               />
             </Form.Item>
@@ -240,7 +270,12 @@ export default function FlexiTimeShiftDetail() {
                 name="maxWorkingMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                  <InputNumber
+                    className="w-full"
+                    {...field}
+                    min={0}
+                    suffix="min"
+                  />
                 )}
               />
             </Form.Item>
@@ -249,7 +284,11 @@ export default function FlexiTimeShiftDetail() {
           <SectionHeader>Break</SectionHeader>
           <Form.Item
             label={FLEXI_TIME_SHIFT_LABEL.UNPAID_LUNCH_BREAK}
-            extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Off = No break window · On = Enforce allowable break period</span>}
+            extra={
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                Off = No break window · On = Enforce allowable break period
+              </span>
+            }
           >
             <Controller
               name="unpaidLunchBreak"
@@ -263,13 +302,22 @@ export default function FlexiTimeShiftDetail() {
             <div className="form-grid-2">
               <Form.Item
                 label={FLEXI_TIME_SHIFT_LABEL.BREAK_PERIOD_START}
-                extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Breaks taken outside this window are unauthorized and will be deducted from working hours.</span>}
+                extra={
+                  <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                    Breaks taken outside this window are unauthorized and will
+                    be deducted from working hours.
+                  </span>
+                }
               >
                 <Controller
                   name="lunchStartTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
@@ -278,7 +326,11 @@ export default function FlexiTimeShiftDetail() {
                   name="lunchEndTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
@@ -291,7 +343,12 @@ export default function FlexiTimeShiftDetail() {
                   name="breakDurationMinutes"
                   control={control}
                   render={({ field }) => (
-                    <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                    <InputNumber
+                      className="w-full"
+                      {...field}
+                      min={0}
+                      suffix="min"
+                    />
                   )}
                 />
               </Form.Item>
@@ -319,7 +376,12 @@ export default function FlexiTimeShiftDetail() {
                   name="overTimeThreshold"
                   control={control}
                   render={({ field }) => (
-                    <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                    <InputNumber
+                      className="w-full"
+                      {...field}
+                      min={0}
+                      suffix="min"
+                    />
                   )}
                 />
               </Form.Item>
@@ -328,7 +390,9 @@ export default function FlexiTimeShiftDetail() {
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button onClick={() => navigate({ to: "/setup/time-shift/flexi" })}>
+              <Button
+                onClick={() => navigate({ to: "/setup/time-shift/flexi" })}
+              >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <Button

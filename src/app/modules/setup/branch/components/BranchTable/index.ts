@@ -1,1 +1,1 @@
-export { default } from './BranchTable';
+export { default } from "./BranchTable";

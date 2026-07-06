@@ -35,7 +35,9 @@ export function toTimeSpan(value: Dayjs | null | undefined): string {
 }
 
 /** Serialize a dayjs value to nullable TimeSpan string. Returns null when empty. */
-export function toOptionalTimeSpan(value: Dayjs | null | undefined): string | null {
+export function toOptionalTimeSpan(
+  value: Dayjs | null | undefined,
+): string | null {
   if (!value?.isValid()) return null;
   return value.format("HH:mm:ss");
 }
@@ -44,7 +46,10 @@ export function toOptionalTimeSpan(value: Dayjs | null | undefined): string | nu
  * Serialize dayjs + day offset to a .NET TimeSpan string.
  * dayOffset 0 → "HH:mm:ss", dayOffset 1 → "1.HH:mm:ss"
  */
-export function toTimeSpanWithDay(value: Dayjs | null | undefined, dayOffset: number): string {
+export function toTimeSpanWithDay(
+  value: Dayjs | null | undefined,
+  dayOffset: number,
+): string {
   const time = toTimeSpan(value);
   return dayOffset > 0 ? `${dayOffset}.${time}` : time;
 }

@@ -24,7 +24,8 @@ export default function DeductionTypeList() {
               {DEDUCTION_TYPE_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Manage deduction type categories used to classify payroll deductions.
+              Manage deduction type categories used to classify payroll
+              deductions.
             </p>
           </div>
           <Button

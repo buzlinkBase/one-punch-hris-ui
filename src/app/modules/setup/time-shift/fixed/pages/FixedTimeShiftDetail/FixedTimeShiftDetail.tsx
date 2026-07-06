@@ -34,8 +34,24 @@ const { Title } = Typography;
 
 function SectionHeader({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 12px" }}>
-      <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        margin: "20px 0 12px",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#6b7280",
+          whiteSpace: "nowrap",
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+        }}
+      >
         {children}
       </span>
       <div style={{ flex: 1, height: 1, backgroundColor: "#e5e7eb" }} />
@@ -48,7 +64,6 @@ const BREAK_MODE_OPTIONS = [
   { value: "UNPAID_BREAK", label: "Unpaid Break" },
   { value: "PAID_BREAK", label: "Paid Break" },
 ];
-
 
 function addHoursToTimeSpan(timeSpan: string, hours: number): string {
   const [h, m, s] = timeSpan.split(":").map(Number);
@@ -68,7 +83,8 @@ export default function FixedTimeShiftDetail() {
   const navigate = useNavigate();
   const { data: selected } = useFixedTimeShift(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateFixedTimeShift();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdateFixedTimeShift();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateFixedTimeShift();
 
   const {
     control,
@@ -164,8 +180,12 @@ export default function FixedTimeShiftDetail() {
       endTime: values.endTime,
       gracePeriodMinutes: values.gracePeriodMinutes,
       withLunchBreak: values.withLunchBreak,
-      lunchStartTime: values.withLunchBreak !== "NONE" ? (values.lunchStartTime ?? null) : null,
-      lunchEndTime: values.withLunchBreak !== "NONE" ? (values.lunchEndTime ?? null) : null,
+      lunchStartTime:
+        values.withLunchBreak !== "NONE"
+          ? (values.lunchStartTime ?? null)
+          : null,
+      lunchEndTime:
+        values.withLunchBreak !== "NONE" ? (values.lunchEndTime ?? null) : null,
       breakDurationMinutes: values.breakDurationMinutes,
       withAMBreak: values.withAMBreak ? "PAID_BREAK" : "NONE",
       amStartTime: values.withAMBreak ? (values.amStartTime ?? null) : null,
@@ -194,7 +214,9 @@ export default function FixedTimeShiftDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit ? FIXED_TIME_SHIFT_LABEL.EDIT_TITLE : FIXED_TIME_SHIFT_LABEL.CREATE_TITLE}
+              {isEdit
+                ? FIXED_TIME_SHIFT_LABEL.EDIT_TITLE
+                : FIXED_TIME_SHIFT_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               Maintain fixed shift templates with consistent start and end time.
@@ -213,7 +235,6 @@ export default function FixedTimeShiftDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-
           <Form.Item
             label={FIXED_TIME_SHIFT_LABEL.SHIFT_NAME}
             validateStatus={errors.shiftName ? "error" : ""}
@@ -258,7 +279,10 @@ export default function FixedTimeShiftDetail() {
                 name="endTime"
                 control={control}
                 render={({ field }) => (
-                  <TimeSpanPicker value={field.value} onChange={field.onChange} />
+                  <TimeSpanPicker
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </Form.Item>
@@ -271,7 +295,12 @@ export default function FixedTimeShiftDetail() {
                 name="gracePeriodMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                  <InputNumber
+                    className="w-full"
+                    {...field}
+                    min={0}
+                    suffix="min"
+                  />
                 )}
               />
             </Form.Item>
@@ -284,7 +313,12 @@ export default function FixedTimeShiftDetail() {
                 name="maxWorkingMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                  <InputNumber
+                    className="w-full"
+                    {...field}
+                    min={0}
+                    suffix="min"
+                  />
                 )}
               />
             </Form.Item>
@@ -297,7 +331,12 @@ export default function FixedTimeShiftDetail() {
                 name="minimumWorkMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                  <InputNumber
+                    className="w-full"
+                    {...field}
+                    min={0}
+                    suffix="min"
+                  />
                 )}
               />
             </Form.Item>
@@ -313,7 +352,11 @@ export default function FixedTimeShiftDetail() {
               name="withLunchBreak"
               control={control}
               render={({ field }) => (
-                <Select {...field} options={BREAK_MODE_OPTIONS} style={{ maxWidth: 280 }} />
+                <Select
+                  {...field}
+                  options={BREAK_MODE_OPTIONS}
+                  style={{ maxWidth: 280 }}
+                />
               )}
             />
           </Form.Item>
@@ -324,7 +367,11 @@ export default function FixedTimeShiftDetail() {
                   name="lunchStartTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
@@ -333,7 +380,11 @@ export default function FixedTimeShiftDetail() {
                   name="lunchEndTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
@@ -362,20 +413,37 @@ export default function FixedTimeShiftDetail() {
           <SectionHeader>
             AM Break
             {amPmBreakDisabled && (
-              <span style={{ fontSize: 11, fontWeight: 400, color: "#9ca3af", marginLeft: 8, textTransform: "none", letterSpacing: "normal" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 400,
+                  color: "#9ca3af",
+                  marginLeft: 8,
+                  textTransform: "none",
+                  letterSpacing: "normal",
+                }}
+              >
                 (disabled when lunch is Paid Break)
               </span>
             )}
           </SectionHeader>
           <Form.Item
             label={FIXED_TIME_SHIFT_LABEL.AM_BREAK}
-            extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Off = No break · On = Paid break</span>}
+            extra={
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                Off = No break · On = Paid break
+              </span>
+            }
           >
             <Controller
               name="withAMBreak"
               control={control}
               render={({ field }) => (
-                <Switch checked={field.value} onChange={field.onChange} disabled={amPmBreakDisabled} />
+                <Switch
+                  checked={field.value}
+                  onChange={field.onChange}
+                  disabled={amPmBreakDisabled}
+                />
               )}
             />
           </Form.Item>
@@ -386,7 +454,11 @@ export default function FixedTimeShiftDetail() {
                   name="amStartTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
@@ -395,7 +467,11 @@ export default function FixedTimeShiftDetail() {
                   name="amEndTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
@@ -405,20 +481,37 @@ export default function FixedTimeShiftDetail() {
           <SectionHeader>
             PM Break
             {amPmBreakDisabled && (
-              <span style={{ fontSize: 11, fontWeight: 400, color: "#9ca3af", marginLeft: 8, textTransform: "none", letterSpacing: "normal" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 400,
+                  color: "#9ca3af",
+                  marginLeft: 8,
+                  textTransform: "none",
+                  letterSpacing: "normal",
+                }}
+              >
                 (disabled when lunch is Paid Break)
               </span>
             )}
           </SectionHeader>
           <Form.Item
             label={FIXED_TIME_SHIFT_LABEL.PM_BREAK}
-            extra={<span style={{ fontSize: 11, color: "#9ca3af" }}>Off = No break · On = Paid break</span>}
+            extra={
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                Off = No break · On = Paid break
+              </span>
+            }
           >
             <Controller
               name="withPMBreak"
               control={control}
               render={({ field }) => (
-                <Switch checked={field.value} onChange={field.onChange} disabled={amPmBreakDisabled} />
+                <Switch
+                  checked={field.value}
+                  onChange={field.onChange}
+                  disabled={amPmBreakDisabled}
+                />
               )}
             />
           </Form.Item>
@@ -429,7 +522,11 @@ export default function FixedTimeShiftDetail() {
                   name="pmStartTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
@@ -438,13 +535,16 @@ export default function FixedTimeShiftDetail() {
                   name="pmEndTime"
                   control={control}
                   render={({ field }) => (
-                    <TimeSpanPicker value={field.value} onChange={field.onChange} nullable />
+                    <TimeSpanPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      nullable
+                    />
                   )}
                 />
               </Form.Item>
             </div>
           )}
-
 
           <SectionHeader>Overtime</SectionHeader>
           <Form.Item label={FIXED_TIME_SHIFT_LABEL.ALLOW_OT}>
@@ -477,7 +577,10 @@ export default function FixedTimeShiftDetail() {
                     name="otStart"
                     control={control}
                     render={({ field }) => (
-                      <TimeSpanPicker value={field.value} onChange={field.onChange} />
+                      <TimeSpanPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     )}
                   />
                 </Form.Item>
@@ -490,7 +593,12 @@ export default function FixedTimeShiftDetail() {
                     name="overTimeThreshold"
                     control={control}
                     render={({ field }) => (
-                      <InputNumber className="w-full" {...field} min={0} suffix="min" />
+                      <InputNumber
+                        className="w-full"
+                        {...field}
+                        min={0}
+                        suffix="min"
+                      />
                     )}
                   />
                 </Form.Item>
@@ -500,7 +608,9 @@ export default function FixedTimeShiftDetail() {
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button onClick={() => navigate({ to: "/setup/time-shift/fixed" })}>
+              <Button
+                onClick={() => navigate({ to: "/setup/time-shift/fixed" })}
+              >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <Button

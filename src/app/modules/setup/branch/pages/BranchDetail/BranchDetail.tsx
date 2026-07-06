@@ -43,7 +43,11 @@ export default function BranchDetail() {
 
   useEffect(() => {
     if (isEdit && selected) {
-      reset({ code: selected.code, name: selected.name, status: selected.status });
+      reset({
+        code: selected.code,
+        name: selected.name,
+        status: selected.status,
+      });
     }
   }, [selected, isEdit, reset]);
 
@@ -110,7 +114,13 @@ export default function BranchDetail() {
             <Controller
               name="status"
               control={control}
-              render={({ field }) => <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={STATUS_OPTIONS}
+                  placeholder="Select status"
+                />
+              )}
             />
           </Form.Item>
 

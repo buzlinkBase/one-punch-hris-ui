@@ -1,4 +1,7 @@
-import type { HolidayType, HolidayWorkType } from '../request/create-holiday.model';
+import type {
+  HolidayType,
+  HolidayWorkType,
+} from "../request/create-holiday.model";
 
 export type { HolidayType, HolidayWorkType };
 

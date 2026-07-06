@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Form, Input, Button, Select, Typography, Space, Tag, DatePicker } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Typography,
+  Space,
+  Tag,
+  DatePicker,
+} from "antd";
 import dayjs from "dayjs";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
@@ -30,8 +39,10 @@ export default function EmployeeDependentDetail() {
   const navigate = useNavigate();
   const { data: selected } = useEmployeeDependent(isEdit ? id : undefined);
   const { data: employees = [] } = useEmployees();
-  const { mutateAsync: add, isPending: isCreating } = useCreateEmployeeDependent();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployeeDependent();
+  const { mutateAsync: add, isPending: isCreating } =
+    useCreateEmployeeDependent();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateEmployeeDependent();
 
   const employeeOptions = employees.map((e) => ({
     value: e.id,
@@ -81,7 +92,9 @@ export default function EmployeeDependentDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit ? EMPLOYEE_DEPENDENT_LABEL.EDIT_TITLE : EMPLOYEE_DEPENDENT_LABEL.CREATE_TITLE}
+              {isEdit
+                ? EMPLOYEE_DEPENDENT_LABEL.EDIT_TITLE
+                : EMPLOYEE_DEPENDENT_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               Record dependent information for an employee.
@@ -91,7 +104,11 @@ export default function EmployeeDependentDetail() {
             <Tag color={isEdit ? "processing" : "success"}>
               {isEdit ? "Editing" : "New Record"}
             </Tag>
-            <Button onClick={() => navigate({ to: "/employee-management/dependents" })}>
+            <Button
+              onClick={() =>
+                navigate({ to: "/employee-management/dependents" })
+              }
+            >
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
           </Space>
@@ -130,7 +147,9 @@ export default function EmployeeDependentDetail() {
             <Controller
               name="fullName"
               control={control}
-              render={({ field }) => <Input {...field} placeholder="Enter full name" />}
+              render={({ field }) => (
+                <Input {...field} placeholder="Enter full name" />
+              )}
             />
           </Form.Item>
 
@@ -145,7 +164,11 @@ export default function EmployeeDependentDetail() {
                 name="relationship"
                 control={control}
                 render={({ field }) => (
-                  <Select {...field} options={RELATIONSHIP_OPTIONS} placeholder="Select relationship" />
+                  <Select
+                    {...field}
+                    options={RELATIONSHIP_OPTIONS}
+                    placeholder="Select relationship"
+                  />
                 )}
               />
             </Form.Item>
@@ -159,7 +182,11 @@ export default function EmployeeDependentDetail() {
                 name="gender"
                 control={control}
                 render={({ field }) => (
-                  <Select {...field} options={GENDER_OPTIONS} placeholder="Select gender" />
+                  <Select
+                    {...field}
+                    options={GENDER_OPTIONS}
+                    placeholder="Select gender"
+                  />
                 )}
               />
             </Form.Item>
@@ -178,7 +205,9 @@ export default function EmployeeDependentDetail() {
                 <DatePicker
                   style={{ width: "100%" }}
                   value={field.value ? dayjs(field.value) : null}
-                  onChange={(date) => field.onChange(date ? date.format("YYYY-MM-DD") : "")}
+                  onChange={(date) =>
+                    field.onChange(date ? date.format("YYYY-MM-DD") : "")
+                  }
                 />
               )}
             />
@@ -186,7 +215,11 @@ export default function EmployeeDependentDetail() {
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button onClick={() => navigate({ to: "/employee-management/dependents" })}>
+              <Button
+                onClick={() =>
+                  navigate({ to: "/employee-management/dependents" })
+                }
+              >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <Button

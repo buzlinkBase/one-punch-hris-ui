@@ -1,4 +1,7 @@
-import type { BreakMode, TimeShiftType } from "../request/create-fixed-time-shift.model";
+import type {
+  BreakMode,
+  TimeShiftType,
+} from "../request/create-fixed-time-shift.model";
 
 export interface FixedTimeShiftResponse {
   id: string;

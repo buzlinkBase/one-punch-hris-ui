@@ -63,8 +63,7 @@ const DeductionTypeList = lazy(
   () => import("@/app/modules/setup/deduction-type/pages/DeductionTypeList"),
 );
 const DeductionTypeDetail = lazy(
-  () =>
-    import("@/app/modules/setup/deduction-type/pages/DeductionTypeDetail"),
+  () => import("@/app/modules/setup/deduction-type/pages/DeductionTypeDetail"),
 );
 
 const ClientList = lazy(

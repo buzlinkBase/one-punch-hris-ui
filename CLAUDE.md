@@ -81,6 +81,7 @@ User info:  localStorage key `auth_user`
 ```
 
 HTTP wrapper in `src/core/http/http-client.ts` exposes:
+
 - `get / post / put / patch / delete` — returns `ApiResponse<T>`
 - `getUnwrapped / postUnwrapped` — unwraps and returns `ApiResponse<T>.data` directly
 

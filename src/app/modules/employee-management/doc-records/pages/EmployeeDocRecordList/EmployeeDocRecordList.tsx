@@ -32,7 +32,9 @@ export default function EmployeeDocRecordList() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/employee-management/doc-records/create" })}
+            onClick={() =>
+              navigate({ to: "/employee-management/doc-records/create" })
+            }
           >
             Add Document
           </Button>

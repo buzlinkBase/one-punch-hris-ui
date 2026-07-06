@@ -1,1 +1,1 @@
-export { default } from './FixedTimeShiftDetail';
+export { default } from "./FixedTimeShiftDetail";

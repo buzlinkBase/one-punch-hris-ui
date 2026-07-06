@@ -40,8 +40,13 @@ const STATUS_OPTIONS = [
   { value: "INACTIVE", label: "Inactive" },
 ];
 
-const filterByLabel = (input: string, option?: { label?: string | number | boolean }) =>
-  String(option?.label ?? "").toLowerCase().includes(input.toLowerCase());
+const filterByLabel = (
+  input: string,
+  option?: { label?: string | number | boolean },
+) =>
+  String(option?.label ?? "")
+    .toLowerCase()
+    .includes(input.toLowerCase());
 
 export default function HolidayDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -104,7 +109,10 @@ export default function HolidayDetail() {
     navigate({ to: "/setup/holiday" });
   };
 
-  const areaOptions = areas.map((a) => ({ value: a.id, label: `${a.code} - ${a.name}` }));
+  const areaOptions = areas.map((a) => ({
+    value: a.id,
+    label: `${a.code} - ${a.name}`,
+  }));
 
   return (
     <div className="content-page">
@@ -132,7 +140,6 @@ export default function HolidayDetail() {
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <div className="form-grid-2">
-
             <Form.Item
               label={HOLIDAY_LABEL.DESCRIPTION}
               validateStatus={errors.description ? "error" : ""}
@@ -158,7 +165,9 @@ export default function HolidayDetail() {
                   <DatePicker
                     className="w-full"
                     value={field.value ? dayjs(field.value) : null}
-                    onChange={(d) => field.onChange(d ? d.format("YYYY-MM-DD") : "")}
+                    onChange={(d) =>
+                      field.onChange(d ? d.format("YYYY-MM-DD") : "")
+                    }
                   />
                 )}
               />
@@ -173,7 +182,11 @@ export default function HolidayDetail() {
                 name="holType"
                 control={control}
                 render={({ field }) => (
-                  <Select {...field} options={HOLIDAY_TYPE_OPTIONS} placeholder="Select type" />
+                  <Select
+                    {...field}
+                    options={HOLIDAY_TYPE_OPTIONS}
+                    placeholder="Select type"
+                  />
                 )}
               />
             </Form.Item>
@@ -191,7 +204,11 @@ export default function HolidayDetail() {
                   name="workType"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} options={WORK_TYPE_OPTIONS} placeholder="Select work type" />
+                    <Select
+                      {...field}
+                      options={WORK_TYPE_OPTIONS}
+                      placeholder="Select work type"
+                    />
                   )}
                 />
               )}
@@ -228,7 +245,11 @@ export default function HolidayDetail() {
                 name="status"
                 control={control}
                 render={({ field }) => (
-                  <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
+                  <Select
+                    {...field}
+                    options={STATUS_OPTIONS}
+                    placeholder="Select status"
+                  />
                 )}
               />
             </Form.Item>
@@ -257,7 +278,6 @@ export default function HolidayDetail() {
                 </div>
               </div>
             </Form.Item>
-
           </div>
 
           <div className="form-action-footer">

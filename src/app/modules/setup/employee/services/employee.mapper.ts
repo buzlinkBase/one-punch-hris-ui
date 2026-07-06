@@ -1,22 +1,22 @@
-import type { EmployeeResponse } from '../models/api/response/employee-response.model';
-import type { EmployeeFormValues } from '../models/forms/employee-form.schema';
-import dayjs from 'dayjs';
+import type { EmployeeResponse } from "../models/api/response/employee-response.model";
+import type { EmployeeFormValues } from "../models/forms/employee-form.schema";
+import dayjs from "dayjs";
 
 export const employeeMapper = {
   toFormValues(response: EmployeeResponse): EmployeeFormValues {
     return {
       firstName: response.firstName,
       lastName: response.lastName,
-      middleName: response.middleName ?? '',
-      suffix: response.suffix ?? '',
-      gender: response.gender ?? '',
-      civilStatus: response.civilStatus ?? '',
+      middleName: response.middleName ?? "",
+      suffix: response.suffix ?? "",
+      gender: response.gender ?? "",
+      civilStatus: response.civilStatus ?? "",
       dob: response.dob ?? null,
       age: response.age ?? undefined,
-      bloodType: response.bloodType ?? '',
-      contact: response.contact ?? '',
-      address1: response.address1 ?? '',
-      address2: response.address2 ?? '',
+      bloodType: response.bloodType ?? "",
+      contact: response.contact ?? "",
+      address1: response.address1 ?? "",
+      address2: response.address2 ?? "",
       bioId: response.bioId ?? null,
       employeeNo: response.employeeNo,
       departmentId: response.departmentId ?? null,
@@ -29,7 +29,7 @@ export const employeeMapper = {
       jobLevel: response.jobLevel,
       timeShiftId: response.timeShiftId ?? null,
       employmentStatus: response.employmentStatus,
-      hiringEntity: response.hiringEntity ?? '',
+      hiringEntity: response.hiringEntity ?? "",
       dateRegistered: response.dateRegistered,
       hireDate: response.hireDate,
       contractStart: response.contractStart ?? null,
@@ -42,19 +42,24 @@ export const employeeMapper = {
       monthlyRate: response.monthlyRate ?? 0,
       dailyRate: response.dailyRate ?? 0,
       cola: response.cola ?? 0,
-      bankName: response.bankName ?? '',
-      bankNo: response.bankNo ?? '',
-      sssNo: response.sssNo ?? '',
-      phicNo: response.phicNo ?? '',
-      hdmfNo: response.hdmfNo ?? '',
-      tin: response.tin ?? '',
+      bankName: response.bankName ?? "",
+      bankNo: response.bankNo ?? "",
+      sssNo: response.sssNo ?? "",
+      phicNo: response.phicNo ?? "",
+      hdmfNo: response.hdmfNo ?? "",
+      tin: response.tin ?? "",
       settings: {
         id: response.settings?.id,
-        isEligibleForOvertime: response.settings?.isEligibleForOvertime ?? false,
-        isEligibleForHolidayPay: response.settings?.isEligibleForHolidayPay ?? false,
-        isEligibleForNightDifferential: response.settings?.isEligibleForNightDifferential ?? false,
-        isEligibleForLeaveCredits: response.settings?.isEligibleForLeaveCredits ?? false,
-        isEligibleFor13thMonth: response.settings?.isEligibleFor13thMonth ?? false,
+        isEligibleForOvertime:
+          response.settings?.isEligibleForOvertime ?? false,
+        isEligibleForHolidayPay:
+          response.settings?.isEligibleForHolidayPay ?? false,
+        isEligibleForNightDifferential:
+          response.settings?.isEligibleForNightDifferential ?? false,
+        isEligibleForLeaveCredits:
+          response.settings?.isEligibleForLeaveCredits ?? false,
+        isEligibleFor13thMonth:
+          response.settings?.isEligibleFor13thMonth ?? false,
       },
     };
   },
@@ -63,11 +68,11 @@ export const employeeMapper = {
     return {
       bioId: null,
       dateRegistered: dayjs().toISOString(),
-      modeOfPayment: 'ATM',
-      salaryType: 'MONTHLY_VARIABLE',
-      employmentStatus: 'Probationary',
-      jobLevel: 'RankandFile',
-      status: 'ACTIVE',
+      modeOfPayment: "ATM",
+      salaryType: "MONTHLY_VARIABLE",
+      employmentStatus: "Probationary",
+      jobLevel: "RankandFile",
+      status: "ACTIVE",
       monthlyRate: 0,
       dailyRate: 0,
       cola: 0,

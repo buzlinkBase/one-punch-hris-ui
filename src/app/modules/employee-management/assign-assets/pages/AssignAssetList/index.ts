@@ -1,1 +1,1 @@
-export { default } from './AssignAssetList';
+export { default } from "./AssignAssetList";

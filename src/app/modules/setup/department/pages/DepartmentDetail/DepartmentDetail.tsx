@@ -40,7 +40,7 @@ export default function DepartmentDetail() {
     formState: { errors },
   } = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
-    defaultValues: { code: "", name: "", headId:  null, status: "Active" },
+    defaultValues: { code: "", name: "", headId: null, status: "Active" },
   });
 
   useEffect(() => {

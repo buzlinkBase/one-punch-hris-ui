@@ -1,9 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { permissionApi } from '../services/permission.api';
-import type { CreatePermission } from '../models/api/request/create-permission.model';
-import type { UpdatePermission } from '../models/api/request/update-permission.model';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { permissionApi } from "../services/permission.api";
+import type { CreatePermission } from "../models/api/request/create-permission.model";
+import type { UpdatePermission } from "../models/api/request/update-permission.model";
 
-const QUERY_KEY = ['permissions'];
+const QUERY_KEY = ["permissions"];
 
 export function usePermissions() {
   return useQuery({

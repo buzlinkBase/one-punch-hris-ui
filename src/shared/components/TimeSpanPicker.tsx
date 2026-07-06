@@ -1,7 +1,11 @@
 import type { CSSProperties } from "react";
 import { TimePicker, Checkbox } from "antd";
 import type { Dayjs } from "dayjs";
-import { fromTimeSpan, getDayOffset, getTimePart } from "@/shared/utils/time-span.util";
+import {
+  fromTimeSpan,
+  getDayOffset,
+  getTimePart,
+} from "@/shared/utils/time-span.util";
 
 interface TimeSpanPickerProps {
   value?: string | null;
@@ -65,7 +69,13 @@ export function TimeSpanPicker({
         disabled={!hasValue}
         onChange={(e) => handleNextDayChange(e.target.checked)}
       >
-        <span style={{ fontSize: 12, whiteSpace: "nowrap", color: isNextDay ? "#1DA081" : "#9ca3af" }}>
+        <span
+          style={{
+            fontSize: 12,
+            whiteSpace: "nowrap",
+            color: isNextDay ? "#1DA081" : "#9ca3af",
+          }}
+        >
           +1 day
         </span>
       </Checkbox>

@@ -1,7 +1,7 @@
-import { Typography } from 'antd';
-import { useAuditLogs } from '../../hooks/useAuditQueries';
-import AuditTable from '../../components/AuditTable';
-import { AUDIT_LABEL } from '../../constants/label.const';
+import { Typography } from "antd";
+import { useAuditLogs } from "../../hooks/useAuditQueries";
+import AuditTable from "../../components/AuditTable";
+import { AUDIT_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
 
@@ -17,7 +17,8 @@ export default function AuditList() {
               {AUDIT_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Track all user actions and system events for accountability and compliance.
+              Track all user actions and system events for accountability and
+              compliance.
             </p>
           </div>
         </div>

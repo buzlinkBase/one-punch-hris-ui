@@ -23,7 +23,8 @@ export function useEmployeeDocRecord(id: string | undefined) {
 export function useCreateEmployeeDocRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateEmployeeDocRecord) => employeeDocRecordApi.create(data),
+    mutationFn: (data: CreateEmployeeDocRecord) =>
+      employeeDocRecordApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
@@ -33,7 +34,8 @@ export function useCreateEmployeeDocRecord() {
 export function useUpdateEmployeeDocRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateEmployeeDocRecord) => employeeDocRecordApi.update(data),
+    mutationFn: (data: UpdateEmployeeDocRecord) =>
+      employeeDocRecordApi.update(data),
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

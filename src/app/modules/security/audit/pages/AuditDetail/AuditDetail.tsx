@@ -1,14 +1,14 @@
-import { Descriptions, Tag, Typography, Button, Space, Skeleton } from 'antd';
-import { useNavigate } from '@tanstack/react-router';
-import dayjs from 'dayjs';
-import { useRouteParams } from '@/shared/hooks/useRouteParams';
-import { useAuditLog } from '../../hooks/useAuditQueries';
+import { Descriptions, Tag, Typography, Button, Space, Skeleton } from "antd";
+import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
+import { useRouteParams } from "@/shared/hooks/useRouteParams";
+import { useAuditLog } from "../../hooks/useAuditQueries";
 import {
   AUDIT_LABEL,
   AUDIT_ACTION_COLORS,
   AUDIT_STATUS_COLORS,
-} from '../../constants/label.const';
-import { NAVIGATION_BUTTON_LABEL } from '@/shared/constants/navigation.const';
+} from "../../constants/label.const";
+import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
 
@@ -30,7 +30,7 @@ export default function AuditDetail() {
             </p>
           </div>
           <Space>
-            <Button onClick={() => navigate({ to: '/security/audit' })}>
+            <Button onClick={() => navigate({ to: "/security/audit" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
           </Space>
@@ -41,23 +41,19 @@ export default function AuditDetail() {
         {isLoading || !audit ? (
           <Skeleton active paragraph={{ rows: 8 }} />
         ) : (
-          <Descriptions
-            bordered
-            column={{ xs: 1, sm: 1, md: 2 }}
-            size="small"
-          >
+          <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }} size="small">
             <Descriptions.Item label={AUDIT_LABEL.TIMESTAMP} span={2}>
-              {dayjs(audit.timestamp).format('MMMM DD, YYYY — HH:mm:ss')}
+              {dayjs(audit.timestamp).format("MMMM DD, YYYY — HH:mm:ss")}
             </Descriptions.Item>
 
             <Descriptions.Item label={AUDIT_LABEL.ACTION}>
-              <Tag color={AUDIT_ACTION_COLORS[audit.action] ?? 'default'}>
+              <Tag color={AUDIT_ACTION_COLORS[audit.action] ?? "default"}>
                 {audit.action}
               </Tag>
             </Descriptions.Item>
 
             <Descriptions.Item label={AUDIT_LABEL.STATUS}>
-              <Tag color={AUDIT_STATUS_COLORS[audit.status] ?? 'default'}>
+              <Tag color={AUDIT_STATUS_COLORS[audit.status] ?? "default"}>
                 {audit.status}
               </Tag>
             </Descriptions.Item>
@@ -72,7 +68,9 @@ export default function AuditDetail() {
 
             <Descriptions.Item label={AUDIT_LABEL.USER}>
               {audit.userName}
-              <span className="ml-2 text-xs text-gray-400">({audit.userId})</span>
+              <span className="ml-2 text-xs text-gray-400">
+                ({audit.userId})
+              </span>
             </Descriptions.Item>
 
             <Descriptions.Item label={AUDIT_LABEL.IP_ADDRESS}>

@@ -21,7 +21,7 @@ const RECORD_TYPES = [
 
 const DESCRIPTIONS: Record<string, string> = {
   "Employment Contract": "Signed employment agreement",
-  "NDA": "Non-disclosure agreement",
+  NDA: "Non-disclosure agreement",
   "Government ID": "Valid government-issued identification",
   "SSS Record": "Social Security System membership record",
   "PhilHealth Record": "Philippine Health Insurance Corporation record",
@@ -49,7 +49,8 @@ const MOCK_DOC_RECORDS: EmployeeDocRecordResponse[] = Array.from(
 export const employeeDocRecordApi = {
   async getAll(): Promise<EmployeeDocRecordResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<EmployeeDocRecordResponse[]>(ENDPOINT);
+      const data =
+        await httpClient.getUnwrapped<EmployeeDocRecordResponse[]>(ENDPOINT);
       return data.length ? data : MOCK_DOC_RECORDS;
     } catch {
       return MOCK_DOC_RECORDS;
@@ -58,7 +59,9 @@ export const employeeDocRecordApi = {
 
   async getById(id: string): Promise<EmployeeDocRecordResponse> {
     try {
-      return await httpClient.getUnwrapped<EmployeeDocRecordResponse>(`${ENDPOINT}/${id}`);
+      return await httpClient.getUnwrapped<EmployeeDocRecordResponse>(
+        `${ENDPOINT}/${id}`,
+      );
     } catch {
       const match = MOCK_DOC_RECORDS.find((r) => r.id === id);
       if (match) return match;
@@ -71,7 +74,10 @@ export const employeeDocRecordApi = {
   },
 
   update(data: UpdateEmployeeDocRecord): Promise<EmployeeDocRecordResponse> {
-    return httpClient.put<EmployeeDocRecordResponse>(`${ENDPOINT}/${data.id}`, data);
+    return httpClient.put<EmployeeDocRecordResponse>(
+      `${ENDPOINT}/${data.id}`,
+      data,
+    );
   },
 
   remove(id: string): Promise<void> {

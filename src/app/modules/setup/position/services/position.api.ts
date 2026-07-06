@@ -6,13 +6,16 @@ import type { UpdatePosition } from "../models/api/request/update-position.model
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "positions");
 
-const MOCK_POSITIONS: PositionResponse[] = Array.from({ length: 12 }, (_, i) => ({
-  id: `position-${i + 1}`,
-  code: `POS${String(i + 1).padStart(3, "0")}`,
-  name: `Position ${i + 1}`,
-  rate: (i + 1) * 500,
-  status: i % 5 === 0 ? "INACTIVE" : "ACTIVE",
-}));
+const MOCK_POSITIONS: PositionResponse[] = Array.from(
+  { length: 12 },
+  (_, i) => ({
+    id: `position-${i + 1}`,
+    code: `POS${String(i + 1).padStart(3, "0")}`,
+    name: `Position ${i + 1}`,
+    rate: (i + 1) * 500,
+    status: i % 5 === 0 ? "INACTIVE" : "ACTIVE",
+  }),
+);
 
 export const positionApi = {
   async getAll(): Promise<PositionResponse[]> {
@@ -25,7 +28,9 @@ export const positionApi = {
   },
   async getById(id: string): Promise<PositionResponse> {
     try {
-      return await httpClient.getUnwrapped<PositionResponse>(`${ENDPOINT}/${id}`);
+      return await httpClient.getUnwrapped<PositionResponse>(
+        `${ENDPOINT}/${id}`,
+      );
     } catch {
       const match = MOCK_POSITIONS.find((item) => item.id === id);
       if (match) return match;

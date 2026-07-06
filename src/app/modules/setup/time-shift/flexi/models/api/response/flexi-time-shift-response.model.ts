@@ -1,4 +1,7 @@
-import type { BreakMode, TimeShiftType } from "../request/create-flexi-time-shift.model";
+import type {
+  BreakMode,
+  TimeShiftType,
+} from "../request/create-flexi-time-shift.model";
 
 export interface FlexiTimeShiftResponse {
   id: string;

@@ -8,7 +8,11 @@ interface Props {
   loading?: boolean;
 }
 
-export default function IncompletePunchesFilter({ onFilter, onReset, loading }: Props) {
+export default function IncompletePunchesFilter({
+  onFilter,
+  onReset,
+  loading,
+}: Props) {
   const [form] = Form.useForm();
 
   const handleFilter = async () => {

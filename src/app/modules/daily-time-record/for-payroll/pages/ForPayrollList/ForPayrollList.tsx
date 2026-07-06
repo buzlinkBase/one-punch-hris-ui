@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Form, Select, Button, Typography, DatePicker, Card, Badge } from "antd";
+import {
+  Form,
+  Select,
+  Button,
+  Typography,
+  DatePicker,
+  Card,
+  Badge,
+} from "antd";
 import { FilterOutlined, ClearOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useForPayrollRecords } from "../../hooks/useForPayrollQueries";
@@ -107,44 +115,64 @@ export default function ForPayrollList() {
                   }
                 />
               </Form.Item>
-              <Form.Item label={FOR_PAYROLL_LABEL.FILTER_DEPARTMENT} className="mb-0">
+              <Form.Item
+                label={FOR_PAYROLL_LABEL.FILTER_DEPARTMENT}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All Departments"
                   options={DEPARTMENT_OPTIONS}
                   value={pending.departmentId}
-                  onChange={(val) => setPending((f) => ({ ...f, departmentId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, departmentId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={FOR_PAYROLL_LABEL.FILTER_CLIENT} className="mb-0">
+              <Form.Item
+                label={FOR_PAYROLL_LABEL.FILTER_CLIENT}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All Clients"
                   options={CLIENT_OPTIONS}
                   value={pending.clientId}
-                  onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, clientId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={FOR_PAYROLL_LABEL.FILTER_EMPLOYEE} className="mb-0">
+              <Form.Item
+                label={FOR_PAYROLL_LABEL.FILTER_EMPLOYEE}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   showSearch={{ optionFilterProp: "label" }}
                   placeholder="All Employees"
                   options={EMPLOYEE_OPTIONS}
                   value={pending.employeeId}
-                  onChange={(val) => setPending((f) => ({ ...f, employeeId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, employeeId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-              <Form.Item label={FOR_PAYROLL_LABEL.FILTER_PAYROLL_GROUP} className="mb-0">
+              <Form.Item
+                label={FOR_PAYROLL_LABEL.FILTER_PAYROLL_GROUP}
+                className="mb-0"
+              >
                 <Select
                   allowClear
                   placeholder="All Payroll Groups"
                   options={PAYROLL_GROUP_OPTIONS}
                   value={pending.payrollGroupId}
-                  onChange={(val) => setPending((f) => ({ ...f, payrollGroupId: val }))}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, payrollGroupId: val }))
+                  }
                   style={{ width: "100%" }}
                 />
               </Form.Item>
@@ -153,7 +181,11 @@ export default function ForPayrollList() {
               <Button icon={<ClearOutlined />} onClick={handleClear}>
                 Clear
               </Button>
-              <Button icon={<FilterOutlined />} type="primary" onClick={handleSearch}>
+              <Button
+                icon={<FilterOutlined />}
+                type="primary"
+                onClick={handleSearch}
+              >
                 Search
               </Button>
             </div>

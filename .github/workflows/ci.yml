@@ -6,8 +6,8 @@ on:
       - main
       - dev
       - production
-      - 'feature/**'
-      - 'hotfix/**'
+      - "feature/**"
+      - "hotfix/**"
   pull_request:
     branches:
       - main
@@ -20,8 +20,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PNPM_VERSION: '10.32.1'
-  NODE_VERSION: '20.19.1'
+  PNPM_VERSION: "10.32.1"
+  NODE_VERSION: "20.19.1"
   DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/hris-react
 
 permissions:

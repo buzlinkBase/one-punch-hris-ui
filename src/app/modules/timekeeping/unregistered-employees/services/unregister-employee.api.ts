@@ -3,7 +3,10 @@ import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { UnregisterEmployeeFilter } from "../models/api/request/unregister-employee-filter.model";
 import type { UnregisterEmployeeResponse } from "../models/api/response/unregister-employee-response.model";
 
-const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timekeeping/unregistered-employees");
+const ENDPOINT = buildApiUrl(
+  API_PREFIX.hrms,
+  "timekeeping/unregistered-employees",
+);
 
 const departments = ["Operations", "Finance", "Human Resources", "IT"];
 const positions = ["Staff", "Supervisor", "Team Lead", "Manager"];

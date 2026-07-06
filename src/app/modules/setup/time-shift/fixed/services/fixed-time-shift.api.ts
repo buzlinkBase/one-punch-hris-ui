@@ -84,7 +84,8 @@ const MOCK_FIXED_TIME_SHIFTS: FixedTimeShiftResponse[] = [
 export const fixedTimeShiftApi = {
   async getAll(): Promise<FixedTimeShiftResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<FixedTimeShiftResponse[]>(ENDPOINT);
+      const data =
+        await httpClient.getUnwrapped<FixedTimeShiftResponse[]>(ENDPOINT);
       return data.length ? data : MOCK_FIXED_TIME_SHIFTS;
     } catch {
       return MOCK_FIXED_TIME_SHIFTS;
@@ -92,7 +93,9 @@ export const fixedTimeShiftApi = {
   },
   async getById(id: string): Promise<FixedTimeShiftResponse> {
     try {
-      return await httpClient.getUnwrapped<FixedTimeShiftResponse>(`${ENDPOINT}/${id}`);
+      return await httpClient.getUnwrapped<FixedTimeShiftResponse>(
+        `${ENDPOINT}/${id}`,
+      );
     } catch {
       const match = MOCK_FIXED_TIME_SHIFTS.find((item) => item.id === id);
       if (match) return match;
@@ -103,7 +106,10 @@ export const fixedTimeShiftApi = {
     return httpClient.postUnwrapped<FixedTimeShiftResponse>(ENDPOINT, data);
   },
   update(data: UpdateFixedTimeShift): Promise<FixedTimeShiftResponse> {
-    return httpClient.put<FixedTimeShiftResponse>(`${ENDPOINT}/${data.id}`, data);
+    return httpClient.put<FixedTimeShiftResponse>(
+      `${ENDPOINT}/${data.id}`,
+      data,
+    );
   },
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/${id}`);

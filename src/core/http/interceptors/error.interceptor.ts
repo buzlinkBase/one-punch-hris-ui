@@ -8,7 +8,9 @@ export function applyErrorInterceptor(instance: AxiosInstance): void {
   instance.interceptors.response.use(
     (response) => response,
     async (error: AxiosError<ErrorResponse>) => {
-      const original = error.config as typeof error.config & { _retry?: boolean };
+      const original = error.config as typeof error.config & {
+        _retry?: boolean;
+      };
 
       // Only attempt refresh when the token is actually expired.
       // A 401 from business logic (e.g. wrong tenant, insufficient permission) must
@@ -37,7 +39,8 @@ export function applyErrorInterceptor(instance: AxiosInstance): void {
         error.response?.data?.message ??
         error.message ??
         "An unexpected error occurred.";
-      const message = problemDetails?.title ?? getStatusTitle(error.response?.status);
+      const message =
+        problemDetails?.title ?? getStatusTitle(error.response?.status);
 
       try {
         getNotify().error({ message, description, placement: "topRight" });
@@ -52,12 +55,19 @@ export function applyErrorInterceptor(instance: AxiosInstance): void {
 
 function getStatusTitle(status?: number): string {
   switch (status) {
-    case 400: return "Bad Request";
-    case 401: return "Unauthorized";
-    case 403: return "Forbidden";
-    case 404: return "Not Found";
-    case 422: return "Validation Error";
-    case 500: return "Server Error";
-    default:  return "Request Failed";
+    case 400:
+      return "Bad Request";
+    case 401:
+      return "Unauthorized";
+    case 403:
+      return "Forbidden";
+    case 404:
+      return "Not Found";
+    case 422:
+      return "Validation Error";
+    case 500:
+      return "Server Error";
+    default:
+      return "Request Failed";
   }
 }

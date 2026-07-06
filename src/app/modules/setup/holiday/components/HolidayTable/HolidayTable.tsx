@@ -17,13 +17,25 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
   const [search, setSearch] = useState("");
 
   const filtered = data.filter((item) =>
-    [item.description, item.holDate, item.holType, item.workType, item.status].some(
-      (val) => String(val ?? "").toLowerCase().includes(search.toLowerCase()),
+    [
+      item.description,
+      item.holDate,
+      item.holType,
+      item.workType,
+      item.status,
+    ].some((val) =>
+      String(val ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
     ),
   );
 
   const columns: ColumnsType<HolidayResponse> = [
-    { title: HOLIDAY_LABEL.DESCRIPTION, dataIndex: "description", key: "description" },
+    {
+      title: HOLIDAY_LABEL.DESCRIPTION,
+      dataIndex: "description",
+      key: "description",
+    },
     {
       title: HOLIDAY_LABEL.HOL_DATE,
       dataIndex: "holDate",
@@ -54,13 +66,15 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
       title: HOLIDAY_LABEL.IS_PAID,
       dataIndex: "isPaid",
       key: "isPaid",
-      render: (v: boolean) => <Tag color={v ? "green" : "default"}>{v ? "Paid" : "Unpaid"}</Tag>,
+      render: (v: boolean) => (
+        <Tag color={v ? "green" : "default"}>{v ? "Paid" : "Unpaid"}</Tag>
+      ),
     },
     {
       title: HOLIDAY_LABEL.IS_RECURING,
       dataIndex: "isRecuring",
       key: "isRecuring",
-      render: (v: boolean) => v ? "Yes" : "No",
+      render: (v: boolean) => (v ? "Yes" : "No"),
     },
     { title: HOLIDAY_LABEL.STATUS, dataIndex: "status", key: "status" },
     {

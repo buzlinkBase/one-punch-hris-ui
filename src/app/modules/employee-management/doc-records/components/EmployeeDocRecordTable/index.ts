@@ -1,1 +1,1 @@
-export { default } from './EmployeeDocRecordTable';
+export { default } from "./EmployeeDocRecordTable";

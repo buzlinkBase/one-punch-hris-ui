@@ -1,1 +1,1 @@
-export { default } from './DeductionTypeTable';
+export { default } from "./DeductionTypeTable";

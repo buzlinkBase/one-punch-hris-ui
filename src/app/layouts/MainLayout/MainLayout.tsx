@@ -1,5 +1,14 @@
 import { useState, type ReactNode } from "react";
-import { Button, Dropdown, Input, Layout, Menu, Spin, Tag, notification } from "antd";
+import {
+  Button,
+  Dropdown,
+  Input,
+  Layout,
+  Menu,
+  Spin,
+  Tag,
+  notification,
+} from "antd";
 import {
   ApartmentOutlined,
   BarChartOutlined,
@@ -262,7 +271,8 @@ export default function MainLayout() {
     } catch {
       notification.error({
         message: "Switch failed",
-        description: "Could not switch to the selected client. Please try again.",
+        description:
+          "Could not switch to the selected client. Please try again.",
       });
       setSwitchingTenant(null);
     }
@@ -315,17 +325,43 @@ export default function MainLayout() {
                     return {
                       key: t.tenantId,
                       disabled: switchingTenant !== null || isActive,
-                      onClick: isActive ? undefined : () => void handleSwitchTenant(t.tenantId),
-                      icon: isActive
-                        ? <CheckOutlined style={{ color: "#1DA081" }} />
-                        : <BankOutlined style={{ color: "#bfbfbf" }} />,
+                      onClick: isActive
+                        ? undefined
+                        : () => void handleSwitchTenant(t.tenantId),
+                      icon: isActive ? (
+                        <CheckOutlined style={{ color: "#1DA081" }} />
+                      ) : (
+                        <BankOutlined style={{ color: "#bfbfbf" }} />
+                      ),
                       label: (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                          <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? "#1DA081" : undefined }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 8,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: isActive ? 600 : 400,
+                              color: isActive ? "#1DA081" : undefined,
+                            }}
+                          >
                             {t.name}
                           </span>
                           {stateTag.show && (
-                            <Tag color={stateTag.color} style={{ margin: 0, fontSize: 10, lineHeight: "16px", padding: "0 5px", flexShrink: 0 }}>
+                            <Tag
+                              color={stateTag.color}
+                              style={{
+                                margin: 0,
+                                fontSize: 10,
+                                lineHeight: "16px",
+                                padding: "0 5px",
+                                flexShrink: 0,
+                              }}
+                            >
                               {t.state}
                             </Tag>
                           )}
@@ -337,7 +373,17 @@ export default function MainLayout() {
                   {
                     key: "__create-tenant",
                     icon: <PlusOutlined style={{ color: "#1DA081" }} />,
-                    label: <span style={{ color: "#1DA081", fontWeight: 500, fontSize: 13 }}>New workspace</span>,
+                    label: (
+                      <span
+                        style={{
+                          color: "#1DA081",
+                          fontWeight: 500,
+                          fontSize: 13,
+                        }}
+                      >
+                        New workspace
+                      </span>
+                    ),
                     onClick: () => navigate({ to: "/create-tenant" }),
                   },
                 ],
@@ -350,22 +396,29 @@ export default function MainLayout() {
                 className={`flex items-center w-full rounded-xl px-2 py-2 cursor-pointer bg-transparent border-0 transition-colors hover:bg-emerald-50 ${collapsed ? "justify-center" : "gap-3"}`}
               >
                 <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                  {switchingTenant
-                    ? <Spin size="small" />
-                    : <BankOutlined style={{ color: "#1DA081", fontSize: 14 }} />
-                  }
+                  {switchingTenant ? (
+                    <Spin size="small" />
+                  ) : (
+                    <BankOutlined style={{ color: "#1DA081", fontSize: 14 }} />
+                  )}
                 </div>
                 {!collapsed && (
                   <>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="m-0 text-xs font-semibold text-gray-800 truncate leading-snug">
-                        {sessionUser.tenants.find((t) => t.tenantId === sessionUser.tenantId)?.name
-                          ?? sessionUser.tenantName
-                          ?? "Select workspace"}
+                        {sessionUser.tenants.find(
+                          (t) => t.tenantId === sessionUser.tenantId,
+                        )?.name ??
+                          sessionUser.tenantName ??
+                          "Select workspace"}
                       </p>
-                      <p className="m-0 text-[11px] text-gray-400 leading-snug">Switch workspace</p>
+                      <p className="m-0 text-[11px] text-gray-400 leading-snug">
+                        Switch workspace
+                      </p>
                     </div>
-                    <DownOutlined style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0 }} />
+                    <DownOutlined
+                      style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0 }}
+                    />
                   </>
                 )}
               </button>
@@ -448,7 +501,10 @@ export default function MainLayout() {
               {/* <h1 className="header-context-title">{headerContext.title}</h1> */}
             </div>
 
-            <div className="header-search-wrap" style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div
+              className="header-search-wrap"
+              style={{ display: "flex", gap: 12, alignItems: "center" }}
+            >
               <Input
                 className="header-search"
                 prefix={<SearchOutlined />}

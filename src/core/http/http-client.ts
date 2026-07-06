@@ -1,21 +1,33 @@
-import type { AxiosRequestConfig } from 'axios';
-import axiosInstance from './axios.instance';
-import type { ApiResponse } from '@/shared/types/api-response.model';
+import type { AxiosRequestConfig } from "axios";
+import axiosInstance from "./axios.instance";
+import type { ApiResponse } from "@/shared/types/api-response.model";
 
 const httpClient = {
   get<T>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
     return axiosInstance.get<T>(endpoint, config).then((r) => r.data);
   },
 
-  post<T>(endpoint: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  post<T>(
+    endpoint: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     return axiosInstance.post<T>(endpoint, body, config).then((r) => r.data);
   },
 
-  put<T>(endpoint: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  put<T>(
+    endpoint: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     return axiosInstance.put<T>(endpoint, body, config).then((r) => r.data);
   },
 
-  patch<T>(endpoint: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  patch<T>(
+    endpoint: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     return axiosInstance.patch<T>(endpoint, body, config).then((r) => r.data);
   },
 
@@ -30,7 +42,11 @@ const httpClient = {
       .then((r) => r.data.data);
   },
 
-  postUnwrapped<T>(endpoint: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  postUnwrapped<T>(
+    endpoint: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
     return axiosInstance
       .post<ApiResponse<T>>(endpoint, body, config)
       .then((r) => r.data.data);

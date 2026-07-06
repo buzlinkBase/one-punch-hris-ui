@@ -23,7 +23,8 @@ export function useEmployeeDependent(id: string | undefined) {
 export function useCreateEmployeeDependent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateEmployeeDependent) => employeeDependentApi.create(data),
+    mutationFn: (data: CreateEmployeeDependent) =>
+      employeeDependentApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
@@ -33,7 +34,8 @@ export function useCreateEmployeeDependent() {
 export function useUpdateEmployeeDependent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateEmployeeDependent) => employeeDependentApi.update(data),
+    mutationFn: (data: UpdateEmployeeDependent) =>
+      employeeDependentApi.update(data),
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

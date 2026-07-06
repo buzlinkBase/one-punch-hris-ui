@@ -111,9 +111,7 @@ export default function EmployeeTable({ data, loading, onDelete }: Props) {
       key: "status",
       width: 90,
       render: (v?: string) =>
-        v ? (
-          <Tag color={v === "ACTIVE" ? "success" : "default"}>{v}</Tag>
-        ) : "—",
+        v ? <Tag color={v === "ACTIVE" ? "success" : "default"}>{v}</Tag> : "—",
     },
     {
       title: "Actions",
