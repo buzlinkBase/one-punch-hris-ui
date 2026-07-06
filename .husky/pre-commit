@@ -1,1 +1,1 @@
-pnpm lint
+pnpm lint-staged || (echo "" && echo "Pre-commit checks failed. Run 'pnpm format' to fix formatting, then re-stage and commit." && exit 1)
