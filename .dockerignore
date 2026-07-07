@@ -4,9 +4,10 @@ dist
 .git
 .gitignore
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 .DS_Store
+**/.DS_Store
 *.pem
 .vscode
 .idea
@@ -20,14 +21,27 @@ coverage
 .nyc_output
 .cache
 .parcel-cache
-.eslintcache
 *.tgz
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-.git
-.gitignore
+
+# CI / tooling / editor
+.github
+.husky
+.claude
+.prettierrc
+.prettierignore
+
+# Docs (not needed inside the image)
+*.md
+!README.md
+
+# Deployment / infra assets not needed for the app build
+# (nginx.conf IS needed — copied in Dockerfile)
+docker
 docker-compose*.yml
-README.md
+init-letsencrypt.sh
+server-setup.sh
