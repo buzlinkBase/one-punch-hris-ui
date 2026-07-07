@@ -1,5 +1,14 @@
 import { useEffect, lazy, Suspense, type ReactNode } from "react";
-import { Form, Input, Button, Select, Typography, Space, Tag, Spin } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Typography,
+  Space,
+  Tag,
+  Spin,
+} from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/useRouteParams";
 import { useForm, Controller } from "react-hook-form";
@@ -17,7 +26,9 @@ import { OPERATION_AREA_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const PolygonMapPicker = lazy(() =>
-  import("@/shared/components/PolygonMapPicker").then((m) => ({ default: m.PolygonMapPicker }))
+  import("@/shared/components/PolygonMapPicker").then((m) => ({
+    default: m.PolygonMapPicker,
+  })),
 );
 
 const { Title } = Typography;
@@ -29,8 +40,24 @@ const STATUS_OPTIONS = [
 
 function SectionHeader({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "20px 0 12px" }}>
-      <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        margin: "20px 0 12px",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#6b7280",
+          whiteSpace: "nowrap",
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+        }}
+      >
         {children}
       </span>
       <div style={{ flex: 1, height: 1, backgroundColor: "#e5e7eb" }} />
@@ -44,7 +71,8 @@ export default function OperationAreaDetail() {
   const navigate = useNavigate();
   const { data: selected } = useOperationArea(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateOperationArea();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdateOperationArea();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateOperationArea();
 
   const {
     control,
@@ -55,7 +83,13 @@ export default function OperationAreaDetail() {
     formState: { errors },
   } = useForm<OperationAreaFormValues>({
     resolver: zodResolver(operationAreaFormSchema),
-    defaultValues: { code: "", name: "", address: "", boundary: null, status: "ACTIVE" },
+    defaultValues: {
+      code: "",
+      name: "",
+      address: "",
+      boundary: null,
+      status: "ACTIVE",
+    },
   });
 
   useEffect(() => {
@@ -82,7 +116,9 @@ export default function OperationAreaDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit ? OPERATION_AREA_LABEL.EDIT_TITLE : OPERATION_AREA_LABEL.CREATE_TITLE}
+              {isEdit
+                ? OPERATION_AREA_LABEL.EDIT_TITLE
+                : OPERATION_AREA_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               Maintain operation areas used for employee and scheduling setup.
@@ -101,7 +137,10 @@ export default function OperationAreaDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }} className="op-area-detail-layout">
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}
+            className="op-area-detail-layout"
+          >
             <style>{`
               @media (min-width: 1024px) {
                 .op-area-detail-layout {
@@ -146,7 +185,11 @@ export default function OperationAreaDetail() {
                   name="address"
                   control={control}
                   render={({ field }) => (
-                    <Input.TextArea {...field} rows={3} placeholder="Enter full address" />
+                    <Input.TextArea
+                      {...field}
+                      rows={3}
+                      placeholder="Enter full address"
+                    />
                   )}
                 />
               </Form.Item>
@@ -160,7 +203,11 @@ export default function OperationAreaDetail() {
                   name="status"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} options={STATUS_OPTIONS} placeholder="Select status" />
+                    <Select
+                      {...field}
+                      options={STATUS_OPTIONS}
+                      placeholder="Select status"
+                    />
                   )}
                 />
               </Form.Item>
@@ -170,26 +217,43 @@ export default function OperationAreaDetail() {
             <div>
               <SectionHeader>Operation Area Boundary</SectionHeader>
               <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
-                Draw a polygon on the map to define the geographic boundary of this operation area.
+                Draw a polygon on the map to define the geographic boundary of
+                this operation area.
               </p>
               <Controller
                 name="boundary"
                 control={control}
                 render={({ field }) => (
-                  <Suspense fallback={<div style={{ height: 450, display: "flex", alignItems: "center", justifyContent: "center" }}><Spin /></div>}>
+                  <Suspense
+                    fallback={
+                      <div
+                        style={{
+                          height: 450,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Spin />
+                      </div>
+                    }
+                  >
                     <PolygonMapPicker
                       value={field.value ?? null}
                       onChange={field.onChange}
                       height={450}
                       onAddressFound={(addr) => {
-                        if (!getValues("address")?.trim()) setValue("address", addr);
+                        if (!getValues("address")?.trim())
+                          setValue("address", addr);
                       }}
                     />
                   </Suspense>
                 )}
               />
               {errors.boundary && (
-                <p style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>{errors.boundary.message}</p>
+                <p style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>
+                  {errors.boundary.message}
+                </p>
               )}
             </div>
           </div>
@@ -199,7 +263,11 @@ export default function OperationAreaDetail() {
               <Button onClick={() => navigate({ to: "/setup/operation-area" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button type="primary" htmlType="submit" loading={isUpdating || isCreating}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isUpdating || isCreating}
+              >
                 {NAVIGATION_BUTTON_LABEL.SAVE}
               </Button>
             </Space>

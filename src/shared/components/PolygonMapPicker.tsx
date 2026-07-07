@@ -7,20 +7,27 @@ import "leaflet/dist/leaflet.css";
 import type { GeoJsonPolygon } from "@/shared/types/geo.types";
 
 // Fix default marker icons broken by bundlers
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)
+  ._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 const CEBU_CENTER: [number, number] = [10.3157, 123.8854];
 
-async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<string | null> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-      { headers: { "Accept-Language": "en", "User-Agent": "OnePunchHRIS/1.0" } },
+      {
+        headers: { "Accept-Language": "en", "User-Agent": "OnePunchHRIS/1.0" },
+      },
     );
     if (!res.ok) return null;
     const data = await res.json();
@@ -42,13 +49,18 @@ interface GeomanControlProps {
   onAddressFound?: (address: string) => void;
 }
 
-function GeomanControl({ value, onChange, onAddressFound }: GeomanControlProps) {
+function GeomanControl({
+  value,
+  onChange,
+  onAddressFound,
+}: GeomanControlProps) {
   const map = useMap();
   const layerRef = useRef<L.Layer | null>(null);
 
   const extractPolygon = (layer: L.Layer): GeoJsonPolygon | null => {
     const geojson = (layer as L.Polygon).toGeoJSON();
-    if (geojson.geometry?.type === "Polygon") return geojson.geometry as GeoJsonPolygon;
+    if (geojson.geometry?.type === "Polygon")
+      return geojson.geometry as GeoJsonPolygon;
     return null;
   };
 
@@ -87,8 +99,13 @@ function GeomanControl({ value, onChange, onAddressFound }: GeomanControlProps) 
 
     if (value) {
       clearExistingLayer();
-      const coords = value.coordinates[0].map(([lng, lat]) => [lat, lng] as [number, number]);
-      const layer = L.polygon(coords, { color: "#1DA081", fillOpacity: 0.2 }).addTo(map);
+      const coords = value.coordinates[0].map(
+        ([lng, lat]) => [lat, lng] as [number, number],
+      );
+      const layer = L.polygon(coords, {
+        color: "#1DA081",
+        fillOpacity: 0.2,
+      }).addTo(map);
       layerRef.current = layer;
       map.fitBounds((layer as L.Polygon).getBounds(), { padding: [40, 40] });
     }
@@ -114,7 +131,7 @@ function GeomanControl({ value, onChange, onAddressFound }: GeomanControlProps) 
       map.off("pm:edit");
       map.off("pm:remove");
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
 
   return null;
@@ -128,7 +145,12 @@ interface PolygonMapPickerProps {
   height?: number;
 }
 
-export function PolygonMapPicker({ value, onChange, onAddressFound, height = 400 }: PolygonMapPickerProps) {
+export function PolygonMapPicker({
+  value,
+  onChange,
+  onAddressFound,
+  height = 400,
+}: PolygonMapPickerProps) {
   // Lazy initialisers avoid synchronous setState in an effect body.
   // `hadInitialValue` lets the geolocation effect skip without referencing `value` as a dep.
   const hadInitialValue = useRef(!!value);
@@ -150,20 +172,46 @@ export function PolygonMapPicker({ value, onChange, onAddressFound, height = 400
 
   if (!ready) {
     return (
-      <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center", background: "#f3f4f6", borderRadius: 8, color: "#9ca3af", fontSize: 13 }}>
+      <div
+        style={{
+          height,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f3f4f6",
+          borderRadius: 8,
+          color: "#9ca3af",
+          fontSize: 13,
+        }}
+      >
         Locating...
       </div>
     );
   }
 
   return (
-    <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid #e5e7eb" }}>
-      <MapContainer center={center} zoom={14} style={{ height }} scrollWheelZoom>
+    <div
+      style={{
+        borderRadius: 8,
+        overflow: "hidden",
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <MapContainer
+        center={center}
+        zoom={14}
+        style={{ height }}
+        scrollWheelZoom
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <GeomanControl value={value} onChange={onChange} onAddressFound={onAddressFound} />
+        <GeomanControl
+          value={value}
+          onChange={onChange}
+          onAddressFound={onAddressFound}
+        />
       </MapContainer>
     </div>
   );

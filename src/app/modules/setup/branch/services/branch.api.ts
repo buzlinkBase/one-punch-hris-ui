@@ -12,18 +12,21 @@ const MOCK_BRANCHES: BranchResponse[] = Array.from({ length: 12 }, (_, i) => ({
   name: `Branch ${i + 1}`,
   address: null,
   status: i % 5 === 0 ? "INACTIVE" : "ACTIVE",
-  boundary: i === 0
-    ? {
-        type: "Polygon" as const,
-        coordinates: [[
-          [123.8820, 10.3140],
-          [123.8900, 10.3140],
-          [123.8900, 10.3200],
-          [123.8820, 10.3200],
-          [123.8820, 10.3140],
-        ]],
-      }
-    : null,
+  boundary:
+    i === 0
+      ? {
+          type: "Polygon" as const,
+          coordinates: [
+            [
+              [123.882, 10.314],
+              [123.89, 10.314],
+              [123.89, 10.32],
+              [123.882, 10.32],
+              [123.882, 10.314],
+            ],
+          ],
+        }
+      : null,
 }));
 
 export const branchApi = {
