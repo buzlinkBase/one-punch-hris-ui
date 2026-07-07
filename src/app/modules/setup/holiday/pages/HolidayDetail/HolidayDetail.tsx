@@ -84,6 +84,7 @@ export default function HolidayDetail() {
   useEffect(() => {
     if (isLegal) {
       setValue("workType", "NonWorking");
+      setValue("isPaid", true);
       setValue("areaId", null);
     }
   }, [isLegal, setValue]);
