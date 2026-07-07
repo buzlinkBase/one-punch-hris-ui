@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -27,6 +27,15 @@ export default function OperationAreaTable({ data, loading, onDelete }: Props) {
   const columns: ColumnsType<OperationAreaResponse> = [
     { title: OPERATION_AREA_LABEL.CODE, dataIndex: "code", key: "code" },
     { title: OPERATION_AREA_LABEL.NAME, dataIndex: "name", key: "name" },
+    { title: OPERATION_AREA_LABEL.ADDRESS, dataIndex: "address", key: "address", render: (val: string) => val || "—" },
+    {
+      title: "Boundary",
+      key: "boundary",
+      render: (_: unknown, record: OperationAreaResponse) =>
+        record.boundary
+          ? <Tag color="green">Area Set</Tag>
+          : <Tag color="default">No Area</Tag>,
+    },
     { title: OPERATION_AREA_LABEL.STATUS, dataIndex: "status", key: "status" },
     {
       title: "Actions",

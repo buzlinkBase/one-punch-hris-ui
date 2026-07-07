@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -27,6 +27,15 @@ export default function BranchTable({ data, loading, onDelete }: Props) {
   const columns: ColumnsType<BranchResponse> = [
     { title: BRANCH_LABEL.CODE, dataIndex: "code", key: "code" },
     { title: BRANCH_LABEL.NAME, dataIndex: "name", key: "name" },
+    { title: BRANCH_LABEL.ADDRESS, dataIndex: "address", key: "address", render: (val: string | null) => val || "—" },
+    {
+      title: "Boundary",
+      key: "boundary",
+      render: (_, record) =>
+        record.boundary
+          ? <Tag color="green">Area Set</Tag>
+          : <Tag color="default">No Area</Tag>,
+    },
     { title: BRANCH_LABEL.STATUS, dataIndex: "status", key: "status" },
     {
       title: "Actions",
