@@ -1,1 +1,3 @@
+echo "Running pre-push type check..."
 pnpm exec tsc -b --noEmit --incremental || (echo "" && echo "Type check failed. Fix the TypeScript errors above before pushing." && exit 1)
+echo "Pre-push type check passed."
