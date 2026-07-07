@@ -90,10 +90,12 @@ jobs:
       - run: pnpm exec tsc -b --noEmit
 
   # ─── Job 3: Verify the app actually builds ────────────────────────────────
+  # Runs in parallel with lint/format-check/type-check rather than after them —
+  # it doesn't depend on their results, and type-check already covers `tsc -b`,
+  # so this skips straight to `vite build` to avoid re-running the type-check.
   build:
     name: Build Check
     runs-on: ubuntu-latest
-    needs: [lint, format-check, type-check]
     steps:
       - uses: actions/checkout@v4
 
@@ -107,7 +109,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - run: pnpm exec vite build
 
   # ─── Job 4: Build Docker image and push to Docker Hub ──────────────────────
   # NOTE: versioning (semantic-release) removed for now — revisit once
@@ -115,7 +117,7 @@ jobs:
   docker-publish:
     name: Docker Publish
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [lint, format-check, type-check, build]
     if: github.event_name == 'push' && contains(fromJSON('["dev","production"]'), github.ref_name)
     environment: ${{ github.ref_name }}
     steps:
@@ -136,6 +138,10 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
+          # Skip provenance/SBOM attestation generation — it adds an extra
+          # manifest-list step that isn't needed for this deployment.
+          provenance: false
+          sbom: false
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ github.ref_name }}-latest
             ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
