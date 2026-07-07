@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "npm" # covers pnpm-lock.yaml too
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "docker" # Dockerfile base images (node, nginx)
+    directory: "/"
+    schedule:
+      interval: "weekly"
