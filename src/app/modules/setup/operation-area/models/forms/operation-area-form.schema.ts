@@ -1,9 +1,11 @@
 import { z } from "zod";
 
-const geoJsonPolygon = z.object({
-  type: z.literal("Polygon"),
-  coordinates: z.array(z.array(z.tuple([z.number(), z.number()]))),
-}).nullable();
+const geoJsonPolygon = z
+  .object({
+    type: z.literal("Polygon"),
+    coordinates: z.array(z.array(z.tuple([z.number(), z.number()]))),
+  })
+  .nullable();
 
 export const operationAreaFormSchema = z.object({
   code: z.string().min(1, "Code is required"),

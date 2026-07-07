@@ -27,14 +27,21 @@ export default function BranchTable({ data, loading, onDelete }: Props) {
   const columns: ColumnsType<BranchResponse> = [
     { title: BRANCH_LABEL.CODE, dataIndex: "code", key: "code" },
     { title: BRANCH_LABEL.NAME, dataIndex: "name", key: "name" },
-    { title: BRANCH_LABEL.ADDRESS, dataIndex: "address", key: "address", render: (val: string | null) => val || "—" },
+    {
+      title: BRANCH_LABEL.ADDRESS,
+      dataIndex: "address",
+      key: "address",
+      render: (val: string | null) => val || "—",
+    },
     {
       title: "Boundary",
       key: "boundary",
       render: (_, record) =>
-        record.boundary
-          ? <Tag color="green">Area Set</Tag>
-          : <Tag color="default">No Area</Tag>,
+        record.boundary ? (
+          <Tag color="green">Area Set</Tag>
+        ) : (
+          <Tag color="default">No Area</Tag>
+        ),
     },
     { title: BRANCH_LABEL.STATUS, dataIndex: "status", key: "status" },
     {
