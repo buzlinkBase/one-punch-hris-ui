@@ -58,11 +58,12 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   padding-bottom: 12px;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scrollbar-gutter: stable;
 }
 
 .app-sider-menu-scroll:hover {
-  scrollbar-width: thin;
   scrollbar-color: rgba(29, 160, 129, 0.3) transparent;
 }
 
@@ -408,11 +409,12 @@ body {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scrollbar-gutter: stable;
 }
 
 .app-content-scroll:hover {
-  scrollbar-width: thin;
   scrollbar-color: rgba(29, 160, 129, 0.3) transparent;
 }
 
