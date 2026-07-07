@@ -19,7 +19,7 @@ import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 
-const Login = lazy(() => import("@/app/modules/auth/login/login"));
+const Login = lazy(() => import("@/app/modules/auth/login"));
 const Register = lazy(() => import("@/app/modules/auth/register"));
 const ForgotPassword = lazy(
   () => import("@/app/modules/auth/forgot-password/forgot-password"),
@@ -27,11 +27,11 @@ const ForgotPassword = lazy(
 const ResetPassword = lazy(
   () => import("@/app/modules/auth/reset-password/reset-password"),
 );
-const Dashboard = lazy(() => import("@/app/modules/dashboard/dashboard"));
+const Dashboard = lazy(() => import("@/app/modules/dashboard/Dashboard"));
 const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/department-list"),
 );
-const Timekeeping = lazy(() => import("@/app/modules/timekeeping/timekeeping"));
+const Timekeeping = lazy(() => import("@/app/modules/timekeeping/Timekeeping"));
 const RawLogsList = lazy(
   () => import("@/app/modules/timekeeping/raw-logs/pages/raw-logs-list"),
 );
