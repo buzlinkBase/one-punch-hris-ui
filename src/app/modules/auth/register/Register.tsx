@@ -8,7 +8,7 @@ import {
   registerFormSchema,
   type RegisterFormValues,
 } from "./models/forms/register-form.schema";
-import { useRegisterMutation } from "./hooks/useRegisterMutation";
+import { useRegisterMutation } from "./hooks/use-register-mutation";
 import type { ApiResponse } from "@/shared/types/api-response.model";
 
 const { Title, Text } = Typography;

@@ -4,10 +4,10 @@ import { RouterProvider } from "@tanstack/react-router";
 import { ConfigProvider } from "antd";
 import { theme } from "antd";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import router from "@/app/routes/AppRoutes";
+import router from "@/app/routes/app-routes";
 import { queryClient } from "@/core/query-client";
 import { THEME_CONFIG } from "@/core/theme.config";
-import { NotificationProvider } from "@/shared/components/NotificationProvider";
+import { NotificationProvider } from "@/shared/components/notification-provider";
 
 export default function App() {
   return (
