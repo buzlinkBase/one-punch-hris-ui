@@ -2,96 +2,100 @@ import { lazy } from "react";
 import type { ComponentType, LazyExoticComponent } from "react";
 
 const DepartmentList = lazy(
-  () => import("@/app/modules/setup/department/pages/DepartmentList"),
+  () => import("@/app/modules/setup/department/pages/department-list"),
 );
 const DepartmentDetail = lazy(
-  () => import("@/app/modules/setup/department/pages/DepartmentDetail"),
+  () => import("@/app/modules/setup/department/pages/department-detail"),
 );
 
 const EmployeeList = lazy(
-  () => import("@/app/modules/setup/employee/pages/EmployeeList"),
+  () => import("@/app/modules/setup/employee/pages/employee-list"),
 );
 const EmployeeDetail = lazy(
-  () => import("@/app/modules/setup/employee/pages/EmployeeDetail"),
+  () => import("@/app/modules/setup/employee/pages/employee-detail"),
 );
 
 const HolidayList = lazy(
-  () => import("@/app/modules/setup/holiday/pages/HolidayList"),
+  () => import("@/app/modules/setup/holiday/pages/holiday-list"),
 );
 const HolidayDetail = lazy(
-  () => import("@/app/modules/setup/holiday/pages/HolidayDetail"),
+  () => import("@/app/modules/setup/holiday/pages/holiday-detail"),
 );
 
 const OperationAreaList = lazy(
-  () => import("@/app/modules/setup/operation-area/pages/OperationAreaList"),
+  () => import("@/app/modules/setup/operation-area/pages/operation-area-list"),
 );
 const OperationAreaDetail = lazy(
-  () => import("@/app/modules/setup/operation-area/pages/OperationAreaDetail"),
+  () =>
+    import("@/app/modules/setup/operation-area/pages/operation-area-detail"),
 );
 
 const PayrollGroupList = lazy(
-  () => import("@/app/modules/setup/payroll-group/pages/PayrollGroupList"),
+  () => import("@/app/modules/setup/payroll-group/pages/payroll-group-list"),
 );
 const PayrollGroupDetail = lazy(
-  () => import("@/app/modules/setup/payroll-group/pages/PayrollGroupDetail"),
+  () => import("@/app/modules/setup/payroll-group/pages/payroll-group-detail"),
 );
 
 const FixedTimeShiftList = lazy(
-  () => import("@/app/modules/setup/time-shift/fixed/pages/FixedTimeShiftList"),
+  () =>
+    import("@/app/modules/setup/time-shift/fixed/pages/fixed-time-shift-list"),
 );
 const FixedTimeShiftDetail = lazy(
   () =>
-    import("@/app/modules/setup/time-shift/fixed/pages/FixedTimeShiftDetail"),
+    import("@/app/modules/setup/time-shift/fixed/pages/fixed-time-shift-detail"),
 );
 
 const FlexiTimeShiftList = lazy(
-  () => import("@/app/modules/setup/time-shift/flexi/pages/FlexiTimeShiftList"),
+  () =>
+    import("@/app/modules/setup/time-shift/flexi/pages/flexi-time-shift-list"),
 );
 const FlexiTimeShiftDetail = lazy(
   () =>
-    import("@/app/modules/setup/time-shift/flexi/pages/FlexiTimeShiftDetail"),
+    import("@/app/modules/setup/time-shift/flexi/pages/flexi-time-shift-detail"),
 );
 
 const DeductionList = lazy(
-  () => import("@/app/modules/setup/deduction/pages/DeductionList"),
+  () => import("@/app/modules/setup/deduction/pages/deduction-list"),
 );
 const DeductionDetail = lazy(
-  () => import("@/app/modules/setup/deduction/pages/DeductionDetail"),
+  () => import("@/app/modules/setup/deduction/pages/deduction-detail"),
 );
 
 const DeductionTypeList = lazy(
-  () => import("@/app/modules/setup/deduction-type/pages/DeductionTypeList"),
+  () => import("@/app/modules/setup/deduction-type/pages/deduction-type-list"),
 );
 const DeductionTypeDetail = lazy(
-  () => import("@/app/modules/setup/deduction-type/pages/DeductionTypeDetail"),
+  () =>
+    import("@/app/modules/setup/deduction-type/pages/deduction-type-detail"),
 );
 
 const ClientList = lazy(
-  () => import("@/app/modules/setup/client/pages/ClientList"),
+  () => import("@/app/modules/setup/client/pages/client-list"),
 );
 const ClientDetail = lazy(
-  () => import("@/app/modules/setup/client/pages/ClientDetail"),
+  () => import("@/app/modules/setup/client/pages/client-detail"),
 );
 
 const SectionList = lazy(
-  () => import("@/app/modules/setup/section/pages/SectionList"),
+  () => import("@/app/modules/setup/section/pages/section-list"),
 );
 const SectionDetail = lazy(
-  () => import("@/app/modules/setup/section/pages/SectionDetail"),
+  () => import("@/app/modules/setup/section/pages/section-detail"),
 );
 
 const BranchList = lazy(
-  () => import("@/app/modules/setup/branch/pages/BranchList"),
+  () => import("@/app/modules/setup/branch/pages/branch-list"),
 );
 const BranchDetail = lazy(
-  () => import("@/app/modules/setup/branch/pages/BranchDetail"),
+  () => import("@/app/modules/setup/branch/pages/branch-detail"),
 );
 
 const PositionList = lazy(
-  () => import("@/app/modules/setup/position/pages/PositionList"),
+  () => import("@/app/modules/setup/position/pages/position-list"),
 );
 const PositionDetail = lazy(
-  () => import("@/app/modules/setup/position/pages/PositionDetail"),
+  () => import("@/app/modules/setup/position/pages/position-detail"),
 );
 
 export interface SetupRouteConfig {

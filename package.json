@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",
+    "@geoman-io/leaflet-geoman-free": "^2.20.0",
     "@hookform/resolvers": "^5.2.2",
     "@react-oauth/google": "^0.13.5",
     "@tanstack/react-query": "^5.100.1",
@@ -22,9 +23,11 @@
     "antd": "^6.3.6",
     "axios": "^1.15.2",
     "dayjs": "^1.11.20",
+    "leaflet": "^1.9.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.73.1",
+    "react-leaflet": "^5.0.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
@@ -41,6 +44,7 @@
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/react-query-devtools": "^5.100.14",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

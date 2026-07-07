@@ -1,0 +1,47 @@
+import { Button, Typography } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  useFlexiTimeShifts,
+  useDeleteFlexiTimeShift,
+} from "../../hooks/use-flexi-time-shift-queries";
+import FlexiTimeShiftTable from "../../components/flexi-time-shift-table";
+import { FLEXI_TIME_SHIFT_LABEL } from "../../constants/label.const";
+
+const { Title } = Typography;
+
+export default function FlexiTimeShiftList() {
+  const navigate = useNavigate();
+  const { data: allShifts = [], isLoading } = useFlexiTimeShifts();
+  const shifts = allShifts.filter((s) => s.shiftType === "FLEXI");
+  const { mutate: remove } = useDeleteFlexiTimeShift();
+
+  return (
+    <div className="content-page">
+      <div className="page-toolbar">
+        <div className="page-toolbar-row">
+          <div>
+            <Title level={4} className="mb-0!">
+              {FLEXI_TIME_SHIFT_LABEL.TITLE}
+            </Title>
+            <p className="page-toolbar-subtitle">
+              Set flexible shift windows while preserving core working hours.
+            </p>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate({ to: "/setup/time-shift/flexi/create" })}
+          >
+            Add Flexi Shift
+          </Button>
+        </div>
+      </div>
+      <FlexiTimeShiftTable
+        data={shifts}
+        loading={isLoading}
+        onDelete={remove}
+      />
+    </div>
+  );
+}

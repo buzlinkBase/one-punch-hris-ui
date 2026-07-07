@@ -12,7 +12,23 @@ const MOCK_OPERATION_AREAS: OperationAreaResponse[] = Array.from(
     id: `op-${i + 1}`,
     code: `OP${String(i + 1).padStart(3, "0")}`,
     name: `Operation Area ${i + 1}`,
+    address: "",
     status: i % 6 === 0 ? "INACTIVE" : "ACTIVE",
+    boundary:
+      i === 0
+        ? {
+            type: "Polygon" as const,
+            coordinates: [
+              [
+                [123.875, 10.31],
+                [123.885, 10.31],
+                [123.885, 10.318],
+                [123.875, 10.318],
+                [123.875, 10.31],
+              ],
+            ],
+          }
+        : null,
   }),
 );
 

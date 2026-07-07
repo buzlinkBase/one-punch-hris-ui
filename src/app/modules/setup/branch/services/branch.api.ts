@@ -10,7 +10,23 @@ const MOCK_BRANCHES: BranchResponse[] = Array.from({ length: 12 }, (_, i) => ({
   id: `branch-${i + 1}`,
   code: `BR${String(i + 1).padStart(3, "0")}`,
   name: `Branch ${i + 1}`,
+  address: null,
   status: i % 5 === 0 ? "INACTIVE" : "ACTIVE",
+  boundary:
+    i === 0
+      ? {
+          type: "Polygon" as const,
+          coordinates: [
+            [
+              [123.882, 10.314],
+              [123.89, 10.314],
+              [123.89, 10.32],
+              [123.882, 10.32],
+              [123.882, 10.314],
+            ],
+          ],
+        }
+      : null,
 }));
 
 export const branchApi = {
