@@ -5,41 +5,50 @@ import {
   Card,
   Form,
   Select,
-  Space,
   Typography,
   Upload,
   message,
 } from "antd";
 import type { RcFile, UploadFile } from "antd/es/upload/interface";
-import { InboxOutlined } from "@ant-design/icons";
+import { DeleteOutlined, FileOutlined, InboxOutlined } from "@ant-design/icons";
 import { UPLOAD_ATTENDANCE_LABEL } from "../../constants/label.const";
 import { useUploadAttendanceLog } from "../../hooks/useUploadAttendanceQueries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/useBranchQueries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/useOperationAreaQueries";
+import { useClients } from "@/app/modules/setup/client/hooks/useClientQueries";
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
 
-const ALLOWED_EXTENSIONS = [".dat", ".csv", ".txt", ".xls"];
+const ALLOWED_EXTENSIONS = [".dat", ".csv", ".txt", ".xls", ".xlsx"];
 
 export default function UploadAttendanceList() {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [branchId, setBranchId] = useState<string | null>(null);
   const [operationAreaId, setOperationAreaId] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
   const { data: areas = [], isLoading: isAreasLoading } = useOperationAreas();
+  const { data: clients = [], isLoading: isClientsLoading } = useClients();
   const { mutateAsync: upload, isPending: isUploading } =
     useUploadAttendanceLog();
 
-  const branchOptions = branches
-    .filter((b) => b.status === "ACTIVE")
-    .map((b) => ({ value: b.id, label: `${b.code} - ${b.name}` }));
+  const branchOptions = branches.map((b) => ({
+    value: b.id,
+    label: `${b.code} - ${b.name}`,
+  }));
 
-  const areaOptions = areas
-    .filter((a) => a.status === "ACTIVE")
-    .map((a) => ({ value: a.id, label: `${a.code} - ${a.name}` }));
+  const areaOptions = areas.map((a) => ({
+    value: a.id,
+    label: `${a.code} - ${a.name}`,
+  }));
+
+  const clientOptions = clients.map((c) => ({
+    value: c.id,
+    label: `${c.code} - ${c.name}`,
+  }));
 
   const beforeUpload = (file: RcFile) => {
     const ext = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
@@ -63,7 +72,7 @@ export default function UploadAttendanceList() {
     }
 
     try {
-      await upload({ file, branchId, operationAreaId });
+      await upload({ file, branchId, operationAreaId, clientId });
       setFileList([]);
       messageApi.success("Attendance log uploaded successfully.");
     } catch {
@@ -98,9 +107,10 @@ export default function UploadAttendanceList() {
                   placeholder="Select branch (optional)"
                   options={branchOptions}
                   loading={isBranchesLoading}
-                  value={branchId}
-                  onChange={setBranchId}
-                  showSearch={{ optionFilterProp: "label" }}
+                  value={branchId ?? undefined}
+                  onChange={(v: string | undefined) => setBranchId(v ?? null)}
+                  showSearch
+                  optionFilterProp="label"
                   allowClear
                 />
               </Form.Item>
@@ -109,9 +119,24 @@ export default function UploadAttendanceList() {
                   placeholder="Select operation area (optional)"
                   options={areaOptions}
                   loading={isAreasLoading}
-                  value={operationAreaId}
-                  onChange={setOperationAreaId}
-                  showSearch={{ optionFilterProp: "label" }}
+                  value={operationAreaId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setOperationAreaId(v ?? null)
+                  }
+                  showSearch
+                  optionFilterProp="label"
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Client">
+                <Select
+                  placeholder="Select client (optional)"
+                  options={clientOptions}
+                  loading={isClientsLoading}
+                  value={clientId ?? undefined}
+                  onChange={(v: string | undefined) => setClientId(v ?? null)}
+                  showSearch
+                  optionFilterProp="label"
                   allowClear
                 />
               </Form.Item>
@@ -121,6 +146,7 @@ export default function UploadAttendanceList() {
               maxCount={1}
               fileList={fileList}
               beforeUpload={beforeUpload}
+              showUploadList={false}
               onChange={({ fileList: next }) => {
                 if (next.length === 0) setFileList([]);
               }}
@@ -132,9 +158,37 @@ export default function UploadAttendanceList() {
                 Click or drag a file here to select
               </p>
               <p className="ant-upload-hint">
-                Supported formats: .dat, .csv, .txt, .xls
+                Supported formats: .dat, .csv, .txt, .xls, .xlsx
               </p>
             </Dragger>
+
+            {fileList.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 12px",
+                  background: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: 6,
+                }}
+              >
+                <FileOutlined style={{ color: "#52c41a", flexShrink: 0 }} />
+                <Text
+                  style={{ flex: 1, fontSize: 13, wordBreak: "break-all" }}
+                >
+                  {fileList[0].name}
+                </Text>
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => setFileList([])}
+                />
+              </div>
+            )}
 
             <Button
               type="primary"
@@ -148,35 +202,36 @@ export default function UploadAttendanceList() {
           </div>
 
           {/* Right: info panel */}
-          <Space direction="vertical" size="middle">
+          <div className="flex flex-col gap-4">
             <Alert
               type="info"
               showIcon
-              message="Supported file formats"
               description={
-                <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-                  <li>
-                    <Text strong>.dat</Text> — biometric device binary export
-                  </li>
-                  <li>
-                    <Text strong>.csv</Text> — comma-separated values
-                  </li>
-                  <li>
-                    <Text strong>.txt</Text> — space/tab-delimited text log
-                  </li>
-                  <li>
-                    <Text strong>.xls</Text> — Excel spreadsheet
-                  </li>
-                </ul>
+                <>
+                  <Text strong>Supported file formats</Text>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                    <li>
+                      <Text strong>.dat</Text> — biometric device binary export
+                    </li>
+                    <li>
+                      <Text strong>.csv</Text> — comma-separated values
+                    </li>
+                    <li>
+                      <Text strong>.txt</Text> — space/tab-delimited text log
+                    </li>
+                    <li>
+                      <Text strong>.xls / .xlsx</Text> — Excel spreadsheet
+                    </li>
+                  </ul>
+                </>
               }
             />
             <Alert
               type="warning"
               showIcon
-              message="Select the correct branch"
-              description="Attendance logs will be tagged to the selected branch. Make sure to choose the branch whose biometric device generated the file."
+              description="Attendance logs will be tagged to the selected branch/area. Make sure to choose the branch/area whose biometric device generated the file."
             />
-          </Space>
+          </div>
         </div>
       </Card>
     </div>

@@ -11,17 +11,12 @@ export const uploadAttendanceApi = {
     if (data.branchId) formData.append("branchId", data.branchId);
     if (data.operationAreaId)
       formData.append("operationAreaId", data.operationAreaId);
+    if (data.clientId) formData.append("clientId", data.clientId);
 
-    // The axios instance defaults to Content-Type: application/json which causes
-    // FormData to be JSON-serialized instead of sent as multipart. Strip it here
-    // so the browser sets the correct multipart/form-data boundary automatically.
+    // Setting multipart/form-data signals axios v1.x's XHR adapter to delete the
+    // header before sending, so the browser can append the correct boundary value.
     await axiosInstance.post(ENDPOINT, formData, {
-      transformRequest: [
-        (reqData: unknown, headers?: Record<string, string>) => {
-          if (headers) delete headers["Content-Type"];
-          return reqData;
-        },
-      ],
+      headers: { "Content-Type": "multipart/form-data" },
     });
   },
 };
