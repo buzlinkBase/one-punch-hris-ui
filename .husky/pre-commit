@@ -1,1 +1,33 @@
 pnpm lint-staged || (echo "" && echo "Pre-commit checks failed. Run 'pnpm format' to fix formatting, then re-stage and commit." && exit 1)
+
+# Enforce kebab-case for staged TS/TSX file names and their parent directories under src/
+# Valid:   main-layout.tsx  auth-storage.ts  components/form-section/
+# Invalid: MainLayout.tsx   AuthStorage.ts   components/FormSection/
+staged=$(git diff --cached --name-only --diff-filter=ACR | grep -E '^src/.*\.(ts|tsx)$' || true)
+
+if [ -n "$staged" ]; then
+  violations=""
+
+  while IFS= read -r file; do
+    # Check every path segment under src/
+    # e.g. src/app/modules/setup/BranchTable/branch-table.tsx → "BranchTable" is invalid
+    relative="${file#src/}"
+    IFS='/' read -ra parts <<< "$relative"
+    for part in "${parts[@]}"; do
+      # Strip file extension for the final segment (the file itself)
+      segment="${part%%.*}"
+      if ! echo "$segment" | grep -qE '^[a-z0-9][a-z0-9-]*$'; then
+        violations="$violations\n  $file  ($segment)"
+        break
+      fi
+    done
+  done <<< "$staged"
+
+  if [ -n "$violations" ]; then
+    echo ""
+    echo "Naming convention error: file and folder names under src/ must be kebab-case"
+    echo "Examples: main-layout.tsx  form-section/  use-queries.ts"
+    printf "Offending paths:%b\n" "$violations"
+    exit 1
+  fi
+fi

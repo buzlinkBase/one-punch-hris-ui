@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -52,13 +52,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built app from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Create directory for environment script
-RUN mkdir -p /docker-entrypoint.d
-
-# Copy entrypoint script for environment variable substitution
-COPY docker-entrypoint.sh /docker-entrypoint.d/01-env-substitution.sh
-RUN chmod +x /docker-entrypoint.d/01-env-substitution.sh
 
 # Expose port
 EXPOSE 80
