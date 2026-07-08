@@ -16,22 +16,34 @@ import { useUploadAttendanceLog } from "../../hooks/useUploadAttendanceQueries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/useBranchQueries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/useOperationAreaQueries";
 import { useClients } from "@/app/modules/setup/client/hooks/useClientQueries";
+import { useDepartments } from "@/app/modules/setup/department/hooks/useDepartmentQueries";
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
 
 const ALLOWED_EXTENSIONS = [".dat", ".csv", ".txt", ".xls", ".xlsx"];
 
+const filterByLabel = (
+  input: string,
+  option?: { label?: string | number | boolean },
+) =>
+  String(option?.label ?? "")
+    .toLowerCase()
+    .includes(input.toLowerCase());
+
 export default function UploadAttendanceList() {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [branchId, setBranchId] = useState<string | null>(null);
   const [operationAreaId, setOperationAreaId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
   const { data: areas = [], isLoading: isAreasLoading } = useOperationAreas();
   const { data: clients = [], isLoading: isClientsLoading } = useClients();
+  const { data: departments = [], isLoading: isDepartmentsLoading } =
+    useDepartments();
   const { mutateAsync: upload, isPending: isUploading } =
     useUploadAttendanceLog();
 
@@ -48,6 +60,11 @@ export default function UploadAttendanceList() {
   const clientOptions = clients.map((c) => ({
     value: c.id,
     label: `${c.code} - ${c.name}`,
+  }));
+
+  const departmentOptions = departments.map((d) => ({
+    value: d.id,
+    label: `${d.code} - ${d.name}`,
   }));
 
   const beforeUpload = (file: RcFile) => {
@@ -72,7 +89,7 @@ export default function UploadAttendanceList() {
     }
 
     try {
-      await upload({ file, branchId, operationAreaId, clientId });
+      await upload({ file, branchId, operationAreaId, clientId, departmentId });
       setFileList([]);
       messageApi.success("Attendance log uploaded successfully.");
     } catch {
@@ -99,7 +116,7 @@ export default function UploadAttendanceList() {
 
       <Card title="Upload Attendance Log">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {/* Left: branch + file picker */}
+          {/* Left: filters + file picker */}
           <div className="flex flex-col gap-3">
             <Form layout="vertical">
               <Form.Item label="Branch">
@@ -109,8 +126,7 @@ export default function UploadAttendanceList() {
                   loading={isBranchesLoading}
                   value={branchId ?? undefined}
                   onChange={(v: string | undefined) => setBranchId(v ?? null)}
-                  showSearch
-                  optionFilterProp="label"
+                  showSearch={{ filterOption: filterByLabel }}
                   allowClear
                 />
               </Form.Item>
@@ -123,8 +139,7 @@ export default function UploadAttendanceList() {
                   onChange={(v: string | undefined) =>
                     setOperationAreaId(v ?? null)
                   }
-                  showSearch
-                  optionFilterProp="label"
+                  showSearch={{ filterOption: filterByLabel }}
                   allowClear
                 />
               </Form.Item>
@@ -135,8 +150,20 @@ export default function UploadAttendanceList() {
                   loading={isClientsLoading}
                   value={clientId ?? undefined}
                   onChange={(v: string | undefined) => setClientId(v ?? null)}
-                  showSearch
-                  optionFilterProp="label"
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Department">
+                <Select
+                  placeholder="Select department (optional)"
+                  options={departmentOptions}
+                  loading={isDepartmentsLoading}
+                  value={departmentId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setDepartmentId(v ?? null)
+                  }
+                  showSearch={{ filterOption: filterByLabel }}
                   allowClear
                 />
               </Form.Item>
@@ -175,9 +202,7 @@ export default function UploadAttendanceList() {
                 }}
               >
                 <FileOutlined style={{ color: "#52c41a", flexShrink: 0 }} />
-                <Text
-                  style={{ flex: 1, fontSize: 13, wordBreak: "break-all" }}
-                >
+                <Text style={{ flex: 1, fontSize: 13, wordBreak: "break-all" }}>
                   {fileList[0].name}
                 </Text>
                 <Button

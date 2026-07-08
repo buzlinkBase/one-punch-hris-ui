@@ -3,4 +3,5 @@ export interface UploadAttendanceRequest {
   branchId?: string | null;
   operationAreaId?: string | null;
   clientId?: string | null;
+  departmentId?: string | null;
 }
