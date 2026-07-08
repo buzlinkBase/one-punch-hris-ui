@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { attendanceEntryApi } from "../services/attendance-entry.api";
 import type { AttendanceEntryFilter } from "../models/api/request/attendance-entry-filter.model";
+import type { CreateAttendanceEntry } from "../models/api/request/create-attendance-entry.model";
 
 const QUERY_KEY = ["timekeeping", "attendance-entry"];
 
@@ -15,6 +16,17 @@ export function useAttendanceEntryEmployees() {
   return useQuery({
     queryKey: [...QUERY_KEY, "employees"],
     queryFn: async () => attendanceEntryApi.getEmployees(),
+  });
+}
+
+export function useCreateAttendanceEntries() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (entries: CreateAttendanceEntry[]) =>
+      attendanceEntryApi.create(entries),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
   });
 }
 

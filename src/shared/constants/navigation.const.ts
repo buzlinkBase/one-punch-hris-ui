@@ -22,6 +22,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/timekeeping/upload-attendance",
       },
       {
+        key: "timekeeping-attendance-entry",
+        label: "Attendance Entry",
+        path: "/timekeeping/attendance-entry",
+      },
+      {
         key: "timekeeping-raw-logs",
         label: "Raw Logs",
         path: "/timekeeping/raw-logs",
@@ -30,11 +35,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "timekeeping-unregistered-employees",
         label: "Unregister Employee",
         path: "/timekeeping/unregistered-employees",
-      },
-      {
-        key: "timekeeping-attendance-entry",
-        label: "Attendance Entry",
-        path: "/timekeeping/attendance-entry",
       },
       {
         key: "timekeeping-incomplete-punches",

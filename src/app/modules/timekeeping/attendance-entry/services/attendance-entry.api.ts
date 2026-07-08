@@ -1,9 +1,11 @@
 import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { AttendanceEntryFilter } from "../models/api/request/attendance-entry-filter.model";
+import type { CreateAttendanceEntry } from "../models/api/request/create-attendance-entry.model";
 import type { AttendanceEntryResponse } from "../models/api/response/attendance-entry-response.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/generate");
+const ENDPOINT_MANUAL = buildApiUrl(API_PREFIX.hrms, "attendance/manual-entry");
 
 const EMPLOYEES = Array.from({ length: 20 }, (_, i) => ({
   id: `emp-${1001 + i}`,
@@ -84,5 +86,9 @@ export const attendanceEntryApi = {
       value: employee.id,
       label: employee.name,
     }));
+  },
+
+  async create(entries: CreateAttendanceEntry[]): Promise<void> {
+    await httpClient.post<void>(ENDPOINT_MANUAL, entries);
   },
 };

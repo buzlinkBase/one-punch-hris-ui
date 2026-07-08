@@ -15,7 +15,9 @@ import {
   ClearOutlined,
   DownloadOutlined,
   FilterOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import AttendanceEntryTable from "../../components/attendance-entry-table";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
@@ -29,6 +31,7 @@ import type { AttendanceEntryFilter } from "../../models/api/request/attendance-
 const { Title } = Typography;
 
 export default function AttendanceEntryList() {
+  const navigate = useNavigate();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filter, setFilter] = useState<AttendanceEntryFilter>({});
   const [pending, setPending] = useState<AttendanceEntryFilter>({});
@@ -210,13 +213,21 @@ export default function AttendanceEntryList() {
             <Dropdown menu={{ items: exportMenuItems }} trigger={["click"]}>
               <Button
                 icon={<DownloadOutlined />}
-                type="primary"
                 loading={isExporting}
                 disabled={isExportDisabled}
               >
                 Export Log
               </Button>
             </Dropdown>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/timekeeping/attendance-entry/create" })
+              }
+            >
+              New Entry
+            </Button>
           </div>
         </div>
       </div>

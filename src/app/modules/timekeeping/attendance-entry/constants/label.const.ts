@@ -1,5 +1,6 @@
 export const ATTENDANCE_ENTRY_LABEL = {
   TITLE: "Attendance Entry",
+  CREATE_TITLE: "New Attendance Entry",
   FILTER_DATE_FROM: "Date From",
   FILTER_DATE_TO: "Date To",
   FILTER_EMPLOYEE: "Employee",
