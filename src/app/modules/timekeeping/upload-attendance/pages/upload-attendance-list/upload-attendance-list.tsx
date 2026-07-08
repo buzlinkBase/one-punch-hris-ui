@@ -1,68 +1,100 @@
 import { useState } from "react";
 import {
   Alert,
-  Badge,
   Button,
   Card,
-  DatePicker,
   Form,
   Select,
-  Space,
   Typography,
   Upload,
   message,
 } from "antd";
-import type { UploadFile } from "antd/es/upload/interface";
-import {
-  ClearOutlined,
-  FilterOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
-import dayjs from "dayjs";
-import UploadAttendanceTable from "../../components/upload-attendance-table";
+import type { RcFile, UploadFile } from "antd/es/upload/interface";
+import { DeleteOutlined, FileOutlined, InboxOutlined } from "@ant-design/icons";
 import { UPLOAD_ATTENDANCE_LABEL } from "../../constants/label.const";
-import {
-  useUploadAttendanceEmployees,
-  useUploadAttendanceRecords,
-  useUploadRawAttendanceLog,
-} from "../../hooks/use-upload-attendance-queries";
-import type { UploadAttendanceFilter } from "../../models/api/request/upload-attendance-filter.model";
+import { useUploadAttendanceLog } from "../../hooks/use-upload-attendance-queries";
+import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
+import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 
 const { Title, Text } = Typography;
+const { Dragger } = Upload;
+
+const ALLOWED_EXTENSIONS = [".dat", ".csv", ".txt", ".xls", ".xlsx"];
+
+const filterByLabel = (
+  input: string,
+  option?: { label?: string | number | boolean },
+) =>
+  String(option?.label ?? "")
+    .toLowerCase()
+    .includes(input.toLowerCase());
 
 export default function UploadAttendanceList() {
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filter, setFilter] = useState<UploadAttendanceFilter>({});
-  const [pending, setPending] = useState<UploadAttendanceFilter>({});
-  const [selectedFile, setSelectedFile] = useState<UploadFile | null>(null);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [branchId, setBranchId] = useState<string | null>(null);
+  const [operationAreaId, setOperationAreaId] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const activeFilterCount = [filter.fromDate, filter.employeeId].filter(
-    Boolean,
-  ).length;
+  const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
+  const { data: areas = [], isLoading: isAreasLoading } = useOperationAreas();
+  const { data: clients = [], isLoading: isClientsLoading } = useClients();
+  const { data: departments = [], isLoading: isDepartmentsLoading } =
+    useDepartments();
+  const { mutateAsync: upload, isPending: isUploading } =
+    useUploadAttendanceLog();
 
-  const { data: records = [], isLoading } = useUploadAttendanceRecords(filter);
-  const { data: employees = [] } = useUploadAttendanceEmployees();
-  const { mutateAsync: uploadRawLog, isPending: isUploading } =
-    useUploadRawAttendanceLog();
+  const branchOptions = branches.map((b) => ({
+    value: b.id,
+    label: `${b.code} - ${b.name}`,
+  }));
 
-  const handleSearch = () => setFilter(pending);
+  const areaOptions = areas.map((a) => ({
+    value: a.id,
+    label: `${a.code} - ${a.name}`,
+  }));
 
-  const handleClear = () => {
-    setPending({});
-    setFilter({});
-    setFiltersOpen(false);
+  const clientOptions = clients.map((c) => ({
+    value: c.id,
+    label: `${c.code} - ${c.name}`,
+  }));
+
+  const departmentOptions = departments.map((d) => ({
+    value: d.id,
+    label: `${d.code} - ${d.name}`,
+  }));
+
+  const beforeUpload = (file: RcFile) => {
+    const ext = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      messageApi.error(
+        `Unsupported file type "${ext}". Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`,
+      );
+      return Upload.LIST_IGNORE;
+    }
+    setFileList([
+      { uid: file.uid, name: file.name, status: "done", originFileObj: file },
+    ]);
+    return false;
   };
 
   const handleUpload = async () => {
-    if (!selectedFile?.originFileObj) {
-      messageApi.warning("Please browse and select a raw DTR log file first.");
+    const file = fileList[0]?.originFileObj;
+    if (!file) {
+      messageApi.warning("Please select a file first.");
       return;
     }
 
-    await uploadRawLog(selectedFile.originFileObj);
-    setSelectedFile(null);
-    messageApi.success("Raw DTR log uploaded successfully.");
+    try {
+      await upload({ file, branchId, operationAreaId, clientId, departmentId });
+      setFileList([]);
+      messageApi.success("Attendance log uploaded successfully.");
+    } catch {
+      messageApi.error("Upload failed. Please try again.");
+    }
   };
 
   return (
@@ -76,133 +108,157 @@ export default function UploadAttendanceList() {
               {UPLOAD_ATTENDANCE_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Browse and upload raw DTR logs, then review employee time log
-              entries in one place.
+              Upload biometric device export files to import attendance logs.
             </p>
-          </div>
-          <div className="flex gap-2">
-            <Badge count={activeFilterCount} size="small">
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setFiltersOpen((v) => !v)}
-                type={filtersOpen ? "default" : "text"}
-              >
-                Filters
-              </Button>
-            </Badge>
           </div>
         </div>
       </div>
 
-      {filtersOpen && (
-        <Card size="small" className="mb-4">
-          <Form layout="vertical">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-              <Form.Item
-                label={UPLOAD_ATTENDANCE_LABEL.FILTER_FROM_DATE}
-                className="mb-0"
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  value={pending.fromDate ? dayjs(pending.fromDate) : null}
-                  onChange={(date) =>
-                    setPending((current) => ({
-                      ...current,
-                      fromDate: date?.format("YYYY-MM-DD"),
-                    }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item
-                label={UPLOAD_ATTENDANCE_LABEL.FILTER_TO_DATE}
-                className="mb-0"
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  value={pending.toDate ? dayjs(pending.toDate) : null}
-                  onChange={(date) =>
-                    setPending((current) => ({
-                      ...current,
-                      toDate: date?.format("YYYY-MM-DD"),
-                    }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item
-                label={UPLOAD_ATTENDANCE_LABEL.FILTER_EMPLOYEE}
-                className="mb-0"
-              >
+      <Card title="Upload Attendance Log">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {/* Left: filters + file picker */}
+          <div className="flex flex-col gap-3">
+            <Form layout="vertical">
+              <Form.Item label="Branch">
                 <Select
+                  placeholder="Select branch (optional)"
+                  options={branchOptions}
+                  loading={isBranchesLoading}
+                  value={branchId ?? undefined}
+                  onChange={(v: string | undefined) => setBranchId(v ?? null)}
+                  showSearch={{ filterOption: filterByLabel }}
                   allowClear
-                  showSearch={{ optionFilterProp: "label" }}
-                  placeholder="All Employees"
-                  options={employees}
-                  value={pending.employeeId}
-                  onChange={(value) =>
-                    setPending((current) => ({ ...current, employeeId: value }))
-                  }
-                  style={{ width: "100%" }}
                 />
               </Form.Item>
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <Button icon={<ClearOutlined />} onClick={handleClear}>
-                Clear
-              </Button>
-              <Button
-                icon={<FilterOutlined />}
-                type="primary"
-                onClick={handleSearch}
-              >
-                Search
-              </Button>
-            </div>
-          </Form>
-        </Card>
-      )}
+              <Form.Item label="Operation Area">
+                <Select
+                  placeholder="Select operation area (optional)"
+                  options={areaOptions}
+                  loading={isAreasLoading}
+                  value={operationAreaId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setOperationAreaId(v ?? null)
+                  }
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Client">
+                <Select
+                  placeholder="Select client (optional)"
+                  options={clientOptions}
+                  loading={isClientsLoading}
+                  value={clientId ?? undefined}
+                  onChange={(v: string | undefined) => setClientId(v ?? null)}
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Department">
+                <Select
+                  placeholder="Select department (optional)"
+                  options={departmentOptions}
+                  loading={isDepartmentsLoading}
+                  value={departmentId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setDepartmentId(v ?? null)
+                  }
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+            </Form>
 
-      <Card className="mb-4" title="Raw DTR Log Upload">
-        <Space direction="vertical" size="middle" className="w-full">
-          <Alert
-            type="info"
-            showIcon
-            message="Upload a .csv or .txt raw DTR log file"
-            description="Use Browse to select a file, then click Upload File to import attendance logs."
-          />
-
-          <Space wrap>
-            <Upload
+            <Dragger
               maxCount={1}
-              accept=".csv,.txt"
-              beforeUpload={(file) => {
-                setSelectedFile(file);
-                return false;
+              fileList={fileList}
+              beforeUpload={beforeUpload}
+              showUploadList={false}
+              onChange={({ fileList: next }) => {
+                if (next.length === 0) setFileList([]);
               }}
-              onRemove={() => {
-                setSelectedFile(null);
-              }}
-              fileList={selectedFile ? [selectedFile] : []}
             >
-              <Button icon={<UploadOutlined />}>Browse File</Button>
-            </Upload>
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">
+                Click or drag a file here to select
+              </p>
+              <p className="ant-upload-hint">
+                Supported formats: .dat, .csv, .txt, .xls, .xlsx
+              </p>
+            </Dragger>
+
+            {fileList.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 12px",
+                  background: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: 6,
+                }}
+              >
+                <FileOutlined style={{ color: "#52c41a", flexShrink: 0 }} />
+                <Text style={{ flex: 1, fontSize: 13, wordBreak: "break-all" }}>
+                  {fileList[0].name}
+                </Text>
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => setFileList([])}
+                />
+              </div>
+            )}
 
             <Button
               type="primary"
               loading={isUploading}
-              icon={<UploadOutlined />}
+              disabled={fileList.length === 0}
               onClick={handleUpload}
+              block
             >
-              Upload File
+              Upload
             </Button>
-          </Space>
+          </div>
 
-          <Text type="secondary">
-            Uploaded records are immediately reflected in the table below.
-          </Text>
-        </Space>
+          {/* Right: info panel */}
+          <div className="flex flex-col gap-4">
+            <Alert
+              type="info"
+              showIcon
+              description={
+                <>
+                  <Text strong>Supported file formats</Text>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                    <li>
+                      <Text strong>.dat</Text> — biometric device binary export
+                    </li>
+                    <li>
+                      <Text strong>.csv</Text> — comma-separated values
+                    </li>
+                    <li>
+                      <Text strong>.txt</Text> — space/tab-delimited text log
+                    </li>
+                    <li>
+                      <Text strong>.xls / .xlsx</Text> — Excel spreadsheet
+                    </li>
+                  </ul>
+                </>
+              }
+            />
+            <Alert
+              type="warning"
+              showIcon
+              description="Attendance logs will be tagged to the selected branch/area. Make sure to choose the branch/area whose biometric device generated the file."
+            />
+          </div>
+        </div>
       </Card>
-
-      <UploadAttendanceTable data={records} loading={isLoading} />
     </div>
   );
 }
