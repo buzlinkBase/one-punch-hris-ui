@@ -12,11 +12,11 @@ import {
 import type { RcFile, UploadFile } from "antd/es/upload/interface";
 import { DeleteOutlined, FileOutlined, InboxOutlined } from "@ant-design/icons";
 import { UPLOAD_ATTENDANCE_LABEL } from "../../constants/label.const";
-import { useUploadAttendanceLog } from "../../hooks/useUploadAttendanceQueries";
-import { useBranches } from "@/app/modules/setup/branch/hooks/useBranchQueries";
-import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/useOperationAreaQueries";
-import { useClients } from "@/app/modules/setup/client/hooks/useClientQueries";
-import { useDepartments } from "@/app/modules/setup/department/hooks/useDepartmentQueries";
+import { useUploadAttendanceLog } from "../../hooks/use-upload-attendance-queries";
+import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
+import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
