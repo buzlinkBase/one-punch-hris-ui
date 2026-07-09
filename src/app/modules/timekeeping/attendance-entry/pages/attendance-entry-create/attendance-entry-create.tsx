@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Alert,
   Button,
   Card,
   Checkbox,
@@ -13,24 +14,35 @@ import {
   Typography,
   message,
 } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useNavigate } from "@tanstack/react-router";
-import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
+import type { EmployeeFilterResponse } from "../../models/api/response/employee-filter-response.model";
 import type { CreateAttendanceEntry } from "../../models/api/request/create-attendance-entry.model";
-import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
-import { useCreateAttendanceEntries } from "../../hooks/use-attendance-entry-queries";
+import {
+  useCreateAttendanceEntries,
+  useEmployeeFilter,
+} from "../../hooks/use-attendance-entry-queries";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title, Text } = Typography;
+
+interface CommittedFilter {
+  branchId?: string | null;
+  departmentId?: string | null;
+  clientId?: string | null;
+  payrollGroupId?: string | null;
+  operationAreaId?: string | null;
+}
 
 const filterByLabel = (
   input: string,
@@ -67,11 +79,17 @@ export default function AttendanceEntryCreate() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
 
+  // Pending filter state (what's in the dropdowns, not yet searched)
   const [branchId, setBranchId] = useState<string | null>(null);
   const [deptId, setDeptId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [payrollGroupId, setPayrollGroupId] = useState<string | null>(null);
   const [operationAreaId, setOperationAreaId] = useState<string | null>(null);
+
+  // Committed filter — null means "not yet searched"
+  const [committedFilter, setCommittedFilter] =
+    useState<CommittedFilter | null>(null);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [timeShiftId, setTimeShiftId] = useState<string | null>(null);
@@ -83,7 +101,17 @@ export default function AttendanceEntryCreate() {
   const [outDayOffset, setOutDayOffset] = useState(0);
 
   const { data: employees = [], isLoading: isEmployeesLoading } =
-    useEmployees();
+    useEmployeeFilter(
+      {
+        branchId: committedFilter?.branchId ?? undefined,
+        departmentId: committedFilter?.departmentId ?? undefined,
+        clientId: committedFilter?.clientId ?? undefined,
+        payrollGroupId: committedFilter?.payrollGroupId ?? undefined,
+        operationAreaId: committedFilter?.operationAreaId ?? undefined,
+      },
+      { enabled: committedFilter !== null },
+    );
+
   const { data: departments = [] } = useDepartments();
   const { data: clients = [] } = useClients();
   const { data: payrollGroups = [] } = usePayrollGroups();
@@ -93,31 +121,24 @@ export default function AttendanceEntryCreate() {
   const { mutateAsync: createEntries, isPending: isSubmitting } =
     useCreateAttendanceEntries();
 
-  const filteredEmployees = useMemo(
-    () =>
-      employees.filter((emp) => {
-        if (branchId && emp.branchId !== branchId) return false;
-        if (deptId && emp.departmentId !== deptId) return false;
-        if (clientId && emp.clientId !== clientId) return false;
-        if (payrollGroupId && emp.payrollGroupId !== payrollGroupId)
-          return false;
-        if (operationAreaId && emp.areaId !== operationAreaId) return false;
-        return true;
-      }),
-    [employees, branchId, deptId, clientId, payrollGroupId, operationAreaId],
-  );
+  const hasSearched = committedFilter !== null;
 
-  const deptMap = useMemo(
-    () => new Map(departments.map((d) => [d.id, d.name])),
-    [departments],
-  );
+  const handleSearch = () => {
+    setSelectedIds(new Set());
+    setCommittedFilter({
+      branchId,
+      departmentId: deptId,
+      clientId,
+      payrollGroupId,
+      operationAreaId,
+    });
+  };
 
-  const allFilteredChecked =
-    filteredEmployees.length > 0 &&
-    filteredEmployees.every((e) => selectedIds.has(e.id));
+  const allChecked =
+    employees.length > 0 && employees.every((e) => selectedIds.has(e.id));
 
-  const someFilteredChecked =
-    !allFilteredChecked && filteredEmployees.some((e) => selectedIds.has(e.id));
+  const someChecked =
+    !allChecked && employees.some((e) => selectedIds.has(e.id));
 
   const toggle = (id: string, checked: boolean) => {
     setSelectedIds((prev) => {
@@ -129,14 +150,9 @@ export default function AttendanceEntryCreate() {
   };
 
   const handleSelectAll = () =>
-    setSelectedIds(new Set(filteredEmployees.map((e) => e.id)));
+    setSelectedIds(new Set(employees.map((e) => e.id)));
 
   const handleDeselectAll = () => setSelectedIds(new Set());
-
-  const clearFilter = (setter: () => void) => {
-    setter();
-    setSelectedIds(new Set());
-  };
 
   const handleTimeShiftChange = (v: string | undefined) => {
     const id = v ?? null;
@@ -186,36 +202,59 @@ export default function AttendanceEntryCreate() {
   const selectedCount = selectedIds.size;
   const totalEntries = selectedCount * dateCount * punchCount;
 
-  const columns: TableColumnsType<EmployeeResponse> = [
+  const columns: TableColumnsType<EmployeeFilterResponse> = [
     {
       width: 40,
       title: (
         <Checkbox
-          checked={allFilteredChecked}
-          indeterminate={someFilteredChecked}
+          checked={allChecked}
+          indeterminate={someChecked}
           onChange={(e) =>
             e.target.checked ? handleSelectAll() : handleDeselectAll()
           }
         />
       ),
-      render: (_: unknown, emp: EmployeeResponse) => (
+      render: (_: unknown, emp: EmployeeFilterResponse) => (
         <Checkbox
           checked={selectedIds.has(emp.id)}
           onChange={(e) => toggle(emp.id, e.target.checked)}
         />
       ),
     },
-    { title: "Employee No", dataIndex: "employeeNo", width: 130 },
     {
       title: "Name",
-      render: (_: unknown, emp: EmployeeResponse) =>
-        `${emp.lastName}, ${emp.firstName}`,
+      dataIndex: "name",
+      render: (name: string | null) => name ?? "—",
     },
     {
       title: "Department",
-      width: 180,
-      render: (_: unknown, emp: EmployeeResponse) =>
-        emp.departmentId ? (deptMap.get(emp.departmentId) ?? "—") : "—",
+      width: 160,
+      dataIndex: "departmentName",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "Branch",
+      width: 140,
+      dataIndex: "branchName",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "Client",
+      width: 140,
+      dataIndex: "clientName",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "Payroll Group",
+      width: 140,
+      dataIndex: "payrollGroupName",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "Operation Area",
+      width: 140,
+      dataIndex: "areaName",
+      render: (v: string | null) => v ?? "—",
     },
   ];
 
@@ -305,8 +344,7 @@ export default function AttendanceEntryCreate() {
               {ATTENDANCE_ENTRY_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Select employees, date range and work time to batch-create
-              attendance entries.
+              Batch-create attendance time logs for one or more employees.
             </p>
           </div>
           <Space>
@@ -320,7 +358,31 @@ export default function AttendanceEntryCreate() {
         </div>
       </div>
 
-      <Card size="small" className="mb-4">
+      <Alert
+        type="info"
+        showIcon
+        className="mb-4"
+        message="How to create attendance entries"
+        description={
+          <ol className="m-0 pl-4 space-y-0.5 text-xs">
+            <li>Set filters (Branch, Department, Client, etc.) then click <strong>Search Employees</strong>. All filters are optional.</li>
+            <li>Check the employees you want to include. Use <strong>Select All</strong> to pick everyone in the results.</li>
+            <li>Pick a <strong>Date Range</strong>. Optionally select a <strong>Time Shift</strong> to pre-fill the In/Out times.</li>
+            <li>Adjust <strong>In Time</strong> / <strong>Out Time</strong> as needed — check <strong>+1d</strong> for overnight shifts — then click <strong>Save</strong>.</li>
+          </ol>
+        }
+      />
+
+      {/* Step 1 — Employee filters */}
+      <Card
+        size="small"
+        className="mb-4"
+        title={
+          <Text strong style={{ fontSize: 13 }}>
+            Step 1 — Find Employees
+          </Text>
+        }
+      >
         <Form layout="vertical">
           <div className="grid grid-cols-3 gap-x-4">
             <Form.Item label="Branch" className="mb-3">
@@ -328,9 +390,7 @@ export default function AttendanceEntryCreate() {
                 placeholder="All branches"
                 options={branchOptions}
                 value={branchId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  clearFilter(() => setBranchId(v ?? null))
-                }
+                onChange={(v: string | undefined) => setBranchId(v ?? null)}
                 showSearch={{ filterOption: filterByLabel }}
                 allowClear
               />
@@ -340,9 +400,7 @@ export default function AttendanceEntryCreate() {
                 placeholder="All departments"
                 options={deptOptions}
                 value={deptId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  clearFilter(() => setDeptId(v ?? null))
-                }
+                onChange={(v: string | undefined) => setDeptId(v ?? null)}
                 showSearch={{ filterOption: filterByLabel }}
                 allowClear
               />
@@ -352,9 +410,7 @@ export default function AttendanceEntryCreate() {
                 placeholder="All clients"
                 options={clientOptions}
                 value={clientId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  clearFilter(() => setClientId(v ?? null))
-                }
+                onChange={(v: string | undefined) => setClientId(v ?? null)}
                 showSearch={{ filterOption: filterByLabel }}
                 allowClear
               />
@@ -365,7 +421,7 @@ export default function AttendanceEntryCreate() {
                 options={payrollGroupOptions}
                 value={payrollGroupId ?? undefined}
                 onChange={(v: string | undefined) =>
-                  clearFilter(() => setPayrollGroupId(v ?? null))
+                  setPayrollGroupId(v ?? null)
                 }
                 showSearch={{ filterOption: filterByLabel }}
                 allowClear
@@ -373,60 +429,86 @@ export default function AttendanceEntryCreate() {
             </Form.Item>
             <Form.Item label="Operation Area" className="mb-0">
               <Select
-                placeholder="All operation areas"
+                placeholder="All areas"
                 options={areaOptions}
                 value={operationAreaId ?? undefined}
                 onChange={(v: string | undefined) =>
-                  clearFilter(() => setOperationAreaId(v ?? null))
+                  setOperationAreaId(v ?? null)
                 }
                 showSearch={{ filterOption: filterByLabel }}
                 allowClear
               />
             </Form.Item>
+            <Form.Item label="&nbsp;" className="mb-0">
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                onClick={handleSearch}
+                style={{ width: "100%" }}
+              >
+                Search Employees
+              </Button>
+            </Form.Item>
           </div>
         </Form>
       </Card>
 
-      <div className="flex items-center justify-between mb-2">
-        <Text type="secondary" style={{ fontSize: 13 }}>
-          {filteredEmployees.length} employee
-          {filteredEmployees.length !== 1 ? "s" : ""}
-          {selectedCount > 0 && (
-            <Text strong style={{ fontSize: 13 }}>
-              {" · "}
-              {selectedCount} selected
-            </Text>
-          )}
-        </Text>
-        <div className="flex gap-2">
-          <Button
-            size="small"
-            onClick={handleSelectAll}
-            disabled={filteredEmployees.length === 0 || allFilteredChecked}
-          >
-            Select All
-          </Button>
-          <Button
-            size="small"
-            onClick={handleDeselectAll}
-            disabled={selectedCount === 0}
-          >
-            Deselect All
-          </Button>
+      {/* Step 2 — Select employees */}
+      {hasSearched && (
+        <div className="flex items-center justify-between mb-2">
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            {employees.length} employee{employees.length !== 1 ? "s" : ""} found
+            {selectedCount > 0 && (
+              <Text strong style={{ fontSize: 13 }}>
+                {" · "}
+                {selectedCount} selected
+              </Text>
+            )}
+          </Text>
+          <div className="flex gap-2">
+            <Button
+              size="small"
+              onClick={handleSelectAll}
+              disabled={employees.length === 0 || allChecked}
+            >
+              Select All
+            </Button>
+            <Button
+              size="small"
+              onClick={handleDeselectAll}
+              disabled={selectedCount === 0}
+            >
+              Deselect All
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
-      <Table<EmployeeResponse>
+      <Table<EmployeeFilterResponse>
         rowKey="id"
         columns={columns}
-        dataSource={filteredEmployees}
+        dataSource={employees}
         loading={isEmployeesLoading}
         size="small"
         pagination={{ pageSize: 10, size: "small", showSizeChanger: false }}
         className="mb-4"
+        locale={{
+          emptyText: hasSearched
+            ? "No employees found for the selected filters."
+            : "Set filters above and click Search Employees to load employees.",
+        }}
       />
 
-      <Card size="small" className="mb-4">
+      {/* Step 3 — Date range and work time */}
+      <Card
+        size="small"
+        className="mb-4"
+        title={
+          <Text strong style={{ fontSize: 13 }}>
+            Step 2 — Set Date Range &amp; Work Time
+          </Text>
+        }
+      >
         <Form layout="vertical">
           <div className="grid grid-cols-2 gap-x-4">
             <Form.Item label="Date Range" required className="mb-3">
@@ -442,9 +524,9 @@ export default function AttendanceEntryCreate() {
                 }}
               />
             </Form.Item>
-            <Form.Item label="Time Shift" className="mb-3">
+            <Form.Item label="Time Shift (optional pre-fill)" className="mb-3">
               <Select
-                placeholder="Select to pre-fill times"
+                placeholder="Select to pre-fill In / Out times"
                 options={timeShiftOptions}
                 value={timeShiftId ?? undefined}
                 onChange={handleTimeShiftChange}

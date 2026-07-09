@@ -1,4 +1,4 @@
-import { Button, Popconfirm, Space, Table } from "antd";
+import { Button, Popconfirm, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { AttendanceEntryResponse } from "../../models/api/response/attendance-entry-response.model";
@@ -23,6 +23,14 @@ const columns = (
     dataIndex: "timeLog",
     key: "timeLog",
     render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm A"),
+  },
+  {
+    title: "Batch",
+    dataIndex: "batchCode",
+    key: "batchCode",
+    width: 200,
+    render: (code: string | null | undefined) =>
+      code ? <Tag color="blue">{code}</Tag> : <Tag color="default">Manual</Tag>,
   },
   {
     title: "Actions",

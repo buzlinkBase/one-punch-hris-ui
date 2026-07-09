@@ -19,6 +19,17 @@ export function useAttendanceEntryEmployees() {
   });
 }
 
+export function useEmployeeFilter(
+  filter: Parameters<typeof attendanceEntryApi.filterEmployees>[0] = {},
+  options: { enabled?: boolean } = {},
+) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "employee-filter", filter],
+    queryFn: () => attendanceEntryApi.filterEmployees(filter),
+    enabled: options.enabled ?? true,
+  });
+}
+
 export function useCreateAttendanceEntries() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -35,6 +46,17 @@ export function useDeleteAttendanceEntryLog() {
 
   return useMutation({
     mutationFn: (id: string) => attendanceEntryApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useDeleteAttendanceBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (batchCode: string) => attendanceEntryApi.deleteBatch(batchCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
