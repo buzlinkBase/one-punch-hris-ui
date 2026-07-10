@@ -89,6 +89,7 @@ export default function AttendanceEntryCreate() {
   // Committed filter — null means "not yet searched"
   const [committedFilter, setCommittedFilter] =
     useState<CommittedFilter | null>(null);
+  const [employeeSearchKey, setEmployeeSearchKey] = useState(0);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
@@ -109,7 +110,7 @@ export default function AttendanceEntryCreate() {
         payrollGroupId: committedFilter?.payrollGroupId ?? undefined,
         operationAreaId: committedFilter?.operationAreaId ?? undefined,
       },
-      { enabled: committedFilter !== null },
+      { enabled: committedFilter !== null, searchKey: employeeSearchKey },
     );
 
   const { data: departments = [] } = useDepartments();
@@ -132,6 +133,7 @@ export default function AttendanceEntryCreate() {
       payrollGroupId,
       operationAreaId,
     });
+    setEmployeeSearchKey((k) => k + 1);
   };
 
   const allChecked =

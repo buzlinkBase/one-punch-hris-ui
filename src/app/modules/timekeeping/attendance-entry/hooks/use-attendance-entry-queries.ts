@@ -25,10 +25,10 @@ export function useAttendanceEntryEmployees() {
 
 export function useEmployeeFilter(
   filter: Parameters<typeof attendanceEntryApi.filterEmployees>[0] = {},
-  options: { enabled?: boolean } = {},
+  options: { enabled?: boolean; searchKey?: number } = {},
 ) {
   return useQuery({
-    queryKey: [...QUERY_KEY, "employee-filter", filter],
+    queryKey: [...QUERY_KEY, "employee-filter", filter, options.searchKey ?? 0],
     queryFn: () => attendanceEntryApi.filterEmployees(filter),
     enabled: options.enabled ?? true,
   });
