@@ -1,6 +1,8 @@
 import { useState } from "react";
 import {
+  Badge,
   Button,
+  Card,
   DatePicker,
   Dropdown,
   Form,
@@ -14,6 +16,7 @@ import type { MenuProps } from "antd";
 import {
   ClearOutlined,
   DownloadOutlined,
+  FilterOutlined,
   PlayCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -60,14 +63,6 @@ interface TabState {
   key: number;
 }
 
-const filterByLabel = (
-  input: string,
-  option?: { label?: string | number | boolean },
-) =>
-  String(option?.label ?? "")
-    .toLowerCase()
-    .includes(input.toLowerCase());
-
 const notGeneratedYet = (
   <div className="py-8 text-center">
     <Text type="secondary">
@@ -77,6 +72,7 @@ const notGeneratedYet = (
 );
 
 export default function RawLogsList() {
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("raw-attendance");
   const [pending, setPending] = useState<RawLogsFilterRequest>(
     currentSemiMonthlyRange,
@@ -158,6 +154,17 @@ export default function RawLogsList() {
     value: e.id,
     label: e.name ?? e.id,
   }));
+
+  const activeFilterCount = [
+    pending.fromDate,
+    pending.toDate,
+    pending.branchId,
+    pending.departmentId,
+    pending.clientId,
+    pending.payrollGroupId,
+    pending.operationAreaId,
+    pending.employeeId,
+  ].filter(Boolean).length;
 
   // ── Export helpers ──────────────────────────────────────────────────────────
 
@@ -326,6 +333,14 @@ export default function RawLogsList() {
   // ────────────────────────────────────────────────────────────────────────────
 
   const handleGenerate = () => {
+    if (!pending.fromDate || !pending.toDate) {
+      messageApi.warning("From Date and To Date are required.");
+      return;
+    }
+    if (isDateRangeInvalid) {
+      messageApi.warning("To Date must be ≥ From Date.");
+      return;
+    }
     setTabStates((prev) => ({
       ...prev,
       [activeTab]: {
@@ -340,15 +355,6 @@ export default function RawLogsList() {
     setTabStates({});
   };
 
-  const hasAnyFilter =
-    !!pending.fromDate ||
-    !!pending.branchId ||
-    !!pending.departmentId ||
-    !!pending.clientId ||
-    !!pending.payrollGroupId ||
-    !!pending.operationAreaId ||
-    !!pending.employeeId;
-
   return (
     <div className="content-page">
       {contextHolder}
@@ -361,132 +367,155 @@ export default function RawLogsList() {
             </Title>
             <p className="page-toolbar-subtitle">{RAW_LOGS_LABEL.SUBTITLE}</p>
           </div>
-          <Dropdown
-            menu={{ items: exportMenuItems }}
-            trigger={["click"]}
-            disabled={!activeTabHasData}
-          >
-            <Button icon={<DownloadOutlined />} disabled={!activeTabHasData}>
-              Export
-            </Button>
-          </Dropdown>
+          <Space>
+            <Dropdown
+              menu={{ items: exportMenuItems }}
+              trigger={["click"]}
+              disabled={!activeTabHasData}
+            >
+              <Button icon={<DownloadOutlined />} disabled={!activeTabHasData}>
+                Export
+              </Button>
+            </Dropdown>
+            <Badge count={activeFilterCount} size="small">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFiltersOpen((v) => !v)}
+                type={filtersOpen ? "default" : "text"}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </Space>
         </div>
       </div>
 
-      <Form layout="vertical" className="mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4">
-          <Form.Item
-            label={RAW_LOGS_LABEL.FROM_DATE}
-            className="mb-3"
-            required
-            validateStatus={!pending.fromDate ? "error" : ""}
-            help={!pending.fromDate ? "Required" : undefined}
-          >
-            <DatePicker
-              style={{ width: "100%" }}
-              status={!pending.fromDate ? "error" : undefined}
-              value={pending.fromDate ? dayjs(pending.fromDate) : null}
-              onChange={(d) =>
-                setPending((c) => ({ ...c, fromDate: d?.format("YYYY-MM-DD") }))
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            label={RAW_LOGS_LABEL.TO_DATE}
-            className="mb-3"
-            required
-            validateStatus={
-              !pending.toDate || isDateRangeInvalid ? "error" : ""
-            }
-            help={
-              !pending.toDate
-                ? "Required"
-                : isDateRangeInvalid
-                  ? "Must be ≥ From Date"
-                  : undefined
-            }
-          >
-            <DatePicker
-              style={{ width: "100%" }}
-              status={
-                !pending.toDate || isDateRangeInvalid ? "error" : undefined
-              }
-              value={pending.toDate ? dayjs(pending.toDate) : null}
-              onChange={(d) =>
-                setPending((c) => ({ ...c, toDate: d?.format("YYYY-MM-DD") }))
-              }
-            />
-          </Form.Item>
-          <Form.Item label="Branch" className="mb-3">
-            <Select
-              allowClear
-              showSearch
-              filterOption={filterByLabel}
-              placeholder="All branches"
-              options={branchOptions}
-              value={pending.branchId}
-              onChange={(v) => setPending((c) => ({ ...c, branchId: v }))}
-            />
-          </Form.Item>
-          <Form.Item label="Department" className="mb-3">
-            <Select
-              allowClear
-              showSearch
-              filterOption={filterByLabel}
-              placeholder="All departments"
-              options={deptOptions}
-              value={pending.departmentId}
-              onChange={(v) => setPending((c) => ({ ...c, departmentId: v }))}
-            />
-          </Form.Item>
-          <Form.Item label={RAW_LOGS_LABEL.CLIENT} className="mb-3">
-            <Select
-              allowClear
-              showSearch
-              filterOption={filterByLabel}
-              placeholder="All clients"
-              options={clientOptions}
-              value={pending.clientId}
-              onChange={(v) => setPending((c) => ({ ...c, clientId: v }))}
-            />
-          </Form.Item>
-          <Form.Item label="Payroll Group" className="mb-3">
-            <Select
-              allowClear
-              showSearch
-              filterOption={filterByLabel}
-              placeholder="All payroll groups"
-              options={payrollGroupOptions}
-              value={pending.payrollGroupId}
-              onChange={(v) => setPending((c) => ({ ...c, payrollGroupId: v }))}
-            />
-          </Form.Item>
-          <Form.Item label="Operation Area" className="mb-3">
-            <Select
-              allowClear
-              showSearch
-              filterOption={filterByLabel}
-              placeholder="All areas"
-              options={areaOptions}
-              value={pending.operationAreaId}
-              onChange={(v) =>
-                setPending((c) => ({ ...c, operationAreaId: v }))
-              }
-            />
-          </Form.Item>
-          <Form.Item label={RAW_LOGS_LABEL.EMPLOYEE_FILTER} className="mb-3">
-            <Select
-              allowClear
-              showSearch
-              filterOption={filterByLabel}
-              placeholder="All employees"
-              options={employeeOptions}
-              value={pending.employeeId}
-              onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
-            />
-          </Form.Item>
-          <Form.Item label=" " className="mb-3">
-            <Space>
+      {filtersOpen && (
+        <Card size="small" className="mb-4">
+          <Form layout="vertical">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4">
+              <Form.Item
+                label={RAW_LOGS_LABEL.FROM_DATE}
+                className="mb-3"
+                required
+                validateStatus={!pending.fromDate ? "error" : ""}
+                help={!pending.fromDate ? "Required" : undefined}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  status={!pending.fromDate ? "error" : undefined}
+                  value={pending.fromDate ? dayjs(pending.fromDate) : null}
+                  onChange={(d) =>
+                    setPending((c) => ({
+                      ...c,
+                      fromDate: d?.format("YYYY-MM-DD"),
+                    }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item
+                label={RAW_LOGS_LABEL.TO_DATE}
+                className="mb-3"
+                required
+                validateStatus={
+                  !pending.toDate || isDateRangeInvalid ? "error" : ""
+                }
+                help={
+                  !pending.toDate
+                    ? "Required"
+                    : isDateRangeInvalid
+                      ? "Must be ≥ From Date"
+                      : undefined
+                }
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  status={
+                    !pending.toDate || isDateRangeInvalid ? "error" : undefined
+                  }
+                  value={pending.toDate ? dayjs(pending.toDate) : null}
+                  onChange={(d) =>
+                    setPending((c) => ({
+                      ...c,
+                      toDate: d?.format("YYYY-MM-DD"),
+                    }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label="Branch" className="mb-3">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All branches"
+                  options={branchOptions}
+                  value={pending.branchId}
+                  onChange={(v) => setPending((c) => ({ ...c, branchId: v }))}
+                />
+              </Form.Item>
+              <Form.Item label="Department" className="mb-3">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All departments"
+                  options={deptOptions}
+                  value={pending.departmentId}
+                  onChange={(v) =>
+                    setPending((c) => ({ ...c, departmentId: v }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label={RAW_LOGS_LABEL.CLIENT} className="mb-3">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All clients"
+                  options={clientOptions}
+                  value={pending.clientId}
+                  onChange={(v) => setPending((c) => ({ ...c, clientId: v }))}
+                />
+              </Form.Item>
+              <Form.Item label="Payroll Group" className="mb-3">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All payroll groups"
+                  options={payrollGroupOptions}
+                  value={pending.payrollGroupId}
+                  onChange={(v) =>
+                    setPending((c) => ({ ...c, payrollGroupId: v }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label="Operation Area" className="mb-3">
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All areas"
+                  options={areaOptions}
+                  value={pending.operationAreaId}
+                  onChange={(v) =>
+                    setPending((c) => ({ ...c, operationAreaId: v }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item
+                label={RAW_LOGS_LABEL.EMPLOYEE_FILTER}
+                className="mb-3"
+              >
+                <Select
+                  allowClear
+                  showSearch={{ optionFilterProp: "label" }}
+                  placeholder="All employees"
+                  options={employeeOptions}
+                  value={pending.employeeId}
+                  onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
+                />
+              </Form.Item>
+            </div>
+            <div className="flex justify-end gap-2 mt-1">
+              <Button icon={<ClearOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
               <Button
                 type="primary"
                 icon={<PlayCircleOutlined />}
@@ -498,17 +527,10 @@ export default function RawLogsList() {
               >
                 Generate
               </Button>
-              <Button
-                icon={<ClearOutlined />}
-                onClick={handleClear}
-                disabled={!hasAnyFilter && Object.keys(tabStates).length === 0}
-              >
-                Clear
-              </Button>
-            </Space>
-          </Form.Item>
-        </div>
-      </Form>
+            </div>
+          </Form>
+        </Card>
+      )}
 
       <Tabs
         activeKey={activeTab}
