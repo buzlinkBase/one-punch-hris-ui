@@ -1,141 +1,155 @@
-import { useState } from "react";
-import { Table, Input, Tag, Tooltip } from "antd";
+import { useMemo, useState } from "react";
+import { Input, Table, Tooltip } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import type { CleanAttendanceLogColumnar } from "../models/api/response/raw-attendance-log.model";
-import { RAW_LOGS_LABEL } from "../constants/label.const";
 
 interface Props {
   data: CleanAttendanceLogColumnar[];
   loading?: boolean;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "COMPLETE":
-      return "green";
-    case "INCOMPLETE":
-      return "orange";
-    case "FLAGGED":
-      return "red";
-    default:
-      return "default";
-  }
-};
+const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+const LOG_KEYS = Array.from(
+  { length: 20 },
+  (_, i) => `log${i + 1}` as keyof CleanAttendanceLogColumnar,
+);
+
+function fmtTime(v: string | null | undefined): string {
+  if (!v) return "—";
+  return dayjs(v).format("HH:mm");
+}
 
 export default function CleanColumnarTable({ data, loading }: Props) {
   const [search, setSearch] = useState("");
 
-  const filtered = data.filter((item) =>
-    Object.values(item).some((val) => {
-      if (typeof val === "object") {
-        return Object.values(val).some((v) =>
-          String(v ?? "")
-            .toLowerCase()
-            .includes(search.toLowerCase()),
-        );
-      }
-      if (Array.isArray(val)) return false;
-      return String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase());
-    }),
+  const valid = useMemo(
+    () => data.filter((r) => r.employeeId !== EMPTY_GUID && r.empNo !== ""),
+    [data],
   );
 
-  const columns: ColumnsType<CleanAttendanceLogColumnar> = [
+  const activeLogKeys = useMemo(
+    () => LOG_KEYS.filter((k) => valid.some((r) => r[k] !== null)),
+    [valid],
+  );
+
+  const filtered = useMemo(() => {
+    if (!search) return valid;
+    const q = search.toLowerCase();
+    return valid.filter((r) =>
+      [r.empNo, r.fullName, r.department, r.workDate, r.shiftName].some((v) =>
+        String(v ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
+    );
+  }, [valid, search]);
+
+  const fixedColumns: ColumnsType<CleanAttendanceLogColumnar> = [
     {
-      title: RAW_LOGS_LABEL.EMPLOYEE_NO,
-      dataIndex: "employeeNo",
-      key: "employeeNo",
-      width: 120,
+      title: "Emp No",
+      dataIndex: "empNo",
+      key: "empNo",
+      width: 80,
       fixed: "left",
     },
     {
-      title: RAW_LOGS_LABEL.EMPLOYEE_NAME,
-      dataIndex: "employeeName",
-      key: "employeeName",
-      width: 150,
+      title: "Full Name",
+      dataIndex: "fullName",
+      key: "fullName",
+      width: 180,
+      fixed: "left",
+      ellipsis: true,
     },
     {
-      title: RAW_LOGS_LABEL.DEPARTMENT,
+      title: "Department",
       dataIndex: "department",
       key: "department",
-      width: 120,
-    },
-    {
-      title: RAW_LOGS_LABEL.PAYROLL_DATE,
-      dataIndex: "payrollDate",
-      key: "payrollDate",
-      width: 120,
-    },
-    {
-      title: RAW_LOGS_LABEL.SHIFT_NAME,
-      key: "shiftName",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.shiftName,
-    },
-    {
-      title: RAW_LOGS_LABEL.SHIFT_START,
-      key: "shiftStart",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.shiftStart,
-    },
-    {
-      title: RAW_LOGS_LABEL.BREAK_OUT,
-      key: "breakOut",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.breakOut,
-    },
-    {
-      title: RAW_LOGS_LABEL.BREAK_IN,
-      key: "breakIn",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.breakIn,
-    },
-    {
-      title: RAW_LOGS_LABEL.SHIFT_END,
-      key: "shiftEnd",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.shiftEnd,
-    },
-    ...Array.from({ length: 8 }, (_, i) => ({
-      title: `Log ${i + 1}`,
-      key: `log-${i}`,
-      width: 80,
-      render: (_: unknown, record: CleanAttendanceLogColumnar) => (
-        <Tooltip title={record.logs[i] || "N/A"}>
-          <span>{record.logs[i] || "-"}</span>
-        </Tooltip>
-      ),
-    })),
-    {
-      title: RAW_LOGS_LABEL.STATUS,
-      dataIndex: "status",
-      key: "status",
       width: 110,
-      fixed: "right",
-      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+    },
+    {
+      title: "Work Date",
+      dataIndex: "workDate",
+      key: "workDate",
+      width: 100,
+    },
+    {
+      title: "Shift",
+      dataIndex: "shiftName",
+      key: "shiftName",
+      width: 110,
+      ellipsis: true,
+    },
+    {
+      title: "Shift Start",
+      dataIndex: "shiftStart",
+      key: "shiftStart",
+      width: 90,
+      render: (v: string) => fmtTime(v),
+    },
+    {
+      title: "Shift End",
+      dataIndex: "shiftEnd",
+      key: "shiftEnd",
+      width: 90,
+      render: (v: string) => fmtTime(v),
+    },
+    {
+      title: "Break Out",
+      dataIndex: "breakOut",
+      key: "breakOut",
+      width: 90,
+      render: (v: string | null) => fmtTime(v),
+    },
+    {
+      title: "Break In",
+      dataIndex: "breakIn",
+      key: "breakIn",
+      width: 90,
+      render: (v: string | null) => fmtTime(v),
     },
   ];
+
+  const logColumns: ColumnsType<CleanAttendanceLogColumnar> = activeLogKeys.map(
+    (k, i) => ({
+      title: `Log ${i + 1}`,
+      key: k,
+      width: 80,
+      render: (_: unknown, record: CleanAttendanceLogColumnar) => {
+        const entry = record[k] as { attId: string; workTime: string } | null;
+        if (!entry) return <span style={{ color: "#bbb" }}>—</span>;
+        return (
+          <Tooltip title={dayjs(entry.workTime).format("MMM DD HH:mm")}>
+            <span>{fmtTime(entry.workTime)}</span>
+          </Tooltip>
+        );
+      },
+    }),
+  );
+
+  const scrollX =
+    fixedColumns.reduce((sum, c) => sum + (Number(c.width) || 100), 0) +
+    activeLogKeys.length * 80;
 
   return (
     <div className="flex flex-col gap-3">
       <Input
         prefix={<SearchOutlined />}
-        placeholder="Search..."
+        placeholder="Search name, emp no, department..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         allowClear
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey="id"
+        rowKey={(r) => `${r.employeeId}-${r.workDate}`}
         dataSource={filtered}
-        columns={columns}
+        columns={[...fixedColumns, ...logColumns]}
         size="small"
         loading={loading}
-        pagination={{ pageSize: 10 }}
-        scroll={{ x: 2000 }}
+        pagination={{ pageSize: 15 }}
+        scroll={{ x: scrollX }}
         sticky
       />
     </div>

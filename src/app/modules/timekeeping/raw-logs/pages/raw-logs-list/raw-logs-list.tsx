@@ -1,54 +1,358 @@
 import { useState } from "react";
-import { Badge, Button, Card, Tabs, Typography } from "antd";
-import { FilterOutlined } from "@ant-design/icons";
+import {
+  Button,
+  DatePicker,
+  Dropdown,
+  Form,
+  Select,
+  Space,
+  Tabs,
+  Typography,
+  message,
+} from "antd";
+import type { MenuProps } from "antd";
+import {
+  ClearOutlined,
+  DownloadOutlined,
+  PlayCircleOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
 import {
   useRawAttendanceLogs,
   useRawColumnarLogs,
   useCleanRowLogs,
   useCleanColumnarLogs,
 } from "../../hooks/use-raw-logs-queries";
-import RawLogsFilter from "../../components/raw-logs-filter";
 import RawAttendanceTable from "../../components/raw-attendance-table";
 import RawColumnarTable from "../../components/raw-columnar-table";
 import CleanRowTable from "../../components/clean-row-table";
 import CleanColumnarTable from "../../components/clean-columnar-table";
 import { RAW_LOGS_LABEL } from "../../constants/label.const";
 import type { RawLogsFilterRequest } from "../../models/api/response/raw-attendance-log.model";
+import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
+import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+const EMPTY_FILTER: RawLogsFilterRequest = {};
+
+function currentSemiMonthlyRange(): { fromDate: string; toDate: string } {
+  const today = dayjs();
+  const day = today.date();
+  if (day <= 15) {
+    return {
+      fromDate: today.startOf("month").format("YYYY-MM-DD"),
+      toDate: today.date(15).format("YYYY-MM-DD"),
+    };
+  }
+  return {
+    fromDate: today.date(16).format("YYYY-MM-DD"),
+    toDate: today.endOf("month").format("YYYY-MM-DD"),
+  };
+}
+
+interface TabState {
+  filter: RawLogsFilterRequest;
+  key: number;
+}
+
+const filterByLabel = (
+  input: string,
+  option?: { label?: string | number | boolean },
+) =>
+  String(option?.label ?? "")
+    .toLowerCase()
+    .includes(input.toLowerCase());
+
+const notGeneratedYet = (
+  <div className="py-8 text-center">
+    <Text type="secondary">
+      Set filters above and click Generate to load data.
+    </Text>
+  </div>
+);
 
 export default function RawLogsList() {
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState<RawLogsFilterRequest>({});
   const [activeTab, setActiveTab] = useState("raw-attendance");
+  const [pending, setPending] = useState<RawLogsFilterRequest>(
+    currentSemiMonthlyRange,
+  );
 
-  const activeFilterCount = [
-    filters.fromDate,
-    filters.clientId,
-    filters.employeeId,
-  ].filter(Boolean).length;
+  // Each tab tracks its own committed filter + generate key independently.
+  // Only Generate (not tab switching) populates a tab's state.
+  const [tabStates, setTabStates] = useState<Record<string, TabState>>({});
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const isDateRangeInvalid =
+    !!pending.fromDate && !!pending.toDate && pending.fromDate > pending.toDate;
+
+  const { data: departments = [] } = useDepartments();
+  const { data: clients = [] } = useClients();
+  const { data: payrollGroups = [] } = usePayrollGroups();
+  const { data: areas = [] } = useOperationAreas();
+  const { data: branches = [] } = useBranches();
+  const { data: employees = [] } = useEmployeeFilter();
+
+  // Per-tab query state helpers
+  const ts = (tab: string) => tabStates[tab];
+  const tabFilter = (tab: string) => ts(tab)?.filter ?? EMPTY_FILTER;
+  const tabKey = (tab: string) => ts(tab)?.key ?? 0;
+  const tabEnabled = (tab: string) => !!ts(tab);
 
   const { data: rawAttendanceLogs = [], isLoading: rawAttendanceLoading } =
-    useRawAttendanceLogs(filters);
-  const { data: rawColumnarLogs = [], isLoading: rawColumnarLoading } =
-    useRawColumnarLogs(filters);
-  const { data: cleanRowLogs = [], isLoading: cleanRowLoading } =
-    useCleanRowLogs(filters);
-  const { data: cleanColumnarLogs = [], isLoading: cleanColumnarLoading } =
-    useCleanColumnarLogs(filters);
+    useRawAttendanceLogs(tabFilter("raw-attendance"), {
+      enabled: tabEnabled("raw-attendance"),
+      generateKey: tabKey("raw-attendance"),
+    });
 
-  const handleFilter = (newFilters: RawLogsFilterRequest) => {
-    setFilters(newFilters);
+  const { data: rawColumnarLogs = [], isLoading: rawColumnarLoading } =
+    useRawColumnarLogs(tabFilter("raw-columnar"), {
+      enabled: tabEnabled("raw-columnar"),
+      generateKey: tabKey("raw-columnar"),
+    });
+
+  const { data: cleanRowLogs = [], isLoading: cleanRowLoading } =
+    useCleanRowLogs(tabFilter("clean-row"), {
+      enabled: tabEnabled("clean-row"),
+      generateKey: tabKey("clean-row"),
+    });
+
+  const { data: cleanColumnarLogs = [], isLoading: cleanColumnarLoading } =
+    useCleanColumnarLogs(tabFilter("clean-columnar"), {
+      enabled: tabEnabled("clean-columnar"),
+      generateKey: tabKey("clean-columnar"),
+    });
+
+  const isActiveTabLoading =
+    (activeTab === "raw-attendance" && rawAttendanceLoading) ||
+    (activeTab === "raw-columnar" && rawColumnarLoading) ||
+    (activeTab === "clean-row" && cleanRowLoading) ||
+    (activeTab === "clean-columnar" && cleanColumnarLoading);
+
+  const branchOptions = branches.map((b) => ({
+    value: b.id,
+    label: `${b.code} - ${b.name}`,
+  }));
+  const deptOptions = departments.map((d) => ({
+    value: d.id,
+    label: `${d.code} - ${d.name}`,
+  }));
+  const clientOptions = clients.map((c) => ({
+    value: c.id,
+    label: `${c.code} - ${c.name}`,
+  }));
+  const payrollGroupOptions = payrollGroups.map((p) => ({
+    value: p.id,
+    label: `${p.code} - ${p.name}`,
+  }));
+  const areaOptions = areas.map((a) => ({
+    value: a.id,
+    label: `${a.code} - ${a.name}`,
+  }));
+  const employeeOptions = employees.map((e) => ({
+    value: e.id,
+    label: e.name ?? e.id,
+  }));
+
+  // ── Export helpers ──────────────────────────────────────────────────────────
+
+  type AnyRow = Record<string, unknown>;
+
+  const activeTabData = (): { rows: AnyRow[]; name: string } => {
+    switch (activeTab) {
+      case "raw-attendance":
+        return {
+          name: "raw-attendance",
+          rows: rawAttendanceLogs.map((r) => ({
+            Employee: r.name ?? "",
+            WorkDateTime: r.workDateTime,
+            LogSource: r.logSource,
+            Batch: r.batch,
+          })),
+        };
+      case "raw-columnar":
+        return {
+          name: "raw-columnar",
+          rows: rawColumnarLogs
+            .filter((r) => r.empNo !== "")
+            .map((r) => ({
+              EmpNo: r.empNo,
+              FullName: r.fullName,
+              Department: r.department,
+              WorkDate: r.workDate,
+              ShiftName: r.shiftName,
+              ShiftStart: r.shiftStart,
+              ShiftEnd: r.shiftEnd,
+              BreakOut: r.breakOut ?? "",
+              BreakIn: r.breakIn ?? "",
+              ...Object.fromEntries(
+                Array.from({ length: 20 }, (_, i) => {
+                  const k = `log${i + 1}` as keyof typeof r;
+                  const v = r[k] as { workTime: string } | null;
+                  return [`Log${i + 1}`, v?.workTime ?? ""];
+                }).filter(([, v]) => v !== ""),
+              ),
+            })),
+        };
+      case "clean-row":
+        return {
+          name: "clean-row",
+          rows: cleanRowLogs.map((r) => ({
+            EmpNo: r.empNo,
+            FullName: r.fullName,
+            Department: r.department,
+            WorkDate: r.workDate,
+            ShiftName: r.shiftName,
+            ShiftStart: r.shiftStart,
+            ShiftEnd: r.shiftEnd,
+            BreakOut: r.breakOut ?? "",
+            BreakIn: r.breakIn ?? "",
+            Log1: r.log1?.workTime ?? "",
+          })),
+        };
+      case "clean-columnar":
+        return {
+          name: "clean-columnar",
+          rows: cleanColumnarLogs
+            .filter((r) => r.empNo !== "")
+            .map((r) => ({
+              EmpNo: r.empNo,
+              FullName: r.fullName,
+              Department: r.department,
+              WorkDate: r.workDate,
+              ShiftName: r.shiftName,
+              ShiftStart: r.shiftStart,
+              ShiftEnd: r.shiftEnd,
+              BreakOut: r.breakOut ?? "",
+              BreakIn: r.breakIn ?? "",
+              ...Object.fromEntries(
+                Array.from({ length: 20 }, (_, i) => {
+                  const k = `log${i + 1}` as keyof typeof r;
+                  const v = r[k] as { workTime: string } | null;
+                  return [`Log${i + 1}`, v?.workTime ?? ""];
+                }).filter(([, v]) => v !== ""),
+              ),
+            })),
+        };
+      default:
+        return { rows: [], name: activeTab };
+    }
   };
 
-  const isAnyLoading =
-    rawAttendanceLoading ||
-    rawColumnarLoading ||
-    cleanRowLoading ||
-    cleanColumnarLoading;
+  const buildCsv = (rows: AnyRow[]): string => {
+    if (!rows.length) return "";
+    const headers = Object.keys(rows[0]);
+    return [
+      headers.join(","),
+      ...rows.map((r) =>
+        headers
+          .map((h) => `"${String(r[h] ?? "").replaceAll('"', '""')}"`)
+          .join(","),
+      ),
+    ].join("\n");
+  };
+
+  const escapeHtml = (v: string) =>
+    v
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+
+  const buildExcel = (rows: AnyRow[]): string => {
+    if (!rows.length) return "";
+    const headers = Object.keys(rows[0]);
+    const th = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
+    const trs = rows
+      .map(
+        (r) =>
+          `<tr>${headers.map((h) => `<td>${escapeHtml(String(r[h] ?? ""))}</td>`).join("")}</tr>`,
+      )
+      .join("");
+    return `<html><head><meta charset="utf-8"/></head><body><table><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></body></html>`;
+  };
+
+  const handleExport = (format: "csv" | "excel") => {
+    const { rows, name } = activeTabData();
+    if (!rows.length) {
+      messageApi.info("No data to export. Click Generate first.");
+      return;
+    }
+    const date = new Date().toISOString().split("T")[0];
+    if (format === "csv") {
+      const a = document.createElement("a");
+      a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv(rows))}`;
+      a.download = `${name}-${date}.csv`;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const blob = new Blob([buildExcel(rows)], {
+        type: "application/vnd.ms-excel;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${name}-${date}.xls`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const exportMenuItems: MenuProps["items"] = [
+    { key: "csv", label: "Export as CSV", onClick: () => handleExport("csv") },
+    {
+      key: "excel",
+      label: "Export as Excel",
+      onClick: () => handleExport("excel"),
+    },
+  ];
+
+  const activeTabHasData =
+    (activeTab === "raw-attendance" && rawAttendanceLogs.length > 0) ||
+    (activeTab === "raw-columnar" && rawColumnarLogs.length > 0) ||
+    (activeTab === "clean-row" && cleanRowLogs.length > 0) ||
+    (activeTab === "clean-columnar" && cleanColumnarLogs.length > 0);
+
+  // ────────────────────────────────────────────────────────────────────────────
+
+  const handleGenerate = () => {
+    setTabStates((prev) => ({
+      ...prev,
+      [activeTab]: {
+        filter: { ...pending },
+        key: (prev[activeTab]?.key ?? 0) + 1,
+      },
+    }));
+  };
+
+  const handleClear = () => {
+    setPending(currentSemiMonthlyRange());
+    setTabStates({});
+  };
+
+  const hasAnyFilter =
+    !!pending.fromDate ||
+    !!pending.branchId ||
+    !!pending.departmentId ||
+    !!pending.clientId ||
+    !!pending.payrollGroupId ||
+    !!pending.operationAreaId ||
+    !!pending.employeeId;
 
   return (
     <div className="content-page">
+      {contextHolder}
+
       <div className="page-toolbar">
         <div className="page-toolbar-row">
           <div>
@@ -57,75 +361,206 @@ export default function RawLogsList() {
             </Title>
             <p className="page-toolbar-subtitle">{RAW_LOGS_LABEL.SUBTITLE}</p>
           </div>
-          <div className="flex gap-2">
-            <Badge count={activeFilterCount} size="small">
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setFiltersOpen((v) => !v)}
-                type={filtersOpen ? "default" : "text"}
-              >
-                Filters
-              </Button>
-            </Badge>
-          </div>
+          <Dropdown
+            menu={{ items: exportMenuItems }}
+            trigger={["click"]}
+            disabled={!activeTabHasData}
+          >
+            <Button icon={<DownloadOutlined />} disabled={!activeTabHasData}>
+              Export
+            </Button>
+          </Dropdown>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
-        {filtersOpen && (
-          <Card size="small">
-            <RawLogsFilter
-              onFilter={handleFilter}
-              onReset={() => setFiltersOpen(false)}
-              loading={isAnyLoading}
+      <Form layout="vertical" className="mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4">
+          <Form.Item
+            label={RAW_LOGS_LABEL.FROM_DATE}
+            className="mb-3"
+            required
+            validateStatus={!pending.fromDate ? "error" : ""}
+            help={!pending.fromDate ? "Required" : undefined}
+          >
+            <DatePicker
+              style={{ width: "100%" }}
+              status={!pending.fromDate ? "error" : undefined}
+              value={pending.fromDate ? dayjs(pending.fromDate) : null}
+              onChange={(d) =>
+                setPending((c) => ({ ...c, fromDate: d?.format("YYYY-MM-DD") }))
+              }
             />
-          </Card>
-        )}
+          </Form.Item>
+          <Form.Item
+            label={RAW_LOGS_LABEL.TO_DATE}
+            className="mb-3"
+            required
+            validateStatus={
+              !pending.toDate || isDateRangeInvalid ? "error" : ""
+            }
+            help={
+              !pending.toDate
+                ? "Required"
+                : isDateRangeInvalid
+                  ? "Must be ≥ From Date"
+                  : undefined
+            }
+          >
+            <DatePicker
+              style={{ width: "100%" }}
+              status={
+                !pending.toDate || isDateRangeInvalid ? "error" : undefined
+              }
+              value={pending.toDate ? dayjs(pending.toDate) : null}
+              onChange={(d) =>
+                setPending((c) => ({ ...c, toDate: d?.format("YYYY-MM-DD") }))
+              }
+            />
+          </Form.Item>
+          <Form.Item label="Branch" className="mb-3">
+            <Select
+              allowClear
+              showSearch
+              filterOption={filterByLabel}
+              placeholder="All branches"
+              options={branchOptions}
+              value={pending.branchId}
+              onChange={(v) => setPending((c) => ({ ...c, branchId: v }))}
+            />
+          </Form.Item>
+          <Form.Item label="Department" className="mb-3">
+            <Select
+              allowClear
+              showSearch
+              filterOption={filterByLabel}
+              placeholder="All departments"
+              options={deptOptions}
+              value={pending.departmentId}
+              onChange={(v) => setPending((c) => ({ ...c, departmentId: v }))}
+            />
+          </Form.Item>
+          <Form.Item label={RAW_LOGS_LABEL.CLIENT} className="mb-3">
+            <Select
+              allowClear
+              showSearch
+              filterOption={filterByLabel}
+              placeholder="All clients"
+              options={clientOptions}
+              value={pending.clientId}
+              onChange={(v) => setPending((c) => ({ ...c, clientId: v }))}
+            />
+          </Form.Item>
+          <Form.Item label="Payroll Group" className="mb-3">
+            <Select
+              allowClear
+              showSearch
+              filterOption={filterByLabel}
+              placeholder="All payroll groups"
+              options={payrollGroupOptions}
+              value={pending.payrollGroupId}
+              onChange={(v) => setPending((c) => ({ ...c, payrollGroupId: v }))}
+            />
+          </Form.Item>
+          <Form.Item label="Operation Area" className="mb-3">
+            <Select
+              allowClear
+              showSearch
+              filterOption={filterByLabel}
+              placeholder="All areas"
+              options={areaOptions}
+              value={pending.operationAreaId}
+              onChange={(v) =>
+                setPending((c) => ({ ...c, operationAreaId: v }))
+              }
+            />
+          </Form.Item>
+          <Form.Item label={RAW_LOGS_LABEL.EMPLOYEE_FILTER} className="mb-3">
+            <Select
+              allowClear
+              showSearch
+              filterOption={filterByLabel}
+              placeholder="All employees"
+              options={employeeOptions}
+              value={pending.employeeId}
+              onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
+            />
+          </Form.Item>
+          <Form.Item label=" " className="mb-3">
+            <Space>
+              <Button
+                type="primary"
+                icon={<PlayCircleOutlined />}
+                loading={isActiveTabLoading}
+                disabled={
+                  !pending.fromDate || !pending.toDate || isDateRangeInvalid
+                }
+                onClick={handleGenerate}
+              >
+                Generate
+              </Button>
+              <Button
+                icon={<ClearOutlined />}
+                onClick={handleClear}
+                disabled={!hasAnyFilter && Object.keys(tabStates).length === 0}
+              >
+                Clear
+              </Button>
+            </Space>
+          </Form.Item>
+        </div>
+      </Form>
 
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: "raw-attendance",
-              label: RAW_LOGS_LABEL.TAB_RAW_ATTENDANCE,
-              children: (
-                <RawAttendanceTable
-                  data={rawAttendanceLogs}
-                  loading={rawAttendanceLoading}
-                />
-              ),
-            },
-            {
-              key: "raw-columnar",
-              label: RAW_LOGS_LABEL.TAB_RAW_COLUMNAR,
-              children: (
-                <RawColumnarTable
-                  data={rawColumnarLogs}
-                  loading={rawColumnarLoading}
-                />
-              ),
-            },
-            {
-              key: "clean-row",
-              label: RAW_LOGS_LABEL.TAB_CLEAN_ROW,
-              children: (
-                <CleanRowTable data={cleanRowLogs} loading={cleanRowLoading} />
-              ),
-            },
-            {
-              key: "clean-columnar",
-              label: RAW_LOGS_LABEL.TAB_CLEAN_COLUMNAR,
-              children: (
-                <CleanColumnarTable
-                  data={cleanColumnarLogs}
-                  loading={cleanColumnarLoading}
-                />
-              ),
-            },
-          ]}
-        />
-      </div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: "raw-attendance",
+            label: RAW_LOGS_LABEL.TAB_RAW_ATTENDANCE,
+            children: tabEnabled("raw-attendance") ? (
+              <RawAttendanceTable
+                data={rawAttendanceLogs}
+                loading={rawAttendanceLoading}
+              />
+            ) : (
+              notGeneratedYet
+            ),
+          },
+          {
+            key: "raw-columnar",
+            label: RAW_LOGS_LABEL.TAB_RAW_COLUMNAR,
+            children: tabEnabled("raw-columnar") ? (
+              <RawColumnarTable
+                data={rawColumnarLogs}
+                loading={rawColumnarLoading}
+              />
+            ) : (
+              notGeneratedYet
+            ),
+          },
+          {
+            key: "clean-row",
+            label: RAW_LOGS_LABEL.TAB_CLEAN_ROW,
+            children: tabEnabled("clean-row") ? (
+              <CleanRowTable data={cleanRowLogs} loading={cleanRowLoading} />
+            ) : (
+              notGeneratedYet
+            ),
+          },
+          {
+            key: "clean-columnar",
+            label: RAW_LOGS_LABEL.TAB_CLEAN_COLUMNAR,
+            children: tabEnabled("clean-columnar") ? (
+              <CleanColumnarTable
+                data={cleanColumnarLogs}
+                loading={cleanColumnarLoading}
+              />
+            ) : (
+              notGeneratedYet
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
