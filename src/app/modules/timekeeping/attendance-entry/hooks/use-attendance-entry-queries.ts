@@ -16,13 +16,6 @@ export function useAttendanceEntryRecords(
   });
 }
 
-export function useAttendanceEntryEmployees() {
-  return useQuery({
-    queryKey: [...QUERY_KEY, "employees"],
-    queryFn: async () => attendanceEntryApi.getEmployees(),
-  });
-}
-
 export function useEmployeeFilter(
   filter: Parameters<typeof attendanceEntryApi.filterEmployees>[0] = {},
   options: { enabled?: boolean; searchKey?: number } = {},

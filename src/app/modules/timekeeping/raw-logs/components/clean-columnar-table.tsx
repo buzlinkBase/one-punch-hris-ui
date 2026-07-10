@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Input, Table, Tag, Tooltip } from "antd";
+import { Input, Table, Tooltip } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -19,16 +19,6 @@ const LOG_KEYS = Array.from(
 function fmtTime(v: string | null | undefined): string {
   if (!v) return "—";
   return dayjs(v).format("HH:mm");
-}
-
-function attStatus(r: CleanAttendanceLogColumnar): {
-  label: string;
-  color: string;
-} {
-  const count = LOG_KEYS.filter((k) => r[k] !== null).length;
-  if (count === 0) return { label: "NO LOG", color: "default" };
-  if (count % 2 === 1) return { label: "INCOMPLETE", color: "orange" };
-  return { label: "COMPLETE", color: "green" };
 }
 
 export default function CleanColumnarTable({ data, loading }: Props) {
@@ -138,23 +128,9 @@ export default function CleanColumnarTable({ data, loading }: Props) {
     }),
   );
 
-  const statusColumn: ColumnsType<CleanAttendanceLogColumnar> = [
-    {
-      title: "Status",
-      key: "status",
-      width: 110,
-      fixed: "right",
-      render: (_: unknown, record: CleanAttendanceLogColumnar) => {
-        const { label, color } = attStatus(record);
-        return <Tag color={color}>{label}</Tag>;
-      },
-    },
-  ];
-
   const scrollX =
     fixedColumns.reduce((sum, c) => sum + (Number(c.width) || 100), 0) +
-    activeLogKeys.length * 80 +
-    110;
+    activeLogKeys.length * 80;
 
   return (
     <div className="flex flex-col gap-3">
@@ -169,7 +145,7 @@ export default function CleanColumnarTable({ data, loading }: Props) {
       <Table
         rowKey={(r) => `${r.employeeId}-${r.workDate}`}
         dataSource={filtered}
-        columns={[...fixedColumns, ...logColumns, ...statusColumn]}
+        columns={[...fixedColumns, ...logColumns]}
         size="small"
         loading={loading}
         pagination={{ pageSize: 15 }}
