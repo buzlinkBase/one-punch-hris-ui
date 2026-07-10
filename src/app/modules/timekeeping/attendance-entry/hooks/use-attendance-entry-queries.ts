@@ -5,10 +5,14 @@ import type { CreateAttendanceEntry } from "../models/api/request/create-attenda
 
 const QUERY_KEY = ["timekeeping", "attendance-entry"];
 
-export function useAttendanceEntryRecords(filter: AttendanceEntryFilter = {}) {
+export function useAttendanceEntryRecords(
+  filter: AttendanceEntryFilter = {},
+  options: { enabled?: boolean; searchKey?: number } = {},
+) {
   return useQuery({
-    queryKey: [...QUERY_KEY, filter],
+    queryKey: [...QUERY_KEY, filter, options.searchKey ?? 0],
     queryFn: () => attendanceEntryApi.getAll(filter),
+    enabled: options.enabled ?? true,
   });
 }
 
@@ -56,7 +60,8 @@ export function useDeleteAttendanceBatch() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (batchCode: string) => attendanceEntryApi.deleteBatch(batchCode),
+    mutationFn: (batchCode: string) =>
+      attendanceEntryApi.deleteBatch(batchCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

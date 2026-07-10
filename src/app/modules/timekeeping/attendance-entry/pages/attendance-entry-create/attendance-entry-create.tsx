@@ -310,7 +310,10 @@ export default function AttendanceEntryCreate() {
 
       for (const dt of punches) {
         for (const employeeId of selectedIds) {
-          entries.push({ workTime: dt.toISOString(), employeeId });
+          entries.push({
+            workTime: dt.format("YYYY-MM-DDTHH:mm:ss"),
+            employeeId,
+          });
         }
       }
       current = current.add(1, "day");
@@ -365,10 +368,23 @@ export default function AttendanceEntryCreate() {
         message="How to create attendance entries"
         description={
           <ol className="m-0 pl-4 space-y-0.5 text-xs">
-            <li>Set filters (Branch, Department, Client, etc.) then click <strong>Search Employees</strong>. All filters are optional.</li>
-            <li>Check the employees you want to include. Use <strong>Select All</strong> to pick everyone in the results.</li>
-            <li>Pick a <strong>Date Range</strong>. Optionally select a <strong>Time Shift</strong> to pre-fill the In/Out times.</li>
-            <li>Adjust <strong>In Time</strong> / <strong>Out Time</strong> as needed — check <strong>+1d</strong> for overnight shifts — then click <strong>Save</strong>.</li>
+            <li>
+              Set filters (Branch, Department, Client, etc.) then click{" "}
+              <strong>Search Employees</strong>. All filters are optional.
+            </li>
+            <li>
+              Check the employees you want to include. Use{" "}
+              <strong>Select All</strong> to pick everyone in the results.
+            </li>
+            <li>
+              Pick a <strong>Date Range</strong>. Optionally select a{" "}
+              <strong>Time Shift</strong> to pre-fill the In/Out times.
+            </li>
+            <li>
+              Adjust <strong>In Time</strong> / <strong>Out Time</strong> as
+              needed — check <strong>+1d</strong> for overnight shifts — then
+              click <strong>Save</strong>.
+            </li>
           </ol>
         }
       />

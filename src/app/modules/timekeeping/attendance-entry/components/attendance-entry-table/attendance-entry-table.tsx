@@ -1,3 +1,4 @@
+import React from "react";
 import { Button, Popconfirm, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -8,6 +9,7 @@ interface Props {
   data: AttendanceEntryResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  emptyText?: React.ReactNode;
 }
 
 const columns = (
@@ -59,6 +61,7 @@ export default function AttendanceEntryTable({
   data,
   loading,
   onDelete,
+  emptyText,
 }: Props) {
   return (
     <Table
@@ -70,6 +73,7 @@ export default function AttendanceEntryTable({
       pagination={{ pageSize: 10 }}
       scroll={{ x: "max-content" }}
       sticky
+      locale={emptyText ? { emptyText } : undefined}
     />
   );
 }

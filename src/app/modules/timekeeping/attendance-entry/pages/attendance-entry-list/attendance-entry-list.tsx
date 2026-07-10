@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import {
-  Badge,
   Button,
-  Card,
   DatePicker,
   Dropdown,
   Form,
@@ -20,8 +18,8 @@ import {
   ClearOutlined,
   DeleteOutlined,
   DownloadOutlined,
-  FilterOutlined,
   PlusOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -46,35 +44,40 @@ interface BatchGroup {
   toDate: string;
 }
 
+const EMPTY_FILTER: AttendanceEntryFilter = {};
+
 export default function AttendanceEntryList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entries");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filter, setFilter] = useState<AttendanceEntryFilter>({});
-  const [pending, setPending] = useState<AttendanceEntryFilter>({});
+  const [pending, setPending] = useState<AttendanceEntryFilter>(EMPTY_FILTER);
+  const [committedFilter, setCommittedFilter] =
+    useState<AttendanceEntryFilter | null>(null);
+  const [searchKey, setSearchKey] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const activeFilterCount = [filter.fromDate, filter.employeeId].filter(Boolean).length;
+  const hasSearched = committedFilter !== null;
 
-  const { data: records = [], isLoading } = useAttendanceEntryRecords(filter);
   const {
-    data: allRecords = [],
-    isLoading: isAllRecordsLoading,
-    isFetching: isAllRecordsFetching,
-  } = useAttendanceEntryRecords();
+    data: records = [],
+    isLoading,
+    isFetching,
+  } = useAttendanceEntryRecords(committedFilter ?? EMPTY_FILTER, {
+    enabled: hasSearched,
+    searchKey,
+  });
   const { data: employees = [] } = useAttendanceEntryEmployees();
-  const { mutateAsync: removeLog, isPending: isDeleting } = useDeleteAttendanceEntryLog();
-  const { mutateAsync: deleteBatch, isPending: isDeletingBatch } = useDeleteAttendanceBatch();
+  const { mutateAsync: removeLog, isPending: isDeleting } =
+    useDeleteAttendanceEntryLog();
+  const { mutateAsync: deleteBatch, isPending: isDeletingBatch } =
+    useDeleteAttendanceBatch();
 
-  const isDateRangeInvalid = useMemo(() => {
-    if (!pending.fromDate || !pending.toDate) return false;
-    return pending.fromDate > pending.toDate;
-  }, [pending.fromDate, pending.toDate]);
+  const isDateRangeInvalid =
+    !!pending.fromDate && !!pending.toDate && pending.fromDate > pending.toDate;
 
   const batchGroups = useMemo<BatchGroup[]>(() => {
     const map = new Map<string, AttendanceEntryResponse[]>();
-    for (const r of allRecords) {
+    for (const r of records) {
       if (r.batchCode) {
         if (!map.has(r.batchCode)) map.set(r.batchCode, []);
         map.get(r.batchCode)!.push(r);
@@ -94,20 +97,21 @@ export default function AttendanceEntryList() {
         };
       })
       .sort((a, b) => b.batchCode.localeCompare(a.batchCode));
-  }, [allRecords]);
+  }, [records]);
 
   const handleSearch = () => {
     if (isDateRangeInvalid) {
       messageApi.warning("Date To must be greater than or equal to Date From.");
       return;
     }
-    setFilter(pending);
+    setCommittedFilter({ ...pending });
+    setSearchKey((k) => k + 1);
   };
 
   const handleClear = () => {
-    setPending({});
-    setFilter({});
-    setFiltersOpen(false);
+    setPending(EMPTY_FILTER);
+    setCommittedFilter(null);
+    setSearchKey(0);
   };
 
   const handleDeleteEntry = async (id: string) => {
@@ -120,21 +124,9 @@ export default function AttendanceEntryList() {
     messageApi.success(`Batch ${batchCode} deleted.`);
   };
 
-  const downloadFile = (content: string, mimeType: string, extension: "csv" | "xls") => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `attendance-entry-log-${dayjs().format("YYYYMMDD-HHmmss")}.${extension}`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  };
-
   const buildCsv = () => {
     const header = ["Employee ID", "Employee", "Time Log", "Batch Code"];
-    const rows = allRecords.map((r) => [
+    const rows = records.map((r) => [
       r.employeeId,
       r.employeeName,
       r.timeLog,
@@ -156,7 +148,7 @@ export default function AttendanceEntryList() {
       .replaceAll("'", "&#39;");
 
   const buildExcelTable = () => {
-    const rows = allRecords
+    const rows = records
       .map(
         (r) =>
           `<tr><td>${escapeHtml(r.employeeId)}</td><td>${escapeHtml(r.employeeName)}</td><td>${escapeHtml(r.timeLog)}</td><td>${escapeHtml(r.batchCode ?? "")}</td></tr>`,
@@ -166,45 +158,46 @@ export default function AttendanceEntryList() {
   };
 
   const handleExport = (format: "csv" | "excel") => {
-    if (!allRecords.length) {
+    if (!records.length) {
       messageApi.info("No records available for export.");
       return;
     }
     setIsExporting(true);
     if (format === "csv") {
-      const element = document.createElement("a");
-      element.setAttribute(
-        "href",
-        `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv())}`,
-      );
-      element.setAttribute(
-        "download",
-        `attendance-${new Date().toISOString().split("T")[0]}.csv`,
-      );
-      element.style.display = "none";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      const a = document.createElement("a");
+      a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv())}`;
+      a.download = `attendance-${dayjs().format("YYYYMMDD")}.csv`;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } else {
-      downloadFile(buildExcelTable(), "application/vnd.ms-excel;charset=utf-8;", "xls");
+      const blob = new Blob([buildExcelTable()], {
+        type: "application/vnd.ms-excel;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `attendance-${dayjs().format("YYYYMMDD")}.xls`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     }
     setIsExporting(false);
   };
 
-  const isExportDisabled =
-    isExporting || isAllRecordsLoading || isAllRecordsFetching || !allRecords.length;
-
   const exportMenuItems: MenuProps["items"] = [
     { key: "csv", label: "Export as CSV", onClick: () => handleExport("csv") },
-    { key: "excel", label: "Export as Excel", onClick: () => handleExport("excel") },
+    {
+      key: "excel",
+      label: "Export as Excel",
+      onClick: () => handleExport("excel"),
+    },
   ];
 
-  // Batch tab — nested entry columns
   const batchEntryColumns: TableColumnsType<AttendanceEntryResponse> = [
-    {
-      title: "Employee",
-      dataIndex: "employeeName",
-    },
+    { title: "Employee", dataIndex: "employeeName" },
     {
       title: "Work Time",
       dataIndex: "timeLog",
@@ -230,7 +223,6 @@ export default function AttendanceEntryList() {
     },
   ];
 
-  // Batch tab — top-level batch columns
   const batchColumns: TableColumnsType<BatchGroup> = [
     {
       title: "Batch Code",
@@ -241,13 +233,11 @@ export default function AttendanceEntryList() {
       title: "Entries",
       dataIndex: "count",
       width: 80,
-      render: (count: number) => (
-        <Tag color="default">{count}</Tag>
-      ),
+      render: (count: number) => <Tag color="default">{count}</Tag>,
     },
     {
       title: "Date Range",
-      width: 280,
+      width: 300,
       render: (_: unknown, row: BatchGroup) => (
         <Text type="secondary" style={{ fontSize: 13 }}>
           {dayjs(row.fromDate).format("MMM DD, YYYY hh:mm A")}
@@ -259,7 +249,7 @@ export default function AttendanceEntryList() {
     {
       title: "",
       key: "actions",
-      width: 140,
+      width: 148,
       render: (_: unknown, row: BatchGroup) => (
         <Popconfirm
           title={`Delete all ${row.count} entries in this batch?`}
@@ -282,6 +272,14 @@ export default function AttendanceEntryList() {
     },
   ];
 
+  const notSearchedYet = (
+    <Text type="secondary">
+      Apply filters above and click Search to load records.
+    </Text>
+  );
+
+  const isTableLoading = (isLoading || isFetching || isDeleting) && hasSearched;
+
   return (
     <div className="content-page">
       {contextHolder}
@@ -293,16 +291,20 @@ export default function AttendanceEntryList() {
               {ATTENDANCE_ENTRY_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              View and maintain attendance logs per employee, then export the
-              complete time log file when needed.
+              Filter by date range and employee, then manage or export
+              attendance logs.
             </p>
           </div>
           <div className="flex gap-2">
-            <Dropdown menu={{ items: exportMenuItems }} trigger={["click"]}>
+            <Dropdown
+              menu={{ items: exportMenuItems }}
+              trigger={["click"]}
+              disabled={!records.length}
+            >
               <Button
                 icon={<DownloadOutlined />}
                 loading={isExporting}
-                disabled={isExportDisabled}
+                disabled={!records.length || isExporting}
               >
                 Export Log
               </Button>
@@ -320,6 +322,81 @@ export default function AttendanceEntryList() {
         </div>
       </div>
 
+      {/* Filter bar — always visible, search required before data loads */}
+      <Form layout="vertical" className="mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
+          <Form.Item
+            label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_FROM}
+            className="mb-0"
+          >
+            <DatePicker
+              style={{ width: "100%" }}
+              value={pending.fromDate ? dayjs(pending.fromDate) : null}
+              onChange={(date) =>
+                setPending((c) => ({
+                  ...c,
+                  fromDate: date?.format("YYYY-MM-DD"),
+                }))
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_TO}
+            className="mb-0"
+          >
+            <DatePicker
+              style={{ width: "100%" }}
+              value={pending.toDate ? dayjs(pending.toDate) : null}
+              status={isDateRangeInvalid ? "error" : undefined}
+              onChange={(date) =>
+                setPending((c) => ({
+                  ...c,
+                  toDate: date?.format("YYYY-MM-DD"),
+                }))
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label={ATTENDANCE_ENTRY_LABEL.FILTER_EMPLOYEE}
+            className="mb-0"
+          >
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="All Employees"
+              options={employees}
+              value={pending.employeeId}
+              onChange={(value) =>
+                setPending((c) => ({ ...c, employeeId: value }))
+              }
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+          <Form.Item label=" " className="mb-0">
+            <Space>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                onClick={handleSearch}
+                disabled={isDateRangeInvalid}
+              >
+                Search
+              </Button>
+              <Button
+                icon={<ClearOutlined />}
+                onClick={handleClear}
+                disabled={
+                  !hasSearched && !pending.fromDate && !pending.employeeId
+                }
+              >
+                Clear
+              </Button>
+            </Space>
+          </Form.Item>
+        </div>
+      </Form>
+
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
@@ -328,93 +405,12 @@ export default function AttendanceEntryList() {
             key: "entries",
             label: "Entries",
             children: (
-              <>
-                <div className="flex justify-end mb-3">
-                  <Badge count={activeFilterCount} size="small">
-                    <Button
-                      icon={<FilterOutlined />}
-                      onClick={() => setFiltersOpen((v) => !v)}
-                      type={filtersOpen ? "default" : "text"}
-                    >
-                      Filters
-                    </Button>
-                  </Badge>
-                </div>
-
-                {filtersOpen && (
-                  <Card size="small" className="mb-4">
-                    <Form layout="vertical">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-                        <Form.Item
-                          label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_FROM}
-                          className="mb-0"
-                        >
-                          <DatePicker
-                            style={{ width: "100%" }}
-                            value={pending.fromDate ? dayjs(pending.fromDate) : null}
-                            onChange={(date) =>
-                              setPending((c) => ({
-                                ...c,
-                                fromDate: date?.format("YYYY-MM-DD"),
-                              }))
-                            }
-                          />
-                        </Form.Item>
-                        <Form.Item
-                          label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_TO}
-                          className="mb-0"
-                        >
-                          <DatePicker
-                            style={{ width: "100%" }}
-                            value={pending.toDate ? dayjs(pending.toDate) : null}
-                            onChange={(date) =>
-                              setPending((c) => ({
-                                ...c,
-                                toDate: date?.format("YYYY-MM-DD"),
-                              }))
-                            }
-                          />
-                        </Form.Item>
-                        <Form.Item
-                          label={ATTENDANCE_ENTRY_LABEL.FILTER_EMPLOYEE}
-                          className="mb-0"
-                        >
-                          <Select
-                            allowClear
-                            showSearch
-                            optionFilterProp="label"
-                            placeholder="All Employees"
-                            options={employees}
-                            value={pending.employeeId}
-                            onChange={(value) =>
-                              setPending((c) => ({ ...c, employeeId: value }))
-                            }
-                            style={{ width: "100%" }}
-                          />
-                        </Form.Item>
-                      </div>
-                      <div className="flex justify-end gap-2 mt-4">
-                        <Button icon={<ClearOutlined />} onClick={handleClear}>
-                          Clear
-                        </Button>
-                        <Button
-                          icon={<FilterOutlined />}
-                          type="primary"
-                          onClick={handleSearch}
-                        >
-                          Search
-                        </Button>
-                      </div>
-                    </Form>
-                  </Card>
-                )}
-
-                <AttendanceEntryTable
-                  data={records}
-                  loading={isLoading || isDeleting}
-                  onDelete={handleDeleteEntry}
-                />
-              </>
+              <AttendanceEntryTable
+                data={records}
+                loading={isTableLoading}
+                onDelete={handleDeleteEntry}
+                emptyText={hasSearched ? undefined : notSearchedYet}
+              />
             ),
           },
           {
@@ -429,12 +425,12 @@ export default function AttendanceEntryList() {
                 )}
               </Space>
             ),
-            children: (
+            children: hasSearched ? (
               <Table<BatchGroup>
                 rowKey="batchCode"
                 dataSource={batchGroups}
                 columns={batchColumns}
-                loading={isAllRecordsLoading}
+                loading={isTableLoading}
                 size="small"
                 pagination={{ pageSize: 10, size: "small" }}
                 expandable={{
@@ -446,14 +442,21 @@ export default function AttendanceEntryList() {
                         columns={batchEntryColumns}
                         pagination={false}
                         size="small"
-                        showHeader={true}
                       />
                     </div>
                   ),
                   rowExpandable: (batch) => batch.entries.length > 0,
                 }}
-                locale={{ emptyText: "No batch entries found." }}
+                locale={{
+                  emptyText: "No batch entries found for this filter.",
+                }}
               />
+            ) : (
+              <div className="py-8 text-center">
+                <Text type="secondary">
+                  Apply filters above and click Search to load batches.
+                </Text>
+              </div>
             ),
           },
         ]}

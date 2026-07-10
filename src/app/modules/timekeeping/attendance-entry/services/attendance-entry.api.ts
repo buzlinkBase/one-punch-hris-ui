@@ -8,7 +8,30 @@ import type { EmployeeFilterResponse } from "../models/api/response/employee-fil
 
 // All manual attendance routes live under the attendance controller
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "attendance");
-const ENDPOINT_EMPLOYEE_FILTER = buildApiUrl(API_PREFIX.hrms, "employees/filter");
+const ENDPOINT_EMPLOYEE_FILTER = buildApiUrl(
+  API_PREFIX.hrms,
+  "employees/filter",
+);
+
+// Raw shape returned by the server (field names differ from frontend model)
+interface ServerAttendanceRecord {
+  id: string;
+  employeeId: string;
+  name: string;
+  workDateTime: string;
+  batch?: string | null;
+  boundary?: string | null;
+}
+
+function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
+  return {
+    id: r.id,
+    employeeId: r.employeeId,
+    employeeName: r.name,
+    timeLog: r.workDateTime,
+    batchCode: r.batch ?? null,
+  };
+}
 
 const EMPLOYEES = Array.from({ length: 20 }, (_, i) => ({
   id: `emp-${1001 + i}`,
@@ -91,7 +114,8 @@ function applyFilter(
 ): AttendanceEntryResponse[] {
   return records.filter((item) => {
     const logDate = item.timeLog.slice(0, 10);
-    if (filter.employeeId && item.employeeId !== filter.employeeId) return false;
+    if (filter.employeeId && item.employeeId !== filter.employeeId)
+      return false;
     if (filter.fromDate && logDate < filter.fromDate) return false;
     if (filter.toDate && logDate > filter.toDate) return false;
     return true;
@@ -108,10 +132,11 @@ export const attendanceEntryApi = {
     if (filter.employeeId) params.employeeId = filter.employeeId;
 
     try {
-      const data = await httpClient.getUnwrapped<AttendanceEntryResponse[]>(
+      const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
         `${ENDPOINT}/generate`,
         { params },
       );
+      const data = raw.map(mapRecord);
       const result = data.length ? data : mockLogs;
       return applyFilter(result, filter);
     } catch {
@@ -131,7 +156,9 @@ export const attendanceEntryApi = {
   async deleteBatch(batchCode: string): Promise<void> {
     try {
       // Route: DELETE attendance/batch/{batch}  — batchCode must also be in the request body ([FromBody])
-      await httpClient.delete<void>(`${ENDPOINT}/batch/${batchCode}`, { data: batchCode });
+      await httpClient.delete<void>(`${ENDPOINT}/batch/${batchCode}`, {
+        data: batchCode,
+      });
     } catch {
       mockLogs = mockLogs.filter((item) => item.batchCode !== batchCode);
     }
@@ -153,7 +180,8 @@ export const attendanceEntryApi = {
       if (filter.payrollGroupId) params.payrollGroupId = filter.payrollGroupId;
       if (filter.clientId) params.clientId = filter.clientId;
       if (filter.branchId) params.branchId = filter.branchId;
-      if (filter.operationAreaId) params.operationAreaId = filter.operationAreaId;
+      if (filter.operationAreaId)
+        params.operationAreaId = filter.operationAreaId;
 
       const data = await httpClient.getUnwrapped<EmployeeFilterResponse[]>(
         ENDPOINT_EMPLOYEE_FILTER,
