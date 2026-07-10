@@ -1,134 +1,138 @@
-import { useState } from "react";
-import { Table, Input, Tag } from "antd";
+import { useMemo, useState } from "react";
+import { Input, Table, Tooltip } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import type { CleanAttendanceLogRow } from "../models/api/response/raw-attendance-log.model";
-import { RAW_LOGS_LABEL } from "../constants/label.const";
 
 interface Props {
   data: CleanAttendanceLogRow[];
   loading?: boolean;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "COMPLETE":
-      return "green";
-    case "INCOMPLETE":
-      return "orange";
-    case "FLAGGED":
-      return "red";
-    default:
-      return "default";
-  }
-};
+const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
+function fmtTime(v: string | null | undefined): string {
+  if (!v) return "—";
+  return dayjs(v).format("HH:mm");
+}
+
+const columns: ColumnsType<CleanAttendanceLogRow> = [
+  {
+    title: "Emp No",
+    dataIndex: "empNo",
+    key: "empNo",
+    width: 90,
+    fixed: "left",
+  },
+  {
+    title: "Full Name",
+    dataIndex: "fullName",
+    key: "fullName",
+    width: 180,
+    fixed: "left",
+    ellipsis: true,
+  },
+  {
+    title: "Department",
+    dataIndex: "department",
+    key: "department",
+    width: 120,
+  },
+  {
+    title: "Work Date",
+    dataIndex: "workDate",
+    key: "workDate",
+    width: 100,
+  },
+  {
+    title: "Shift",
+    dataIndex: "shiftName",
+    key: "shiftName",
+    width: 120,
+    ellipsis: true,
+  },
+  {
+    title: "Shift Start",
+    dataIndex: "shiftStart",
+    key: "shiftStart",
+    width: 90,
+    render: (v: string) => fmtTime(v),
+  },
+  {
+    title: "Shift End",
+    dataIndex: "shiftEnd",
+    key: "shiftEnd",
+    width: 90,
+    render: (v: string) => fmtTime(v),
+  },
+  {
+    title: "Break Out",
+    dataIndex: "breakOut",
+    key: "breakOut",
+    width: 90,
+    render: (v: string | null) => fmtTime(v),
+  },
+  {
+    title: "Break In",
+    dataIndex: "breakIn",
+    key: "breakIn",
+    width: 90,
+    render: (v: string | null) => fmtTime(v),
+  },
+  {
+    title: "Log 1",
+    dataIndex: "log1",
+    key: "log1",
+    width: 80,
+    render: (v: CleanAttendanceLogRow["log1"]) => {
+      if (!v) return <span style={{ color: "#bbb" }}>—</span>;
+      return (
+        <Tooltip title={dayjs(v.workTime).format("MMM DD HH:mm")}>
+          <span>{fmtTime(v.workTime)}</span>
+        </Tooltip>
+      );
+    },
+  },
+];
 
 export default function CleanRowTable({ data, loading }: Props) {
   const [search, setSearch] = useState("");
 
-  const filtered = data.filter((item) =>
-    Object.values(item).some((val) => {
-      if (typeof val === "object") {
-        return Object.values(val).some((v) =>
-          String(v ?? "")
-            .toLowerCase()
-            .includes(search.toLowerCase()),
-        );
-      }
-      return String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase());
-    }),
+  const valid = useMemo(
+    () => data.filter((r) => r.employeeId !== EMPTY_GUID && r.empNo !== ""),
+    [data],
   );
 
-  const columns: ColumnsType<CleanAttendanceLogRow> = [
-    {
-      title: RAW_LOGS_LABEL.EMPLOYEE_NO,
-      dataIndex: "employeeNo",
-      key: "employeeNo",
-      width: 120,
-      fixed: "left",
-    },
-    {
-      title: RAW_LOGS_LABEL.EMPLOYEE_NAME,
-      dataIndex: "employeeName",
-      key: "employeeName",
-      width: 150,
-    },
-    {
-      title: RAW_LOGS_LABEL.DEPARTMENT,
-      dataIndex: "department",
-      key: "department",
-      width: 120,
-    },
-    {
-      title: RAW_LOGS_LABEL.PAYROLL_DATE,
-      dataIndex: "payrollDate",
-      key: "payrollDate",
-      width: 120,
-    },
-    {
-      title: RAW_LOGS_LABEL.SHIFT_NAME,
-      key: "shiftName",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.shiftName,
-    },
-    {
-      title: RAW_LOGS_LABEL.SHIFT_START,
-      key: "shiftStart",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.shiftStart,
-    },
-    {
-      title: RAW_LOGS_LABEL.BREAK_OUT,
-      key: "breakOut",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.breakOut,
-    },
-    {
-      title: RAW_LOGS_LABEL.BREAK_IN,
-      key: "breakIn",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.breakIn,
-    },
-    {
-      title: RAW_LOGS_LABEL.SHIFT_END,
-      key: "shiftEnd",
-      width: 100,
-      render: (_, record) => record.timeShiftInfo.shiftEnd,
-    },
-    {
-      title: RAW_LOGS_LABEL.LOGS,
-      dataIndex: "log",
-      key: "log",
-      width: 100,
-    },
-    {
-      title: RAW_LOGS_LABEL.STATUS,
-      dataIndex: "status",
-      key: "status",
-      width: 110,
-      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
-    },
-  ];
+  const filtered = useMemo(() => {
+    if (!search) return valid;
+    const q = search.toLowerCase();
+    return valid.filter((r) =>
+      [r.empNo, r.fullName, r.department, r.workDate, r.shiftName].some((v) =>
+        String(v ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
+    );
+  }, [valid, search]);
 
   return (
     <div className="flex flex-col gap-3">
       <Input
         prefix={<SearchOutlined />}
-        placeholder="Search..."
+        placeholder="Search name, emp no, department..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         allowClear
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey="id"
+        rowKey={(r, i) => r.log1?.attId ?? `${r.employeeId}-${r.workDate}-${i}`}
         dataSource={filtered}
         columns={columns}
         size="small"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{ pageSize: 15 }}
         scroll={{ x: "max-content" }}
         sticky
       />

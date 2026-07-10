@@ -26,7 +26,7 @@ import dayjs from "dayjs";
 import AttendanceEntryTable from "../../components/attendance-entry-table";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import {
-  useAttendanceEntryEmployees,
+  useEmployeeFilter,
   useAttendanceEntryRecords,
   useDeleteAttendanceEntryLog,
   useDeleteAttendanceBatch,
@@ -66,7 +66,11 @@ export default function AttendanceEntryList() {
     enabled: hasSearched,
     searchKey,
   });
-  const { data: employees = [] } = useAttendanceEntryEmployees();
+  const { data: employeeData = [] } = useEmployeeFilter();
+  const employees = employeeData.map((e) => ({
+    value: e.id,
+    label: e.name ?? e.id,
+  }));
   const { mutateAsync: removeLog, isPending: isDeleting } =
     useDeleteAttendanceEntryLog();
   const { mutateAsync: deleteBatch, isPending: isDeletingBatch } =
