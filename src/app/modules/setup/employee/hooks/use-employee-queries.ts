@@ -50,3 +50,19 @@ export function useDeleteEmployee() {
     },
   });
 }
+
+export function useDownloadEmployeeTemplate() {
+  return useMutation({
+    mutationFn: () => employeeApi.downloadTemplate(),
+  });
+}
+
+export function useUploadEmployees() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => employeeApi.uploadEmployees(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}

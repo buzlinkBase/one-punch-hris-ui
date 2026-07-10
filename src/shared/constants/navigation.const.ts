@@ -129,15 +129,15 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Payroll Group",
         path: "/setup/payroll-group",
       },
-      { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
+      { key: "setup-client", label: "Client", path: "/setup/client" },
       { key: "setup-employee", label: "Employee", path: "/setup/employee" },
+      { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
       // {
       //   key: "setup-deduction-type",
       //   label: "Deduction Type",
       //   path: "/setup/deduction-type",
       // },
       // { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
-      { key: "setup-client", label: "Client", path: "/setup/client" },
     ],
   },
   {

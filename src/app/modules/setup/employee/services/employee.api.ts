@@ -1,4 +1,5 @@
 import httpClient from "@/core/http/http-client";
+import axiosInstance from "@/core/http/axios.instance";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { EmployeeResponse } from "../models/api/response/employee-response.model";
 import type { CreateEmployee } from "../models/api/request/create-employee.model";
@@ -93,5 +94,27 @@ export const employeeApi = {
 
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${BASE_URL}/${id}`);
+  },
+
+  async uploadEmployees(file: File): Promise<void> {
+    const form = new FormData();
+    form.append("excelFile", file);
+    await axiosInstance.post(`${BASE_URL}/upload-employees`, form, {
+      headers: { "Content-Type": undefined },
+    });
+  },
+
+  async downloadTemplate(): Promise<void> {
+    const response = await axiosInstance.get(`${BASE_URL}/export-template`, {
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(new Blob([response.data as BlobPart]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "employees.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   },
 };
