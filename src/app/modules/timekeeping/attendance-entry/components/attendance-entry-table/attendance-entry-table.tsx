@@ -1,4 +1,5 @@
-import { Button, Popconfirm, Space, Table } from "antd";
+import React from "react";
+import { Button, Popconfirm, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { AttendanceEntryResponse } from "../../models/api/response/attendance-entry-response.model";
@@ -8,6 +9,7 @@ interface Props {
   data: AttendanceEntryResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  emptyText?: React.ReactNode;
 }
 
 const columns = (
@@ -23,6 +25,14 @@ const columns = (
     dataIndex: "timeLog",
     key: "timeLog",
     render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm A"),
+  },
+  {
+    title: "Batch",
+    dataIndex: "batchCode",
+    key: "batchCode",
+    width: 200,
+    render: (code: string | null | undefined) =>
+      code ? <Tag color="blue">{code}</Tag> : <Tag color="default">Manual</Tag>,
   },
   {
     title: "Actions",
@@ -51,6 +61,7 @@ export default function AttendanceEntryTable({
   data,
   loading,
   onDelete,
+  emptyText,
 }: Props) {
   return (
     <Table
@@ -62,6 +73,7 @@ export default function AttendanceEntryTable({
       pagination={{ pageSize: 10 }}
       scroll={{ x: "max-content" }}
       sticky
+      locale={emptyText ? { emptyText } : undefined}
     />
   );
 }

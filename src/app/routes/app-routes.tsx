@@ -51,6 +51,10 @@ const AttendanceEntryList = lazy(
   () =>
     import("@/app/modules/timekeeping/attendance-entry/pages/attendance-entry-list"),
 );
+const AttendanceEntryCreate = lazy(
+  () =>
+    import("@/app/modules/timekeeping/attendance-entry/pages/attendance-entry-create"),
+);
 const UserList = lazy(
   () => import("@/app/modules/security/users/pages/user-list"),
 );
@@ -399,6 +403,12 @@ const attendanceEntryIndexRoute = createRoute({
   getParentRoute: () => attendanceEntryRoute,
   path: "/",
   component: withSuspense(AttendanceEntryList),
+});
+
+const attendanceEntryCreateRoute = createRoute({
+  getParentRoute: () => attendanceEntryRoute,
+  path: "create",
+  component: withSuspense(AttendanceEntryCreate),
 });
 
 const rawLogsRoute = createRoute({
@@ -786,7 +796,10 @@ const routeTree = rootRoute.addChildren([
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
-  attendanceEntryRoute.addChildren([attendanceEntryIndexRoute]),
+  attendanceEntryRoute.addChildren([
+    attendanceEntryIndexRoute,
+    attendanceEntryCreateRoute,
+  ]),
   rawLogsRoute.addChildren([rawLogsIndexRoute]),
   incompletePunchesRoute.addChildren([incompletePunchesIndexRoute]),
   unregisterEmployeeRoute.addChildren([unregisterEmployeeIndexRoute]),
