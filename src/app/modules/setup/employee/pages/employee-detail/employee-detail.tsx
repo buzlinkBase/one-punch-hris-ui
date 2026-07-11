@@ -52,10 +52,6 @@ import { usePositions } from "@/app/modules/setup/position/hooks/use-position-qu
 
 const { Title } = Typography;
 
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-];
 
 const filterByLabel = (
   input: string,
@@ -771,23 +767,6 @@ export default function EmployeeDetail() {
                   />
                 </Form.Item>
 
-                <Form.Item
-                  label={EMPLOYEE_LABEL.STATUS}
-                  validateStatus={errors.status ? "error" : ""}
-                  help={errors.status?.message}
-                >
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={STATUS_OPTIONS}
-                        placeholder="Select status"
-                      />
-                    )}
-                  />
-                </Form.Item>
               </div>
             </Card>
           </section>

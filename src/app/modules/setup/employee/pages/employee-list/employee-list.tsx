@@ -1,6 +1,7 @@
 import { useRef } from "react";
-import { Button, Space, Typography, message } from "antd";
-import { DownloadOutlined, PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import { Button, Dropdown, Space, Typography, message } from "antd";
+import { DownloadOutlined, PlusOutlined, ReloadOutlined, UploadOutlined } from "@ant-design/icons";
+import type { MenuProps } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useEmployees,
@@ -16,7 +17,7 @@ const { Title } = Typography;
 export default function EmployeeList() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: employees = [], isLoading } = useEmployees();
+  const { data: employees = [], isLoading, refetch, isFetching } = useEmployees();
   const { mutate: remove } = useDeleteEmployee();
   const { mutate: downloadTemplate, isPending: downloading } =
     useDownloadEmployeeTemplate();
@@ -65,19 +66,35 @@ export default function EmployeeList() {
           </div>
           <Space>
             <Button
-              icon={<DownloadOutlined />}
-              loading={downloading}
-              onClick={handleDownloadTemplate}
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Dropdown
+              trigger={["click"]}
+              menu={{
+                items: [
+                  {
+                    key: "template",
+                    icon: <DownloadOutlined />,
+                    label: "Download Template",
+                    onClick: handleDownloadTemplate,
+                    disabled: downloading,
+                  },
+                  {
+                    key: "upload",
+                    icon: <UploadOutlined />,
+                    label: "Upload File",
+                    onClick: handleImportClick,
+                    disabled: uploading,
+                  },
+                ] as MenuProps["items"],
+              }}
             >
-              Download Template
-            </Button>
-            <Button
-              icon={<UploadOutlined />}
-              loading={uploading}
-              onClick={handleImportClick}
-            >
-              Import
-            </Button>
+              <Button icon={<UploadOutlined />} loading={uploading || downloading}>
+                Import
+              </Button>
+            </Dropdown>
             <Button
               type="primary"
               icon={<PlusOutlined />}

@@ -81,7 +81,7 @@ export default function EmployeeTable({ data, loading, onDelete }: Props) {
       title: EMPLOYEE_LABEL.TIME_SHIFT,
       dataIndex: "timeShiftName",
       key: "timeShiftName",
-      width: 150,
+      width: 200,
       render: (v?: string) => v || "—",
     },
     {
@@ -99,19 +99,64 @@ export default function EmployeeTable({ data, loading, onDelete }: Props) {
           : "—",
     },
     {
+      title: EMPLOYEE_LABEL.GENDER,
+      dataIndex: "gender",
+      key: "gender",
+      width: 90,
+      render: (v?: string) => v || "—",
+    },
+    {
       title: EMPLOYEE_LABEL.EMPLOYMENT_STATUS,
       dataIndex: "employmentStatus",
       key: "employmentStatus",
       width: 150,
+      render: (v?: string) => {
+        if (!v) return "—";
+        const colors: Record<string, string> = {
+          Regular:     "success",
+          Probationary: "processing",
+          Contractual:  "warning",
+          ProjectBased: "purple",
+          Seasonal:     "cyan",
+          Casual:       "default",
+          PartTime:     "geekblue",
+          Term:         "volcano",
+          Internship:   "magenta",
+        };
+        const labels: Record<string, string> = {
+          ProjectBased: "Project Based",
+          PartTime:     "Part Time",
+        };
+        return <Tag color={colors[v] ?? "default"}>{labels[v] ?? v}</Tag>;
+      },
+    },
+    {
+      title: EMPLOYEE_LABEL.SSS_NO,
+      dataIndex: "sssNo",
+      key: "sssNo",
+      width: 130,
       render: (v?: string) => v || "—",
     },
     {
-      title: EMPLOYEE_LABEL.STATUS,
-      dataIndex: "status",
-      key: "status",
-      width: 90,
-      render: (v?: string) =>
-        v ? <Tag color={v === "ACTIVE" ? "success" : "default"}>{v}</Tag> : "—",
+      title: EMPLOYEE_LABEL.PHIC_NO,
+      dataIndex: "phicNo",
+      key: "phicNo",
+      width: 140,
+      render: (v?: string) => v || "—",
+    },
+    {
+      title: EMPLOYEE_LABEL.HDMF_NO,
+      dataIndex: "hdmfNo",
+      key: "hdmfNo",
+      width: 130,
+      render: (v?: string) => v || "—",
+    },
+    {
+      title: EMPLOYEE_LABEL.TIN,
+      dataIndex: "tin",
+      key: "tin",
+      width: 120,
+      render: (v?: string) => v || "—",
     },
     {
       title: "Actions",
