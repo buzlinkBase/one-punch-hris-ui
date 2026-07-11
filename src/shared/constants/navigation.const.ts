@@ -113,9 +113,9 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       { key: "setup-branch", label: "Branch", path: "/setup/branch" },
       {
-        key: "setup-operation-area",
-        label: "Operation Area",
-        path: "/setup/operation-area",
+        key: "setup-project-site",
+        label: "Project Site",
+        path: "/setup/project-site",
       },
       {
         key: "setup-department",

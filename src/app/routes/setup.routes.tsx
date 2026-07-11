@@ -116,9 +116,9 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "holiday/create", component: HolidayDetail },
   { path: "holiday/$id", component: HolidayDetail },
 
-  { path: "operation-area", component: OperationAreaList },
-  { path: "operation-area/create", component: OperationAreaDetail },
-  { path: "operation-area/$id", component: OperationAreaDetail },
+  { path: "project-site", component: OperationAreaList },
+  { path: "project-site/create", component: OperationAreaDetail },
+  { path: "project-site/$id", component: OperationAreaDetail },
 
   { path: "payroll-group", component: PayrollGroupList },
   { path: "payroll-group/create", component: PayrollGroupDetail },

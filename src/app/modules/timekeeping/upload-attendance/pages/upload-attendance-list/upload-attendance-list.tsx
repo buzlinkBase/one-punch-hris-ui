@@ -130,9 +130,9 @@ export default function UploadAttendanceList() {
                   allowClear
                 />
               </Form.Item>
-              <Form.Item label="Operation Area">
+              <Form.Item label="Project Site">
                 <Select
-                  placeholder="Select operation area (optional)"
+                  placeholder="Select project site (optional)"
                   options={areaOptions}
                   loading={isAreasLoading}
                   value={operationAreaId ?? undefined}

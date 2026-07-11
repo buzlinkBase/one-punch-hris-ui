@@ -486,11 +486,11 @@ export default function RawLogsList() {
                   }
                 />
               </Form.Item>
-              <Form.Item label="Operation Area" className="mb-3">
+              <Form.Item label="Project Site" className="mb-3">
                 <Select
                   allowClear
                   showSearch={{ optionFilterProp: "label" }}
-                  placeholder="All areas"
+                  placeholder="All project sites"
                   options={areaOptions}
                   value={pending.operationAreaId}
                   onChange={(v) =>

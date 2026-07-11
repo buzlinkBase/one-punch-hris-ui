@@ -24,15 +24,16 @@ export default function OperationAreaList() {
               {OPERATION_AREA_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Define work zones and coverage areas for operations planning.
+              Define and manage project sites used for employee and scheduling
+              setup.
             </p>
           </div>
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/operation-area/create" })}
+            onClick={() => navigate({ to: "/setup/project-site/create" })}
           >
-            Add Operation Area
+            Add Project Site
           </Button>
         </div>
       </div>

@@ -53,15 +53,13 @@ export default function OperationAreaTable({ data, loading, onDelete }: Props) {
         <Space>
           <Button
             type="link"
-            onClick={() =>
-              navigate({ to: `/setup/operation-area/${record.id}` })
-            }
+            onClick={() => navigate({ to: `/setup/project-site/${record.id}` })}
           >
             Edit
           </Button>
           {onDelete && (
             <Popconfirm
-              title="Delete this operation area?"
+              title="Delete this project site?"
               onConfirm={() => onDelete(record.id)}
               okText="Yes"
               cancelText="No"

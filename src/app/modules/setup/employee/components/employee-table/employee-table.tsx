@@ -113,19 +113,19 @@ export default function EmployeeTable({ data, loading, onDelete }: Props) {
       render: (v?: string) => {
         if (!v) return "—";
         const colors: Record<string, string> = {
-          Regular:     "success",
+          Regular: "success",
           Probationary: "processing",
-          Contractual:  "warning",
+          Contractual: "warning",
           ProjectBased: "purple",
-          Seasonal:     "cyan",
-          Casual:       "default",
-          PartTime:     "geekblue",
-          Term:         "volcano",
-          Internship:   "magenta",
+          Seasonal: "cyan",
+          Casual: "default",
+          PartTime: "geekblue",
+          Term: "volcano",
+          Internship: "magenta",
         };
         const labels: Record<string, string> = {
           ProjectBased: "Project Based",
-          PartTime:     "Part Time",
+          PartTime: "Part Time",
         };
         return <Tag color={colors[v] ?? "default"}>{labels[v] ?? v}</Tag>;
       },

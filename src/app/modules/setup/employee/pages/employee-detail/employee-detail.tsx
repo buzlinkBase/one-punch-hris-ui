@@ -52,7 +52,6 @@ import { usePositions } from "@/app/modules/setup/position/hooks/use-position-qu
 
 const { Title } = Typography;
 
-
 const filterByLabel = (
   input: string,
   option?: { label?: string | number | boolean },
@@ -490,7 +489,7 @@ export default function EmployeeDetail() {
                         allowClear
                         showSearch
                         filterOption={filterByLabel}
-                        placeholder="Select area"
+                        placeholder="Select project site"
                       />
                     )}
                   />
@@ -766,7 +765,6 @@ export default function EmployeeDetail() {
                     )}
                   />
                 </Form.Item>
-
               </div>
             </Card>
           </section>

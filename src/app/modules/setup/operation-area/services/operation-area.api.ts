@@ -11,7 +11,7 @@ const MOCK_OPERATION_AREAS: OperationAreaResponse[] = Array.from(
   (_, i) => ({
     id: `op-${i + 1}`,
     code: `OP${String(i + 1).padStart(3, "0")}`,
-    name: `Operation Area ${i + 1}`,
+    name: `Project Site ${i + 1}`,
     address: "",
     status: i % 6 === 0 ? "INACTIVE" : "ACTIVE",
     boundary:

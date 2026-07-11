@@ -11,7 +11,10 @@ const BASE_URL = buildApiUrl(API_PREFIX.hrms, "employees");
 export const employeeApi = {
   async getAll(): Promise<EmployeeResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<PaginatedResponse<EmployeeResponse[]>>(BASE_URL);
+      const data =
+        await httpClient.getUnwrapped<PaginatedResponse<EmployeeResponse[]>>(
+          BASE_URL,
+        );
       return data.data ?? [];
     } catch {
       return [];

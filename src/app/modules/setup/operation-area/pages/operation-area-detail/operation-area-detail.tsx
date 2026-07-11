@@ -107,7 +107,7 @@ export default function OperationAreaDetail() {
   const onSubmit = async (values: OperationAreaFormValues) => {
     if (isEdit && id) await update({ id, ...values });
     else await add(values);
-    navigate({ to: "/setup/operation-area" });
+    navigate({ to: "/setup/project-site" });
   };
 
   return (
@@ -121,14 +121,14 @@ export default function OperationAreaDetail() {
                 : OPERATION_AREA_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Maintain operation areas used for employee and scheduling setup.
+              Maintain project sites used for employee and scheduling setup.
             </p>
           </div>
           <Space>
             <Tag color={isEdit ? "processing" : "success"}>
               {isEdit ? "Editing" : "New Record"}
             </Tag>
-            <Button onClick={() => navigate({ to: "/setup/operation-area" })}>
+            <Button onClick={() => navigate({ to: "/setup/project-site" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
           </Space>
@@ -215,10 +215,10 @@ export default function OperationAreaDetail() {
 
             {/* Right (large) / bottom (small): map */}
             <div>
-              <SectionHeader>Operation Area Boundary</SectionHeader>
+              <SectionHeader>Project Site Boundary</SectionHeader>
               <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8 }}>
                 Draw a polygon on the map to define the geographic boundary of
-                this operation area.
+                this project site.
               </p>
               <Controller
                 name="boundary"
@@ -260,7 +260,7 @@ export default function OperationAreaDetail() {
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button onClick={() => navigate({ to: "/setup/operation-area" })}>
+              <Button onClick={() => navigate({ to: "/setup/project-site" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <Button
