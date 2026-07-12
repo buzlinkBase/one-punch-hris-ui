@@ -253,7 +253,7 @@ export default function AttendanceEntryCreate() {
       render: (v: string | null) => v ?? "—",
     },
     {
-      title: "Operation Area",
+      title: "Project Site",
       width: 140,
       dataIndex: "areaName",
       render: (v: string | null) => v ?? "—",
@@ -445,9 +445,9 @@ export default function AttendanceEntryCreate() {
                 allowClear
               />
             </Form.Item>
-            <Form.Item label="Operation Area" className="mb-0">
+            <Form.Item label="Project Site" className="mb-0">
               <Select
-                placeholder="All areas"
+                placeholder="All project sites"
                 options={areaOptions}
                 value={operationAreaId ?? undefined}
                 onChange={(v: string | undefined) =>

@@ -24,7 +24,7 @@ export const PERMISSION_MODULE_OPTIONS = [
   { value: "Department", label: "Department" },
   { value: "Employee", label: "Employee" },
   { value: "Holiday", label: "Holiday" },
-  { value: "Operation Area", label: "Operation Area" },
+  { value: "Project Site", label: "Project Site" },
   { value: "Payroll Group", label: "Payroll Group" },
   { value: "Time Shift", label: "Time Shift" },
   { value: "Timekeeping", label: "Timekeeping" },

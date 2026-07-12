@@ -16,7 +16,19 @@ const col = (
   title: string,
   dataIndex: keyof DtrDetailResponse,
   width = 75,
-) => ({ title, dataIndex, key: dataIndex as string, align: R, width });
+) => ({
+  title,
+  dataIndex,
+  key: dataIndex as string,
+  align: R,
+  width,
+  render: (v: number | null | undefined) => {
+    const n = v ?? 0;
+    if (n === 0)
+      return <span style={{ color: "#d9d9d9", userSelect: "none" }}>—</span>;
+    return <span style={{ fontWeight: 500 }}>{n}</span>;
+  },
+});
 
 const timeCol = (
   title: string,

@@ -394,9 +394,9 @@ export default function CreateAttendanceEntryDrawer({
               allowClear
             />
           </Form.Item>
-          <Form.Item label="Operation Area" className="mb-3">
+          <Form.Item label="Project Site" className="mb-3">
             <Select
-              placeholder="All operation areas"
+              placeholder="All project sites"
               options={areaOptions}
               value={operationAreaId ?? undefined}
               onChange={(v: string | undefined) =>

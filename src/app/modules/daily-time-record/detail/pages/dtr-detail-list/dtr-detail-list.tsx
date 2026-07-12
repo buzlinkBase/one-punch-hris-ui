@@ -416,12 +416,12 @@ export default function DtrDetailList() {
                   }
                 />
               </Form.Item>
-              <Form.Item label="Operation Area" className="mb-3">
+              <Form.Item label="Project Site" className="mb-3">
                 <Select
                   allowClear
                   showSearch
                   filterOption={filterByLabel}
-                  placeholder="All areas"
+                  placeholder="All project sites"
                   options={areaOptions}
                   value={pending.operationAreaId}
                   onChange={(v) =>

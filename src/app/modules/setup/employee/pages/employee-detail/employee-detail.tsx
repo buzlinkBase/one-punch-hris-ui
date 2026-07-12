@@ -52,11 +52,6 @@ import { usePositions } from "@/app/modules/setup/position/hooks/use-position-qu
 
 const { Title } = Typography;
 
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-];
-
 const filterByLabel = (
   input: string,
   option?: { label?: string | number | boolean },
@@ -494,7 +489,7 @@ export default function EmployeeDetail() {
                         allowClear
                         showSearch
                         filterOption={filterByLabel}
-                        placeholder="Select area"
+                        placeholder="Select project site"
                       />
                     )}
                   />
@@ -766,24 +761,6 @@ export default function EmployeeDetail() {
                           field.onChange(checkedValues as string[])
                         }
                         className="flex gap-4 flex-wrap"
-                      />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={EMPLOYEE_LABEL.STATUS}
-                  validateStatus={errors.status ? "error" : ""}
-                  help={errors.status?.message}
-                >
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={STATUS_OPTIONS}
-                        placeholder="Select status"
                       />
                     )}
                   />
