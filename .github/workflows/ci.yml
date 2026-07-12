@@ -6,8 +6,6 @@ on:
       - main
       - dev
       - production
-      - "feature/**"
-      - "hotfix/**"
   pull_request:
     branches:
       - main
