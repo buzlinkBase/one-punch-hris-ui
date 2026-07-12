@@ -24,7 +24,7 @@ ENV VITE_PREFIX_TENANTS=$VITE_PREFIX_TENANTS
 ENV VITE_PREFIX_NOTIFICATIONS=$VITE_PREFIX_NOTIFICATIONS
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+RUN npm install -g pnpm@10.32.1
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
