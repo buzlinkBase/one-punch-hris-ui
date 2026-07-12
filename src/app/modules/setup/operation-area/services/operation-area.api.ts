@@ -6,52 +6,12 @@ import type { UpdateOperationArea } from "../models/api/request/update-operation
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "costcenters");
 
-const MOCK_OPERATION_AREAS: OperationAreaResponse[] = Array.from(
-  { length: 24 },
-  (_, i) => ({
-    id: `op-${i + 1}`,
-    code: `OP${String(i + 1).padStart(3, "0")}`,
-    name: `Project Site ${i + 1}`,
-    address: "",
-    status: i % 6 === 0 ? "INACTIVE" : "ACTIVE",
-    boundary:
-      i === 0
-        ? {
-            type: "Polygon" as const,
-            coordinates: [
-              [
-                [123.875, 10.31],
-                [123.885, 10.31],
-                [123.885, 10.318],
-                [123.875, 10.318],
-                [123.875, 10.31],
-              ],
-            ],
-          }
-        : null,
-  }),
-);
-
 export const operationAreaApi = {
-  async getAll(): Promise<OperationAreaResponse[]> {
-    try {
-      const data =
-        await httpClient.getUnwrapped<OperationAreaResponse[]>(ENDPOINT);
-      return data.length ? data : MOCK_OPERATION_AREAS;
-    } catch {
-      return MOCK_OPERATION_AREAS;
-    }
+  getAll(): Promise<OperationAreaResponse[]> {
+    return httpClient.getUnwrapped<OperationAreaResponse[]>(ENDPOINT);
   },
-  async getById(id: string): Promise<OperationAreaResponse> {
-    try {
-      return await httpClient.getUnwrapped<OperationAreaResponse>(
-        `${ENDPOINT}/${id}`,
-      );
-    } catch {
-      const match = MOCK_OPERATION_AREAS.find((item) => item.id === id);
-      if (match) return match;
-      throw new Error(`Operation area ${id} not found`);
-    }
+  getById(id: string): Promise<OperationAreaResponse> {
+    return httpClient.getUnwrapped<OperationAreaResponse>(`${ENDPOINT}/${id}`);
   },
   create(data: CreateOperationArea): Promise<OperationAreaResponse> {
     return httpClient.postUnwrapped<OperationAreaResponse>(ENDPOINT, data);

@@ -1,24 +1,16 @@
 import { Button, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  usePositions,
-  useDeletePosition,
-} from "../../hooks/use-position-queries";
-import PositionTable from "../../components/position-table";
-import { POSITION_LABEL } from "../../constants/label.const";
+import { useDevices, useDeleteDevice } from "../../hooks/use-device-queries";
+import DeviceTable from "../../components/device-table";
+import { DEVICE_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
 
-export default function PositionList() {
+export default function ManageDevicesList() {
   const navigate = useNavigate();
-  const {
-    data: positions = [],
-    isLoading,
-    refetch,
-    isFetching,
-  } = usePositions();
-  const { mutate: remove } = useDeletePosition();
+  const { data: devices = [], isLoading, refetch, isFetching } = useDevices();
+  const { mutate: remove } = useDeleteDevice();
 
   return (
     <div className="content-page">
@@ -26,11 +18,9 @@ export default function PositionList() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {POSITION_LABEL.TITLE}
+              {DEVICE_LABEL.TITLE}
             </Title>
-            <p className="page-toolbar-subtitle">
-              Manage job positions and their associated base rates.
-            </p>
+            <p className="page-toolbar-subtitle">{DEVICE_LABEL.SUBTITLE}</p>
           </div>
           <Space>
             <Button
@@ -41,14 +31,16 @@ export default function PositionList() {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/position/create" })}
+              onClick={() =>
+                navigate({ to: "/biometric/manage-devices/create" })
+              }
             >
-              Add Position
+              Add Device
             </Button>
           </Space>
         </div>
       </div>
-      <PositionTable data={positions} loading={isLoading} onDelete={remove} />
+      <DeviceTable data={devices} loading={isLoading} onDelete={remove} />
     </div>
   );
 }
