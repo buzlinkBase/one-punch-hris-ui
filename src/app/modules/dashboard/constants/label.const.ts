@@ -1,0 +1,18 @@
+export const DASHBOARD_LABEL = {
+  TITLE: "Dashboard",
+  SUBTITLE: "Overview of your HR operations.",
+  TOTAL_EMPLOYEES: "Total Employees",
+  PRESENT_TODAY: "Present Today",
+  LATE_TODAY: "Late Today",
+  ABSENT_TODAY: "Absent Today",
+  ON_LEAVE_TODAY: "On Leave Today",
+  PENDING_REQUESTS: "Pending Requests",
+  NEW_HIRES: "New Hires (This Month)",
+  ATTENDANCE_OVERVIEW: "Attendance Overview",
+  ATTENDANCE_OVERVIEW_SUBTITLE: "Last 7 days",
+  DEPARTMENT_HEADCOUNT: "Department Headcount",
+  UPCOMING_HOLIDAYS: "Upcoming Holidays",
+  RECENT_ACTIVITY: "Recent Activity",
+  PENDING_APPROVALS: "Pending Approvals",
+  QUICK_ACTIONS: "Quick Actions",
+};
