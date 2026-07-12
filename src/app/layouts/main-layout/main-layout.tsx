@@ -431,7 +431,6 @@ export default function MainLayout() {
             mode="inline"
             className="app-menu"
             selectedKeys={[activeMenuKey]}
-            defaultOpenKeys={["setup"]}
             items={menuItems}
             onClick={handleMenuClick}
           />
