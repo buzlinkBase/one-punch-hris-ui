@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PNPM_VERSION: "10.32.1"
+  PNPM_VERSION: "11.12.0"
   NODE_VERSION: "24.18.0"
   DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/hris-react
 
