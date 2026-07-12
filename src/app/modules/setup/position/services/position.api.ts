@@ -6,36 +6,12 @@ import type { UpdatePosition } from "../models/api/request/update-position.model
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "positions");
 
-const MOCK_POSITIONS: PositionResponse[] = Array.from(
-  { length: 12 },
-  (_, i) => ({
-    id: `position-${i + 1}`,
-    code: `POS${String(i + 1).padStart(3, "0")}`,
-    name: `Position ${i + 1}`,
-    rate: (i + 1) * 500,
-    status: i % 5 === 0 ? "INACTIVE" : "ACTIVE",
-  }),
-);
-
 export const positionApi = {
-  async getAll(): Promise<PositionResponse[]> {
-    try {
-      const data = await httpClient.getUnwrapped<PositionResponse[]>(ENDPOINT);
-      return data.length ? data : MOCK_POSITIONS;
-    } catch {
-      return MOCK_POSITIONS;
-    }
+  getAll(): Promise<PositionResponse[]> {
+    return httpClient.getUnwrapped<PositionResponse[]>(ENDPOINT);
   },
-  async getById(id: string): Promise<PositionResponse> {
-    try {
-      return await httpClient.getUnwrapped<PositionResponse>(
-        `${ENDPOINT}/${id}`,
-      );
-    } catch {
-      const match = MOCK_POSITIONS.find((item) => item.id === id);
-      if (match) return match;
-      throw new Error(`Position ${id} not found`);
-    }
+  getById(id: string): Promise<PositionResponse> {
+    return httpClient.getUnwrapped<PositionResponse>(`${ENDPOINT}/${id}`);
   },
   create(data: CreatePosition): Promise<PositionResponse> {
     return httpClient.postUnwrapped<PositionResponse>(ENDPOINT, data);

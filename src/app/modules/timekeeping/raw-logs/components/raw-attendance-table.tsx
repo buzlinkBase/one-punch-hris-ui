@@ -1,68 +1,64 @@
 import { useState } from "react";
-import { Table, Input, Tag } from "antd";
+import { Input, Table, Tag } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import type { RawAttendanceLog } from "../models/api/response/raw-attendance-log.model";
-import { RAW_LOGS_LABEL } from "../constants/label.const";
 
 interface Props {
   data: RawAttendanceLog[];
   loading?: boolean;
 }
 
+const columns: ColumnsType<RawAttendanceLog> = [
+  {
+    title: "Employee",
+    dataIndex: "name",
+    key: "name",
+    render: (v: string | null) => v ?? "—",
+  },
+  {
+    title: "Work Date Time",
+    dataIndex: "workDateTime",
+    key: "workDateTime",
+    width: 180,
+    render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A"),
+  },
+  {
+    title: "Log Source",
+    dataIndex: "logSource",
+    key: "logSource",
+    width: 130,
+    render: (v: string) => <Tag>{v}</Tag>,
+  },
+  {
+    title: "Batch",
+    dataIndex: "batch",
+    key: "batch",
+    width: 200,
+    render: (v: string) =>
+      v ? <Tag color="blue">{v}</Tag> : <Tag color="default">Manual</Tag>,
+  },
+];
+
 export default function RawAttendanceTable({ data, loading }: Props) {
   const [search, setSearch] = useState("");
 
-  const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
-      String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-    ),
-  );
-
-  const columns: ColumnsType<RawAttendanceLog> = [
-    {
-      title: RAW_LOGS_LABEL.BIO_ID,
-      dataIndex: "bioId",
-      key: "bioId",
-      width: 120,
-    },
-    {
-      title: RAW_LOGS_LABEL.EMPLOYEE,
-      dataIndex: "employeeName",
-      key: "employeeName",
-      render: (_, record) => `${record.employeeNo} - ${record.employeeName}`,
-    },
-    {
-      title: RAW_LOGS_LABEL.LOG_DATE_TIME,
-      dataIndex: "logDateTime",
-      key: "logDateTime",
-      width: 180,
-      render: (text) => new Date(text).toLocaleString(),
-    },
-    {
-      title: RAW_LOGS_LABEL.TIME_LOG,
-      dataIndex: "timeLog",
-      key: "timeLog",
-      width: 100,
-    },
-    {
-      title: RAW_LOGS_LABEL.LOG_TYPE,
-      dataIndex: "logType",
-      key: "logType",
-      width: 100,
-      render: (type) => (
-        <Tag color={type === "IN" ? "green" : "red"}>{type}</Tag>
-      ),
-    },
-  ];
+  const filtered = search
+    ? data.filter((item) =>
+        [item.name, item.workDateTime, item.logSource, item.batch].some((v) =>
+          String(v ?? "")
+            .toLowerCase()
+            .includes(search.toLowerCase()),
+        ),
+      )
+    : data;
 
   return (
     <div className="flex flex-col gap-3">
       <Input
         prefix={<SearchOutlined />}
-        placeholder="Search..."
+        placeholder="Search employee, source, batch..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         allowClear

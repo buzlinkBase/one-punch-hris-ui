@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useSections, useDeleteSection } from "../../hooks/use-section-queries";
 import SectionTable from "../../components/section-table";
@@ -9,7 +9,7 @@ const { Title } = Typography;
 
 export default function SectionList() {
   const navigate = useNavigate();
-  const { data: sections = [], isLoading } = useSections();
+  const { data: sections = [], isLoading, refetch, isFetching } = useSections();
   const { mutate: remove } = useDeleteSection();
 
   return (
@@ -24,13 +24,20 @@ export default function SectionList() {
               Manage organizational sections within departments.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/section/create" })}
-          >
-            Add Section
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/section/create" })}
+            >
+              Add Section
+            </Button>
+          </Space>
         </div>
       </div>
       <SectionTable data={sections} loading={isLoading} onDelete={remove} />

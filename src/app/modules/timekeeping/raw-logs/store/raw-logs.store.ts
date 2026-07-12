@@ -33,13 +33,23 @@ export const useRawLogsStore = create<RawLogsStore>((set) => ({
   loadAll: async (filters) => {
     set({ loading: true, error: null });
     try {
-      const data = await rawLogsApi.getAll(filters);
+      const [
+        rawAttendanceLogs,
+        rawColumnarLogs,
+        cleanRowLogs,
+        cleanColumnarLogs,
+      ] = await Promise.all([
+        rawLogsApi.getRawAttendanceLogs(filters),
+        rawLogsApi.getRawColumnarLogs(filters),
+        rawLogsApi.getCleanRowLogs(filters),
+        rawLogsApi.getCleanColumnarLogs(filters),
+      ]);
       set({
-        rawAttendanceLogs: data.rawAttendanceLogs,
-        rawColumnarLogs: data.rawColumnarLogs,
-        cleanRowLogs: data.cleanRowLogs,
-        cleanColumnarLogs: data.cleanColumnarLogs,
-        filters: filters || {},
+        rawAttendanceLogs,
+        rawColumnarLogs,
+        cleanRowLogs,
+        cleanColumnarLogs,
+        filters: filters ?? {},
         loading: false,
       });
     } catch (err) {

@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useOperationAreas,
@@ -12,7 +12,12 @@ const { Title } = Typography;
 
 export default function OperationAreaList() {
   const navigate = useNavigate();
-  const { data: operationAreas = [], isLoading } = useOperationAreas();
+  const {
+    data: operationAreas = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = useOperationAreas();
   const { mutate: remove } = useDeleteOperationArea();
 
   return (
@@ -24,16 +29,24 @@ export default function OperationAreaList() {
               {OPERATION_AREA_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Define work zones and coverage areas for operations planning.
+              Define and manage project sites used for employee and scheduling
+              setup.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/operation-area/create" })}
-          >
-            Add Operation Area
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/project-site/create" })}
+            >
+              Add Project Site
+            </Button>
+          </Space>
         </div>
       </div>
       <OperationAreaTable

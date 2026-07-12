@@ -1,17 +1,12 @@
-// Raw Attendance Log - Vertical display
-// Columns: BioId, Employee, Time Log
 export interface RawAttendanceLog {
   id: string;
-  bioId: string;
-  employeeNo: string;
-  employeeName: string;
-  timeLog: string;
-  logType: "IN" | "OUT";
-  logDateTime: string;
+  employeeId: string | null;
+  name: string | null;
+  workDateTime: string;
+  batch: string;
+  logSource: string;
 }
 
-// Raw Columnar Attendance Log - Horizontal display per employee
-// Columns: BioId, Employee, Department, Payroll Date, Time Shift Info, Logs[1-20]
 export interface TimeShiftInfo {
   shiftName: string;
   shiftStart: string;
@@ -20,54 +15,70 @@ export interface TimeShiftInfo {
   shiftEnd: string;
 }
 
+export interface AttInfo {
+  attId: string;
+  workTime: string;
+}
+
 export interface RawColumnarAttendanceLog {
-  id: string;
-  bioId: string;
-  employeeNo: string;
-  employeeName: string;
+  employeeId: string;
+  clientId: string | null;
+  payrollGroupId: string | null;
+  departmentId: string | null;
+  empNo: string;
+  fullName: string;
   department: string;
-  payrollDate: string;
-  timeShiftInfo: TimeShiftInfo;
-  logs: string[]; // Up to 20 logs
+  workDate: string;
+  shiftName: string;
+  shiftStart: string;
+  shiftEnd: string;
+  breakOut: string | null;
+  breakIn: string | null;
+  log1: AttInfo | null;
+  log2: AttInfo | null;
+  log3: AttInfo | null;
+  log4: AttInfo | null;
+  log5: AttInfo | null;
+  log6: AttInfo | null;
+  log7: AttInfo | null;
+  log8: AttInfo | null;
+  log9: AttInfo | null;
+  log10: AttInfo | null;
+  log11: AttInfo | null;
+  log12: AttInfo | null;
+  log13: AttInfo | null;
+  log14: AttInfo | null;
+  log15: AttInfo | null;
+  log16: AttInfo | null;
+  log17: AttInfo | null;
+  log18: AttInfo | null;
+  log19: AttInfo | null;
+  log20: AttInfo | null;
 }
 
-// Clean Attendance Log (Row) - Cleaned version with additional information
-// Columns: Emp No, Employee name, Department, Payroll Date, Time Shift Info, Logs[1]
 export interface CleanAttendanceLogRow {
-  id: string;
-  employeeNo: string;
-  employeeName: string;
+  employeeId: string;
+  empNo: string;
+  fullName: string;
   department: string;
-  payrollDate: string;
-  timeShiftInfo: TimeShiftInfo;
-  log: string; // Single log entry
-  status: "COMPLETE" | "INCOMPLETE" | "FLAGGED";
+  workDate: string;
+  shiftName: string;
+  shiftStart: string;
+  shiftEnd: string;
+  breakOut: string | null;
+  breakIn: string | null;
+  log1: AttInfo | null;
 }
 
-// Clean Attendance Log (Columnar) - Cleaned version, columnar format
-export interface CleanAttendanceLogColumnar {
-  id: string;
-  employeeNo: string;
-  employeeName: string;
-  department: string;
-  payrollDate: string;
-  timeShiftInfo: TimeShiftInfo;
-  logs: string[]; // Multiple log entries
-  status: "COMPLETE" | "INCOMPLETE" | "FLAGGED";
-}
+export type CleanAttendanceLogColumnar = RawColumnarAttendanceLog;
 
-// Filter parameters
 export interface RawLogsFilterRequest {
   fromDate?: string;
   toDate?: string;
-  clientId?: string;
   employeeId?: string;
-}
-
-// Generic response wrapper
-export interface RawLogsResponse {
-  rawAttendanceLogs: RawAttendanceLog[];
-  rawColumnarLogs: RawColumnarAttendanceLog[];
-  cleanRowLogs: CleanAttendanceLogRow[];
-  cleanColumnarLogs: CleanAttendanceLogColumnar[];
+  branchId?: string;
+  departmentId?: string;
+  clientId?: string;
+  payrollGroupId?: string;
+  operationAreaId?: string;
 }

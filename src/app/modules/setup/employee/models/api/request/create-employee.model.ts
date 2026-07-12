@@ -50,7 +50,6 @@ export interface CreateEmployee {
   address1?: string;
   address2?: string;
   profileImg?: string;
-  status: string;
   restDays?: RestDayModel[];
   settings?: EmployeeSettingModel;
 }

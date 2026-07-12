@@ -53,7 +53,6 @@ export const employeeFormSchema = z.object({
   contractStart: z.string().nullable().optional(),
   contractEnd: z.string().nullable().optional(),
   dateResigned: z.string().nullable().optional(),
-  status: z.string().min(1, "Status is required"),
   restDays: z.array(z.string()).optional(),
 
   // Compensation

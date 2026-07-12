@@ -22,6 +22,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/timekeeping/upload-attendance",
       },
       {
+        key: "timekeeping-attendance-entry",
+        label: "Attendance Entry",
+        path: "/timekeeping/attendance-entry",
+      },
+      {
         key: "timekeeping-raw-logs",
         label: "Raw Logs",
         path: "/timekeeping/raw-logs",
@@ -30,11 +35,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "timekeeping-unregistered-employees",
         label: "Unregister Employee",
         path: "/timekeeping/unregistered-employees",
-      },
-      {
-        key: "timekeeping-attendance-entry",
-        label: "Attendance Entry",
-        path: "/timekeeping/attendance-entry",
       },
       {
         key: "timekeeping-incomplete-punches",
@@ -113,9 +113,9 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       { key: "setup-branch", label: "Branch", path: "/setup/branch" },
       {
-        key: "setup-operation-area",
-        label: "Operation Area",
-        path: "/setup/operation-area",
+        key: "setup-project-site",
+        label: "Project Site",
+        path: "/setup/project-site",
       },
       {
         key: "setup-department",
@@ -129,15 +129,15 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Payroll Group",
         path: "/setup/payroll-group",
       },
-      { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
+      { key: "setup-client", label: "Client", path: "/setup/client" },
       { key: "setup-employee", label: "Employee", path: "/setup/employee" },
+      { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
       // {
       //   key: "setup-deduction-type",
       //   label: "Deduction Type",
       //   path: "/setup/deduction-type",
       // },
       // { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
-      { key: "setup-client", label: "Client", path: "/setup/client" },
     ],
   },
   {
@@ -162,9 +162,20 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   {
-    key: "enroll-biometrics",
-    label: "Enroll Biometrics",
-    path: "/enroll-biometrics",
+    key: "biometric",
+    label: "Biometric",
+    children: [
+      {
+        key: "enroll-biometrics",
+        label: "Enroll Biometrics",
+        path: "/enroll-biometrics",
+      },
+      {
+        key: "biometric-manage-devices",
+        label: "Manage Devices",
+        path: "/biometric/manage-devices",
+      },
+    ],
   },
   {
     key: "security",

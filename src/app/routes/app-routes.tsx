@@ -51,6 +51,10 @@ const AttendanceEntryList = lazy(
   () =>
     import("@/app/modules/timekeeping/attendance-entry/pages/attendance-entry-list"),
 );
+const AttendanceEntryCreate = lazy(
+  () =>
+    import("@/app/modules/timekeeping/attendance-entry/pages/attendance-entry-create"),
+);
 const UserList = lazy(
   () => import("@/app/modules/security/users/pages/user-list"),
 );
@@ -65,6 +69,14 @@ const RoleDetail = lazy(
 );
 const TardinessList = lazy(
   () => import("@/app/modules/reports/tardiness/pages/tardiness-list"),
+);
+const ManageDevicesList = lazy(
+  () =>
+    import("@/app/modules/biometric/manage-devices/pages/manage-devices-list"),
+);
+const ManageDevicesDetail = lazy(
+  () =>
+    import("@/app/modules/biometric/manage-devices/pages/manage-devices-detail"),
 );
 const ForPayrollList = lazy(
   () =>
@@ -399,6 +411,12 @@ const attendanceEntryIndexRoute = createRoute({
   getParentRoute: () => attendanceEntryRoute,
   path: "/",
   component: withSuspense(AttendanceEntryList),
+});
+
+const attendanceEntryCreateRoute = createRoute({
+  getParentRoute: () => attendanceEntryRoute,
+  path: "create",
+  component: withSuspense(AttendanceEntryCreate),
 });
 
 const rawLogsRoute = createRoute({
@@ -773,6 +791,30 @@ const securityAuditDetailRoute = createRoute({
   component: withSuspense(AuditDetail),
 });
 
+const manageDevicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "biometric/manage-devices",
+  component: MainLayout,
+});
+
+const manageDevicesIndexRoute = createRoute({
+  getParentRoute: () => manageDevicesRoute,
+  path: "/",
+  component: withSuspense(ManageDevicesList),
+});
+
+const manageDevicesCreateRoute = createRoute({
+  getParentRoute: () => manageDevicesRoute,
+  path: "create",
+  component: withSuspense(ManageDevicesDetail),
+});
+
+const manageDevicesDetailRoute = createRoute({
+  getParentRoute: () => manageDevicesRoute,
+  path: "$id",
+  component: withSuspense(ManageDevicesDetail),
+});
+
 const routeTree = rootRoute.addChildren([
   rootIndexRoute,
   loginRoute.addChildren([loginIndexRoute]),
@@ -786,7 +828,10 @@ const routeTree = rootRoute.addChildren([
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
-  attendanceEntryRoute.addChildren([attendanceEntryIndexRoute]),
+  attendanceEntryRoute.addChildren([
+    attendanceEntryIndexRoute,
+    attendanceEntryCreateRoute,
+  ]),
   rawLogsRoute.addChildren([rawLogsIndexRoute]),
   incompletePunchesRoute.addChildren([incompletePunchesIndexRoute]),
   unregisterEmployeeRoute.addChildren([unregisterEmployeeIndexRoute]),
@@ -834,6 +879,11 @@ const routeTree = rootRoute.addChildren([
     employeeDocRecordsDetailRoute,
   ]),
   appSectionRoute("enroll-biometrics", "Enroll Biometrics"),
+  manageDevicesRoute.addChildren([
+    manageDevicesIndexRoute,
+    manageDevicesCreateRoute,
+    manageDevicesDetailRoute,
+  ]),
   securityUsersRoute.addChildren([
     securityUsersIndexRoute,
     securityUsersCreateRoute,

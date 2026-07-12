@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useClients, useDeleteClient } from "../../hooks/use-client-queries";
 import ClientTable from "../../components/client-table";
@@ -9,7 +9,7 @@ const { Title } = Typography;
 
 export default function ClientList() {
   const navigate = useNavigate();
-  const { data: clients = [], isLoading } = useClients();
+  const { data: clients = [], isLoading, refetch, isFetching } = useClients();
   const { mutate: remove } = useDeleteClient();
 
   return (
@@ -24,13 +24,20 @@ export default function ClientList() {
               Manage client accounts linked to employee assignments and billing.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/client/create" })}
-          >
-            Add Client
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/client/create" })}
+            >
+              Add Client
+            </Button>
+          </Space>
         </div>
       </div>
       <ClientTable data={clients} loading={isLoading} onDelete={remove} />

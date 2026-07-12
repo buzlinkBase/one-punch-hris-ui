@@ -5,7 +5,7 @@ export const RAW_LOGS_LABEL = {
   // Tab titles
   TAB_RAW_ATTENDANCE: "Raw Attendance (Vertical)",
   TAB_RAW_COLUMNAR: "Raw Attendance (Columnar)",
-  TAB_CLEAN_ROW: "Clean Attendance (Row)",
+  TAB_CLEAN_ROW: "Clean Attendance (Vertical)",
   TAB_CLEAN_COLUMNAR: "Clean Attendance (Columnar)",
 
   // Filter labels

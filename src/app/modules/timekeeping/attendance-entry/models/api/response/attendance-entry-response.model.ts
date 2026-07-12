@@ -3,4 +3,5 @@ export interface AttendanceEntryResponse {
   employeeId: string;
   employeeName: string;
   timeLog: string;
+  batchCode?: string | null;
 }
