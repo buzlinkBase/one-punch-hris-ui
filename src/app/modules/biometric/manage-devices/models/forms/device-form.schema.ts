@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const deviceFormSchema = z.object({
   sn: z.string().min(1, "Serial number is required"),
-  description: z.string().default(""),
+  description: z.string(),
   branchId: z.string().nullish(),
   clientId: z.string().nullish(),
   areaId: z.string().nullish(),

@@ -90,7 +90,7 @@ export default function ManageDevicesDetail() {
   const onSubmit = async (values: DeviceFormValues) => {
     const payload = {
       sn: values.sn,
-      description: values.description ?? "",
+      description: values.description,
       branchId: values.branchId || undefined,
       clientId: values.clientId || undefined,
       areaId: values.areaId || undefined,
