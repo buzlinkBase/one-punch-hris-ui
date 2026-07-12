@@ -70,6 +70,14 @@ const RoleDetail = lazy(
 const TardinessList = lazy(
   () => import("@/app/modules/reports/tardiness/pages/tardiness-list"),
 );
+const ManageDevicesList = lazy(
+  () =>
+    import("@/app/modules/biometric/manage-devices/pages/manage-devices-list"),
+);
+const ManageDevicesDetail = lazy(
+  () =>
+    import("@/app/modules/biometric/manage-devices/pages/manage-devices-detail"),
+);
 const ForPayrollList = lazy(
   () =>
     import("@/app/modules/daily-time-record/for-payroll/pages/for-payroll-list"),
@@ -783,6 +791,30 @@ const securityAuditDetailRoute = createRoute({
   component: withSuspense(AuditDetail),
 });
 
+const manageDevicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "biometric/manage-devices",
+  component: MainLayout,
+});
+
+const manageDevicesIndexRoute = createRoute({
+  getParentRoute: () => manageDevicesRoute,
+  path: "/",
+  component: withSuspense(ManageDevicesList),
+});
+
+const manageDevicesCreateRoute = createRoute({
+  getParentRoute: () => manageDevicesRoute,
+  path: "create",
+  component: withSuspense(ManageDevicesDetail),
+});
+
+const manageDevicesDetailRoute = createRoute({
+  getParentRoute: () => manageDevicesRoute,
+  path: "$id",
+  component: withSuspense(ManageDevicesDetail),
+});
+
 const routeTree = rootRoute.addChildren([
   rootIndexRoute,
   loginRoute.addChildren([loginIndexRoute]),
@@ -847,6 +879,11 @@ const routeTree = rootRoute.addChildren([
     employeeDocRecordsDetailRoute,
   ]),
   appSectionRoute("enroll-biometrics", "Enroll Biometrics"),
+  manageDevicesRoute.addChildren([
+    manageDevicesIndexRoute,
+    manageDevicesCreateRoute,
+    manageDevicesDetailRoute,
+  ]),
   securityUsersRoute.addChildren([
     securityUsersIndexRoute,
     securityUsersCreateRoute,

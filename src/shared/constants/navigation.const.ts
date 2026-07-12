@@ -162,9 +162,20 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   {
-    key: "enroll-biometrics",
-    label: "Enroll Biometrics",
-    path: "/enroll-biometrics",
+    key: "biometric",
+    label: "Biometric",
+    children: [
+      {
+        key: "enroll-biometrics",
+        label: "Enroll Biometrics",
+        path: "/enroll-biometrics",
+      },
+      {
+        key: "biometric-manage-devices",
+        label: "Manage Devices",
+        path: "/biometric/manage-devices",
+      },
+    ],
   },
   {
     key: "security",

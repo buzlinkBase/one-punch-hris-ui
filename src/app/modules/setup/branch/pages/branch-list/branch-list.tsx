@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useBranches, useDeleteBranch } from "../../hooks/use-branch-queries";
 import BranchTable from "../../components/branch-table";
@@ -9,7 +9,7 @@ const { Title } = Typography;
 
 export default function BranchList() {
   const navigate = useNavigate();
-  const { data: branches = [], isLoading } = useBranches();
+  const { data: branches = [], isLoading, refetch, isFetching } = useBranches();
   const { mutate: remove } = useDeleteBranch();
 
   return (
@@ -24,13 +24,20 @@ export default function BranchList() {
               Manage company branches and their assignment to employees.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/branch/create" })}
-          >
-            Add Branch
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/branch/create" })}
+            >
+              Add Branch
+            </Button>
+          </Space>
         </div>
       </div>
       <BranchTable data={branches} loading={isLoading} onDelete={remove} />

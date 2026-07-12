@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useDepartments,
@@ -12,7 +12,12 @@ const { Title } = Typography;
 
 export default function DepartmentList() {
   const navigate = useNavigate();
-  const { data: departments = [], isLoading } = useDepartments();
+  const {
+    data: departments = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = useDepartments();
   const { mutate: remove } = useDeleteDepartment();
 
   return (
@@ -27,13 +32,20 @@ export default function DepartmentList() {
               Organize teams and ownership for employee assignment and reports.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/department/create" })}
-          >
-            Add Department
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/department/create" })}
+            >
+              Add Department
+            </Button>
+          </Space>
         </div>
       </div>
       <DepartmentTable

@@ -6,34 +6,12 @@ import type { UpdateSection } from "../models/api/request/update-section.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "sections");
 
-const MOCK_SECTIONS: SectionResponse[] = Array.from({ length: 12 }, (_, i) => ({
-  id: `section-${i + 1}`,
-  departmentId: `dept-${(i % 6) + 1}`,
-  departmentName: `Department ${(i % 6) + 1}`,
-  code: `SEC${String(i + 1).padStart(3, "0")}`,
-  name: `Section ${i + 1}`,
-  status: i % 5 === 0 ? "INACTIVE" : "ACTIVE",
-}));
-
 export const sectionApi = {
-  async getAll(): Promise<SectionResponse[]> {
-    try {
-      const data = await httpClient.getUnwrapped<SectionResponse[]>(ENDPOINT);
-      return data.length ? data : MOCK_SECTIONS;
-    } catch {
-      return MOCK_SECTIONS;
-    }
+  getAll(): Promise<SectionResponse[]> {
+    return httpClient.getUnwrapped<SectionResponse[]>(ENDPOINT);
   },
-  async getById(id: string): Promise<SectionResponse> {
-    try {
-      return await httpClient.getUnwrapped<SectionResponse>(
-        `${ENDPOINT}/${id}`,
-      );
-    } catch {
-      const match = MOCK_SECTIONS.find((item) => item.id === id);
-      if (match) return match;
-      throw new Error(`Section ${id} not found`);
-    }
+  getById(id: string): Promise<SectionResponse> {
+    return httpClient.getUnwrapped<SectionResponse>(`${ENDPOINT}/${id}`);
   },
   create(data: CreateSection): Promise<SectionResponse> {
     return httpClient.postUnwrapped<SectionResponse>(ENDPOINT, data);

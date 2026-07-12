@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
   usePayrollGroups,
@@ -12,7 +12,12 @@ const { Title } = Typography;
 
 export default function PayrollGroupList() {
   const navigate = useNavigate();
-  const { data: payrollGroups = [], isLoading } = usePayrollGroups();
+  const {
+    data: payrollGroups = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = usePayrollGroups();
   const { mutate: remove } = useDeletePayrollGroup();
 
   return (
@@ -27,13 +32,20 @@ export default function PayrollGroupList() {
               Configure payroll groupings for pay cycle and policy mapping.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/payroll-group/create" })}
-          >
-            Add Payroll Group
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/payroll-group/create" })}
+            >
+              Add Payroll Group
+            </Button>
+          </Space>
         </div>
       </div>
       <PayrollGroupTable

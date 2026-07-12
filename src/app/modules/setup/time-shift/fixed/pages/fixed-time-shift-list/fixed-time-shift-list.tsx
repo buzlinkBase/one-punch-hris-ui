@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useFixedTimeShifts,
@@ -12,7 +12,12 @@ const { Title } = Typography;
 
 export default function FixedTimeShiftList() {
   const navigate = useNavigate();
-  const { data: allShifts = [], isLoading } = useFixedTimeShifts();
+  const {
+    data: allShifts = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = useFixedTimeShifts();
   const shifts = allShifts.filter((s) => s.shiftType === "FIXED");
   const { mutate: remove } = useDeleteFixedTimeShift();
 
@@ -28,13 +33,20 @@ export default function FixedTimeShiftList() {
               Create standard schedules with fixed start and end times.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/time-shift/fixed/create" })}
-          >
-            Add Fixed Shift
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/time-shift/fixed/create" })}
+            >
+              Add Fixed Shift
+            </Button>
+          </Space>
         </div>
       </div>
       <FixedTimeShiftTable
