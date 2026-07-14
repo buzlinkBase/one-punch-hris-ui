@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input, Select, Tag } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { EmployeeDependentResponse } from "../../models/api/response/employee-dependent-response.model";
@@ -10,6 +14,8 @@ import {
   RELATIONSHIP_OPTIONS,
   GENDER_OPTIONS,
 } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: EmployeeDependentResponse[];
@@ -39,6 +45,14 @@ export default function EmployeeDependentTable({
   const [employeeFilter, setEmployeeFilter] = useState("");
   const [relationshipFilter, setRelationshipFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
+
+  const { widths, handleResize } = useResizableColumns({
+    employeeId: 240,
+    fullName: 160,
+    relationship: 140,
+    gender: 100,
+    dob: 130,
+  });
 
   const employeeMap = new Map(
     employees.map((e) => [
@@ -78,26 +92,47 @@ export default function EmployeeDependentTable({
       title: EMPLOYEE_DEPENDENT_LABEL.EMPLOYEE,
       dataIndex: "employeeId",
       key: "employeeId",
-      width: 240,
+      width: widths.employeeId,
+      onHeaderCell: () =>
+        ({
+          width: widths.employeeId,
+          onResize: (w: number) => handleResize("employeeId", w),
+        }) as object,
       render: (id: string) => employeeMap.get(id) ?? id,
     },
     {
       title: EMPLOYEE_DEPENDENT_LABEL.FULL_NAME,
       dataIndex: "fullName",
       key: "fullName",
+      width: widths.fullName,
+      onHeaderCell: () =>
+        ({
+          width: widths.fullName,
+          onResize: (w: number) => handleResize("fullName", w),
+        }) as object,
     },
     {
       title: EMPLOYEE_DEPENDENT_LABEL.RELATIONSHIP,
       dataIndex: "relationship",
       key: "relationship",
-      width: 140,
+      width: widths.relationship,
+      onHeaderCell: () =>
+        ({
+          width: widths.relationship,
+          onResize: (w: number) => handleResize("relationship", w),
+        }) as object,
       render: (val: string) => <Tag color="blue">{val}</Tag>,
     },
     {
       title: EMPLOYEE_DEPENDENT_LABEL.GENDER,
       dataIndex: "gender",
       key: "gender",
-      width: 100,
+      width: widths.gender,
+      onHeaderCell: () =>
+        ({
+          width: widths.gender,
+          onResize: (w: number) => handleResize("gender", w),
+        }) as object,
       render: (val: string) => (
         <Tag color={val === "Male" ? "geekblue" : "magenta"}>{val}</Tag>
       ),
@@ -106,23 +141,27 @@ export default function EmployeeDependentTable({
       title: EMPLOYEE_DEPENDENT_LABEL.DOB,
       dataIndex: "dob",
       key: "dob",
-      width: 130,
+      width: widths.dob,
+      onHeaderCell: () =>
+        ({
+          width: widths.dob,
+          onResize: (w: number) => handleResize("dob", w),
+        }) as object,
     },
     {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 140,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() =>
               navigate({ to: `/employee-management/dependents/${record.id}` })
             }
-          >
-            Edit
-          </Button>
+          />
           {onDelete && (
             <Popconfirm
               title="Remove this dependent?"
@@ -130,9 +169,7 @@ export default function EmployeeDependentTable({
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -184,6 +221,7 @@ export default function EmployeeDependentTable({
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

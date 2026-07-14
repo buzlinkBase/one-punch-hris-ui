@@ -3,6 +3,8 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { UnregisterEmployeeResponse } from "../../models/api/response/unregister-employee-response.model";
 import { UNREGISTER_EMPLOYEE_LABEL } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: UnregisterEmployeeResponse[];
@@ -19,43 +21,83 @@ export default function UnregisterEmployeeTable({
   onRegister,
   onUnregister,
 }: Props) {
+  const { widths, handleResize } = useResizableColumns({
+    employeeNo: 130,
+    employeeName: 190,
+    department: 160,
+    position: 140,
+    biometricId: 150,
+    status: 150,
+    lastActionAt: 180,
+  });
+
   const columns: ColumnsType<UnregisterEmployeeResponse> = [
     {
       title: UNREGISTER_EMPLOYEE_LABEL.EMPLOYEE_NO,
       dataIndex: "employeeNo",
       key: "employeeNo",
-      width: 130,
+      width: widths.employeeNo,
+      onHeaderCell: () =>
+        ({
+          width: widths.employeeNo,
+          onResize: (w: number) => handleResize("employeeNo", w),
+        }) as object,
     },
     {
       title: UNREGISTER_EMPLOYEE_LABEL.EMPLOYEE_NAME,
       dataIndex: "employeeName",
       key: "employeeName",
-      width: 190,
+      width: widths.employeeName,
+      onHeaderCell: () =>
+        ({
+          width: widths.employeeName,
+          onResize: (w: number) => handleResize("employeeName", w),
+        }) as object,
     },
     {
       title: UNREGISTER_EMPLOYEE_LABEL.DEPARTMENT,
       dataIndex: "department",
       key: "department",
-      width: 160,
+      width: widths.department,
+      onHeaderCell: () =>
+        ({
+          width: widths.department,
+          onResize: (w: number) => handleResize("department", w),
+        }) as object,
     },
     {
       title: UNREGISTER_EMPLOYEE_LABEL.POSITION,
       dataIndex: "position",
       key: "position",
-      width: 140,
+      width: widths.position,
+      onHeaderCell: () =>
+        ({
+          width: widths.position,
+          onResize: (w: number) => handleResize("position", w),
+        }) as object,
     },
     {
       title: UNREGISTER_EMPLOYEE_LABEL.BIOMETRIC_ID,
       dataIndex: "biometricId",
       key: "biometricId",
-      width: 150,
+      width: widths.biometricId,
+      onHeaderCell: () =>
+        ({
+          width: widths.biometricId,
+          onResize: (w: number) => handleResize("biometricId", w),
+        }) as object,
       render: (value: string | null) => value || "-",
     },
     {
       title: UNREGISTER_EMPLOYEE_LABEL.STATUS,
       dataIndex: "status",
       key: "status",
-      width: 150,
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
       render: (value: UnregisterEmployeeResponse["status"]) => (
         <Tag color={value === "REGISTERED" ? "green" : "orange"}>
           {value === "REGISTERED"
@@ -68,7 +110,12 @@ export default function UnregisterEmployeeTable({
       title: UNREGISTER_EMPLOYEE_LABEL.LAST_ACTION_AT,
       dataIndex: "lastActionAt",
       key: "lastActionAt",
-      width: 180,
+      width: widths.lastActionAt,
+      onHeaderCell: () =>
+        ({
+          width: widths.lastActionAt,
+          onResize: (w: number) => handleResize("lastActionAt", w),
+        }) as object,
       render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm A"),
     },
     {
@@ -116,6 +163,7 @@ export default function UnregisterEmployeeTable({
       pagination={{ pageSize: 10 }}
       scroll={{ x: "max-content" }}
       sticky
+      components={{ header: { cell: ResizableTitle } }}
     />
   );
 }

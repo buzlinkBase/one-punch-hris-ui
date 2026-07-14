@@ -4,45 +4,74 @@ import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { RawAttendanceLog } from "../models/api/response/raw-attendance-log.model";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: RawAttendanceLog[];
   loading?: boolean;
 }
 
-const columns: ColumnsType<RawAttendanceLog> = [
-  {
-    title: "Employee",
-    dataIndex: "name",
-    key: "name",
-    render: (v: string | null) => v ?? "—",
-  },
-  {
-    title: "Work Date Time",
-    dataIndex: "workDateTime",
-    key: "workDateTime",
-    width: 180,
-    render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A"),
-  },
-  {
-    title: "Log Source",
-    dataIndex: "logSource",
-    key: "logSource",
-    width: 130,
-    render: (v: string) => <Tag>{v}</Tag>,
-  },
-  {
-    title: "Batch",
-    dataIndex: "batch",
-    key: "batch",
-    width: 200,
-    render: (v: string) =>
-      v ? <Tag color="blue">{v}</Tag> : <Tag color="default">Manual</Tag>,
-  },
-];
-
 export default function RawAttendanceTable({ data, loading }: Props) {
   const [search, setSearch] = useState("");
+
+  const { widths, handleResize } = useResizableColumns({
+    name: 150,
+    workDateTime: 180,
+    logSource: 130,
+    batch: 200,
+  });
+
+  const columns: ColumnsType<RawAttendanceLog> = [
+    {
+      title: "Employee",
+      dataIndex: "name",
+      key: "name",
+      width: widths.name,
+      onHeaderCell: () =>
+        ({
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
+        }) as object,
+    },
+    {
+      title: "Work Date Time",
+      dataIndex: "workDateTime",
+      key: "workDateTime",
+      width: widths.workDateTime,
+      onHeaderCell: () =>
+        ({
+          width: widths.workDateTime,
+          onResize: (w: number) => handleResize("workDateTime", w),
+        }) as object,
+      render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A"),
+    },
+    {
+      title: "Log Source",
+      dataIndex: "logSource",
+      key: "logSource",
+      width: widths.logSource,
+      onHeaderCell: () =>
+        ({
+          width: widths.logSource,
+          onResize: (w: number) => handleResize("logSource", w),
+        }) as object,
+      render: (v: string) => <Tag>{v}</Tag>,
+    },
+    {
+      title: "Batch",
+      dataIndex: "batch",
+      key: "batch",
+      width: widths.batch,
+      onHeaderCell: () =>
+        ({
+          width: widths.batch,
+          onResize: (w: number) => handleResize("batch", w),
+        }) as object,
+      render: (v: string) =>
+        v ? <Tag color="blue">{v}</Tag> : <Tag color="default">Manual</Tag>,
+    },
+  ];
 
   const filtered = search
     ? data.filter((item) =>
@@ -73,6 +102,7 @@ export default function RawAttendanceTable({ data, loading }: Props) {
         pagination={{ pageSize: 15 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

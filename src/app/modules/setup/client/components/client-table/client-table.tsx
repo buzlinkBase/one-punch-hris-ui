@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { ClientResponse } from "../../models/api/response/client-response.model";
 import { CLIENT_LABEL } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: ClientResponse[];
@@ -16,6 +22,12 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
+  const { widths, handleResize } = useResizableColumns({
+    code: 120,
+    name: 200,
+    status: 120,
+  });
+
   const filtered = data.filter((item) =>
     Object.values(item).some((val) =>
       String(val ?? "")
@@ -25,22 +37,51 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
   );
 
   const columns: ColumnsType<ClientResponse> = [
-    { title: CLIENT_LABEL.CODE, dataIndex: "code", key: "code" },
-    { title: CLIENT_LABEL.NAME, dataIndex: "name", key: "name" },
-    { title: CLIENT_LABEL.STATUS, dataIndex: "status", key: "status" },
+    {
+      title: CLIENT_LABEL.CODE,
+      dataIndex: "code",
+      key: "code",
+      width: widths.code,
+      onHeaderCell: () =>
+        ({
+          width: widths.code,
+          onResize: (w: number) => handleResize("code", w),
+        }) as object,
+    },
+    {
+      title: CLIENT_LABEL.NAME,
+      dataIndex: "name",
+      key: "name",
+      width: widths.name,
+      onHeaderCell: () =>
+        ({
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
+        }) as object,
+    },
+    {
+      title: CLIENT_LABEL.STATUS,
+      dataIndex: "status",
+      key: "status",
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
+    },
     {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 140,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() => navigate({ to: `/setup/client/${record.id}` })}
-          >
-            Edit
-          </Button>
+          />
           {onDelete && (
             <Popconfirm
               title="Delete this client?"
@@ -48,9 +89,7 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -77,6 +116,7 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );
