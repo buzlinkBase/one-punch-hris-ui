@@ -16,6 +16,8 @@ import {
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType } from "antd";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useNavigate } from "@tanstack/react-router";
@@ -122,6 +124,15 @@ export default function AttendanceEntryCreate() {
   const { mutateAsync: createEntries, isPending: isSubmitting } =
     useCreateAttendanceEntries();
 
+  const { widths, handleResize } = useResizableColumns({
+    name: 150,
+    departmentName: 160,
+    branchName: 140,
+    clientName: 140,
+    payrollGroupName: 140,
+    areaName: 140,
+  });
+
   const hasSearched = committedFilter !== null;
 
   const handleSearch = () => {
@@ -226,37 +237,68 @@ export default function AttendanceEntryCreate() {
     {
       title: "Name",
       dataIndex: "name",
-      render: (name: string | null) => name ?? "—",
+      key: "name",
+      width: widths.name,
+      onHeaderCell: () =>
+        ({
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
+        }) as object,
     },
     {
       title: "Department",
-      width: 160,
       dataIndex: "departmentName",
-      render: (v: string | null) => v ?? "—",
+      key: "departmentName",
+      width: widths.departmentName,
+      onHeaderCell: () =>
+        ({
+          width: widths.departmentName,
+          onResize: (w: number) => handleResize("departmentName", w),
+        }) as object,
     },
     {
       title: "Branch",
-      width: 140,
       dataIndex: "branchName",
-      render: (v: string | null) => v ?? "—",
+      key: "branchName",
+      width: widths.branchName,
+      onHeaderCell: () =>
+        ({
+          width: widths.branchName,
+          onResize: (w: number) => handleResize("branchName", w),
+        }) as object,
     },
     {
       title: "Client",
-      width: 140,
       dataIndex: "clientName",
-      render: (v: string | null) => v ?? "—",
+      key: "clientName",
+      width: widths.clientName,
+      onHeaderCell: () =>
+        ({
+          width: widths.clientName,
+          onResize: (w: number) => handleResize("clientName", w),
+        }) as object,
     },
     {
       title: "Payroll Group",
-      width: 140,
       dataIndex: "payrollGroupName",
-      render: (v: string | null) => v ?? "—",
+      key: "payrollGroupName",
+      width: widths.payrollGroupName,
+      onHeaderCell: () =>
+        ({
+          width: widths.payrollGroupName,
+          onResize: (w: number) => handleResize("payrollGroupName", w),
+        }) as object,
     },
     {
       title: "Project Site",
-      width: 140,
       dataIndex: "areaName",
-      render: (v: string | null) => v ?? "—",
+      key: "areaName",
+      width: widths.areaName,
+      onHeaderCell: () =>
+        ({
+          width: widths.areaName,
+          onResize: (w: number) => handleResize("areaName", w),
+        }) as object,
     },
   ];
 
@@ -510,11 +552,13 @@ export default function AttendanceEntryCreate() {
         size="small"
         pagination={{ pageSize: 10, size: "small", showSizeChanger: false }}
         className="mb-4"
+        scroll={{ x: "max-content" }}
         locale={{
           emptyText: hasSearched
             ? "No employees found for the selected filters."
             : "Set filters above and click Search Employees to load employees.",
         }}
+        components={{ header: { cell: ResizableTitle } }}
       />
 
       {/* Step 3 — Date range and work time */}

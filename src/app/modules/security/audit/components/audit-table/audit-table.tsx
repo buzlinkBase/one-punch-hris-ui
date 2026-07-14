@@ -10,6 +10,8 @@ import {
   AUDIT_ACTION_COLORS,
   AUDIT_STATUS_COLORS,
 } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 const { RangePicker } = DatePicker;
 
@@ -46,6 +48,15 @@ export default function AuditTable({ data, loading }: Props) {
     [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
   >(null);
 
+  const { widths, handleResize } = useResizableColumns({
+    timestamp: 180,
+    action: 110,
+    module: 160,
+    userName: 160,
+    description: 300,
+    status: 100,
+  });
+
   const filtered = data.filter((item) => {
     const matchesSearch =
       !search ||
@@ -73,7 +84,12 @@ export default function AuditTable({ data, loading }: Props) {
       title: AUDIT_LABEL.TIMESTAMP,
       dataIndex: "timestamp",
       key: "timestamp",
-      width: 180,
+      width: widths.timestamp,
+      onHeaderCell: () =>
+        ({
+          width: widths.timestamp,
+          onResize: (w: number) => handleResize("timestamp", w),
+        }) as object,
       sorter: (a, b) => dayjs(a.timestamp).unix() - dayjs(b.timestamp).unix(),
       defaultSortOrder: "descend",
       render: (val: string) => dayjs(val).format("MMM DD, YYYY HH:mm"),
@@ -82,7 +98,12 @@ export default function AuditTable({ data, loading }: Props) {
       title: AUDIT_LABEL.ACTION,
       dataIndex: "action",
       key: "action",
-      width: 110,
+      width: widths.action,
+      onHeaderCell: () =>
+        ({
+          width: widths.action,
+          onResize: (w: number) => handleResize("action", w),
+        }) as object,
       render: (val: string) => (
         <Tag color={AUDIT_ACTION_COLORS[val] ?? "default"}>{val}</Tag>
       ),
@@ -91,25 +112,46 @@ export default function AuditTable({ data, loading }: Props) {
       title: AUDIT_LABEL.MODULE,
       dataIndex: "module",
       key: "module",
-      width: 160,
+      width: widths.module,
+      onHeaderCell: () =>
+        ({
+          width: widths.module,
+          onResize: (w: number) => handleResize("module", w),
+        }) as object,
     },
     {
       title: AUDIT_LABEL.USER,
       dataIndex: "userName",
       key: "userName",
-      width: 160,
+      width: widths.userName,
+      onHeaderCell: () =>
+        ({
+          width: widths.userName,
+          onResize: (w: number) => handleResize("userName", w),
+        }) as object,
     },
     {
       title: AUDIT_LABEL.DESCRIPTION,
       dataIndex: "description",
       key: "description",
+      width: widths.description,
+      onHeaderCell: () =>
+        ({
+          width: widths.description,
+          onResize: (w: number) => handleResize("description", w),
+        }) as object,
       ellipsis: true,
     },
     {
       title: AUDIT_LABEL.STATUS,
       dataIndex: "status",
       key: "status",
-      width: 100,
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
       render: (val: string) => (
         <Tag color={AUDIT_STATUS_COLORS[val] ?? "default"}>{val}</Tag>
       ),
@@ -170,6 +212,7 @@ export default function AuditTable({ data, loading }: Props) {
         pagination={{ pageSize: 15, showTotal: (total) => `${total} records` }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

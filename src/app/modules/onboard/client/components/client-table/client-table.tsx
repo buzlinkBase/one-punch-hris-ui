@@ -1,10 +1,12 @@
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, EditOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { Button, Input, Popconfirm, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useState } from "react";
 import { CLIENT_LABEL } from "../../constants/label.const";
 import type { ClientResponse } from "../../models/api/response/client-response.model";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: ClientResponse[];
@@ -22,6 +24,15 @@ export default function ClientTable({ data, loading, onDeactivate }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
+  const { widths, handleResize } = useResizableColumns({
+    clientCode: 130,
+    clientName: 200,
+    contactPerson: 160,
+    contactNumber: 140,
+    unpaidDues: 130,
+    status: 120,
+  });
+
   const filtered = data.filter((item) =>
     Object.values(item).some((value) =>
       String(value ?? "")
@@ -35,32 +46,68 @@ export default function ClientTable({ data, loading, onDeactivate }: Props) {
       title: CLIENT_LABEL.CLIENT_CODE,
       dataIndex: "clientCode",
       key: "clientCode",
+      width: widths.clientCode,
+      onHeaderCell: () =>
+        ({
+          width: widths.clientCode,
+          onResize: (w: number) => handleResize("clientCode", w),
+        }) as object,
     },
     {
       title: CLIENT_LABEL.CLIENT_NAME,
       dataIndex: "clientName",
       key: "clientName",
+      width: widths.clientName,
+      onHeaderCell: () =>
+        ({
+          width: widths.clientName,
+          onResize: (w: number) => handleResize("clientName", w),
+        }) as object,
     },
     {
       title: CLIENT_LABEL.CONTACT_PERSON,
       dataIndex: "contactPerson",
       key: "contactPerson",
+      width: widths.contactPerson,
+      onHeaderCell: () =>
+        ({
+          width: widths.contactPerson,
+          onResize: (w: number) => handleResize("contactPerson", w),
+        }) as object,
     },
     {
       title: CLIENT_LABEL.CONTACT_NUMBER,
       dataIndex: "contactNumber",
       key: "contactNumber",
+      width: widths.contactNumber,
+      onHeaderCell: () =>
+        ({
+          width: widths.contactNumber,
+          onResize: (w: number) => handleResize("contactNumber", w),
+        }) as object,
     },
     {
       title: CLIENT_LABEL.UNPAID_DUES,
       dataIndex: "unpaidDues",
       key: "unpaidDues",
+      width: widths.unpaidDues,
+      onHeaderCell: () =>
+        ({
+          width: widths.unpaidDues,
+          onResize: (w: number) => handleResize("unpaidDues", w),
+        }) as object,
       render: (value: number) => currencyFormatter.format(value),
     },
     {
       title: CLIENT_LABEL.STATUS,
       dataIndex: "status",
       key: "status",
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
       render: (value: ClientResponse["status"]) => (
         <Tag color={value === "ACTIVE" ? "green" : "red"}>{value}</Tag>
       ),
@@ -69,15 +116,14 @@ export default function ClientTable({ data, loading, onDeactivate }: Props) {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 180,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() => navigate({ to: `/clients/${record.id}` })}
-          >
-            Edit
-          </Button>
+          />
           {onDeactivate &&
           record.status === "ACTIVE" &&
           record.unpaidDues > 0 ? (
@@ -121,6 +167,7 @@ export default function ClientTable({ data, loading, onDeactivate }: Props) {
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

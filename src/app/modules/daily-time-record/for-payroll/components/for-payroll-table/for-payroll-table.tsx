@@ -2,6 +2,8 @@ import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { ForPayrollResponse } from "../../models/api/response/for-payroll-response.model";
 import { FOR_PAYROLL_LABEL } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: ForPayrollResponse[];
@@ -10,85 +12,128 @@ interface Props {
 
 const R = "right" as const;
 
-const col = (
-  title: string,
-  dataIndex: keyof ForPayrollResponse,
-  width = 75,
-) => ({ title, dataIndex, key: dataIndex as string, align: R, width });
-
-const columns: ColumnsType<ForPayrollResponse> = [
-  // ── Identity (fixed left) ────────────────────────────────────────────────────
-  {
-    title: FOR_PAYROLL_LABEL.BIO_ID,
-    dataIndex: "bioId",
-    key: "bioId",
-    fixed: "left",
-    width: 100,
-  },
-  {
-    title: FOR_PAYROLL_LABEL.EMPLOYEE,
-    dataIndex: "employeeName",
-    key: "employeeName",
-    fixed: "left",
-    width: 180,
-  },
-  // ── Late/UT ──────────────────────────────────────────────────────────────────
-  {
-    title: "Late/UT",
-    children: [
-      col(FOR_PAYROLL_LABEL.LATE, "late", 80),
-      col(FOR_PAYROLL_LABEL.UNDER_TIME, "underTime", 80),
-    ],
-  },
-  // ── Hours ────────────────────────────────────────────────────────────────────
-  {
-    title: "Hours",
-    children: [
-      {
-        title: "Regular",
-        children: [
-          col(FOR_PAYROLL_LABEL.REG_NET, "regNet", 90),
-          col(FOR_PAYROLL_LABEL.NET_OVERTIME, "netOvertime", 90),
-          col(FOR_PAYROLL_LABEL.ND, "nd", 70),
-          col(FOR_PAYROLL_LABEL.ND_OT, "ndOt", 80),
-        ],
-      },
-      {
-        title: "Rest Day",
-        children: [
-          col(FOR_PAYROLL_LABEL.REST_DAY_NET, "restDayNet", 90),
-          col(FOR_PAYROLL_LABEL.REST_DAY_OT, "restDayOt", 90),
-          col(FOR_PAYROLL_LABEL.RD_ND, "rdNd", 80),
-          col(FOR_PAYROLL_LABEL.RD_ND_OT, "rdNdOt", 90),
-        ],
-      },
-      {
-        title: "Holiday",
-        children: [
-          {
-            title: "Legal",
-            children: [
-              col(FOR_PAYROLL_LABEL.LH, "lh", 70),
-              col(FOR_PAYROLL_LABEL.LH_OT, "lhOt", 80),
-              col(FOR_PAYROLL_LABEL.LH_ND, "lhNd", 80),
-            ],
-          },
-          {
-            title: "Special",
-            children: [
-              col(FOR_PAYROLL_LABEL.SPH, "sph", 70),
-              col(FOR_PAYROLL_LABEL.SPH_OT, "sphOt", 80),
-              col(FOR_PAYROLL_LABEL.SPH_ND, "sphNd", 80),
-              col(FOR_PAYROLL_LABEL.SPH_ND_OT, "sphNdOt", 90),
-            ],
-          },
-        ],
-      },
-    ],
-  },
-];
-
 export default function ForPayrollTable({ data, loading }: Props) {
+  const { widths, handleResize } = useResizableColumns({
+    bioId: 100,
+    employeeName: 180,
+    late: 80,
+    underTime: 80,
+    regNet: 90,
+    netOvertime: 90,
+    nd: 70,
+    ndOt: 80,
+    restDayNet: 90,
+    restDayOt: 90,
+    rdNd: 80,
+    rdNdOt: 90,
+    lh: 70,
+    lhOt: 80,
+    lhNd: 80,
+    sph: 70,
+    sphOt: 80,
+    sphNd: 80,
+    sphNdOt: 90,
+  });
+
+  const col = (
+    title: string,
+    dataIndex: keyof ForPayrollResponse,
+    width = 75,
+  ) => ({
+    title,
+    dataIndex,
+    key: dataIndex as string,
+    align: R,
+    width: widths[dataIndex as string] ?? width,
+    onHeaderCell: () =>
+      ({
+        width: widths[dataIndex as string] ?? width,
+        onResize: (w: number) => handleResize(dataIndex as string, w),
+      }) as object,
+  });
+
+  const columns: ColumnsType<ForPayrollResponse> = [
+    // ── Identity (fixed left) ────────────────────────────────────────────────────
+    {
+      title: FOR_PAYROLL_LABEL.BIO_ID,
+      dataIndex: "bioId",
+      key: "bioId",
+      fixed: "left",
+      width: widths.bioId,
+      onHeaderCell: () =>
+        ({
+          width: widths.bioId,
+          onResize: (w: number) => handleResize("bioId", w),
+        }) as object,
+    },
+    {
+      title: FOR_PAYROLL_LABEL.EMPLOYEE,
+      dataIndex: "employeeName",
+      key: "employeeName",
+      fixed: "left",
+      width: widths.employeeName,
+      onHeaderCell: () =>
+        ({
+          width: widths.employeeName,
+          onResize: (w: number) => handleResize("employeeName", w),
+        }) as object,
+    },
+    // ── Late/UT ──────────────────────────────────────────────────────────────────
+    {
+      title: "Late/UT",
+      children: [
+        col(FOR_PAYROLL_LABEL.LATE, "late", 80),
+        col(FOR_PAYROLL_LABEL.UNDER_TIME, "underTime", 80),
+      ],
+    },
+    // ── Hours ────────────────────────────────────────────────────────────────────
+    {
+      title: "Hours",
+      children: [
+        {
+          title: "Regular",
+          children: [
+            col(FOR_PAYROLL_LABEL.REG_NET, "regNet", 90),
+            col(FOR_PAYROLL_LABEL.NET_OVERTIME, "netOvertime", 90),
+            col(FOR_PAYROLL_LABEL.ND, "nd", 70),
+            col(FOR_PAYROLL_LABEL.ND_OT, "ndOt", 80),
+          ],
+        },
+        {
+          title: "Rest Day",
+          children: [
+            col(FOR_PAYROLL_LABEL.REST_DAY_NET, "restDayNet", 90),
+            col(FOR_PAYROLL_LABEL.REST_DAY_OT, "restDayOt", 90),
+            col(FOR_PAYROLL_LABEL.RD_ND, "rdNd", 80),
+            col(FOR_PAYROLL_LABEL.RD_ND_OT, "rdNdOt", 90),
+          ],
+        },
+        {
+          title: "Holiday",
+          children: [
+            {
+              title: "Legal",
+              children: [
+                col(FOR_PAYROLL_LABEL.LH, "lh", 70),
+                col(FOR_PAYROLL_LABEL.LH_OT, "lhOt", 80),
+                col(FOR_PAYROLL_LABEL.LH_ND, "lhNd", 80),
+              ],
+            },
+            {
+              title: "Special",
+              children: [
+                col(FOR_PAYROLL_LABEL.SPH, "sph", 70),
+                col(FOR_PAYROLL_LABEL.SPH_OT, "sphOt", 80),
+                col(FOR_PAYROLL_LABEL.SPH_ND, "sphNd", 80),
+                col(FOR_PAYROLL_LABEL.SPH_ND_OT, "sphNdOt", 90),
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
   return (
     <Table
       rowKey="id"
@@ -100,6 +145,7 @@ export default function ForPayrollTable({ data, loading }: Props) {
       scroll={{ x: "max-content" }}
       bordered
       sticky
+      components={{ header: { cell: ResizableTitle } }}
     />
   );
 }

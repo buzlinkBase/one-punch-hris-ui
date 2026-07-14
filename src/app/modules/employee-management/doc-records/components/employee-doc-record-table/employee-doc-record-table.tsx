@@ -9,7 +9,12 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { SearchOutlined, PaperClipOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  PaperClipOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { EmployeeDocRecordResponse } from "../../models/api/response/employee-doc-record-response.model";
@@ -18,6 +23,8 @@ import {
   EMPLOYEE_DOC_RECORD_LABEL,
   DOC_RECORD_TYPE_OPTIONS,
 } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 const { Text } = Typography;
 
@@ -43,6 +50,13 @@ export default function EmployeeDocRecordTable({
   const [search, setSearch] = useState("");
   const [employeeFilter, setEmployeeFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+
+  const { widths, handleResize } = useResizableColumns({
+    employeeId: 240,
+    recordType: 180,
+    description: 200,
+    file: 80,
+  });
 
   const employeeMap = new Map(
     employees.map((e) => [
@@ -75,27 +89,48 @@ export default function EmployeeDocRecordTable({
       title: EMPLOYEE_DOC_RECORD_LABEL.EMPLOYEE,
       dataIndex: "employeeId",
       key: "employeeId",
-      width: 240,
+      width: widths.employeeId,
+      onHeaderCell: () =>
+        ({
+          width: widths.employeeId,
+          onResize: (w: number) => handleResize("employeeId", w),
+        }) as object,
       render: (id: string) => employeeMap.get(id) ?? id,
     },
     {
       title: EMPLOYEE_DOC_RECORD_LABEL.RECORD_TYPE,
       dataIndex: "recordType",
       key: "recordType",
-      width: 180,
+      width: widths.recordType,
+      onHeaderCell: () =>
+        ({
+          width: widths.recordType,
+          onResize: (w: number) => handleResize("recordType", w),
+        }) as object,
       render: (val: string) => <Tag color="purple">{val}</Tag>,
     },
     {
       title: EMPLOYEE_DOC_RECORD_LABEL.DESCRIPTION,
       dataIndex: "description",
       key: "description",
+      width: widths.description,
+      onHeaderCell: () =>
+        ({
+          width: widths.description,
+          onResize: (w: number) => handleResize("description", w),
+        }) as object,
       render: (val: string) => <Text ellipsis={{ tooltip: val }}>{val}</Text>,
     },
     {
       title: EMPLOYEE_DOC_RECORD_LABEL.FILE,
       dataIndex: "file",
       key: "file",
-      width: 80,
+      width: widths.file,
+      onHeaderCell: () =>
+        ({
+          width: widths.file,
+          onResize: (w: number) => handleResize("file", w),
+        }) as object,
       align: "center",
       render: (file: string) =>
         file ? (
@@ -110,17 +145,16 @@ export default function EmployeeDocRecordTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 140,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() =>
               navigate({ to: `/employee-management/doc-records/${record.id}` })
             }
-          >
-            Edit
-          </Button>
+          />
           {onDelete && (
             <Popconfirm
               title="Delete this document record?"
@@ -128,9 +162,7 @@ export default function EmployeeDocRecordTable({
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -175,6 +207,7 @@ export default function EmployeeDocRecordTable({
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

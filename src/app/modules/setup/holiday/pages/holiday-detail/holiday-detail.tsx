@@ -93,7 +93,9 @@ export default function HolidayDetail() {
     if (isEdit && selected) {
       reset({
         description: selected.description,
-        holType: selected.holType,
+        holType: (
+          (selected.holidayType ?? selected.holType) as string | undefined
+        )?.toUpperCase() as "LEGAL" | "SPECIAL",
         workType: selected.workType,
         holDate: selected.holDate,
         isRecuring: selected.isRecuring,

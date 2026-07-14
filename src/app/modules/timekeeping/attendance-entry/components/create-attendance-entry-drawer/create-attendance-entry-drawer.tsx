@@ -12,6 +12,8 @@ import {
   message,
 } from "antd";
 import type { TableColumnsType } from "antd";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
@@ -98,6 +100,12 @@ export default function CreateAttendanceEntryDrawer({
   const { data: timeShifts = [] } = useFixedTimeShifts();
   const { mutateAsync: createEntries, isPending: isSubmitting } =
     useCreateAttendanceEntries();
+
+  const { widths, handleResize } = useResizableColumns({
+    employeeNo: 120,
+    name: 150,
+    department: 160,
+  });
 
   const filteredEmployees = useMemo(
     () =>
@@ -212,17 +220,40 @@ export default function CreateAttendanceEntryDrawer({
         />
       ),
     },
-    { title: "Employee No", dataIndex: "employeeNo", width: 120 },
+    {
+      title: "Employee No",
+      dataIndex: "employeeNo",
+      key: "employeeNo",
+      width: widths.employeeNo,
+      onHeaderCell: () =>
+        ({
+          width: widths.employeeNo,
+          onResize: (w: number) => handleResize("employeeNo", w),
+        }) as object,
+    },
     {
       title: "Name",
+      key: "name",
+      width: widths.name,
+      onHeaderCell: () =>
+        ({
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
+        }) as object,
       render: (_: unknown, emp: EmployeeResponse) =>
         `${emp.lastName}, ${emp.firstName}`,
     },
     {
       title: "Department",
-      width: 160,
+      key: "department",
+      width: widths.department,
+      onHeaderCell: () =>
+        ({
+          width: widths.department,
+          onResize: (w: number) => handleResize("department", w),
+        }) as object,
       render: (_: unknown, emp: EmployeeResponse) =>
-        emp.departmentId ? (deptMap.get(emp.departmentId) ?? "—") : "—",
+        emp.departmentId ? deptMap.get(emp.departmentId) : undefined,
     },
   ];
 
@@ -445,8 +476,9 @@ export default function CreateAttendanceEntryDrawer({
         loading={isEmployeesLoading}
         size="small"
         pagination={{ pageSize: 8, size: "small", showSizeChanger: false }}
-        scroll={{ y: 260 }}
+        scroll={{ x: "max-content", y: 260 }}
         className="mb-5"
+        components={{ header: { cell: ResizableTitle } }}
       />
 
       <Form layout="vertical">

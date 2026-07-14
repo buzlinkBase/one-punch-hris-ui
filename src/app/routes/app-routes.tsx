@@ -70,6 +70,10 @@ const RoleDetail = lazy(
 const TardinessList = lazy(
   () => import("@/app/modules/reports/tardiness/pages/tardiness-list"),
 );
+const EnrollBiometrics = lazy(
+  () =>
+    import("@/app/modules/biometric/enroll-biometrics/pages/enroll-biometrics"),
+);
 const ManageDevicesList = lazy(
   () =>
     import("@/app/modules/biometric/manage-devices/pages/manage-devices-list"),
@@ -791,6 +795,18 @@ const securityAuditDetailRoute = createRoute({
   component: withSuspense(AuditDetail),
 });
 
+const enrollBiometricsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "enroll-biometrics",
+  component: MainLayout,
+});
+
+const enrollBiometricsIndexRoute = createRoute({
+  getParentRoute: () => enrollBiometricsRoute,
+  path: "/",
+  component: withSuspense(EnrollBiometrics),
+});
+
 const manageDevicesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "biometric/manage-devices",
@@ -878,7 +894,7 @@ const routeTree = rootRoute.addChildren([
     employeeDocRecordsCreateRoute,
     employeeDocRecordsDetailRoute,
   ]),
-  appSectionRoute("enroll-biometrics", "Enroll Biometrics"),
+  enrollBiometricsRoute.addChildren([enrollBiometricsIndexRoute]),
   manageDevicesRoute.addChildren([
     manageDevicesIndexRoute,
     manageDevicesCreateRoute,
