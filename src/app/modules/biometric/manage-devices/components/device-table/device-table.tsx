@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { useNavigate } from "@tanstack/react-router";
 import type { BiometricDeviceModel } from "../../models/api/response/device-response.model";
 import { DEVICE_LABEL } from "../../constants/label.const";
@@ -20,6 +26,25 @@ const STATUS_COLOR: Record<string, string> = {
 export default function DeviceTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const { widths, handleResize } = useResizableColumns({
+    sn: 140,
+    deviceName: 180,
+    description: 200,
+    macAddress: 160,
+    ipAddress: 140,
+    platform: 120,
+    oemVendor: 120,
+  });
+
+  const resizable = (key: string) =>
+    ({
+      width: widths[key],
+      onHeaderCell: () =>
+        ({
+          width: widths[key],
+          onResize: (w: number) => handleResize(key, w),
+        }) as object,
+    }) as object;
 
   const filtered = data.filter((item) =>
     [
@@ -38,48 +63,42 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
   );
 
   const columns: ColumnsType<BiometricDeviceModel> = [
-    { title: DEVICE_LABEL.SN, dataIndex: "sn", key: "sn", width: 140 },
+    { title: DEVICE_LABEL.SN, dataIndex: "sn", key: "sn", ...resizable("sn") },
     {
       title: DEVICE_LABEL.DEVICE_NAME,
       dataIndex: "deviceName",
       key: "deviceName",
-      width: 180,
-      render: (v: string) => v || "—",
+      ...resizable("deviceName"),
     },
     {
       title: DEVICE_LABEL.DESCRIPTION,
       dataIndex: "description",
       key: "description",
-      width: 200,
-      render: (v: string) => v || "—",
+      ...resizable("description"),
     },
     {
       title: DEVICE_LABEL.MAC_ADDRESS,
       dataIndex: "macAddress",
       key: "macAddress",
-      width: 160,
-      render: (v: string) => v || "—",
+      ...resizable("macAddress"),
     },
     {
       title: DEVICE_LABEL.IP_ADDRESS,
       dataIndex: "ipAddress",
       key: "ipAddress",
-      width: 140,
-      render: (v: string) => v || "—",
+      ...resizable("ipAddress"),
     },
     {
       title: DEVICE_LABEL.PLATFORM,
       dataIndex: "platform",
       key: "platform",
-      width: 120,
-      render: (v: string) => v || "—",
+      ...resizable("platform"),
     },
     {
       title: DEVICE_LABEL.OEM_VENDOR,
       dataIndex: "oemVendor",
       key: "oemVendor",
-      width: 120,
-      render: (v: string) => v || "—",
+      ...resizable("oemVendor"),
     },
     {
       title: DEVICE_LABEL.STATUS,
@@ -95,17 +114,16 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 140,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() =>
               navigate({ to: `/biometric/manage-devices/${record.id}` })
             }
-          >
-            Edit
-          </Button>
+          />
           {onDelete && (
             <Popconfirm
               title="Delete this device?"
@@ -113,9 +131,7 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -137,6 +153,7 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
         rowKey="id"
         dataSource={filtered}
         columns={columns}
+        components={{ header: { cell: ResizableTitle } }}
         size="small"
         loading={loading}
         pagination={{ pageSize: 15 }}

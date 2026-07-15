@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input, Select, Tag } from "antd";
-import { SearchOutlined, PaperClipOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  PaperClipOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { AssignAssetResponse } from "../../models/api/response/assign-asset-response.model";
@@ -9,6 +14,8 @@ import {
   ASSIGN_ASSET_LABEL,
   ASSET_TYPE_OPTIONS,
 } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: AssignAssetResponse[];
@@ -39,6 +46,19 @@ export default function AssignAssetTable({
   const [employeeFilter, setEmployeeFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+
+  const { widths, handleResize } = useResizableColumns({
+    employeeId: 220,
+    assetType: 150,
+    assetDescription: 180,
+    brand: 110,
+    model: 110,
+    serialNo: 130,
+    qty: 70,
+    issuanceDate: 130,
+    status: 120,
+    file: 90,
+  });
 
   const employeeMap = new Map(
     employees.map((e) => [
@@ -79,55 +99,101 @@ export default function AssignAssetTable({
       title: ASSIGN_ASSET_LABEL.EMPLOYEE,
       dataIndex: "employeeId",
       key: "employeeId",
-      width: 220,
+      width: widths.employeeId,
+      onHeaderCell: () =>
+        ({
+          width: widths.employeeId,
+          onResize: (w: number) => handleResize("employeeId", w),
+        }) as object,
       render: (id: string) => employeeMap.get(id) ?? id,
     },
     {
       title: ASSIGN_ASSET_LABEL.ASSET_TYPE,
       dataIndex: "assetType",
       key: "assetType",
-      width: 150,
+      width: widths.assetType,
+      onHeaderCell: () =>
+        ({
+          width: widths.assetType,
+          onResize: (w: number) => handleResize("assetType", w),
+        }) as object,
     },
     {
       title: ASSIGN_ASSET_LABEL.ASSET_DESCRIPTION,
       dataIndex: "assetDescription",
       key: "assetDescription",
+      width: widths.assetDescription,
+      onHeaderCell: () =>
+        ({
+          width: widths.assetDescription,
+          onResize: (w: number) => handleResize("assetDescription", w),
+        }) as object,
     },
     {
       title: ASSIGN_ASSET_LABEL.BRAND,
       dataIndex: "brand",
       key: "brand",
-      width: 110,
+      width: widths.brand,
+      onHeaderCell: () =>
+        ({
+          width: widths.brand,
+          onResize: (w: number) => handleResize("brand", w),
+        }) as object,
     },
     {
       title: ASSIGN_ASSET_LABEL.MODEL,
       dataIndex: "model",
       key: "model",
-      width: 110,
+      width: widths.model,
+      onHeaderCell: () =>
+        ({
+          width: widths.model,
+          onResize: (w: number) => handleResize("model", w),
+        }) as object,
     },
     {
       title: ASSIGN_ASSET_LABEL.SERIAL_NO,
       dataIndex: "serialNo",
       key: "serialNo",
-      width: 130,
+      width: widths.serialNo,
+      onHeaderCell: () =>
+        ({
+          width: widths.serialNo,
+          onResize: (w: number) => handleResize("serialNo", w),
+        }) as object,
     },
     {
       title: ASSIGN_ASSET_LABEL.QTY,
       dataIndex: "qty",
       key: "qty",
-      width: 70,
+      width: widths.qty,
+      onHeaderCell: () =>
+        ({
+          width: widths.qty,
+          onResize: (w: number) => handleResize("qty", w),
+        }) as object,
       align: "center",
     },
     {
       title: ASSIGN_ASSET_LABEL.ISSUANCE_DATE,
       dataIndex: "issuanceDate",
       key: "issuanceDate",
-      width: 130,
+      width: widths.issuanceDate,
+      onHeaderCell: () =>
+        ({
+          width: widths.issuanceDate,
+          onResize: (w: number) => handleResize("issuanceDate", w),
+        }) as object,
     },
     {
       title: "Status",
       key: "status",
-      width: 120,
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
       render: (_, record) =>
         record.returnedDate ? (
           <Tag color="default">Returned</Tag>
@@ -139,7 +205,12 @@ export default function AssignAssetTable({
       title: ASSIGN_ASSET_LABEL.FILE,
       dataIndex: "file",
       key: "file",
-      width: 90,
+      width: widths.file,
+      onHeaderCell: () =>
+        ({
+          width: widths.file,
+          onResize: (w: number) => handleResize("file", w),
+        }) as object,
       align: "center",
       render: (file: string) =>
         file ? (
@@ -154,19 +225,18 @@ export default function AssignAssetTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 140,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() =>
               navigate({
                 to: `/employee-management/assign-assets/${record.id}`,
               })
             }
-          >
-            Edit
-          </Button>
+          />
           {onDelete && (
             <Popconfirm
               title="Remove this asset assignment?"
@@ -174,9 +244,7 @@ export default function AssignAssetTable({
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -228,6 +296,7 @@ export default function AssignAssetTable({
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

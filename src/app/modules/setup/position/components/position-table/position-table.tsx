@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { PositionResponse } from "../../models/api/response/position-response.model";
 import { POSITION_LABEL } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: PositionResponse[];
@@ -16,6 +22,13 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
+  const { widths, handleResize } = useResizableColumns({
+    code: 120,
+    name: 200,
+    rate: 120,
+    status: 120,
+  });
+
   const filtered = data.filter((item) =>
     Object.values(item).some((val) =>
       String(val ?? "")
@@ -25,29 +38,64 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
   );
 
   const columns: ColumnsType<PositionResponse> = [
-    { title: POSITION_LABEL.CODE, dataIndex: "code", key: "code" },
-    { title: POSITION_LABEL.NAME, dataIndex: "name", key: "name" },
+    {
+      title: POSITION_LABEL.CODE,
+      dataIndex: "code",
+      key: "code",
+      width: widths.code,
+      onHeaderCell: () =>
+        ({
+          width: widths.code,
+          onResize: (w: number) => handleResize("code", w),
+        }) as object,
+    },
+    {
+      title: POSITION_LABEL.NAME,
+      dataIndex: "name",
+      key: "name",
+      width: widths.name,
+      onHeaderCell: () =>
+        ({
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
+        }) as object,
+    },
     {
       title: POSITION_LABEL.RATE,
       dataIndex: "rate",
       key: "rate",
+      width: widths.rate,
+      onHeaderCell: () =>
+        ({
+          width: widths.rate,
+          onResize: (w: number) => handleResize("rate", w),
+        }) as object,
       render: (v: number) =>
         `₱ ${v.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
     },
-    { title: POSITION_LABEL.STATUS, dataIndex: "status", key: "status" },
+    {
+      title: POSITION_LABEL.STATUS,
+      dataIndex: "status",
+      key: "status",
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
+    },
     {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 140,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() => navigate({ to: `/setup/position/${record.id}` })}
-          >
-            Edit
-          </Button>
+          />
           {onDelete && (
             <Popconfirm
               title="Delete this position?"
@@ -55,9 +103,7 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -84,6 +130,7 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

@@ -14,6 +14,8 @@ import {
   message,
 } from "antd";
 import type { MenuProps, TableColumnsType } from "antd";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import {
   ClearOutlined,
   DeleteOutlined,
@@ -75,6 +77,21 @@ export default function AttendanceEntryList() {
     useDeleteAttendanceEntryLog();
   const { mutateAsync: deleteBatch, isPending: isDeletingBatch } =
     useDeleteAttendanceBatch();
+
+  const { widths: entryWidths, handleResize: entryResize } =
+    useResizableColumns({
+      employeeName: 150,
+      timeLog: 200,
+      action: 80,
+    });
+
+  const { widths: batchWidths, handleResize: batchResize } =
+    useResizableColumns({
+      batchCode: 150,
+      count: 80,
+      dateRange: 300,
+      actions: 148,
+    });
 
   const isDateRangeInvalid =
     !!pending.fromDate && !!pending.toDate && pending.fromDate > pending.toDate;
@@ -201,17 +218,38 @@ export default function AttendanceEntryList() {
   ];
 
   const batchEntryColumns: TableColumnsType<AttendanceEntryResponse> = [
-    { title: "Employee", dataIndex: "employeeName" },
+    {
+      title: "Employee",
+      dataIndex: "employeeName",
+      key: "employeeName",
+      width: entryWidths.employeeName,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.employeeName,
+          onResize: (w: number) => entryResize("employeeName", w),
+        }) as object,
+    },
     {
       title: "Work Time",
       dataIndex: "timeLog",
-      width: 200,
+      key: "timeLog",
+      width: entryWidths.timeLog,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.timeLog,
+          onResize: (w: number) => entryResize("timeLog", w),
+        }) as object,
       render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A"),
     },
     {
       title: "",
       key: "action",
-      width: 80,
+      width: entryWidths.action,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.action,
+          onResize: (w: number) => entryResize("action", w),
+        }) as object,
       render: (_: unknown, record: AttendanceEntryResponse) => (
         <Popconfirm
           title="Delete this time log?"
@@ -231,17 +269,36 @@ export default function AttendanceEntryList() {
     {
       title: "Batch Code",
       dataIndex: "batchCode",
+      key: "batchCode",
+      width: batchWidths.batchCode,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.batchCode,
+          onResize: (w: number) => batchResize("batchCode", w),
+        }) as object,
       render: (code: string) => <Tag color="blue">{code}</Tag>,
     },
     {
       title: "Entries",
       dataIndex: "count",
-      width: 80,
+      key: "count",
+      width: batchWidths.count,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.count,
+          onResize: (w: number) => batchResize("count", w),
+        }) as object,
       render: (count: number) => <Tag color="default">{count}</Tag>,
     },
     {
       title: "Date Range",
-      width: 300,
+      key: "dateRange",
+      width: batchWidths.dateRange,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.dateRange,
+          onResize: (w: number) => batchResize("dateRange", w),
+        }) as object,
       render: (_: unknown, row: BatchGroup) => (
         <Text type="secondary" style={{ fontSize: 13 }}>
           {dayjs(row.fromDate).format("MMM DD, YYYY hh:mm A")}
@@ -253,7 +310,12 @@ export default function AttendanceEntryList() {
     {
       title: "",
       key: "actions",
-      width: 148,
+      width: batchWidths.actions,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.actions,
+          onResize: (w: number) => batchResize("actions", w),
+        }) as object,
       render: (_: unknown, row: BatchGroup) => (
         <Popconfirm
           title={`Delete all ${row.count} entries in this batch?`}
@@ -437,6 +499,7 @@ export default function AttendanceEntryList() {
                 loading={isTableLoading}
                 size="small"
                 pagination={{ pageSize: 10, size: "small" }}
+                scroll={{ x: "max-content" }}
                 expandable={{
                   expandedRowRender: (batch) => (
                     <div className="pl-8 py-2">
@@ -446,6 +509,8 @@ export default function AttendanceEntryList() {
                         columns={batchEntryColumns}
                         pagination={false}
                         size="small"
+                        scroll={{ x: "max-content" }}
+                        components={{ header: { cell: ResizableTitle } }}
                       />
                     </div>
                   ),
@@ -454,6 +519,7 @@ export default function AttendanceEntryList() {
                 locale={{
                   emptyText: "No batch entries found for this filter.",
                 }}
+                components={{ header: { cell: ResizableTitle } }}
               />
             ) : (
               <div className="py-8 text-center">

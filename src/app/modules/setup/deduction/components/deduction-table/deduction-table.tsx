@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input, Select, Tag } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { DeductionResponse } from "../../models/api/response/deduction-response.model";
 import type { DeductionTypeResponse } from "@/app/modules/setup/deduction-type/models/api/response/deduction-type-response.model";
 import { DEDUCTION_LABEL } from "../../constants/label.const";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: DeductionResponse[];
@@ -31,6 +37,14 @@ export default function DeductionTable({
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
+  const { widths, handleResize } = useResizableColumns({
+    code: 120,
+    name: 200,
+    deductionTypeId: 160,
+    amount: 130,
+    status: 100,
+  });
+
   const typeMap = new Map(deductionTypes.map((t) => [t.id, t.name]));
 
   const typeOptions = [
@@ -53,20 +67,50 @@ export default function DeductionTable({
   });
 
   const columns: ColumnsType<DeductionResponse> = [
-    { title: DEDUCTION_LABEL.CODE, dataIndex: "code", key: "code", width: 120 },
-    { title: DEDUCTION_LABEL.NAME, dataIndex: "name", key: "name" },
+    {
+      title: DEDUCTION_LABEL.CODE,
+      dataIndex: "code",
+      key: "code",
+      width: widths.code,
+      onHeaderCell: () =>
+        ({
+          width: widths.code,
+          onResize: (w: number) => handleResize("code", w),
+        }) as object,
+    },
+    {
+      title: DEDUCTION_LABEL.NAME,
+      dataIndex: "name",
+      key: "name",
+      width: widths.name,
+      onHeaderCell: () =>
+        ({
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
+        }) as object,
+    },
     {
       title: DEDUCTION_LABEL.DEDUCTION_TYPE,
       dataIndex: "deductionTypeId",
       key: "deductionTypeId",
-      width: 160,
+      width: widths.deductionTypeId,
+      onHeaderCell: () =>
+        ({
+          width: widths.deductionTypeId,
+          onResize: (w: number) => handleResize("deductionTypeId", w),
+        }) as object,
       render: (id: string) => typeMap.get(id) ?? id,
     },
     {
       title: DEDUCTION_LABEL.AMOUNT,
       dataIndex: "amount",
       key: "amount",
-      width: 130,
+      width: widths.amount,
+      onHeaderCell: () =>
+        ({
+          width: widths.amount,
+          onResize: (w: number) => handleResize("amount", w),
+        }) as object,
       align: "right",
       render: (amount: number) =>
         amount.toLocaleString("en-PH", { style: "currency", currency: "PHP" }),
@@ -75,7 +119,12 @@ export default function DeductionTable({
       title: DEDUCTION_LABEL.STATUS,
       dataIndex: "status",
       key: "status",
-      width: 100,
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
       render: (status: string) => (
         <Tag color={status === "ACTIVE" ? "success" : "default"}>{status}</Tag>
       ),
@@ -84,15 +133,14 @@ export default function DeductionTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 140,
+      width: 80,
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
+            type="text"
+            icon={<EditOutlined />}
             onClick={() => navigate({ to: `/setup/deduction/${record.id}` })}
-          >
-            Edit
-          </Button>
+          />
           {onDelete && (
             <Popconfirm
               title="Delete this deduction?"
@@ -100,9 +148,7 @@ export default function DeductionTable({
               okText="Yes"
               cancelText="No"
             >
-              <Button type="link" danger>
-                Delete
-              </Button>
+              <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           )}
         </Space>
@@ -145,6 +191,7 @@ export default function DeductionTable({
         pagination={{ pageSize: 10 }}
         scroll={{ x: "max-content" }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );

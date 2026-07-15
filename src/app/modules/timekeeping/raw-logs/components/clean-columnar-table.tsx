@@ -4,6 +4,8 @@ import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { CleanAttendanceLogColumnar } from "../models/api/response/raw-attendance-log.model";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
   data: CleanAttendanceLogColumnar[];
@@ -17,12 +19,27 @@ const LOG_KEYS = Array.from(
 );
 
 function fmtTime(v: string | null | undefined): string {
-  if (!v) return "—";
+  if (!v) return "";
   return dayjs(v).format("HH:mm");
 }
 
 export default function CleanColumnarTable({ data, loading }: Props) {
   const [search, setSearch] = useState("");
+
+  const { widths, handleResize } = useResizableColumns({
+    empNo: 80,
+    fullName: 180,
+    department: 110,
+    workDate: 100,
+    shiftName: 110,
+    shiftStart: 90,
+    shiftEnd: 90,
+    breakOut: 90,
+    breakIn: 90,
+    ...Object.fromEntries(
+      Array.from({ length: 20 }, (_, i) => [`log${i + 1}`, 80]),
+    ),
+  });
 
   const valid = useMemo(
     () => data.filter((r) => r.employeeId !== EMPTY_GUID && r.empNo !== ""),
@@ -51,62 +68,107 @@ export default function CleanColumnarTable({ data, loading }: Props) {
       title: "Emp No",
       dataIndex: "empNo",
       key: "empNo",
-      width: 80,
+      width: widths.empNo,
       fixed: "left",
+      onHeaderCell: () =>
+        ({
+          width: widths.empNo,
+          onResize: (w: number) => handleResize("empNo", w),
+        }) as object,
     },
     {
       title: "Full Name",
       dataIndex: "fullName",
       key: "fullName",
-      width: 180,
+      width: widths.fullName,
       fixed: "left",
       ellipsis: true,
+      onHeaderCell: () =>
+        ({
+          width: widths.fullName,
+          onResize: (w: number) => handleResize("fullName", w),
+        }) as object,
     },
     {
       title: "Department",
       dataIndex: "department",
       key: "department",
-      width: 110,
+      width: widths.department,
+      onHeaderCell: () =>
+        ({
+          width: widths.department,
+          onResize: (w: number) => handleResize("department", w),
+        }) as object,
     },
     {
       title: "Work Date",
       dataIndex: "workDate",
       key: "workDate",
-      width: 100,
+      width: widths.workDate,
+      onHeaderCell: () =>
+        ({
+          width: widths.workDate,
+          onResize: (w: number) => handleResize("workDate", w),
+        }) as object,
     },
     {
       title: "Shift",
       dataIndex: "shiftName",
       key: "shiftName",
-      width: 110,
+      width: widths.shiftName,
       ellipsis: true,
+      onHeaderCell: () =>
+        ({
+          width: widths.shiftName,
+          onResize: (w: number) => handleResize("shiftName", w),
+        }) as object,
     },
     {
       title: "Shift Start",
       dataIndex: "shiftStart",
       key: "shiftStart",
-      width: 90,
+      width: widths.shiftStart,
+      onHeaderCell: () =>
+        ({
+          width: widths.shiftStart,
+          onResize: (w: number) => handleResize("shiftStart", w),
+        }) as object,
       render: (v: string) => fmtTime(v),
     },
     {
       title: "Shift End",
       dataIndex: "shiftEnd",
       key: "shiftEnd",
-      width: 90,
+      width: widths.shiftEnd,
+      onHeaderCell: () =>
+        ({
+          width: widths.shiftEnd,
+          onResize: (w: number) => handleResize("shiftEnd", w),
+        }) as object,
       render: (v: string) => fmtTime(v),
     },
     {
       title: "Break Out",
       dataIndex: "breakOut",
       key: "breakOut",
-      width: 90,
+      width: widths.breakOut,
+      onHeaderCell: () =>
+        ({
+          width: widths.breakOut,
+          onResize: (w: number) => handleResize("breakOut", w),
+        }) as object,
       render: (v: string | null) => fmtTime(v),
     },
     {
       title: "Break In",
       dataIndex: "breakIn",
       key: "breakIn",
-      width: 90,
+      width: widths.breakIn,
+      onHeaderCell: () =>
+        ({
+          width: widths.breakIn,
+          onResize: (w: number) => handleResize("breakIn", w),
+        }) as object,
       render: (v: string | null) => fmtTime(v),
     },
   ];
@@ -115,7 +177,12 @@ export default function CleanColumnarTable({ data, loading }: Props) {
     (k, i) => ({
       title: `Log ${i + 1}`,
       key: k,
-      width: 80,
+      width: widths[k as string] ?? 80,
+      onHeaderCell: () =>
+        ({
+          width: widths[k as string] ?? 80,
+          onResize: (w: number) => handleResize(k as string, w),
+        }) as object,
       render: (_: unknown, record: CleanAttendanceLogColumnar) => {
         const entry = record[k] as { attId: string; workTime: string } | null;
         if (!entry) return <span style={{ color: "#bbb" }}>—</span>;
@@ -151,6 +218,7 @@ export default function CleanColumnarTable({ data, loading }: Props) {
         pagination={{ pageSize: 15 }}
         scroll={{ x: scrollX }}
         sticky
+        components={{ header: { cell: ResizableTitle } }}
       />
     </div>
   );
