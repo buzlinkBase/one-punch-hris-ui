@@ -42,6 +42,15 @@ export function toOptionalTimeSpan(
   return value.format("HH:mm:ss");
 }
 
+/** Convert a .NET TimeSpan string to total seconds (for comparison). */
+export function timeSpanToSeconds(value: string | null | undefined): number {
+  if (!value) return 0;
+  const dayOffset = getDayOffset(value);
+  const timePart = getTimePart(value);
+  const [h, m, s] = timePart.split(":").map(Number);
+  return dayOffset * 86400 + (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
+}
+
 /**
  * Serialize dayjs + day offset to a .NET TimeSpan string.
  * dayOffset 0 → "HH:mm:ss", dayOffset 1 → "1.HH:mm:ss"

@@ -28,7 +28,7 @@ import { workRotationMapper } from "../../services/work-rotation.mapper";
 import { WORK_ROTATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
-import { useFlexiTimeShifts } from "@/app/modules/setup/time-shift/flexi/hooks/use-flexi-time-shift-queries";
+import { useSplitTimeShifts } from "@/app/modules/setup/time-shift/split/hooks/use-split-time-shift-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 
 const { Title } = Typography;
@@ -47,8 +47,8 @@ export default function WorkRotationDetail() {
 
   const { data: fixedShifts = [], isLoading: isFixedLoading } =
     useFixedTimeShifts();
-  const { data: flexiShifts = [], isLoading: isFlexiLoading } =
-    useFlexiTimeShifts();
+  const { data: splitShifts = [], isLoading: isSplitLoading } =
+    useSplitTimeShifts();
   const { data: employees = [], isLoading: isEmployeesLoading } =
     useEmployees();
 
@@ -82,16 +82,16 @@ export default function WorkRotationDetail() {
   };
 
   const isSubmitting = isCreating || isUpdating;
-  const isTimeShiftLoading = isFixedLoading || isFlexiLoading;
+  const isTimeShiftLoading = isFixedLoading || isSplitLoading;
 
   const timeShiftOptions = [
     ...fixedShifts.map((s) => ({
       value: s.id,
       label: `[Fixed] ${s.shiftName} (${s.startTime} – ${s.endTime})`,
     })),
-    ...flexiShifts.map((s) => ({
+    ...splitShifts.map((s) => ({
       value: s.id,
-      label: `[Flexi] ${s.shiftName}`,
+      label: `[Split] ${s.shiftName}`,
     })),
   ];
 

@@ -3,7 +3,7 @@ import { z } from "zod";
 const timeSpan = z.string().min(1, "Time is required");
 const optionalTimeSpan = z.string().nullable().optional();
 
-export const flexiTimeShiftFormSchema = z.object({
+export const SplitTimeShiftFormSchema = z.object({
   shiftName: z.string().min(1, "Shift name is required"),
   startTime: timeSpan,
   endTime: timeSpan,
@@ -17,4 +17,4 @@ export const flexiTimeShiftFormSchema = z.object({
   overTimeThreshold: z.number().min(0),
 });
 
-export type FlexiTimeShiftFormValues = z.infer<typeof flexiTimeShiftFormSchema>;
+export type SplitTimeShiftFormValues = z.infer<typeof SplitTimeShiftFormSchema>;

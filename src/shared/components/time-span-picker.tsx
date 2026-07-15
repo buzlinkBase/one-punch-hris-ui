@@ -16,6 +16,12 @@ interface TimeSpanPickerProps {
   style?: CSSProperties;
   className?: string;
   placeholder?: string;
+  /**
+   * When provided, the +1 day offset is computed automatically:
+   * if the picked time (HH:mm:ss) is earlier than this reference time,
+   * the value is emitted as next-day. The manual checkbox is hidden.
+   */
+  referenceTime?: string | null;
 }
 
 /**
@@ -30,11 +36,13 @@ export function TimeSpanPicker({
   style,
   className,
   placeholder,
+  referenceTime,
 }: TimeSpanPickerProps) {
   const dayOffset = getDayOffset(value);
   const timePart = value != null ? getTimePart(value) : null;
   const isNextDay = dayOffset > 0;
   const hasValue = value != null;
+  const autoMode = referenceTime != null;
 
   const emit = (time: string, offset: number) => {
     onChange?.(offset > 0 ? `${offset}.${time}` : time);
@@ -45,7 +53,16 @@ export function TimeSpanPicker({
       onChange?.(nullable ? null : "00:00:00");
       return;
     }
-    emit(val.format("HH:mm:ss"), dayOffset);
+    const timeStr = val.format("HH:mm:ss");
+    let offset = dayOffset;
+    if (autoMode) {
+      const refOffset = getDayOffset(referenceTime);
+      const refPart = getTimePart(referenceTime);
+      // If picked time is earlier than the reference's time-of-day, it's one
+      // day ahead of the reference (which may itself already be +1 or more).
+      offset = timeStr < refPart ? refOffset + 1 : refOffset;
+    }
+    emit(timeStr, offset);
   };
 
   const handleNextDayChange = (checked: boolean) => {
@@ -64,21 +81,36 @@ export function TimeSpanPicker({
         format={format}
         placeholder={placeholder}
       />
-      <Checkbox
-        checked={isNextDay}
-        disabled={!hasValue}
-        onChange={(e) => handleNextDayChange(e.target.checked)}
-      >
-        <span
-          style={{
-            fontSize: 12,
-            whiteSpace: "nowrap",
-            color: isNextDay ? "#1DA081" : "#9ca3af",
-          }}
+      {autoMode ? (
+        isNextDay && (
+          <span
+            style={{
+              fontSize: 12,
+              whiteSpace: "nowrap",
+              color: "#1DA081",
+              fontWeight: 600,
+            }}
+          >
+            +1 day
+          </span>
+        )
+      ) : (
+        <Checkbox
+          checked={isNextDay}
+          disabled={!hasValue}
+          onChange={(e) => handleNextDayChange(e.target.checked)}
         >
-          +1 day
-        </span>
-      </Checkbox>
+          <span
+            style={{
+              fontSize: 12,
+              whiteSpace: "nowrap",
+              color: isNextDay ? "#1DA081" : "#9ca3af",
+            }}
+          >
+            +1 day
+          </span>
+        </Checkbox>
+      )}
     </div>
   );
 }

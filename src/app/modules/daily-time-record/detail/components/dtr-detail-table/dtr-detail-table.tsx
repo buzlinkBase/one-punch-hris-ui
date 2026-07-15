@@ -75,7 +75,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
       const n = v ?? 0;
       if (n === 0)
         return <span style={{ color: "#d9d9d9", userSelect: "none" }}>—</span>;
-      return <span style={{ fontWeight: 500 }}>{n}</span>;
+      return <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>;
     },
   });
 

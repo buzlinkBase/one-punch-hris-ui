@@ -1,24 +1,24 @@
 import { create } from "zustand";
-import { flexiTimeShiftApi } from "../services/flexi-time-shift.api";
-import type { FlexiTimeShiftResponse } from "../models/api/response/flexi-time-shift-response.model";
-import type { CreateFlexiTimeShift } from "../models/api/request/create-flexi-time-shift.model";
-import type { UpdateFlexiTimeShift } from "../models/api/request/update-flexi-time-shift.model";
+import { SplitTimeShiftApi } from "../services/split-time-shift.api";
+import type { SplitTimeShiftResponse } from "../models/api/response/split-time-shift-response.model";
+import type { CreateSplitTimeShift } from "../models/api/request/create-split-time-shift.model";
+import type { UpdateSplitTimeShift } from "../models/api/request/update-split-time-shift.model";
 
-interface FlexiTimeShiftStore {
-  shifts: FlexiTimeShiftResponse[];
-  selected: FlexiTimeShiftResponse | null;
+interface SplitTimeShiftStore {
+  shifts: SplitTimeShiftResponse[];
+  selected: SplitTimeShiftResponse | null;
   loading: boolean;
   error: string | null;
   loadAll: () => Promise<void>;
   loadById: (id: string) => Promise<void>;
-  add: (data: CreateFlexiTimeShift) => Promise<void>;
-  update: (data: UpdateFlexiTimeShift) => Promise<void>;
+  add: (data: CreateSplitTimeShift) => Promise<void>;
+  update: (data: UpdateSplitTimeShift) => Promise<void>;
   remove: (id: string) => Promise<void>;
-  setSelected: (shift: FlexiTimeShiftResponse | null) => void;
+  setSelected: (shift: SplitTimeShiftResponse | null) => void;
   clearError: () => void;
 }
 
-export const useFlexiTimeShiftStore = create<FlexiTimeShiftStore>((set) => ({
+export const useSplitTimeShiftStore = create<SplitTimeShiftStore>((set) => ({
   shifts: [],
   selected: null,
   loading: false,
@@ -26,7 +26,7 @@ export const useFlexiTimeShiftStore = create<FlexiTimeShiftStore>((set) => ({
   loadAll: async () => {
     set({ loading: true, error: null });
     try {
-      const shifts = await flexiTimeShiftApi.getAll();
+      const shifts = await SplitTimeShiftApi.getAll();
       set({ shifts, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });
@@ -35,7 +35,7 @@ export const useFlexiTimeShiftStore = create<FlexiTimeShiftStore>((set) => ({
   loadById: async (id) => {
     set({ loading: true, error: null });
     try {
-      const selected = await flexiTimeShiftApi.getById(id);
+      const selected = await SplitTimeShiftApi.getById(id);
       set({ selected, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });
@@ -44,7 +44,7 @@ export const useFlexiTimeShiftStore = create<FlexiTimeShiftStore>((set) => ({
   add: async (data) => {
     set({ loading: true, error: null });
     try {
-      const shift = await flexiTimeShiftApi.create(data);
+      const shift = await SplitTimeShiftApi.create(data);
       set((s) => ({ shifts: [...s.shifts, shift], loading: false }));
     } catch (err) {
       set({ error: String(err), loading: false });
@@ -53,7 +53,7 @@ export const useFlexiTimeShiftStore = create<FlexiTimeShiftStore>((set) => ({
   update: async (data) => {
     set({ loading: true, error: null });
     try {
-      const updated = await flexiTimeShiftApi.update(data);
+      const updated = await SplitTimeShiftApi.update(data);
       set((s) => ({
         shifts: s.shifts.map((sh) => (sh.id === updated.id ? updated : sh)),
         selected: updated,
@@ -66,7 +66,7 @@ export const useFlexiTimeShiftStore = create<FlexiTimeShiftStore>((set) => ({
   remove: async (id) => {
     set({ loading: true, error: null });
     try {
-      await flexiTimeShiftApi.remove(id);
+      await SplitTimeShiftApi.remove(id);
       set((s) => ({
         shifts: s.shifts.filter((sh) => sh.id !== id),
         loading: false,

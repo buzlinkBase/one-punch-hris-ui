@@ -1,5 +1,5 @@
-export const FLEXI_TIME_SHIFT_LABEL = {
-  TITLE: "Flexi Time Shift",
+export const SPLIT_TIME_SHIFT_LABEL = {
+  TITLE: "Split Shift",
   SHIFT_NAME: "Shift Name",
   START_TIME: "Earliest Clock-In Time",
   END_TIME: "Latest Clock-Out Time",
@@ -11,6 +11,6 @@ export const FLEXI_TIME_SHIFT_LABEL = {
   BREAK_DURATION: "Break Duration (min)",
   ALLOW_OT: "Allow Overtime",
   OT_THRESHOLD: "OT Threshold (min)",
-  CREATE_TITLE: "Create Flexi Time Shift",
-  EDIT_TITLE: "Edit Flexi Time Shift",
+  CREATE_TITLE: "Create Split Shift",
+  EDIT_TITLE: "Edit Split Shift",
 };

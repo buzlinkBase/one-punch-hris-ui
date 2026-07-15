@@ -1,7 +1,10 @@
-export type BreakMode = "NONE" | "UNPAID_BREAK" | "PAID_BREAK";
-export type TimeShiftType = "FIXED" | "FLEXI";
+import type {
+  BreakMode,
+  TimeShiftType,
+} from "../request/create-split-time-shift.model";
 
-export interface CreateFlexiTimeShift {
+export interface SplitTimeShiftResponse {
+  id: string;
   shiftName: string;
   shiftType: TimeShiftType;
   startTime: string;

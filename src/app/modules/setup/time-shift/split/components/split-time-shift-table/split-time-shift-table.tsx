@@ -7,13 +7,13 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
-import type { FlexiTimeShiftResponse } from "../../models/api/response/flexi-time-shift-response.model";
-import { FLEXI_TIME_SHIFT_LABEL } from "../../constants/label.const";
+import type { SplitTimeShiftResponse } from "../../models/api/response/split-time-shift-response.model";
+import { SPLIT_TIME_SHIFT_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
-  data: FlexiTimeShiftResponse[];
+  data: SplitTimeShiftResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
 }
@@ -28,7 +28,7 @@ function formatTimeSpan(value: string | null | undefined): string {
   return hasDayOffset ? `+1d ${formatted}` : formatted;
 }
 
-export default function FlexiTimeShiftTable({
+export default function SplitTimeShiftTable({
   data,
   loading,
   onDelete,
@@ -55,9 +55,9 @@ export default function FlexiTimeShiftTable({
     ),
   );
 
-  const columns: ColumnsType<FlexiTimeShiftResponse> = [
+  const columns: ColumnsType<SplitTimeShiftResponse> = [
     {
-      title: FLEXI_TIME_SHIFT_LABEL.SHIFT_NAME,
+      title: SPLIT_TIME_SHIFT_LABEL.SHIFT_NAME,
       dataIndex: "shiftName",
       key: "shiftName",
       width: widths.shiftName,
@@ -69,7 +69,7 @@ export default function FlexiTimeShiftTable({
       sorter: (a, b) => a.shiftName.localeCompare(b.shiftName),
     },
     {
-      title: FLEXI_TIME_SHIFT_LABEL.START_TIME,
+      title: SPLIT_TIME_SHIFT_LABEL.START_TIME,
       dataIndex: "startTime",
       key: "startTime",
       width: widths.startTime,
@@ -81,7 +81,7 @@ export default function FlexiTimeShiftTable({
       render: (val) => formatTimeSpan(val),
     },
     {
-      title: FLEXI_TIME_SHIFT_LABEL.END_TIME,
+      title: SPLIT_TIME_SHIFT_LABEL.END_TIME,
       dataIndex: "endTime",
       key: "endTime",
       width: widths.endTime,
@@ -93,7 +93,7 @@ export default function FlexiTimeShiftTable({
       render: (val) => formatTimeSpan(val),
     },
     {
-      title: FLEXI_TIME_SHIFT_LABEL.MIN_WORKING,
+      title: SPLIT_TIME_SHIFT_LABEL.MIN_WORKING,
       dataIndex: "minimumWorkMinutes",
       key: "minimumWorkMinutes",
       width: widths.minimumWorkMinutes,
@@ -106,7 +106,7 @@ export default function FlexiTimeShiftTable({
       align: "right",
     },
     {
-      title: FLEXI_TIME_SHIFT_LABEL.MAX_WORKING,
+      title: SPLIT_TIME_SHIFT_LABEL.MAX_WORKING,
       dataIndex: "maxWorkingMinutes",
       key: "maxWorkingMinutes",
       width: widths.maxWorkingMinutes,
@@ -133,7 +133,7 @@ export default function FlexiTimeShiftTable({
           : null,
     },
     {
-      title: FLEXI_TIME_SHIFT_LABEL.ALLOW_OT,
+      title: SPLIT_TIME_SHIFT_LABEL.ALLOW_OT,
       dataIndex: "withOT",
       key: "withOT",
       width: widths.withOT,
@@ -146,7 +146,7 @@ export default function FlexiTimeShiftTable({
         val ? <Tag color="green">Yes</Tag> : <Tag color="default">No</Tag>,
     },
     {
-      title: FLEXI_TIME_SHIFT_LABEL.OT_THRESHOLD,
+      title: SPLIT_TIME_SHIFT_LABEL.OT_THRESHOLD,
       dataIndex: "overTimeThreshold",
       key: "overTimeThreshold",
       width: widths.overTimeThreshold,
@@ -169,7 +169,7 @@ export default function FlexiTimeShiftTable({
             type="text"
             icon={<EditOutlined />}
             onClick={() =>
-              navigate({ to: `/setup/time-shift/flexi/${record.id}` })
+              navigate({ to: `/setup/time-shift/split/${record.id}` })
             }
           />
           {onDelete && (
