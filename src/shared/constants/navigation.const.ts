@@ -111,6 +111,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Split Shift",
         path: "/setup/time-shift/split",
       },
+      {
+        key: "setup-flexi-shift",
+        label: "Flexi Time Shift",
+        path: "/setup/time-shift/flexi",
+      },
       { key: "setup-branch", label: "Branch", path: "/setup/branch" },
       {
         key: "setup-project-site",

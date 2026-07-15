@@ -45,6 +45,7 @@ import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import { useSplitTimeShifts } from "@/app/modules/setup/time-shift/split/hooks/use-split-time-shift-queries";
+import { useFlexiTimeShifts } from "@/app/modules/setup/time-shift/flexi/hooks/use-flexi-time-shift-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useSections } from "@/app/modules/setup/section/hooks/use-section-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
@@ -100,6 +101,8 @@ export default function EmployeeDetail() {
     useFixedTimeShifts();
   const { data: splitShifts = [], isLoading: isSplitShiftsLoading } =
     useSplitTimeShifts();
+  const { data: flexiShifts = [], isLoading: isFlexiShiftsLoading } =
+    useFlexiTimeShifts();
   const { data: clients = [], isLoading: isClientsLoading } = useClients();
   const { data: sections = [], isLoading: isSectionsLoading } = useSections();
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
@@ -150,6 +153,7 @@ export default function EmployeeDetail() {
     isPayrollGroupsLoading ||
     isFixedShiftsLoading ||
     isSplitShiftsLoading ||
+    isFlexiShiftsLoading ||
     isClientsLoading ||
     isSectionsLoading ||
     isBranchesLoading ||
@@ -192,6 +196,16 @@ export default function EmployeeDetail() {
         label: `${s.shiftName} (Split)`,
         shiftName: s.shiftName,
         shiftType: "SPLIT" as const,
+        startTime: s.startTime,
+        endTime: s.endTime,
+      })),
+    ...flexiShifts
+      .filter((s) => s.shiftType === "FLEXI")
+      .map((s) => ({
+        value: s.id,
+        label: `${s.shiftName} (Flexi)`,
+        shiftName: s.shiftName,
+        shiftType: "FLEXI" as const,
         startTime: s.startTime,
         endTime: s.endTime,
       })),

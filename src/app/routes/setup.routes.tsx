@@ -55,6 +55,15 @@ const SplitTimeShiftDetail = lazy(
     import("@/app/modules/setup/time-shift/split/pages/split-time-shift-detail"),
 );
 
+const FlexiTimeShiftList = lazy(
+  () =>
+    import("@/app/modules/setup/time-shift/flexi/pages/flexi-time-shift-list"),
+);
+const FlexiTimeShiftDetail = lazy(
+  () =>
+    import("@/app/modules/setup/time-shift/flexi/pages/flexi-time-shift-detail"),
+);
+
 const DeductionList = lazy(
   () => import("@/app/modules/setup/deduction/pages/deduction-list"),
 );
@@ -131,6 +140,10 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "time-shift/split", component: SplitTimeShiftList },
   { path: "time-shift/split/create", component: SplitTimeShiftDetail },
   { path: "time-shift/split/$id", component: SplitTimeShiftDetail },
+
+  { path: "time-shift/flexi", component: FlexiTimeShiftList },
+  { path: "time-shift/flexi/create", component: FlexiTimeShiftDetail },
+  { path: "time-shift/flexi/$id", component: FlexiTimeShiftDetail },
 
   { path: "deduction", component: DeductionList },
   { path: "deduction/create", component: DeductionDetail },
