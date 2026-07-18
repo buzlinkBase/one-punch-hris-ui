@@ -1,0 +1,20 @@
+import { z } from "zod";
+
+const timeSpan = z.string().min(1, "Time is required");
+const optionalTimeSpan = z.string().nullable().optional();
+
+export const SplitTimeShiftFormSchema = z.object({
+  shiftName: z.string().min(1, "Shift name is required"),
+  startTime: timeSpan,
+  endTime: timeSpan,
+  unpaidLunchBreak: z.boolean(),
+  lunchStartTime: optionalTimeSpan,
+  lunchEndTime: optionalTimeSpan,
+  breakDurationMinutes: z.number().min(0),
+  minimumWorkMinutes: z.number().min(0),
+  maxWorkingMinutes: z.number().min(0),
+  withOT: z.boolean(),
+  overTimeThreshold: z.number().min(0),
+});
+
+export type SplitTimeShiftFormValues = z.infer<typeof SplitTimeShiftFormSchema>;

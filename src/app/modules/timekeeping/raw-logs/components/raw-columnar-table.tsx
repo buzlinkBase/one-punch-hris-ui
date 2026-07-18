@@ -65,13 +65,12 @@ export default function RawColumnarTable({ data, loading }: Props) {
     );
   }, [valid, search]);
 
-  const fixedColumns: ColumnsType<RawColumnarAttendanceLog> = [
+  const identityColumns: ColumnsType<RawColumnarAttendanceLog> = [
     {
       title: "Emp No",
       dataIndex: "empNo",
       key: "empNo",
       width: widths.empNo,
-      fixed: "left",
       onHeaderCell: () =>
         ({
           width: widths.empNo,
@@ -83,7 +82,6 @@ export default function RawColumnarTable({ data, loading }: Props) {
       dataIndex: "fullName",
       key: "fullName",
       width: widths.fullName,
-      fixed: "left",
       ellipsis: true,
       onHeaderCell: () =>
         ({
@@ -199,7 +197,7 @@ export default function RawColumnarTable({ data, loading }: Props) {
   );
 
   const scrollX =
-    fixedColumns.reduce((sum, c) => sum + (Number(c.width) || 100), 0) +
+    identityColumns.reduce((sum, c) => sum + (Number(c.width) || 100), 0) +
     activeLogKeys.length * 80;
 
   return (
@@ -215,7 +213,7 @@ export default function RawColumnarTable({ data, loading }: Props) {
       <Table
         rowKey={(r) => `${r.employeeId}-${r.workDate}`}
         dataSource={filtered}
-        columns={[...fixedColumns, ...logColumns]}
+        columns={[...identityColumns, ...logColumns]}
         size="small"
         loading={loading}
         pagination={{ pageSize: 15 }}

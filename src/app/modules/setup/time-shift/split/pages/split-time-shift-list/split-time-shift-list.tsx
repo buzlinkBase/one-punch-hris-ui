@@ -2,24 +2,24 @@ import { Button, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  useFlexiTimeShifts,
-  useDeleteFlexiTimeShift,
-} from "../../hooks/use-flexi-time-shift-queries";
-import FlexiTimeShiftTable from "../../components/flexi-time-shift-table";
-import { FLEXI_TIME_SHIFT_LABEL } from "../../constants/label.const";
+  useSplitTimeShifts,
+  useDeleteSplitTimeShift,
+} from "../../hooks/use-split-time-shift-queries";
+import SplitTimeShiftTable from "../../components/split-time-shift-table";
+import { SPLIT_TIME_SHIFT_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
 
-export default function FlexiTimeShiftList() {
+export default function SplitTimeShiftList() {
   const navigate = useNavigate();
   const {
     data: allShifts = [],
     isLoading,
     refetch,
     isFetching,
-  } = useFlexiTimeShifts();
-  const shifts = allShifts.filter((s) => s.shiftType === "FLEXI");
-  const { mutate: remove } = useDeleteFlexiTimeShift();
+  } = useSplitTimeShifts();
+  const shifts = allShifts.filter((s) => s.shiftType === "SPLIT");
+  const { mutate: remove } = useDeleteSplitTimeShift();
 
   return (
     <div className="content-page">
@@ -27,10 +27,10 @@ export default function FlexiTimeShiftList() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {FLEXI_TIME_SHIFT_LABEL.TITLE}
+              {SPLIT_TIME_SHIFT_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Configure flexible shift windows and required working hours.
+              Configure split shift schedules with separate work periods.
             </p>
           </div>
           <Space>
@@ -42,14 +42,14 @@ export default function FlexiTimeShiftList() {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/time-shift/flexi/create" })}
+              onClick={() => navigate({ to: "/setup/time-shift/split/create" })}
             >
-              Add Flexi Shift
+              Add Split Shift
             </Button>
           </Space>
         </div>
       </div>
-      <FlexiTimeShiftTable
+      <SplitTimeShiftTable
         data={shifts}
         loading={isLoading}
         onDelete={remove}

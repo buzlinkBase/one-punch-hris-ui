@@ -15,7 +15,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fromTimeSpan, toTimeSpan } from "@/shared/utils/time-span.util";
+import {
+  fromTimeSpan,
+  toTimeSpan,
+  timeSpanToSeconds,
+} from "@/shared/utils/time-span.util";
 import { TimeSpanPicker } from "@/shared/components/time-span-picker";
 import {
   fixedTimeShiftFormSchema,
@@ -119,10 +123,65 @@ export default function FixedTimeShiftDetail() {
   });
 
   const startTime = useWatch({ control, name: "startTime" });
+  const endTime = useWatch({ control, name: "endTime" });
   const withLunchBreak = useWatch({ control, name: "withLunchBreak" });
+  const lunchStartTime = useWatch({ control, name: "lunchStartTime" });
+  const lunchEndTime = useWatch({ control, name: "lunchEndTime" });
   const withAMBreak = useWatch({ control, name: "withAMBreak" });
+  const amStartTime = useWatch({ control, name: "amStartTime" });
+  const amEndTime = useWatch({ control, name: "amEndTime" });
   const withPMBreak = useWatch({ control, name: "withPMBreak" });
+  const pmStartTime = useWatch({ control, name: "pmStartTime" });
+  const pmEndTime = useWatch({ control, name: "pmEndTime" });
   const withOT = useWatch({ control, name: "withOT" });
+  const otStart = useWatch({ control, name: "otStart" });
+
+  const shiftStartSec = timeSpanToSeconds(startTime);
+  const shiftEndSec = timeSpanToSeconds(endTime);
+  const shiftDefined = !!startTime && !!endTime && shiftEndSec > shiftStartSec;
+
+  const endBeforeStart = !!endTime && shiftEndSec <= shiftStartSec;
+
+  // Lunch
+  const lunchStartSec = timeSpanToSeconds(lunchStartTime);
+  const lunchEndSec = timeSpanToSeconds(lunchEndTime);
+  const lunchStartOOB =
+    shiftDefined &&
+    !!lunchStartTime &&
+    (lunchStartSec < shiftStartSec || lunchStartSec > shiftEndSec);
+  const lunchEndOOB =
+    shiftDefined && !!lunchEndTime && lunchEndSec > shiftEndSec;
+  const lunchEndBeforeStart =
+    !!lunchEndTime && !!lunchStartTime && lunchEndSec <= lunchStartSec;
+
+  // AM break
+  const amStartSec = timeSpanToSeconds(amStartTime);
+  const amEndSec = timeSpanToSeconds(amEndTime);
+  const amStartOOB =
+    withAMBreak &&
+    shiftDefined &&
+    !!amStartTime &&
+    (amStartSec < shiftStartSec || amStartSec > shiftEndSec);
+  const amEndOOB =
+    withAMBreak && shiftDefined && !!amEndTime && amEndSec > shiftEndSec;
+  const amEndBeforeStart =
+    withAMBreak && !!amEndTime && !!amStartTime && amEndSec <= amStartSec;
+
+  // PM break
+  const pmStartSec = timeSpanToSeconds(pmStartTime);
+  const pmEndSec = timeSpanToSeconds(pmEndTime);
+  const pmStartOOB =
+    withPMBreak &&
+    shiftDefined &&
+    !!pmStartTime &&
+    (pmStartSec < shiftStartSec || pmStartSec > shiftEndSec);
+  const pmEndOOB =
+    withPMBreak && shiftDefined && !!pmEndTime && pmEndSec > shiftEndSec;
+  const pmEndBeforeStart =
+    withPMBreak && !!pmEndTime && !!pmStartTime && pmEndSec <= pmStartSec;
+
+  const otBeforeEnd =
+    withOT && !!otStart && timeSpanToSeconds(otStart) < shiftEndSec;
 
   useEffect(() => {
     if (isEdit || !startTime) return;
@@ -272,8 +331,13 @@ export default function FixedTimeShiftDetail() {
             </Form.Item>
             <Form.Item
               label={FIXED_TIME_SHIFT_LABEL.END_TIME}
-              validateStatus={errors.endTime ? "error" : ""}
-              help={errors.endTime?.message}
+              validateStatus={errors.endTime || endBeforeStart ? "error" : ""}
+              help={
+                errors.endTime?.message ??
+                (endBeforeStart
+                  ? "End time must be after start time"
+                  : undefined)
+              }
             >
               <Controller
                 name="endTime"
@@ -282,6 +346,7 @@ export default function FixedTimeShiftDetail() {
                   <TimeSpanPicker
                     value={field.value}
                     onChange={field.onChange}
+                    referenceTime={startTime}
                   />
                 )}
               />
@@ -362,7 +427,15 @@ export default function FixedTimeShiftDetail() {
           </Form.Item>
           {withLunchBreak !== "NONE" && (
             <div className="form-grid-2">
-              <Form.Item label={FIXED_TIME_SHIFT_LABEL.LUNCH_START}>
+              <Form.Item
+                label={FIXED_TIME_SHIFT_LABEL.LUNCH_START}
+                validateStatus={lunchStartOOB ? "error" : ""}
+                help={
+                  lunchStartOOB
+                    ? "Lunch start must be within the shift hours"
+                    : undefined
+                }
+              >
                 <Controller
                   name="lunchStartTime"
                   control={control}
@@ -371,11 +444,24 @@ export default function FixedTimeShiftDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       nullable
+                      referenceTime={startTime}
                     />
                   )}
                 />
               </Form.Item>
-              <Form.Item label={FIXED_TIME_SHIFT_LABEL.LUNCH_END}>
+              <Form.Item
+                label={FIXED_TIME_SHIFT_LABEL.LUNCH_END}
+                validateStatus={
+                  lunchEndBeforeStart || lunchEndOOB ? "error" : ""
+                }
+                help={
+                  lunchEndBeforeStart
+                    ? "Lunch end must be after lunch start"
+                    : lunchEndOOB
+                      ? "Lunch end exceeds shift end time"
+                      : undefined
+                }
+              >
                 <Controller
                   name="lunchEndTime"
                   control={control}
@@ -384,6 +470,7 @@ export default function FixedTimeShiftDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       nullable
+                      referenceTime={lunchStartTime}
                     />
                   )}
                 />
@@ -449,7 +536,15 @@ export default function FixedTimeShiftDetail() {
           </Form.Item>
           {withAMBreak && (
             <div className="form-grid-2">
-              <Form.Item label={FIXED_TIME_SHIFT_LABEL.AM_START}>
+              <Form.Item
+                label={FIXED_TIME_SHIFT_LABEL.AM_START}
+                validateStatus={amStartOOB ? "error" : ""}
+                help={
+                  amStartOOB
+                    ? "AM break start must be within the shift hours"
+                    : undefined
+                }
+              >
                 <Controller
                   name="amStartTime"
                   control={control}
@@ -458,11 +553,22 @@ export default function FixedTimeShiftDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       nullable
+                      referenceTime={startTime}
                     />
                   )}
                 />
               </Form.Item>
-              <Form.Item label={FIXED_TIME_SHIFT_LABEL.AM_END}>
+              <Form.Item
+                label={FIXED_TIME_SHIFT_LABEL.AM_END}
+                validateStatus={amEndBeforeStart || amEndOOB ? "error" : ""}
+                help={
+                  amEndBeforeStart
+                    ? "AM break end must be after AM break start"
+                    : amEndOOB
+                      ? "AM break end exceeds shift end time"
+                      : undefined
+                }
+              >
                 <Controller
                   name="amEndTime"
                   control={control}
@@ -471,6 +577,7 @@ export default function FixedTimeShiftDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       nullable
+                      referenceTime={amStartTime}
                     />
                   )}
                 />
@@ -517,7 +624,15 @@ export default function FixedTimeShiftDetail() {
           </Form.Item>
           {withPMBreak && (
             <div className="form-grid-2">
-              <Form.Item label={FIXED_TIME_SHIFT_LABEL.PM_START}>
+              <Form.Item
+                label={FIXED_TIME_SHIFT_LABEL.PM_START}
+                validateStatus={pmStartOOB ? "error" : ""}
+                help={
+                  pmStartOOB
+                    ? "PM break start must be within the shift hours"
+                    : undefined
+                }
+              >
                 <Controller
                   name="pmStartTime"
                   control={control}
@@ -526,11 +641,22 @@ export default function FixedTimeShiftDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       nullable
+                      referenceTime={startTime}
                     />
                   )}
                 />
               </Form.Item>
-              <Form.Item label={FIXED_TIME_SHIFT_LABEL.PM_END}>
+              <Form.Item
+                label={FIXED_TIME_SHIFT_LABEL.PM_END}
+                validateStatus={pmEndBeforeStart || pmEndOOB ? "error" : ""}
+                help={
+                  pmEndBeforeStart
+                    ? "PM break end must be after PM break start"
+                    : pmEndOOB
+                      ? "PM break end exceeds shift end time"
+                      : undefined
+                }
+              >
                 <Controller
                   name="pmEndTime"
                   control={control}
@@ -539,6 +665,7 @@ export default function FixedTimeShiftDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       nullable
+                      referenceTime={pmStartTime}
                     />
                   )}
                 />
@@ -570,8 +697,13 @@ export default function FixedTimeShiftDetail() {
               <div className="form-grid-2">
                 <Form.Item
                   label={FIXED_TIME_SHIFT_LABEL.OT_START}
-                  validateStatus={errors.otStart ? "error" : ""}
-                  help={errors.otStart?.message}
+                  validateStatus={errors.otStart || otBeforeEnd ? "error" : ""}
+                  help={
+                    errors.otStart?.message ??
+                    (otBeforeEnd
+                      ? "OT start must be at or after shift end time"
+                      : undefined)
+                  }
                 >
                   <Controller
                     name="otStart"
@@ -580,6 +712,7 @@ export default function FixedTimeShiftDetail() {
                       <TimeSpanPicker
                         value={field.value}
                         onChange={field.onChange}
+                        referenceTime={startTime}
                       />
                     )}
                   />

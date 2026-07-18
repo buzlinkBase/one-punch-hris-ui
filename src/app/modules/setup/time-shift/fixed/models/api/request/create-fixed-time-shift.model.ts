@@ -1,5 +1,5 @@
 export type BreakMode = "NONE" | "UNPAID_BREAK" | "PAID_BREAK";
-export type TimeShiftType = "FIXED" | "FLEXI";
+export type TimeShiftType = "FIXED" | "SPLIT" | "FLEXI";
 
 export interface CreateFixedTimeShift {
   shiftName: string;

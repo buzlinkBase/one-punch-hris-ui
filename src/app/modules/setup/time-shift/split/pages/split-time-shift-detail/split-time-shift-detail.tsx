@@ -21,17 +21,17 @@ import {
 } from "@/shared/utils/time-span.util";
 import { TimeSpanPicker } from "@/shared/components/time-span-picker";
 import {
-  flexiTimeShiftFormSchema,
-  type FlexiTimeShiftFormValues,
-} from "../../models/forms/flexi-time-shift-form.schema";
+  SplitTimeShiftFormSchema,
+  type SplitTimeShiftFormValues,
+} from "../../models/forms/split-time-shift-form.schema";
 import {
-  useFlexiTimeShift,
-  useCreateFlexiTimeShift,
-  useUpdateFlexiTimeShift,
-} from "../../hooks/use-flexi-time-shift-queries";
-import { FLEXI_TIME_SHIFT_LABEL } from "../../constants/label.const";
+  useSplitTimeShift,
+  useCreateSplitTimeShift,
+  useUpdateSplitTimeShift,
+} from "../../hooks/use-split-time-shift-queries";
+import { SPLIT_TIME_SHIFT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
-import type { CreateFlexiTimeShift } from "../../models/api/request/create-flexi-time-shift.model";
+import type { CreateSplitTimeShift } from "../../models/api/request/create-split-time-shift.model";
 
 const { Title } = Typography;
 
@@ -74,14 +74,14 @@ function addHoursToTimeSpan(timeSpan: string, hours: number): string {
   return dayOffset > 0 ? `${dayOffset}.${time}` : time;
 }
 
-export default function FlexiTimeShiftDetail() {
+export default function SplitTimeShiftDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-  const { data: selected } = useFlexiTimeShift(isEdit ? id : undefined);
-  const { mutateAsync: add, isPending: isCreating } = useCreateFlexiTimeShift();
+  const { data: selected } = useSplitTimeShift(isEdit ? id : undefined);
+  const { mutateAsync: add, isPending: isCreating } = useCreateSplitTimeShift();
   const { mutateAsync: update, isPending: isUpdating } =
-    useUpdateFlexiTimeShift();
+    useUpdateSplitTimeShift();
 
   const {
     control,
@@ -89,8 +89,8 @@ export default function FlexiTimeShiftDetail() {
     reset,
     setValue,
     formState: { errors },
-  } = useForm<FlexiTimeShiftFormValues>({
-    resolver: zodResolver(flexiTimeShiftFormSchema),
+  } = useForm<SplitTimeShiftFormValues>({
+    resolver: zodResolver(SplitTimeShiftFormSchema),
     defaultValues: {
       shiftName: "",
       startTime: "06:00:00",
@@ -144,6 +144,7 @@ export default function FlexiTimeShiftDetail() {
 
   useEffect(() => {
     if (isEdit && selected) {
+      // TimeSpanPicker stores "d.HH:mm:ss" — pass API values through directly.
       reset({
         shiftName: selected.shiftName,
         startTime: selected.startTime,
@@ -160,10 +161,11 @@ export default function FlexiTimeShiftDetail() {
     }
   }, [selected, isEdit, reset]);
 
-  const onSubmit = async (values: FlexiTimeShiftFormValues) => {
-    const payload: CreateFlexiTimeShift = {
+  const onSubmit = async (values: SplitTimeShiftFormValues) => {
+    // All time values from TimeSpanPicker are already in "HH:mm:ss" or "d.HH:mm:ss" — pass through directly.
+    const payload: CreateSplitTimeShift = {
       shiftName: values.shiftName,
-      shiftType: "FLEXI",
+      shiftType: "SPLIT",
       startTime: values.startTime,
       endTime: values.endTime,
       withAMBreak: "UNPAID_BREAK",
@@ -191,7 +193,7 @@ export default function FlexiTimeShiftDetail() {
 
     if (isEdit && id) await update({ id, ...payload });
     else await add(payload);
-    navigate({ to: "/setup/time-shift/flexi" });
+    navigate({ to: "/setup/time-shift/split" });
   };
 
   return (
@@ -201,18 +203,18 @@ export default function FlexiTimeShiftDetail() {
           <div>
             <Title level={4} className="mb-0!">
               {isEdit
-                ? FLEXI_TIME_SHIFT_LABEL.EDIT_TITLE
-                : FLEXI_TIME_SHIFT_LABEL.CREATE_TITLE}
+                ? SPLIT_TIME_SHIFT_LABEL.EDIT_TITLE
+                : SPLIT_TIME_SHIFT_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Configure flexible shift windows and required working hours.
+              Configure split shift schedule and required working hours.
             </p>
           </div>
           <Space>
             <Tag color={isEdit ? "processing" : "success"}>
               {isEdit ? "Editing" : "New Record"}
             </Tag>
-            <Button onClick={() => navigate({ to: "/setup/time-shift/flexi" })}>
+            <Button onClick={() => navigate({ to: "/setup/time-shift/split" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
           </Space>
@@ -222,7 +224,7 @@ export default function FlexiTimeShiftDetail() {
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <Form.Item
-            label={FLEXI_TIME_SHIFT_LABEL.SHIFT_NAME}
+            label={SPLIT_TIME_SHIFT_LABEL.SHIFT_NAME}
             validateStatus={errors.shiftName ? "error" : ""}
             help={errors.shiftName?.message}
           >
@@ -230,15 +232,16 @@ export default function FlexiTimeShiftDetail() {
               name="shiftName"
               control={control}
               render={({ field }) => (
-                <Input {...field} placeholder="e.g. Flexi Day Shift" />
+                <Input {...field} placeholder="e.g. Split Day Shift" />
               )}
             />
           </Form.Item>
 
-          <SectionHeader>Flexible Window</SectionHeader>
+          <SectionHeader>Allowable Break Window</SectionHeader>
           <div className="form-grid-2">
+            {/* startTime is the day-0 anchor — no +1 day needed */}
             <Form.Item
-              label={FLEXI_TIME_SHIFT_LABEL.START_TIME}
+              label={SPLIT_TIME_SHIFT_LABEL.START_TIME}
               validateStatus={errors.startTime ? "error" : ""}
               help={errors.startTime?.message}
             >
@@ -256,7 +259,7 @@ export default function FlexiTimeShiftDetail() {
               />
             </Form.Item>
             <Form.Item
-              label={FLEXI_TIME_SHIFT_LABEL.END_TIME}
+              label={SPLIT_TIME_SHIFT_LABEL.END_TIME}
               validateStatus={errors.endTime || endBeforeStart ? "error" : ""}
               help={
                 errors.endTime?.message ??
@@ -278,7 +281,7 @@ export default function FlexiTimeShiftDetail() {
               />
             </Form.Item>
             <Form.Item
-              label={FLEXI_TIME_SHIFT_LABEL.MIN_WORKING}
+              label={SPLIT_TIME_SHIFT_LABEL.MIN_WORKING}
               validateStatus={errors.minimumWorkMinutes ? "error" : ""}
               help={errors.minimumWorkMinutes?.message}
             >
@@ -296,7 +299,7 @@ export default function FlexiTimeShiftDetail() {
               />
             </Form.Item>
             <Form.Item
-              label={FLEXI_TIME_SHIFT_LABEL.MAX_WORKING}
+              label={SPLIT_TIME_SHIFT_LABEL.MAX_WORKING}
               validateStatus={errors.maxWorkingMinutes ? "error" : ""}
               help={errors.maxWorkingMinutes?.message}
             >
@@ -317,7 +320,7 @@ export default function FlexiTimeShiftDetail() {
 
           <SectionHeader>Break</SectionHeader>
           <Form.Item
-            label={FLEXI_TIME_SHIFT_LABEL.UNPAID_LUNCH_BREAK}
+            label={SPLIT_TIME_SHIFT_LABEL.UNPAID_LUNCH_BREAK}
             extra={
               <span style={{ fontSize: 11, color: "#9ca3af" }}>
                 Off = No break window · On = Enforce allowable break period
@@ -335,7 +338,7 @@ export default function FlexiTimeShiftDetail() {
           {unpaidLunchBreak && (
             <div className="form-grid-2">
               <Form.Item
-                label={FLEXI_TIME_SHIFT_LABEL.BREAK_PERIOD_START}
+                label={SPLIT_TIME_SHIFT_LABEL.BREAK_PERIOD_START}
                 validateStatus={lunchStartOOB ? "error" : ""}
                 help={
                   lunchStartOOB
@@ -363,7 +366,7 @@ export default function FlexiTimeShiftDetail() {
                 />
               </Form.Item>
               <Form.Item
-                label={FLEXI_TIME_SHIFT_LABEL.BREAK_PERIOD_END}
+                label={SPLIT_TIME_SHIFT_LABEL.BREAK_PERIOD_END}
                 validateStatus={
                   lunchEndBeforeStart || lunchEndOOB ? "error" : ""
                 }
@@ -389,7 +392,7 @@ export default function FlexiTimeShiftDetail() {
                 />
               </Form.Item>
               <Form.Item
-                label={FLEXI_TIME_SHIFT_LABEL.BREAK_DURATION}
+                label={SPLIT_TIME_SHIFT_LABEL.BREAK_DURATION}
                 validateStatus={errors.breakDurationMinutes ? "error" : ""}
                 help={errors.breakDurationMinutes?.message}
               >
@@ -410,7 +413,7 @@ export default function FlexiTimeShiftDetail() {
           )}
 
           <SectionHeader>Overtime</SectionHeader>
-          <Form.Item label={FLEXI_TIME_SHIFT_LABEL.ALLOW_OT}>
+          <Form.Item label={SPLIT_TIME_SHIFT_LABEL.ALLOW_OT}>
             <Controller
               name="withOT"
               control={control}
@@ -422,7 +425,7 @@ export default function FlexiTimeShiftDetail() {
           {withOT && (
             <div className="form-grid-2">
               <Form.Item
-                label={FLEXI_TIME_SHIFT_LABEL.OT_THRESHOLD}
+                label={SPLIT_TIME_SHIFT_LABEL.OT_THRESHOLD}
                 validateStatus={errors.overTimeThreshold ? "error" : ""}
                 help={errors.overTimeThreshold?.message}
               >
@@ -445,7 +448,7 @@ export default function FlexiTimeShiftDetail() {
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
               <Button
-                onClick={() => navigate({ to: "/setup/time-shift/flexi" })}
+                onClick={() => navigate({ to: "/setup/time-shift/split" })}
               >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>

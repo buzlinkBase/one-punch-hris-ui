@@ -109,6 +109,7 @@ function getNavIcon(key: string): ReactNode {
     "reports-tardiness": <ClockCircleOutlined />,
     setup: <SettingOutlined />,
     "setup-fixed-shift": <FieldTimeOutlined />,
+    "setup-split-shift": <FieldTimeOutlined />,
     "setup-flexi-shift": <FieldTimeOutlined />,
     "setup-department": <ApartmentOutlined />,
     "setup-operation-area": <BankOutlined />,

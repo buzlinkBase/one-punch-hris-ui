@@ -46,6 +46,15 @@ const FixedTimeShiftDetail = lazy(
     import("@/app/modules/setup/time-shift/fixed/pages/fixed-time-shift-detail"),
 );
 
+const SplitTimeShiftList = lazy(
+  () =>
+    import("@/app/modules/setup/time-shift/split/pages/split-time-shift-list"),
+);
+const SplitTimeShiftDetail = lazy(
+  () =>
+    import("@/app/modules/setup/time-shift/split/pages/split-time-shift-detail"),
+);
+
 const FlexiTimeShiftList = lazy(
   () =>
     import("@/app/modules/setup/time-shift/flexi/pages/flexi-time-shift-list"),
@@ -127,6 +136,10 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "time-shift/fixed", component: FixedTimeShiftList },
   { path: "time-shift/fixed/create", component: FixedTimeShiftDetail },
   { path: "time-shift/fixed/$id", component: FixedTimeShiftDetail },
+
+  { path: "time-shift/split", component: SplitTimeShiftList },
+  { path: "time-shift/split/create", component: SplitTimeShiftDetail },
+  { path: "time-shift/split/$id", component: SplitTimeShiftDetail },
 
   { path: "time-shift/flexi", component: FlexiTimeShiftList },
   { path: "time-shift/flexi/create", component: FlexiTimeShiftDetail },
