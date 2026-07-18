@@ -16,7 +16,6 @@ import {
   Table,
   Tabs,
   Tag,
-  Tooltip,
   Typography,
   message,
 } from "antd";
@@ -89,11 +88,23 @@ function PendingCommandsSection({ sn }: { sn: string }) {
   } = usePendingCommands(sn);
   const { mutate: removeCmd, isPending: removing } = useDeleteCommand();
   const { widths, handleResize } = useResizableColumns({
+    sn: 200,
     commandType: 220,
-    commands: 560,
   });
 
   const columns: ColumnsType<DeviceCommandRecord> = [
+    {
+      title: "Serial No",
+      dataIndex: "sn",
+      key: "sn",
+      width: widths.sn,
+      onHeaderCell: () =>
+        ({
+          width: widths.sn,
+          onResize: (w: number) => handleResize("sn", w),
+        }) as object,
+      render: (v: string) => <span className="font-mono text-xs">{v}</span>,
+    },
     {
       title: "Type",
       dataIndex: "commandType",
@@ -105,26 +116,6 @@ function PendingCommandsSection({ sn }: { sn: string }) {
           onResize: (w: number) => handleResize("commandType", w),
         }) as object,
       render: (v: string) => <Tag>{v}</Tag>,
-    },
-    {
-      title: "Command",
-      dataIndex: "commands",
-      key: "commands",
-      width: widths.commands,
-      ellipsis: { showTitle: false },
-      onHeaderCell: () =>
-        ({
-          width: widths.commands,
-          onResize: (w: number) => handleResize("commands", w),
-        }) as object,
-      render: (v: string) => (
-        <Tooltip
-          title={<span className="font-mono text-xs break-all">{v}</span>}
-          placement="topLeft"
-        >
-          <span className="font-mono text-xs">{v}</span>
-        </Tooltip>
-      ),
     },
     {
       title: "",
@@ -178,6 +169,11 @@ function EnrollSection({ sn }: { sn: string }) {
   const [faceForm] = Form.useForm();
   const [queryForm] = Form.useForm();
 
+  const { data: employeeData = [] } = useEmployeeFilter();
+  const employeeOptions = employeeData
+    .filter((e) => (e.bioId ?? 0) > 0)
+    .map((e) => ({ value: e.id, label: e.name ?? e.id, bioId: e.bioId! }));
+
   const { mutateAsync: enrollFP, isPending: enrollingFP } =
     useEnrollFingerprint();
   const { mutateAsync: enrollFace, isPending: enrollingFace } = useEnrollFace();
@@ -199,12 +195,27 @@ function EnrollSection({ sn }: { sn: string }) {
             fpForm.resetFields();
           }}
         >
+          <Form.Item label="Employee" required>
+            <Select
+              showSearch
+              allowClear
+              optionFilterProp="label"
+              placeholder="Select employee"
+              options={employeeOptions}
+              onChange={(val, opt) => {
+                fpForm.setFieldValue(
+                  "bioId",
+                  val ? (opt as (typeof employeeOptions)[number]).bioId : null,
+                );
+              }}
+            />
+          </Form.Item>
           <Form.Item
             name="bioId"
-            label="Employee Bio ID"
+            label="Bio ID"
             rules={[{ required: true, message: "Required" }]}
           >
-            <InputNumber min={1} className="w-full" placeholder="e.g. 1001" />
+            <InputNumber className="w-full" readOnly />
           </Form.Item>
           <Form.Item
             name="fingerIndex"
@@ -235,12 +246,27 @@ function EnrollSection({ sn }: { sn: string }) {
             faceForm.resetFields();
           }}
         >
+          <Form.Item label="Employee" required>
+            <Select
+              showSearch
+              allowClear
+              optionFilterProp="label"
+              placeholder="Select employee"
+              options={employeeOptions}
+              onChange={(val, opt) => {
+                faceForm.setFieldValue(
+                  "bioId",
+                  val ? (opt as (typeof employeeOptions)[number]).bioId : null,
+                );
+              }}
+            />
+          </Form.Item>
           <Form.Item
             name="bioId"
-            label="Employee Bio ID"
+            label="Bio ID"
             rules={[{ required: true, message: "Required" }]}
           >
-            <InputNumber min={1} className="w-full" placeholder="e.g. 1001" />
+            <InputNumber className="w-full" readOnly />
           </Form.Item>
           <Form.Item
             name="cardNo"
@@ -280,12 +306,25 @@ function EnrollSection({ sn }: { sn: string }) {
             queryForm.resetFields();
           }}
         >
-          <Form.Item
-            name="pin"
-            label="PIN"
-            help="Leave blank to query all users"
-          >
-            <Input placeholder="Employee Bio ID" />
+          <Form.Item label="Employee" help="Leave blank to query all users">
+            <Select
+              showSearch
+              allowClear
+              optionFilterProp="label"
+              placeholder="Select employee (optional)"
+              options={employeeOptions}
+              onChange={(val, opt) => {
+                queryForm.setFieldValue(
+                  "pin",
+                  val
+                    ? String((opt as (typeof employeeOptions)[number]).bioId)
+                    : undefined,
+                );
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="pin" hidden>
+            <Input />
           </Form.Item>
           <Form.Item
             name="fid"
