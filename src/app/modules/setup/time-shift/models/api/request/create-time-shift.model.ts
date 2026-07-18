@@ -22,7 +22,7 @@ export interface CreateFixedTimeShiftRequest {
   maxWorkingMinutes: number;
 }
 
-export interface CreateFlexiTimeShiftRequest {
+export interface CreateSplitTimeShiftRequest {
   shiftName: string;
   shiftType: string;
   startTime: string;

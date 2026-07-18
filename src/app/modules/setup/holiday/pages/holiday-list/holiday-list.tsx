@@ -1,6 +1,8 @@
-import { Button, Space, Typography } from "antd";
+import { useState } from "react";
+import { Button, DatePicker, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import { useHolidays, useDeleteHoliday } from "../../hooks/use-holiday-queries";
 import HolidayTable from "../../components/holiday-table";
 import { HOLIDAY_LABEL } from "../../constants/label.const";
@@ -9,7 +11,13 @@ const { Title } = Typography;
 
 export default function HolidayList() {
   const navigate = useNavigate();
-  const { data: holidays = [], isLoading, refetch, isFetching } = useHolidays();
+  const [year, setYear] = useState(() => dayjs().year());
+  const {
+    data: holidays = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = useHolidays(year);
   const { mutate: remove } = useDeleteHoliday();
 
   return (
@@ -25,6 +33,14 @@ export default function HolidayList() {
             </p>
           </div>
           <Space>
+            <DatePicker
+              picker="year"
+              value={dayjs().year(year)}
+              onChange={(d) => {
+                if (d) setYear(d.year());
+              }}
+              allowClear={false}
+            />
             <Button
               icon={<ReloadOutlined spin={isFetching} />}
               onClick={() => refetch()}

@@ -6,7 +6,7 @@ export const HOLIDAY_LABEL = {
   HOL_DATE: "Holiday Date",
   IS_RECURING: "Recurring",
   IS_PAID: "Paid Holiday",
-  AREA: "Area (Localized)",
+  AREA: "Site (Localized)",
   STATUS: "Status",
   CREATE_TITLE: "Create Holiday",
   EDIT_TITLE: "Edit Holiday",

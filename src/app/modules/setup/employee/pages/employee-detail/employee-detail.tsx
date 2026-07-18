@@ -44,6 +44,7 @@ import { useDepartments } from "@/app/modules/setup/department/hooks/use-departm
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
+import { useSplitTimeShifts } from "@/app/modules/setup/time-shift/split/hooks/use-split-time-shift-queries";
 import { useFlexiTimeShifts } from "@/app/modules/setup/time-shift/flexi/hooks/use-flexi-time-shift-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useSections } from "@/app/modules/setup/section/hooks/use-section-queries";
@@ -98,6 +99,8 @@ export default function EmployeeDetail() {
     usePayrollGroups();
   const { data: fixedShifts = [], isLoading: isFixedShiftsLoading } =
     useFixedTimeShifts();
+  const { data: splitShifts = [], isLoading: isSplitShiftsLoading } =
+    useSplitTimeShifts();
   const { data: flexiShifts = [], isLoading: isFlexiShiftsLoading } =
     useFlexiTimeShifts();
   const { data: clients = [], isLoading: isClientsLoading } = useClients();
@@ -149,6 +152,7 @@ export default function EmployeeDetail() {
     isAreasLoading ||
     isPayrollGroupsLoading ||
     isFixedShiftsLoading ||
+    isSplitShiftsLoading ||
     isFlexiShiftsLoading ||
     isClientsLoading ||
     isSectionsLoading ||
@@ -182,6 +186,16 @@ export default function EmployeeDetail() {
         label: `${s.shiftName} (Fixed)`,
         shiftName: s.shiftName,
         shiftType: "FIXED" as const,
+        startTime: s.startTime,
+        endTime: s.endTime,
+      })),
+    ...splitShifts
+      .filter((s) => s.shiftType === "SPLIT")
+      .map((s) => ({
+        value: s.id,
+        label: `${s.shiftName} (Split)`,
+        shiftName: s.shiftName,
+        shiftType: "SPLIT" as const,
         startTime: s.startTime,
         endTime: s.endTime,
       })),
@@ -648,7 +662,7 @@ export default function EmployeeDetail() {
                                     color: isFixed ? "#065f46" : "#5b21b6",
                                   }}
                                 >
-                                  {isFixed ? "Fixed" : "Flexi"}
+                                  {isFixed ? "Fixed" : "Split"}
                                 </span>
                               </span>
                             </div>

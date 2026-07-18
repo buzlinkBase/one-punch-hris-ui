@@ -5,10 +5,10 @@ import type { UpdateHoliday } from "../models/api/request/update-holiday.model";
 
 const QUERY_KEY = ["holidays"];
 
-export function useHolidays() {
+export function useHolidays(year: number = new Date().getFullYear()) {
   return useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: () => holidayApi.getAll(),
+    queryKey: [...QUERY_KEY, year],
+    queryFn: () => holidayApi.getAll(year),
   });
 }
 

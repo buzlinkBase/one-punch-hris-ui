@@ -12,7 +12,7 @@ const TIME_SHIFT_NAMES = [
   "Day Shift (8AM-5PM)",
   "Mid Shift (10AM-7PM)",
   "Night Shift (10PM-6AM)",
-  "Flexi Shift",
+  "Split Shift",
 ];
 
 const CLIENT_NAMES = ["Client A", "Client B", "Client C"];

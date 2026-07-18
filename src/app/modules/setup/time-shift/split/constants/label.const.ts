@@ -1,0 +1,16 @@
+export const SPLIT_TIME_SHIFT_LABEL = {
+  TITLE: "Split Shift",
+  SHIFT_NAME: "Shift Name",
+  START_TIME: "Earliest Clock-In Time",
+  END_TIME: "Latest Clock-Out Time",
+  MIN_WORKING: "Minimum Working Time (min)",
+  MAX_WORKING: "Maximum Working Time (min)",
+  UNPAID_LUNCH_BREAK: "Set Allowable Break Window",
+  BREAK_PERIOD_START: "Allowable Break Period Start",
+  BREAK_PERIOD_END: "Allowable Break Period End",
+  BREAK_DURATION: "Break Duration (min)",
+  ALLOW_OT: "Allow Overtime",
+  OT_THRESHOLD: "OT Threshold (min)",
+  CREATE_TITLE: "Create Split Shift",
+  EDIT_TITLE: "Edit Split Shift",
+};

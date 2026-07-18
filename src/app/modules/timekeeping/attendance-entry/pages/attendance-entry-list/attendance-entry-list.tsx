@@ -38,6 +38,23 @@ import type { AttendanceEntryResponse } from "../../models/api/response/attendan
 
 const { Title, Text } = Typography;
 
+function getSemiMonthlyCutoff(): { fromDate: string; toDate: string } {
+  const today = dayjs();
+  const day = today.date();
+  if (day <= 15) {
+    return {
+      fromDate: today.startOf("month").format("YYYY-MM-DD"),
+      toDate: today.date(15).format("YYYY-MM-DD"),
+    };
+  }
+  return {
+    fromDate: today.date(16).format("YYYY-MM-DD"),
+    toDate: today.endOf("month").format("YYYY-MM-DD"),
+  };
+}
+
+const DEFAULT_CUTOFF = getSemiMonthlyCutoff();
+
 interface BatchGroup {
   batchCode: string;
   entries: AttendanceEntryResponse[];
@@ -51,9 +68,9 @@ const EMPTY_FILTER: AttendanceEntryFilter = {};
 export default function AttendanceEntryList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entries");
-  const [pending, setPending] = useState<AttendanceEntryFilter>(EMPTY_FILTER);
+  const [pending, setPending] = useState<AttendanceEntryFilter>(DEFAULT_CUTOFF);
   const [committedFilter, setCommittedFilter] =
-    useState<AttendanceEntryFilter | null>(null);
+    useState<AttendanceEntryFilter | null>(DEFAULT_CUTOFF);
   const [searchKey, setSearchKey] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
@@ -130,9 +147,9 @@ export default function AttendanceEntryList() {
   };
 
   const handleClear = () => {
-    setPending(EMPTY_FILTER);
-    setCommittedFilter(null);
-    setSearchKey(0);
+    setPending(DEFAULT_CUTOFF);
+    setCommittedFilter(DEFAULT_CUTOFF);
+    setSearchKey((k) => k + 1);
   };
 
   const handleDeleteEntry = async (id: string) => {
