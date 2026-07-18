@@ -28,6 +28,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import type { Dayjs } from "dayjs";
 import { useDevices } from "@/app/modules/biometric/manage-devices/hooks/use-device-queries";
+import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import type { DeviceCommandRecord } from "../../models/api/response/device-command-record.model";
 import type { SetEmployeeCommandPayload } from "../../models/api/request/set-employee-command.model";
 import type { SyncBioPayload } from "../../models/api/request/sync-bio.model";
@@ -313,6 +314,11 @@ function SyncSection({ sn }: { sn: string }) {
   const [bioJson, setBioJson] = useState("");
   const [faceJson, setFaceJson] = useState("");
 
+  const { data: employeeData = [] } = useEmployeeFilter();
+  const employeeOptions = employeeData
+    .filter((e) => (e.bioId ?? 0) > 0)
+    .map((e) => ({ value: e.id, label: e.name ?? e.id, bioId: e.bioId! }));
+
   const { mutateAsync: syncEmployees, isPending: syncingEmp } =
     useSyncEmployees();
   const { mutateAsync: syncBiometric, isPending: syncingBio } =
@@ -364,20 +370,51 @@ function SyncSection({ sn }: { sn: string }) {
                     key={key}
                     className="border border-gray-200 rounded-lg p-3 mb-2 bg-gray-50/50"
                   >
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                      <Form.Item
+                        label="Employee"
+                        className="col-span-2"
+                        required
+                      >
+                        <Select
+                          showSearch
+                          allowClear
+                          optionFilterProp="label"
+                          placeholder="Select employee"
+                          options={employeeOptions}
+                          onChange={(val, opt) => {
+                            if (!val) {
+                              empForm.setFieldValue(
+                                ["employees", name, "bioId"],
+                                null,
+                              );
+                              empForm.setFieldValue(
+                                ["employees", name, "name"],
+                                "",
+                              );
+                            } else {
+                              const o = opt as (typeof employeeOptions)[number];
+                              empForm.setFieldValue(
+                                ["employees", name, "bioId"],
+                                o.bioId,
+                              );
+                              empForm.setFieldValue(
+                                ["employees", name, "name"],
+                                o.label,
+                              );
+                            }
+                          }}
+                        />
+                      </Form.Item>
                       <Form.Item
                         name={[name, "bioId"]}
                         label="Bio ID"
                         rules={[{ required: true, message: "Required" }]}
                       >
-                        <InputNumber min={1} className="w-full" />
+                        <InputNumber className="w-full" readOnly />
                       </Form.Item>
-                      <Form.Item
-                        name={[name, "name"]}
-                        label="Name"
-                        rules={[{ required: true, message: "Required" }]}
-                      >
-                        <Input placeholder="Full Name" />
+                      <Form.Item name={[name, "name"]} hidden>
+                        <Input />
                       </Form.Item>
                       <Form.Item name={[name, "privilege"]} label="Privilege">
                         <Select options={PRIVILEGE_OPTIONS} />
