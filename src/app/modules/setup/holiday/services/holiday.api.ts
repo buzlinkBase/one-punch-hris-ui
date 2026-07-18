@@ -7,8 +7,10 @@ import type { UpdateHoliday } from "../models/api/request/update-holiday.model";
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "holidays");
 
 export const holidayApi = {
-  getAll(): Promise<HolidayResponse[]> {
-    return httpClient.getUnwrapped<HolidayResponse[]>(ENDPOINT);
+  getAll(year: number = new Date().getFullYear()): Promise<HolidayResponse[]> {
+    return httpClient.getUnwrapped<HolidayResponse[]>(
+      `${ENDPOINT}?year=${year}`,
+    );
   },
   getById(id: string): Promise<HolidayResponse> {
     return httpClient.getUnwrapped<HolidayResponse>(`${ENDPOINT}/${id}`);

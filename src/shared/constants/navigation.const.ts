@@ -78,11 +78,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "DTR Summary",
         path: "/daily-time-record/summary",
       },
-      {
-        key: "daily-time-record-for-payroll",
-        label: "For Payroll",
-        path: "/daily-time-record/for-payroll",
-      },
+      // {
+      //   key: "daily-time-record-for-payroll",
+      //   label: "For Payroll",
+      //   path: "/daily-time-record/for-payroll",
+      // },
     ],
   },
   {
@@ -102,19 +102,25 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     label: "Setup",
     children: [
       {
-        key: "setup-fixed-shift",
-        label: "Fixed Time Shift",
-        path: "/setup/time-shift/fixed",
-      },
-      {
-        key: "setup-split-shift",
-        label: "Split Shift",
-        path: "/setup/time-shift/split",
-      },
-      {
-        key: "setup-flexi-shift",
-        label: "Flexi Time Shift",
-        path: "/setup/time-shift/flexi",
+        key: "Time Shift",
+        label: "Time Shift",
+        children: [
+          {
+            key: "setup-fixed-shift",
+            label: "Fixed Time Shift",
+            path: "/setup/time-shift/fixed",
+          },
+          {
+            key: "setup-split-shift",
+            label: "Split Shift",
+            path: "/setup/time-shift/split",
+          },
+          // {
+          //   key: "setup-flexi-shift",
+          //   label: "Flexi Time Shift",
+          //   path: "/setup/time-shift/flexi",
+          // },
+        ],
       },
       { key: "setup-branch", label: "Branch", path: "/setup/branch" },
       {

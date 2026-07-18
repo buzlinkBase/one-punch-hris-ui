@@ -19,7 +19,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
     fullName: 180,
     workType: 120,
     workDate: 110,
-    shiftName: 160,
+    shiftName: 100,
     startTime: 75,
     endTime: 75,
     lateMinutes: 75,
@@ -79,31 +79,11 @@ export default function DtrDetailTable({ data, loading }: Props) {
     },
   });
 
-  const timeCol = (
-    title: string,
-    dataIndex: keyof DtrDetailResponse,
-    width = 75,
-  ) => ({
-    title,
-    dataIndex,
-    key: dataIndex as string,
-    align: R,
-    width: widths[dataIndex as string] ?? width,
-    onHeaderCell: () =>
-      ({
-        width: widths[dataIndex as string] ?? width,
-        onResize: (w: number) => handleResize(dataIndex as string, w),
-      }) as object,
-    render: (v: string | null) => (v ? dayjs(v).format("HH:mm") : null),
-  });
-
   const columns: ColumnsType<DtrDetailResponse> = [
-    // ── Identity (fixed left) ────────────────────────────────────────────────────
     {
       title: DTR_DETAIL_LABEL.EMPLOYEE,
       dataIndex: "fullName",
       key: "fullName",
-      fixed: "left",
       width: widths.fullName,
       align: L,
       onHeaderCell: () =>
@@ -116,7 +96,6 @@ export default function DtrDetailTable({ data, loading }: Props) {
       title: DTR_DETAIL_LABEL.WORK_TYPE,
       dataIndex: "workType",
       key: "workType",
-      fixed: "left",
       width: widths.workType,
       align: L,
       onHeaderCell: () =>
@@ -149,8 +128,32 @@ export default function DtrDetailTable({ data, loading }: Props) {
           onResize: (w: number) => handleResize("shiftName", w),
         }) as object,
     },
-    timeCol(DTR_DETAIL_LABEL.START, "startTime"),
-    timeCol(DTR_DETAIL_LABEL.END, "endTime"),
+    {
+      title: DTR_DETAIL_LABEL.START,
+      dataIndex: "startTime",
+      key: "startTime",
+      width: widths.startTime,
+      align: R,
+      onHeaderCell: () =>
+        ({
+          width: widths.startTime,
+          onResize: (w: number) => handleResize("startTime", w),
+        }) as object,
+      render: (v: string | null) => (v ? dayjs(v).format("HH:mm") : null),
+    },
+    {
+      title: DTR_DETAIL_LABEL.END,
+      dataIndex: "endTime",
+      key: "endTime",
+      width: widths.endTime,
+      align: R,
+      onHeaderCell: () =>
+        ({
+          width: widths.endTime,
+          onResize: (w: number) => handleResize("endTime", w),
+        }) as object,
+      render: (v: string | null) => (v ? dayjs(v).format("HH:mm") : null),
+    },
     // ── MINUTES group ────────────────────────────────────────────────────────────
     {
       title: "Minutes",

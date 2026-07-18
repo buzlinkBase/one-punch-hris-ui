@@ -69,7 +69,6 @@ export default function CleanColumnarTable({ data, loading }: Props) {
       dataIndex: "empNo",
       key: "empNo",
       width: widths.empNo,
-      fixed: "left",
       onHeaderCell: () =>
         ({
           width: widths.empNo,
@@ -81,7 +80,6 @@ export default function CleanColumnarTable({ data, loading }: Props) {
       dataIndex: "fullName",
       key: "fullName",
       width: widths.fullName,
-      fixed: "left",
       ellipsis: true,
       onHeaderCell: () =>
         ({
