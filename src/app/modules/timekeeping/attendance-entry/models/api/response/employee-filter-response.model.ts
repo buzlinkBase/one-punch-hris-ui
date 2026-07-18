@@ -1,5 +1,6 @@
 export interface EmployeeFilterResponse {
   id: string;
+  bioId?: number | null;
   name?: string | null;
   branchId?: string | null;
   areaId?: string | null;
