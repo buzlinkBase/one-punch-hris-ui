@@ -9,6 +9,9 @@ export function useDevices() {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: () => deviceApi.getAll(),
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 

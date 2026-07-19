@@ -3,13 +3,16 @@ export interface BiometricDeviceModel {
   sn: string;
   deviceName: string;
   description: string;
-  macAddress: string;
-  ipAddress: string;
   platform: string;
   oemVendor: string;
+  fwVersion: string;
+  pushVersion: string;
+  regDeviceType?: string | null;
+  languageCode: number;
   branchId?: string;
   clientId?: string;
   departmentId?: string;
   operationAreaId?: string;
+  state: string;
   status: string;
 }

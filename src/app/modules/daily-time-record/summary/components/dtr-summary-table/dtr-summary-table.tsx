@@ -81,30 +81,33 @@ export default function DtrSummaryTable({ data, loading }: Props) {
   });
 
   const columns: ColumnsType<DtrSummaryResponse> = [
-    // ── Identity (fixed left) ────────────────────────────────────────────────────
+    // ── Identity group ───────────────────────────────────────────────────────────
     {
-      title: DTR_SUMMARY_LABEL.BIO_ID,
-      dataIndex: "bioId",
-      key: "bioId",
-      fixed: "left",
-      width: widths.bioId,
-      onHeaderCell: () =>
-        ({
+      title: "Employee",
+      children: [
+        {
+          title: DTR_SUMMARY_LABEL.BIO_ID,
+          dataIndex: "bioId",
+          key: "bioId",
           width: widths.bioId,
-          onResize: (w: number) => handleResize("bioId", w),
-        }) as object,
-    },
-    {
-      title: DTR_SUMMARY_LABEL.EMPLOYEE,
-      dataIndex: "employeeName",
-      key: "employeeName",
-      fixed: "left",
-      width: widths.employeeName,
-      onHeaderCell: () =>
-        ({
+          onHeaderCell: () =>
+            ({
+              width: widths.bioId,
+              onResize: (w: number) => handleResize("bioId", w),
+            }) as object,
+        },
+        {
+          title: DTR_SUMMARY_LABEL.EMPLOYEE,
+          dataIndex: "employeeName",
+          key: "employeeName",
           width: widths.employeeName,
-          onResize: (w: number) => handleResize("employeeName", w),
-        }) as object,
+          onHeaderCell: () =>
+            ({
+              width: widths.employeeName,
+              onResize: (w: number) => handleResize("employeeName", w),
+            }) as object,
+        },
+      ],
     },
     // ── Minutes group ────────────────────────────────────────────────────────────
     {
@@ -219,11 +222,16 @@ export default function DtrSummaryTable({ data, loading }: Props) {
         },
       ],
     },
-    // ── Trailing flat columns ─────────────────────────────────────────────────────
-    col(DTR_SUMMARY_LABEL.RAW_OT, "rawOt", 80),
-    col(DTR_SUMMARY_LABEL.APPLIED_OT, "appliedOt", 90),
-    col(DTR_SUMMARY_LABEL.ABS, "abs", 60),
-    col(DTR_SUMMARY_LABEL.TOTAL, "total", 80),
+    // ── Summary group ─────────────────────────────────────────────────────────────
+    {
+      title: "Summary",
+      children: [
+        col(DTR_SUMMARY_LABEL.RAW_OT, "rawOt", 80),
+        col(DTR_SUMMARY_LABEL.APPLIED_OT, "appliedOt", 90),
+        col(DTR_SUMMARY_LABEL.ABS, "abs", 60),
+        col(DTR_SUMMARY_LABEL.TOTAL, "total", 80),
+      ],
+    },
   ];
 
   return (
