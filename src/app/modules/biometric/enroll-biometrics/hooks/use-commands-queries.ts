@@ -141,9 +141,99 @@ export function useQueryTemplates() {
   );
 }
 
+export function useQueryTemplatesBulk() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      sn,
+      pins,
+      fid,
+    }: {
+      sn: string;
+      pins: string[];
+      fid?: number;
+    }) =>
+      Promise.all(
+        pins.map((pin) => commandsApi.queryTemplates(sn, pin, fid)),
+      ).then(() => undefined),
+    onSuccess: () => {
+      message.success("Query templates commands queued");
+      queryClient.invalidateQueries({ queryKey: COMMANDS_KEY });
+    },
+    onError: () => {
+      message.error("Some query commands failed. Please try again.");
+    },
+  });
+}
+
 export function useRegistryReset() {
   return useCommandMutation(
     (sn: string) => commandsApi.registryReset(sn),
     "Registry reset command queued",
   );
+}
+
+export function useDeleteEmployee() {
+  return useCommandMutation(
+    ({ sn, pin }: { sn: string; pin: string }) =>
+      commandsApi.deleteEmployee(sn, pin),
+    "Delete employee command queued",
+  );
+}
+
+export function useDeleteFingerprint() {
+  return useCommandMutation(
+    ({
+      sn,
+      pin,
+      fingerIndex,
+    }: {
+      sn: string;
+      pin: string;
+      fingerIndex?: number;
+    }) => commandsApi.deleteFingerprint(sn, pin, fingerIndex),
+    "Delete fingerprint command queued",
+  );
+}
+
+export function useDeleteEmployeesBulk() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ sn, pins }: { sn: string; pins: string[] }) =>
+      Promise.all(pins.map((pin) => commandsApi.deleteEmployee(sn, pin))).then(
+        () => undefined,
+      ),
+    onSuccess: () => {
+      message.success("Delete employee commands queued");
+      queryClient.invalidateQueries({ queryKey: COMMANDS_KEY });
+    },
+    onError: () => {
+      message.error("Some delete commands failed. Please try again.");
+    },
+  });
+}
+
+export function useDeleteFingerprintsBulk() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      sn,
+      pins,
+      fingerIndex,
+    }: {
+      sn: string;
+      pins: string[];
+      fingerIndex?: number;
+    }) =>
+      Promise.all(
+        pins.map((pin) => commandsApi.deleteFingerprint(sn, pin, fingerIndex)),
+      ).then(() => undefined),
+    onSuccess: () => {
+      message.success("Delete fingerprint commands queued");
+      queryClient.invalidateQueries({ queryKey: COMMANDS_KEY });
+    },
+    onError: () => {
+      message.error("Some delete commands failed. Please try again.");
+    },
+  });
 }

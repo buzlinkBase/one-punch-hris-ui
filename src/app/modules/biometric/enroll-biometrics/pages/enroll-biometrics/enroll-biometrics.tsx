@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Key } from "react";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import {
@@ -19,15 +20,15 @@ import {
   Typography,
   message,
 } from "antd";
-import {
-  DeleteOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { Dayjs } from "dayjs";
 import { useDevices } from "@/app/modules/biometric/manage-devices/hooks/use-device-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import type { EmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/models/api/request/employee-filter.model";
+import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
+import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import type { DeviceCommandRecord } from "../../models/api/response/device-command-record.model";
 import type { SetEmployeeCommandPayload } from "../../models/api/request/set-employee-command.model";
 import type { SyncBioPayload } from "../../models/api/request/sync-bio.model";
@@ -35,7 +36,6 @@ import {
   usePendingCommands,
   useDeleteCommand,
   useEnrollFingerprint,
-  useEnrollFace,
   useSyncEmployees,
   useSyncBiometric,
   useSyncFace,
@@ -46,7 +46,10 @@ import {
   useClearAdmin,
   usePullAttendance,
   useQueryTemplates,
+  useQueryTemplatesBulk,
   useRegistryReset,
+  useDeleteEmployeesBulk,
+  useDeleteFingerprintsBulk,
 } from "../../hooks/use-commands-queries";
 
 const { Title } = Typography;
@@ -63,11 +66,6 @@ const FINGER_OPTIONS = [
   { value: 7, label: "7 – Right Middle" },
   { value: 8, label: "8 – Right Ring" },
   { value: 9, label: "9 – Right Pinky" },
-];
-
-const FACE_TYPE_OPTIONS = [
-  { value: 1, label: "Type 1" },
-  { value: 2, label: "Type 2 (Default)" },
 ];
 
 const PRIVILEGE_OPTIONS = [
@@ -166,8 +164,6 @@ function PendingCommandsSection({ sn }: { sn: string }) {
 
 function EnrollSection({ sn }: { sn: string }) {
   const [fpForm] = Form.useForm();
-  const [faceForm] = Form.useForm();
-  const [queryForm] = Form.useForm();
 
   const { data: employeeData = [] } = useEmployeeFilter();
   const employeeOptions = employeeData
@@ -176,13 +172,9 @@ function EnrollSection({ sn }: { sn: string }) {
 
   const { mutateAsync: enrollFP, isPending: enrollingFP } =
     useEnrollFingerprint();
-  const { mutateAsync: enrollFace, isPending: enrollingFace } = useEnrollFace();
-  const { mutateAsync: queryTemplates, isPending: querying } =
-    useQueryTemplates();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3">
-      {/* Enroll Fingerprint */}
       <Card title="Enroll Fingerprint" size="small">
         <Form
           form={fpForm}
@@ -229,119 +221,317 @@ function EnrollSection({ sn }: { sn: string }) {
           </Button>
         </Form>
       </Card>
+    </div>
+  );
+}
 
-      {/* Enroll Face */}
-      <Card title="Enroll Face" size="small">
-        <Form
-          form={faceForm}
-          layout="vertical"
-          initialValues={{ faceType: 2, overwrite: true }}
-          onFinish={async (v: {
-            bioId: number;
-            cardNo: string;
-            faceType: number;
-            overwrite: boolean;
-          }) => {
-            await enrollFace({ sn, payload: v });
-            faceForm.resetFields();
-          }}
-        >
-          <Form.Item label="Employee" required>
-            <Select
-              showSearch
-              allowClear
-              optionFilterProp="label"
-              placeholder="Select employee"
-              options={employeeOptions}
-              onChange={(val, opt) => {
-                faceForm.setFieldValue(
-                  "bioId",
-                  val ? (opt as (typeof employeeOptions)[number]).bioId : null,
-                );
-              }}
-            />
-          </Form.Item>
-          <Form.Item
-            name="bioId"
-            label="Bio ID"
-            rules={[{ required: true, message: "Required" }]}
+// ─── Section: Query Templates ─────────────────────────────────────────────────
+
+function QueryTemplatesSection({ sn }: { sn: string }) {
+  const [filter, setFilter] = useState<EmployeeFilter>({});
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [fingerIndex, setFingerIndex] = useState<number | undefined>();
+
+  const { data: employeeData = [], isFetching } = useEmployeeFilter(filter);
+  const { data: departments = [] } = useDepartments();
+  const { data: payrollGroups = [] } = usePayrollGroups();
+  const { data: clients = [] } = useClients();
+
+  const { mutateAsync: queryAll, isPending: queryingAll } = useQueryTemplates();
+  const { mutateAsync: queryBulk, isPending: queryingBulk } =
+    useQueryTemplatesBulk();
+
+  const employees = employeeData.filter((e) => (e.bioId ?? 0) > 0);
+
+  const columns = [
+    { title: "Bio ID", dataIndex: "bioId", key: "bioId", width: 80 },
+    { title: "Name", dataIndex: "name", key: "name" },
+    {
+      title: "Department",
+      dataIndex: "departmentName",
+      key: "departmentName",
+      width: 160,
+    },
+    { title: "Client", dataIndex: "clientName", key: "clientName", width: 160 },
+    {
+      title: "Payroll Group",
+      dataIndex: "payrollGroupName",
+      key: "payrollGroupName",
+      width: 140,
+    },
+  ];
+
+  const fingerLabel =
+    fingerIndex !== undefined
+      ? (FINGER_OPTIONS.find((f) => f.value === fingerIndex)?.label ??
+        String(fingerIndex))
+      : "all fingers";
+
+  const handleQuerySelected = async () => {
+    const selected = employees.filter((e) => selectedRowKeys.includes(e.id));
+    await queryBulk({
+      sn,
+      pins: selected.map((e) => String(e.bioId!)),
+      fid: fingerIndex,
+    });
+    setSelectedRowKeys([]);
+  };
+
+  return (
+    <div className="flex flex-col gap-3 pt-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+          value={filter.departmentId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, departmentId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Payroll Groups"
+          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
+          value={filter.payrollGroupId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Clients"
+          options={clients.map((c) => ({ value: c.id, label: c.name }))}
+          value={filter.clientId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, clientId: val ?? null }))
+          }
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-600 shrink-0">Finger:</span>
+        <Select
+          allowClear
+          placeholder="All fingers"
+          options={FINGER_OPTIONS}
+          value={fingerIndex}
+          onChange={(val) => setFingerIndex(val as number | undefined)}
+          style={{ width: 220 }}
+        />
+      </div>
+
+      <Table
+        rowKey="id"
+        dataSource={employees}
+        columns={columns}
+        loading={isFetching}
+        size="small"
+        pagination={{ pageSize: 15, size: "small" }}
+        scroll={{ x: "max-content" }}
+        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+        locale={{ emptyText: "No employees with a Bio ID found" }}
+      />
+
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-500">
+          {selectedRowKeys.length > 0
+            ? `${selectedRowKeys.length} employee${selectedRowKeys.length !== 1 ? "s" : ""} selected — ${fingerLabel}`
+            : `No selection — use Query All to query every employee on device`}
+        </span>
+        <Space>
+          <Button
+            loading={queryingAll}
+            onClick={() => queryAll({ sn, fid: fingerIndex })}
           >
-            <InputNumber className="w-full" readOnly />
-          </Form.Item>
-          <Form.Item
-            name="cardNo"
-            label="Card No"
-            rules={[{ required: true, message: "Required" }]}
-          >
-            <Input placeholder="e.g. 12345678" />
-          </Form.Item>
-          <Form.Item name="faceType" label="Face Type">
-            <Select options={FACE_TYPE_OPTIONS} />
-          </Form.Item>
-          <Form.Item name="overwrite" label="Overwrite" valuePropName="checked">
-            <Switch />
-          </Form.Item>
+            Query All
+          </Button>
           <Button
             type="primary"
-            htmlType="submit"
-            loading={enrollingFace}
-            block
+            disabled={selectedRowKeys.length === 0}
+            loading={queryingBulk}
+            onClick={handleQuerySelected}
           >
-            Queue Enroll Command
+            Query Selected ({selectedRowKeys.length})
           </Button>
-        </Form>
-      </Card>
+        </Space>
+      </div>
+    </div>
+  );
+}
 
-      {/* Query Templates */}
-      <Card title="Query Templates" size="small">
-        <Form
-          form={queryForm}
-          layout="vertical"
-          onFinish={async (v: { pin?: string; fid?: number | null }) => {
-            await queryTemplates({
-              sn,
-              pin: v.pin || undefined,
-              fid: v.fid ?? undefined,
-            });
-            queryForm.resetFields();
-          }}
+// ─── Sync Employees Panel ─────────────────────────────────────────────────────
+
+interface RowOverride {
+  privilege: number;
+  password: string;
+  card: string;
+}
+
+function SyncEmployeesPanel({
+  onSync,
+  syncing,
+}: {
+  onSync: (payload: SetEmployeeCommandPayload[]) => Promise<void>;
+  syncing: boolean;
+}) {
+  const [filter, setFilter] = useState<EmployeeFilter>({});
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [overrides, setOverrides] = useState<Record<string, RowOverride>>({});
+
+  const { data: employeeData = [], isFetching } = useEmployeeFilter(filter);
+  const { data: departments = [] } = useDepartments();
+  const { data: payrollGroups = [] } = usePayrollGroups();
+  const { data: clients = [] } = useClients();
+
+  const employees = employeeData.filter((e) => (e.bioId ?? 0) > 0);
+
+  const getOverride = (id: string): RowOverride =>
+    overrides[id] ?? { privilege: 0, password: "", card: "" };
+
+  const setField = (
+    id: string,
+    field: keyof RowOverride,
+    value: string | number,
+  ) =>
+    setOverrides((prev) => ({
+      ...prev,
+      [id]: { ...getOverride(id), [field]: value },
+    }));
+
+  const columns = [
+    { title: "Bio ID", dataIndex: "bioId", key: "bioId", width: 75 },
+    { title: "Name", dataIndex: "name", key: "name", width: 180 },
+    {
+      title: "Department",
+      dataIndex: "departmentName",
+      key: "departmentName",
+      width: 150,
+    },
+    { title: "Client", dataIndex: "clientName", key: "clientName", width: 150 },
+    {
+      title: "Privilege",
+      key: "privilege",
+      width: 130,
+      render: (_: unknown, row: (typeof employees)[number]) => (
+        <Select
+          size="small"
+          options={PRIVILEGE_OPTIONS}
+          value={getOverride(row.id).privilege}
+          onChange={(val) => setField(row.id, "privilege", val as number)}
+          style={{ width: "100%" }}
+        />
+      ),
+    },
+    {
+      title: "Password",
+      key: "password",
+      width: 120,
+      render: (_: unknown, row: (typeof employees)[number]) => (
+        <Input
+          size="small"
+          placeholder="(none)"
+          value={getOverride(row.id).password}
+          onChange={(e) => setField(row.id, "password", e.target.value)}
+        />
+      ),
+    },
+    {
+      title: "Card No",
+      key: "card",
+      width: 120,
+      render: (_: unknown, row: (typeof employees)[number]) => (
+        <Input
+          size="small"
+          placeholder="(none)"
+          value={getOverride(row.id).card}
+          onChange={(e) => setField(row.id, "card", e.target.value)}
+        />
+      ),
+    },
+  ];
+
+  const handleSync = async () => {
+    const selected = employees.filter((e) => selectedRowKeys.includes(e.id));
+    const payload: SetEmployeeCommandPayload[] = selected.map((e) => ({
+      bioId: e.bioId!,
+      name: e.name ?? "",
+      ...getOverride(e.id),
+    }));
+    await onSync(payload);
+    setSelectedRowKeys([]);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+          value={filter.departmentId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, departmentId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Payroll Groups"
+          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
+          value={filter.payrollGroupId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Clients"
+          options={clients.map((c) => ({ value: c.id, label: c.name }))}
+          value={filter.clientId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, clientId: val ?? null }))
+          }
+        />
+      </div>
+
+      <Table
+        rowKey="id"
+        dataSource={employees}
+        columns={columns}
+        loading={isFetching}
+        size="small"
+        pagination={{ pageSize: 15, size: "small" }}
+        scroll={{ x: "max-content" }}
+        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+        locale={{ emptyText: "No employees with a Bio ID found" }}
+      />
+
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-500">
+          {selectedRowKeys.length} employee
+          {selectedRowKeys.length !== 1 ? "s" : ""} selected
+        </span>
+        <Button
+          type="primary"
+          disabled={selectedRowKeys.length === 0}
+          loading={syncing}
+          onClick={handleSync}
         >
-          <Form.Item label="Employee" help="Leave blank to query all users">
-            <Select
-              showSearch
-              allowClear
-              optionFilterProp="label"
-              placeholder="Select employee (optional)"
-              options={employeeOptions}
-              onChange={(val, opt) => {
-                queryForm.setFieldValue(
-                  "pin",
-                  val
-                    ? String((opt as (typeof employeeOptions)[number]).bioId)
-                    : undefined,
-                );
-              }}
-            />
-          </Form.Item>
-          <Form.Item name="pin" hidden>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="fid"
-            label="Finger ID"
-            help="Leave blank to query all fingers"
-          >
-            <Select
-              options={FINGER_OPTIONS}
-              allowClear
-              placeholder="All fingers"
-            />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" loading={querying} block>
-            Query Templates
-          </Button>
-        </Form>
-      </Card>
+          Sync Selected ({selectedRowKeys.length})
+        </Button>
+      </div>
     </div>
   );
 }
@@ -349,31 +539,14 @@ function EnrollSection({ sn }: { sn: string }) {
 // ─── Section: Sync ───────────────────────────────────────────────────────────
 
 function SyncSection({ sn }: { sn: string }) {
-  const [empForm] = Form.useForm<{ employees: SetEmployeeCommandPayload[] }>();
   const [bioJson, setBioJson] = useState("");
   const [faceJson, setFaceJson] = useState("");
-
-  const { data: employeeData = [] } = useEmployeeFilter();
-  const employeeOptions = employeeData
-    .filter((e) => (e.bioId ?? 0) > 0)
-    .map((e) => ({ value: e.id, label: e.name ?? e.id, bioId: e.bioId! }));
 
   const { mutateAsync: syncEmployees, isPending: syncingEmp } =
     useSyncEmployees();
   const { mutateAsync: syncBiometric, isPending: syncingBio } =
     useSyncBiometric();
   const { mutateAsync: syncFace, isPending: syncingFace } = useSyncFace();
-
-  const handleSyncEmp = async (values: {
-    employees: SetEmployeeCommandPayload[];
-  }) => {
-    if (!values.employees?.length) {
-      void message.warning("Add at least one employee");
-      return;
-    }
-    await syncEmployees({ sn, payload: values.employees });
-    empForm.resetFields();
-  };
 
   const parseBioJson = (json: string): SyncBioPayload[] | null => {
     try {
@@ -393,105 +566,10 @@ function SyncSection({ sn }: { sn: string }) {
       key: "employees",
       label: "Sync Employees",
       children: (
-        <Form
-          form={empForm}
-          layout="vertical"
-          initialValues={{
-            employees: [{ privilege: 0, password: "", card: "" }],
-          }}
-          onFinish={handleSyncEmp}
-        >
-          <Form.List name="employees">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name }) => (
-                  <div
-                    key={key}
-                    className="border border-gray-200 rounded-lg p-3 mb-2 bg-gray-50/50"
-                  >
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-                      <Form.Item
-                        label="Employee"
-                        className="col-span-2"
-                        required
-                      >
-                        <Select
-                          showSearch
-                          allowClear
-                          optionFilterProp="label"
-                          placeholder="Select employee"
-                          options={employeeOptions}
-                          onChange={(val, opt) => {
-                            if (!val) {
-                              empForm.setFieldValue(
-                                ["employees", name, "bioId"],
-                                null,
-                              );
-                              empForm.setFieldValue(
-                                ["employees", name, "name"],
-                                "",
-                              );
-                            } else {
-                              const o = opt as (typeof employeeOptions)[number];
-                              empForm.setFieldValue(
-                                ["employees", name, "bioId"],
-                                o.bioId,
-                              );
-                              empForm.setFieldValue(
-                                ["employees", name, "name"],
-                                o.label,
-                              );
-                            }
-                          }}
-                        />
-                      </Form.Item>
-                      <Form.Item
-                        name={[name, "bioId"]}
-                        label="Bio ID"
-                        rules={[{ required: true, message: "Required" }]}
-                      >
-                        <InputNumber className="w-full" readOnly />
-                      </Form.Item>
-                      <Form.Item name={[name, "name"]} hidden>
-                        <Input />
-                      </Form.Item>
-                      <Form.Item name={[name, "privilege"]} label="Privilege">
-                        <Select options={PRIVILEGE_OPTIONS} />
-                      </Form.Item>
-                      <Form.Item name={[name, "password"]} label="Password">
-                        <Input placeholder="Device password" />
-                      </Form.Item>
-                      <Form.Item name={[name, "card"]} label="Card No">
-                        <Input placeholder="Card number" />
-                      </Form.Item>
-                    </div>
-                    {fields.length > 1 && (
-                      <Button
-                        danger
-                        size="small"
-                        icon={<DeleteOutlined />}
-                        onClick={() => remove(name)}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={() => add({ privilege: 0, password: "", card: "" })}
-                >
-                  Add Employee
-                </Button>
-              </>
-            )}
-          </Form.List>
-          <div className="mt-4">
-            <Button type="primary" htmlType="submit" loading={syncingEmp}>
-              Sync Employees
-            </Button>
-          </div>
-        </Form>
+        <SyncEmployeesPanel
+          syncing={syncingEmp}
+          onSync={(payload) => syncEmployees({ sn, payload })}
+        />
       ),
     },
     {
@@ -751,6 +829,283 @@ function ControlsSection({ sn }: { sn: string }) {
   );
 }
 
+// ─── Section: Delete ─────────────────────────────────────────────────────────
+
+function BulkDeleteEmployeePanel({ sn }: { sn: string }) {
+  const [filter, setFilter] = useState<EmployeeFilter>({});
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+
+  const { data: employeeData = [], isFetching } = useEmployeeFilter(filter);
+  const { data: departments = [] } = useDepartments();
+  const { data: payrollGroups = [] } = usePayrollGroups();
+  const { data: clients = [] } = useClients();
+  const { mutateAsync: deleteEmployees, isPending: deleting } =
+    useDeleteEmployeesBulk();
+
+  const employees = employeeData.filter((e) => (e.bioId ?? 0) > 0);
+
+  const columns = [
+    { title: "Bio ID", dataIndex: "bioId", key: "bioId", width: 80 },
+    { title: "Name", dataIndex: "name", key: "name" },
+    {
+      title: "Department",
+      dataIndex: "departmentName",
+      key: "departmentName",
+      width: 160,
+    },
+    { title: "Client", dataIndex: "clientName", key: "clientName", width: 160 },
+    {
+      title: "Payroll Group",
+      dataIndex: "payrollGroupName",
+      key: "payrollGroupName",
+      width: 140,
+    },
+  ];
+
+  const handleDelete = async () => {
+    const selected = employees.filter((e) => selectedRowKeys.includes(e.id));
+    await deleteEmployees({ sn, pins: selected.map((e) => String(e.bioId!)) });
+    setSelectedRowKeys([]);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+          value={filter.departmentId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, departmentId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Payroll Groups"
+          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
+          value={filter.payrollGroupId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Clients"
+          options={clients.map((c) => ({ value: c.id, label: c.name }))}
+          value={filter.clientId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, clientId: val ?? null }))
+          }
+        />
+      </div>
+
+      <Table
+        rowKey="id"
+        dataSource={employees}
+        columns={columns}
+        loading={isFetching}
+        size="small"
+        pagination={{ pageSize: 10, size: "small" }}
+        scroll={{ x: "max-content" }}
+        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+        locale={{ emptyText: "No employees with a Bio ID found" }}
+      />
+
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-500">
+          {selectedRowKeys.length} employee
+          {selectedRowKeys.length !== 1 ? "s" : ""} selected
+        </span>
+        <Popconfirm
+          title={`Delete ${selectedRowKeys.length} employee(s) from device?`}
+          description="This will remove their records from the device."
+          onConfirm={handleDelete}
+          okText="Delete"
+          cancelText="Cancel"
+          okButtonProps={{ danger: true }}
+          disabled={selectedRowKeys.length === 0}
+        >
+          <Button
+            danger
+            disabled={selectedRowKeys.length === 0}
+            loading={deleting}
+          >
+            Delete Selected ({selectedRowKeys.length})
+          </Button>
+        </Popconfirm>
+      </div>
+    </div>
+  );
+}
+
+function BulkDeleteFingerprintPanel({ sn }: { sn: string }) {
+  const [filter, setFilter] = useState<EmployeeFilter>({});
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [fingerIndex, setFingerIndex] = useState<number | undefined>();
+
+  const { data: employeeData = [], isFetching } = useEmployeeFilter(filter);
+  const { data: departments = [] } = useDepartments();
+  const { data: payrollGroups = [] } = usePayrollGroups();
+  const { data: clients = [] } = useClients();
+  const { mutateAsync: deleteFingerprints, isPending: deleting } =
+    useDeleteFingerprintsBulk();
+
+  const employees = employeeData.filter((e) => (e.bioId ?? 0) > 0);
+
+  const columns = [
+    { title: "Bio ID", dataIndex: "bioId", key: "bioId", width: 80 },
+    { title: "Name", dataIndex: "name", key: "name" },
+    {
+      title: "Department",
+      dataIndex: "departmentName",
+      key: "departmentName",
+      width: 160,
+    },
+    { title: "Client", dataIndex: "clientName", key: "clientName", width: 160 },
+    {
+      title: "Payroll Group",
+      dataIndex: "payrollGroupName",
+      key: "payrollGroupName",
+      width: 140,
+    },
+  ];
+
+  const handleDelete = async () => {
+    const selected = employees.filter((e) => selectedRowKeys.includes(e.id));
+    await deleteFingerprints({
+      sn,
+      pins: selected.map((e) => String(e.bioId!)),
+      fingerIndex,
+    });
+    setSelectedRowKeys([]);
+  };
+
+  const fingerLabel =
+    fingerIndex !== undefined
+      ? (FINGER_OPTIONS.find((f) => f.value === fingerIndex)?.label ??
+        String(fingerIndex))
+      : "all fingers";
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Departments"
+          options={departments.map((d) => ({ value: d.id, label: d.name }))}
+          value={filter.departmentId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, departmentId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Payroll Groups"
+          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
+          value={filter.payrollGroupId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))
+          }
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All Clients"
+          options={clients.map((c) => ({ value: c.id, label: c.name }))}
+          value={filter.clientId ?? undefined}
+          onChange={(val) =>
+            setFilter((f) => ({ ...f, clientId: val ?? null }))
+          }
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-600 shrink-0">
+          Finger to delete:
+        </span>
+        <Select
+          allowClear
+          placeholder="All fingers"
+          options={FINGER_OPTIONS}
+          value={fingerIndex}
+          onChange={(val) => setFingerIndex(val as number | undefined)}
+          style={{ width: 220 }}
+        />
+      </div>
+
+      <Table
+        rowKey="id"
+        dataSource={employees}
+        columns={columns}
+        loading={isFetching}
+        size="small"
+        pagination={{ pageSize: 10, size: "small" }}
+        scroll={{ x: "max-content" }}
+        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+        locale={{ emptyText: "No employees with a Bio ID found" }}
+      />
+
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-500">
+          {selectedRowKeys.length} employee
+          {selectedRowKeys.length !== 1 ? "s" : ""} selected —{" "}
+          <span className="font-medium">{fingerLabel}</span>
+        </span>
+        <Popconfirm
+          title={`Delete fingerprints for ${selectedRowKeys.length} employee(s)?`}
+          description={`This will delete ${fingerLabel} from the device.`}
+          onConfirm={handleDelete}
+          okText="Delete"
+          cancelText="Cancel"
+          okButtonProps={{ danger: true }}
+          disabled={selectedRowKeys.length === 0}
+        >
+          <Button
+            danger
+            disabled={selectedRowKeys.length === 0}
+            loading={deleting}
+          >
+            Delete Selected ({selectedRowKeys.length})
+          </Button>
+        </Popconfirm>
+      </div>
+    </div>
+  );
+}
+
+function DeleteSection({ sn }: { sn: string }) {
+  const collapseItems = [
+    {
+      key: "delete-employee",
+      label: "Delete Employee",
+      children: <BulkDeleteEmployeePanel sn={sn} />,
+    },
+    {
+      key: "delete-fingerprint",
+      label: "Delete Fingerprint",
+      children: <BulkDeleteFingerprintPanel sn={sn} />,
+    },
+  ];
+
+  return (
+    <div className="pt-3">
+      <Collapse items={collapseItems} defaultActiveKey={["delete-employee"]} />
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EnrollBiometrics() {
@@ -779,9 +1134,19 @@ export default function EnrollBiometrics() {
           children: <EnrollSection sn={selectedSN} />,
         },
         {
+          key: "query-templates",
+          label: "Query Templates",
+          children: <QueryTemplatesSection sn={selectedSN} />,
+        },
+        {
           key: "sync",
           label: "Sync",
           children: <SyncSection sn={selectedSN} />,
+        },
+        {
+          key: "delete",
+          label: "Delete",
+          children: <DeleteSection sn={selectedSN} />,
         },
         {
           key: "controls",

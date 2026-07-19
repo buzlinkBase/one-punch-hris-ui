@@ -107,6 +107,25 @@ export const commandsApi = {
     );
   },
 
+  deleteEmployee(sn: string, pin: string): Promise<void> {
+    return httpClient.post<void>(
+      `${ENDPOINT}/delete-employee?SN=${encodeURIComponent(sn)}&pin=${encodeURIComponent(pin)}`,
+    );
+  },
+
+  deleteFingerprint(
+    sn: string,
+    pin: string,
+    fingerIndex?: number,
+  ): Promise<void> {
+    const params = new URLSearchParams({ SN: sn, pin });
+    if (fingerIndex !== undefined)
+      params.set("fingerIndex", String(fingerIndex));
+    return httpClient.post<void>(
+      `${ENDPOINT}/delete-fingerprint?${params.toString()}`,
+    );
+  },
+
   deleteCommand(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}?id=${id}`);
   },
