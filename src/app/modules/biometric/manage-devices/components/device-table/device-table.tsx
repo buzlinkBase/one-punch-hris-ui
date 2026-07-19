@@ -27,13 +27,15 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const { widths, handleResize } = useResizableColumns({
-    sn: 140,
+    sn: 160,
     deviceName: 180,
     description: 200,
-    macAddress: 160,
-    ipAddress: 140,
     platform: 120,
     oemVendor: 120,
+    fwVersion: 120,
+    pushVersion: 120,
+    regDeviceType: 120,
+    state: 100,
   });
 
   const resizable = (key: string) =>
@@ -50,10 +52,11 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
     [
       item.sn,
       item.deviceName,
-      item.macAddress,
-      item.ipAddress,
+      item.description,
       item.platform,
       item.oemVendor,
+      item.regDeviceType,
+      item.state,
       item.status,
     ].some((val) =>
       String(val ?? "")
@@ -77,18 +80,6 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
       ...resizable("description"),
     },
     {
-      title: DEVICE_LABEL.MAC_ADDRESS,
-      dataIndex: "macAddress",
-      key: "macAddress",
-      ...resizable("macAddress"),
-    },
-    {
-      title: DEVICE_LABEL.IP_ADDRESS,
-      dataIndex: "ipAddress",
-      key: "ipAddress",
-      ...resizable("ipAddress"),
-    },
-    {
       title: DEVICE_LABEL.PLATFORM,
       dataIndex: "platform",
       key: "platform",
@@ -101,11 +92,34 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
       ...resizable("oemVendor"),
     },
     {
+      title: DEVICE_LABEL.FW_VERSION,
+      dataIndex: "fwVersion",
+      key: "fwVersion",
+      ...resizable("fwVersion"),
+    },
+    {
+      title: DEVICE_LABEL.PUSH_VERSION,
+      dataIndex: "pushVersion",
+      key: "pushVersion",
+      ...resizable("pushVersion"),
+    },
+    {
+      title: DEVICE_LABEL.REG_DEVICE_TYPE,
+      dataIndex: "regDeviceType",
+      key: "regDeviceType",
+      ...resizable("regDeviceType"),
+    },
+    {
+      title: DEVICE_LABEL.STATE,
+      dataIndex: "state",
+      key: "state",
+      ...resizable("state"),
+    },
+    {
       title: DEVICE_LABEL.STATUS,
       dataIndex: "status",
       key: "status",
       width: 100,
-      fixed: "right",
       render: (v: string) => (
         <Tag color={STATUS_COLOR[v] ?? "default"}>{v}</Tag>
       ),
