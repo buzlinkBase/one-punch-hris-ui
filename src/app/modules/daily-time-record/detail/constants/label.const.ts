@@ -4,8 +4,8 @@ export const DTR_DETAIL_LABEL = {
   WORK_TYPE: "Work Type",
   DTR_DATE: "DTR Date",
   TIME_SHIFT: "TimeShift",
-  START: "Start",
-  END: "End",
+  START: "Actual Start",
+  END: "Actual End",
   // Minutes – Late/Over Break
   MINUTES_LATE: "Late",
   MINUTES_UT: "UT",

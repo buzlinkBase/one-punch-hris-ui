@@ -19,7 +19,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
     fullName: 180,
     workType: 120,
     workDate: 110,
-    shiftName: 100,
+    shiftName: 150,
     startTime: 75,
     endTime: 75,
     lateMinutes: 75,
@@ -127,6 +127,24 @@ export default function DtrDetailTable({ data, loading }: Props) {
           width: widths.shiftName,
           onResize: (w: number) => handleResize("shiftName", w),
         }) as object,
+      render: (name: string | null, record: DtrDetailResponse) => {
+        const start = record.shiftStartTime
+          ? dayjs(record.shiftStartTime).format("HH:mm")
+          : null;
+        const end = record.shiftEndTime
+          ? dayjs(record.shiftEndTime).format("HH:mm")
+          : null;
+        return (
+          <div style={{ lineHeight: 1.3 }}>
+            <div>{name}</div>
+            {(start || end) && (
+              <div style={{ fontSize: 11, color: "#8c8c8c" }}>
+                {start ?? "—"} – {end ?? "—"}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: DTR_DETAIL_LABEL.START,

@@ -12,10 +12,10 @@ export const DEVICE_LABEL = {
   AREA: "Project Site",
   STATUS: "Status",
 
-  MAC_ADDRESS: "MAC Address",
-  IP_ADDRESS: "IP Address",
   PLATFORM: "Platform",
   OEM_VENDOR: "OEM Vendor",
   FW_VERSION: "Firmware Version",
   PUSH_VERSION: "Push Version",
+  REG_DEVICE_TYPE: "Device Type",
+  STATE: "State",
 };

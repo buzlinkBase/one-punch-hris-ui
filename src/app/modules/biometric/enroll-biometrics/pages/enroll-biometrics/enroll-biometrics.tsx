@@ -764,6 +764,8 @@ export default function EnrollBiometrics() {
       label: d.description ? `${d.sn} — ${d.description}` : d.sn,
     }));
 
+  const selectedDevice = devices.find((d) => d.sn === selectedSN);
+
   const tabItems = selectedSN
     ? [
         {
@@ -821,9 +823,12 @@ export default function EnrollBiometrics() {
           }
         />
         {selectedSN && (
-          <Tag color="success" className="ml-auto shrink-0">
-            {selectedSN}
-          </Tag>
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            <Tag color="success">{selectedSN}</Tag>
+            {selectedDevice?.state && (
+              <Tag color="processing">{selectedDevice.state}</Tag>
+            )}
+          </div>
         )}
       </div>
 
