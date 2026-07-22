@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { dtrDetailApi } from "../services/dtr-detail.api";
 import type { DtrDetailFilter } from "../models/api/request/dtr-detail-filter.model";
+import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
 
 const QUERY_KEY = ["daily-time-record", "detail"];
 
@@ -12,5 +13,11 @@ export function useDtrDetailRecords(
     queryKey: [...QUERY_KEY, filter, options.generateKey ?? 0],
     queryFn: () => dtrDetailApi.getAll(filter),
     enabled: options.enabled ?? true,
+  });
+}
+
+export function useSaveDtrDetail() {
+  return useMutation({
+    mutationFn: (records: DtrDetailResponse[]) => dtrDetailApi.save(records),
   });
 }

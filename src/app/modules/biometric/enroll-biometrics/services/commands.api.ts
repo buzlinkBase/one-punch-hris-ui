@@ -6,6 +6,7 @@ import type { SyncBioPayload } from "../models/api/request/sync-bio.model";
 import type { EnrollFPPayload } from "../models/api/request/enroll-fp.model";
 import type { EnrollFacePayload } from "../models/api/request/enroll-face.model";
 import type { PullAttPayload } from "../models/api/request/pull-att.model";
+import type { DeleteEmployeePayload } from "../models/api/request/delete-employee-payload.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.adms, "commands");
 
@@ -107,22 +108,13 @@ export const commandsApi = {
     );
   },
 
-  deleteEmployee(sn: string, pin: string): Promise<void> {
+  deleteEmployee(sn: string, bioIds: number[]): Promise<void> {
+    const payload: DeleteEmployeePayload[] = bioIds.map((id) => ({
+      BioId: id,
+    }));
     return httpClient.post<void>(
-      `${ENDPOINT}/delete-employee?SN=${encodeURIComponent(sn)}&pin=${encodeURIComponent(pin)}`,
-    );
-  },
-
-  deleteFingerprint(
-    sn: string,
-    pin: string,
-    fingerIndex?: number,
-  ): Promise<void> {
-    const params = new URLSearchParams({ SN: sn, pin });
-    if (fingerIndex !== undefined)
-      params.set("fingerIndex", String(fingerIndex));
-    return httpClient.post<void>(
-      `${ENDPOINT}/delete-fingerprint?${params.toString()}`,
+      `${ENDPOINT}/delete-employee?SN=${encodeURIComponent(sn)}`,
+      payload,
     );
   },
 
