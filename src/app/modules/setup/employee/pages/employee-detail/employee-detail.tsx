@@ -14,11 +14,18 @@ import {
   Switch,
   Tabs,
   Avatar,
+  message,
 } from "antd";
 import { UserOutlined, CameraOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { useForm, Controller, useWatch, type Resolver } from "react-hook-form";
+import {
+  useForm,
+  Controller,
+  useWatch,
+  type Resolver,
+  type FieldErrors,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
@@ -164,6 +171,31 @@ export default function EmployeeDetail() {
     }
   };
 
+  const handleInvalid = (fieldErrors: FieldErrors<EmployeeFormValues>) => {
+    const keys = Object.keys(fieldErrors);
+    const tabsWithErrors: string[] = [];
+    const personalFields = ["firstName", "lastName"];
+    const employmentFields = [
+      "payrollGroupId",
+      "jobLevel",
+      "employmentStatus",
+      "dateRegistered",
+    ];
+    const compensationFields = ["salaryType", "modeOfPayment"];
+    if (keys.some((k) => personalFields.includes(k)))
+      tabsWithErrors.push("Personal Information");
+    if (keys.some((k) => employmentFields.includes(k)))
+      tabsWithErrors.push("Employment Details");
+    if (keys.some((k) => compensationFields.includes(k)))
+      tabsWithErrors.push("Compensation");
+    message.warning(
+      tabsWithErrors.length
+        ? `Required fields missing in: ${tabsWithErrors.join(", ")}. Please review and fill them in.`
+        : "Please fill in all required fields before saving.",
+      5,
+    );
+  };
+
   const isSubmitting = isUpdating || isCreating;
   const imgInputRef = useRef<HTMLInputElement>(null);
 
@@ -293,7 +325,7 @@ export default function EmployeeDetail() {
         </div>
       </div>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit, handleInvalid)}>
         {/* ── 201 File Header ── */}
         <Card className="mb-4">
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -422,6 +454,7 @@ export default function EmployeeDetail() {
               {
                 key: "personal",
                 label: "Personal Information",
+                forceRender: true,
                 children: (
                   <div className="form-grid-2" style={{ paddingTop: 16 }}>
                     <Form.Item
@@ -555,6 +588,7 @@ export default function EmployeeDetail() {
               {
                 key: "employment",
                 label: "Employment Details",
+                forceRender: true,
                 children: (
                   <div className="form-grid-2" style={{ paddingTop: 16 }}>
                     <Form.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
@@ -643,15 +677,20 @@ export default function EmployeeDetail() {
                       />
                     </Form.Item>
 
-                    <Form.Item label={EMPLOYEE_LABEL.PAYROLL_GROUP}>
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.PAYROLL_GROUP}
+                      required
+                      validateStatus={errors.payrollGroupId ? "error" : ""}
+                      help={errors.payrollGroupId?.message}
+                    >
                       <Controller
                         name="payrollGroupId"
                         control={control}
                         render={({ field }) => (
                           <Select
                             {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
+                            value={field.value || undefined}
+                            onChange={(v?: string) => field.onChange(v ?? "")}
                             options={payrollGroupOptions}
                             loading={isRefLoading}
                             allowClear
@@ -735,6 +774,7 @@ export default function EmployeeDetail() {
                         render={({ field }) => (
                           <Select
                             {...field}
+                            value={field.value ?? undefined}
                             options={JOB_LEVEL_OPTIONS}
                             placeholder="Select job level"
                           />
@@ -924,6 +964,7 @@ export default function EmployeeDetail() {
               {
                 key: "compensation",
                 label: "Compensation",
+                forceRender: true,
                 children: (
                   <div className="form-grid-2" style={{ paddingTop: 16 }}>
                     <Form.Item
@@ -1037,6 +1078,7 @@ export default function EmployeeDetail() {
               {
                 key: "govids",
                 label: "Gov't IDs",
+                forceRender: true,
                 children: (
                   <div className="form-grid-2" style={{ paddingTop: 16 }}>
                     <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
@@ -1076,6 +1118,7 @@ export default function EmployeeDetail() {
               {
                 key: "settings",
                 label: "Eligibility",
+                forceRender: true,
                 children: (
                   <div style={{ paddingTop: 16, maxWidth: 480 }}>
                     <div className="flex flex-col gap-4">

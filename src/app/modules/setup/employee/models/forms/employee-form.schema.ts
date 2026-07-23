@@ -19,7 +19,7 @@ export const employeeFormSchema = z.object({
   employeeNo: z.string().optional(),
   departmentId: z.string().nullable().optional(),
   areaId: z.string().nullable().optional(),
-  payrollGroupId: z.string().nullable().optional(),
+  payrollGroupId: z.string().min(1, "Payroll group is required"),
   clientId: z.string().nullable().optional(),
   branchId: z.string().nullable().optional(),
   sectionId: z.string().nullable().optional(),

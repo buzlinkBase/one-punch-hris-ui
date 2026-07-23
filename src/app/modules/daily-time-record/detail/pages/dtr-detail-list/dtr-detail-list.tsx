@@ -154,7 +154,6 @@ export default function DtrDetailList() {
   const handleClear = () => {
     setPending(currentSemiMonthlyRange());
     setCommittedFilter(null);
-    setGenerateKey(0);
   };
 
   // ── Export ──────────────────────────────────────────────────────────────────
