@@ -1,5 +1,6 @@
 export interface ChangeHolidayResponse {
-  batchId: string;
+  employeeId: string;
+  batchCode: string;
   holidayName: string;
   clientName: string;
   fullName: string;

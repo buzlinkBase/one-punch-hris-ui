@@ -13,7 +13,7 @@ interface ChangeRestDayStore {
   loadById: (id: string) => Promise<void>;
   add: (data: CreateChangeRestDay) => Promise<void>;
   update: (data: UpdateChangeRestDay) => Promise<void>;
-  remove: (id: string) => Promise<void>;
+  remove: (batchCode: string) => Promise<void>;
   setSelected: (record: ChangeRestDayResponse | null) => void;
   clearError: () => void;
 }
@@ -47,8 +47,9 @@ export const useChangeRestDayStore = create<ChangeRestDayStore>((set) => ({
   add: async (data) => {
     set({ loading: true, error: null });
     try {
-      const record = await changeRestDayApi.create(data);
-      set((s) => ({ records: [...s.records, record], loading: false }));
+      await changeRestDayApi.create(data);
+      const records = await changeRestDayApi.getAll();
+      set({ records, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });
     }
@@ -57,23 +58,20 @@ export const useChangeRestDayStore = create<ChangeRestDayStore>((set) => ({
   update: async (data) => {
     set({ loading: true, error: null });
     try {
-      const updated = await changeRestDayApi.update(data);
-      set((s) => ({
-        records: s.records.map((r) => (r.id === updated.id ? updated : r)),
-        selected: updated,
-        loading: false,
-      }));
+      await changeRestDayApi.update(data);
+      const records = await changeRestDayApi.getAll();
+      set({ records, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });
     }
   },
 
-  remove: async (id) => {
+  remove: async (batchCode) => {
     set({ loading: true, error: null });
     try {
-      await changeRestDayApi.remove(id);
+      await changeRestDayApi.removeBatch(batchCode);
       set((s) => ({
-        records: s.records.filter((r) => r.id !== id),
+        records: s.records.filter((r) => r.batchCode !== batchCode),
         loading: false,
       }));
     } catch (err) {

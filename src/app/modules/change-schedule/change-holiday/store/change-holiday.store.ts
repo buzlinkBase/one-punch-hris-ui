@@ -13,7 +13,7 @@ interface ChangeHolidayStore {
   loadById: (id: string) => Promise<void>;
   add: (data: CreateChangeHoliday) => Promise<void>;
   update: (data: UpdateChangeHoliday) => Promise<void>;
-  remove: (id: string) => Promise<void>;
+  remove: (batchCode: string) => Promise<void>;
   setSelected: (record: ChangeHolidayResponse | null) => void;
   clearError: () => void;
 }
@@ -47,8 +47,9 @@ export const useChangeHolidayStore = create<ChangeHolidayStore>((set) => ({
   add: async (data) => {
     set({ loading: true, error: null });
     try {
-      const record = await changeHolidayApi.create(data);
-      set((s) => ({ records: [...s.records, record], loading: false }));
+      await changeHolidayApi.create(data);
+      const records = await changeHolidayApi.getAll();
+      set({ records, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });
     }
@@ -57,25 +58,20 @@ export const useChangeHolidayStore = create<ChangeHolidayStore>((set) => ({
   update: async (data) => {
     set({ loading: true, error: null });
     try {
-      const updated = await changeHolidayApi.update(data);
-      set((s) => ({
-        records: s.records.map((r) =>
-          r.batchId === updated.batchId ? updated : r,
-        ),
-        selected: updated,
-        loading: false,
-      }));
+      await changeHolidayApi.update(data);
+      const records = await changeHolidayApi.getAll();
+      set({ records, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });
     }
   },
 
-  remove: async (id) => {
+  remove: async (batchCode) => {
     set({ loading: true, error: null });
     try {
-      await changeHolidayApi.remove(id);
+      await changeHolidayApi.removeBatch(batchCode);
       set((s) => ({
-        records: s.records.filter((r) => r.batchId !== id),
+        records: s.records.filter((r) => r.batchCode !== batchCode),
         loading: false,
       }));
     } catch (err) {

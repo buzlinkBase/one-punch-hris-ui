@@ -6,37 +6,42 @@ import type { ChangeRestDayFilter } from "../models/api/request/change-rest-day-
 
 const QUERY_KEY = ["change-schedule", "change-rest-day"];
 
-export function useChangeRestDays(filter: ChangeRestDayFilter = {}) {
+export function useChangeRestDays(
+  filter: ChangeRestDayFilter = {},
+  fetchKey = 0,
+) {
   return useQuery({
-    queryKey: [...QUERY_KEY, filter],
+    queryKey: [...QUERY_KEY, filter, fetchKey],
     queryFn: () => changeRestDayApi.getAll(filter),
+    enabled: !!filter.fromDate && !!filter.toDate,
   });
 }
 
-export function useChangeRestDay(id: string | undefined) {
+export function useChangeRestDay(id: string) {
   return useQuery({
     queryKey: [...QUERY_KEY, id],
-    queryFn: () => changeRestDayApi.getById(id!),
+    queryFn: () => changeRestDayApi.getById(id),
     enabled: !!id,
-  });
-}
-
-export function useCreateChangeRestDay() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateChangeRestDay) => changeRestDayApi.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-    },
   });
 }
 
 export function useUpdateChangeRestDay() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateChangeRestDay) => changeRestDayApi.update(data),
-    onSuccess: (updated) => {
-      queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
+    mutationFn: (payload: UpdateChangeRestDay) =>
+      changeRestDayApi.update(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useCreateChangeRestDay() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateChangeRestDay) =>
+      changeRestDayApi.create(payload),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
@@ -45,7 +50,23 @@ export function useUpdateChangeRestDay() {
 export function useDeleteChangeRestDay() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => changeRestDayApi.remove(id),
+    mutationFn: ({
+      employeeId,
+      batchCode,
+    }: {
+      employeeId: string;
+      batchCode: string;
+    }) => changeRestDayApi.removeEmployee(employeeId, batchCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useDeleteChangeRestDayBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchCode: string) => changeRestDayApi.removeBatch(batchCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
