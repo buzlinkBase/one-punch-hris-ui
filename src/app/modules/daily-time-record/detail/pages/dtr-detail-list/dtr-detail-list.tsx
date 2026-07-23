@@ -17,9 +17,13 @@ import {
   DownloadOutlined,
   FilterOutlined,
   PlayCircleOutlined,
+  SaveOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { useDtrDetailRecords } from "../../hooks/use-dtr-detail-queries";
+import {
+  useDtrDetailRecords,
+  useSaveDtrDetail,
+} from "../../hooks/use-dtr-detail-queries";
 import DtrDetailTable from "../../components/dtr-detail-table";
 import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
@@ -110,6 +114,19 @@ export default function DtrDetailList() {
     { enabled: hasGenerated, generateKey },
   );
 
+  const { mutateAsync: saveRecords, isPending: isSaving } = useSaveDtrDetail();
+
+  const handleSave = async () => {
+    if (!records.length) {
+      messageApi.warning("No data to save. Click Generate first.");
+      return;
+    }
+    await saveRecords(records);
+    messageApi.success(
+      `${records.length} record${records.length !== 1 ? "s" : ""} saved.`,
+    );
+  };
+
   const activeFilterCount = [
     pending.fromDate,
     pending.toDate,
@@ -137,7 +154,6 @@ export default function DtrDetailList() {
   const handleClear = () => {
     setPending(currentSemiMonthlyRange());
     setCommittedFilter(null);
-    setGenerateKey(0);
   };
 
   // ── Export ──────────────────────────────────────────────────────────────────
@@ -294,6 +310,15 @@ export default function DtrDetailList() {
                 Export
               </Button>
             </Dropdown>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              disabled={!records.length}
+              loading={isSaving}
+              onClick={handleSave}
+            >
+              Save
+            </Button>
             <Badge count={activeFilterCount} size="small">
               <Button
                 icon={<FilterOutlined />}

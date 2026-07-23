@@ -72,6 +72,7 @@ export const attendanceEntryApi = {
       if (filter.branchId) params.branchId = filter.branchId;
       if (filter.operationAreaId)
         params.operationAreaId = filter.operationAreaId;
+      if (filter.dayName != null) params.dayName = String(filter.dayName);
 
       return await httpClient.getUnwrapped<EmployeeFilterResponse[]>(
         ENDPOINT_EMPLOYEE_FILTER,

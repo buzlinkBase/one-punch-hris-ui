@@ -5,12 +5,11 @@ export const CHANGE_REST_DAY_LABEL = {
   EMPLOYEE: "Employee",
   HOLIDAY_NAME: "Holiday Name",
   CLIENT: "Client",
-  FROM_DATE: "From Date",
-  TO_DATE: "To Date",
+  FROM_DATE: "Prior Day-Off From",
+  TO_DATE: "Prior Day-Off To",
+  NEW_DATE: "New Day-Off Date",
   // Filters
-  FILTER_PAYROLL_GROUP: "Payroll Group",
   FILTER_EMPLOYEE: "Employee",
-  FILTER_CLIENT: "Client",
-  FILTER_FROM_PAYROLL_DATE: "Payroll Date From",
-  FILTER_TO_PAYROLL_DATE: "Payroll Date To",
+  FILTER_FROM_DATE: "Date From",
+  FILTER_TO_DATE: "Date To",
 };

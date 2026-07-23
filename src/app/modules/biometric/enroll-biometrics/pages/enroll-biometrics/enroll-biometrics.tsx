@@ -49,7 +49,6 @@ import {
   useQueryTemplatesBulk,
   useRegistryReset,
   useDeleteEmployeesBulk,
-  useDeleteFingerprintsBulk,
 } from "../../hooks/use-commands-queries";
 
 const { Title } = Typography;
@@ -864,7 +863,7 @@ function BulkDeleteEmployeePanel({ sn }: { sn: string }) {
 
   const handleDelete = async () => {
     const selected = employees.filter((e) => selectedRowKeys.includes(e.id));
-    await deleteEmployees({ sn, pins: selected.map((e) => String(e.bioId!)) });
+    await deleteEmployees({ sn, bioIds: selected.map((e) => e.bioId!) });
     setSelectedRowKeys([]);
   };
 
@@ -945,157 +944,12 @@ function BulkDeleteEmployeePanel({ sn }: { sn: string }) {
   );
 }
 
-function BulkDeleteFingerprintPanel({ sn }: { sn: string }) {
-  const [filter, setFilter] = useState<EmployeeFilter>({});
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  const [fingerIndex, setFingerIndex] = useState<number | undefined>();
-
-  const { data: employeeData = [], isFetching } = useEmployeeFilter(filter);
-  const { data: departments = [] } = useDepartments();
-  const { data: payrollGroups = [] } = usePayrollGroups();
-  const { data: clients = [] } = useClients();
-  const { mutateAsync: deleteFingerprints, isPending: deleting } =
-    useDeleteFingerprintsBulk();
-
-  const employees = employeeData.filter((e) => (e.bioId ?? 0) > 0);
-
-  const columns = [
-    { title: "Bio ID", dataIndex: "bioId", key: "bioId", width: 80 },
-    { title: "Name", dataIndex: "name", key: "name" },
-    {
-      title: "Department",
-      dataIndex: "departmentName",
-      key: "departmentName",
-      width: 160,
-    },
-    { title: "Client", dataIndex: "clientName", key: "clientName", width: 160 },
-    {
-      title: "Payroll Group",
-      dataIndex: "payrollGroupName",
-      key: "payrollGroupName",
-      width: 140,
-    },
-  ];
-
-  const handleDelete = async () => {
-    const selected = employees.filter((e) => selectedRowKeys.includes(e.id));
-    await deleteFingerprints({
-      sn,
-      pins: selected.map((e) => String(e.bioId!)),
-      fingerIndex,
-    });
-    setSelectedRowKeys([]);
-  };
-
-  const fingerLabel =
-    fingerIndex !== undefined
-      ? (FINGER_OPTIONS.find((f) => f.value === fingerIndex)?.label ??
-        String(fingerIndex))
-      : "all fingers";
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Select
-          allowClear
-          showSearch
-          optionFilterProp="label"
-          placeholder="All Departments"
-          options={departments.map((d) => ({ value: d.id, label: d.name }))}
-          value={filter.departmentId ?? undefined}
-          onChange={(val) =>
-            setFilter((f) => ({ ...f, departmentId: val ?? null }))
-          }
-        />
-        <Select
-          allowClear
-          showSearch
-          optionFilterProp="label"
-          placeholder="All Payroll Groups"
-          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
-          value={filter.payrollGroupId ?? undefined}
-          onChange={(val) =>
-            setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))
-          }
-        />
-        <Select
-          allowClear
-          showSearch
-          optionFilterProp="label"
-          placeholder="All Clients"
-          options={clients.map((c) => ({ value: c.id, label: c.name }))}
-          value={filter.clientId ?? undefined}
-          onChange={(val) =>
-            setFilter((f) => ({ ...f, clientId: val ?? null }))
-          }
-        />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600 shrink-0">
-          Finger to delete:
-        </span>
-        <Select
-          allowClear
-          placeholder="All fingers"
-          options={FINGER_OPTIONS}
-          value={fingerIndex}
-          onChange={(val) => setFingerIndex(val as number | undefined)}
-          style={{ width: 220 }}
-        />
-      </div>
-
-      <Table
-        rowKey="id"
-        dataSource={employees}
-        columns={columns}
-        loading={isFetching}
-        size="small"
-        pagination={{ pageSize: 10, size: "small" }}
-        scroll={{ x: "max-content" }}
-        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
-        locale={{ emptyText: "No employees with a Bio ID found" }}
-      />
-
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">
-          {selectedRowKeys.length} employee
-          {selectedRowKeys.length !== 1 ? "s" : ""} selected —{" "}
-          <span className="font-medium">{fingerLabel}</span>
-        </span>
-        <Popconfirm
-          title={`Delete fingerprints for ${selectedRowKeys.length} employee(s)?`}
-          description={`This will delete ${fingerLabel} from the device.`}
-          onConfirm={handleDelete}
-          okText="Delete"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true }}
-          disabled={selectedRowKeys.length === 0}
-        >
-          <Button
-            danger
-            disabled={selectedRowKeys.length === 0}
-            loading={deleting}
-          >
-            Delete Selected ({selectedRowKeys.length})
-          </Button>
-        </Popconfirm>
-      </div>
-    </div>
-  );
-}
-
 function DeleteSection({ sn }: { sn: string }) {
   const collapseItems = [
     {
       key: "delete-employee",
       label: "Delete Employee",
       children: <BulkDeleteEmployeePanel sn={sn} />,
-    },
-    {
-      key: "delete-fingerprint",
-      label: "Delete Fingerprint",
-      children: <BulkDeleteFingerprintPanel sn={sn} />,
     },
   ];
 

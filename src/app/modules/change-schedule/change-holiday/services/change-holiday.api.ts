@@ -7,97 +7,40 @@ import type { ChangeHolidayFilter } from "../models/api/request/change-holiday-f
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "changeholidays");
 
-const HOLIDAY_NAMES = [
-  "New Year's Day",
-  "Araw ng Kagitingan",
-  "Labor Day",
-  "Independence Day",
-  "National Heroes Day",
-  "Bonifacio Day",
-  "Christmas Day",
-  "Rizal Day",
-];
-
-const CLIENT_NAMES = ["Client A", "Client B", "Client C"];
-
-const EMPLOYEE_NAMES = [
-  "Santos, Juan",
-  "Reyes, Maria",
-  "Cruz, Jose",
-  "Garcia, Ana",
-  "Ramos, Pedro",
-  "Torres, Rosa",
-  "Flores, Carlos",
-  "Mendoza, Luz",
-  "Castillo, Ramon",
-  "Villanueva, Liza",
-];
-
-const MOCK_DATA: ChangeHolidayResponse[] = Array.from(
-  { length: 20 },
-  (_, i) => ({
-    batchId: `ch-${i + 1}`,
-    fullName: EMPLOYEE_NAMES[i % EMPLOYEE_NAMES.length],
-    holidayName: HOLIDAY_NAMES[i % HOLIDAY_NAMES.length],
-    clientName: CLIENT_NAMES[i % CLIENT_NAMES.length],
-    fromDate: `2026-${String((i % 12) + 1).padStart(2, "0")}-01`,
-    toDate: `2026-${String((i % 12) + 1).padStart(2, "0")}-28`,
-  }),
-);
-
-function applyFilter(
-  data: ChangeHolidayResponse[],
-  filter: ChangeHolidayFilter,
-): ChangeHolidayResponse[] {
-  return data.filter((item) => {
-    if (filter.fromPayrollDate && item.fromDate < filter.fromPayrollDate)
-      return false;
-    if (filter.toPayrollDate && item.toDate > filter.toPayrollDate)
-      return false;
-    return true;
-  });
-}
-
 export const changeHolidayApi = {
   async getAll(
     filter: ChangeHolidayFilter = {},
   ): Promise<ChangeHolidayResponse[]> {
     try {
-      const data = await httpClient.getUnwrapped<ChangeHolidayResponse[]>(
-        ENDPOINT,
-        { params: filter },
-      );
-      const result = data.length ? data : MOCK_DATA;
-      return applyFilter(result, filter);
+      return await httpClient.getUnwrapped<ChangeHolidayResponse[]>(ENDPOINT, {
+        params: filter,
+      });
     } catch {
-      return applyFilter(MOCK_DATA, filter);
+      return [];
     }
   },
 
-  async getById(id: string): Promise<ChangeHolidayResponse> {
-    try {
-      return await httpClient.getUnwrapped<ChangeHolidayResponse>(
-        `${ENDPOINT}/${id}`,
-      );
-    } catch {
-      const match = MOCK_DATA.find((item) => item.batchId === id);
-      if (match) return match;
-      throw new Error(`Change Holiday record ${id} not found`);
-    }
+  getById(id: string): Promise<ChangeHolidayResponse> {
+    return httpClient.getUnwrapped<ChangeHolidayResponse>(`${ENDPOINT}/${id}`);
   },
 
-  create(data: CreateChangeHoliday): Promise<ChangeHolidayResponse> {
-    return httpClient.postUnwrapped<ChangeHolidayResponse>(ENDPOINT, data);
+  create(data: CreateChangeHoliday): Promise<void> {
+    return httpClient.postUnwrapped<void>(ENDPOINT, data);
   },
 
-  update(data: UpdateChangeHoliday): Promise<ChangeHolidayResponse> {
-    return httpClient.put<ChangeHolidayResponse>(
-      `${ENDPOINT}/${data.id}`,
-      data,
-    );
+  update({ id, ...data }: UpdateChangeHoliday): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/${id}`, data);
   },
 
-  remove(id: string): Promise<void> {
-    return httpClient.delete<void>(`${ENDPOINT}/${id}`);
+  removeEmployee(employeeId: string, batchCode: string): Promise<void> {
+    return httpClient.delete<void>(ENDPOINT, {
+      params: { employeeId, BatchCode: batchCode },
+    });
+  },
+
+  removeBatch(batchCode: string): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/batch`, {
+      params: { BatchCode: batchCode },
+    });
   },
 };

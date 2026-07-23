@@ -2,11 +2,10 @@ import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input } from "antd";
 import {
   SearchOutlined,
-  EditOutlined,
   DeleteOutlined,
+  ArrowRightOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { useNavigate } from "@tanstack/react-router";
 import type { ChangeRestDayResponse } from "../../models/api/response/change-rest-day-response.model";
 import { CHANGE_REST_DAY_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
@@ -15,22 +14,21 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 interface Props {
   data: ChangeRestDayResponse[];
   loading?: boolean;
-  onDelete?: (id: string) => void;
+  onDelete?: (employeeId: string, batchCode: string) => void;
 }
 
 export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
-  const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
-    employeeName: 150,
-    holidayName: 150,
-    fromDate: 120,
-    toDate: 120,
+    fullName: 160,
+    batchCode: 130,
+    fromDate: 130,
+    toDate: 130,
   });
 
   const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
+    [item.fullName, item.batchCode, item.fromDate, item.toDate].some((val) =>
       String(val ?? "")
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -40,24 +38,24 @@ export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
   const columns: ColumnsType<ChangeRestDayResponse> = [
     {
       title: CHANGE_REST_DAY_LABEL.EMPLOYEE,
-      dataIndex: "employeeName",
-      key: "employeeName",
-      width: widths.employeeName,
+      dataIndex: "fullName",
+      key: "fullName",
+      width: widths.fullName,
       onHeaderCell: () =>
         ({
-          width: widths.employeeName,
-          onResize: (w: number) => handleResize("employeeName", w),
+          width: widths.fullName,
+          onResize: (w: number) => handleResize("fullName", w),
         }) as object,
     },
     {
-      title: CHANGE_REST_DAY_LABEL.HOLIDAY_NAME,
-      dataIndex: "holidayName",
-      key: "holidayName",
-      width: widths.holidayName,
+      title: "Batch",
+      dataIndex: "batchCode",
+      key: "batchCode",
+      width: widths.batchCode,
       onHeaderCell: () =>
         ({
-          width: widths.holidayName,
-          onResize: (w: number) => handleResize("holidayName", w),
+          width: widths.batchCode,
+          onResize: (w: number) => handleResize("batchCode", w),
         }) as object,
     },
     {
@@ -72,7 +70,12 @@ export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
         }) as object,
     },
     {
-      title: CHANGE_REST_DAY_LABEL.TO_DATE,
+      title: () => (
+        <Space size={4}>
+          <ArrowRightOutlined style={{ color: "#1DA081" }} />
+          {CHANGE_REST_DAY_LABEL.NEW_DATE}
+        </Space>
+      ),
       dataIndex: "toDate",
       key: "toDate",
       width: widths.toDate,
@@ -81,35 +84,26 @@ export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
           width: widths.toDate,
           onResize: (w: number) => handleResize("toDate", w),
         }) as object,
+      render: (v: string) => (
+        <span style={{ color: "#1DA081", fontWeight: 500 }}>{v}</span>
+      ),
     },
     {
-      title: "Actions",
+      title: "",
       key: "actions",
       fixed: "right",
       width: 80,
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate({
-                to: `/change-schedule/change-rest-day/${record.id}`,
-              })
-            }
-          />
-          {onDelete && (
-            <Popconfirm
-              title="Delete this record?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          )}
-        </Space>
-      ),
+      render: (_, record) =>
+        onDelete ? (
+          <Popconfirm
+            title="Delete this record?"
+            onConfirm={() => onDelete(record.employeeId, record.batchCode)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        ) : null,
     },
   ];
 
@@ -117,14 +111,14 @@ export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
     <div className="flex flex-col gap-3">
       <Input
         prefix={<SearchOutlined />}
-        placeholder="Search..."
+        placeholder="Search employee, dates..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         allowClear
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey="id"
+        rowKey={(r) => `${r.batchCode}-${r.employeeId}`}
         dataSource={filtered}
         columns={columns}
         size="small"

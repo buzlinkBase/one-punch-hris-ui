@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Form,
   Input,
@@ -12,10 +12,20 @@ import {
   Tag,
   Checkbox,
   Switch,
+  Tabs,
+  Avatar,
+  message,
 } from "antd";
+import { UserOutlined, CameraOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { useForm, Controller, useWatch, type Resolver } from "react-hook-form";
+import {
+  useForm,
+  Controller,
+  useWatch,
+  type Resolver,
+  type FieldErrors,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
@@ -51,7 +61,24 @@ import { useSections } from "@/app/modules/setup/section/hooks/use-section-queri
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+const STATUS_COLORS: Record<string, string> = {
+  Regular: "success",
+  Probationary: "processing",
+  Contractual: "warning",
+  ProjectBased: "purple",
+  Seasonal: "cyan",
+  Casual: "default",
+  PartTime: "geekblue",
+  Term: "volcano",
+  Internship: "magenta",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ProjectBased: "Project Based",
+  PartTime: "Part Time",
+};
 
 const filterByLabel = (
   input: string,
@@ -140,12 +167,48 @@ export default function EmployeeDetail() {
       else await add(payload);
       navigate({ to: "/setup/employee" });
     } catch {
-      // error notification is handled by the global error interceptor
+      // handled by global error interceptor
     }
   };
 
+  const handleInvalid = (fieldErrors: FieldErrors<EmployeeFormValues>) => {
+    const keys = Object.keys(fieldErrors);
+    const tabsWithErrors: string[] = [];
+    const personalFields = ["firstName", "lastName"];
+    const employmentFields = [
+      "payrollGroupId",
+      "jobLevel",
+      "employmentStatus",
+      "dateRegistered",
+    ];
+    const compensationFields = ["salaryType", "modeOfPayment"];
+    if (keys.some((k) => personalFields.includes(k)))
+      tabsWithErrors.push("Personal Information");
+    if (keys.some((k) => employmentFields.includes(k)))
+      tabsWithErrors.push("Employment Details");
+    if (keys.some((k) => compensationFields.includes(k)))
+      tabsWithErrors.push("Compensation");
+    message.warning(
+      tabsWithErrors.length
+        ? `Required fields missing in: ${tabsWithErrors.join(", ")}. Please review and fill them in.`
+        : "Please fill in all required fields before saving.",
+      5,
+    );
+  };
+
   const isSubmitting = isUpdating || isCreating;
+  const imgInputRef = useRef<HTMLInputElement>(null);
+
   const watchedDepartmentId = useWatch({ control, name: "departmentId" });
+  const watchedFirstName = useWatch({ control, name: "firstName" });
+  const watchedLastName = useWatch({ control, name: "lastName" });
+  const watchedMiddleName = useWatch({ control, name: "middleName" });
+  const watchedSuffix = useWatch({ control, name: "suffix" });
+  const watchedEmpNo = useWatch({ control, name: "employeeNo" });
+  const watchedEmploymentStatus = useWatch({
+    control,
+    name: "employmentStatus",
+  });
 
   const isRefLoading =
     isDepartmentsLoading ||
@@ -171,6 +234,7 @@ export default function EmployeeDetail() {
     value: p.id,
     label: `${p.code} - ${p.name}`,
   }));
+
   const formatShiftTime = (t: string) => {
     const dot = t.indexOf(".");
     const hasDayOffset = dot > 0 && dot < t.lastIndexOf(":");
@@ -178,6 +242,7 @@ export default function EmployeeDetail() {
     const [h, m] = timePart.split(":");
     return hasDayOffset ? `+1d ${h}:${m}` : `${h}:${m}`;
   };
+
   const timeShiftOptions = [
     ...fixedShifts
       .filter((s) => s.shiftType === "FIXED")
@@ -210,6 +275,7 @@ export default function EmployeeDetail() {
         endTime: s.endTime,
       })),
   ];
+
   const clientOptions = clients.map((c) => ({
     value: c.id,
     label: `${c.code} - ${c.name}`,
@@ -227,6 +293,13 @@ export default function EmployeeDetail() {
       (s) => !watchedDepartmentId || s.departmentId === watchedDepartmentId,
     )
     .map((s) => ({ value: s.id, label: `${s.code} - ${s.name}` }));
+
+  const displayName =
+    watchedLastName || watchedFirstName
+      ? [watchedLastName, watchedFirstName].filter(Boolean).join(", ") +
+        (watchedMiddleName ? ` ${watchedMiddleName.charAt(0)}.` : "") +
+        (watchedSuffix ? ` ${watchedSuffix}` : "")
+      : null;
 
   return (
     <div className="content-page">
@@ -252,774 +325,892 @@ export default function EmployeeDetail() {
         </div>
       </div>
 
-      <div className="section-jump-bar">
-        <a href="#emp-personal" className="section-jump-chip">
-          Personal
-        </a>
-        <a href="#emp-employment" className="section-jump-chip">
-          Employment
-        </a>
-        <a href="#emp-compensation" className="section-jump-chip">
-          Compensation
-        </a>
-        <a href="#emp-gov-ids" className="section-jump-chip">
-          Gov't IDs
-        </a>
-        <a href="#emp-settings" className="section-jump-chip">
-          Settings
-        </a>
-      </div>
-
-      <div className="form-page-body">
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          {/* ── Personal Information ── */}
-          <section id="emp-personal" className="form-section-anchor">
-            <Card className="form-section-card" title="Personal Information">
-              <div className="form-grid-2">
-                <Form.Item
-                  label={EMPLOYEE_LABEL.FIRST_NAME}
-                  validateStatus={errors.firstName ? "error" : ""}
-                  help={errors.firstName?.message}
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit, handleInvalid)}>
+        {/* ── 201 File Header ── */}
+        <Card className="mb-4">
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <Controller
+              name="profileImg"
+              control={control}
+              render={({ field }) => (
+                <div
+                  style={{
+                    position: "relative",
+                    flexShrink: 0,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => imgInputRef.current?.click()}
+                  title="Click to upload photo"
                 >
-                  <Controller
-                    name="firstName"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
+                  <Avatar
+                    size={72}
+                    src={field.value || undefined}
+                    icon={!field.value ? <UserOutlined /> : undefined}
+                    style={{
+                      backgroundColor: !field.value ? "#1DA081" : undefined,
+                      fontSize: 32,
+                      display: "block",
+                    }}
                   />
-                </Form.Item>
-
-                <Form.Item
-                  label={EMPLOYEE_LABEL.LAST_NAME}
-                  validateStatus={errors.lastName ? "error" : ""}
-                  help={errors.lastName?.message}
-                >
-                  <Controller
-                    name="lastName"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.MIDDLE_NAME}>
-                  <Controller
-                    name="middleName"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.SUFFIX}>
-                  <Controller
-                    name="suffix"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} placeholder="Jr., Sr., III…" />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.GENDER}>
-                  <Controller
-                    name="gender"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        options={GENDER_OPTIONS}
-                        allowClear
-                        placeholder="Select gender"
-                      />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.CIVIL_STATUS}>
-                  <Controller
-                    name="civilStatus"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        options={CIVIL_STATUS_OPTIONS}
-                        allowClear
-                        placeholder="Select civil status"
-                      />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.DOB}>
-                  <Controller
-                    name="dob"
-                    control={control}
-                    render={({ field }) =>
-                      datePicker(field.value, field.onChange)
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      background: "rgba(0,0,0,0.35)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                    }}
+                    className="avatar-upload-overlay"
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLDivElement).style.opacity = "1")
                     }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLDivElement).style.opacity = "0")
+                    }
+                  >
+                    <CameraOutlined style={{ color: "#fff", fontSize: 20 }} />
+                  </div>
+                  <input
+                    ref={imgInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () =>
+                        field.onChange(reader.result as string);
+                      reader.readAsDataURL(file);
+                      e.target.value = "";
+                    }}
                   />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.AGE}>
-                  <Controller
-                    name="age"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        {...field}
-                        className="w-full"
-                        min={0}
-                        max={120}
-                        placeholder="0"
-                      />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.BLOOD_TYPE}>
-                  <Controller
-                    name="bloodType"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        options={BLOOD_TYPE_OPTIONS}
-                        allowClear
-                        placeholder="Select blood type"
-                      />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.CONTACT}>
-                  <Controller
-                    name="contact"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.ADDRESS1}>
-                  <Controller
-                    name="address1"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.ADDRESS2}>
-                  <Controller
-                    name="address2"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
+                </div>
+              )}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
+                {displayName ?? (
+                  <Text
+                    type="secondary"
+                    style={{ fontWeight: 400, fontSize: 16 }}
+                  >
+                    New Employee
+                  </Text>
+                )}
               </div>
-            </Card>
-          </section>
+              <div
+                style={{
+                  marginTop: 6,
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                {watchedEmpNo && (
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    EMP# {watchedEmpNo}
+                  </Text>
+                )}
+                {watchedEmploymentStatus && (
+                  <Tag
+                    color={STATUS_COLORS[watchedEmploymentStatus] ?? "default"}
+                  >
+                    {STATUS_LABELS[watchedEmploymentStatus] ??
+                      watchedEmploymentStatus}
+                  </Tag>
+                )}
+              </div>
+            </div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  color: "#9ca3af",
+                  textTransform: "uppercase",
+                }}
+              >
+                201 File
+              </div>
+              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                {isEdit ? "Personnel Record" : "New Record"}
+              </div>
+            </div>
+          </div>
+        </Card>
 
-          {/* ── Employment ── */}
-          <section id="emp-employment" className="form-section-anchor">
-            <Card className="form-section-card" title="Employment Details">
-              <div className="form-grid-2">
-                <Form.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
-                  <Controller
-                    name="employeeNo"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.BIO_ID}>
-                  <Controller
-                    name="bioId"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        {...field}
-                        className="w-full"
-                        min={0}
-                        placeholder=""
+        {/* ── Tabbed Sections ── */}
+        <Card>
+          <Tabs
+            type="card"
+            items={[
+              {
+                key: "personal",
+                label: "Personal Information",
+                forceRender: true,
+                children: (
+                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.FIRST_NAME}
+                      required
+                      validateStatus={errors.firstName ? "error" : ""}
+                      help={errors.firstName?.message}
+                    >
+                      <Controller
+                        name="firstName"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
-                  <Controller
-                    name="departmentId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => {
-                          field.onChange(v ?? null);
-                          setValue("sectionId", null);
-                        }}
-                        options={departmentOptions}
-                        loading={isRefLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select department"
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.LAST_NAME}
+                      required
+                      validateStatus={errors.lastName ? "error" : ""}
+                      help={errors.lastName?.message}
+                    >
+                      <Controller
+                        name="lastName"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.SECTION}>
-                  <Controller
-                    name="sectionId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => field.onChange(v ?? null)}
-                        options={sectionOptions}
-                        loading={isSectionsLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select section"
+                    <Form.Item label={EMPLOYEE_LABEL.MIDDLE_NAME}>
+                      <Controller
+                        name="middleName"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.AREA}>
-                  <Controller
-                    name="areaId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => field.onChange(v ?? null)}
-                        options={areaOptions}
-                        loading={isRefLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select project site"
+                    <Form.Item label={EMPLOYEE_LABEL.SUFFIX}>
+                      <Controller
+                        name="suffix"
+                        control={control}
+                        render={({ field }) => (
+                          <Input {...field} placeholder="Jr., Sr., III…" />
+                        )}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.PAYROLL_GROUP}>
-                  <Controller
-                    name="payrollGroupId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => field.onChange(v ?? null)}
-                        options={payrollGroupOptions}
-                        loading={isRefLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select payroll group"
+                    <Form.Item label={EMPLOYEE_LABEL.GENDER}>
+                      <Controller
+                        name="gender"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            options={GENDER_OPTIONS}
+                            allowClear
+                            placeholder="Select gender"
+                          />
+                        )}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.CLIENT}>
-                  <Controller
-                    name="clientId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => field.onChange(v ?? null)}
-                        options={clientOptions}
-                        loading={isClientsLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select client"
+                    <Form.Item label={EMPLOYEE_LABEL.CIVIL_STATUS}>
+                      <Controller
+                        name="civilStatus"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            options={CIVIL_STATUS_OPTIONS}
+                            allowClear
+                            placeholder="Select civil status"
+                          />
+                        )}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.BRANCH}>
-                  <Controller
-                    name="branchId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => field.onChange(v ?? null)}
-                        options={branchOptions}
-                        loading={isBranchesLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select branch"
+                    <Form.Item label={EMPLOYEE_LABEL.DOB}>
+                      <Controller
+                        name="dob"
+                        control={control}
+                        render={({ field }) =>
+                          datePicker(field.value, field.onChange)
+                        }
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.POSITION}>
-                  <Controller
-                    name="positionId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => field.onChange(v ?? null)}
-                        options={positionOptions}
-                        loading={isPositionsLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select position"
+                    <Form.Item label={EMPLOYEE_LABEL.BLOOD_TYPE}>
+                      <Controller
+                        name="bloodType"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            options={BLOOD_TYPE_OPTIONS}
+                            allowClear
+                            placeholder="Select blood type"
+                          />
+                        )}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item
-                  label={EMPLOYEE_LABEL.JOB_LEVEL}
-                  validateStatus={errors.jobLevel ? "error" : ""}
-                  help={errors.jobLevel?.message}
-                >
-                  <Controller
-                    name="jobLevel"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={JOB_LEVEL_OPTIONS}
-                        placeholder="Select job level"
+                    <Form.Item label={EMPLOYEE_LABEL.CONTACT}>
+                      <Controller
+                        name="contact"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
-                  <Controller
-                    name="timeShiftId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        value={field.value ?? undefined}
-                        onChange={(v) => field.onChange(v ?? null)}
-                        options={timeShiftOptions}
-                        loading={isRefLoading}
-                        allowClear
-                        showSearch
-                        filterOption={filterByLabel}
-                        placeholder="Select time shift"
-                        optionRender={(opt) => {
-                          const o =
-                            opt.data as (typeof timeShiftOptions)[number];
-                          const isFixed = o.shiftType === "FIXED";
-                          return (
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                gap: 8,
-                              }}
-                            >
-                              <span style={{ fontWeight: 500 }}>
-                                {o.shiftName}
-                              </span>
-                              <span
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <span
-                                  style={{ fontSize: 11, color: "#6b7280" }}
-                                >
-                                  {formatShiftTime(o.startTime)} –{" "}
-                                  {formatShiftTime(o.endTime)}
-                                </span>
-                                <span
+                    <Form.Item label={EMPLOYEE_LABEL.ADDRESS1}>
+                      <Controller
+                        name="address1"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.ADDRESS2}>
+                      <Controller
+                        name="address2"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+                  </div>
+                ),
+              },
+              {
+                key: "employment",
+                label: "Employment Details",
+                forceRender: true,
+                children: (
+                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
+                    <Form.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
+                      <Controller
+                        name="employeeNo"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.BIO_ID}>
+                      <Controller
+                        name="bioId"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            className="w-full"
+                            min={0}
+                            placeholder=""
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
+                      <Controller
+                        name="departmentId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => {
+                              field.onChange(v ?? null);
+                              setValue("sectionId", null);
+                            }}
+                            options={departmentOptions}
+                            loading={isRefLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select department"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.SECTION}>
+                      <Controller
+                        name="sectionId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => field.onChange(v ?? null)}
+                            options={sectionOptions}
+                            loading={isSectionsLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select section"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.AREA}>
+                      <Controller
+                        name="areaId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => field.onChange(v ?? null)}
+                            options={areaOptions}
+                            loading={isRefLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select project site"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.PAYROLL_GROUP}
+                      required
+                      validateStatus={errors.payrollGroupId ? "error" : ""}
+                      help={errors.payrollGroupId?.message}
+                    >
+                      <Controller
+                        name="payrollGroupId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value || undefined}
+                            onChange={(v?: string) => field.onChange(v ?? "")}
+                            options={payrollGroupOptions}
+                            loading={isRefLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select payroll group"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.CLIENT}>
+                      <Controller
+                        name="clientId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => field.onChange(v ?? null)}
+                            options={clientOptions}
+                            loading={isClientsLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select client"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.BRANCH}>
+                      <Controller
+                        name="branchId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => field.onChange(v ?? null)}
+                            options={branchOptions}
+                            loading={isBranchesLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select branch"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.POSITION}>
+                      <Controller
+                        name="positionId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => field.onChange(v ?? null)}
+                            options={positionOptions}
+                            loading={isPositionsLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select position"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.JOB_LEVEL}
+                      required
+                      validateStatus={errors.jobLevel ? "error" : ""}
+                      help={errors.jobLevel?.message}
+                    >
+                      <Controller
+                        name="jobLevel"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            options={JOB_LEVEL_OPTIONS}
+                            placeholder="Select job level"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
+                      <Controller
+                        name="timeShiftId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => field.onChange(v ?? null)}
+                            options={timeShiftOptions}
+                            loading={isRefLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select time shift"
+                            optionRender={(opt) => {
+                              const o =
+                                opt.data as (typeof timeShiftOptions)[number];
+                              const isFixed = o.shiftType === "FIXED";
+                              return (
+                                <div
                                   style={{
-                                    fontSize: 10,
-                                    fontWeight: 600,
-                                    padding: "1px 6px",
-                                    borderRadius: 4,
-                                    background: isFixed ? "#d1fae5" : "#ede9fe",
-                                    color: isFixed ? "#065f46" : "#5b21b6",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    gap: 8,
                                   }}
                                 >
-                                  {isFixed ? "Fixed" : "Split"}
-                                </span>
-                              </span>
-                            </div>
-                          );
-                        }}
+                                  <span style={{ fontWeight: 500 }}>
+                                    {o.shiftName}
+                                  </span>
+                                  <span
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 6,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <span
+                                      style={{ fontSize: 11, color: "#6b7280" }}
+                                    >
+                                      {formatShiftTime(o.startTime)} –{" "}
+                                      {formatShiftTime(o.endTime)}
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                        padding: "1px 6px",
+                                        borderRadius: 4,
+                                        background: isFixed
+                                          ? "#d1fae5"
+                                          : "#ede9fe",
+                                        color: isFixed ? "#065f46" : "#5b21b6",
+                                      }}
+                                    >
+                                      {isFixed ? "Fixed" : "Split"}
+                                    </span>
+                                  </span>
+                                </div>
+                              );
+                            }}
+                          />
+                        )}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item
-                  label={EMPLOYEE_LABEL.EMPLOYMENT_STATUS}
-                  validateStatus={errors.employmentStatus ? "error" : ""}
-                  help={errors.employmentStatus?.message}
-                >
-                  <Controller
-                    name="employmentStatus"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={EMPLOYMENT_STATUS_OPTIONS}
-                        placeholder="Select status"
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.EMPLOYMENT_STATUS}
+                      required
+                      validateStatus={errors.employmentStatus ? "error" : ""}
+                      help={errors.employmentStatus?.message}
+                    >
+                      <Controller
+                        name="employmentStatus"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            options={EMPLOYMENT_STATUS_OPTIONS}
+                            placeholder="Select status"
+                          />
+                        )}
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.HIRING_ENTITY}>
-                  <Controller
-                    name="hiringEntity"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={EMPLOYEE_LABEL.DATE_REGISTERED}
-                  validateStatus={errors.dateRegistered ? "error" : ""}
-                  help={errors.dateRegistered?.message}
-                >
-                  <Controller
-                    name="dateRegistered"
-                    control={control}
-                    render={({ field }) =>
-                      datePicker(
-                        field.value,
-                        (v) => field.onChange(v ?? ""),
-                        false,
-                      )
-                    }
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.HIRE_DATE}>
-                  <Controller
-                    name="hireDate"
-                    control={control}
-                    render={({ field }) =>
-                      datePicker(field.value, field.onChange)
-                    }
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.CONTRACT_START}>
-                  <Controller
-                    name="contractStart"
-                    control={control}
-                    render={({ field }) =>
-                      datePicker(field.value, field.onChange)
-                    }
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.CONTRACT_END}>
-                  <Controller
-                    name="contractEnd"
-                    control={control}
-                    render={({ field }) =>
-                      datePicker(field.value, field.onChange)
-                    }
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={EMPLOYEE_LABEL.DATE_RESIGNED}
-                  className="col-span-2"
-                >
-                  <Controller
-                    name="dateResigned"
-                    control={control}
-                    render={({ field }) =>
-                      datePicker(field.value, field.onChange)
-                    }
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={EMPLOYEE_LABEL.REST_DAYS}
-                  className="col-span-2"
-                >
-                  <Controller
-                    name="restDays"
-                    control={control}
-                    render={({ field }) => (
-                      <Checkbox.Group
-                        options={REST_DAY_OPTIONS}
-                        value={field.value ?? []}
-                        onChange={(checkedValues) =>
-                          field.onChange(checkedValues as string[])
-                        }
-                        className="flex gap-4 flex-wrap"
+                    <Form.Item label={EMPLOYEE_LABEL.HIRING_ENTITY}>
+                      <Controller
+                        name="hiringEntity"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
                       />
-                    )}
-                  />
-                </Form.Item>
-              </div>
-            </Card>
-          </section>
+                    </Form.Item>
 
-          {/* ── Compensation ── */}
-          <section id="emp-compensation" className="form-section-anchor">
-            <Card className="form-section-card" title="Compensation">
-              <div className="form-grid-2">
-                <Form.Item
-                  label={EMPLOYEE_LABEL.SALARY_TYPE}
-                  validateStatus={errors.salaryType ? "error" : ""}
-                  help={errors.salaryType?.message}
-                >
-                  <Controller
-                    name="salaryType"
-                    control={control}
-                    render={({ field }) => (
-                      <Select {...field} options={SALARY_TYPE_OPTIONS} />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.MONTHLY_RATE}>
-                  <Controller
-                    name="monthlyRate"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        {...field}
-                        className="w-full"
-                        min={0}
-                        precision={2}
-                        formatter={(v) =>
-                          `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.DATE_REGISTERED}
+                      required
+                      validateStatus={errors.dateRegistered ? "error" : ""}
+                      help={errors.dateRegistered?.message}
+                    >
+                      <Controller
+                        name="dateRegistered"
+                        control={control}
+                        render={({ field }) =>
+                          datePicker(
+                            field.value,
+                            (v) => field.onChange(v ?? ""),
+                            false,
+                          )
                         }
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.DAILY_RATE}>
-                  <Controller
-                    name="dailyRate"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        {...field}
-                        className="w-full"
-                        min={0}
-                        precision={2}
-                        formatter={(v) =>
-                          `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    <Form.Item label={EMPLOYEE_LABEL.HIRE_DATE}>
+                      <Controller
+                        name="hireDate"
+                        control={control}
+                        render={({ field }) =>
+                          datePicker(field.value, field.onChange)
                         }
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item label={EMPLOYEE_LABEL.COLA}>
-                  <Controller
-                    name="cola"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        {...field}
-                        className="w-full"
-                        min={0}
-                        precision={2}
-                        formatter={(v) =>
-                          `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    <Form.Item label={EMPLOYEE_LABEL.CONTRACT_START}>
+                      <Controller
+                        name="contractStart"
+                        control={control}
+                        render={({ field }) =>
+                          datePicker(field.value, field.onChange)
                         }
                       />
-                    )}
-                  />
-                </Form.Item>
+                    </Form.Item>
 
-                <Form.Item
-                  label={EMPLOYEE_LABEL.MODE_OF_PAYMENT}
-                  validateStatus={errors.modeOfPayment ? "error" : ""}
-                  help={errors.modeOfPayment?.message}
-                >
-                  <Controller
-                    name="modeOfPayment"
-                    control={control}
-                    render={({ field }) => (
-                      <Select {...field} options={MODE_OF_PAYMENT_OPTIONS} />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.BANK_NAME}>
-                  <Controller
-                    name="bankName"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={EMPLOYEE_LABEL.BANK_NO}
-                  className="col-span-2"
-                >
-                  <Controller
-                    name="bankNo"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-              </div>
-            </Card>
-          </section>
-
-          {/* ── Government IDs ── */}
-          <section id="emp-gov-ids" className="form-section-anchor">
-            <Card className="form-section-card" title="Government IDs">
-              <div className="form-grid-2">
-                <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
-                  <Controller
-                    name="sssNo"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.PHIC_NO}>
-                  <Controller
-                    name="phicNo"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.HDMF_NO}>
-                  <Controller
-                    name="hdmfNo"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-
-                <Form.Item label={EMPLOYEE_LABEL.TIN}>
-                  <Controller
-                    name="tin"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                </Form.Item>
-              </div>
-            </Card>
-          </section>
-
-          {/* ── Settings ── */}
-          <section id="emp-settings" className="form-section-anchor">
-            <Card className="form-section-card" title="Eligibility Settings">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <span>Eligible for Overtime</span>
-                  <Controller
-                    name="settings.isEligibleForOvertime"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value ?? false}
-                        onChange={field.onChange}
+                    <Form.Item label={EMPLOYEE_LABEL.CONTRACT_END}>
+                      <Controller
+                        name="contractEnd"
+                        control={control}
+                        render={({ field }) =>
+                          datePicker(field.value, field.onChange)
+                        }
                       />
-                    )}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Eligible for Holiday Pay</span>
-                  <Controller
-                    name="settings.isEligibleForHolidayPay"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value ?? false}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Eligible for Night Differential</span>
-                  <Controller
-                    name="settings.isEligibleForNightDifferential"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value ?? false}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Eligible for Leave Credits</span>
-                  <Controller
-                    name="settings.isEligibleForLeaveCredits"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value ?? false}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Eligible for 13th Month Pay</span>
-                  <Controller
-                    name="settings.isEligibleFor13thMonth"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value ?? false}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-            </Card>
-          </section>
+                    </Form.Item>
 
-          <div className="form-action-footer">
-            <Space className="form-action-footer-row">
-              <Button onClick={() => navigate({ to: "/setup/employee" })}>
-                {NAVIGATION_BUTTON_LABEL.BACK}
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isSubmitting}
-                disabled={isRefLoading}
-              >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
-            </Space>
-          </div>
-        </Form>
-      </div>
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.DATE_RESIGNED}
+                      className="col-span-2"
+                    >
+                      <Controller
+                        name="dateResigned"
+                        control={control}
+                        render={({ field }) =>
+                          datePicker(field.value, field.onChange)
+                        }
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.REST_DAYS}
+                      className="col-span-2"
+                    >
+                      <Controller
+                        name="restDays"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox.Group
+                            options={REST_DAY_OPTIONS}
+                            value={field.value ?? []}
+                            onChange={(checkedValues) =>
+                              field.onChange(checkedValues as string[])
+                            }
+                            className="flex gap-4 flex-wrap"
+                          />
+                        )}
+                      />
+                    </Form.Item>
+                  </div>
+                ),
+              },
+              {
+                key: "compensation",
+                label: "Compensation",
+                forceRender: true,
+                children: (
+                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.SALARY_TYPE}
+                      required
+                      validateStatus={errors.salaryType ? "error" : ""}
+                      help={errors.salaryType?.message}
+                    >
+                      <Controller
+                        name="salaryType"
+                        control={control}
+                        render={({ field }) => (
+                          <Select {...field} options={SALARY_TYPE_OPTIONS} />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.MONTHLY_RATE}>
+                      <Controller
+                        name="monthlyRate"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            className="w-full"
+                            min={0}
+                            precision={2}
+                            formatter={(v) =>
+                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                            }
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.DAILY_RATE}>
+                      <Controller
+                        name="dailyRate"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            className="w-full"
+                            min={0}
+                            precision={2}
+                            formatter={(v) =>
+                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                            }
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.COLA}>
+                      <Controller
+                        name="cola"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            className="w-full"
+                            min={0}
+                            precision={2}
+                            formatter={(v) =>
+                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                            }
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.MODE_OF_PAYMENT}
+                      required
+                      validateStatus={errors.modeOfPayment ? "error" : ""}
+                      help={errors.modeOfPayment?.message}
+                    >
+                      <Controller
+                        name="modeOfPayment"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            options={MODE_OF_PAYMENT_OPTIONS}
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.BANK_NAME}>
+                      <Controller
+                        name="bankName"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.BANK_NO}
+                      className="col-span-2"
+                    >
+                      <Controller
+                        name="bankNo"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+                  </div>
+                ),
+              },
+              {
+                key: "govids",
+                label: "Gov't IDs",
+                forceRender: true,
+                children: (
+                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
+                    <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
+                      <Controller
+                        name="sssNo"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.PHIC_NO}>
+                      <Controller
+                        name="phicNo"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.HDMF_NO}>
+                      <Controller
+                        name="hdmfNo"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.TIN}>
+                      <Controller
+                        name="tin"
+                        control={control}
+                        render={({ field }) => <Input {...field} />}
+                      />
+                    </Form.Item>
+                  </div>
+                ),
+              },
+              {
+                key: "settings",
+                label: "Eligibility",
+                forceRender: true,
+                children: (
+                  <div style={{ paddingTop: 16, maxWidth: 480 }}>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <span>Eligible for Overtime</span>
+                        <Controller
+                          name="settings.isEligibleForOvertime"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Eligible for Holiday Pay</span>
+                        <Controller
+                          name="settings.isEligibleForHolidayPay"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Eligible for Night Differential</span>
+                        <Controller
+                          name="settings.isEligibleForNightDifferential"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Eligible for Leave Credits</span>
+                        <Controller
+                          name="settings.isEligibleForLeaveCredits"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Eligible for 13th Month Pay</span>
+                        <Controller
+                          name="settings.isEligibleFor13thMonth"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </Card>
+
+        <div className="form-action-footer">
+          <Space className="form-action-footer-row">
+            <Button onClick={() => navigate({ to: "/setup/employee" })}>
+              {NAVIGATION_BUTTON_LABEL.BACK}
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isSubmitting}
+              disabled={isRefLoading}
+            >
+              {NAVIGATION_BUTTON_LABEL.SAVE}
+            </Button>
+          </Space>
+        </div>
+      </Form>
     </div>
   );
 }
