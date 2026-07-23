@@ -112,14 +112,14 @@ export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
             icon={<EditOutlined />}
             onClick={() =>
               navigate({
-                to: `/change-schedule/change-holiday/${record.batchId}`,
+                to: `/change-schedule/change-holiday/${record.batchCode}`,
               })
             }
           />
           {onDelete && (
             <Popconfirm
               title="Delete this record?"
-              onConfirm={() => onDelete(record.batchId)}
+              onConfirm={() => onDelete(record.batchCode)}
               okText="Yes"
               cancelText="No"
             >
@@ -142,7 +142,7 @@ export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey="batchId"
+        rowKey={(r) => `${r.batchCode}-${r.employeeId}`}
         dataSource={filtered}
         columns={columns}
         size="small"

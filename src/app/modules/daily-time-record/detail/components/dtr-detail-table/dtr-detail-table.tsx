@@ -182,9 +182,9 @@ export default function DtrDetailTable({ data, loading }: Props) {
             col(DTR_DETAIL_LABEL.MINUTES_LATE, "lateMinutes"),
             col(DTR_DETAIL_LABEL.MINUTES_UT, "utMinutes"),
             col(DTR_DETAIL_LABEL.MINUTES_OVER, "overBreakMinutes"),
-            col(DTR_DETAIL_LABEL.MINUTES_OT, "otMinutes"),
-            col(DTR_DETAIL_LABEL.MINUTES_ND, "nd"),
-            col(DTR_DETAIL_LABEL.MINUTES_ND_OT, "ndot", 80),
+            // col(DTR_DETAIL_LABEL.MINUTES_OT, "otMinutes"),
+            // col(DTR_DETAIL_LABEL.MINUTES_ND, "nd"),
+            // col(DTR_DETAIL_LABEL.MINUTES_ND_OT, "ndot", 80),
           ],
         },
         {

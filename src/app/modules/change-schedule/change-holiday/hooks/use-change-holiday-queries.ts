@@ -6,10 +6,14 @@ import type { ChangeHolidayFilter } from "../models/api/request/change-holiday-f
 
 const QUERY_KEY = ["change-schedule", "change-holiday"];
 
-export function useChangeHolidays(filter: ChangeHolidayFilter = {}) {
+export function useChangeHolidays(
+  filter: ChangeHolidayFilter = {},
+  fetchKey = 0,
+) {
   return useQuery({
-    queryKey: [...QUERY_KEY, filter],
+    queryKey: [...QUERY_KEY, filter, fetchKey],
     queryFn: () => changeHolidayApi.getAll(filter),
+    enabled: !!filter.fromDate && !!filter.toDate,
   });
 }
 
@@ -35,8 +39,7 @@ export function useUpdateChangeHoliday() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: UpdateChangeHoliday) => changeHolidayApi.update(data),
-    onSuccess: (updated) => {
-      queryClient.setQueryData([...QUERY_KEY, updated.batchId], updated);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
@@ -45,7 +48,23 @@ export function useUpdateChangeHoliday() {
 export function useDeleteChangeHoliday() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => changeHolidayApi.remove(id),
+    mutationFn: ({
+      employeeId,
+      batchCode,
+    }: {
+      employeeId: string;
+      batchCode: string;
+    }) => changeHolidayApi.removeEmployee(employeeId, batchCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useDeleteChangeHolidayBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchCode: string) => changeHolidayApi.removeBatch(batchCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

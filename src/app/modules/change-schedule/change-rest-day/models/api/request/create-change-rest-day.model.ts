@@ -1,4 +1,7 @@
 export interface CreateChangeRestDay {
-  fromDate: string;
-  toDate: string;
+  fromDay: number;
+  toDay: number;
+  payrollDateFrom: string;
+  payrollDateTo: string;
+  employeeIds: string[];
 }

@@ -13,12 +13,11 @@ export const CHANGE_HOLIDAY_LABEL = {
   HOLIDAY_NAME: "Holiday Name",
   HOLIDAY: "Holiday",
   CLIENT: "Client",
-  FROM_DATE: "From Date",
-  TO_DATE: "To Date",
+  FROM_DATE: "Payroll Date From",
+  TO_DATE: "Payroll Date To",
+  REPLACEMENT_DATE: "Replacement Date",
   // Filters
-  FILTER_PAYROLL_GROUP: "Payroll Group",
   FILTER_EMPLOYEE: "Employee",
-  FILTER_CLIENT: "Client",
-  FILTER_FROM_PAYROLL_DATE: "Payroll Date From",
-  FILTER_TO_PAYROLL_DATE: "Payroll Date To",
+  FILTER_FROM_DATE: "Date From",
+  FILTER_TO_DATE: "Date To",
 };

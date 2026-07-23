@@ -9,7 +9,6 @@ export const employeeFormSchema = z.object({
   gender: z.string().optional(),
   civilStatus: z.string().optional(),
   dob: z.string().nullable().optional(),
-  age: z.coerce.number().optional(),
   bloodType: z.string().optional(),
   contact: z.string().optional(),
   address1: z.string().optional(),
@@ -20,7 +19,7 @@ export const employeeFormSchema = z.object({
   employeeNo: z.string().optional(),
   departmentId: z.string().nullable().optional(),
   areaId: z.string().nullable().optional(),
-  payrollGroupId: z.string().nullable().optional(),
+  payrollGroupId: z.string().min(1, "Payroll group is required"),
   clientId: z.string().nullable().optional(),
   branchId: z.string().nullable().optional(),
   sectionId: z.string().nullable().optional(),
@@ -69,6 +68,9 @@ export const employeeFormSchema = z.object({
   phicNo: z.string().optional(),
   hdmfNo: z.string().optional(),
   tin: z.string().optional(),
+
+  // Profile
+  profileImg: z.string().optional(),
 
   // Settings
   settings: z

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Badge,
   Button,
@@ -82,6 +82,7 @@ export default function RawLogsList() {
   // Only Generate (not tab switching) populates a tab's state.
   const [tabStates, setTabStates] = useState<Record<string, TabState>>({});
 
+  const seqRef = useRef(0);
   const [messageApi, contextHolder] = message.useMessage();
 
   const isDateRangeInvalid =
@@ -341,11 +342,12 @@ export default function RawLogsList() {
       messageApi.warning("To Date must be ≥ From Date.");
       return;
     }
+    seqRef.current += 1;
     setTabStates((prev) => ({
       ...prev,
       [activeTab]: {
         filter: { ...pending },
-        key: (prev[activeTab]?.key ?? 0) + 1,
+        key: seqRef.current,
       },
     }));
   };

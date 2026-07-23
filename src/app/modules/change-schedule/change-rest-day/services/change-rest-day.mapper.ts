@@ -4,8 +4,10 @@ import type { ChangeRestDayFormValues } from "../models/forms/change-rest-day-fo
 export const changeRestDayMapper = {
   toFormValues(response: ChangeRestDayResponse): ChangeRestDayFormValues {
     return {
+      employeeId: response.employeeId,
       fromDate: response.fromDate,
-      toDate: response.toDate,
+      toDate: response.fromDate,
+      newDate: response.toDate,
     };
   },
 };

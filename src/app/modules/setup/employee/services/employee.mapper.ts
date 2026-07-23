@@ -12,7 +12,6 @@ export const employeeMapper = {
       gender: response.gender ?? "",
       civilStatus: response.civilStatus ?? "",
       dob: response.dob ?? null,
-      age: response.age ?? undefined,
       bloodType: response.bloodType ?? "",
       contact: response.contact ?? "",
       address1: response.address1 ?? "",
@@ -21,7 +20,7 @@ export const employeeMapper = {
       employeeNo: response.employeeNo,
       departmentId: response.departmentId ?? null,
       areaId: response.areaId ?? null,
-      payrollGroupId: response.payrollGroupId ?? null,
+      payrollGroupId: response.payrollGroupId ?? "",
       clientId: response.clientId ?? null,
       branchId: response.branchId ?? null,
       sectionId: response.sectionId ?? null,
@@ -47,6 +46,7 @@ export const employeeMapper = {
       phicNo: response.phicNo ?? "",
       hdmfNo: response.hdmfNo ?? "",
       tin: response.tin ?? "",
+      profileImg: response.profileImg ?? "",
       settings: {
         id: response.settings?.id,
         isEligibleForOvertime:

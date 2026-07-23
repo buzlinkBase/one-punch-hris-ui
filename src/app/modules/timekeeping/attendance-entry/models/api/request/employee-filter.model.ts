@@ -4,4 +4,5 @@ export interface EmployeeFilter {
   clientId?: string | null;
   branchId?: string | null;
   operationAreaId?: string | null;
+  dayName?: number | null;
 }
