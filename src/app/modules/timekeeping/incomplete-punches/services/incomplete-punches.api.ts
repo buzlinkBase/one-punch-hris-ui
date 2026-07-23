@@ -5,6 +5,15 @@ import type {
   IncompletePunchesFilterRequest,
   IncompletePunchesResponse,
 } from "../models/api/response/incomplete-punch.model";
+import type {
+  CleanAttendanceLogColumnar,
+  RawLogsFilterRequest,
+} from "@/app/modules/timekeeping/raw-logs/models/api/response/raw-attendance-log.model";
+
+const EP_INCOMPLETE_COLUMNAR = buildApiUrl(
+  API_PREFIX.hrms,
+  "dailyrecords/incomplete-columnar",
+);
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "timekeeping/incomplete-punches");
 
@@ -97,6 +106,28 @@ export const incompletePunchesApi = {
       const match = MOCK_DATA.incompletePunches.find((item) => item.id === id);
       if (match) return match;
       throw new Error(`Incomplete punch ${id} not found`);
+    }
+  },
+
+  async getIncompleteColumnar(
+    filters: RawLogsFilterRequest = {},
+  ): Promise<CleanAttendanceLogColumnar[]> {
+    const p: Record<string, string> = {};
+    if (filters.fromDate) p.fromDate = filters.fromDate;
+    if (filters.toDate) p.toDate = filters.toDate;
+    if (filters.employeeId) p.employeeId = filters.employeeId;
+    if (filters.branchId) p.branchId = filters.branchId;
+    if (filters.departmentId) p.departmentId = filters.departmentId;
+    if (filters.clientId) p.clientId = filters.clientId;
+    if (filters.payrollGroupId) p.payrollGroupId = filters.payrollGroupId;
+    if (filters.operationAreaId) p.operationAreaId = filters.operationAreaId;
+    try {
+      return await httpClient.getUnwrapped<CleanAttendanceLogColumnar[]>(
+        EP_INCOMPLETE_COLUMNAR,
+        { params: p },
+      );
+    } catch {
+      return [];
     }
   },
 };
