@@ -54,11 +54,18 @@ function currentSemiMonthlyRange(): { fromDate: string; toDate: string } {
 
 const filterByLabel = (
   input: string,
-  option?: { label?: string | number | boolean },
-) =>
-  String(option?.label ?? "")
-    .toLowerCase()
-    .includes(input.toLowerCase());
+  option?: { label?: string | number | boolean; fullLabel?: string },
+) => {
+  const q = input.toLowerCase();
+  return (
+    String(option?.label ?? "")
+      .toLowerCase()
+      .includes(q) ||
+    String(option?.fullLabel ?? "")
+      .toLowerCase()
+      .includes(q)
+  );
+};
 
 const EMPTY_FILTER: DtrDetailFilter = {};
 
@@ -74,9 +81,6 @@ export default function DtrDetailList() {
 
   const hasGenerated = committedFilter !== null;
 
-  const isDateRangeInvalid =
-    !!pending.fromDate && !!pending.toDate && pending.fromDate > pending.toDate;
-
   const { data: departments = [] } = useDepartments();
   const { data: clients = [] } = useClients();
   const { data: payrollGroups = [] } = usePayrollGroups();
@@ -86,23 +90,28 @@ export default function DtrDetailList() {
 
   const branchOptions = branches.map((b) => ({
     value: b.id,
-    label: `${b.code} - ${b.name}`,
+    label: b.code || b.name,
+    fullLabel: b.code ? b.name : undefined,
   }));
   const deptOptions = departments.map((d) => ({
     value: d.id,
-    label: `${d.code} - ${d.name}`,
+    label: d.code || d.name,
+    fullLabel: d.code ? d.name : undefined,
   }));
   const clientOptions = clients.map((c) => ({
     value: c.id,
-    label: `${c.code} - ${c.name}`,
+    label: c.code || c.name,
+    fullLabel: c.code ? c.name : undefined,
   }));
   const payrollGrpOptions = payrollGroups.map((p) => ({
     value: p.id,
-    label: `${p.code} - ${p.name}`,
+    label: p.code || p.name,
+    fullLabel: p.code ? p.name : undefined,
   }));
   const areaOptions = areas.map((a) => ({
     value: a.id,
-    label: `${a.code} - ${a.name}`,
+    label: a.code || a.name,
+    fullLabel: a.code ? a.name : undefined,
   }));
   const employeeOptions = employeeData.map((e) => ({
     value: e.id,
@@ -140,11 +149,7 @@ export default function DtrDetailList() {
 
   const handleGenerate = () => {
     if (!pending.fromDate || !pending.toDate) {
-      messageApi.warning("From Date and To Date are required.");
-      return;
-    }
-    if (isDateRangeInvalid) {
-      messageApi.warning("To Date must be ≥ From Date.");
+      messageApi.warning("Date Range is required.");
       return;
     }
     setCommittedFilter({ ...pending });
@@ -337,49 +342,31 @@ export default function DtrDetailList() {
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4">
               <Form.Item
-                label={DTR_DETAIL_LABEL.FILTER_FROM_DATE}
-                className="mb-3"
-                required
-                validateStatus={!pending.fromDate ? "error" : ""}
-                help={!pending.fromDate ? "Required" : undefined}
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  status={!pending.fromDate ? "error" : undefined}
-                  value={pending.fromDate ? dayjs(pending.fromDate) : null}
-                  onChange={(d) =>
-                    setPending((f) => ({
-                      ...f,
-                      fromDate: d?.format("YYYY-MM-DD"),
-                    }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item
-                label={DTR_DETAIL_LABEL.FILTER_TO_DATE}
-                className="mb-3"
+                label="Date Range"
+                className="mb-3 sm:col-span-2"
                 required
                 validateStatus={
-                  !pending.toDate || isDateRangeInvalid ? "error" : ""
+                  !pending.fromDate || !pending.toDate ? "error" : ""
                 }
                 help={
-                  !pending.toDate
-                    ? "Required"
-                    : isDateRangeInvalid
-                      ? "Must be ≥ From Date"
-                      : undefined
+                  !pending.fromDate || !pending.toDate ? "Required" : undefined
                 }
               >
-                <DatePicker
+                <DatePicker.RangePicker
                   style={{ width: "100%" }}
                   status={
-                    !pending.toDate || isDateRangeInvalid ? "error" : undefined
+                    !pending.fromDate || !pending.toDate ? "error" : undefined
                   }
-                  value={pending.toDate ? dayjs(pending.toDate) : null}
-                  onChange={(d) =>
+                  value={
+                    pending.fromDate && pending.toDate
+                      ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                      : null
+                  }
+                  onChange={(dates) =>
                     setPending((f) => ({
                       ...f,
-                      toDate: d?.format("YYYY-MM-DD"),
+                      fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                      toDate: dates?.[1]?.format("YYYY-MM-DD"),
                     }))
                   }
                 />
@@ -391,6 +378,11 @@ export default function DtrDetailList() {
                   filterOption={filterByLabel}
                   placeholder="All branches"
                   options={branchOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.branchId}
                   onChange={(v) => setPending((f) => ({ ...f, branchId: v }))}
                 />
@@ -405,6 +397,11 @@ export default function DtrDetailList() {
                   filterOption={filterByLabel}
                   placeholder="All departments"
                   options={deptOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.departmentId}
                   onChange={(v) =>
                     setPending((f) => ({ ...f, departmentId: v }))
@@ -421,6 +418,11 @@ export default function DtrDetailList() {
                   filterOption={filterByLabel}
                   placeholder="All clients"
                   options={clientOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.clientId}
                   onChange={(v) => setPending((f) => ({ ...f, clientId: v }))}
                 />
@@ -435,6 +437,11 @@ export default function DtrDetailList() {
                   filterOption={filterByLabel}
                   placeholder="All payroll groups"
                   options={payrollGrpOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.payrollGroupId}
                   onChange={(v) =>
                     setPending((f) => ({ ...f, payrollGroupId: v }))
@@ -448,6 +455,11 @@ export default function DtrDetailList() {
                   filterOption={filterByLabel}
                   placeholder="All project sites"
                   options={areaOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.operationAreaId}
                   onChange={(v) =>
                     setPending((f) => ({ ...f, operationAreaId: v }))
@@ -477,9 +489,7 @@ export default function DtrDetailList() {
                 type="primary"
                 icon={<PlayCircleOutlined />}
                 loading={isLoading}
-                disabled={
-                  !pending.fromDate || !pending.toDate || isDateRangeInvalid
-                }
+                disabled={!pending.fromDate || !pending.toDate}
                 onClick={handleGenerate}
               >
                 Generate

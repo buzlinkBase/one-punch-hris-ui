@@ -119,17 +119,7 @@ export default function ChangeRestDayList() {
       .sort((a, b) => b.batchCode.localeCompare(a.batchCode));
   }, [records]);
 
-  const isDateRangeInvalid =
-    !!pending.fromDate && !!pending.toDate && pending.fromDate > pending.toDate;
-
   const handleSearch = () => {
-    if (isDateRangeInvalid) {
-      getNotify().warning({
-        message: "Invalid Date Range",
-        description: "Date To must be on or after Date From.",
-      });
-      return;
-    }
     setCommitted({ ...pending });
     setSearchKey((k) => k + 1);
   };
@@ -389,29 +379,20 @@ export default function ChangeRestDayList() {
 
       <Form layout="vertical" className="mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
-          <Form.Item
-            label={CHANGE_REST_DAY_LABEL.FILTER_FROM_DATE}
-            className="mb-0"
-          >
-            <DatePicker
+          <Form.Item label="Entry Date" className="mb-0 sm:col-span-2">
+            <DatePicker.RangePicker
               style={{ width: "100%" }}
-              value={pending.fromDate ? dayjs(pending.fromDate) : null}
-              status={isDateRangeInvalid ? "error" : undefined}
-              onChange={(d) =>
-                setPending((c) => ({ ...c, fromDate: d?.format("YYYY-MM-DD") }))
+              value={
+                pending.fromDate && pending.toDate
+                  ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                  : null
               }
-            />
-          </Form.Item>
-          <Form.Item
-            label={CHANGE_REST_DAY_LABEL.FILTER_TO_DATE}
-            className="mb-0"
-          >
-            <DatePicker
-              style={{ width: "100%" }}
-              value={pending.toDate ? dayjs(pending.toDate) : null}
-              status={isDateRangeInvalid ? "error" : undefined}
-              onChange={(d) =>
-                setPending((c) => ({ ...c, toDate: d?.format("YYYY-MM-DD") }))
+              onChange={(dates) =>
+                setPending((c) => ({
+                  ...c,
+                  fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                  toDate: dates?.[1]?.format("YYYY-MM-DD"),
+                }))
               }
             />
           </Form.Item>
@@ -440,7 +421,6 @@ export default function ChangeRestDayList() {
                 type="primary"
                 icon={<SearchOutlined />}
                 loading={isLoading}
-                disabled={isDateRangeInvalid}
                 onClick={handleSearch}
               >
                 Search

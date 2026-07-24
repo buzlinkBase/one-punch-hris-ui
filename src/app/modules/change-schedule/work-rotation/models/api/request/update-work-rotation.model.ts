@@ -1,5 +1,6 @@
-import type { CreateWorkRotation } from "./create-work-rotation.model";
-
-export interface UpdateWorkRotation extends CreateWorkRotation {
+export interface UpdateWorkRotation {
   id: string;
+  employeeId: string;
+  timeShiftId: string;
+  payrollDate: string;
 }

@@ -1,5 +1,5 @@
 export interface CreateWorkRotation {
-  employeeId: string;
+  employeeIds: string[];
   timeShiftId: string;
-  payrollDate: string;
+  payrollDates: string[];
 }

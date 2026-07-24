@@ -572,10 +572,16 @@ function EditForm({ id }: { id: string }) {
     control,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
   });
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const fromDate = watch("fromDate");
+  const toDate = watch("toDate");
 
   useEffect(() => {
     if (selected) {
@@ -686,44 +692,24 @@ function EditForm({ id }: { id: string }) {
               </Form.Item>
 
               <Form.Item
-                label={CHANGE_HOLIDAY_LABEL.FROM_DATE}
+                label="Payroll Period"
                 required
-                validateStatus={errors.fromDate ? "error" : ""}
-                help={errors.fromDate?.message}
+                className="sm:col-span-2"
+                validateStatus={errors.fromDate || errors.toDate ? "error" : ""}
+                help={errors.fromDate?.message ?? errors.toDate?.message}
               >
-                <Controller
-                  name="fromDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      style={{ width: "100%" }}
-                      value={field.value ? dayjs(field.value) : null}
-                      onChange={(d) =>
-                        field.onChange(d?.format("YYYY-MM-DD") ?? "")
-                      }
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label={CHANGE_HOLIDAY_LABEL.TO_DATE}
-                required
-                validateStatus={errors.toDate ? "error" : ""}
-                help={errors.toDate?.message}
-              >
-                <Controller
-                  name="toDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      style={{ width: "100%" }}
-                      value={field.value ? dayjs(field.value) : null}
-                      onChange={(d) =>
-                        field.onChange(d?.format("YYYY-MM-DD") ?? "")
-                      }
-                    />
-                  )}
+                <DatePicker.RangePicker
+                  style={{ width: "100%" }}
+                  value={
+                    fromDate && toDate ? [dayjs(fromDate), dayjs(toDate)] : null
+                  }
+                  onChange={(dates) => {
+                    setValue(
+                      "fromDate",
+                      dates?.[0]?.format("YYYY-MM-DD") ?? "",
+                    );
+                    setValue("toDate", dates?.[1]?.format("YYYY-MM-DD") ?? "");
+                  }}
                 />
               </Form.Item>
             </div>
