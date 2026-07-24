@@ -59,15 +59,19 @@ export const SALARY_TYPE_OPTIONS = [
 ];
 
 export const EMPLOYMENT_STATUS_OPTIONS = [
-  { value: "Probationary", label: "Probationary" },
   { value: "Regular", label: "Regular" },
-  { value: "Contractual", label: "Contractual" },
-  { value: "ProjectBased", label: "Project Based" },
-  { value: "Seasonal", label: "Seasonal" },
-  { value: "Casual", label: "Casual" },
   { value: "PartTime", label: "Part Time" },
-  { value: "Term", label: "Term" },
-  { value: "Internship", label: "Internship" },
+  { value: "Probationary", label: "Probationary" },
+  { value: "Contract", label: "Contract" },
+  { value: "Temporary", label: "Temporary" },
+  { value: "Casual", label: "Casual" },
+  { value: "Intern", label: "Intern" },
+  { value: "OnLeave", label: "On Leave" },
+  { value: "Suspended", label: "Suspended" },
+  { value: "Terminated", label: "Terminated" },
+  { value: "Resigned", label: "Resigned" },
+  { value: "Retired", label: "Retired" },
+  { value: "Deceased", label: "Deceased" },
 ];
 
 export const JOB_LEVEL_OPTIONS = [

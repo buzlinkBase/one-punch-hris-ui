@@ -81,9 +81,6 @@ export default function IncompletePunchesList() {
   const [search, setSearch] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
 
-  const isDateRangeInvalid =
-    !!pending.fromDate && !!pending.toDate && pending.fromDate > pending.toDate;
-
   const { data: departments = [] } = useDepartments();
   const { data: clients = [] } = useClients();
   const { data: payrollGroups = [] } = usePayrollGroups();
@@ -143,23 +140,28 @@ export default function IncompletePunchesList() {
 
   const branchOptions = branches.map((b) => ({
     value: b.id,
-    label: `${b.code} - ${b.name}`,
+    label: b.code || b.name,
+    fullLabel: b.code ? b.name : undefined,
   }));
   const deptOptions = departments.map((d) => ({
     value: d.id,
-    label: `${d.code} - ${d.name}`,
+    label: d.code || d.name,
+    fullLabel: d.code ? d.name : undefined,
   }));
   const clientOptions = clients.map((c) => ({
     value: c.id,
-    label: `${c.code} - ${c.name}`,
+    label: c.code || c.name,
+    fullLabel: c.code ? c.name : undefined,
   }));
   const payrollGroupOptions = payrollGroups.map((p) => ({
     value: p.id,
-    label: `${p.code} - ${p.name}`,
+    label: p.code || p.name,
+    fullLabel: p.code ? p.name : undefined,
   }));
   const areaOptions = areas.map((a) => ({
     value: a.id,
-    label: `${a.code} - ${a.name}`,
+    label: a.code || a.name,
+    fullLabel: a.code ? a.name : undefined,
   }));
   const employeeOptions = employees.map((e) => ({
     value: e.id,
@@ -179,11 +181,7 @@ export default function IncompletePunchesList() {
 
   const handleGenerate = () => {
     if (!pending.fromDate || !pending.toDate) {
-      messageApi.warning("From Date and To Date are required.");
-      return;
-    }
-    if (isDateRangeInvalid) {
-      messageApi.warning("To Date must be ≥ From Date.");
+      messageApi.warning("Date Range is required.");
       return;
     }
     seqRef.current += 1;
@@ -371,49 +369,31 @@ export default function IncompletePunchesList() {
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4">
               <Form.Item
-                label={INCOMPLETE_PUNCHES_LABEL.FROM_DATE}
-                className="mb-3"
-                required
-                validateStatus={!pending.fromDate ? "error" : ""}
-                help={!pending.fromDate ? "Required" : undefined}
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  status={!pending.fromDate ? "error" : undefined}
-                  value={pending.fromDate ? dayjs(pending.fromDate) : null}
-                  onChange={(d) =>
-                    setPending((c) => ({
-                      ...c,
-                      fromDate: d?.format("YYYY-MM-DD"),
-                    }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item
-                label={INCOMPLETE_PUNCHES_LABEL.TO_DATE}
-                className="mb-3"
+                label="Date Range"
+                className="mb-3 sm:col-span-2"
                 required
                 validateStatus={
-                  !pending.toDate || isDateRangeInvalid ? "error" : ""
+                  !pending.fromDate || !pending.toDate ? "error" : ""
                 }
                 help={
-                  !pending.toDate
-                    ? "Required"
-                    : isDateRangeInvalid
-                      ? "Must be ≥ From Date"
-                      : undefined
+                  !pending.fromDate || !pending.toDate ? "Required" : undefined
                 }
               >
-                <DatePicker
+                <DatePicker.RangePicker
                   style={{ width: "100%" }}
                   status={
-                    !pending.toDate || isDateRangeInvalid ? "error" : undefined
+                    !pending.fromDate || !pending.toDate ? "error" : undefined
                   }
-                  value={pending.toDate ? dayjs(pending.toDate) : null}
-                  onChange={(d) =>
+                  value={
+                    pending.fromDate && pending.toDate
+                      ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                      : null
+                  }
+                  onChange={(dates) =>
                     setPending((c) => ({
                       ...c,
-                      toDate: d?.format("YYYY-MM-DD"),
+                      fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                      toDate: dates?.[1]?.format("YYYY-MM-DD"),
                     }))
                   }
                 />
@@ -421,9 +401,25 @@ export default function IncompletePunchesList() {
               <Form.Item label="Branch" className="mb-3">
                 <Select
                   allowClear
-                  showSearch={{ optionFilterProp: "label" }}
+                  showSearch
+                  filterOption={(input, opt) => {
+                    const q = input.toLowerCase();
+                    return (
+                      String(opt?.label ?? "")
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(opt?.fullLabel ?? "")
+                        .toLowerCase()
+                        .includes(q)
+                    );
+                  }}
                   placeholder="All branches"
                   options={branchOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.branchId}
                   onChange={(v) => setPending((c) => ({ ...c, branchId: v }))}
                 />
@@ -434,9 +430,25 @@ export default function IncompletePunchesList() {
               >
                 <Select
                   allowClear
-                  showSearch={{ optionFilterProp: "label" }}
+                  showSearch
+                  filterOption={(input, opt) => {
+                    const q = input.toLowerCase();
+                    return (
+                      String(opt?.label ?? "")
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(opt?.fullLabel ?? "")
+                        .toLowerCase()
+                        .includes(q)
+                    );
+                  }}
                   placeholder="All departments"
                   options={deptOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.departmentId}
                   onChange={(v) =>
                     setPending((c) => ({ ...c, departmentId: v }))
@@ -449,9 +461,25 @@ export default function IncompletePunchesList() {
               >
                 <Select
                   allowClear
-                  showSearch={{ optionFilterProp: "label" }}
+                  showSearch
+                  filterOption={(input, opt) => {
+                    const q = input.toLowerCase();
+                    return (
+                      String(opt?.label ?? "")
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(opt?.fullLabel ?? "")
+                        .toLowerCase()
+                        .includes(q)
+                    );
+                  }}
                   placeholder="All clients"
                   options={clientOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.clientId}
                   onChange={(v) => setPending((c) => ({ ...c, clientId: v }))}
                 />
@@ -462,9 +490,25 @@ export default function IncompletePunchesList() {
               >
                 <Select
                   allowClear
-                  showSearch={{ optionFilterProp: "label" }}
+                  showSearch
+                  filterOption={(input, opt) => {
+                    const q = input.toLowerCase();
+                    return (
+                      String(opt?.label ?? "")
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(opt?.fullLabel ?? "")
+                        .toLowerCase()
+                        .includes(q)
+                    );
+                  }}
                   placeholder="All payroll groups"
                   options={payrollGroupOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.payrollGroupId}
                   onChange={(v) =>
                     setPending((c) => ({ ...c, payrollGroupId: v }))
@@ -474,9 +518,25 @@ export default function IncompletePunchesList() {
               <Form.Item label="Project Site" className="mb-3">
                 <Select
                   allowClear
-                  showSearch={{ optionFilterProp: "label" }}
+                  showSearch
+                  filterOption={(input, opt) => {
+                    const q = input.toLowerCase();
+                    return (
+                      String(opt?.label ?? "")
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(opt?.fullLabel ?? "")
+                        .toLowerCase()
+                        .includes(q)
+                    );
+                  }}
                   placeholder="All project sites"
                   options={areaOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
                   value={pending.operationAreaId}
                   onChange={(v) =>
                     setPending((c) => ({ ...c, operationAreaId: v }))
@@ -489,7 +549,19 @@ export default function IncompletePunchesList() {
               >
                 <Select
                   allowClear
-                  showSearch={{ optionFilterProp: "label" }}
+                  showSearch
+                  filterOption={(input, opt) => {
+                    const q = input.toLowerCase();
+                    const o = opt as typeof opt & { fullLabel?: string };
+                    return (
+                      String(o?.label ?? "")
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(o?.fullLabel ?? "")
+                        .toLowerCase()
+                        .includes(q)
+                    );
+                  }}
                   placeholder="All employees"
                   options={employeeOptions}
                   value={pending.employeeId}
@@ -505,9 +577,7 @@ export default function IncompletePunchesList() {
                 type="primary"
                 icon={<PlayCircleOutlined />}
                 loading={isLoading}
-                disabled={
-                  !pending.fromDate || !pending.toDate || isDateRangeInvalid
-                }
+                disabled={!pending.fromDate || !pending.toDate}
                 onClick={handleGenerate}
               >
                 Generate

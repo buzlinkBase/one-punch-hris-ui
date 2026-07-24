@@ -1,15 +1,19 @@
 export type ModeOfPayment = "Cash" | "ATM";
 export type SalaryType = "DAILY" | "MONTHLY_VARIABLE" | "MONTHLY_FIXED";
 export type EmploymentStatus =
-  | "Probationary"
   | "Regular"
-  | "Contractual"
-  | "ProjectBased"
-  | "Seasonal"
-  | "Casual"
   | "PartTime"
-  | "Term"
-  | "Internship";
+  | "Probationary"
+  | "Contract"
+  | "Temporary"
+  | "Casual"
+  | "Intern"
+  | "OnLeave"
+  | "Suspended"
+  | "Terminated"
+  | "Resigned"
+  | "Retired"
+  | "Deceased";
 export type JobLevel =
   | "Managerial"
   | "Supervisory"

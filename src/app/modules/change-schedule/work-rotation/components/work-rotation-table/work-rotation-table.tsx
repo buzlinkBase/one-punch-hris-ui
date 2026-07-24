@@ -17,9 +17,8 @@ export default function WorkRotationTable({ data, loading, onDelete }: Props) {
 
   const { widths, handleResize } = useResizableColumns({
     payrollDate: 120,
-    employeeName: 150,
-    timeShiftName: 150,
-    clientName: 150,
+    fullName: 150,
+    shiftName: 150,
   });
 
   const columns: ColumnsType<WorkRotationResponse> = [
@@ -36,35 +35,24 @@ export default function WorkRotationTable({ data, loading, onDelete }: Props) {
     },
     {
       title: WORK_ROTATION_LABEL.EMPLOYEE,
-      dataIndex: "employeeName",
-      key: "employeeName",
-      width: widths.employeeName,
+      dataIndex: "fullName",
+      key: "fullName",
+      width: widths.fullName,
       onHeaderCell: () =>
         ({
-          width: widths.employeeName,
-          onResize: (w: number) => handleResize("employeeName", w),
+          width: widths.fullName,
+          onResize: (w: number) => handleResize("fullName", w),
         }) as object,
     },
     {
       title: WORK_ROTATION_LABEL.TIME_SHIFT,
-      dataIndex: "timeShiftName",
-      key: "timeShiftName",
-      width: widths.timeShiftName,
+      dataIndex: "shiftName",
+      key: "shiftName",
+      width: widths.shiftName,
       onHeaderCell: () =>
         ({
-          width: widths.timeShiftName,
-          onResize: (w: number) => handleResize("timeShiftName", w),
-        }) as object,
-    },
-    {
-      title: WORK_ROTATION_LABEL.CLIENT,
-      dataIndex: "clientName",
-      key: "clientName",
-      width: widths.clientName,
-      onHeaderCell: () =>
-        ({
-          width: widths.clientName,
-          onResize: (w: number) => handleResize("clientName", w),
+          width: widths.shiftName,
+          onResize: (w: number) => handleResize("shiftName", w),
         }) as object,
     },
     {

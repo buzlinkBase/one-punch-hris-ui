@@ -1,61 +1,350 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
-  Typography,
-  Select,
-  Form,
   DatePicker,
-  Card,
-  Badge,
+  Form,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  Tabs,
+  Tag,
+  Typography,
 } from "antd";
-import { PlusOutlined, FilterOutlined, ClearOutlined } from "@ant-design/icons";
+import type { TableColumnsType } from "antd";
+import {
+  ArrowRightOutlined,
+  ClearOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import type { WorkRotationFilter } from "../../models/api/request/work-rotation-filter.model";
+import { ResizableTitle } from "@/shared/components/resizable-title";
+import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import {
   useWorkRotations,
   useDeleteWorkRotation,
+  useDeleteWorkRotationBatch,
 } from "../../hooks/use-work-rotation-queries";
-import WorkRotationTable from "../../components/work-rotation-table";
+import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { WORK_ROTATION_LABEL } from "../../constants/label.const";
+import { getNotify } from "@/shared/utils/notify";
+import type { WorkRotationFilter } from "../../models/api/request/work-rotation-filter.model";
+import type { WorkRotationResponse } from "../../models/api/response/work-rotation-response.model";
 
-const { Title } = Typography;
-const { RangePicker } = DatePicker;
+const { Title, Text } = Typography;
 
-const PAYROLL_GROUP_OPTIONS = [
-  { value: "pg-1", label: "Payroll Group 1" },
-  { value: "pg-2", label: "Payroll Group 2" },
-  { value: "pg-3", label: "Payroll Group 3" },
-];
+interface BatchGroup {
+  batchCode: string;
+  entries: WorkRotationResponse[];
+  count: number;
+  timeShiftName: string;
+  fromDate: string;
+  toDate: string;
+}
 
-const CLIENT_OPTIONS = [
-  { value: "client-1", label: "Client A" },
-  { value: "client-2", label: "Client B" },
-  { value: "client-3", label: "Client C" },
-];
+function currentSemiMonthlyRange(): {
+  fromDate: string;
+  toDate: string;
+} {
+  const today = dayjs();
+  const day = today.date();
+  if (day <= 15) {
+    return {
+      fromDate: today.startOf("month").format("YYYY-MM-DD"),
+      toDate: today.date(15).format("YYYY-MM-DD"),
+    };
+  }
+  return {
+    fromDate: today.date(16).format("YYYY-MM-DD"),
+    toDate: today.endOf("month").format("YYYY-MM-DD"),
+  };
+}
+
+const DEFAULT_FILTER = currentSemiMonthlyRange();
 
 export default function WorkRotationList() {
   const navigate = useNavigate();
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filter, setFilter] = useState<WorkRotationFilter>({});
-  const [pending, setPending] = useState<WorkRotationFilter>({});
+  const [activeTab, setActiveTab] = useState("entries");
+  const [pending, setPending] = useState<WorkRotationFilter>(DEFAULT_FILTER);
+  const [committed, setCommitted] =
+    useState<WorkRotationFilter>(DEFAULT_FILTER);
+  const [searchKey, setSearchKey] = useState(0);
 
-  const activeFilterCount = [
-    filter.payrollGroupId,
-    filter.clientId,
-    filter.fromPayrollDate,
-  ].filter(Boolean).length;
+  const {
+    data: records = [],
+    isLoading,
+    isFetching,
+  } = useWorkRotations(committed, searchKey);
+  const { mutateAsync: removeEntry, isPending: isDeletingEntry } =
+    useDeleteWorkRotation();
+  const { mutateAsync: removeBatch, isPending: isDeletingBatch } =
+    useDeleteWorkRotationBatch();
+  const { data: employeeData = [] } = useEmployeeFilter();
 
-  const { data: records = [], isLoading } = useWorkRotations(filter);
-  const { mutate: remove } = useDeleteWorkRotation();
+  const employees = employeeData.map((e) => ({
+    value: e.id,
+    label: e.name ?? e.id,
+  }));
 
-  const handleSearch = () => setFilter(pending);
+  const { widths: entryWidths, handleResize: entryResize } =
+    useResizableColumns({
+      employeeName: 180,
+      batchCode: 160,
+      timeShiftName: 200,
+      payrollDate: 130,
+      actions: 80,
+    });
+
+  const { widths: batchWidths, handleResize: batchResize } =
+    useResizableColumns({
+      batchCode: 160,
+      count: 80,
+      timeShiftName: 220,
+      dateRange: 240,
+      actions: 140,
+    });
+
+  const batchGroups = useMemo<BatchGroup[]>(() => {
+    const map = new Map<string, WorkRotationResponse[]>();
+    for (const r of records) {
+      if (!r.batchCode) continue;
+      if (!map.has(r.batchCode)) map.set(r.batchCode, []);
+      map.get(r.batchCode)!.push(r);
+    }
+    return Array.from(map.entries())
+      .map(([batchCode, entries]) => {
+        const dates = entries.map((e) => e.payrollDate).sort();
+        return {
+          batchCode,
+          entries,
+          count: entries.length,
+          timeShiftName: entries[0].shiftName ?? "",
+          fromDate: dates[0],
+          toDate: dates[dates.length - 1],
+        };
+      })
+      .sort((a, b) => b.batchCode.localeCompare(a.batchCode));
+  }, [records]);
+
+  const handleSearch = () => {
+    setCommitted({ ...pending });
+    setSearchKey((k) => k + 1);
+  };
 
   const handleClear = () => {
-    setPending({});
-    setFilter({});
-    setFiltersOpen(false);
+    setPending(DEFAULT_FILTER);
+    setCommitted(DEFAULT_FILTER);
+    setSearchKey((k) => k + 1);
   };
+
+  const handleDeleteEntry = async (id: string) => {
+    await removeEntry(id);
+    getNotify().success({ message: "Record deleted." });
+  };
+
+  const handleDeleteBatch = async (batchCode: string, count: number) => {
+    await removeBatch(batchCode);
+    getNotify().success({
+      message: "Batch Deleted",
+      description: `${count} record${count !== 1 ? "s" : ""} removed.`,
+    });
+  };
+
+  const isTableLoading =
+    isLoading || isFetching || isDeletingEntry || isDeletingBatch;
+
+  const entryColumns: TableColumnsType<WorkRotationResponse> = [
+    {
+      title: WORK_ROTATION_LABEL.EMPLOYEE,
+      dataIndex: "fullName",
+      key: "fullName",
+      width: entryWidths.employeeName,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.employeeName,
+          onResize: (w: number) => entryResize("employeeName", w),
+        }) as object,
+    },
+    {
+      title: "Batch",
+      dataIndex: "batchCode",
+      key: "batchCode",
+      width: entryWidths.batchCode,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.batchCode,
+          onResize: (w: number) => entryResize("batchCode", w),
+        }) as object,
+      render: (v: string) => <Tag color="blue">{v}</Tag>,
+    },
+    {
+      title: WORK_ROTATION_LABEL.TIME_SHIFT,
+      dataIndex: "shiftName",
+      key: "shiftName",
+      width: entryWidths.timeShiftName,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.timeShiftName,
+          onResize: (w: number) => entryResize("timeShiftName", w),
+        }) as object,
+    },
+    {
+      title: WORK_ROTATION_LABEL.PAYROLL_DATE,
+      dataIndex: "payrollDate",
+      key: "payrollDate",
+      width: entryWidths.payrollDate,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.payrollDate,
+          onResize: (w: number) => entryResize("payrollDate", w),
+        }) as object,
+    },
+    {
+      title: "",
+      key: "actions",
+      width: entryWidths.actions,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.actions,
+          onResize: (w: number) => entryResize("actions", w),
+        }) as object,
+      render: (_: unknown, record: WorkRotationResponse) => (
+        <Popconfirm
+          title="Delete this entry?"
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+          onConfirm={() => handleDeleteEntry(record.id)}
+        >
+          <Button type="link" danger size="small" loading={isDeletingEntry}>
+            Delete
+          </Button>
+        </Popconfirm>
+      ),
+    },
+  ];
+
+  const batchEntryColumns: TableColumnsType<WorkRotationResponse> = [
+    {
+      title: WORK_ROTATION_LABEL.EMPLOYEE,
+      dataIndex: "fullName",
+      key: "fullName",
+    },
+    {
+      title: WORK_ROTATION_LABEL.PAYROLL_DATE,
+      dataIndex: "payrollDate",
+      key: "payrollDate",
+    },
+    {
+      title: "",
+      key: "action",
+      width: 80,
+      render: (_: unknown, record: WorkRotationResponse) => (
+        <Popconfirm
+          title="Delete this entry?"
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+          onConfirm={() => handleDeleteEntry(record.id)}
+        >
+          <Button type="link" danger size="small" loading={isDeletingEntry}>
+            Delete
+          </Button>
+        </Popconfirm>
+      ),
+    },
+  ];
+
+  const batchColumns: TableColumnsType<BatchGroup> = [
+    {
+      title: "Batch Code",
+      dataIndex: "batchCode",
+      key: "batchCode",
+      width: batchWidths.batchCode,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.batchCode,
+          onResize: (w: number) => batchResize("batchCode", w),
+        }) as object,
+      render: (code: string) => <Tag color="blue">{code}</Tag>,
+    },
+    {
+      title: "Employees",
+      dataIndex: "count",
+      key: "count",
+      width: batchWidths.count,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.count,
+          onResize: (w: number) => batchResize("count", w),
+        }) as object,
+      render: (count: number) => <Tag color="default">{count}</Tag>,
+    },
+    {
+      title: WORK_ROTATION_LABEL.TIME_SHIFT,
+      dataIndex: "timeShiftName",
+      key: "timeShiftName",
+      width: batchWidths.timeShiftName,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.timeShiftName,
+          onResize: (w: number) => batchResize("timeShiftName", w),
+        }) as object,
+    },
+    {
+      title: "Date Range",
+      key: "dateRange",
+      width: batchWidths.dateRange,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.dateRange,
+          onResize: (w: number) => batchResize("dateRange", w),
+        }) as object,
+      render: (_: unknown, row: BatchGroup) => (
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          {row.fromDate}
+          <ArrowRightOutlined
+            style={{ color: "#1DA081", marginInline: 6, fontSize: 11 }}
+          />
+          <span style={{ color: "#1DA081", fontWeight: 500 }}>
+            {row.toDate}
+          </span>
+        </Text>
+      ),
+    },
+    {
+      title: "",
+      key: "actions",
+      width: batchWidths.actions,
+      onHeaderCell: () =>
+        ({
+          width: batchWidths.actions,
+          onResize: (w: number) => batchResize("actions", w),
+        }) as object,
+      render: (_: unknown, row: BatchGroup) => (
+        <Popconfirm
+          title={`Delete batch ${row.batchCode}?`}
+          description={`This will remove all ${row.count} record${row.count !== 1 ? "s" : ""} in this batch.`}
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+          onConfirm={() => handleDeleteBatch(row.batchCode, row.count)}
+        >
+          <Button
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            loading={isDeletingBatch}
+          >
+            Delete Batch
+          </Button>
+        </Popconfirm>
+      ),
+    },
+  ];
 
   return (
     <div className="content-page">
@@ -69,105 +358,152 @@ export default function WorkRotationList() {
               Manage employee work rotation plans and time shift assignments.
             </p>
           </div>
-          <div className="flex gap-2">
-            <Badge count={activeFilterCount} size="small">
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setFiltersOpen((v) => !v)}
-                type={filtersOpen ? "default" : "text"}
-              >
-                Filters
-              </Button>
-            </Badge>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/change-schedule/work-rotation/create" })
-              }
-            >
-              Add Work Rotation Plan
-            </Button>
-          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() =>
+              navigate({ to: "/change-schedule/work-rotation/create" })
+            }
+          >
+            Add Work Rotation Plan
+          </Button>
         </div>
       </div>
 
-      {filtersOpen && (
-        <Card size="small" className="mb-4">
-          <Form layout="vertical">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
-              <Form.Item
-                label={WORK_ROTATION_LABEL.FILTER_PAYROLL_GROUP}
-                className="mb-0"
-              >
-                <Select
-                  allowClear
-                  placeholder="All"
-                  options={PAYROLL_GROUP_OPTIONS}
-                  value={pending.payrollGroupId}
-                  onChange={(val) =>
-                    setPending((f) => ({ ...f, payrollGroupId: val }))
-                  }
-                  style={{ width: "100%" }}
-                />
-              </Form.Item>
-              <Form.Item
-                label={WORK_ROTATION_LABEL.FILTER_CLIENT}
-                className="mb-0"
-              >
-                <Select
-                  allowClear
-                  placeholder="All"
-                  options={CLIENT_OPTIONS}
-                  value={pending.clientId}
-                  onChange={(val) =>
-                    setPending((f) => ({ ...f, clientId: val }))
-                  }
-                  style={{ width: "100%" }}
-                />
-              </Form.Item>
-              <Form.Item
-                label={WORK_ROTATION_LABEL.PAYROLL_DATE}
-                className="mb-0"
-              >
-                <RangePicker
-                  format="YYYY-MM-DD"
-                  style={{ width: "100%" }}
-                  value={
-                    pending.fromPayrollDate && pending.toPayrollDate
-                      ? [
-                          dayjs(pending.fromPayrollDate),
-                          dayjs(pending.toPayrollDate),
-                        ]
-                      : null
-                  }
-                  onChange={(dates) =>
-                    setPending((f) => ({
-                      ...f,
-                      fromPayrollDate: dates?.[0]?.format("YYYY-MM-DD"),
-                      toPayrollDate: dates?.[1]?.format("YYYY-MM-DD"),
-                    }))
-                  }
-                />
-              </Form.Item>
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <Button icon={<ClearOutlined />} onClick={handleClear}>
-                Clear
-              </Button>
+      <Form layout="vertical" className="mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
+          <Form.Item label="Payroll Date" className="mb-0 sm:col-span-2">
+            <DatePicker.RangePicker
+              style={{ width: "100%" }}
+              value={
+                pending.fromDate && pending.toDate
+                  ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                  : null
+              }
+              onChange={(dates) =>
+                setPending((c) => ({
+                  ...c,
+                  fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                  toDate: dates?.[1]?.format("YYYY-MM-DD"),
+                }))
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label={WORK_ROTATION_LABEL.FILTER_EMPLOYEE}
+            className="mb-0"
+          >
+            <Select
+              allowClear
+              showSearch
+              filterOption={(input, opt) =>
+                String(opt?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              placeholder="All Employees"
+              options={employees}
+              value={pending.employeeId}
+              onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+          <Form.Item label=" " className="mb-0">
+            <Space>
               <Button
-                icon={<FilterOutlined />}
                 type="primary"
+                icon={<SearchOutlined />}
+                loading={isLoading}
                 onClick={handleSearch}
               >
                 Search
               </Button>
-            </div>
-          </Form>
-        </Card>
-      )}
+              <Button icon={<ClearOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
+            </Space>
+          </Form.Item>
+        </div>
+      </Form>
 
-      <WorkRotationTable data={records} loading={isLoading} onDelete={remove} />
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: "entries",
+            label: "Entries",
+            children: (
+              <Table<WorkRotationResponse>
+                rowKey="id"
+                dataSource={records}
+                columns={entryColumns}
+                loading={isTableLoading}
+                size="small"
+                pagination={{
+                  pageSize: 15,
+                  size: "small",
+                  showSizeChanger: false,
+                }}
+                scroll={{ x: "max-content" }}
+                sticky
+                components={{ header: { cell: ResizableTitle } }}
+                locale={{
+                  emptyText: "No records found for the selected filters.",
+                }}
+              />
+            ),
+          },
+          {
+            key: "batches",
+            label: (
+              <Space size={4}>
+                Batches
+                {batchGroups.length > 0 && (
+                  <Tag color="blue" style={{ marginInlineStart: 0 }}>
+                    {batchGroups.length}
+                  </Tag>
+                )}
+              </Space>
+            ),
+            children: (
+              <Table<BatchGroup>
+                rowKey="batchCode"
+                dataSource={batchGroups}
+                columns={batchColumns}
+                loading={isTableLoading}
+                size="small"
+                pagination={{
+                  pageSize: 10,
+                  size: "small",
+                  showSizeChanger: false,
+                }}
+                scroll={{ x: "max-content" }}
+                sticky
+                components={{ header: { cell: ResizableTitle } }}
+                expandable={{
+                  expandedRowRender: (batch) => (
+                    <div className="pl-8 py-2">
+                      <Table<WorkRotationResponse>
+                        rowKey="id"
+                        dataSource={batch.entries}
+                        columns={batchEntryColumns}
+                        pagination={false}
+                        size="small"
+                        scroll={{ x: "max-content" }}
+                      />
+                    </div>
+                  ),
+                  rowExpandable: (batch) => batch.entries.length > 0,
+                }}
+                locale={{
+                  emptyText: "No batches found for the selected filters.",
+                }}
+              />
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
