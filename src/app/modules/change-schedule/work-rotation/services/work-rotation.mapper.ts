@@ -4,7 +4,6 @@ import type { WorkRotationFormValues } from "../models/forms/work-rotation-form.
 export const workRotationMapper = {
   toFormValues(response: WorkRotationResponse): WorkRotationFormValues {
     return {
-      employeeId: response.employeeId,
       timeShiftId: response.timeShiftId,
       payrollDate: response.payrollDate,
     };

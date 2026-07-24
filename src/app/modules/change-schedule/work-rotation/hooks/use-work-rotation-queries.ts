@@ -6,9 +6,12 @@ import type { WorkRotationFilter } from "../models/api/request/work-rotation-fil
 
 const QUERY_KEY = ["change-schedule", "work-rotation"];
 
-export function useWorkRotations(filter: WorkRotationFilter = {}) {
+export function useWorkRotations(
+  filter: WorkRotationFilter = {},
+  searchKey = 0,
+) {
   return useQuery({
-    queryKey: [...QUERY_KEY, filter],
+    queryKey: [...QUERY_KEY, filter, searchKey],
     queryFn: () => workRotationApi.getAll(filter),
   });
 }
@@ -35,8 +38,7 @@ export function useUpdateWorkRotation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: UpdateWorkRotation) => workRotationApi.update(data),
-    onSuccess: (updated) => {
-      queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
@@ -46,6 +48,16 @@ export function useDeleteWorkRotation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => workRotationApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useDeleteWorkRotationBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchCode: string) => workRotationApi.removeByBatch(batchCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

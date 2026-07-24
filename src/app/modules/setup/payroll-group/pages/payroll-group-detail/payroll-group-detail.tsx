@@ -1,25 +1,8 @@
 import { useEffect } from "react";
-import {
-  Form,
-  Input,
-  InputNumber,
-  Button,
-  Select,
-  Checkbox,
-  Typography,
-  Space,
-  Tag,
-  Card,
-} from "antd";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Form, Input, Button, Select, Typography, Space, Tag } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import {
-  useForm,
-  Controller,
-  useFieldArray,
-  type Resolver,
-} from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   payrollGroupFormSchema,
@@ -70,26 +53,29 @@ export default function PayrollGroupDetail() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "cutoffDays",
-  });
-
   useEffect(() => {
     if (isEdit && selected) {
       reset({
         code: selected.code,
         name: selected.name,
         payrollFrequency: selected.payrollFrequency,
-        cutoffDays: selected.cutoffDays ?? [],
+        cutoffDays: [],
         status: selected.status,
       });
     }
   }, [selected, isEdit, reset]);
 
+  const DEFAULT_CUTOFF_DAYS = [
+    { day: 10, isEndOfMonth: false, label: "1st Cutoff" },
+    { day: 25, isEndOfMonth: false, label: "2nd Cutoff" },
+  ];
+
   const onSubmit = async (values: PayrollGroupFormValues) => {
-    if (isEdit && id) await update({ id, ...values });
-    else await add(values);
+    if (isEdit && id) {
+      await update({ id, ...values, cutoffDays: selected?.cutoffDays ?? [] });
+    } else {
+      await add({ ...values, cutoffDays: DEFAULT_CUTOFF_DAYS });
+    }
     navigate({ to: "/setup/payroll-group" });
   };
 
@@ -179,80 +165,6 @@ export default function PayrollGroupDetail() {
               )}
             />
           </Form.Item>
-
-          {/* Cutoff Days */}
-          <Card
-            className="mt-4"
-            title={PAYROLL_GROUP_LABEL.CUTOFF_DAYS}
-            extra={
-              <Button
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={() =>
-                  append({ day: 15, isEndOfMonth: false, label: "" })
-                }
-              >
-                Add Cutoff
-              </Button>
-            }
-          >
-            {fields.length === 0 && (
-              <p className="text-gray-400 text-sm">
-                No cutoff days configured.
-              </p>
-            )}
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex items-start gap-3 mb-3">
-                <Form.Item
-                  label="Day"
-                  className="mb-0 w-24"
-                  validateStatus={
-                    errors.cutoffDays?.[index]?.day ? "error" : ""
-                  }
-                  help={errors.cutoffDays?.[index]?.day?.message}
-                >
-                  <Controller
-                    name={`cutoffDays.${index}.day`}
-                    control={control}
-                    render={({ field: f }) => (
-                      <InputNumber {...f} className="w-full" min={1} max={31} />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label="Label" className="mb-0 flex-1">
-                  <Controller
-                    name={`cutoffDays.${index}.label`}
-                    control={control}
-                    render={({ field: f }) => (
-                      <Input {...f} placeholder="e.g. First Cutoff" />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item label="End of Month" className="mb-0">
-                  <Controller
-                    name={`cutoffDays.${index}.isEndOfMonth`}
-                    control={control}
-                    render={({ field: f }) => (
-                      <Checkbox
-                        checked={f.value}
-                        onChange={(e) => f.onChange(e.target.checked)}
-                      />
-                    )}
-                  />
-                </Form.Item>
-
-                <Button
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  className="mt-6"
-                  onClick={() => remove(index)}
-                />
-              </div>
-            ))}
-          </Card>
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">

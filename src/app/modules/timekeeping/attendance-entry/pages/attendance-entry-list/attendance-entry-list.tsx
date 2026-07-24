@@ -110,9 +110,6 @@ export default function AttendanceEntryList() {
       actions: 148,
     });
 
-  const isDateRangeInvalid =
-    !!pending.fromDate && !!pending.toDate && pending.fromDate > pending.toDate;
-
   const batchGroups = useMemo<BatchGroup[]>(() => {
     const map = new Map<string, AttendanceEntryResponse[]>();
     for (const r of records) {
@@ -138,10 +135,6 @@ export default function AttendanceEntryList() {
   }, [records]);
 
   const handleSearch = () => {
-    if (isDateRangeInvalid) {
-      messageApi.warning("Date To must be greater than or equal to Date From.");
-      return;
-    }
     setCommittedFilter({ ...pending });
     setSearchKey((k) => k + 1);
   };
@@ -408,33 +401,19 @@ export default function AttendanceEntryList() {
       {/* Filter bar — always visible, search required before data loads */}
       <Form layout="vertical" className="mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
-          <Form.Item
-            label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_FROM}
-            className="mb-0"
-          >
-            <DatePicker
+          <Form.Item label="Date Range" className="mb-0 sm:col-span-2">
+            <DatePicker.RangePicker
               style={{ width: "100%" }}
-              value={pending.fromDate ? dayjs(pending.fromDate) : null}
-              onChange={(date) =>
-                setPending((c) => ({
-                  ...c,
-                  fromDate: date?.format("YYYY-MM-DD"),
-                }))
+              value={
+                pending.fromDate && pending.toDate
+                  ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                  : null
               }
-            />
-          </Form.Item>
-          <Form.Item
-            label={ATTENDANCE_ENTRY_LABEL.FILTER_DATE_TO}
-            className="mb-0"
-          >
-            <DatePicker
-              style={{ width: "100%" }}
-              value={pending.toDate ? dayjs(pending.toDate) : null}
-              status={isDateRangeInvalid ? "error" : undefined}
-              onChange={(date) =>
+              onChange={(dates) =>
                 setPending((c) => ({
                   ...c,
-                  toDate: date?.format("YYYY-MM-DD"),
+                  fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                  toDate: dates?.[1]?.format("YYYY-MM-DD"),
                 }))
               }
             />
@@ -462,7 +441,6 @@ export default function AttendanceEntryList() {
                 type="primary"
                 icon={<SearchOutlined />}
                 onClick={handleSearch}
-                disabled={isDateRangeInvalid}
               >
                 Search
               </Button>

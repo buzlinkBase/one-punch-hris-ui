@@ -1,11 +1,9 @@
 export interface WorkRotationResponse {
   id: string;
-  employeeId: string;
-  employeeName: string;
-  payrollGroupId: string;
-  clientId: string;
-  clientName: string;
   timeShiftId: string;
-  timeShiftName: string;
+  employeeId: string;
   payrollDate: string;
+  batchCode?: string;
+  fullName?: string;
+  shiftName?: string;
 }

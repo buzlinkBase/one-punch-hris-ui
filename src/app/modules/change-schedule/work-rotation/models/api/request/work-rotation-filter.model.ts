@@ -1,7 +1,5 @@
 export interface WorkRotationFilter {
-  payrollGroupId?: string;
+  fromDate?: string;
+  toDate?: string;
   employeeId?: string;
-  clientId?: string;
-  fromPayrollDate?: string;
-  toPayrollDate?: string;
 }
