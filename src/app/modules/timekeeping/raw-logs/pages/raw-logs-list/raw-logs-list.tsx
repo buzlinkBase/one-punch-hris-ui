@@ -34,7 +34,6 @@ import { RAW_LOGS_LABEL } from "../../constants/label.const";
 import type { RawLogsFilterRequest } from "../../models/api/response/raw-attendance-log.model";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
-import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
@@ -87,7 +86,6 @@ export default function RawLogsList() {
 
   const { data: departments = [] } = useDepartments();
   const { data: clients = [] } = useClients();
-  const { data: payrollGroups = [] } = usePayrollGroups();
   const { data: areas = [] } = useOperationAreas();
   const { data: branches = [] } = useBranches();
   const { data: employees = [] } = useEmployeeFilter();
@@ -143,11 +141,6 @@ export default function RawLogsList() {
     label: c.code || c.name,
     fullLabel: c.code ? c.name : undefined,
   }));
-  const payrollGroupOptions = payrollGroups.map((p) => ({
-    value: p.id,
-    label: p.code || p.name,
-    fullLabel: p.code ? p.name : undefined,
-  }));
   const areaOptions = areas.map((a) => ({
     value: a.id,
     label: a.code || a.name,
@@ -164,7 +157,6 @@ export default function RawLogsList() {
     pending.branchId,
     pending.departmentId,
     pending.clientId,
-    pending.payrollGroupId,
     pending.operationAreaId,
     pending.employeeId,
   ].filter(Boolean).length;
@@ -502,34 +494,6 @@ export default function RawLogsList() {
                   }
                   value={pending.clientId}
                   onChange={(v) => setPending((c) => ({ ...c, clientId: v }))}
-                />
-              </Form.Item>
-              <Form.Item label="Payroll Group" className="mb-3">
-                <Select
-                  allowClear
-                  showSearch
-                  filterOption={(input, opt) => {
-                    const q = input.toLowerCase();
-                    return (
-                      String(opt?.label ?? "")
-                        .toLowerCase()
-                        .includes(q) ||
-                      String(opt?.fullLabel ?? "")
-                        .toLowerCase()
-                        .includes(q)
-                    );
-                  }}
-                  placeholder="All payroll groups"
-                  options={payrollGroupOptions}
-                  optionRender={(opt) =>
-                    opt.data.fullLabel
-                      ? `${opt.data.label} - ${opt.data.fullLabel}`
-                      : String(opt.data.label ?? "")
-                  }
-                  value={pending.payrollGroupId}
-                  onChange={(v) =>
-                    setPending((c) => ({ ...c, payrollGroupId: v }))
-                  }
                 />
               </Form.Item>
               <Form.Item label="Project Site" className="mb-3">

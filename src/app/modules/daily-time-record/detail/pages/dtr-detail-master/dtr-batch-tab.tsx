@@ -1,77 +1,92 @@
 import { useState } from "react";
-import { Button, Dropdown, Select, Space, Typography, message } from "antd";
+import { Button, Dropdown, Popconfirm, Select, Space, message } from "antd";
 import type { MenuProps } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import {
-  useDtrBatchCodes,
-  useDtrSummaryByBatch,
-} from "../../hooks/use-dtr-summary-queries";
-import DtrSummaryTable from "../../components/dtr-summary-table";
-import { DTR_SUMMARY_LABEL } from "../../constants/label.const";
-import type { DtrSummaryResponse } from "../../models/api/response/dtr-summary-response.model";
-
-const { Title } = Typography;
+  DeleteOutlined,
+  DownloadOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useDtrDetailBatchCodes,
+  useDtrDetailMaster,
+  useDeleteDtrBatch,
+} from "../../hooks/use-dtr-detail-queries";
+import DtrDetailTable from "../../components/dtr-detail-table";
+import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
 
 type AnyRow = Record<string, unknown>;
 
-export default function DtrSummaryList() {
+export default function DtrBatchTab() {
   const [selectedBatchCode, setSelectedBatchCode] = useState<
     string | undefined
   >(undefined);
   const [messageApi, contextHolder] = message.useMessage();
+  const queryClient = useQueryClient();
 
-  const { data: batchCodes = [], isLoading: isLoadingCodes } =
-    useDtrBatchCodes();
+  const {
+    data: batchCodes = [],
+    isLoading: isLoadingCodes,
+    refetch: refetchBatchCodes,
+  } = useDtrDetailBatchCodes();
 
   const {
     data: records = [],
-    isLoading: isLoadingRecords,
+    isLoading,
     refetch,
-  } = useDtrSummaryByBatch(selectedBatchCode ?? "", { enabled: false });
+  } = useDtrDetailMaster(selectedBatchCode ?? "", { enabled: false });
+
+  const { mutateAsync: deleteBatch, isPending: isDeleting } =
+    useDeleteDtrBatch();
+
+  const handleDelete = async () => {
+    if (!selectedBatchCode) return;
+    await deleteBatch(selectedBatchCode);
+    messageApi.success(`Batch "${selectedBatchCode}" deleted.`);
+    setSelectedBatchCode(undefined);
+    queryClient.invalidateQueries({
+      queryKey: ["daily-time-record", "detail", "batch-codes"],
+    });
+  };
 
   const options = batchCodes.map((item) => ({
     value: item.code ?? "",
     label: item.code ?? "",
   }));
 
-  // ── Export ────────────────────────────────────────────────────────────────────
-
   const toExportRows = (): AnyRow[] =>
-    records.map((r: DtrSummaryResponse) => ({
-      BatchCode: r.batchCode,
+    records.map((r: DtrDetailResponse) => ({
       Employee: r.fullName,
-      // Attendance
-      Late_hr: r.lateHours,
-      UT_hr: r.utHours,
-      Over_hr: r.overHours,
-      Absent: r.absentCount,
-      // Regular
+      WorkType: r.workType,
+      WorkDate: r.workDate,
+      ShiftName: r.shiftName,
+      Start: r.startTime ? dayjs(r.startTime).format("HH:mm") : "",
+      End: r.endTime ? dayjs(r.endTime).format("HH:mm") : "",
+      Late_min: r.lateMinutes,
+      UT_min: r.utMinutes,
+      OverBreak_min: r.overMinutes,
+      Leave_hr: r.leaveHours,
       Reg_hr: r.regularNetHours,
       Reg_OT_hr: r.regularOTHours,
       Reg_ND_hr: r.regularNDHours,
       Reg_ND_OT_hr: r.regularNDOTHours,
-      // Rest Day
       RD_hr: r.restDayHours,
       RD_OT_hr: r.restDayOTHours,
       RD_ND_hr: r.restDayNDHours,
       RD_ND_OT_hr: r.restDayNDOTHours,
-      // Legal Holiday
       LH_hr: r.legalHolHours,
       LH_OT_hr: r.legalHolOTHours,
       LH_ND_hr: r.legalHolNightDiffHours,
       LH_ND_OT_hr: r.legalHolNightDiffOTHours,
-      // Special Holiday
       SPH_hr: r.specialHolHours,
       SPH_OT_hr: r.specialHolOTHours,
       SPH_ND_hr: r.specialHolNightDiffHours,
       SPH_ND_OT_hr: r.specialHolNightDiffOTHours,
-      // Rest + Legal Day
       RestLegal_hr: r.restLegalDayHours,
       RestLegal_OT_hr: r.restLegalDayOTHours,
       RestLegal_ND_hr: r.restLegalDayNDHours,
       RestLegal_ND_OT_hr: r.restLegalDayNDOTHours,
-      // Rest + Special Day
       RestSpecial_hr: r.restSpecialDayHours,
       RestSpecial_OT_hr: r.restSpecialDayOTHours,
       RestSpecial_ND_hr: r.restSpecialDayNDHours,
@@ -124,7 +139,7 @@ export default function DtrSummaryList() {
     if (format === "csv") {
       const a = document.createElement("a");
       a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv(rows))}`;
-      a.download = `dtr-summary-${suffix}.csv`;
+      a.download = `dtr-detail-${suffix}.csv`;
       a.style.display = "none";
       document.body.appendChild(a);
       a.click();
@@ -136,7 +151,7 @@ export default function DtrSummaryList() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `dtr-summary-${suffix}.xls`;
+      a.download = `dtr-detail-${suffix}.xls`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -154,34 +169,47 @@ export default function DtrSummaryList() {
   ];
 
   return (
-    <div className="content-page">
+    <>
       {contextHolder}
-
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              {DTR_SUMMARY_LABEL.TITLE}
-            </Title>
-            <p className="page-toolbar-subtitle">
-              View aggregated DTR summary by batch code.
-            </p>
-          </div>
-          <Space>
-            <Dropdown
-              menu={{ items: exportMenuItems }}
-              trigger={["click"]}
-              disabled={!records.length}
+      <div className="flex justify-end mb-3">
+        <Space>
+          <Popconfirm
+            title="Delete batch"
+            description={`Delete all records in "${selectedBatchCode}"?`}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={handleDelete}
+            disabled={!selectedBatchCode}
+          >
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              disabled={!selectedBatchCode}
+              loading={isDeleting}
             >
-              <Button icon={<DownloadOutlined />} disabled={!records.length}>
-                Export
-              </Button>
-            </Dropdown>
-          </Space>
-        </div>
+              Delete
+            </Button>
+          </Popconfirm>
+          <Dropdown
+            menu={{ items: exportMenuItems }}
+            trigger={["click"]}
+            disabled={!records.length}
+          >
+            <Button icon={<DownloadOutlined />} disabled={!records.length}>
+              Export
+            </Button>
+          </Dropdown>
+        </Space>
       </div>
 
-      <div className="mb-4 flex gap-2" style={{ maxWidth: 620 }}>
+      <div className="mb-4 flex gap-2" style={{ maxWidth: 660 }}>
+        <Button
+          icon={<ReloadOutlined />}
+          loading={isLoadingCodes}
+          onClick={() => refetchBatchCodes()}
+          title="Refresh batch codes"
+        />
         <Select
           showSearch
           allowClear
@@ -200,14 +228,14 @@ export default function DtrSummaryList() {
         <Button
           type="primary"
           disabled={!selectedBatchCode}
-          loading={isLoadingRecords}
+          loading={isLoading}
           onClick={() => refetch()}
         >
           Search
         </Button>
       </div>
 
-      <DtrSummaryTable data={records} loading={isLoadingRecords} />
-    </div>
+      <DtrDetailTable data={records} loading={isLoading} />
+    </>
   );
 }

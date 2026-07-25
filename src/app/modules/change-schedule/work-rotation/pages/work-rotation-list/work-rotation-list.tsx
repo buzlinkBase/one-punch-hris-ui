@@ -372,7 +372,7 @@ export default function WorkRotationList() {
 
       <Form layout="vertical" className="mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
-          <Form.Item label="Payroll Date" className="mb-0 sm:col-span-2">
+          <Form.Item label="Entry Date" className="mb-0 sm:col-span-2">
             <DatePicker.RangePicker
               style={{ width: "100%" }}
               value={

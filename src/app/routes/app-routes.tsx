@@ -93,6 +93,10 @@ const DtrSummaryList = lazy(
 const DtrDetailList = lazy(
   () => import("@/app/modules/daily-time-record/detail/pages/dtr-detail-list"),
 );
+const DtrDetailMaster = lazy(
+  () =>
+    import("@/app/modules/daily-time-record/detail/pages/dtr-detail-master"),
+);
 const ChangeHolidayList = lazy(
   () =>
     import("@/app/modules/change-schedule/change-holiday/pages/change-holiday-list"),
@@ -559,6 +563,18 @@ const dtrDetailIndexRoute = createRoute({
   component: withSuspense(DtrDetailList),
 });
 
+const dtrDetailMasterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "daily-time-record/master",
+  component: MainLayout,
+});
+
+const dtrDetailMasterIndexRoute = createRoute({
+  getParentRoute: () => dtrDetailMasterRoute,
+  path: "/",
+  component: withSuspense(DtrDetailMaster),
+});
+
 const dtrSummaryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/summary",
@@ -869,6 +885,7 @@ const routeTree = rootRoute.addChildren([
   ]),
   appSectionRoute("daily-time-record", "DTR Summary"),
   dtrDetailRoute.addChildren([dtrDetailIndexRoute]),
+  dtrDetailMasterRoute.addChildren([dtrDetailMasterIndexRoute]),
   dtrSummaryRoute.addChildren([dtrSummaryIndexRoute]),
   forPayrollRoute.addChildren([forPayrollIndexRoute]),
   appSectionRoute("reports", "Reports"),

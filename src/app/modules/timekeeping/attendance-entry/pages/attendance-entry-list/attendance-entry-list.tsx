@@ -156,9 +156,8 @@ export default function AttendanceEntryList() {
   };
 
   const buildCsv = () => {
-    const header = ["Employee ID", "Employee", "Time Log", "Batch Code"];
+    const header = ["Employee", "Time Log", "Batch Code"];
     const rows = records.map((r) => [
-      r.employeeId,
       r.employeeName,
       r.timeLog,
       r.batchCode ?? "",
@@ -182,10 +181,10 @@ export default function AttendanceEntryList() {
     const rows = records
       .map(
         (r) =>
-          `<tr><td>${escapeHtml(r.employeeId)}</td><td>${escapeHtml(r.employeeName)}</td><td>${escapeHtml(r.timeLog)}</td><td>${escapeHtml(r.batchCode ?? "")}</td></tr>`,
+          `<tr><td>${escapeHtml(r.employeeName)}</td><td>${escapeHtml(r.timeLog)}</td><td>${escapeHtml(r.batchCode ?? "")}</td></tr>`,
       )
       .join("");
-    return `<html><head><meta charset="utf-8" /></head><body><table><thead><tr><th>Employee ID</th><th>Employee</th><th>Time Log</th><th>Batch Code</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+    return `<html><head><meta charset="utf-8" /></head><body><table><thead><tr><th>Employee</th><th>Time Log</th><th>Batch Code</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
   };
 
   const handleExport = (format: "csv" | "excel") => {

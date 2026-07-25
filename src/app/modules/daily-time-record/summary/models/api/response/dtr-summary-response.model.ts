@@ -1,55 +1,33 @@
 export interface DtrSummaryResponse {
-  id: string;
-  bioId: string;
+  batchCode?: string;
+  fullName?: string;
   employeeId: string;
-  employeeName: string;
-  departmentId: string;
-  clientId: string;
-  payrollGroupId: string;
-  // Time shift
-  timeShift: string;
-  start: string;
-  end: string;
-  // Attendance / raw hours
-  late: number;
-  underTime: number;
-  over: number;
-  ot: number;
-  overOt: number;
-  nd: number;
-  ndOt: number;
-  lhHours: number;
-  spHours: number;
-  days: number;
-  // Rest-day hours
-  rnd: number;
-  rot: number;
-  rndo: number;
-  restDay: number;
-  rdNd: number;
-  rdOt: number;
-  rdNdo: number;
-  // Used / net hours
-  lhUsed: number;
-  spUsed: number;
-  // Net amounts
-  regNet: number;
-  netOt: number;
-  ndNet: number;
-  ndOtNet: number;
-  rdNet: number;
-  rdOtNet: number;
-  rdNdOt: number;
-  lh: number;
-  lhOt: number;
-  lhNd: number;
-  lhNdOt: number;
-  sph: number;
-  sphOt: number;
-  sphNd: number;
-  sphNdOt: number;
-  rawOt: number;
-  appliedOt: number;
-  abs: number;
-  total: number;
+  lateHours: number;
+  utHours: number;
+  overHours: number;
+  absentCount: number;
+  regularNetHours: number;
+  regularOTHours: number;
+  regularNDHours: number;
+  regularNDOTHours: number;
+  restDayHours: number;
+  restDayOTHours: number;
+  restDayNDHours: number;
+  restDayNDOTHours: number;
+  legalHolHours: number;
+  legalHolOTHours: number;
+  legalHolNightDiffHours: number;
+  legalHolNightDiffOTHours: number;
+  specialHolHours: number;
+  specialHolOTHours: number;
+  specialHolNightDiffHours: number;
+  specialHolNightDiffOTHours: number;
+  restLegalDayHours: number;
+  restLegalDayOTHours: number;
+  restLegalDayNDHours: number;
+  restLegalDayNDOTHours: number;
+  restSpecialDayHours: number;
+  restSpecialDayOTHours: number;
+  restSpecialDayNDHours: number;
+  restSpecialDayNDOTHours: number;
 }
