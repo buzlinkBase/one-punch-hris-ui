@@ -8,7 +8,6 @@ import {
   Form,
   Select,
   Space,
-  Typography,
   message,
 } from "antd";
 import type { MenuProps } from "antd";
@@ -25,7 +24,6 @@ import {
   useSaveDtrDetail,
 } from "../../hooks/use-dtr-detail-queries";
 import DtrDetailTable from "../../components/dtr-detail-table";
-import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
 import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
@@ -35,7 +33,7 @@ import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 
-const { Title } = Typography;
+type AnyRow = Record<string, unknown>;
 
 function currentSemiMonthlyRange(): { fromDate: string; toDate: string } {
   const today = dayjs();
@@ -69,7 +67,7 @@ const filterByLabel = (
 
 const EMPTY_FILTER: DtrDetailFilter = {};
 
-export default function DtrDetailList() {
+export default function DtrGenerateTab() {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [pending, setPending] = useState<DtrDetailFilter>(
     currentSemiMonthlyRange,
@@ -161,9 +159,7 @@ export default function DtrDetailList() {
     setCommittedFilter(null);
   };
 
-  // ── Export ──────────────────────────────────────────────────────────────────
-
-  type AnyRow = Record<string, unknown>;
+  // ── Export ────────────────────────────────────────────────────────────────────
 
   const toExportRows = (): AnyRow[] =>
     records.map((r: DtrDetailResponse) => ({
@@ -173,32 +169,26 @@ export default function DtrDetailList() {
       ShiftName: r.shiftName,
       Start: r.startTime ? dayjs(r.startTime).format("HH:mm") : "",
       End: r.endTime ? dayjs(r.endTime).format("HH:mm") : "",
-      // Minutes
       Late_min: r.lateMinutes,
       UT_min: r.utMinutes,
       OverBreak_min: r.overMinutes,
       Leave_hr: r.leaveHours,
-      // Hours – regular
-      RegNet_hr: r.regularNetHours,
-      RegOT_hr: r.regularOTHours,
-      RegND_hr: r.regularNDHours,
-      RegND_OT_hr: r.regularNDOTHours,
-      // Hours – rest day
+      Reg_hr: r.regularNetHours,
+      Reg_OT_hr: r.regularOTHours,
+      Reg_ND_hr: r.regularNDHours,
+      Reg_ND_OT_hr: r.regularNDOTHours,
       RD_hr: r.restDayHours,
       RD_OT_hr: r.restDayOTHours,
       RD_ND_hr: r.restDayNDHours,
       RD_ND_OT_hr: r.restDayNDOTHours,
-      // Hours – legal holiday
       LH_hr: r.legalHolHours,
       LH_OT_hr: r.legalHolOTHours,
       LH_ND_hr: r.legalHolNightDiffHours,
       LH_ND_OT_hr: r.legalHolNightDiffOTHours,
-      // Hours – special holiday
       SPH_hr: r.specialHolHours,
       SPH_OT_hr: r.specialHolOTHours,
       SPH_ND_hr: r.specialHolNightDiffHours,
       SPH_ND_OT_hr: r.specialHolNightDiffOTHours,
-      // Hours – rest + legal/special
       RestLegal_hr: r.restLegalDayHours,
       RestLegal_OT_hr: r.restLegalDayOTHours,
       RestLegal_ND_hr: r.restLegalDayNDHours,
@@ -283,50 +273,38 @@ export default function DtrDetailList() {
   ];
 
   return (
-    <div className="content-page">
+    <>
       {contextHolder}
-
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              {DTR_DETAIL_LABEL.TITLE}
-            </Title>
-            <p className="page-toolbar-subtitle">
-              View per-day time record details including minutes and hours
-              breakdowns for each employee.
-            </p>
-          </div>
-          <Space>
-            <Dropdown
-              menu={{ items: exportMenuItems }}
-              trigger={["click"]}
-              disabled={!records.length}
-            >
-              <Button icon={<DownloadOutlined />} disabled={!records.length}>
-                Export
-              </Button>
-            </Dropdown>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              disabled={!records.length}
-              loading={isSaving}
-              onClick={handleSave}
-            >
-              Post
+      <div className="flex justify-end mb-3">
+        <Space>
+          <Dropdown
+            menu={{ items: exportMenuItems }}
+            trigger={["click"]}
+            disabled={!records.length}
+          >
+            <Button icon={<DownloadOutlined />} disabled={!records.length}>
+              Export
             </Button>
-            <Badge count={activeFilterCount} size="small">
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setFiltersOpen((v) => !v)}
-                type={filtersOpen ? "default" : "text"}
-              >
-                Filters
-              </Button>
-            </Badge>
-          </Space>
-        </div>
+          </Dropdown>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            disabled={!records.length}
+            loading={isSaving}
+            onClick={handleSave}
+          >
+            Post
+          </Button>
+          <Badge count={activeFilterCount} size="small">
+            <Button
+              icon={<FilterOutlined />}
+              onClick={() => setFiltersOpen((v) => !v)}
+              type={filtersOpen ? "default" : "text"}
+            >
+              Filters
+            </Button>
+          </Badge>
+        </Space>
       </div>
 
       {filtersOpen && (
@@ -379,10 +357,7 @@ export default function DtrDetailList() {
                   onChange={(v) => setPending((f) => ({ ...f, branchId: v }))}
                 />
               </Form.Item>
-              <Form.Item
-                label={DTR_DETAIL_LABEL.FILTER_DEPARTMENT}
-                className="mb-3"
-              >
+              <Form.Item label="Department" className="mb-3">
                 <Select
                   allowClear
                   showSearch
@@ -400,10 +375,7 @@ export default function DtrDetailList() {
                   }
                 />
               </Form.Item>
-              <Form.Item
-                label={DTR_DETAIL_LABEL.FILTER_CLIENT}
-                className="mb-3"
-              >
+              <Form.Item label="Client" className="mb-3">
                 <Select
                   allowClear
                   showSearch
@@ -419,10 +391,7 @@ export default function DtrDetailList() {
                   onChange={(v) => setPending((f) => ({ ...f, clientId: v }))}
                 />
               </Form.Item>
-              <Form.Item
-                label={DTR_DETAIL_LABEL.FILTER_PAYROLL_GROUP}
-                className="mb-3"
-              >
+              <Form.Item label="Payroll Group" className="mb-3">
                 <Select
                   allowClear
                   showSearch
@@ -458,10 +427,7 @@ export default function DtrDetailList() {
                   }
                 />
               </Form.Item>
-              <Form.Item
-                label={DTR_DETAIL_LABEL.FILTER_EMPLOYEE}
-                className="mb-3"
-              >
+              <Form.Item label="Employee" className="mb-3">
                 <Select
                   allowClear
                   showSearch
@@ -492,6 +458,6 @@ export default function DtrDetailList() {
       )}
 
       <DtrDetailTable data={records} loading={isLoading} />
-    </div>
+    </>
   );
 }
