@@ -14,9 +14,23 @@ interface Props {
 const R = "right" as const;
 const L = "left" as const;
 
+const GC = {
+  minutes: { group: "#8896a8", sub: "#f8fafc" },
+  regular: { group: "#5b8fc9", sub: "#eff6ff" },
+  restDay: { group: "#c49a5a", sub: "#fffbeb" },
+  legalHol: { group: "#c47070", sub: "#fef2f2" },
+  specialHol: { group: "#9b7ec8", sub: "#faf5ff" },
+  restLegal: { group: "#4aab98", sub: "#f0fdfa" },
+  restSpecial: { group: "#5aaa5a", sub: "#f0fdf4" },
+};
+
+const groupHeader = (bg: string) => (): object => ({
+  style: { backgroundColor: bg, color: "#fff", fontWeight: 600 },
+});
+
 export default function DtrDetailTable({ data, loading }: Props) {
   const { widths, handleResize } = useResizableColumns({
-    fullName: 180,
+    fullName: 260,
     workType: 120,
     workDate: 110,
     shiftName: 150,
@@ -24,16 +38,11 @@ export default function DtrDetailTable({ data, loading }: Props) {
     endTime: 75,
     lateMinutes: 75,
     utMinutes: 75,
-    overBreakMinutes: 75,
-    otMinutes: 75,
-    nd: 75,
-    ndot: 80,
-    lh: 75,
-    sp: 75,
+    overMinutes: 75,
     regularNetHours: 80,
     regularOTHours: 75,
-    regularNDOTHours: 75,
     regularNDHours: 75,
+    regularNDOTHours: 75,
     restDayHours: 80,
     restDayOTHours: 75,
     restDayNDHours: 75,
@@ -43,9 +52,9 @@ export default function DtrDetailTable({ data, loading }: Props) {
     legalHolNightDiffHours: 75,
     legalHolNightDiffOTHours: 90,
     specialHolHours: 75,
+    specialHolOTHours: 75,
     specialHolNightDiffHours: 80,
     specialHolNightDiffOTHours: 95,
-    specialHolOTHours: 75,
     restLegalDayHours: 75,
     restLegalDayOTHours: 75,
     restLegalDayNDHours: 75,
@@ -60,6 +69,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
     title: string,
     dataIndex: keyof DtrDetailResponse,
     width = 75,
+    subBg?: string,
   ) => ({
     title,
     dataIndex,
@@ -70,6 +80,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
       ({
         width: widths[dataIndex as string] ?? width,
         onResize: (w: number) => handleResize(dataIndex as string, w),
+        style: subBg ? { backgroundColor: subBg } : undefined,
       }) as object,
     render: (v: number | null | undefined) => {
       const n = v ?? 0;
@@ -172,94 +183,95 @@ export default function DtrDetailTable({ data, loading }: Props) {
         }) as object,
       render: (v: string | null) => (v ? dayjs(v).format("HH:mm") : null),
     },
-    // ── MINUTES group ────────────────────────────────────────────────────────────
+    // ── MINUTES ──────────────────────────────────────────────────────────────────
     {
       title: "Minutes",
+      onHeaderCell: groupHeader(GC.minutes.group),
       children: [
         {
           title: "Late / Over Break",
+          onHeaderCell: () =>
+            ({ style: { backgroundColor: GC.minutes.sub } }) as object,
           children: [
-            col(DTR_DETAIL_LABEL.MINUTES_LATE, "lateMinutes"),
-            col(DTR_DETAIL_LABEL.MINUTES_UT, "utMinutes"),
-            col(DTR_DETAIL_LABEL.MINUTES_OVER, "overBreakMinutes"),
-            // col(DTR_DETAIL_LABEL.MINUTES_OT, "otMinutes"),
-            // col(DTR_DETAIL_LABEL.MINUTES_ND, "nd"),
-            // col(DTR_DETAIL_LABEL.MINUTES_ND_OT, "ndot", 80),
-          ],
-        },
-        {
-          title: "Holiday",
-          children: [
-            col(DTR_DETAIL_LABEL.MINUTES_LH, "lh"),
-            col(DTR_DETAIL_LABEL.MINUTES_SP, "sp"),
+            col(
+              DTR_DETAIL_LABEL.MINUTES_LATE,
+              "lateMinutes",
+              75,
+              GC.minutes.sub,
+            ),
+            col(DTR_DETAIL_LABEL.MINUTES_UT, "utMinutes", 75, GC.minutes.sub),
+            col(
+              DTR_DETAIL_LABEL.MINUTES_OVER,
+              "overMinutes",
+              75,
+              GC.minutes.sub,
+            ),
           ],
         },
       ],
     },
-    // ── HOURS group ──────────────────────────────────────────────────────────────
+    // ── HOURS ────────────────────────────────────────────────────────────────────
     {
       title: "Hours",
       children: [
         {
           title: "Regular",
+          onHeaderCell: groupHeader(GC.regular.group),
           children: [
-            col(DTR_DETAIL_LABEL.HOURS_REG_NET, "regularNetHours", 80),
-            col(DTR_DETAIL_LABEL.HOURS_NET_OT, "regularOTHours", 75),
-            col(DTR_DETAIL_LABEL.HOURS_ND_OT, "regularNDOTHours", 75),
-            col("ND", "regularNDHours", 75),
+            col("Hrs", "regularNetHours", 80, GC.regular.sub),
+            col("OT", "regularOTHours", 75, GC.regular.sub),
+            col("ND", "regularNDHours", 75, GC.regular.sub),
+            col("ND-OT", "regularNDOTHours", 75, GC.regular.sub),
           ],
         },
         {
           title: "Rest Day",
+          onHeaderCell: groupHeader(GC.restDay.group),
           children: [
-            col(DTR_DETAIL_LABEL.HOURS_RD_NET, "restDayHours", 80),
-            col(DTR_DETAIL_LABEL.HOURS_RD_OT, "restDayOTHours", 75),
-            col(DTR_DETAIL_LABEL.HOURS_RD_ND, "restDayNDHours", 75),
-            col(DTR_DETAIL_LABEL.HOURS_RD_ND_OT, "restDayNDOTHours", 90),
+            col("Hrs", "restDayHours", 80, GC.restDay.sub),
+            col("OT", "restDayOTHours", 75, GC.restDay.sub),
+            col("ND", "restDayNDHours", 75, GC.restDay.sub),
+            col("ND-OT", "restDayNDOTHours", 90, GC.restDay.sub),
           ],
         },
         {
           title: "Legal Holiday",
+          onHeaderCell: groupHeader(GC.legalHol.group),
           children: [
-            col(DTR_DETAIL_LABEL.HOURS_LH, "legalHolHours"),
-            col(DTR_DETAIL_LABEL.HOURS_LH_OT, "legalHolOTHours", 75),
-            col(DTR_DETAIL_LABEL.HOURS_LH_ND, "legalHolNightDiffHours", 75),
-            col(
-              DTR_DETAIL_LABEL.HOURS_LH_ND_OT,
-              "legalHolNightDiffOTHours",
-              90,
-            ),
+            col("Hrs", "legalHolHours", 75, GC.legalHol.sub),
+            col("OT", "legalHolOTHours", 75, GC.legalHol.sub),
+            col("ND", "legalHolNightDiffHours", 75, GC.legalHol.sub),
+            col("ND-OT", "legalHolNightDiffOTHours", 90, GC.legalHol.sub),
           ],
         },
         {
           title: "Special Holiday",
+          onHeaderCell: groupHeader(GC.specialHol.group),
           children: [
-            col(DTR_DETAIL_LABEL.HOURS_SPH, "specialHolHours"),
-            col(DTR_DETAIL_LABEL.HOURS_SPH_ND, "specialHolNightDiffHours", 80),
-            col(
-              DTR_DETAIL_LABEL.HOURS_SPH_ND_OT,
-              "specialHolNightDiffOTHours",
-              95,
-            ),
-            col("OT", "specialHolOTHours", 75),
+            col("Hrs", "specialHolHours", 75, GC.specialHol.sub),
+            col("OT", "specialHolOTHours", 75, GC.specialHol.sub),
+            col("ND", "specialHolNightDiffHours", 80, GC.specialHol.sub),
+            col("ND-OT", "specialHolNightDiffOTHours", 95, GC.specialHol.sub),
           ],
         },
         {
           title: "Rest + Legal Day",
+          onHeaderCell: groupHeader(GC.restLegal.group),
           children: [
-            col("Hrs", "restLegalDayHours", 75),
-            col("OT", "restLegalDayOTHours", 75),
-            col("ND", "restLegalDayNDHours", 75),
-            col("ND-OT", "restLegalDayNDOTHours", 80),
+            col("Hrs", "restLegalDayHours", 75, GC.restLegal.sub),
+            col("OT", "restLegalDayOTHours", 75, GC.restLegal.sub),
+            col("ND", "restLegalDayNDHours", 75, GC.restLegal.sub),
+            col("ND-OT", "restLegalDayNDOTHours", 80, GC.restLegal.sub),
           ],
         },
         {
           title: "Rest + Special Day",
+          onHeaderCell: groupHeader(GC.restSpecial.group),
           children: [
-            col("Hrs", "restSpecialDayHours", 75),
-            col("OT", "restSpecialDayOTHours", 75),
-            col("ND", "restSpecialDayNDHours", 75),
-            col("ND-OT", "restSpecialDayNDOTHours", 80),
+            col("Hrs", "restSpecialDayHours", 75, GC.restSpecial.sub),
+            col("OT", "restSpecialDayOTHours", 75, GC.restSpecial.sub),
+            col("ND", "restSpecialDayNDHours", 75, GC.restSpecial.sub),
+            col("ND-OT", "restSpecialDayNDOTHours", 80, GC.restSpecial.sub),
           ],
         },
       ],

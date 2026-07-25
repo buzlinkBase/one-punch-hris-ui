@@ -69,9 +69,9 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     label: "Daily Time Record",
     children: [
       {
-        key: "daily-time-record-detail",
+        key: "daily-time-record-master",
         label: "DTR Detail",
-        path: "/daily-time-record/detail",
+        path: "/daily-time-record/master",
       },
       {
         key: "daily-time-record-summary",
