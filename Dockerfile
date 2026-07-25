@@ -27,7 +27,7 @@ ENV VITE_PREFIX_NOTIFICATIONS=$VITE_PREFIX_NOTIFICATIONS
 RUN npm install -g pnpm@11.12.0
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
