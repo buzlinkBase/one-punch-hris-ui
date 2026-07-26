@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { DtrSummaryResponse } from "../../models/api/response/dtr-summary-response.model";
@@ -58,6 +59,54 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     restSpecialDayNDOTHours: 80,
   });
 
+  const sum = (field: keyof DtrSummaryResponse) =>
+    data.reduce((acc, row) => acc + ((row[field] as number) ?? 0), 0);
+
+  const totals = useMemo(
+    () => ({
+      lateHours: sum("lateHours"),
+      utHours: sum("utHours"),
+      overHours: sum("overHours"),
+      absentCount: sum("absentCount"),
+      regularNetHours: sum("regularNetHours"),
+      regularOTHours: sum("regularOTHours"),
+      regularNDHours: sum("regularNDHours"),
+      regularNDOTHours: sum("regularNDOTHours"),
+      restDayHours: sum("restDayHours"),
+      restDayOTHours: sum("restDayOTHours"),
+      restDayNDHours: sum("restDayNDHours"),
+      restDayNDOTHours: sum("restDayNDOTHours"),
+      legalHolHours: sum("legalHolHours"),
+      legalHolOTHours: sum("legalHolOTHours"),
+      legalHolNightDiffHours: sum("legalHolNightDiffHours"),
+      legalHolNightDiffOTHours: sum("legalHolNightDiffOTHours"),
+      specialHolHours: sum("specialHolHours"),
+      specialHolOTHours: sum("specialHolOTHours"),
+      specialHolNightDiffHours: sum("specialHolNightDiffHours"),
+      specialHolNightDiffOTHours: sum("specialHolNightDiffOTHours"),
+      restLegalDayHours: sum("restLegalDayHours"),
+      restLegalDayOTHours: sum("restLegalDayOTHours"),
+      restLegalDayNDHours: sum("restLegalDayNDHours"),
+      restLegalDayNDOTHours: sum("restLegalDayNDOTHours"),
+      restSpecialDayHours: sum("restSpecialDayHours"),
+      restSpecialDayOTHours: sum("restSpecialDayOTHours"),
+      restSpecialDayNDHours: sum("restSpecialDayNDHours"),
+      restSpecialDayNDOTHours: sum("restSpecialDayNDOTHours"),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data],
+  );
+
+  const tc = (v: number) => ({
+    align: "right" as const,
+    children:
+      v === 0 ? (
+        <span style={{ color: "#d9d9d9", userSelect: "none" }}>—</span>
+      ) : (
+        <span style={{ fontWeight: 600 }}>{v.toFixed(1)}</span>
+      ),
+  });
+
   const col = (
     title: string,
     dataIndex: keyof DtrSummaryResponse,
@@ -99,12 +148,17 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     // ── ATTENDANCE ────────────────────────────────────────────────────────────────
     {
       title: "Attendance",
-      onHeaderCell: groupHeader(GC.attendance.group),
       children: [
-        col("Late", "lateHours", 70, GC.attendance.sub),
-        col("UT", "utHours", 70, GC.attendance.sub),
-        col("Over", "overHours", 70, GC.attendance.sub),
-        col("Absent", "absentCount", 60, GC.attendance.sub),
+        {
+          title: "Late / Over Break",
+          onHeaderCell: groupHeader(GC.attendance.group),
+          children: [
+            col("Late", "lateHours", 70, GC.attendance.sub),
+            col("UT", "utHours", 70, GC.attendance.sub),
+            col("Over", "overHours", 70, GC.attendance.sub),
+            col("Absent", "absentCount", 60, GC.attendance.sub),
+          ],
+        },
       ],
     },
     // ── HOURS ─────────────────────────────────────────────────────────────────────
@@ -187,6 +241,116 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       bordered
       sticky
       components={{ header: { cell: ResizableTitle } }}
+      summary={
+        data.length === 0
+          ? undefined
+          : () => (
+              <Table.Summary fixed="bottom">
+                <Table.Summary.Row>
+                  <Table.Summary.Cell index={0}>
+                    <strong>Total</strong>
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={1} {...tc(totals.lateHours)} />
+                  <Table.Summary.Cell index={2} {...tc(totals.utHours)} />
+                  <Table.Summary.Cell index={3} {...tc(totals.overHours)} />
+                  <Table.Summary.Cell index={4} {...tc(totals.absentCount)} />
+                  <Table.Summary.Cell
+                    index={5}
+                    {...tc(totals.regularNetHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={6}
+                    {...tc(totals.regularOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={7}
+                    {...tc(totals.regularNDHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={8}
+                    {...tc(totals.regularNDOTHours)}
+                  />
+                  <Table.Summary.Cell index={9} {...tc(totals.restDayHours)} />
+                  <Table.Summary.Cell
+                    index={10}
+                    {...tc(totals.restDayOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={11}
+                    {...tc(totals.restDayNDHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={12}
+                    {...tc(totals.restDayNDOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={13}
+                    {...tc(totals.legalHolHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={14}
+                    {...tc(totals.legalHolOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={15}
+                    {...tc(totals.legalHolNightDiffHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={16}
+                    {...tc(totals.legalHolNightDiffOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={17}
+                    {...tc(totals.specialHolHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={18}
+                    {...tc(totals.specialHolOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={19}
+                    {...tc(totals.specialHolNightDiffHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={20}
+                    {...tc(totals.specialHolNightDiffOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={21}
+                    {...tc(totals.restLegalDayHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={22}
+                    {...tc(totals.restLegalDayOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={23}
+                    {...tc(totals.restLegalDayNDHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={24}
+                    {...tc(totals.restLegalDayNDOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={25}
+                    {...tc(totals.restSpecialDayHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={26}
+                    {...tc(totals.restSpecialDayOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={27}
+                    {...tc(totals.restSpecialDayNDHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={28}
+                    {...tc(totals.restSpecialDayNDOTHours)}
+                  />
+                </Table.Summary.Row>
+              </Table.Summary>
+            )
+      }
     />
   );
 }
