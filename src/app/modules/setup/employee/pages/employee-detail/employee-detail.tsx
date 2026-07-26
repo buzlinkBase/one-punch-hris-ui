@@ -17,7 +17,7 @@ import {
   message,
 } from "antd";
 import { UserOutlined, CameraOutlined } from "@ant-design/icons";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import {
   useForm,
@@ -119,6 +119,7 @@ export default function EmployeeDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: selected } = useEmployee(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateEmployee();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployee();
@@ -156,6 +157,15 @@ export default function EmployeeDetail() {
       reset(employeeMapper.toFormValues(selected));
     }
   }, [selected, isEdit, reset]);
+
+  useEffect(() => {
+    if (!isEdit) {
+      const state = location.state as { bioId?: number | null } | null;
+      if (state?.bioId != null) {
+        setValue("bioId", state.bioId);
+      }
+    }
+  }, [isEdit, location.state, setValue]);
 
   const onSubmit = async (values: EmployeeFormValues) => {
     const selectedDays = values.restDays ?? [];

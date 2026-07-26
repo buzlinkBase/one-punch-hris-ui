@@ -33,7 +33,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       {
         key: "timekeeping-unregistered-employees",
-        label: "Unregister Employee",
+        label: "Unregistered Employees",
         path: "/timekeeping/unregistered-employees",
       },
       {
