@@ -26,6 +26,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import AttendanceEntryTable from "../../components/attendance-entry-table";
+import EditAttendanceEntryModal from "../../components/edit-attendance-entry-modal";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import {
   useEmployeeFilter,
@@ -73,6 +74,8 @@ export default function AttendanceEntryList() {
     useState<AttendanceEntryFilter | null>(DEFAULT_CUTOFF);
   const [searchKey, setSearchKey] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
+  const [editingRecord, setEditingRecord] =
+    useState<AttendanceEntryResponse | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
   const hasSearched = committedFilter !== null;
@@ -158,7 +161,7 @@ export default function AttendanceEntryList() {
   const buildCsv = () => {
     const header = ["Employee", "Time Log", "Batch Code"];
     const rows = records.map((r) => [
-      r.employeeName,
+      r.employeeName ?? "",
       r.timeLog,
       r.batchCode ?? "",
     ]);
@@ -181,7 +184,7 @@ export default function AttendanceEntryList() {
     const rows = records
       .map(
         (r) =>
-          `<tr><td>${escapeHtml(r.employeeName)}</td><td>${escapeHtml(r.timeLog)}</td><td>${escapeHtml(r.batchCode ?? "")}</td></tr>`,
+          `<tr><td>${escapeHtml(r.employeeName ?? "")}</td><td>${escapeHtml(r.timeLog)}</td><td>${escapeHtml(r.batchCode ?? "")}</td></tr>`,
       )
       .join("");
     return `<html><head><meta charset="utf-8" /></head><body><table><thead><tr><th>Employee</th><th>Time Log</th><th>Batch Code</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
@@ -297,7 +300,7 @@ export default function AttendanceEntryList() {
           width: batchWidths.count,
           onResize: (w: number) => batchResize("count", w),
         }) as object,
-      render: (count: number) => <Tag color="default">{count}</Tag>,
+      render: (count: number) => count,
     },
     {
       title: "Date Range",
@@ -358,6 +361,11 @@ export default function AttendanceEntryList() {
   return (
     <div className="content-page">
       {contextHolder}
+      <EditAttendanceEntryModal
+        key={editingRecord?.id}
+        record={editingRecord}
+        onClose={() => setEditingRecord(null)}
+      />
 
       <div className="page-toolbar">
         <div className="page-toolbar-row">
@@ -468,6 +476,7 @@ export default function AttendanceEntryList() {
               <AttendanceEntryTable
                 data={records}
                 loading={isTableLoading}
+                onEdit={setEditingRecord}
                 onDelete={handleDeleteEntry}
                 emptyText={hasSearched ? undefined : notSearchedYet}
               />

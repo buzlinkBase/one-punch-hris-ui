@@ -20,6 +20,9 @@ export default function RawAttendanceTable({ data, loading }: Props) {
     workDateTime: 180,
     logSource: 130,
     batch: 200,
+    branch: 130,
+    client: 130,
+    area: 130,
   });
 
   const columns: ColumnsType<RawAttendanceLog> = [
@@ -59,6 +62,45 @@ export default function RawAttendanceTable({ data, loading }: Props) {
       render: (v: string) => <Tag>{v}</Tag>,
     },
     {
+      title: "Branch",
+      dataIndex: "branch",
+      key: "branch",
+      width: widths.branch,
+      onHeaderCell: () =>
+        ({
+          width: widths.branch,
+          onResize: (w: number) => handleResize("branch", w),
+        }) as object,
+      render: (v: string | null) =>
+        v ?? <span style={{ color: "#d9d9d9" }}>—</span>,
+    },
+    {
+      title: "Client",
+      dataIndex: "client",
+      key: "client",
+      width: widths.client,
+      onHeaderCell: () =>
+        ({
+          width: widths.client,
+          onResize: (w: number) => handleResize("client", w),
+        }) as object,
+      render: (v: string | null) =>
+        v ?? <span style={{ color: "#d9d9d9" }}>—</span>,
+    },
+    {
+      title: "Project Site",
+      dataIndex: "area",
+      key: "area",
+      width: widths.area,
+      onHeaderCell: () =>
+        ({
+          width: widths.area,
+          onResize: (w: number) => handleResize("area", w),
+        }) as object,
+      render: (v: string | null) =>
+        v ?? <span style={{ color: "#d9d9d9" }}>—</span>,
+    },
+    {
       title: "Batch",
       dataIndex: "batch",
       key: "batch",
@@ -75,7 +117,15 @@ export default function RawAttendanceTable({ data, loading }: Props) {
 
   const filtered = search
     ? data.filter((item) =>
-        [item.name, item.workDateTime, item.logSource, item.batch].some((v) =>
+        [
+          item.name,
+          item.workDateTime,
+          item.logSource,
+          item.batch,
+          item.branch,
+          item.client,
+          item.area,
+        ].some((v) =>
           String(v ?? "")
             .toLowerCase()
             .includes(search.toLowerCase()),

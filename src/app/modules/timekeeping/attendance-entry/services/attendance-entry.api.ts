@@ -3,6 +3,7 @@ import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { AttendanceEntryFilter } from "../models/api/request/attendance-entry-filter.model";
 import type { EmployeeFilter } from "../models/api/request/employee-filter.model";
 import type { CreateAttendanceEntry } from "../models/api/request/create-attendance-entry.model";
+import type { UpdateAttendanceEntry } from "../models/api/request/update-attendance-entry.model";
 import type { AttendanceEntryResponse } from "../models/api/response/attendance-entry-response.model";
 import type { EmployeeFilterResponse } from "../models/api/response/employee-filter-response.model";
 
@@ -14,20 +15,27 @@ const ENDPOINT_EMPLOYEE_FILTER = buildApiUrl(
 
 interface ServerAttendanceRecord {
   id: string;
-  employeeId: string;
-  name: string;
+  employeeId: string | null;
+  name: string | null;
   workDateTime: string;
-  batch?: string | null;
-  boundary?: string | null;
+  batch: string;
+  logSource: string;
+  branch: string | null;
+  client: string | null;
+  area: string | null;
 }
 
 function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
   return {
     id: r.id,
-    employeeId: r.employeeId,
-    employeeName: r.name,
+    employeeId: r.employeeId ?? null,
+    employeeName: r.name ?? null,
     timeLog: r.workDateTime,
-    batchCode: r.batch ?? null,
+    batchCode: r.batch || null,
+    logSource: r.logSource,
+    branch: r.branch ?? null,
+    client: r.client ?? null,
+    area: r.area ?? null,
   };
 }
 
@@ -49,6 +57,10 @@ export const attendanceEntryApi = {
     } catch {
       return [];
     }
+  },
+
+  async update(payload: UpdateAttendanceEntry): Promise<void> {
+    await httpClient.put<void>(ENDPOINT, payload);
   },
 
   async remove(id: string): Promise<void> {
