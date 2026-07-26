@@ -1,11 +1,12 @@
-export interface UnregisterEmployeeResponse {
+export interface UnregisteredAttendanceLog {
   id: string;
-  employeeId: string;
-  employeeNo: string;
-  employeeName: string;
-  department: string;
-  position: string;
-  biometricId: string | null;
-  status: "REGISTERED" | "UNREGISTERED";
-  lastActionAt: string;
+  bioId: number | null;
+  employeeId: string | null;
+  name: string | null;
+  workDateTime: string;
+  batch: string;
+  logSource: string;
+  branch: string | null;
+  client: string | null;
+  area: string | null;
 }

@@ -11,6 +11,7 @@ interface Props {
   data: AttendanceEntryResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  onEdit?: (record: AttendanceEntryResponse) => void;
   emptyText?: React.ReactNode;
 }
 
@@ -18,6 +19,7 @@ export default function AttendanceEntryTable({
   data,
   loading,
   onDelete,
+  onEdit,
   emptyText,
 }: Props) {
   const { widths, handleResize } = useResizableColumns({
@@ -79,6 +81,11 @@ export default function AttendanceEntryTable({
         }) as object,
       render: (_, record) => (
         <Space>
+          {onEdit && (
+            <Button type="link" size="small" onClick={() => onEdit(record)}>
+              Edit
+            </Button>
+          )}
           {onDelete && (
             <Popconfirm
               title="Delete this time log?"
@@ -86,7 +93,7 @@ export default function AttendanceEntryTable({
               cancelText="No"
               onConfirm={() => onDelete(record.id)}
             >
-              <Button type="link" danger>
+              <Button type="link" danger size="small">
                 Delete
               </Button>
             </Popconfirm>

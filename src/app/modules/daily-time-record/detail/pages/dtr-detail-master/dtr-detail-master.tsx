@@ -7,7 +7,7 @@ const { Title } = Typography;
 const TAB_ITEMS = [
   {
     key: "batch",
-    label: "By Batch Code",
+    label: "Posted DTR",
     children: <DtrBatchTab />,
   },
   {

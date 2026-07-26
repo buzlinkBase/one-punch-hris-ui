@@ -162,7 +162,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
       dataIndex: "startTime",
       key: "startTime",
       width: widths.startTime,
-      align: R,
+      align: "center",
       onHeaderCell: () =>
         ({
           width: widths.startTime,
@@ -175,7 +175,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
       dataIndex: "endTime",
       key: "endTime",
       width: widths.endTime,
-      align: R,
+      align: "center",
       onHeaderCell: () =>
         ({
           width: widths.endTime,
@@ -186,12 +186,10 @@ export default function DtrDetailTable({ data, loading }: Props) {
     // ── MINUTES ──────────────────────────────────────────────────────────────────
     {
       title: "Minutes",
-      onHeaderCell: groupHeader(GC.minutes.group),
       children: [
         {
           title: "Late / Over Break",
-          onHeaderCell: () =>
-            ({ style: { backgroundColor: GC.minutes.sub } }) as object,
+          onHeaderCell: groupHeader(GC.minutes.group),
           children: [
             col(
               DTR_DETAIL_LABEL.MINUTES_LATE,

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { attendanceEntryApi } from "../services/attendance-entry.api";
 import type { AttendanceEntryFilter } from "../models/api/request/attendance-entry-filter.model";
 import type { CreateAttendanceEntry } from "../models/api/request/create-attendance-entry.model";
+import type { UpdateAttendanceEntry } from "../models/api/request/update-attendance-entry.model";
 
 const QUERY_KEY = ["timekeeping", "attendance-entry"];
 
@@ -32,6 +33,17 @@ export function useCreateAttendanceEntries() {
   return useMutation({
     mutationFn: (entries: CreateAttendanceEntry[]) =>
       attendanceEntryApi.create(entries),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useUpdateAttendanceEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: UpdateAttendanceEntry) =>
+      attendanceEntryApi.update(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

@@ -1,169 +1,187 @@
-import { Button, Popconfirm, Table, Tag } from "antd";
+import { useMemo } from "react";
+import { Button, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import type { UnregisterEmployeeResponse } from "../../models/api/response/unregister-employee-response.model";
+import type { UnregisteredAttendanceLog } from "../../models/api/response/unregister-employee-response.model";
 import { UNREGISTER_EMPLOYEE_LABEL } from "../../constants/label.const";
-import { ResizableTitle } from "@/shared/components/resizable-title";
-import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+
+const { Text } = Typography;
+
+interface BioIdGroup {
+  key: string;
+  bioId: number | null;
+  name: string | null;
+  count: number;
+  fromDate: string;
+  toDate: string;
+  entries: UnregisteredAttendanceLog[];
+  representative: UnregisteredAttendanceLog;
+}
 
 interface Props {
-  data: UnregisterEmployeeResponse[];
+  data: UnregisteredAttendanceLog[];
   loading?: boolean;
-  actionLoadingId?: string | null;
-  onRegister: (employeeId: string) => Promise<void> | void;
-  onUnregister: (employeeId: string) => Promise<void> | void;
+  onTag?: (entries: UnregisteredAttendanceLog[]) => void;
 }
+
+const dash = <span style={{ color: "#d9d9d9" }}>—</span>;
+
+const fmt = (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A");
 
 export default function UnregisterEmployeeTable({
   data,
   loading,
-  actionLoadingId,
-  onRegister,
-  onUnregister,
+  onTag,
 }: Props) {
-  const { widths, handleResize } = useResizableColumns({
-    employeeNo: 130,
-    employeeName: 190,
-    department: 160,
-    position: 140,
-    biometricId: 150,
-    status: 150,
-    lastActionAt: 180,
-  });
+  const groups = useMemo<BioIdGroup[]>(() => {
+    const map = new Map<string, UnregisteredAttendanceLog[]>();
+    for (const log of data) {
+      const key = log.bioId != null ? String(log.bioId) : `null-${log.id}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(log);
+    }
+    return Array.from(map.entries()).map(([key, entries]) => {
+      const sorted = [...entries].sort((a, b) =>
+        a.workDateTime.localeCompare(b.workDateTime),
+      );
+      const withName = entries.find((e) => e.name);
+      return {
+        key,
+        bioId: entries[0].bioId,
+        name: withName?.name ?? null,
+        count: entries.length,
+        fromDate: sorted[0].workDateTime,
+        toDate: sorted[sorted.length - 1].workDateTime,
+        entries: sorted,
+        representative: entries[0],
+      };
+    });
+  }, [data]);
 
-  const columns: ColumnsType<UnregisterEmployeeResponse> = [
+  const parentColumns: ColumnsType<BioIdGroup> = [
     {
-      title: UNREGISTER_EMPLOYEE_LABEL.EMPLOYEE_NO,
-      dataIndex: "employeeNo",
-      key: "employeeNo",
-      width: widths.employeeNo,
-      onHeaderCell: () =>
-        ({
-          width: widths.employeeNo,
-          onResize: (w: number) => handleResize("employeeNo", w),
-        }) as object,
+      title: "Bio ID",
+      dataIndex: "bioId",
+      key: "bioId",
+      width: 90,
+      render: (v: number | null) => (v != null ? v : dash),
     },
     {
-      title: UNREGISTER_EMPLOYEE_LABEL.EMPLOYEE_NAME,
-      dataIndex: "employeeName",
-      key: "employeeName",
-      width: widths.employeeName,
-      onHeaderCell: () =>
-        ({
-          width: widths.employeeName,
-          onResize: (w: number) => handleResize("employeeName", w),
-        }) as object,
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      width: 180,
+      render: (v: string | null) => v ?? dash,
     },
     {
-      title: UNREGISTER_EMPLOYEE_LABEL.DEPARTMENT,
-      dataIndex: "department",
-      key: "department",
-      width: widths.department,
-      onHeaderCell: () =>
-        ({
-          width: widths.department,
-          onResize: (w: number) => handleResize("department", w),
-        }) as object,
+      title: "Entries",
+      dataIndex: "count",
+      key: "count",
+      width: 80,
     },
     {
-      title: UNREGISTER_EMPLOYEE_LABEL.POSITION,
-      dataIndex: "position",
-      key: "position",
-      width: widths.position,
-      onHeaderCell: () =>
-        ({
-          width: widths.position,
-          onResize: (w: number) => handleResize("position", w),
-        }) as object,
-    },
-    {
-      title: UNREGISTER_EMPLOYEE_LABEL.BIOMETRIC_ID,
-      dataIndex: "biometricId",
-      key: "biometricId",
-      width: widths.biometricId,
-      onHeaderCell: () =>
-        ({
-          width: widths.biometricId,
-          onResize: (w: number) => handleResize("biometricId", w),
-        }) as object,
-      render: (value: string | null) => value || "-",
-    },
-    {
-      title: UNREGISTER_EMPLOYEE_LABEL.STATUS,
-      dataIndex: "status",
-      key: "status",
-      width: widths.status,
-      onHeaderCell: () =>
-        ({
-          width: widths.status,
-          onResize: (w: number) => handleResize("status", w),
-        }) as object,
-      render: (value: UnregisterEmployeeResponse["status"]) => (
-        <Tag color={value === "REGISTERED" ? "green" : "orange"}>
-          {value === "REGISTERED"
-            ? UNREGISTER_EMPLOYEE_LABEL.STATUS_REGISTERED
-            : UNREGISTER_EMPLOYEE_LABEL.STATUS_UNREGISTERED}
-        </Tag>
+      title: "Date Range",
+      key: "dateRange",
+      width: 380,
+      render: (_: unknown, row: BioIdGroup) => (
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          {fmt(row.fromDate)}
+          {" — "}
+          {fmt(row.toDate)}
+        </Text>
       ),
-    },
-    {
-      title: UNREGISTER_EMPLOYEE_LABEL.LAST_ACTION_AT,
-      dataIndex: "lastActionAt",
-      key: "lastActionAt",
-      width: widths.lastActionAt,
-      onHeaderCell: () =>
-        ({
-          width: widths.lastActionAt,
-          onResize: (w: number) => handleResize("lastActionAt", w),
-        }) as object,
-      render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm A"),
     },
     {
       title: UNREGISTER_EMPLOYEE_LABEL.ACTIONS,
       key: "actions",
+      width: 220,
       fixed: "right",
-      width: 150,
-      render: (_, record) => {
-        const isLoading = actionLoadingId === record.employeeId;
-
-        if (record.status === "REGISTERED") {
-          return (
-            <Popconfirm
-              title="Unregister employee from biometric?"
-              onConfirm={() => onUnregister(record.employeeId)}
-            >
-              <Button danger loading={isLoading}>
-                {UNREGISTER_EMPLOYEE_LABEL.UNREGISTER}
-              </Button>
-            </Popconfirm>
-          );
-        }
-
-        return (
-          <Popconfirm
-            title="Register employee to biometric?"
-            onConfirm={() => onRegister(record.employeeId)}
+      render: (_: unknown, row: BioIdGroup) => (
+        <Space size="small">
+          <Button
+            size="small"
+            type="primary"
+            onClick={() => onTag?.(row.entries)}
           >
-            <Button type="primary" loading={isLoading}>
-              {UNREGISTER_EMPLOYEE_LABEL.REGISTER}
-            </Button>
-          </Popconfirm>
-        );
-      },
+            {UNREGISTER_EMPLOYEE_LABEL.TAG}
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
+  const childColumns: ColumnsType<UnregisteredAttendanceLog> = [
+    {
+      title: "Work Date Time",
+      dataIndex: "workDateTime",
+      key: "workDateTime",
+      width: 200,
+      render: (v: string) => fmt(v),
+    },
+    {
+      title: "Log Source",
+      dataIndex: "logSource",
+      key: "logSource",
+      width: 120,
+      render: (v: string) => <Tag>{v}</Tag>,
+    },
+    {
+      title: "Branch",
+      dataIndex: "branch",
+      key: "branch",
+      width: 130,
+      render: (v: string | null) => v ?? dash,
+    },
+    {
+      title: "Client",
+      dataIndex: "client",
+      key: "client",
+      width: 130,
+      render: (v: string | null) => v ?? dash,
+    },
+    {
+      title: "Project Site",
+      dataIndex: "area",
+      key: "area",
+      width: 130,
+      render: (v: string | null) => v ?? dash,
+    },
+    {
+      title: "Batch",
+      dataIndex: "batch",
+      key: "batch",
+      width: 200,
+      render: (v: string) =>
+        v ? <Tag color="blue">{v}</Tag> : <Tag color="default">Manual</Tag>,
     },
   ];
 
   return (
-    <Table
-      rowKey="id"
-      dataSource={data}
-      columns={columns}
+    <Table<BioIdGroup>
+      rowKey="key"
+      dataSource={groups}
+      columns={parentColumns}
       loading={loading}
       size="small"
-      pagination={{ pageSize: 10 }}
+      pagination={{ pageSize: 15 }}
       scroll={{ x: "max-content" }}
       sticky
-      components={{ header: { cell: ResizableTitle } }}
+      locale={{ emptyText: "No unregistered attendance logs found." }}
+      expandable={{
+        expandedRowRender: (group) => (
+          <div style={{ paddingLeft: 32, paddingBlock: 8 }}>
+            <Table<UnregisteredAttendanceLog>
+              rowKey="id"
+              dataSource={group.entries}
+              columns={childColumns}
+              pagination={false}
+              size="small"
+              scroll={{ x: "max-content" }}
+            />
+          </div>
+        ),
+        rowExpandable: (group) => group.entries.length > 0,
+      }}
     />
   );
 }

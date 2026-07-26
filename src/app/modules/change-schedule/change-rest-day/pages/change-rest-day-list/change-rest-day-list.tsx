@@ -65,8 +65,7 @@ export default function ChangeRestDayList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entries");
   const [pending, setPending] = useState<ChangeRestDayFilter>(DEFAULT_FILTER);
-  const [committed, setCommitted] =
-    useState<ChangeRestDayFilter>(DEFAULT_FILTER);
+  const [committed, setCommitted] = useState<ChangeRestDayFilter>({});
   const [searchKey, setSearchKey] = useState(0);
 
   const {
@@ -126,7 +125,7 @@ export default function ChangeRestDayList() {
 
   const handleClear = () => {
     setPending(DEFAULT_FILTER);
-    setCommitted(DEFAULT_FILTER);
+    setCommitted({});
     setSearchKey((k) => k + 1);
   };
 
@@ -456,7 +455,9 @@ export default function ChangeRestDayList() {
                 sticky
                 components={{ header: { cell: ResizableTitle } }}
                 locale={{
-                  emptyText: "No records found for the selected filters.",
+                  emptyText: committed.fromDate
+                    ? "No records found for the selected filters."
+                    : "Set the date range and click Search.",
                 }}
               />
             ),
@@ -504,7 +505,9 @@ export default function ChangeRestDayList() {
                   rowExpandable: (batch) => batch.entries.length > 0,
                 }}
                 locale={{
-                  emptyText: "No batches found for the selected filters.",
+                  emptyText: committed.fromDate
+                    ? "No batches found for the selected filters."
+                    : "Set the date range and click Search.",
                 }}
               />
             ),
