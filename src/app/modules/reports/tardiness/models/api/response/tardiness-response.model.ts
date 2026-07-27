@@ -1,11 +1,12 @@
 export interface TardinessResponse {
-  id: string;
+  workDate: string;
   employeeNo: string;
-  employeeName: string;
-  departmentId: string;
-  department: string;
-  employeeId: string;
-  payrollGroupId: string;
-  late: number;
-  underTime: number;
+  fullName: string | null;
+  department: string | null;
+  scheduledIn: string;
+  actualIn: string | null;
+  gracePeriodMinutes: number;
+  tardinessMinutes: number;
+  deductibleMinutes: number;
+  isWithinGracePeriod: boolean;
 }
