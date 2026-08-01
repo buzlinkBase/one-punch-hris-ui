@@ -152,27 +152,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   {
-    key: "employee-management",
-    label: "Employee Management",
-    children: [
-      {
-        key: "employee-management-assign-assets",
-        label: "Assign Assets",
-        path: "/employee-management/assign-assets",
-      },
-      {
-        key: "employee-management-dependents",
-        label: "Dependents",
-        path: "/employee-management/dependents",
-      },
-      {
-        key: "employee-management-doc-records",
-        label: "Document Records",
-        path: "/employee-management/doc-records",
-      },
-    ],
-  },
-  {
     key: "biometric",
     label: "Biometric",
     children: [

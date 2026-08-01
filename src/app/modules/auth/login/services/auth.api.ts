@@ -15,11 +15,16 @@ import type { CreateTenantResponse } from "../models/api/response/create-tenant-
 import type { InvitationResponse } from "../models/api/response/invitation-response.model";
 import type { AcceptInvitationRequest } from "../models/api/request/accept-invitation-request.model";
 import type { AcceptInvitationResponse } from "../models/api/response/accept-invitation-response.model";
+import type { TenantStatusResponse } from "../models/api/response/tenant-status-response.model";
+import type { InvitationPreviewResponse } from "../models/api/response/invitation-preview-response.model";
+import type { AcceptInvitationByTokenRequest } from "../models/api/request/accept-invitation-by-token-request.model";
+import type { SendInvitationRequest } from "@/app/modules/security/users/models/api/request/send-invitation-request.model";
 import { authStorage } from "@/core/auth/auth-storage";
 
 const USERS_URL = buildApiUrl(API_PREFIX.auth, "users");
 const TENANTS_URL = buildApiUrl(API_PREFIX.auth, "workspace");
 const INVITATIONS_URL = buildApiUrl(API_PREFIX.auth, "invitation");
+const TENANT_REQUEST_URL = buildApiUrl(API_PREFIX.auth, "tenantrequest");
 
 export const authApi = {
   refresh(): Promise<RefreshResponse> {
@@ -47,6 +52,7 @@ export const authApi = {
     return httpClient.postUnwrapped<LoginResponse>(
       `${USERS_URL}/set-default-tenant`,
       { tenantId },
+      { _skipErrorNotification: true },
     );
   },
   register(data: RegisterRequest): Promise<RegisterResponse> {
@@ -107,5 +113,28 @@ export const authApi = {
       `${INVITATIONS_URL}/accept`,
       data,
     );
+  },
+  getTenantCreationStatus(tenantId: string): Promise<TenantStatusResponse> {
+    return httpClient.getUnwrapped<TenantStatusResponse>(
+      `${TENANT_REQUEST_URL}/status/${tenantId}`,
+    );
+  },
+  getInvitationPreview(token: string): Promise<InvitationPreviewResponse> {
+    return httpClient.getUnwrapped<InvitationPreviewResponse>(
+      `${INVITATIONS_URL}/preview?token=${encodeURIComponent(token)}`,
+      { _skipErrorNotification: true },
+    );
+  },
+  acceptInvitationByToken(
+    data: AcceptInvitationByTokenRequest,
+  ): Promise<LoginResponse> {
+    return httpClient.postUnwrapped<LoginResponse>(
+      `${INVITATIONS_URL}/accept-by-token`,
+      data,
+      { _skipErrorNotification: true },
+    );
+  },
+  sendInvitation(data: SendInvitationRequest): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${INVITATIONS_URL}/send`, data);
   },
 };

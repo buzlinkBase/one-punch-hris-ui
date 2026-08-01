@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, Form, Input, Button, Typography, notification } from "antd";
 import { ArrowLeftOutlined, BankOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -10,12 +10,16 @@ import {
 } from "./create-tenant-form.schema";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { authStorage } from "@/core/auth/auth-storage";
+import { tenantHub } from "@/core/signalr/tenant-hub.connection";
+import { TENANT_FAILED_STATUSES } from "@/core/signalr/tenant-hub.types";
+import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 
 const { Title, Text } = Typography;
 
 export default function CreateTenant() {
   const navigate = useNavigate();
   const hasExistingTenants = (authStorage.getTenants().length ?? 0) > 0;
+  const [provisioning, setProvisioning] = useState(false);
 
   const {
     control,
@@ -36,15 +40,107 @@ export default function CreateTenant() {
     try {
       const result = await authApi.createTenant(values);
       const claims = authStorage.getTenantClaims(result.accessToken);
-      const user = authStorage.getUser();
+      const currentUser = authStorage.getUser()!;
+
+      // The new tenant's ID — prefer the JWT claim (most authoritative), then
+      // fall back to the first entry in result.tenants that isn't already known.
+      const existingIds = new Set(
+        (currentUser.tenants ?? []).map((t) => t.tenantId),
+      );
+      const newTenantFromResult = result.tenants.find(
+        (t) => !existingIds.has(t.tenantId),
+      );
+      const tenantId =
+        claims.tenantId ??
+        newTenantFromResult?.tenantId ??
+        result.tenants[0]?.tenantId ??
+        null;
+
+      // Build a TenantSummary for the new workspace so it always appears in the
+      // sidebar dropdown, even if the backend omits still-provisioning tenants
+      // from the returned list.
+      const newEntry: TenantSummary = newTenantFromResult ?? {
+        tenantId: tenantId ?? "",
+        name: values.tenantName,
+        state: "Provisioning",
+        role: currentUser.role ?? "Admin",
+        hrDbStatus: null,
+        hrDbReady: false,
+      };
+
+      // Merge: existing tenants + new one (deduplicated by tenantId)
+      const mergedTenants: TenantSummary[] = tenantId
+        ? [
+            ...(currentUser.tenants ?? []).filter(
+              (t) => t.tenantId !== tenantId,
+            ),
+            newEntry,
+          ]
+        : ((result.tenants.length > 0 ? result.tenants : currentUser.tenants) ??
+          []);
+
       authStorage.save(result.accessToken, {
-        ...user!,
-        tenants: result.tenants,
-        tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
-        tenantName: claims.tenantName,
+        ...currentUser,
+        tenants: mergedTenants,
+        tenantId,
+        tenantName: claims.tenantName ?? values.tenantName,
       });
+
+      if (tenantId) {
+        setProvisioning(true);
+        const { ready, timedOut } =
+          await tenantHub.waitForProvisioning(tenantId);
+
+        if (!ready && timedOut) {
+          const status = await authApi
+            .getTenantCreationStatus(tenantId)
+            .catch(() => null);
+
+          if (
+            status &&
+            TENANT_FAILED_STATUSES.includes(status.status.toLowerCase())
+          ) {
+            setProvisioning(false);
+            notification.error({
+              message: "Setup failed",
+              description: `We couldn't finish setting up "${values.tenantName}". Please try again.`,
+              placement: "topRight",
+            });
+            return;
+          }
+
+          if (!status?.isReady) {
+            notification.info({
+              message: "Still setting up",
+              description:
+                "Your workspace is finishing setup in the background — we'll notify you once it's ready.",
+              placement: "topRight",
+            });
+          }
+        }
+
+        // Update the stored tenant entry's state now that TenantCreated fired.
+        // Do NOT call selectTenant here — membership is not yet "Active" at this
+        // point in provisioning, so that endpoint returns 403. The session token
+        // from createTenant already has tenantId embedded; the menu-lock + polling
+        // in use-tenant-hub will handle unlocking once HrDb is ready.
+        const userAfterProvisioning = authStorage.getUser()!;
+        const updatedTenants = (userAfterProvisioning.tenants ?? []).map((t) =>
+          t.tenantId === tenantId
+            ? { ...t, state: ready ? "Created" : "Provisioning" }
+            : t,
+        );
+        authStorage.save(authStorage.getToken()!, {
+          ...userAfterProvisioning,
+          tenants: updatedTenants,
+        });
+
+        setProvisioning(false);
+      }
+
       window.location.assign("/dashboard");
     } catch {
+      setProvisioning(false);
       notification.error({
         message: "Creation failed",
         description: "Failed to create workspace. Please try again.",
@@ -77,9 +173,11 @@ export default function CreateTenant() {
           {hasExistingTenants ? "New Workspace" : "Create Your Organization"}
         </Title>
         <Text className="login-subtitle">
-          {hasExistingTenants
-            ? "Set up a new workspace to manage a separate organization."
-            : "You don't have an organization yet. Create one to get started."}
+          {provisioning
+            ? "Setting up your workspace — this only takes a moment."
+            : hasExistingTenants
+              ? "Set up a new workspace to manage a separate organization."
+              : "You don't have an organization yet. Create one to get started."}
         </Text>
       </div>
 
@@ -98,20 +196,26 @@ export default function CreateTenant() {
                 {...field}
                 placeholder="Enter workspace name"
                 size="large"
+                disabled={provisioning}
               />
             )}
           />
         </Form.Item>
 
-        <Form.Item className="!mb-0">
+        <Form.Item className="mb-0!">
           <Button
             type="primary"
             htmlType="submit"
-            loading={isSubmitting}
+            loading={isSubmitting || provisioning}
+            disabled={provisioning}
             block
             size="large"
           >
-            {hasExistingTenants ? "Create Workspace" : "Create Organization"}
+            {provisioning
+              ? "Setting up workspace…"
+              : hasExistingTenants
+                ? "Create Workspace"
+                : "Create Organization"}
           </Button>
         </Form.Item>
       </Form>

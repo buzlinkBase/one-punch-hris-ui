@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "../services/user.api";
+import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import type { CreateUser } from "../models/api/request/create-user.model";
 import type { UpdateUser } from "../models/api/request/update-user.model";
+import type { SendInvitationRequest } from "../models/api/request/send-invitation-request.model";
 
 const QUERY_KEY = ["users"];
 
@@ -48,5 +50,11 @@ export function useDeleteUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
+  });
+}
+
+export function useSendInvitation() {
+  return useMutation({
+    mutationFn: (data: SendInvitationRequest) => authApi.sendInvitation(data),
   });
 }
