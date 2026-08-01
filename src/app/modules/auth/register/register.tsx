@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Card, Form, Input, Button, Typography, notification } from "antd";
-import { UserAddOutlined } from "@ant-design/icons";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { MailOutlined, UserAddOutlined } from "@ant-design/icons";
+import { Link } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -14,8 +15,8 @@ import type { ApiResponse } from "@/shared/types/api-response.model";
 const { Title, Text } = Typography;
 
 export default function Register() {
-  const navigate = useNavigate();
   const { mutateAsync: register, isPending } = useRegisterMutation();
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 
   const {
     control,
@@ -36,13 +37,8 @@ export default function Register() {
     ...values
   }: RegisterFormValues) => {
     try {
-      await register(values);
-      notification.success({
-        message: "Account created",
-        description: "Your account has been created. You can now sign in.",
-        placement: "topRight",
-      });
-      navigate({ to: "/login" });
+      const result = await register(values);
+      setSubmittedEmail(result.email ?? values.email);
     } catch (err) {
       const description = axios.isAxiosError(err)
         ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
@@ -55,6 +51,32 @@ export default function Register() {
       });
     }
   };
+
+  if (submittedEmail) {
+    return (
+      <Card className="auth-card login-card border-0">
+        <div className="login-header">
+          <div
+            className="login-icon-placeholder"
+            aria-label="App icon placeholder"
+          >
+            <MailOutlined />
+          </div>
+          <Text className="login-kicker">One Punch HRIS</Text>
+          <Title level={3} className="login-title">
+            Check your email
+          </Title>
+          <Text className="login-subtitle">
+            We sent a confirmation link to <strong>{submittedEmail}</strong>.
+            Open it to activate your account before signing in.
+          </Text>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <Link to="/login">Back to sign in</Link>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="auth-card login-card border-0">
@@ -147,7 +169,7 @@ export default function Register() {
           />
         </Form.Item>
 
-        <Form.Item className="!mb-4">
+        <Form.Item className="mb-4!">
           <Button
             type="primary"
             htmlType="submit"

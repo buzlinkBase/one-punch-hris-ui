@@ -1,8 +1,4 @@
-import httpClient from "@/core/http/http-client";
-import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DashboardOverview } from "../models/api/response/dashboard-response.model";
-
-const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dashboard/overview");
 
 const DEPARTMENT_NAMES = ["HR", "Finance", "Operations", "IT", "Sales"];
 
@@ -121,12 +117,9 @@ function dayLabel(offsetFromMonday: number): string {
 }
 
 export const dashboardApi = {
+  // API call disabled for now — serving MOCK_DATA directly until the dashboard
+  // overview endpoint is ready.
   async getOverview(): Promise<DashboardOverview> {
-    try {
-      const data = await httpClient.getUnwrapped<DashboardOverview>(ENDPOINT);
-      return data ?? MOCK_DATA;
-    } catch {
-      return MOCK_DATA;
-    }
+    return MOCK_DATA;
   },
 };

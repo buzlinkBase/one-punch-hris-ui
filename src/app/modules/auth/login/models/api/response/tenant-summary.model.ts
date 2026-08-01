@@ -3,4 +3,6 @@ export interface TenantSummary {
   name: string;
   state: string;
   role: string;
+  hrDbStatus: string | null;
+  hrDbReady: boolean;
 }

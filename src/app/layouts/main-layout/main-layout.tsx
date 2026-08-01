@@ -1,18 +1,22 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
+  Badge,
   Button,
   Dropdown,
+  Empty,
   Input,
   Layout,
   Menu,
   Spin,
   Tag,
+  Tooltip,
   notification,
 } from "antd";
 import {
   ApartmentOutlined,
   BarChartOutlined,
   BankOutlined,
+  BellOutlined,
   CalendarOutlined,
   CheckOutlined,
   ClockCircleOutlined,
@@ -28,15 +32,19 @@ import {
   SafetyCertificateOutlined,
   SafetyOutlined,
   SettingOutlined,
-  SolutionOutlined,
   SwapOutlined,
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
+import type { AxiosError } from "axios";
 import { NAVIGATION_ITEMS } from "@/shared/constants/navigation.const";
 import { authStorage } from "@/core/auth/auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import { refreshAccessToken } from "@/core/auth/auth-refresh";
+import { useTenantHub } from "@/core/signalr/use-tenant-hub";
+import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
+import ProvisioningScreen from "./provisioning-screen";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import type { MenuProps } from "antd";
 
@@ -117,7 +125,6 @@ function getNavIcon(key: string): ReactNode {
     "setup-holiday": <CalendarOutlined />,
     "setup-employee": <UserOutlined />,
     clients: <TeamOutlined />,
-    "employee-management": <SolutionOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
     security: <SafetyOutlined />,
     "security-users": <UserOutlined />,
@@ -129,13 +136,38 @@ function getNavIcon(key: string): ReactNode {
   return iconMap[key] ?? <FileTextOutlined />;
 }
 
-function buildMenuItems(items: typeof NAVIGATION_ITEMS): MenuItem[] {
-  return items.map((item) => ({
-    key: item.path ?? item.key,
-    label: item.label,
-    icon: getNavIcon(item.key),
-    children: item.children ? buildMenuItems(item.children) : undefined,
-  }));
+/** Nav keys that don't depend on the tenant's HR database and stay enabled while it provisions. */
+const HR_DB_INDEPENDENT_KEYS = new Set(["dashboard"]);
+
+function buildMenuItems(
+  items: typeof NAVIGATION_ITEMS,
+  hrDbReady: boolean,
+  atRoot = true,
+): MenuItem[] {
+  return items.map((item) => {
+    const disabled =
+      atRoot && !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
+    const label = disabled ? (
+      <Tooltip
+        title="Available once your workspace resources finish setting up"
+        placement="right"
+      >
+        <span>{item.label}</span>
+      </Tooltip>
+    ) : (
+      item.label
+    );
+
+    return {
+      key: item.path ?? item.key,
+      label,
+      icon: getNavIcon(item.key),
+      disabled,
+      children: item.children
+        ? buildMenuItems(item.children, hrDbReady, false)
+        : undefined,
+    };
+  });
 }
 
 function flattenNavigation(
@@ -218,14 +250,17 @@ function getTenantStateTag(state: string): { color: string; show: boolean } {
     case "created":
     case "active":
       return { color: "", show: false };
+    case "initial":
+    case "awaitingapproval":
     case "provisioning":
+    case "onboarding":
       return { color: "orange", show: true };
     case "suspended":
-      return { color: "red", show: true };
     case "expired":
+    case "deactivated":
+    case "failed":
+    case "rejected":
       return { color: "red", show: true };
-    case "Deactivated":
-      return { color: "orange", show: true };
     default:
       return { color: "default", show: true };
   }
@@ -238,10 +273,28 @@ export default function MainLayout() {
   const location = useLocation();
   const sessionUser = getSessionUser();
 
-  const menuItems = buildMenuItems(NAVIGATION_ITEMS);
+  useTenantHub();
+  const liveTenantStates = useTenantHubStore((s) => s.liveTenantStates);
+  const notifications = useTenantHubStore((s) => s.notifications);
+  const unreadCount = useTenantHubStore((s) => s.unreadCount);
+  const markAllRead = useTenantHubStore((s) => s.markAllRead);
+  const hrDb = useTenantHubStore((s) => s.getHrDbStatus(sessionUser.tenantId));
+  const hrDbFailed =
+    hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
+
+  const menuItems = buildMenuItems(NAVIGATION_ITEMS, hrDb.ready);
   const navEntries = flattenNavigation(NAVIGATION_ITEMS);
   const headerContext = buildHeaderContext(location.pathname, navEntries);
   const activeMenuKey = resolveActiveMenuKey(location.pathname, navEntries);
+
+  useEffect(() => {
+    if (!hrDb.known || hrDb.ready) return;
+    const allowed =
+      location.pathname === "/dashboard" || location.pathname === "/profile";
+    if (!allowed) {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [hrDb.known, hrDb.ready, location.pathname, navigate]);
 
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
     if (key.startsWith("/")) {
@@ -258,24 +311,72 @@ export default function MainLayout() {
 
   const handleSwitchTenant = async (tenantId: string) => {
     setSwitchingTenant(tenantId);
-    try {
+
+    const doSwitch = async () => {
       const result = await authApi.selectTenant(tenantId);
       const claims = authStorage.getTenantClaims(result.accessToken);
       const user = authStorage.getUser();
+
+      // Merge: use fresh data from backend for tenants it returns, but keep any
+      // locally-tracked tenants it omits (e.g. still-provisioning workspaces that
+      // the backend excludes from the list until membership becomes Active).
+      const resultIds = new Set(result.tenants.map((t) => t.tenantId));
+      const preserved = (user?.tenants ?? []).filter(
+        (t) => !resultIds.has(t.tenantId),
+      );
+      const mergedTenants = [...result.tenants, ...preserved];
+
       authStorage.save(result.accessToken, {
         ...user!,
         tenantId: claims.tenantId ?? tenantId,
         tenantName: claims.tenantName,
-        tenants: result.tenants ?? user?.tenants,
+        tenants: mergedTenants,
       });
-      window.location.assign("/dashboard");
-    } catch {
+      window.location.assign(window.location.pathname + window.location.search);
+    };
+
+    const showError = (err: unknown) => {
+      const axiosErr = err as AxiosError<{
+        message?: string;
+        data?: { detail?: string; title?: string };
+      }>;
+      const detail =
+        axiosErr.response?.data?.data?.detail ??
+        axiosErr.response?.data?.data?.title ??
+        axiosErr.response?.data?.message ??
+        axiosErr.message;
+      console.error(
+        "[switch-tenant] failed:",
+        axiosErr.response?.status,
+        detail,
+        axiosErr,
+      );
       notification.error({
-        message: "Switch failed",
+        message: `Switch failed (${axiosErr.response?.status ?? "network error"})`,
         description:
-          "Could not switch to the selected client. Please try again.",
+          detail ??
+          "Could not switch to the selected workspace. Please try again.",
       });
       setSwitchingTenant(null);
+    };
+
+    try {
+      await doSwitch();
+    } catch (err) {
+      const axiosErr = err as AxiosError;
+      if (axiosErr.response?.status === 401) {
+        // The service validates the token internally — force a refresh to get a fresh
+        // token even if the frontend didn't detect expiry (clock skew / missing exp claim).
+        // refreshAccessToken() redirects to /login if the refresh token is also gone.
+        try {
+          await refreshAccessToken();
+          await doSwitch();
+        } catch (retryErr) {
+          showError(retryErr);
+        }
+      } else {
+        showError(err);
+      }
     }
   };
 
@@ -299,7 +400,7 @@ export default function MainLayout() {
             </div>
             {!collapsed && (
               <div className="min-w-0 leading-tight">
-                <p className="m-0 text-sm font-semibold tracking-[0.05em] truncate">
+                <p className="m-0 text-sm font-semibold tracking-wider truncate">
                   {import.meta.env.VITE_APP_NAME ?? "One Punch HRIS"}
                 </p>
                 <p className="m-0 text-[10px] tracking-[0.16em] uppercase text-white/85 truncate">
@@ -322,7 +423,8 @@ export default function MainLayout() {
                 items: [
                   ...sessionUser.tenants.map((t) => {
                     const isActive = t.tenantId === sessionUser.tenantId;
-                    const stateTag = getTenantStateTag(t.state);
+                    const liveState = liveTenantStates[t.tenantId] ?? t.state;
+                    const stateTag = getTenantStateTag(liveState);
                     return {
                       key: t.tenantId,
                       disabled: switchingTenant !== null || isActive,
@@ -363,7 +465,7 @@ export default function MainLayout() {
                                 flexShrink: 0,
                               }}
                             >
-                              {t.state}
+                              {liveState}
                             </Tag>
                           )}
                         </div>
@@ -439,9 +541,15 @@ export default function MainLayout() {
         <div className="app-sider-user">
           {collapsed ? (
             <div className="side-user-collapsed">
-              <div className="side-user-avatar" title={sessionUser.name}>
+              <button
+                type="button"
+                className="side-user-avatar"
+                style={{ border: 0, padding: 0, cursor: "pointer" }}
+                title={`${sessionUser.name} · View profile`}
+                onClick={() => navigate({ to: "/profile" })}
+              >
                 {getInitials(sessionUser.name)}
-              </div>
+              </button>
               <Button
                 type="text"
                 size="small"
@@ -453,16 +561,34 @@ export default function MainLayout() {
             </div>
           ) : (
             <div className="side-user-chip">
-              <div className="side-user-avatar">
+              <button
+                type="button"
+                className="side-user-avatar"
+                style={{ border: 0, padding: 0, cursor: "pointer" }}
+                title="View profile"
+                onClick={() => navigate({ to: "/profile" })}
+              >
                 {getInitials(sessionUser.name)}
-              </div>
-              <div className="side-user-meta">
+              </button>
+              <button
+                type="button"
+                className="side-user-meta"
+                style={{
+                  border: 0,
+                  padding: 0,
+                  background: "transparent",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  font: "inherit",
+                }}
+                onClick={() => navigate({ to: "/profile" })}
+              >
                 <p className="side-user-name">{sessionUser.name}</p>
                 <p className="side-user-subtitle">
                   {sessionUser.role}
                   {sessionUser.email ? ` · ${sessionUser.email}` : ""}
                 </p>
-              </div>
+              </button>
               <Button
                 type="text"
                 size="small"
@@ -512,11 +638,90 @@ export default function MainLayout() {
                 allowClear
                 disabled
               />
+              <Dropdown
+                trigger={["click"]}
+                placement="bottomRight"
+                onOpenChange={(open) => {
+                  if (open) markAllRead();
+                }}
+                menu={{
+                  style: { minWidth: 320, maxHeight: 380, overflowY: "auto" },
+                  items:
+                    notifications.length > 0
+                      ? notifications.map((n) => ({
+                          key: n.id,
+                          label: (
+                            <div style={{ padding: "2px 0" }}>
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: "#1f2937",
+                                }}
+                              >
+                                {n.title}
+                              </p>
+                              <p
+                                style={{
+                                  margin: "2px 0 0",
+                                  fontSize: 12,
+                                  color: "#6b7280",
+                                  whiteSpace: "normal",
+                                }}
+                              >
+                                {n.message}
+                              </p>
+                              <p
+                                style={{
+                                  margin: "4px 0 0",
+                                  fontSize: 11,
+                                  color: "#9ca3af",
+                                }}
+                              >
+                                {new Date(n.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                          ),
+                        }))
+                      : [
+                          {
+                            key: "__empty",
+                            disabled: true,
+                            label: (
+                              <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description="No notifications yet"
+                                style={{ padding: "12px 0" }}
+                              />
+                            ),
+                          },
+                        ],
+                }}
+              >
+                <button
+                  type="button"
+                  className="header-collapse-trigger"
+                  aria-label="Notifications"
+                  title="Notifications"
+                >
+                  <Badge count={unreadCount} size="small" offset={[-2, 2]}>
+                    <BellOutlined />
+                  </Badge>
+                </button>
+              </Dropdown>
             </div>
           </div>
         </Header>
         <Content className="app-content-surface app-content-scroll m-6 p-6 rounded-2xl min-h-70 relative">
-          <Outlet />
+          {!hrDb.ready ? (
+            <ProvisioningScreen
+              tenantName={sessionUser.tenantName}
+              failed={hrDbFailed}
+            />
+          ) : (
+            <Outlet />
+          )}
         </Content>
       </Layout>
     </Layout>
