@@ -28,6 +28,9 @@ const ResetPassword = lazy(
   () => import("@/app/modules/auth/reset-password/reset-password"),
 );
 const Dashboard = lazy(() => import("@/app/modules/dashboard/dashboard"));
+const Profile = lazy(
+  () => import("@/app/modules/account/profile/pages/profile/profile"),
+);
 const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/department-list"),
 );
@@ -130,38 +133,17 @@ const CreateTenant = lazy(
 const AwaitingInvitation = lazy(
   () => import("@/app/modules/auth/awaiting-invitation/awaiting-invitation"),
 );
+const AccountConfirmation = lazy(
+  () => import("@/app/modules/auth/account-confirmation/account-confirmation"),
+);
+const AcceptInvitation = lazy(
+  () => import("@/app/modules/auth/accept-invitation/accept-invitation"),
+);
 const ClientList = lazy(
   () => import("@/app/modules/onboard/client/pages/client-list"),
 );
 const ClientDetail = lazy(
   () => import("@/app/modules/onboard/client/pages/client-detail"),
-);
-
-const AssignAssetList = lazy(
-  () =>
-    import("@/app/modules/employee-management/assign-assets/pages/assign-asset-list"),
-);
-const AssignAssetDetail = lazy(
-  () =>
-    import("@/app/modules/employee-management/assign-assets/pages/assign-asset-detail"),
-);
-
-const EmployeeDependentList = lazy(
-  () =>
-    import("@/app/modules/employee-management/dependents/pages/employee-dependent-list"),
-);
-const EmployeeDependentDetail = lazy(
-  () =>
-    import("@/app/modules/employee-management/dependents/pages/employee-dependent-detail"),
-);
-
-const EmployeeDocRecordList = lazy(
-  () =>
-    import("@/app/modules/employee-management/doc-records/pages/employee-doc-record-list"),
-);
-const EmployeeDocRecordDetail = lazy(
-  () =>
-    import("@/app/modules/employee-management/doc-records/pages/employee-doc-record-detail"),
 );
 
 const RouteFallback = () => null;
@@ -203,6 +185,9 @@ const PUBLIC_PATHS = [
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/account-confirmation/success",
+  "/account-confirmation/error",
+  "/accept-invite",
 ];
 const TENANT_FLOW_PATHS = [
   "/select-tenant",
@@ -353,6 +338,36 @@ const awaitingInvitationIndexRoute = createRoute({
   component: withSuspense(AwaitingInvitation),
 });
 
+const accountConfirmationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "account-confirmation",
+  component: AuthLayout,
+});
+
+const accountConfirmationSuccessRoute = createRoute({
+  getParentRoute: () => accountConfirmationRoute,
+  path: "success",
+  component: withSuspense(AccountConfirmation),
+});
+
+const accountConfirmationErrorRoute = createRoute({
+  getParentRoute: () => accountConfirmationRoute,
+  path: "error",
+  component: withSuspense(AccountConfirmation),
+});
+
+const acceptInviteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "accept-invite",
+  component: AuthLayout,
+});
+
+const acceptInviteIndexRoute = createRoute({
+  getParentRoute: () => acceptInviteRoute,
+  path: "/",
+  component: withSuspense(AcceptInvitation),
+});
+
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "dashboard",
@@ -363,6 +378,18 @@ const dashboardIndexRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: "/",
   component: withSuspense(Dashboard),
+});
+
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "profile",
+  component: MainLayout,
+});
+
+const profileIndexRoute = createRoute({
+  getParentRoute: () => profileRoute,
+  path: "/",
+  component: withSuspense(Profile),
 });
 
 const setupRoute = createRoute({
@@ -635,78 +662,6 @@ const clientsDetailRoute = createRoute({
   component: withSuspense(ClientDetail),
 });
 
-const assignAssetsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "employee-management/assign-assets",
-  component: MainLayout,
-});
-
-const assignAssetsIndexRoute = createRoute({
-  getParentRoute: () => assignAssetsRoute,
-  path: "/",
-  component: withSuspense(AssignAssetList),
-});
-
-const assignAssetsCreateRoute = createRoute({
-  getParentRoute: () => assignAssetsRoute,
-  path: "create",
-  component: withSuspense(AssignAssetDetail),
-});
-
-const assignAssetsDetailRoute = createRoute({
-  getParentRoute: () => assignAssetsRoute,
-  path: "$id",
-  component: withSuspense(AssignAssetDetail),
-});
-
-const employeeDependentsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "employee-management/dependents",
-  component: MainLayout,
-});
-
-const employeeDependentsIndexRoute = createRoute({
-  getParentRoute: () => employeeDependentsRoute,
-  path: "/",
-  component: withSuspense(EmployeeDependentList),
-});
-
-const employeeDependentsCreateRoute = createRoute({
-  getParentRoute: () => employeeDependentsRoute,
-  path: "create",
-  component: withSuspense(EmployeeDependentDetail),
-});
-
-const employeeDependentsDetailRoute = createRoute({
-  getParentRoute: () => employeeDependentsRoute,
-  path: "$id",
-  component: withSuspense(EmployeeDependentDetail),
-});
-
-const employeeDocRecordsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "employee-management/doc-records",
-  component: MainLayout,
-});
-
-const employeeDocRecordsIndexRoute = createRoute({
-  getParentRoute: () => employeeDocRecordsRoute,
-  path: "/",
-  component: withSuspense(EmployeeDocRecordList),
-});
-
-const employeeDocRecordsCreateRoute = createRoute({
-  getParentRoute: () => employeeDocRecordsRoute,
-  path: "create",
-  component: withSuspense(EmployeeDocRecordDetail),
-});
-
-const employeeDocRecordsDetailRoute = createRoute({
-  getParentRoute: () => employeeDocRecordsRoute,
-  path: "$id",
-  component: withSuspense(EmployeeDocRecordDetail),
-});
-
 const securityUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/users",
@@ -856,7 +811,13 @@ const routeTree = rootRoute.addChildren([
   selectTenantRoute.addChildren([selectTenantIndexRoute]),
   createTenantRoute.addChildren([createTenantIndexRoute]),
   awaitingInvitationRoute.addChildren([awaitingInvitationIndexRoute]),
+  accountConfirmationRoute.addChildren([
+    accountConfirmationSuccessRoute,
+    accountConfirmationErrorRoute,
+  ]),
+  acceptInviteRoute.addChildren([acceptInviteIndexRoute]),
   dashboardRoute.addChildren([dashboardIndexRoute]),
+  profileRoute.addChildren([profileIndexRoute]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
@@ -894,22 +855,6 @@ const routeTree = rootRoute.addChildren([
     clientsIndexRoute,
     clientsCreateRoute,
     clientsDetailRoute,
-  ]),
-  appSectionRoute("employee-management", "Employee Management"),
-  assignAssetsRoute.addChildren([
-    assignAssetsIndexRoute,
-    assignAssetsCreateRoute,
-    assignAssetsDetailRoute,
-  ]),
-  employeeDependentsRoute.addChildren([
-    employeeDependentsIndexRoute,
-    employeeDependentsCreateRoute,
-    employeeDependentsDetailRoute,
-  ]),
-  employeeDocRecordsRoute.addChildren([
-    employeeDocRecordsIndexRoute,
-    employeeDocRecordsCreateRoute,
-    employeeDocRecordsDetailRoute,
   ]),
   enrollBiometricsRoute.addChildren([enrollBiometricsIndexRoute]),
   manageDevicesRoute.addChildren([

@@ -1,8 +1,10 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import { Button, Space, Typography } from "antd";
+import { MailOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useUsers, useDeleteUser } from "../../hooks/use-user-queries";
 import UserTable from "../../components/user-table";
+import InviteUserModal from "../../components/invite-user-modal/invite-user-modal";
 import { USER_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
@@ -11,6 +13,7 @@ export default function UserList() {
   const navigate = useNavigate();
   const { data: users = [], isLoading } = useUsers();
   const { mutate: remove } = useDeleteUser();
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   return (
     <div className="content-page">
@@ -24,17 +27,24 @@ export default function UserList() {
               Manage system users, credentials, and access profile status.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/security/users/create" })}
-          >
-            Add User
-          </Button>
+          <Space>
+            <Button icon={<MailOutlined />} onClick={() => setInviteOpen(true)}>
+              Invite User
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/security/users/create" })}
+            >
+              Add User
+            </Button>
+          </Space>
         </div>
       </div>
 
       <UserTable data={users} loading={isLoading} onDelete={remove} />
+
+      <InviteUserModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
     </div>
   );
 }
