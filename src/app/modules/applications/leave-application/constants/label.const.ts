@@ -1,0 +1,14 @@
+export const LEAVE_APPLICATION_LABEL = {
+  TITLE: "Leave Applications",
+  EMPLOYEE: "Employee",
+  LEAVE_TYPE: "Leave Type",
+  DATE_FROM: "Date From",
+  DATE_TO: "Date To",
+  DAY_TYPE: "Day Type",
+  REMARKS: "Reason / Remarks",
+  STATUS: "Status",
+  REVIEWED_BY: "Reviewed By",
+  REVIEWED_ON: "Reviewed On",
+  CREATE_TITLE: "File Leave Application",
+  EDIT_TITLE: "Edit Leave Application",
+};

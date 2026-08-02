@@ -741,12 +741,141 @@ const securityPermissionsDetailRoute = createRoute({
   component: withSuspense(PermissionDetail),
 });
 
+const LeaveApplicationList = lazy(
+  () =>
+    import("@/app/modules/applications/leave-application/pages/leave-application-list"),
+);
+const LeaveApplicationDetail = lazy(
+  () =>
+    import("@/app/modules/applications/leave-application/pages/leave-application-detail"),
+);
+const OvertimeApplicationList = lazy(
+  () =>
+    import("@/app/modules/applications/overtime-application/pages/overtime-application-list"),
+);
+const OvertimeApplicationDetail = lazy(
+  () =>
+    import("@/app/modules/applications/overtime-application/pages/overtime-application-detail"),
+);
+const TravelOrderList = lazy(
+  () =>
+    import("@/app/modules/applications/travel-order-application/pages/travel-order-list"),
+);
+const TravelOrderDetail = lazy(
+  () =>
+    import("@/app/modules/applications/travel-order-application/pages/travel-order-detail"),
+);
+const UndertimeList = lazy(
+  () =>
+    import("@/app/modules/applications/undertime-application/pages/undertime-list"),
+);
+const UndertimeDetail = lazy(
+  () =>
+    import("@/app/modules/applications/undertime-application/pages/undertime-detail"),
+);
+
 const AuditList = lazy(
   () => import("@/app/modules/security/audit/pages/audit-list"),
 );
 const AuditDetail = lazy(
   () => import("@/app/modules/security/audit/pages/audit-detail"),
 );
+
+const leaveApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/leave",
+  component: MainLayout,
+});
+
+const leaveApplicationIndexRoute = createRoute({
+  getParentRoute: () => leaveApplicationRoute,
+  path: "/",
+  component: withSuspense(LeaveApplicationList),
+});
+
+const leaveApplicationCreateRoute = createRoute({
+  getParentRoute: () => leaveApplicationRoute,
+  path: "create",
+  component: withSuspense(LeaveApplicationDetail),
+});
+
+const leaveApplicationDetailRoute = createRoute({
+  getParentRoute: () => leaveApplicationRoute,
+  path: "$id",
+  component: withSuspense(LeaveApplicationDetail),
+});
+
+const overtimeApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/overtime",
+  component: MainLayout,
+});
+
+const travelOrderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/official-business",
+  component: MainLayout,
+});
+
+const undertimeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/undertime",
+  component: MainLayout,
+});
+
+const overtimeApplicationIndexRoute = createRoute({
+  getParentRoute: () => overtimeApplicationRoute,
+  path: "/",
+  component: withSuspense(OvertimeApplicationList),
+});
+
+const overtimeApplicationCreateRoute = createRoute({
+  getParentRoute: () => overtimeApplicationRoute,
+  path: "create",
+  component: withSuspense(OvertimeApplicationDetail),
+});
+
+const overtimeApplicationDetailRoute = createRoute({
+  getParentRoute: () => overtimeApplicationRoute,
+  path: "$id",
+  component: withSuspense(OvertimeApplicationDetail),
+});
+
+const travelOrderIndexRoute = createRoute({
+  getParentRoute: () => travelOrderRoute,
+  path: "/",
+  component: withSuspense(TravelOrderList),
+});
+
+const travelOrderCreateRoute = createRoute({
+  getParentRoute: () => travelOrderRoute,
+  path: "create",
+  component: withSuspense(TravelOrderDetail),
+});
+
+const travelOrderDetailRoute = createRoute({
+  getParentRoute: () => travelOrderRoute,
+  path: "$id",
+  component: withSuspense(TravelOrderDetail),
+});
+
+const undertimeIndexRoute = createRoute({
+  getParentRoute: () => undertimeRoute,
+  path: "/",
+  component: withSuspense(UndertimeList),
+});
+
+const undertimeCreateRoute = createRoute({
+  getParentRoute: () => undertimeRoute,
+  path: "create",
+  component: withSuspense(UndertimeDetail),
+});
+
+const undertimeDetailRoute = createRoute({
+  getParentRoute: () => undertimeRoute,
+  path: "$id",
+  component: withSuspense(UndertimeDetail),
+});
 
 const securityAuditRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -880,6 +1009,26 @@ const routeTree = rootRoute.addChildren([
   securityAuditRoute.addChildren([
     securityAuditIndexRoute,
     securityAuditDetailRoute,
+  ]),
+  leaveApplicationRoute.addChildren([
+    leaveApplicationIndexRoute,
+    leaveApplicationCreateRoute,
+    leaveApplicationDetailRoute,
+  ]),
+  overtimeApplicationRoute.addChildren([
+    overtimeApplicationIndexRoute,
+    overtimeApplicationCreateRoute,
+    overtimeApplicationDetailRoute,
+  ]),
+  travelOrderRoute.addChildren([
+    travelOrderIndexRoute,
+    travelOrderCreateRoute,
+    travelOrderDetailRoute,
+  ]),
+  undertimeRoute.addChildren([
+    undertimeIndexRoute,
+    undertimeCreateRoute,
+    undertimeDetailRoute,
   ]),
 ]);
 

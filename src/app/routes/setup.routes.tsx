@@ -107,6 +107,13 @@ const PositionDetail = lazy(
   () => import("@/app/modules/setup/position/pages/position-detail"),
 );
 
+const LeaveTypeList = lazy(
+  () => import("@/app/modules/setup/leave-type/pages/leave-type-list"),
+);
+const LeaveTypeDetail = lazy(
+  () => import("@/app/modules/setup/leave-type/pages/leave-type-detail"),
+);
+
 export interface SetupRouteConfig {
   path: string;
   component: LazyExoticComponent<ComponentType>;
@@ -168,4 +175,8 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "position", component: PositionList },
   { path: "position/create", component: PositionDetail },
   { path: "position/$id", component: PositionDetail },
+
+  { path: "leave-type", component: LeaveTypeList },
+  { path: "leave-type/create", component: LeaveTypeDetail },
+  { path: "leave-type/$id", component: LeaveTypeDetail },
 ];
