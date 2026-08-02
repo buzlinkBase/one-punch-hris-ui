@@ -37,23 +37,26 @@ export default function InviteUserModal({ open, onClose }: Props) {
   }, [open, reset]);
 
   const onSubmit = (values: InviteUserFormValues) => {
-    sendInvitation(values, {
-      onSuccess: () => {
-        notification.success({
-          message: "Invitation sent",
-          description: `An invitation email has been sent to ${values.email}.`,
-          placement: "topRight",
-        });
-        onClose();
+    sendInvitation(
+      { email: values.email, roles: [values.role] },
+      {
+        onSuccess: () => {
+          notification.success({
+            message: "Invitation sent",
+            description: `An invitation email has been sent to ${values.email}.`,
+            placement: "topRight",
+          });
+          onClose();
+        },
+        onError: () => {
+          notification.error({
+            message: "Failed to send invitation",
+            description: "Could not send the invitation. Please try again.",
+            placement: "topRight",
+          });
+        },
       },
-      onError: () => {
-        notification.error({
-          message: "Failed to send invitation",
-          description: "Could not send the invitation. Please try again.",
-          placement: "topRight",
-        });
-      },
-    });
+    );
   };
 
   return (

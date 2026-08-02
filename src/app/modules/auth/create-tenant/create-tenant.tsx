@@ -91,6 +91,8 @@ export default function CreateTenant() {
         const { ready, timedOut } =
           await tenantHub.waitForProvisioning(tenantId);
 
+        let finalReady = ready;
+
         if (!ready && timedOut) {
           const status = await authApi
             .getTenantCreationStatus(tenantId)
@@ -109,7 +111,9 @@ export default function CreateTenant() {
             return;
           }
 
-          if (!status?.isReady) {
+          finalReady = status?.isReady ?? false;
+
+          if (!finalReady) {
             notification.info({
               message: "Still setting up",
               description:
@@ -127,7 +131,7 @@ export default function CreateTenant() {
         const userAfterProvisioning = authStorage.getUser()!;
         const updatedTenants = (userAfterProvisioning.tenants ?? []).map((t) =>
           t.tenantId === tenantId
-            ? { ...t, state: ready ? "Created" : "Provisioning" }
+            ? { ...t, state: finalReady ? "Created" : "Provisioning" }
             : t,
         );
         authStorage.save(authStorage.getToken()!, {
