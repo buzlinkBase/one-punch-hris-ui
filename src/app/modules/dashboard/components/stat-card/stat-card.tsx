@@ -3,11 +3,12 @@ import { Card, Skeleton, Statistic } from "antd";
 
 interface StatCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: ReactNode;
   color: string;
   loading?: boolean;
   suffix?: string;
+  subtext?: string;
 }
 
 export default function StatCard({
@@ -17,6 +18,7 @@ export default function StatCard({
   color,
   loading,
   suffix,
+  subtext,
 }: StatCardProps) {
   return (
     <Card size="small" className="h-full">
@@ -30,12 +32,19 @@ export default function StatCard({
           >
             {icon}
           </div>
-          <Statistic
-            title={<span className="text-xs text-gray-500">{title}</span>}
-            value={value}
-            suffix={suffix}
-            valueStyle={{ fontSize: 22, fontWeight: 600 }}
-          />
+          <div className="min-w-0">
+            <Statistic
+              title={<span className="text-xs text-gray-500">{title}</span>}
+              value={value}
+              suffix={suffix}
+              valueStyle={{ fontSize: 20, fontWeight: 600, lineHeight: 1.2 }}
+            />
+            {subtext && (
+              <span className="text-xs font-medium" style={{ color }}>
+                {subtext}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </Card>
