@@ -1,4 +1,4 @@
 export interface SendInvitationRequest {
   email: string;
-  role: string;
+  roles: string[];
 }

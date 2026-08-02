@@ -135,6 +135,9 @@ export const authApi = {
     );
   },
   sendInvitation(data: SendInvitationRequest): Promise<void> {
-    return httpClient.postUnwrapped<void>(`${INVITATIONS_URL}/send`, data);
+    return httpClient.postUnwrapped<void>(
+      `${INVITATIONS_URL}/send-invite`,
+      data,
+    );
   },
 };
