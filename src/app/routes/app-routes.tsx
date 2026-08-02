@@ -765,6 +765,14 @@ const TravelOrderDetail = lazy(
   () =>
     import("@/app/modules/applications/travel-order-application/pages/travel-order-detail"),
 );
+const UndertimeList = lazy(
+  () =>
+    import("@/app/modules/applications/undertime-application/pages/undertime-list"),
+);
+const UndertimeDetail = lazy(
+  () =>
+    import("@/app/modules/applications/undertime-application/pages/undertime-detail"),
+);
 
 const AuditList = lazy(
   () => import("@/app/modules/security/audit/pages/audit-list"),
@@ -809,6 +817,12 @@ const travelOrderRoute = createRoute({
   component: MainLayout,
 });
 
+const undertimeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/undertime",
+  component: MainLayout,
+});
+
 const overtimeApplicationIndexRoute = createRoute({
   getParentRoute: () => overtimeApplicationRoute,
   path: "/",
@@ -843,6 +857,24 @@ const travelOrderDetailRoute = createRoute({
   getParentRoute: () => travelOrderRoute,
   path: "$id",
   component: withSuspense(TravelOrderDetail),
+});
+
+const undertimeIndexRoute = createRoute({
+  getParentRoute: () => undertimeRoute,
+  path: "/",
+  component: withSuspense(UndertimeList),
+});
+
+const undertimeCreateRoute = createRoute({
+  getParentRoute: () => undertimeRoute,
+  path: "create",
+  component: withSuspense(UndertimeDetail),
+});
+
+const undertimeDetailRoute = createRoute({
+  getParentRoute: () => undertimeRoute,
+  path: "$id",
+  component: withSuspense(UndertimeDetail),
 });
 
 const securityAuditRoute = createRoute({
@@ -992,6 +1024,11 @@ const routeTree = rootRoute.addChildren([
     travelOrderIndexRoute,
     travelOrderCreateRoute,
     travelOrderDetailRoute,
+  ]),
+  undertimeRoute.addChildren([
+    undertimeIndexRoute,
+    undertimeCreateRoute,
+    undertimeDetailRoute,
   ]),
 ]);
 
