@@ -749,6 +749,14 @@ const LeaveApplicationDetail = lazy(
   () =>
     import("@/app/modules/applications/leave-application/pages/leave-application-detail"),
 );
+const OvertimeApplicationList = lazy(
+  () =>
+    import("@/app/modules/applications/overtime-application/pages/overtime-application-list"),
+);
+const OvertimeApplicationDetail = lazy(
+  () =>
+    import("@/app/modules/applications/overtime-application/pages/overtime-application-detail"),
+);
 
 const AuditList = lazy(
   () => import("@/app/modules/security/audit/pages/audit-list"),
@@ -779,6 +787,30 @@ const leaveApplicationDetailRoute = createRoute({
   getParentRoute: () => leaveApplicationRoute,
   path: "$id",
   component: withSuspense(LeaveApplicationDetail),
+});
+
+const overtimeApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/overtime",
+  component: MainLayout,
+});
+
+const overtimeApplicationIndexRoute = createRoute({
+  getParentRoute: () => overtimeApplicationRoute,
+  path: "/",
+  component: withSuspense(OvertimeApplicationList),
+});
+
+const overtimeApplicationCreateRoute = createRoute({
+  getParentRoute: () => overtimeApplicationRoute,
+  path: "create",
+  component: withSuspense(OvertimeApplicationDetail),
+});
+
+const overtimeApplicationDetailRoute = createRoute({
+  getParentRoute: () => overtimeApplicationRoute,
+  path: "$id",
+  component: withSuspense(OvertimeApplicationDetail),
 });
 
 const securityAuditRoute = createRoute({
@@ -918,6 +950,11 @@ const routeTree = rootRoute.addChildren([
     leaveApplicationIndexRoute,
     leaveApplicationCreateRoute,
     leaveApplicationDetailRoute,
+  ]),
+  overtimeApplicationRoute.addChildren([
+    overtimeApplicationIndexRoute,
+    overtimeApplicationCreateRoute,
+    overtimeApplicationDetailRoute,
   ]),
 ]);
 

@@ -106,6 +106,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Leave",
         path: "/applications/leave",
       },
+      {
+        key: "applications-overtime",
+        label: "Overtime",
+        path: "/applications/overtime",
+      },
     ],
   },
   {
