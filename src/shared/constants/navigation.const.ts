@@ -143,6 +143,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       { key: "setup-client", label: "Client", path: "/setup/client" },
       { key: "setup-employee", label: "Employee", path: "/setup/employee" },
       { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
+      {
+        key: "setup-leave-type",
+        label: "Leave Types",
+        path: "/setup/leave-type",
+      },
       // {
       //   key: "setup-deduction-type",
       //   label: "Deduction Type",
