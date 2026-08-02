@@ -98,6 +98,17 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   {
+    key: "applications",
+    label: "Applications",
+    children: [
+      {
+        key: "applications-leave",
+        label: "Leave",
+        path: "/applications/leave",
+      },
+    ],
+  },
+  {
     key: "setup",
     label: "Setup",
     children: [

@@ -741,12 +741,45 @@ const securityPermissionsDetailRoute = createRoute({
   component: withSuspense(PermissionDetail),
 });
 
+const LeaveApplicationList = lazy(
+  () =>
+    import("@/app/modules/applications/leave-application/pages/leave-application-list"),
+);
+const LeaveApplicationDetail = lazy(
+  () =>
+    import("@/app/modules/applications/leave-application/pages/leave-application-detail"),
+);
+
 const AuditList = lazy(
   () => import("@/app/modules/security/audit/pages/audit-list"),
 );
 const AuditDetail = lazy(
   () => import("@/app/modules/security/audit/pages/audit-detail"),
 );
+
+const leaveApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/leave",
+  component: MainLayout,
+});
+
+const leaveApplicationIndexRoute = createRoute({
+  getParentRoute: () => leaveApplicationRoute,
+  path: "/",
+  component: withSuspense(LeaveApplicationList),
+});
+
+const leaveApplicationCreateRoute = createRoute({
+  getParentRoute: () => leaveApplicationRoute,
+  path: "create",
+  component: withSuspense(LeaveApplicationDetail),
+});
+
+const leaveApplicationDetailRoute = createRoute({
+  getParentRoute: () => leaveApplicationRoute,
+  path: "$id",
+  component: withSuspense(LeaveApplicationDetail),
+});
 
 const securityAuditRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -880,6 +913,11 @@ const routeTree = rootRoute.addChildren([
   securityAuditRoute.addChildren([
     securityAuditIndexRoute,
     securityAuditDetailRoute,
+  ]),
+  leaveApplicationRoute.addChildren([
+    leaveApplicationIndexRoute,
+    leaveApplicationCreateRoute,
+    leaveApplicationDetailRoute,
   ]),
 ]);
 
