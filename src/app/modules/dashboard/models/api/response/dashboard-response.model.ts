@@ -45,7 +45,13 @@ export interface RecentActivity {
 }
 
 export type PendingRequestType =
-  "leave" | "change-rest-day" | "change-holiday" | "work-rotation" | "overtime";
+  | "leave"
+  | "change-rest-day"
+  | "change-holiday"
+  | "work-rotation"
+  | "overtime"
+  | "undertime"
+  | "official-business";
 
 export interface PendingRequest {
   id: string;

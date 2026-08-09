@@ -1,7 +1,7 @@
 import { Typography } from "antd";
 import {
+  CalendarOutlined,
   ClockCircleOutlined,
-  FileTextOutlined,
   TeamOutlined,
   UserAddOutlined,
   UserSwitchOutlined,
@@ -21,6 +21,11 @@ const { Title } = Typography;
 export default function Dashboard() {
   const { data, isLoading } = useDashboardOverview();
   const stats = data?.stats;
+
+  const attendanceRate =
+    stats && stats.totalEmployees > 0
+      ? Math.round((stats.presentToday / stats.totalEmployees) * 100)
+      : null;
 
   return (
     <div className="content-page">
@@ -49,6 +54,11 @@ export default function Dashboard() {
           icon={<ClockCircleOutlined />}
           color="#1890FF"
           loading={isLoading}
+          subtext={
+            attendanceRate !== null
+              ? `${attendanceRate}% attendance`
+              : undefined
+          }
         />
         <StatCard
           title={DASHBOARD_LABEL.LATE_TODAY}
@@ -65,9 +75,9 @@ export default function Dashboard() {
           loading={isLoading}
         />
         <StatCard
-          title={DASHBOARD_LABEL.PENDING_REQUESTS}
-          value={stats?.pendingRequests ?? 0}
-          icon={<FileTextOutlined />}
+          title={DASHBOARD_LABEL.ON_LEAVE_TODAY}
+          value={stats?.onLeaveToday ?? 0}
+          icon={<CalendarOutlined />}
           color="#722ED1"
           loading={isLoading}
         />

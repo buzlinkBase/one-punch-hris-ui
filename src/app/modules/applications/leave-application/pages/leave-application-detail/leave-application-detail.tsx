@@ -38,6 +38,11 @@ const DAY_TYPE_OPTIONS = [
   { value: "HalfDay", label: "Half Day" },
 ];
 
+const PAY_TYPE_OPTIONS = [
+  { value: "WithPay", label: "With Pay" },
+  { value: "WithoutPay", label: "Without Pay" },
+];
+
 const APPROVAL_STATUS_OPTIONS = [
   { value: "ForApproval", label: "For Approval" },
   { value: "Approved", label: "Approved" },
@@ -98,6 +103,7 @@ export default function LeaveApplicationDetail() {
       leaveDateFrom: "",
       leaveDateTo: "",
       dayType: "WholeDay",
+      payType: "WithPay",
       applicationRemarks: "",
     },
   });
@@ -114,6 +120,7 @@ export default function LeaveApplicationDetail() {
         leaveDateFrom: selected.leaveDateFrom,
         leaveDateTo: selected.leaveDateTo,
         dayType: selected.dayType,
+        payType: selected.payType ?? "WithPay",
         applicationRemarks: selected.applicationRemarks ?? "",
       });
     }
@@ -228,7 +235,7 @@ export default function LeaveApplicationDetail() {
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-3 gap-x-6">
+          <div className="grid grid-cols-4 gap-x-6">
             <Form.Item
               label="Leave Date Range"
               className="col-span-2"
@@ -267,6 +274,20 @@ export default function LeaveApplicationDetail() {
                 control={control}
                 render={({ field }) => (
                   <Select {...field} options={DAY_TYPE_OPTIONS} />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={LEAVE_APPLICATION_LABEL.PAY_TYPE}
+              validateStatus={errors.payType ? "error" : ""}
+              help={errors.payType?.message}
+            >
+              <Controller
+                name="payType"
+                control={control}
+                render={({ field }) => (
+                  <Select {...field} options={PAY_TYPE_OPTIONS} />
                 )}
               />
             </Form.Item>

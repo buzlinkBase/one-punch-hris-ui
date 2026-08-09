@@ -22,6 +22,7 @@ const GC = {
   specialHol: { group: "#9b7ec8", sub: "#faf5ff" },
   restLegal: { group: "#4aab98", sub: "#f0fdfa" },
   restSpecial: { group: "#5aaa5a", sub: "#f0fdf4" },
+  ob: { group: "#1DA081", sub: "#f0fdf9" },
 };
 
 const groupHeader = (bg: string) => (): object => ({
@@ -63,6 +64,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
     restSpecialDayOTHours: 75,
     restSpecialDayNDHours: 75,
     restSpecialDayNDOTHours: 80,
+    obHours: 75,
   });
 
   const col = (
@@ -271,6 +273,11 @@ export default function DtrDetailTable({ data, loading }: Props) {
             col("ND", "restSpecialDayNDHours", 75, GC.restSpecial.sub),
             col("ND-OT", "restSpecialDayNDOTHours", 80, GC.restSpecial.sub),
           ],
+        },
+        {
+          title: "Official Business",
+          onHeaderCell: groupHeader(GC.ob.group),
+          children: [col("OB Hrs", "obHours", 75, GC.ob.sub)],
         },
       ],
     },

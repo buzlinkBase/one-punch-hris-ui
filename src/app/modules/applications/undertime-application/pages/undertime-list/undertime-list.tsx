@@ -1,28 +1,22 @@
 import { useMemo, useState } from "react";
-import { Button, Select, Space, Tabs, Typography } from "antd";
+import { Button, DatePicker, Select, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import {
   useUndertimeApplications,
   useDeleteUndertimeApplication,
 } from "../../hooks/use-undertime-application-queries";
-import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import UndertimeTable from "../../components/undertime-table";
 import { UNDERTIME_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
-
-const STATUS_TABS = [
-  { key: "all", label: "All" },
-  { key: "ForApproval", label: "For Approval" },
-  { key: "Approved", label: "Approved" },
-  { key: "Declined", label: "Declined" },
-  { key: "Cancelled", label: "Cancelled" },
-];
+const { RangePicker } = DatePicker;
 
 export default function UndertimeList() {
   const navigate = useNavigate();
-  const [statusTab, setStatusTab] = useState("all");
+  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [employeeFilter, setEmployeeFilter] = useState<string | undefined>();
 
   const {
@@ -30,39 +24,26 @@ export default function UndertimeList() {
     isLoading,
     isFetching,
     refetch,
-  } = useUndertimeApplications();
+  } = useUndertimeApplications(
+    dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
+  );
   const { mutate: remove } = useDeleteUndertimeApplication();
-  const { data: employees = [] } = useEmployeeFilter();
+  const { data: rawEmployees = [] } = useEmployees();
+
+  const employees = rawEmployees.map((e) => ({
+    id: e.id,
+    name: e.fullName ?? `${e.firstName} ${e.lastName}`,
+  }));
 
   const employeeOptions = employees.map((e) => ({
     value: e.id,
-    label: e.name ?? e.id,
+    label: e.name,
   }));
 
   const filtered = useMemo(() => {
-    let list = applications;
-    if (statusTab !== "all")
-      list = list.filter((a) => a.approvalStatus === statusTab);
-    if (employeeFilter)
-      list = list.filter((a) => a.employeeId === employeeFilter);
-    return list;
-  }, [applications, statusTab, employeeFilter]);
-
-  const tabItems = STATUS_TABS.map((t) => ({
-    key: t.key,
-    label:
-      t.key === "all"
-        ? `All (${applications.length})`
-        : `${t.label} (${applications.filter((a) => a.approvalStatus === t.key).length})`,
-    children: (
-      <UndertimeTable
-        data={filtered}
-        employees={employees}
-        loading={isLoading || isFetching}
-        onDelete={remove}
-      />
-    ),
-  }));
+    if (!employeeFilter) return applications;
+    return applications.filter((a) => a.employeeId === employeeFilter);
+  }, [applications, employeeFilter]);
 
   return (
     <div className="content-page">
@@ -93,7 +74,23 @@ export default function UndertimeList() {
         </div>
       </div>
 
-      <div className="mb-3" style={{ maxWidth: 280 }}>
+      <div className="mb-3 flex items-center gap-3 flex-wrap">
+        <RangePicker
+          value={[
+            dateRange ? dayjs(dateRange[0]) : null,
+            dateRange ? dayjs(dateRange[1]) : null,
+          ]}
+          onChange={(dates) =>
+            setDateRange(
+              dates
+                ? [
+                    dates[0]?.format("YYYY-MM-DD") ?? "",
+                    dates[1]?.format("YYYY-MM-DD") ?? "",
+                  ]
+                : null,
+            )
+          }
+        />
         <Select
           allowClear
           showSearch
@@ -101,7 +98,7 @@ export default function UndertimeList() {
           options={employeeOptions}
           value={employeeFilter}
           onChange={setEmployeeFilter}
-          style={{ width: "100%" }}
+          style={{ width: 240 }}
           filterOption={(input, opt) =>
             String(opt?.label ?? "")
               .toLowerCase()
@@ -110,11 +107,11 @@ export default function UndertimeList() {
         />
       </div>
 
-      <Tabs
-        activeKey={statusTab}
-        onChange={setStatusTab}
-        items={tabItems}
-        size="small"
+      <UndertimeTable
+        data={filtered}
+        employees={employees}
+        loading={isLoading || isFetching}
+        onDelete={remove}
       />
     </div>
   );

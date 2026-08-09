@@ -5,4 +5,5 @@ export interface UndertimeApplicationResponse {
   utMinutes: number;
   remarks: string;
   approvalStatus: string;
+  createdAt?: string;
 }

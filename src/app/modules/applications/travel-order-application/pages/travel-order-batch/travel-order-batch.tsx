@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   Input,
@@ -10,23 +11,16 @@ import {
   Typography,
   Space,
   Tag,
-  Card,
-  Descriptions,
 } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
-import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
-  travelOrderFormSchema,
-  type TravelOrderFormValues,
-} from "../../models/forms/travel-order-application-form.schema";
-import {
-  useTravelOrder,
-  useCreateTravelOrder,
-  useUpdateTravelOrder,
-} from "../../hooks/use-travel-order-queries";
+  batchTravelOrderFormSchema,
+  type BatchTravelOrderFormValues,
+} from "../../models/forms/travel-order-batch-form.schema";
+import type { CreateTravelOrderApplication } from "../../models/api/request/create-travel-order-application.model";
+import { useCreateTravelOrderBatch } from "../../hooks/use-travel-order-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import {
@@ -43,20 +37,6 @@ const MODE_OPTIONS = [
   { label: "Time Range", value: "timerange" },
   { label: "Hours", value: "hours" },
 ];
-
-const APPROVAL_STATUS_OPTIONS = [
-  { value: "ForApproval", label: "For Approval" },
-  { value: "Approved", label: "Approved" },
-  { value: "Declined", label: "Declined" },
-  { value: "Cancelled", label: "Cancelled" },
-];
-
-const STATUS_COLOR: Record<string, string> = {
-  ForApproval: "warning",
-  Approved: "success",
-  Declined: "error",
-  Cancelled: "default",
-};
 
 const filterOption = (
   input: string,
@@ -86,14 +66,14 @@ function buildEndDateTime(
   return adjusted.format("YYYY-MM-DDTHH:mm:ss");
 }
 
-export default function TravelOrderDetail() {
-  const { id } = useRouteParams<{ id?: string }>();
-  const isEdit = Boolean(id);
-  const navigate = useNavigate();
+const defaultEntry = () => ({
+  employeeId: "",
+  applicationRemarks: "",
+});
 
-  const { data: selected } = useTravelOrder(isEdit ? id : undefined);
-  const { mutateAsync: add, isPending: isCreating } = useCreateTravelOrder();
-  const { mutateAsync: update, isPending: isUpdating } = useUpdateTravelOrder();
+export default function TravelOrderBatch() {
+  const navigate = useNavigate();
+  const { mutateAsync: createBatch, isPending } = useCreateTravelOrderBatch();
   const { data: employees = [] } = useEmployeeFilter();
   const { data: timeShifts = [] } = useFixedTimeShifts();
 
@@ -112,14 +92,12 @@ export default function TravelOrderDetail() {
   const {
     control,
     handleSubmit,
-    reset,
-    setValue,
     watch,
+    setValue,
     formState: { errors },
-  } = useForm<TravelOrderFormValues>({
-    resolver: zodResolver(travelOrderFormSchema),
+  } = useForm<BatchTravelOrderFormValues>({
+    resolver: zodResolver(batchTravelOrderFormSchema),
     defaultValues: {
-      employeeId: "",
       startDate: "",
       endDate: "",
       mode: "timerange",
@@ -130,9 +108,13 @@ export default function TravelOrderDetail() {
       destination: "",
       classification: "",
       purpose: "",
-      cost: 0,
-      applicationRemarks: "",
+      entries: [defaultEntry()],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "entries",
   });
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -142,37 +124,10 @@ export default function TravelOrderDetail() {
   const startTime = watch("startTime");
   const endTime = watch("endTime");
 
-  useEffect(() => {
-    if (isEdit && selected) {
-      const editMode = selected.isManualEntry ? "hours" : "timerange";
-      reset({
-        employeeId: selected.employeeId,
-        startDate: selected.startDate,
-        endDate: selected.endDate,
-        mode: editMode,
-        timeShiftId: undefined,
-        startTime:
-          editMode === "timerange" && selected.startTime
-            ? dayjs(selected.startTime).format("HH:mm:ss")
-            : "",
-        endTime:
-          editMode === "timerange" && selected.endTime
-            ? dayjs(selected.endTime).format("HH:mm:ss")
-            : "",
-        totalHours:
-          editMode === "hours" && selected.totalMinutes != null
-            ? selected.totalMinutes / 60
-            : undefined,
-        destination: selected.destination,
-        classification: selected.classification,
-        purpose: selected.purpose,
-        cost: selected.cost ?? 0,
-        applicationRemarks: selected.applicationRemarks ?? "",
-      });
-    }
-  }, [selected, isEdit, reset]);
+  const crossMidnight =
+    mode === "timerange" && isCrossMidnight(startTime ?? "", endTime ?? "");
 
-  const onSubmit = async (values: TravelOrderFormValues) => {
+  const onSubmit = async (values: BatchTravelOrderFormValues) => {
     const timePayload =
       values.mode === "timerange"
         ? {
@@ -196,32 +151,23 @@ export default function TravelOrderDetail() {
             totalMinutes: Math.round((values.totalHours ?? 0) * 60),
           };
 
-    const payload = {
-      employeeId: values.employeeId,
-      startDate: values.startDate,
-      endDate: values.endDate,
-      destination: values.destination,
-      classification: values.classification,
-      purpose: values.purpose,
-      cost: 0,
-      applicationRemarks: values.applicationRemarks,
-      ...timePayload,
-    };
+    const payload: CreateTravelOrderApplication[] = values.entries.map(
+      (entry) => ({
+        employeeId: entry.employeeId,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        destination: values.destination,
+        classification: values.classification,
+        purpose: values.purpose,
+        cost: 0,
+        applicationRemarks: entry.applicationRemarks,
+        ...timePayload,
+      }),
+    );
 
-    if (isEdit && id) {
-      await update({
-        id,
-        approvalStatus: selected?.approvalStatus ?? "ForApproval",
-        ...payload,
-      });
-    } else {
-      await add(payload);
-    }
+    await createBatch(payload);
     navigate({ to: "/applications/official-business" });
   };
-
-  const crossMidnight =
-    mode === "timerange" && isCrossMidnight(startTime ?? "", endTime ?? "");
 
   return (
     <div className="content-page">
@@ -229,24 +175,13 @@ export default function TravelOrderDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit
-                ? TRAVEL_ORDER_LABEL.EDIT_TITLE
-                : TRAVEL_ORDER_LABEL.CREATE_TITLE}
+              File OB / Travel Order — Batch Entry
             </Title>
             <p className="page-toolbar-subtitle">
-              File an official business or travel order request for approval.
+              File a travel order for multiple employees on the same trip.
             </p>
           </div>
           <Space>
-            {isEdit && selected ? (
-              <Tag color={STATUS_COLOR[selected.approvalStatus] ?? "default"}>
-                {selected.approvalStatus === "ForApproval"
-                  ? "For Approval"
-                  : selected.approvalStatus}
-              </Tag>
-            ) : (
-              <Tag color="success">New Record</Tag>
-            )}
             <Button
               onClick={() =>
                 navigate({ to: "/applications/official-business" })
@@ -259,66 +194,21 @@ export default function TravelOrderDetail() {
       </div>
 
       <div className="form-page-body">
-        {isEdit && selected && (
-          <Card size="small" className="mb-4">
-            <Descriptions size="small" column={3}>
-              <Descriptions.Item label={TRAVEL_ORDER_LABEL.STATUS}>
-                <Tag color={STATUS_COLOR[selected.approvalStatus] ?? "default"}>
-                  {selected.approvalStatus === "ForApproval"
-                    ? "For Approval"
-                    : selected.approvalStatus}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={TRAVEL_ORDER_LABEL.DAYS}>
-                {selected.days != null
-                  ? `${selected.days} day${selected.days !== 1 ? "s" : ""}`
-                  : "-"}
-              </Descriptions.Item>
-              {selected.reference && (
-                <Descriptions.Item label={TRAVEL_ORDER_LABEL.REFERENCE}>
-                  {selected.reference}
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-        )}
-
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          {/* Row 1: Employee | Date Range | Entry Mode — mirrors OT's 3-col top row */}
+          {/* Row 1: Travel Period | Entry Mode — mirrors OT / single-entry layout */}
           <div className="grid grid-cols-3 gap-x-6">
             <Form.Item
-              label={TRAVEL_ORDER_LABEL.EMPLOYEE}
-              validateStatus={errors.employeeId ? "error" : ""}
-              help={errors.employeeId?.message}
-            >
-              <Controller
-                name="employeeId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    showSearch
-                    placeholder="Select employee"
-                    options={employeeOptions}
-                    filterOption={filterOption}
-                    value={field.value || undefined}
-                  />
-                )}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Travel Date Range"
+              label="Travel Period"
+              className="col-span-2"
               validateStatus={errors.startDate || errors.endDate ? "error" : ""}
               help={errors.startDate?.message ?? errors.endDate?.message}
             >
               <RangePicker
                 style={{ width: "100%" }}
-                value={
-                  startDate && endDate
-                    ? [dayjs(startDate), dayjs(endDate)]
-                    : null
-                }
+                value={[
+                  startDate ? dayjs(startDate) : null,
+                  endDate ? dayjs(endDate) : null,
+                ]}
                 onChange={(dates) => {
                   setValue("startDate", dates?.[0]?.format("YYYY-MM-DD") ?? "");
                   setValue("endDate", dates?.[1]?.format("YYYY-MM-DD") ?? "");
@@ -441,7 +331,7 @@ export default function TravelOrderDetail() {
                 validateStatus={errors.totalHours ? "error" : ""}
                 help={
                   errors.totalHours?.message ??
-                  "Enter the total hours for this travel (e.g. 4, 1.5 for 1 hr 30 min)."
+                  "Enter total hours for this travel (e.g. 4, 1.5 for 1 hr 30 min)."
                 }
               >
                 <Controller
@@ -476,7 +366,7 @@ export default function TravelOrderDetail() {
                 name="destination"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} placeholder="City, Province or Address" />
+                  <Input {...field} placeholder="e.g. Makati City" />
                 )}
               />
             </Form.Item>
@@ -492,8 +382,8 @@ export default function TravelOrderDetail() {
                 render={({ field }) => (
                   <Select
                     {...field}
-                    placeholder="Select classification"
                     options={TRAVEL_CLASSIFICATION_OPTIONS}
+                    placeholder="Select"
                     value={field.value || undefined}
                   />
                 )}
@@ -513,42 +403,90 @@ export default function TravelOrderDetail() {
               render={({ field }) => (
                 <TextArea
                   {...field}
-                  rows={3}
-                  placeholder="Describe the purpose of this official business"
-                />
-              )}
-            />
-          </Form.Item>
-
-          {isEdit && selected && (
-            <Form.Item label={TRAVEL_ORDER_LABEL.STATUS}>
-              <Select
-                disabled
-                value={selected.approvalStatus}
-                options={APPROVAL_STATUS_OPTIONS}
-              />
-            </Form.Item>
-          )}
-
-          <Form.Item
-            label={TRAVEL_ORDER_LABEL.REMARKS}
-            validateStatus={errors.applicationRemarks ? "error" : ""}
-            help={errors.applicationRemarks?.message}
-          >
-            <Controller
-              name="applicationRemarks"
-              control={control}
-              render={({ field }) => (
-                <TextArea
-                  {...field}
                   rows={2}
-                  placeholder="Additional notes or instructions"
+                  placeholder="State the purpose of travel"
                 />
               )}
             />
           </Form.Item>
 
-          <div className="form-action-footer">
+          {/* Per-employee rows */}
+          <div className="rounded-lg border border-gray-200 overflow-hidden">
+            <div className="grid grid-cols-[1fr_1fr_36px] gap-2 px-3 py-2 bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
+              <span>Employee</span>
+              <span>Remarks</span>
+              <span />
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {fields.map((field, index) => {
+                const entryErrors = errors.entries?.[index];
+                return (
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-[1fr_1fr_36px] gap-2 px-3 py-2 items-start"
+                  >
+                    <Form.Item
+                      className="mb-0"
+                      validateStatus={entryErrors?.employeeId ? "error" : ""}
+                      help={entryErrors?.employeeId?.message}
+                    >
+                      <Controller
+                        name={`entries.${index}.employeeId`}
+                        control={control}
+                        render={({ field: f }) => (
+                          <Select
+                            {...f}
+                            showSearch
+                            placeholder="Select employee"
+                            options={employeeOptions}
+                            filterOption={filterOption}
+                            value={f.value || undefined}
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <Form.Item className="mb-0">
+                      <Controller
+                        name={`entries.${index}.applicationRemarks`}
+                        control={control}
+                        render={({ field: f }) => (
+                          <TextArea
+                            {...f}
+                            rows={1}
+                            placeholder="Remarks (optional)"
+                            style={{ resize: "none" }}
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
+                    <div className="pt-1">
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        disabled={fields.length === 1}
+                        onClick={() => remove(index)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <Button
+            type="dashed"
+            icon={<PlusOutlined />}
+            className="mt-3 w-full"
+            onClick={() => append(defaultEntry())}
+          >
+            Add Row
+          </Button>
+
+          <div className="form-action-footer mt-4">
             <Space className="form-action-footer-row">
               <Button
                 onClick={() =>
@@ -557,12 +495,8 @@ export default function TravelOrderDetail() {
               >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isCreating || isUpdating}
-              >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
+              <Button type="primary" htmlType="submit" loading={isPending}>
+                Submit{fields.length > 1 ? ` (${fields.length} entries)` : ""}
               </Button>
             </Space>
           </div>

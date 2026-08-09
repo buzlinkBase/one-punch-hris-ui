@@ -7,8 +7,17 @@ import type { UpdateLeaveApplication } from "../models/api/request/update-leave-
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "leaveapplications");
 
 export const leaveApplicationApi = {
-  async getAll(): Promise<LeaveApplicationResponse[]> {
-    return httpClient.getUnwrapped<LeaveApplicationResponse[]>(ENDPOINT);
+  async getAll(params?: {
+    from?: string;
+    to?: string;
+  }): Promise<LeaveApplicationResponse[]> {
+    const qs = new URLSearchParams();
+    if (params?.from) qs.set("from", params.from);
+    if (params?.to) qs.set("to", params.to);
+    const query = qs.toString();
+    return httpClient.getUnwrapped<LeaveApplicationResponse[]>(
+      query ? `${ENDPOINT}?${query}` : ENDPOINT,
+    );
   },
 
   async getById(id: string): Promise<LeaveApplicationResponse> {
@@ -21,10 +30,39 @@ export const leaveApplicationApi = {
     return httpClient.postUnwrapped<LeaveApplicationResponse>(ENDPOINT, data);
   },
 
+  createBatch(
+    data: CreateLeaveApplication[],
+  ): Promise<LeaveApplicationResponse[]> {
+    return httpClient.postUnwrapped<LeaveApplicationResponse[]>(
+      `${ENDPOINT}/batch`,
+      data,
+    );
+  },
+
   update(data: UpdateLeaveApplication): Promise<LeaveApplicationResponse> {
-    return httpClient.put<LeaveApplicationResponse>(
+    return httpClient.putUnwrapped<LeaveApplicationResponse>(
       `${ENDPOINT}/${data.id}`,
       data,
+    );
+  },
+
+  changeStatus(
+    record: LeaveApplicationResponse,
+    status: string,
+  ): Promise<LeaveApplicationResponse> {
+    return httpClient.putUnwrapped<LeaveApplicationResponse>(
+      `${ENDPOINT}/${record.id}`,
+      {
+        id: record.id,
+        employeeId: record.employeeId,
+        leaveId: record.leaveId,
+        leaveDateFrom: record.leaveDateFrom,
+        leaveDateTo: record.leaveDateTo,
+        dayType: record.dayType,
+        payType: record.payType,
+        applicationRemarks: record.applicationRemarks,
+        approvalStatus: status,
+      },
     );
   },
 
