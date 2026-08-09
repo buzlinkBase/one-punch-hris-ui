@@ -6,6 +6,7 @@ export const leaveApplicationFormSchema = z.object({
   leaveDateFrom: z.string().min(1, "Start date is required"),
   leaveDateTo: z.string().min(1, "End date is required"),
   dayType: z.string().min(1, "Day type is required"),
+  payType: z.string().min(1, "Pay type is required"),
   applicationRemarks: z.string().optional(),
 });
 

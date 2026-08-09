@@ -1,5 +1,10 @@
 import { Table, Button, Space, Popconfirm, Tag } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { LeaveApplicationResponse } from "../../models/api/response/leave-application-response.model";
@@ -29,6 +34,8 @@ interface Props {
   leaveTypes: LeaveTypeResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  onApprove?: (record: LeaveApplicationResponse) => void;
+  onDecline?: (record: LeaveApplicationResponse) => void;
 }
 
 export default function LeaveApplicationTable({
@@ -37,6 +44,8 @@ export default function LeaveApplicationTable({
   leaveTypes,
   loading,
   onDelete,
+  onApprove,
+  onDecline,
 }: Props) {
   const navigate = useNavigate();
 
@@ -51,6 +60,7 @@ export default function LeaveApplicationTable({
     dateFrom: 120,
     dateTo: 120,
     dayType: 110,
+    payType: 120,
     status: 120,
   });
 
@@ -112,6 +122,22 @@ export default function LeaveApplicationTable({
       render: (val: string) => (val === "HalfDay" ? "Half Day" : "Whole Day"),
     },
     {
+      title: LEAVE_APPLICATION_LABEL.PAY_TYPE,
+      dataIndex: "payType",
+      key: "payType",
+      width: widths.payType,
+      onHeaderCell: () =>
+        ({
+          width: widths.payType,
+          onResize: (w: number) => handleResize("payType", w),
+        }) as object,
+      render: (val: string) => (
+        <Tag color={val === "WithoutPay" ? "red" : "green"}>
+          {val === "WithoutPay" ? "Without Pay" : "With Pay"}
+        </Tag>
+      ),
+    },
+    {
       title: LEAVE_APPLICATION_LABEL.STATUS,
       dataIndex: "approvalStatus",
       key: "status",
@@ -131,20 +157,46 @@ export default function LeaveApplicationTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 140,
       render: (_, record) => (
         <Space>
+          {onApprove && record.approvalStatus === "ForApproval" && (
+            <Popconfirm
+              title="Approve this leave application?"
+              onConfirm={() => onApprove(record)}
+              okText="Approve"
+              cancelText="Cancel"
+            >
+              <Button
+                type="text"
+                icon={<CheckOutlined />}
+                style={{ color: "#52c41a" }}
+              />
+            </Popconfirm>
+          )}
+          {onDecline && record.approvalStatus === "ForApproval" && (
+            <Popconfirm
+              title="Decline this leave application?"
+              onConfirm={() => onDecline(record)}
+              okText="Decline"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
+            >
+              <Button type="text" danger icon={<CloseOutlined />} />
+            </Popconfirm>
+          )}
           <Button
             type="text"
             icon={<EditOutlined />}
             onClick={() => navigate({ to: `/applications/leave/${record.id}` })}
           />
-          {onDelete && record.approvalStatus === "ForApproval" && (
+          {onDelete && (
             <Popconfirm
-              title="Cancel this leave application?"
+              title="Delete this leave application?"
               onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>

@@ -5,6 +5,7 @@ export const LEAVE_APPLICATION_LABEL = {
   DATE_FROM: "Date From",
   DATE_TO: "Date To",
   DAY_TYPE: "Day Type",
+  PAY_TYPE: "Pay Type",
   REMARKS: "Reason / Remarks",
   STATUS: "Status",
   REVIEWED_BY: "Reviewed By",

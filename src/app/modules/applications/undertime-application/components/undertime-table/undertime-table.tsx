@@ -1,5 +1,10 @@
 import { Table, Button, Space, Popconfirm, Tag } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { UndertimeApplicationResponse } from "../../models/api/response/undertime-application-response.model";
@@ -27,6 +32,8 @@ interface Props {
   employees: EmployeeFilterResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  onApprove?: (record: UndertimeApplicationResponse) => void;
+  onDecline?: (record: UndertimeApplicationResponse) => void;
 }
 
 export default function UndertimeTable({
@@ -34,6 +41,8 @@ export default function UndertimeTable({
   employees,
   loading,
   onDelete,
+  onApprove,
+  onDecline,
 }: Props) {
   const navigate = useNavigate();
   const empMap = new Map(employees.map((e) => [e.id, e.name ?? e.id]));
@@ -118,9 +127,34 @@ export default function UndertimeTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 140,
       render: (_, record) => (
         <Space>
+          {onApprove && record.approvalStatus === "ForApproval" && (
+            <Popconfirm
+              title="Approve this undertime application?"
+              onConfirm={() => onApprove(record)}
+              okText="Approve"
+              cancelText="Cancel"
+            >
+              <Button
+                type="text"
+                icon={<CheckOutlined />}
+                style={{ color: "#52c41a" }}
+              />
+            </Popconfirm>
+          )}
+          {onDecline && record.approvalStatus === "ForApproval" && (
+            <Popconfirm
+              title="Decline this undertime application?"
+              onConfirm={() => onDecline(record)}
+              okText="Decline"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
+            >
+              <Button type="text" danger icon={<CloseOutlined />} />
+            </Popconfirm>
+          )}
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -128,12 +162,13 @@ export default function UndertimeTable({
               navigate({ to: `/applications/undertime/${record.id}` })
             }
           />
-          {onDelete && record.approvalStatus === "ForApproval" && (
+          {onDelete && (
             <Popconfirm
-              title="Cancel this undertime application?"
+              title="Delete this undertime application?"
               onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>

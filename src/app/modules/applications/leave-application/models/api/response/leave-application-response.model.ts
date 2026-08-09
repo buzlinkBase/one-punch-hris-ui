@@ -5,8 +5,10 @@ export interface LeaveApplicationResponse {
   leaveDateFrom: string;
   leaveDateTo: string;
   dayType: string;
+  payType: string;
   applicationRemarks?: string;
   approvalStatus: string;
   reviewedBy?: number;
   reviewedOn?: string;
+  createdAt?: string;
 }

@@ -7,8 +7,17 @@ import type { UpdateOvertimeApplication } from "../models/api/request/update-ove
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "overtimeapplications");
 
 export const overtimeApplicationApi = {
-  async getAll(): Promise<OvertimeApplicationResponse[]> {
-    return httpClient.getUnwrapped<OvertimeApplicationResponse[]>(ENDPOINT);
+  async getAll(params?: {
+    from?: string;
+    to?: string;
+  }): Promise<OvertimeApplicationResponse[]> {
+    const qs = new URLSearchParams();
+    if (params?.from) qs.set("from", params.from);
+    if (params?.to) qs.set("to", params.to);
+    const query = qs.toString();
+    return httpClient.getUnwrapped<OvertimeApplicationResponse[]>(
+      query ? `${ENDPOINT}?${query}` : ENDPOINT,
+    );
   },
 
   async getById(id: string): Promise<OvertimeApplicationResponse> {
@@ -26,12 +35,41 @@ export const overtimeApplicationApi = {
     );
   },
 
+  createBatch(
+    data: CreateOvertimeApplication[],
+  ): Promise<OvertimeApplicationResponse[]> {
+    return httpClient.postUnwrapped<OvertimeApplicationResponse[]>(
+      `${ENDPOINT}/batch`,
+      data,
+    );
+  },
+
   update(
     data: UpdateOvertimeApplication,
   ): Promise<OvertimeApplicationResponse> {
-    return httpClient.put<OvertimeApplicationResponse>(
+    return httpClient.putUnwrapped<OvertimeApplicationResponse>(
       `${ENDPOINT}/${data.id}`,
       data,
+    );
+  },
+
+  changeStatus(
+    record: OvertimeApplicationResponse,
+    status: string,
+  ): Promise<OvertimeApplicationResponse> {
+    return httpClient.putUnwrapped<OvertimeApplicationResponse>(
+      `${ENDPOINT}/${record.id}`,
+      {
+        id: record.id,
+        employeeId: record.employeeId,
+        otDate: record.otDate,
+        startTime: record.startTime,
+        endTime: record.endTime,
+        manualOtMinutes: record.manualOtMinutes,
+        isManualEntry: record.isManualEntry,
+        remarks: record.remarks,
+        otStatus: status,
+      },
     );
   },
 

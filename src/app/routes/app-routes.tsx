@@ -745,6 +745,10 @@ const LeaveApplicationList = lazy(
   () =>
     import("@/app/modules/applications/leave-application/pages/leave-application-list"),
 );
+const LeaveApplicationBatch = lazy(
+  () =>
+    import("@/app/modules/applications/leave-application/pages/leave-application-batch"),
+);
 const LeaveApplicationDetail = lazy(
   () =>
     import("@/app/modules/applications/leave-application/pages/leave-application-detail"),
@@ -752,6 +756,10 @@ const LeaveApplicationDetail = lazy(
 const OvertimeApplicationList = lazy(
   () =>
     import("@/app/modules/applications/overtime-application/pages/overtime-application-list"),
+);
+const OvertimeApplicationBatch = lazy(
+  () =>
+    import("@/app/modules/applications/overtime-application/pages/overtime-application-batch"),
 );
 const OvertimeApplicationDetail = lazy(
   () =>
@@ -761,6 +769,10 @@ const TravelOrderList = lazy(
   () =>
     import("@/app/modules/applications/travel-order-application/pages/travel-order-list"),
 );
+const TravelOrderBatch = lazy(
+  () =>
+    import("@/app/modules/applications/travel-order-application/pages/travel-order-batch"),
+);
 const TravelOrderDetail = lazy(
   () =>
     import("@/app/modules/applications/travel-order-application/pages/travel-order-detail"),
@@ -768,6 +780,10 @@ const TravelOrderDetail = lazy(
 const UndertimeList = lazy(
   () =>
     import("@/app/modules/applications/undertime-application/pages/undertime-list"),
+);
+const UndertimeBatch = lazy(
+  () =>
+    import("@/app/modules/applications/undertime-application/pages/undertime-batch"),
 );
 const UndertimeDetail = lazy(
   () =>
@@ -796,7 +812,7 @@ const leaveApplicationIndexRoute = createRoute({
 const leaveApplicationCreateRoute = createRoute({
   getParentRoute: () => leaveApplicationRoute,
   path: "create",
-  component: withSuspense(LeaveApplicationDetail),
+  component: withSuspense(LeaveApplicationBatch),
 });
 
 const leaveApplicationDetailRoute = createRoute({
@@ -832,7 +848,7 @@ const overtimeApplicationIndexRoute = createRoute({
 const overtimeApplicationCreateRoute = createRoute({
   getParentRoute: () => overtimeApplicationRoute,
   path: "create",
-  component: withSuspense(OvertimeApplicationDetail),
+  component: withSuspense(OvertimeApplicationBatch),
 });
 
 const overtimeApplicationDetailRoute = createRoute({
@@ -850,7 +866,7 @@ const travelOrderIndexRoute = createRoute({
 const travelOrderCreateRoute = createRoute({
   getParentRoute: () => travelOrderRoute,
   path: "create",
-  component: withSuspense(TravelOrderDetail),
+  component: withSuspense(TravelOrderBatch),
 });
 
 const travelOrderDetailRoute = createRoute({
@@ -868,7 +884,7 @@ const undertimeIndexRoute = createRoute({
 const undertimeCreateRoute = createRoute({
   getParentRoute: () => undertimeRoute,
   path: "create",
-  component: withSuspense(UndertimeDetail),
+  component: withSuspense(UndertimeBatch),
 });
 
 const undertimeDetailRoute = createRoute({

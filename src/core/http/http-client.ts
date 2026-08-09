@@ -51,6 +51,16 @@ const httpClient = {
       .post<ApiResponse<T>>(endpoint, body, config)
       .then((r) => r.data.data);
   },
+
+  putUnwrapped<T>(
+    endpoint: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    return axiosInstance
+      .put<ApiResponse<T>>(endpoint, body, config)
+      .then((r) => r.data.data);
+  },
 };
 
 export default httpClient;

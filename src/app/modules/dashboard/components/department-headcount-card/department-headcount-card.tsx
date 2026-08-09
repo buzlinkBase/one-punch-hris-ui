@@ -24,25 +24,27 @@ export default function DepartmentHeadcountCard({
         <Skeleton active paragraph={{ rows: 5 }} />
       ) : (
         <div className="flex flex-col gap-3">
-          {data.map((dept) => (
-            <div key={dept.departmentId}>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm text-gray-700">
-                  {dept.departmentName}
-                </span>
-                <span className="text-sm font-medium text-gray-800">
-                  {dept.headcount}
-                </span>
+          {[...data]
+            .sort((a, b) => b.headcount - a.headcount)
+            .map((dept) => (
+              <div key={dept.departmentId}>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm text-gray-700">
+                    {dept.departmentName}
+                  </span>
+                  <span className="text-sm font-medium text-gray-800">
+                    {dept.headcount}
+                  </span>
+                </div>
+                <Progress
+                  percent={(dept.headcount / max) * 100}
+                  showInfo={false}
+                  strokeColor="#1DA081"
+                  trailColor="#eef7f4"
+                  size="small"
+                />
               </div>
-              <Progress
-                percent={(dept.headcount / max) * 100}
-                showInfo={false}
-                strokeColor="#1DA081"
-                trailColor="#eef7f4"
-                size="small"
-              />
-            </div>
-          ))}
+            ))}
         </div>
       )}
     </Card>
