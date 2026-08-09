@@ -21,7 +21,7 @@ import { useDepartments } from "@/app/modules/setup/department/hooks/use-departm
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
 
-const ALLOWED_EXTENSIONS = [".dat", ".csv", ".txt", ".xls", ".xlsx"];
+const ALLOWED_EXTENSIONS = [".dat"];
 
 const filterByLabel = (
   input: string,
@@ -71,7 +71,7 @@ export default function UploadAttendanceList() {
     const ext = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
       messageApi.error(
-        `Unsupported file type "${ext}". Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`,
+        `Unsupported file type "${ext}". Only .dat files are accepted.`,
       );
       return Upload.LIST_IGNORE;
     }
@@ -185,7 +185,7 @@ export default function UploadAttendanceList() {
                 Click or drag a file here to select
               </p>
               <p className="ant-upload-hint">
-                Supported formats: .dat, .csv, .txt, .xls, .xlsx
+                Supported format: .dat (biometric device export)
               </p>
             </Dragger>
 
@@ -233,19 +233,10 @@ export default function UploadAttendanceList() {
               showIcon
               description={
                 <>
-                  <Text strong>Supported file formats</Text>
+                  <Text strong>Accepted file format</Text>
                   <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
                     <li>
                       <Text strong>.dat</Text> — biometric device binary export
-                    </li>
-                    <li>
-                      <Text strong>.csv</Text> — comma-separated values
-                    </li>
-                    <li>
-                      <Text strong>.txt</Text> — space/tab-delimited text log
-                    </li>
-                    <li>
-                      <Text strong>.xls / .xlsx</Text> — Excel spreadsheet
                     </li>
                   </ul>
                 </>

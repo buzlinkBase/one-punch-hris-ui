@@ -2,13 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { leaveApplicationApi } from "../services/leave-application.api";
 import type { CreateLeaveApplication } from "../models/api/request/create-leave-application.model";
 import type { UpdateLeaveApplication } from "../models/api/request/update-leave-application.model";
+import type { LeaveApplicationResponse } from "../models/api/response/leave-application-response.model";
 
 const QUERY_KEY = ["leave-applications"];
 
-export function useLeaveApplications() {
+export function useLeaveApplications(params?: { from?: string; to?: string }) {
   return useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: () => leaveApplicationApi.getAll(),
+    queryKey: [...QUERY_KEY, params],
+    queryFn: () => leaveApplicationApi.getAll(params),
   });
 }
 
@@ -48,6 +49,34 @@ export function useDeleteLeaveApplication() {
   return useMutation({
     mutationFn: (id: string) => leaveApplicationApi.remove(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useCreateLeaveApplicationBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateLeaveApplication[]) =>
+      leaveApplicationApi.createBatch(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useChangeLeaveApplicationStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      record,
+      status,
+    }: {
+      record: LeaveApplicationResponse;
+      status: string;
+    }) => leaveApplicationApi.changeStatus(record, status),
+    onSuccess: (updated) => {
+      queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });

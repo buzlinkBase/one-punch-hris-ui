@@ -1,5 +1,10 @@
 import { Table, Button, Space, Popconfirm, Tag } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { OvertimeApplicationResponse } from "../../models/api/response/overtime-application-response.model";
@@ -28,6 +33,8 @@ interface Props {
   employees: EmployeeFilterResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  onApprove?: (record: OvertimeApplicationResponse) => void;
+  onDecline?: (record: OvertimeApplicationResponse) => void;
 }
 
 export default function OvertimeApplicationTable({
@@ -35,6 +42,8 @@ export default function OvertimeApplicationTable({
   employees,
   loading,
   onDelete,
+  onApprove,
+  onDecline,
 }: Props) {
   const navigate = useNavigate();
 
@@ -98,13 +107,13 @@ export default function OvertimeApplicationTable({
     },
     {
       title: OVERTIME_APPLICATION_LABEL.OT_MINUTES,
-      dataIndex: "otMinutes",
-      key: "otHours",
-      width: widths.otHours,
+      dataIndex: "manualOTMinutes",
+      key: "manualOTMinutes",
+      width: widths.manualOTMinutes,
       onHeaderCell: () =>
         ({
-          width: widths.otHours,
-          onResize: (w: number) => handleResize("otHours", w),
+          width: widths.manualOTMinutes,
+          onResize: (w: number) => handleResize("manualOTMinutes", w),
         }) as object,
       render: (val: number) =>
         val != null ? `${(val / 60).toFixed(2)} hrs` : "-",
@@ -129,9 +138,34 @@ export default function OvertimeApplicationTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 140,
       render: (_, record) => (
         <Space>
+          {onApprove && record.otStatus === "ForApproval" && (
+            <Popconfirm
+              title="Approve this overtime request?"
+              onConfirm={() => onApprove(record)}
+              okText="Approve"
+              cancelText="Cancel"
+            >
+              <Button
+                type="text"
+                icon={<CheckOutlined />}
+                style={{ color: "#52c41a" }}
+              />
+            </Popconfirm>
+          )}
+          {onDecline && record.otStatus === "ForApproval" && (
+            <Popconfirm
+              title="Decline this overtime request?"
+              onConfirm={() => onDecline(record)}
+              okText="Decline"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
+            >
+              <Button type="text" danger icon={<CloseOutlined />} />
+            </Popconfirm>
+          )}
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -139,12 +173,13 @@ export default function OvertimeApplicationTable({
               navigate({ to: `/applications/overtime/${record.id}` })
             }
           />
-          {onDelete && record.otStatus === "ForApproval" && (
+          {onDelete && (
             <Popconfirm
-              title="Cancel this overtime application?"
+              title="Delete this overtime application?"
               onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>

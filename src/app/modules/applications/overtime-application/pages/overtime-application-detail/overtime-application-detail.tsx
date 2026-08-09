@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import {
   Form,
   Input,
+  InputNumber,
   Button,
   Select,
   DatePicker,
@@ -26,7 +27,7 @@ import {
   useCreateOvertimeApplication,
   useUpdateOvertimeApplication,
 } from "../../hooks/use-overtime-application-queries";
-import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import { OVERTIME_APPLICATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
@@ -47,6 +48,11 @@ const STATUS_COLOR: Record<string, string> = {
   Cancelled: "default",
 };
 
+const MODE_OPTIONS = [
+  { label: "Time Range", value: "datetime" },
+  { label: "Hours", value: "hours" },
+];
+
 const filterOption = (
   input: string,
   option?: { label?: string | number | boolean },
@@ -55,9 +61,27 @@ const filterOption = (
     .toLowerCase()
     .includes(input.toLowerCase());
 
-function buildDateTime(date: string, time: string): string {
+function buildStartDateTime(date: string, time: string): string {
   if (!date || !time) return "";
   return dayjs(`${date}T${time}`).toISOString();
+}
+
+function buildEndDateTime(
+  date: string,
+  startTime: string,
+  endTime: string,
+): string {
+  if (!date || !endTime) return "";
+  const end = dayjs(`${date}T${endTime}`);
+  return (endTime <= startTime ? end.add(1, "day") : end).toISOString();
+}
+
+function isCrossMidnight(startTime: string, endTime: string): boolean {
+  return !!startTime && !!endTime && endTime <= startTime;
+}
+
+function detectMode(isManualEntry?: boolean): "datetime" | "hours" {
+  return isManualEntry ? "hours" : "datetime";
 }
 
 export default function OvertimeApplicationDetail() {
@@ -70,11 +94,11 @@ export default function OvertimeApplicationDetail() {
     useCreateOvertimeApplication();
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateOvertimeApplication();
-  const { data: employees = [] } = useEmployeeFilter();
+  const { data: rawEmployees = [] } = useEmployees();
 
-  const employeeOptions = employees.map((e) => ({
+  const employeeOptions = rawEmployees.map((e) => ({
     value: e.id,
-    label: e.name ?? e.id,
+    label: e.fullName ?? `${e.firstName} ${e.lastName}`,
   }));
 
   const {
@@ -87,43 +111,74 @@ export default function OvertimeApplicationDetail() {
   } = useForm<OvertimeApplicationFormValues>({
     resolver: zodResolver(overtimeApplicationFormSchema),
     defaultValues: {
+      mode: "hours",
       employeeId: "",
       otDate: "",
       startTime: "",
       endTime: "",
+      manualOTMinutes: undefined,
       remarks: "",
     },
   });
 
   // eslint-disable-next-line react-hooks/incompatible-library
+  const mode = watch("mode");
   const otDate = watch("otDate");
   const startTime = watch("startTime");
   const endTime = watch("endTime");
 
   useEffect(() => {
     if (isEdit && selected) {
+      const editMode = detectMode(selected.isManualEntry);
       reset({
+        mode: editMode,
         employeeId: selected.employeeId,
-        otDate: selected.otDate,
-        startTime: selected.startTime
-          ? dayjs(selected.startTime).format("HH:mm:ss")
-          : "",
-        endTime: selected.endTime
-          ? dayjs(selected.endTime).format("HH:mm:ss")
-          : "",
+        otDate: dayjs(selected.otDate).format("YYYY-MM-DD"),
+        startTime:
+          editMode === "datetime" && selected.startTime
+            ? dayjs(selected.startTime).format("HH:mm:ss")
+            : "",
+        endTime:
+          editMode === "datetime" && selected.endTime
+            ? dayjs(selected.endTime).format("HH:mm:ss")
+            : "",
+        manualOTMinutes:
+          editMode === "hours" && selected.manualOtMinutes
+            ? selected.manualOtMinutes / 60
+            : undefined,
         remarks: selected.remarks ?? "",
       });
     }
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: OvertimeApplicationFormValues) => {
-    const payload = {
-      employeeId: values.employeeId,
-      otDate: values.otDate,
-      startTime: buildDateTime(values.otDate, values.startTime),
-      endTime: buildDateTime(values.otDate, values.endTime),
-      remarks: values.remarks,
-    };
+    const payload =
+      values.mode === "datetime"
+        ? {
+            employeeId: values.employeeId,
+            otDate: values.otDate,
+            startTime: buildStartDateTime(
+              values.otDate,
+              values.startTime ?? "",
+            ),
+            endTime: buildEndDateTime(
+              values.otDate,
+              values.startTime ?? "",
+              values.endTime ?? "",
+            ),
+            manualOtMinutes: 0,
+            isManualEntry: false,
+            remarks: values.remarks,
+          }
+        : {
+            employeeId: values.employeeId,
+            otDate: values.otDate,
+            startTime: null,
+            endTime: null,
+            manualOtMinutes: Math.round((values.manualOTMinutes ?? 0) * 60),
+            isManualEntry: true,
+            remarks: values.remarks,
+          };
 
     if (isEdit && id) {
       await update({
@@ -180,8 +235,8 @@ export default function OvertimeApplicationDetail() {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={OVERTIME_APPLICATION_LABEL.OT_MINUTES}>
-                {selected.otMinutes != null
-                  ? `${(selected.otMinutes / 60).toFixed(2)} hrs`
+                {selected.manualOtMinutes != null
+                  ? `${(selected.manualOtMinutes / 60).toFixed(2)} hrs`
                   : "-"}
               </Descriptions.Item>
             </Descriptions>
@@ -189,7 +244,7 @@ export default function OvertimeApplicationDetail() {
         )}
 
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-2 gap-x-6">
+          <div className="grid grid-cols-3 gap-x-6">
             <Form.Item
               label={OVERTIME_APPLICATION_LABEL.EMPLOYEE}
               validateStatus={errors.employeeId ? "error" : ""}
@@ -224,41 +279,98 @@ export default function OvertimeApplicationDetail() {
                 }
               />
             </Form.Item>
-          </div>
 
-          <div className="grid grid-cols-2 gap-x-6">
-            <Form.Item
-              label={OVERTIME_APPLICATION_LABEL.START_TIME}
-              validateStatus={errors.startTime ? "error" : ""}
-              help={errors.startTime?.message}
-            >
-              <TimePicker
-                style={{ width: "100%" }}
-                use12Hours
-                format="hh:mm A"
-                value={startTime ? dayjs(startTime, "HH:mm:ss") : null}
-                onChange={(time) =>
-                  setValue("startTime", time?.format("HH:mm:ss") ?? "")
-                }
-              />
-            </Form.Item>
-
-            <Form.Item
-              label={OVERTIME_APPLICATION_LABEL.END_TIME}
-              validateStatus={errors.endTime ? "error" : ""}
-              help={errors.endTime?.message}
-            >
-              <TimePicker
-                style={{ width: "100%" }}
-                use12Hours
-                format="hh:mm A"
-                value={endTime ? dayjs(endTime, "HH:mm:ss") : null}
-                onChange={(time) =>
-                  setValue("endTime", time?.format("HH:mm:ss") ?? "")
-                }
+            <Form.Item label="Entry Mode">
+              <Controller
+                name="mode"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={MODE_OPTIONS}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      setValue("startTime", "");
+                      setValue("endTime", "");
+                      setValue("manualOTMinutes", undefined);
+                    }}
+                  />
+                )}
               />
             </Form.Item>
           </div>
+
+          {mode === "datetime" ? (
+            <div className="grid grid-cols-2 gap-x-6">
+              <Form.Item
+                label={OVERTIME_APPLICATION_LABEL.START_TIME}
+                validateStatus={errors.startTime ? "error" : ""}
+                help={errors.startTime?.message}
+              >
+                <TimePicker
+                  style={{ width: "100%" }}
+                  use12Hours
+                  format="hh:mm A"
+                  value={startTime ? dayjs(startTime, "HH:mm:ss") : null}
+                  onChange={(time) =>
+                    setValue("startTime", time?.format("HH:mm:ss") ?? "")
+                  }
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={
+                  <span className="flex items-center gap-2">
+                    {OVERTIME_APPLICATION_LABEL.END_TIME}
+                    {isCrossMidnight(startTime ?? "", endTime ?? "") && (
+                      <Tag color="blue" className="text-[11px] leading-none">
+                        +1 day
+                      </Tag>
+                    )}
+                  </span>
+                }
+                validateStatus={errors.endTime ? "error" : ""}
+                help={errors.endTime?.message}
+              >
+                <TimePicker
+                  style={{ width: "100%" }}
+                  use12Hours
+                  format="hh:mm A"
+                  value={endTime ? dayjs(endTime, "HH:mm:ss") : null}
+                  onChange={(time) =>
+                    setValue("endTime", time?.format("HH:mm:ss") ?? "")
+                  }
+                />
+              </Form.Item>
+            </div>
+          ) : (
+            <Form.Item
+              label="OT Hours"
+              validateStatus={errors.manualOTMinutes ? "error" : ""}
+              help={
+                errors.manualOTMinutes?.message ??
+                "Enter the total approved OT minutes (e.g. 120 for 2 hours, 90 for 1 hr 30 min)."
+              }
+            >
+              <Controller
+                name="manualOTMinutes"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    style={{ width: 200 }}
+                    min={0.25}
+                    max={24}
+                    step={0.25}
+                    precision={2}
+                    addonAfter="hrs"
+                    placeholder="e.g. 2"
+                    onChange={(val) => field.onChange(val ?? undefined)}
+                  />
+                )}
+              />
+            </Form.Item>
+          )}
 
           {isEdit && selected && (
             <Form.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>

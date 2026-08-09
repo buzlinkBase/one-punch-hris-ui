@@ -6,9 +6,11 @@ export interface OvertimeApplicationResponse {
   endTime: string;
   remarks: string;
   otStatus: string;
-  otMinutes: number;
+  isManualEntry: boolean;
+  manualOtMinutes: number;
   otBeforeOverride: number;
   flexiEndTime: boolean;
   paidByNetDutyTime: boolean;
   overTimeThreshold: number;
+  createdAt?: string;
 }

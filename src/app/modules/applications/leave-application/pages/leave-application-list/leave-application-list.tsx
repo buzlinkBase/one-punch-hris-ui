@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Button, Select, Space, Tabs, Typography } from "antd";
+import { Button, DatePicker, Select, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import {
   useLeaveApplications,
   useDeleteLeaveApplication,
@@ -12,18 +13,11 @@ import LeaveApplicationTable from "../../components/leave-application-table";
 import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
-
-const STATUS_TABS = [
-  { key: "all", label: "All" },
-  { key: "ForApproval", label: "For Approval" },
-  { key: "Approved", label: "Approved" },
-  { key: "Declined", label: "Declined" },
-  { key: "Cancelled", label: "Cancelled" },
-];
+const { RangePicker } = DatePicker;
 
 export default function LeaveApplicationList() {
   const navigate = useNavigate();
-  const [statusTab, setStatusTab] = useState("all");
+  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [employeeFilter, setEmployeeFilter] = useState<string | undefined>();
 
   const {
@@ -31,7 +25,9 @@ export default function LeaveApplicationList() {
     isLoading,
     isFetching,
     refetch,
-  } = useLeaveApplications();
+  } = useLeaveApplications(
+    dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
+  );
   const { mutate: remove } = useDeleteLeaveApplication();
   const { data: leaveTypes = [] } = useLeaveTypes();
   const { data: employees = [] } = useEmployeeFilter();
@@ -42,30 +38,9 @@ export default function LeaveApplicationList() {
   }));
 
   const filtered = useMemo(() => {
-    let list = applications;
-    if (statusTab !== "all")
-      list = list.filter((a) => a.approvalStatus === statusTab);
-    if (employeeFilter)
-      list = list.filter((a) => a.employeeId === employeeFilter);
-    return list;
-  }, [applications, statusTab, employeeFilter]);
-
-  const tabItems = STATUS_TABS.map((t) => ({
-    key: t.key,
-    label:
-      t.key === "all"
-        ? `All (${applications.length})`
-        : `${t.label} (${applications.filter((a) => a.approvalStatus === t.key).length})`,
-    children: (
-      <LeaveApplicationTable
-        data={filtered}
-        employees={employees}
-        leaveTypes={leaveTypes}
-        loading={isLoading || isFetching}
-        onDelete={remove}
-      />
-    ),
-  }));
+    if (!employeeFilter) return applications;
+    return applications.filter((a) => a.employeeId === employeeFilter);
+  }, [applications, employeeFilter]);
 
   return (
     <div className="content-page">
@@ -96,7 +71,23 @@ export default function LeaveApplicationList() {
         </div>
       </div>
 
-      <div className="mb-3" style={{ maxWidth: 280 }}>
+      <div className="mb-3 flex items-center gap-3 flex-wrap">
+        <RangePicker
+          value={[
+            dateRange ? dayjs(dateRange[0]) : null,
+            dateRange ? dayjs(dateRange[1]) : null,
+          ]}
+          onChange={(dates) =>
+            setDateRange(
+              dates
+                ? [
+                    dates[0]?.format("YYYY-MM-DD") ?? "",
+                    dates[1]?.format("YYYY-MM-DD") ?? "",
+                  ]
+                : null,
+            )
+          }
+        />
         <Select
           allowClear
           showSearch
@@ -104,7 +95,7 @@ export default function LeaveApplicationList() {
           options={employeeOptions}
           value={employeeFilter}
           onChange={setEmployeeFilter}
-          style={{ width: "100%" }}
+          style={{ width: 240 }}
           filterOption={(input, opt) =>
             String(opt?.label ?? "")
               .toLowerCase()
@@ -113,11 +104,12 @@ export default function LeaveApplicationList() {
         />
       </div>
 
-      <Tabs
-        activeKey={statusTab}
-        onChange={setStatusTab}
-        items={tabItems}
-        size="small"
+      <LeaveApplicationTable
+        data={filtered}
+        employees={employees}
+        leaveTypes={leaveTypes}
+        loading={isLoading || isFetching}
+        onDelete={remove}
       />
     </div>
   );

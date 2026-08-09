@@ -3,7 +3,10 @@ export interface TravelOrderApplicationResponse {
   employeeId: string;
   startDate: string;
   endDate: string;
-  travelDayType: string;
+  isManualEntry?: boolean;
+  startTime?: string | null;
+  endTime?: string | null;
+  totalMinutes?: number | null;
   destination: string;
   classification: string;
   purpose: string;
@@ -13,4 +16,5 @@ export interface TravelOrderApplicationResponse {
   days: number;
   applicationDate: string;
   reference?: string;
+  createdAt?: string;
 }

@@ -18,21 +18,21 @@ const SERIES = [
 
 const SVG_W = 520;
 const SVG_H = 170;
-const PL = 40;
-const PR = 8;
-const PT = 8;
-const PB = 26;
+const PL = 36;
+const PR = 12;
+const PT = 10;
+const PB = 28;
 const IW = SVG_W - PL - PR;
 const IH = SVG_H - PT - PB;
 
 function niceMax(max: number): number {
-  if (max <= 0) return 50;
-  const raw = max * 1.1;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(raw)));
-  for (const factor of [1, 2, 2.5, 5, 10]) {
-    if (factor * magnitude >= raw) return factor * magnitude;
+  if (max <= 0) return 10;
+  const raw = max * 1.2;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const f of [1, 2, 2.5, 5, 10]) {
+    if (f * mag >= raw) return f * mag;
   }
-  return Math.ceil(raw / 50) * 50;
+  return Math.ceil(raw / 10) * 10;
 }
 
 export default function AttendanceOverviewCard({
@@ -41,18 +41,22 @@ export default function AttendanceOverviewCard({
 }: AttendanceOverviewCardProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const rawMax = Math.max(1, ...data.map((d) => d.present + d.late + d.absent));
-  const yMax = niceMax(rawMax);
-  const yTicks = [0, yMax * 0.25, yMax * 0.5, yMax * 0.75, yMax].map(
-    Math.round,
+  const rawMax = Math.max(
+    1,
+    ...SERIES.flatMap((s) => data.map((d) => d[s.key])),
   );
+  const yMax = niceMax(rawMax);
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * yMax));
 
-  const n = data.length || 1;
-  const groupW = IW / n;
-  const barW = Math.min(groupW * 0.65, 48);
-  const barPad = (groupW - barW) / 2;
-
-  const scaleY = (v: number) => IH - (v / yMax) * IH;
+  const n = Math.max(data.length, 1);
+  // Points spread edge-to-edge like a line chart
+  const xOf = (i: number) => (n === 1 ? IW / 2 : (i / (n - 1)) * IW);
+  const yOf = (v: number) => IH - (v / yMax) * IH;
+  // Zone width = spacing between consecutive points
+  const zoneW = n > 1 ? IW / (n - 1) : IW;
+  // Stick gap within a group — tighten as dates crowd
+  const stickGap = Math.min(13, zoneW / (SERIES.length + 1));
+  const halfSpan = ((SERIES.length - 1) * stickGap) / 2;
 
   const avgRate =
     data.length > 0
@@ -81,13 +85,29 @@ export default function AttendanceOverviewCard({
             </span>
           </Text>
         </div>
-        <div className="flex gap-3 shrink-0">
+        <div className="flex gap-4 shrink-0">
           {SERIES.map((s) => (
             <div key={s.key} className="flex items-center gap-1.5">
-              <span
-                className="w-2.5 h-2.5 rounded-sm"
-                style={{ background: s.color, display: "inline-block" }}
-              />
+              {/* Lollipop mini-icon in legend */}
+              <svg width={12} height={14} style={{ display: "block" }}>
+                <line
+                  x1={6}
+                  y1={13}
+                  x2={6}
+                  y2={5}
+                  stroke={s.color}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx={6}
+                  cy={4}
+                  r={3}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth={1.5}
+                />
+              </svg>
               <span className="text-xs text-gray-500">{s.label}</span>
             </div>
           ))}
@@ -104,8 +124,9 @@ export default function AttendanceOverviewCard({
             style={{ display: "block", overflow: "visible" }}
           >
             <g transform={`translate(${PL},${PT})`}>
+              {/* Grid lines + Y labels */}
               {yTicks.map((tick) => {
-                const y = scaleY(tick);
+                const y = yOf(tick);
                 return (
                   <g key={tick}>
                     <line
@@ -113,16 +134,16 @@ export default function AttendanceOverviewCard({
                       y1={y}
                       x2={IW}
                       y2={y}
-                      stroke={tick === 0 ? "#e5e7eb" : "#f3f4f6"}
+                      stroke={tick === 0 ? "#e2e8f0" : "#f1f5f9"}
                       strokeWidth={1}
                     />
                     <text
-                      x={-6}
+                      x={-5}
                       y={y}
                       textAnchor="end"
                       dominantBaseline="middle"
                       fontSize={9}
-                      fill="#9ca3af"
+                      fill="#c0c0c0"
                     >
                       {tick}
                     </text>
@@ -130,83 +151,97 @@ export default function AttendanceOverviewCard({
                 );
               })}
 
+              {/* Per-date lollipop groups */}
               {data.map((point, i) => {
-                const gx = i * groupW;
-                const bx = gx + barPad;
+                const cx = xOf(i);
                 const isHovered = hoveredIdx === i;
-                const total = point.present + point.late + point.absent;
-                const topY = scaleY(total);
-
-                let cumY = IH;
-                const segments = SERIES.map((s) => {
-                  const h = yMax > 0 ? (point[s.key] / yMax) * IH : 0;
-                  cumY -= h;
-                  const segY = cumY;
-                  return (
-                    <rect
-                      key={s.key}
-                      x={bx}
-                      y={segY}
-                      width={barW}
-                      height={Math.max(0, h)}
-                      fill={s.color}
-                      opacity={isHovered ? 1 : 0.82}
-                    />
-                  );
-                });
 
                 return (
-                  <g
-                    key={point.date}
-                    onMouseEnter={() => setHoveredIdx(i)}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                    style={{ cursor: "default" }}
-                  >
+                  <g key={point.date}>
+                    {/* Hover column highlight */}
                     {isHovered && (
                       <rect
-                        x={gx + 1}
+                        x={cx - zoneW / 2 + 2}
                         y={0}
-                        width={groupW - 2}
+                        width={zoneW - 4}
                         height={IH}
-                        fill="#f9fafb"
+                        fill="#f8fafc"
                         rx={4}
                       />
                     )}
-                    {segments}
-                    {isHovered && total > 0 && (
-                      <text
-                        x={bx + barW / 2}
-                        y={topY - 5}
-                        textAnchor="middle"
-                        fontSize={9}
-                        fill="#374151"
-                        fontWeight="bold"
-                      >
-                        {total}
-                      </text>
-                    )}
+
+                    {/* Three lollipops */}
+                    {SERIES.map((s, si) => {
+                      const sx = cx - halfSpan + si * stickGap;
+                      const sy = yOf(point[s.key]);
+                      const h = IH - sy;
+
+                      return (
+                        <g key={s.key}>
+                          {/* Stem */}
+                          <line
+                            x1={sx}
+                            y1={IH}
+                            x2={sx}
+                            y2={sy + (isHovered ? 5 : 3.5)}
+                            stroke={s.color}
+                            strokeWidth={isHovered ? 2 : 1.5}
+                            strokeLinecap="round"
+                            opacity={h <= 0 ? 0 : isHovered ? 1 : 0.7}
+                          />
+                          {/* Head — open circle at rest, filled on hover */}
+                          {h > 0 && (
+                            <circle
+                              cx={sx}
+                              cy={sy}
+                              r={isHovered ? 5 : 3.5}
+                              fill={isHovered ? s.color : "#fff"}
+                              stroke={s.color}
+                              strokeWidth={isHovered ? 0 : 2}
+                              opacity={isHovered ? 1 : 0.85}
+                            />
+                          )}
+                        </g>
+                      );
+                    })}
+
+                    {/* X-axis date label */}
                     <text
-                      x={gx + groupW / 2}
-                      y={IH + 16}
+                      x={cx}
+                      y={IH + 17}
                       textAnchor="middle"
                       fontSize={10}
-                      fill={isHovered ? "#374151" : "#9ca3af"}
+                      fill={isHovered ? "#374151" : "#c0c0c0"}
                       fontWeight={isHovered ? "600" : "400"}
                     >
                       {point.date}
                     </text>
+
+                    {/* Invisible hit zone */}
+                    <rect
+                      x={cx - zoneW / 2}
+                      y={0}
+                      width={zoneW}
+                      height={IH}
+                      fill="transparent"
+                      style={{ cursor: "default" }}
+                      onMouseEnter={() => setHoveredIdx(i)}
+                      onMouseLeave={() => setHoveredIdx(null)}
+                    />
                   </g>
                 );
               })}
             </g>
           </svg>
 
+          {/* Tooltip strip */}
           <div
-            className="mt-2 rounded-lg px-3 py-2 flex items-center gap-4 text-xs transition-colors"
+            className="mt-2 rounded-lg px-3 py-2 flex items-center gap-4 text-xs"
             style={{
-              background: hovered ? "#f9fafb" : "transparent",
+              background: hovered ? "#fafafa" : "transparent",
               border: `1px solid ${hovered ? "#f0f0f0" : "transparent"}`,
               minHeight: 34,
+              transition: "background 0.15s, border-color 0.15s",
             }}
           >
             {hovered ? (
@@ -217,25 +252,25 @@ export default function AttendanceOverviewCard({
                 {SERIES.map((s) => (
                   <span key={s.key} className="flex items-center gap-1">
                     <span
-                      className="w-2 h-2 rounded-sm"
-                      style={{ background: s.color, display: "inline-block" }}
+                      className="inline-block w-2 h-2 rounded-full"
+                      style={{ background: s.color }}
                     />
-                    <span className="text-gray-500">{s.label}:</span>
-                    <span className="font-semibold text-gray-800">
+                    <span className="text-gray-400">{s.label}</span>
+                    <span className="font-semibold text-gray-800 tabular-nums">
                       {hovered[s.key]}
                     </span>
                   </span>
                 ))}
-                <span className="ml-auto text-gray-400">
-                  Total:{" "}
+                <span className="ml-auto text-gray-400 tabular-nums">
+                  Total{" "}
                   <span className="font-semibold text-gray-700">
                     {hovered.present + hovered.late + hovered.absent}
                   </span>
                 </span>
               </>
             ) : (
-              <span className="text-gray-400 text-[11px]">
-                Hover over a bar to see breakdown
+              <span className="text-gray-300 text-[11px]">
+                Hover a date to see breakdown
               </span>
             )}
           </div>

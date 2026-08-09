@@ -6,14 +6,14 @@ const { Title } = Typography;
 
 const TAB_ITEMS = [
   {
-    key: "batch",
-    label: "Posted DTR",
-    children: <DtrBatchTab />,
-  },
-  {
     key: "generate",
     label: "Generate",
     children: <DtrGenerateTab />,
+  },
+  {
+    key: "batch",
+    label: "Posted DTR",
+    children: <DtrBatchTab />,
   },
 ];
 

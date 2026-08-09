@@ -1,5 +1,10 @@
 import { Table, Button, Space, Popconfirm, Tag } from "antd";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  CheckOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { TravelOrderApplicationResponse } from "../../models/api/response/travel-order-application-response.model";
@@ -34,6 +39,8 @@ interface Props {
   employees: EmployeeFilterResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  onApprove?: (record: TravelOrderApplicationResponse) => void;
+  onDecline?: (record: TravelOrderApplicationResponse) => void;
 }
 
 export default function TravelOrderTable({
@@ -41,6 +48,8 @@ export default function TravelOrderTable({
   employees,
   loading,
   onDelete,
+  onApprove,
+  onDecline,
 }: Props) {
   const navigate = useNavigate();
 
@@ -91,8 +100,7 @@ export default function TravelOrderTable({
         }) as object,
     },
     {
-      title: TRAVEL_ORDER_LABEL.DAYS,
-      dataIndex: "days",
+      title: "Duration",
       key: "days",
       width: widths.days,
       onHeaderCell: () =>
@@ -100,8 +108,12 @@ export default function TravelOrderTable({
           width: widths.days,
           onResize: (w: number) => handleResize("days", w),
         }) as object,
-      render: (val: number) =>
-        val != null ? `${val} day${val !== 1 ? "s" : ""}` : "-",
+      render: (_, r) => {
+        if (r.isManualEntry && r.totalMinutes != null) {
+          return `${(r.totalMinutes / 60).toFixed(2)} hrs`;
+        }
+        return r.days != null ? `${r.days} day${r.days !== 1 ? "s" : ""}` : "-";
+      },
     },
     {
       title: TRAVEL_ORDER_LABEL.DESTINATION,
@@ -148,9 +160,34 @@ export default function TravelOrderTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 140,
       render: (_, record) => (
         <Space>
+          {onApprove && record.approvalStatus === "ForApproval" && (
+            <Popconfirm
+              title="Approve this travel order?"
+              onConfirm={() => onApprove(record)}
+              okText="Approve"
+              cancelText="Cancel"
+            >
+              <Button
+                type="text"
+                icon={<CheckOutlined />}
+                style={{ color: "#52c41a" }}
+              />
+            </Popconfirm>
+          )}
+          {onDecline && record.approvalStatus === "ForApproval" && (
+            <Popconfirm
+              title="Decline this travel order?"
+              onConfirm={() => onDecline(record)}
+              okText="Decline"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
+            >
+              <Button type="text" danger icon={<CloseOutlined />} />
+            </Popconfirm>
+          )}
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -158,12 +195,13 @@ export default function TravelOrderTable({
               navigate({ to: `/applications/official-business/${record.id}` })
             }
           />
-          {onDelete && record.approvalStatus === "ForApproval" && (
+          {onDelete && (
             <Popconfirm
-              title="Cancel this travel order application?"
+              title="Delete this travel order application?"
               onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
