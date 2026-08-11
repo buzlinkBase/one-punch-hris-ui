@@ -37,15 +37,15 @@ const { TextArea } = Input;
 const APPROVAL_STATUS_OPTIONS = [
   { value: "ForApproval", label: "For Approval" },
   { value: "Approved", label: "Approved" },
-  { value: "Declined", label: "Declined" },
   { value: "Cancelled", label: "Cancelled" },
+  { value: "Declined", label: "Declined" },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
   Approved: "success",
-  Declined: "error",
   Cancelled: "default",
+  Declined: "error",
 };
 
 const MODE_OPTIONS = [
@@ -63,7 +63,7 @@ const filterOption = (
 
 function buildStartDateTime(date: string, time: string): string {
   if (!date || !time) return "";
-  return dayjs(`${date}T${time}`).toISOString();
+  return dayjs(`${date}T${time}`).format("YYYY-MM-DDTHH:mm:ss");
 }
 
 function buildEndDateTime(
@@ -73,11 +73,13 @@ function buildEndDateTime(
 ): string {
   if (!date || !endTime) return "";
   const end = dayjs(`${date}T${endTime}`);
-  return (endTime <= startTime ? end.add(1, "day") : end).toISOString();
+  return (endTime < startTime ? end.add(1, "day") : end).format(
+    "YYYY-MM-DDTHH:mm:ss",
+  );
 }
 
 function isCrossMidnight(startTime: string, endTime: string): boolean {
-  return !!startTime && !!endTime && endTime <= startTime;
+  return !!startTime && !!endTime && endTime < startTime;
 }
 
 function detectMode(isManualEntry?: boolean): "datetime" | "hours" {
@@ -118,6 +120,7 @@ export default function OvertimeApplicationDetail() {
       endTime: "",
       manualOTMinutes: undefined,
       remarks: "",
+      approvalStatus: "Approved",
     },
   });
 
@@ -147,6 +150,7 @@ export default function OvertimeApplicationDetail() {
             ? selected.manualOtMinutes / 60
             : undefined,
         remarks: selected.remarks ?? "",
+        approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
@@ -183,11 +187,11 @@ export default function OvertimeApplicationDetail() {
     if (isEdit && id) {
       await update({
         id,
-        otStatus: selected?.otStatus ?? "ForApproval",
+        approvalStatus: values.approvalStatus,
         ...payload,
       });
     } else {
-      await add(payload);
+      await add({ ...payload, approvalStatus: values.approvalStatus });
     }
     navigate({ to: "/applications/overtime" });
   };
@@ -208,10 +212,10 @@ export default function OvertimeApplicationDetail() {
           </div>
           <Space>
             {isEdit && selected ? (
-              <Tag color={STATUS_COLOR[selected.otStatus] ?? "default"}>
-                {selected.otStatus === "ForApproval"
+              <Tag color={STATUS_COLOR[selected.approvalStatus] ?? "default"}>
+                {selected.approvalStatus === "ForApproval"
                   ? "For Approval"
-                  : selected.otStatus}
+                  : selected.approvalStatus}
               </Tag>
             ) : (
               <Tag color="success">New Record</Tag>
@@ -228,10 +232,10 @@ export default function OvertimeApplicationDetail() {
           <Card size="small" className="mb-4">
             <Descriptions size="small" column={2}>
               <Descriptions.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>
-                <Tag color={STATUS_COLOR[selected.otStatus] ?? "default"}>
-                  {selected.otStatus === "ForApproval"
+                <Tag color={STATUS_COLOR[selected.approvalStatus] ?? "default"}>
+                  {selected.approvalStatus === "ForApproval"
                     ? "For Approval"
-                    : selected.otStatus}
+                    : selected.approvalStatus}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={OVERTIME_APPLICATION_LABEL.OT_MINUTES}>
@@ -372,15 +376,15 @@ export default function OvertimeApplicationDetail() {
             </Form.Item>
           )}
 
-          {isEdit && selected && (
-            <Form.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>
-              <Select
-                disabled
-                value={selected.otStatus}
-                options={APPROVAL_STATUS_OPTIONS}
-              />
-            </Form.Item>
-          )}
+          <Form.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>
+            <Controller
+              name="approvalStatus"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+              )}
+            />
+          </Form.Item>
 
           <Form.Item
             label={OVERTIME_APPLICATION_LABEL.REMARKS}

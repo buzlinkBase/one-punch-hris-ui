@@ -47,15 +47,15 @@ const MODE_OPTIONS = [
 const APPROVAL_STATUS_OPTIONS = [
   { value: "ForApproval", label: "For Approval" },
   { value: "Approved", label: "Approved" },
-  { value: "Declined", label: "Declined" },
   { value: "Cancelled", label: "Cancelled" },
+  { value: "Declined", label: "Declined" },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
   Approved: "success",
-  Declined: "error",
   Cancelled: "default",
+  Declined: "error",
 };
 
 const filterOption = (
@@ -132,6 +132,7 @@ export default function TravelOrderDetail() {
       purpose: "",
       cost: 0,
       applicationRemarks: "",
+      approvalStatus: "Approved",
     },
   });
 
@@ -168,6 +169,7 @@ export default function TravelOrderDetail() {
         purpose: selected.purpose,
         cost: selected.cost ?? 0,
         applicationRemarks: selected.applicationRemarks ?? "",
+        approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
@@ -211,11 +213,11 @@ export default function TravelOrderDetail() {
     if (isEdit && id) {
       await update({
         id,
-        approvalStatus: selected?.approvalStatus ?? "ForApproval",
+        approvalStatus: values.approvalStatus,
         ...payload,
       });
     } else {
-      await add(payload);
+      await add({ ...payload, approvalStatus: values.approvalStatus });
     }
     navigate({ to: "/applications/official-business" });
   };
@@ -520,15 +522,15 @@ export default function TravelOrderDetail() {
             />
           </Form.Item>
 
-          {isEdit && selected && (
-            <Form.Item label={TRAVEL_ORDER_LABEL.STATUS}>
-              <Select
-                disabled
-                value={selected.approvalStatus}
-                options={APPROVAL_STATUS_OPTIONS}
-              />
-            </Form.Item>
-          )}
+          <Form.Item label={TRAVEL_ORDER_LABEL.STATUS}>
+            <Controller
+              name="approvalStatus"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+              )}
+            />
+          </Form.Item>
 
           <Form.Item
             label={TRAVEL_ORDER_LABEL.REMARKS}

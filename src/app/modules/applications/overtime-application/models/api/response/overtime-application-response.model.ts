@@ -5,7 +5,7 @@ export interface OvertimeApplicationResponse {
   startTime: string;
   endTime: string;
   remarks: string;
-  otStatus: string;
+  approvalStatus: string;
   isManualEntry: boolean;
   manualOtMinutes: number;
   otBeforeOverride: number;

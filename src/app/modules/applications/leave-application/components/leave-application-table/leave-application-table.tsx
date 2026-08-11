@@ -17,15 +17,15 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
   Approved: "success",
-  Declined: "error",
   Cancelled: "default",
+  Declined: "error",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   ForApproval: "For Approval",
   Approved: "Approved",
-  Declined: "Declined",
   Cancelled: "Cancelled",
+  Declined: "Declined",
 };
 
 interface Props {
