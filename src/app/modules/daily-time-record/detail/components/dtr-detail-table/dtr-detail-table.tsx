@@ -1,14 +1,22 @@
+import { useState } from "react";
 import dayjs from "dayjs";
-import { Table } from "antd";
+import { Button, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { Key } from "react";
+import { EyeOutlined } from "@ant-design/icons";
 import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
 import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import DtrAttendanceLogsModal from "../dtr-attendance-logs-modal/dtr-attendance-logs-modal";
 
 interface Props {
   data: DtrDetailResponse[];
   loading?: boolean;
+}
+
+function rowKey(r: DtrDetailResponse) {
+  return `${r.employeeId}-${r.workDate}-${r.workType}`;
 }
 
 const R = "right" as const;
@@ -30,6 +38,13 @@ const groupHeader = (bg: string) => (): object => ({
 });
 
 export default function DtrDetailTable({ data, loading }: Props) {
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Derive selected row from current data — auto-clears when data is replaced
+  const selectedRow = data.find((r) => rowKey(r) === selectedKey) ?? null;
+  const activeKeys: Key[] = selectedRow ? [selectedKey as string] : [];
+
   const { widths, handleResize } = useResizableColumns({
     fullName: 260,
     workType: 120,
@@ -286,17 +301,60 @@ export default function DtrDetailTable({ data, loading }: Props) {
   ];
 
   return (
-    <Table
-      rowKey={(r, i) => `${r.employeeId}-${r.workDate}-${i ?? 0}`}
-      dataSource={data}
-      columns={columns}
-      size="small"
-      loading={loading}
-      pagination={{ pageSize: 10 }}
-      scroll={{ x: "max-content" }}
-      bordered
-      sticky
-      components={{ header: { cell: ResizableTitle } }}
-    />
+    <>
+      <div className="flex justify-between items-center mb-2">
+        <Space>
+          <Button
+            icon={<EyeOutlined />}
+            disabled={!selectedRow}
+            onClick={() => setModalOpen(true)}
+          >
+            View Attendance
+          </Button>
+          {selectedRow && (
+            <span style={{ fontSize: 13, color: "#8c8c8c" }}>
+              {selectedRow.fullName} &mdash; {selectedRow.workDate}
+            </span>
+          )}
+        </Space>
+      </div>
+
+      <Table
+        rowKey={rowKey}
+        dataSource={data}
+        columns={columns}
+        size="small"
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        scroll={{ x: "max-content" }}
+        bordered
+        sticky
+        components={{ header: { cell: ResizableTitle } }}
+        rowSelection={{
+          type: "radio",
+          selectedRowKeys: activeKeys,
+          onChange: (keys) => {
+            setSelectedKey((keys[0] as string) ?? null);
+          },
+        }}
+        onRow={(record) => ({
+          onClick: () => {
+            const key = rowKey(record);
+            setSelectedKey((prev) => (prev === key ? null : key));
+          },
+          style: { cursor: "pointer" },
+        })}
+      />
+
+      {selectedRow && (
+        <DtrAttendanceLogsModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          employeeId={selectedRow.employeeId}
+          employeeName={selectedRow.fullName}
+          workDate={selectedRow.workDate}
+        />
+      )}
+    </>
   );
 }
