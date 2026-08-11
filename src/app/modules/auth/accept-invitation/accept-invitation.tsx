@@ -208,6 +208,7 @@ export default function AcceptInvitation() {
           label="Password"
           validateStatus={errors.password ? "error" : ""}
           help={errors.password?.message}
+          extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
           className="login-form-item"
         >
           <Controller

@@ -151,6 +151,7 @@ export default function UserDetail() {
               label={USER_LABEL.PASSWORD}
               validateStatus={errors.password ? "error" : ""}
               help={errors.password?.message}
+              extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
             >
               <Controller
                 name="password"

@@ -1,14 +1,5 @@
 import { useEffect } from "react";
-import {
-  Form,
-  Input,
-  InputNumber,
-  Button,
-  Select,
-  Typography,
-  Space,
-  Tag,
-} from "antd";
+import { Form, Input, Button, Select, Typography, Space, Tag } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller, type Resolver } from "react-hook-form";
@@ -55,7 +46,7 @@ export default function PositionDetail() {
       reset({
         code: selected.code,
         name: selected.name,
-        rate: selected.rate,
+        rate: 0,
         status: selected.status,
       });
     }
@@ -113,28 +104,6 @@ export default function PositionDetail() {
               name="name"
               control={control}
               render={({ field }) => <Input {...field} />}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label={POSITION_LABEL.RATE}
-            validateStatus={errors.rate ? "error" : ""}
-            help={errors.rate?.message}
-          >
-            <Controller
-              name="rate"
-              control={control}
-              render={({ field }) => (
-                <InputNumber
-                  {...field}
-                  className="w-full"
-                  min={0}
-                  precision={2}
-                  formatter={(v) =>
-                    `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
-                />
-              )}
             />
           </Form.Item>
 

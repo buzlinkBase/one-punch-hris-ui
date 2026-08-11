@@ -25,7 +25,6 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
   const { widths, handleResize } = useResizableColumns({
     code: 120,
     name: 200,
-    rate: 120,
     status: 120,
   });
 
@@ -59,19 +58,6 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
           width: widths.name,
           onResize: (w: number) => handleResize("name", w),
         }) as object,
-    },
-    {
-      title: POSITION_LABEL.RATE,
-      dataIndex: "rate",
-      key: "rate",
-      width: widths.rate,
-      onHeaderCell: () =>
-        ({
-          width: widths.rate,
-          onResize: (w: number) => handleResize("rate", w),
-        }) as object,
-      render: (v: number) =>
-        `₱ ${v.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
     },
     {
       title: POSITION_LABEL.STATUS,
