@@ -327,7 +327,10 @@ export default function CreateAttendanceEntryDrawer({
 
       for (const dt of punches) {
         for (const employeeId of selectedIds) {
-          entries.push({ workTime: dt.toISOString(), employeeId });
+          entries.push({
+            workTime: dt.format("YYYY-MM-DDTHH:mm:ss"),
+            employeeId,
+          });
         }
       }
       current = current.add(1, "day");

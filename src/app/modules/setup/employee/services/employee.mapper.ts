@@ -25,7 +25,7 @@ export const employeeMapper = {
       branchId: response.branchId ?? null,
       sectionId: response.sectionId ?? null,
       positionId: response.positionId ?? null,
-      jobLevel: response.jobLevel,
+      jobLevel: response.jobLevel ?? "RankandFile",
       timeShiftId: response.timeShiftId ?? null,
       employmentStatus: response.employmentStatus,
       hiringEntity: response.hiringEntity ?? "",
@@ -66,11 +66,10 @@ export const employeeMapper = {
   toDefaultValues(): Partial<EmployeeFormValues> {
     return {
       bioId: null,
-      dateRegistered: dayjs().toISOString(),
+      dateRegistered: dayjs().format("YYYY-MM-DD"),
       modeOfPayment: "ATM",
       salaryType: "MONTHLY_VARIABLE",
       employmentStatus: "Probationary",
-      jobLevel: "RankandFile",
       monthlyRate: 0,
       dailyRate: 0,
       cola: 0,

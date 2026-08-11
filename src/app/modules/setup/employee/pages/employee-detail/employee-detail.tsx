@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Form,
   Input,
@@ -16,7 +16,7 @@ import {
   Avatar,
   message,
 } from "antd";
-import { UserOutlined, CameraOutlined } from "@ant-design/icons";
+import { UserOutlined, CameraOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import {
@@ -60,6 +60,13 @@ import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries"
 import { useSections } from "@/app/modules/setup/section/hooks/use-section-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
+import QuickAddPayrollGroupModal from "../../components/quick-add-payroll-group-modal";
+import QuickAddDepartmentModal from "../../components/quick-add-department-modal";
+import QuickAddOperationAreaModal from "../../components/quick-add-operation-area-modal";
+import QuickAddClientModal from "../../components/quick-add-client-modal";
+import QuickAddSectionModal from "../../components/quick-add-section-modal";
+import QuickAddBranchModal from "../../components/quick-add-branch-modal";
+import QuickAddPositionModal from "../../components/quick-add-position-modal";
 
 const { Title, Text } = Typography;
 
@@ -110,7 +117,7 @@ const datePicker = (
   <DatePicker
     className="w-full"
     value={value ? dayjs(value) : null}
-    onChange={(date) => onChange(date ? date.toISOString() : null)}
+    onChange={(date) => onChange(date ? date.format("YYYY-MM-DD") : null)}
     allowClear={allowClear}
   />
 );
@@ -151,6 +158,14 @@ export default function EmployeeDetail() {
     resolver: zodResolver(employeeFormSchema) as Resolver<EmployeeFormValues>,
     defaultValues: employeeMapper.toDefaultValues(),
   });
+
+  const [deptModalOpen, setDeptModalOpen] = useState(false);
+  const [areaModalOpen, setAreaModalOpen] = useState(false);
+  const [pgModalOpen, setPgModalOpen] = useState(false);
+  const [clientModalOpen, setClientModalOpen] = useState(false);
+  const [sectionModalOpen, setSectionModalOpen] = useState(false);
+  const [branchModalOpen, setBranchModalOpen] = useState(false);
+  const [positionModalOpen, setPositionModalOpen] = useState(false);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -629,66 +644,90 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
-                      <Controller
-                        name="departmentId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => {
-                              field.onChange(v ?? null);
-                              setValue("sectionId", null);
-                            }}
-                            options={departmentOptions}
-                            loading={isRefLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select department"
-                          />
-                        )}
-                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Controller
+                          name="departmentId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => {
+                                field.onChange(v ?? null);
+                                setValue("sectionId", null);
+                              }}
+                              options={departmentOptions}
+                              loading={isRefLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select department"
+                              style={{ flex: 1 }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setDeptModalOpen(true)}
+                          title="Add new department"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.SECTION}>
-                      <Controller
-                        name="sectionId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
-                            options={sectionOptions}
-                            loading={isSectionsLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select section"
-                          />
-                        )}
-                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Controller
+                          name="sectionId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => field.onChange(v ?? null)}
+                              options={sectionOptions}
+                              loading={isSectionsLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select section"
+                              style={{ flex: 1 }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setSectionModalOpen(true)}
+                          title="Add new section"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.AREA}>
-                      <Controller
-                        name="areaId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
-                            options={areaOptions}
-                            loading={isRefLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select project site"
-                          />
-                        )}
-                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Controller
+                          name="areaId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => field.onChange(v ?? null)}
+                              options={areaOptions}
+                              loading={isRefLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select project site"
+                              style={{ flex: 1 }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setAreaModalOpen(true)}
+                          title="Add new operation area"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item
@@ -697,83 +736,115 @@ export default function EmployeeDetail() {
                       validateStatus={errors.payrollGroupId ? "error" : ""}
                       help={errors.payrollGroupId?.message}
                     >
-                      <Controller
-                        name="payrollGroupId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value || undefined}
-                            onChange={(v?: string) => field.onChange(v ?? "")}
-                            options={payrollGroupOptions}
-                            loading={isRefLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select payroll group"
-                          />
-                        )}
-                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Controller
+                          name="payrollGroupId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value || undefined}
+                              onChange={(v?: string) => field.onChange(v ?? "")}
+                              options={payrollGroupOptions}
+                              loading={isRefLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select payroll group"
+                              style={{ flex: 1 }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setPgModalOpen(true)}
+                          title="Add new payroll group"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.CLIENT}>
-                      <Controller
-                        name="clientId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
-                            options={clientOptions}
-                            loading={isClientsLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select client"
-                          />
-                        )}
-                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Controller
+                          name="clientId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => field.onChange(v ?? null)}
+                              options={clientOptions}
+                              loading={isClientsLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select client"
+                              style={{ flex: 1 }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setClientModalOpen(true)}
+                          title="Add new client"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.BRANCH}>
-                      <Controller
-                        name="branchId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
-                            options={branchOptions}
-                            loading={isBranchesLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select branch"
-                          />
-                        )}
-                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Controller
+                          name="branchId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => field.onChange(v ?? null)}
+                              options={branchOptions}
+                              loading={isBranchesLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select branch"
+                              style={{ flex: 1 }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setBranchModalOpen(true)}
+                          title="Add new branch"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.POSITION}>
-                      <Controller
-                        name="positionId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
-                            options={positionOptions}
-                            loading={isPositionsLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select position"
-                          />
-                        )}
-                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Controller
+                          name="positionId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => field.onChange(v ?? null)}
+                              options={positionOptions}
+                              loading={isPositionsLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select position"
+                              style={{ flex: 1 }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setPositionModalOpen(true)}
+                          title="Add new position"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item
@@ -1225,6 +1296,65 @@ export default function EmployeeDetail() {
           </Space>
         </div>
       </Form>
+
+      <QuickAddDepartmentModal
+        open={deptModalOpen}
+        onClose={() => setDeptModalOpen(false)}
+        onCreated={(id) => {
+          setValue("departmentId", id);
+          setValue("sectionId", null);
+          setDeptModalOpen(false);
+        }}
+      />
+      <QuickAddOperationAreaModal
+        open={areaModalOpen}
+        onClose={() => setAreaModalOpen(false)}
+        onCreated={(id) => {
+          setValue("areaId", id);
+          setAreaModalOpen(false);
+        }}
+      />
+      <QuickAddPayrollGroupModal
+        open={pgModalOpen}
+        onClose={() => setPgModalOpen(false)}
+        onCreated={(id) => {
+          setValue("payrollGroupId", id);
+          setPgModalOpen(false);
+        }}
+      />
+      <QuickAddClientModal
+        open={clientModalOpen}
+        onClose={() => setClientModalOpen(false)}
+        onCreated={(id) => {
+          setValue("clientId", id);
+          setClientModalOpen(false);
+        }}
+      />
+      <QuickAddSectionModal
+        open={sectionModalOpen}
+        onClose={() => setSectionModalOpen(false)}
+        defaultDepartmentId={watchedDepartmentId}
+        onCreated={(id) => {
+          setValue("sectionId", id);
+          setSectionModalOpen(false);
+        }}
+      />
+      <QuickAddBranchModal
+        open={branchModalOpen}
+        onClose={() => setBranchModalOpen(false)}
+        onCreated={(id) => {
+          setValue("branchId", id);
+          setBranchModalOpen(false);
+        }}
+      />
+      <QuickAddPositionModal
+        open={positionModalOpen}
+        onClose={() => setPositionModalOpen(false)}
+        onCreated={(id) => {
+          setValue("positionId", id);
+          setPositionModalOpen(false);
+        }}
+      />
     </div>
   );
 }

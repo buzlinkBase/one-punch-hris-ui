@@ -489,7 +489,6 @@ export default function FixedTimeShiftDetail() {
                       {...field}
                       min={0}
                       suffix="min"
-                      readOnly={withLunchBreak === "PAID_BREAK"}
                     />
                   )}
                 />

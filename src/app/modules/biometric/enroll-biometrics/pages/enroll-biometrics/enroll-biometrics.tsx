@@ -740,8 +740,8 @@ function ControlsSection({ sn }: { sn: string }) {
               if (!pullDates?.[0] || !pullDates?.[1]) return;
               void pullAtt({
                 sn,
-                startDate: pullDates[0].toISOString(),
-                endDate: pullDates[1].toISOString(),
+                startDate: pullDates[0].format("YYYY-MM-DDTHH:mm:ss"),
+                endDate: pullDates[1].format("YYYY-MM-DDTHH:mm:ss"),
               });
             }}
           >
