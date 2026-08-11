@@ -42,13 +42,15 @@ const filterOption = (
 
 function buildStartDateTime(date: string, time: string): string {
   if (!date || !time) return "";
-  return dayjs(`${date}T${time}`).toISOString();
+  return dayjs(`${date}T${time}`).format("YYYY-MM-DDTHH:mm:ss");
 }
 
 function buildEndDateTime(date: string, startT: string, endT: string): string {
   if (!date || !endT) return "";
   const end = dayjs(`${date}T${endT}`);
-  return (endT <= startT ? end.add(1, "day") : end).toISOString();
+  return (endT <= startT ? end.add(1, "day") : end).format(
+    "YYYY-MM-DDTHH:mm:ss",
+  );
 }
 
 const defaultEntry = () => ({

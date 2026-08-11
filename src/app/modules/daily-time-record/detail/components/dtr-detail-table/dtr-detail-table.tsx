@@ -15,18 +15,18 @@ const R = "right" as const;
 const L = "left" as const;
 
 const GC = {
-  minutes: { group: "#8896a8", sub: "#f8fafc" },
-  regular: { group: "#5b8fc9", sub: "#eff6ff" },
-  restDay: { group: "#c49a5a", sub: "#fffbeb" },
-  legalHol: { group: "#c47070", sub: "#fef2f2" },
-  specialHol: { group: "#9b7ec8", sub: "#faf5ff" },
-  restLegal: { group: "#4aab98", sub: "#f0fdfa" },
-  restSpecial: { group: "#5aaa5a", sub: "#f0fdf4" },
-  ob: { group: "#1DA081", sub: "#f0fdf9" },
+  minutes: { group: "#e4e9ee", sub: "#f8fafc" },
+  regular: { group: "#dae8f5", sub: "#f4f9fe" },
+  restDay: { group: "#f3e9d4", sub: "#fdfaf3" },
+  legalHol: { group: "#f3dcdc", sub: "#fdf5f5" },
+  specialHol: { group: "#ebe6f5", sub: "#f8f5fd" },
+  restLegal: { group: "#d3ece8", sub: "#f0faf8" },
+  restSpecial: { group: "#d4edd4", sub: "#f0faf0" },
+  ob: { group: "#ccece6", sub: "#f0faf8" },
 };
 
 const groupHeader = (bg: string) => (): object => ({
-  style: { backgroundColor: bg, color: "#fff", fontWeight: 600 },
+  style: { backgroundColor: bg, color: "#374151", fontWeight: 600 },
 });
 
 export default function DtrDetailTable({ data, loading }: Props) {
@@ -188,6 +188,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
     // ── MINUTES ──────────────────────────────────────────────────────────────────
     {
       title: "Minutes",
+      onHeaderCell: groupHeader(GC.minutes.group),
       children: [
         {
           title: "Late / Over Break",
@@ -213,6 +214,7 @@ export default function DtrDetailTable({ data, loading }: Props) {
     // ── HOURS ────────────────────────────────────────────────────────────────────
     {
       title: "Hours",
+      onHeaderCell: groupHeader(GC.minutes.group),
       children: [
         {
           title: "Regular",
