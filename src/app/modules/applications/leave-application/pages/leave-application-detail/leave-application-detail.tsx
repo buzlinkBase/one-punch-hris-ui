@@ -46,15 +46,15 @@ const PAY_TYPE_OPTIONS = [
 const APPROVAL_STATUS_OPTIONS = [
   { value: "ForApproval", label: "For Approval" },
   { value: "Approved", label: "Approved" },
-  { value: "Declined", label: "Declined" },
   { value: "Cancelled", label: "Cancelled" },
+  { value: "Declined", label: "Declined" },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
   Approved: "success",
-  Declined: "error",
   Cancelled: "default",
+  Declined: "error",
 };
 
 const filterOption = (
@@ -105,6 +105,7 @@ export default function LeaveApplicationDetail() {
       dayType: "WholeDay",
       payType: "WithPay",
       applicationRemarks: "",
+      approvalStatus: "Approved",
     },
   });
 
@@ -122,17 +123,14 @@ export default function LeaveApplicationDetail() {
         dayType: selected.dayType,
         payType: selected.payType ?? "WithPay",
         applicationRemarks: selected.applicationRemarks ?? "",
+        approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: LeaveApplicationFormValues) => {
     if (isEdit && id) {
-      await update({
-        id,
-        approvalStatus: selected?.approvalStatus ?? "ForApproval",
-        ...values,
-      });
+      await update({ id, ...values });
     } else {
       await add(values);
     }
@@ -293,15 +291,15 @@ export default function LeaveApplicationDetail() {
             </Form.Item>
           </div>
 
-          {isEdit && selected && (
-            <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
-              <Select
-                disabled
-                value={selected.approvalStatus}
-                options={APPROVAL_STATUS_OPTIONS}
-              />
-            </Form.Item>
-          )}
+          <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
+            <Controller
+              name="approvalStatus"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+              )}
+            />
+          </Form.Item>
 
           <Form.Item
             label={LEAVE_APPLICATION_LABEL.REMARKS}
