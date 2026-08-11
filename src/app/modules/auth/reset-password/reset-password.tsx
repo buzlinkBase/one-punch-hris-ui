@@ -111,6 +111,7 @@ export default function ResetPassword() {
           label="New Password"
           validateStatus={errors.newPassword ? "error" : ""}
           help={errors.newPassword?.message}
+          extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
           className="login-form-item"
         >
           <Controller

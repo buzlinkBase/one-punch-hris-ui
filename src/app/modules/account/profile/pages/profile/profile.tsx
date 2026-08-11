@@ -187,6 +187,7 @@ function ChangePasswordForm({ email }: { email: string }) {
         label="New Password"
         validateStatus={errors.newPassword ? "error" : ""}
         help={errors.newPassword?.message}
+        extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
       >
         <Controller
           name="newPassword"
@@ -254,6 +255,7 @@ function SetPasswordForm() {
         label="Password"
         validateStatus={errors.password ? "error" : ""}
         help={errors.password?.message}
+        extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
       >
         <Controller
           name="password"
