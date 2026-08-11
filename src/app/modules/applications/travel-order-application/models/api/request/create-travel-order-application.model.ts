@@ -11,4 +11,5 @@ export interface CreateTravelOrderApplication {
   purpose: string;
   cost: number;
   applicationRemarks?: string;
+  approvalStatus?: string;
 }

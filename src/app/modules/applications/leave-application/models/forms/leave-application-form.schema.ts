@@ -8,6 +8,7 @@ export const leaveApplicationFormSchema = z.object({
   dayType: z.string().min(1, "Day type is required"),
   payType: z.string().min(1, "Pay type is required"),
   applicationRemarks: z.string().optional(),
+  approvalStatus: z.string(),
 });
 
 export type LeaveApplicationFormValues = z.infer<

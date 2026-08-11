@@ -68,7 +68,7 @@ export const overtimeApplicationApi = {
         manualOtMinutes: record.manualOtMinutes,
         isManualEntry: record.isManualEntry,
         remarks: record.remarks,
-        otStatus: status,
+        approvalStatus: status,
       },
     );
   },

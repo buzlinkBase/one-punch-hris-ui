@@ -17,15 +17,15 @@ import dayjs from "dayjs";
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
   Approved: "success",
-  Declined: "error",
   Cancelled: "default",
+  Declined: "error",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   ForApproval: "For Approval",
   Approved: "Approved",
-  Declined: "Declined",
   Cancelled: "Cancelled",
+  Declined: "Declined",
 };
 
 interface Props {
@@ -120,7 +120,7 @@ export default function OvertimeApplicationTable({
     },
     {
       title: OVERTIME_APPLICATION_LABEL.STATUS,
-      dataIndex: "otStatus",
+      dataIndex: "approvalStatus",
       key: "status",
       width: widths.status,
       onHeaderCell: () =>
@@ -141,7 +141,7 @@ export default function OvertimeApplicationTable({
       width: 140,
       render: (_, record) => (
         <Space>
-          {onApprove && record.otStatus === "ForApproval" && (
+          {onApprove && record.approvalStatus === "ForApproval" && (
             <Popconfirm
               title="Approve this overtime request?"
               onConfirm={() => onApprove(record)}
@@ -155,7 +155,7 @@ export default function OvertimeApplicationTable({
               />
             </Popconfirm>
           )}
-          {onDecline && record.otStatus === "ForApproval" && (
+          {onDecline && record.approvalStatus === "ForApproval" && (
             <Popconfirm
               title="Decline this overtime request?"
               onConfirm={() => onDecline(record)}

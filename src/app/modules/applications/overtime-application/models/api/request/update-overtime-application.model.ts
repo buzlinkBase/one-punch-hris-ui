@@ -2,5 +2,5 @@ import type { CreateOvertimeApplication } from "./create-overtime-application.mo
 
 export interface UpdateOvertimeApplication extends CreateOvertimeApplication {
   id: string;
-  otStatus: string;
+  approvalStatus: string;
 }

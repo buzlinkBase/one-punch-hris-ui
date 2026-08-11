@@ -35,15 +35,15 @@ const { TextArea } = Input;
 const APPROVAL_STATUS_OPTIONS = [
   { value: "ForApproval", label: "For Approval" },
   { value: "Approved", label: "Approved" },
-  { value: "Declined", label: "Declined" },
   { value: "Cancelled", label: "Cancelled" },
+  { value: "Declined", label: "Declined" },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
   Approved: "success",
-  Declined: "error",
   Cancelled: "default",
+  Declined: "error",
 };
 
 const filterOption = (
@@ -85,6 +85,7 @@ export default function UndertimeDetail() {
       payrollDate: "",
       utMinutes: 0,
       remarks: "",
+      approvalStatus: "Approved",
     },
   });
 
@@ -98,17 +99,14 @@ export default function UndertimeDetail() {
         payrollDate: selected.payrollDate,
         utMinutes: selected.utMinutes,
         remarks: selected.remarks,
+        approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: UndertimeApplicationFormValues) => {
     if (isEdit && id) {
-      await update({
-        id,
-        approvalStatus: selected?.approvalStatus ?? "ForApproval",
-        ...values,
-      });
+      await update({ id, ...values });
     } else {
       await add(values);
     }
@@ -217,15 +215,15 @@ export default function UndertimeDetail() {
             />
           </Form.Item>
 
-          {isEdit && selected && (
-            <Form.Item label={UNDERTIME_LABEL.STATUS}>
-              <Select
-                disabled
-                value={selected.approvalStatus}
-                options={APPROVAL_STATUS_OPTIONS}
-              />
-            </Form.Item>
-          )}
+          <Form.Item label={UNDERTIME_LABEL.STATUS}>
+            <Controller
+              name="approvalStatus"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+              )}
+            />
+          </Form.Item>
 
           <Form.Item
             label={UNDERTIME_LABEL.REMARKS}

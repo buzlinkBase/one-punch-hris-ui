@@ -3,4 +3,5 @@ export interface CreateUndertimeApplication {
   payrollDate: string;
   utMinutes: number;
   remarks: string;
+  approvalStatus?: string;
 }

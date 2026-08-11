@@ -5,6 +5,7 @@ export const undertimeApplicationFormSchema = z.object({
   payrollDate: z.string().min(1, "Date is required"),
   utMinutes: z.number({ error: "Must be a number" }).min(0),
   remarks: z.string().min(1, "Reason is required"),
+  approvalStatus: z.string(),
 });
 
 export type UndertimeApplicationFormValues = z.infer<
