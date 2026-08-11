@@ -6,4 +6,5 @@ export interface CreateLeaveApplication {
   dayType: string;
   payType: string;
   applicationRemarks?: string;
+  approvalStatus?: string;
 }
