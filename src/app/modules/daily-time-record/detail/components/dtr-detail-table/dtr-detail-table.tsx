@@ -1,18 +1,27 @@
 import { useState } from "react";
 import dayjs from "dayjs";
-import { Button, Space, Table } from "antd";
+import { Button, Divider, Space, Table, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { Key } from "react";
-import { EyeOutlined } from "@ant-design/icons";
+import {
+  CalendarOutlined,
+  EyeOutlined,
+  PushpinOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
 import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
 import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import DtrAttendanceLogsModal from "../dtr-attendance-logs-modal/dtr-attendance-logs-modal";
+import DtrChangeTimeShiftModal from "../dtr-change-time-shift-modal/dtr-change-time-shift-modal";
+import DtrChangeRestDayModal from "../dtr-change-rest-day-modal/dtr-change-rest-day-modal";
+import DtrSetRestDayModal from "../dtr-set-rest-day-modal/dtr-set-rest-day-modal";
 
 interface Props {
   data: DtrDetailResponse[];
   loading?: boolean;
+  onChanged?: () => void;
 }
 
 function rowKey(r: DtrDetailResponse) {
@@ -37,9 +46,12 @@ const groupHeader = (bg: string) => (): object => ({
   style: { backgroundColor: bg, color: "#374151", fontWeight: 600 },
 });
 
-export default function DtrDetailTable({ data, loading }: Props) {
+export default function DtrDetailTable({ data, loading, onChanged }: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [shiftModalOpen, setShiftModalOpen] = useState(false);
+  const [restDayModalOpen, setRestDayModalOpen] = useState(false);
+  const [restDayDateModalOpen, setRestDayDateModalOpen] = useState(false);
 
   // Derive selected row from current data — auto-clears when data is replaced
   const selectedRow = data.find((r) => rowKey(r) === selectedKey) ?? null;
@@ -302,21 +314,48 @@ export default function DtrDetailTable({ data, loading }: Props) {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-2">
-        <Space>
-          <Button
-            icon={<EyeOutlined />}
-            disabled={!selectedRow}
-            onClick={() => setModalOpen(true)}
-          >
-            View Attendance
-          </Button>
-          {selectedRow && (
-            <span style={{ fontSize: 13, color: "#8c8c8c" }}>
-              {selectedRow.fullName} &mdash; {selectedRow.workDate}
-            </span>
-          )}
+      <div className="flex items-center mb-3">
+        <Space size={8}>
+          <Tooltip title="View Attendance">
+            <Button
+              icon={<EyeOutlined />}
+              disabled={!selectedRow}
+              onClick={() => setModalOpen(true)}
+            />
+          </Tooltip>
+          <Tooltip title="Change Time Shift">
+            <Button
+              icon={<SwapOutlined />}
+              disabled={!selectedRow}
+              onClick={() => setShiftModalOpen(true)}
+            />
+          </Tooltip>
+          <Tooltip title="Change Rest Day">
+            <Button
+              icon={<CalendarOutlined />}
+              disabled={!selectedRow}
+              onClick={() => setRestDayModalOpen(true)}
+            />
+          </Tooltip>
+          <Tooltip title="Set Restday Date">
+            <Button
+              icon={<PushpinOutlined />}
+              disabled={!selectedRow}
+              onClick={() => setRestDayDateModalOpen(true)}
+            />
+          </Tooltip>
         </Space>
+        {selectedRow && (
+          <>
+            <Divider type="vertical" style={{ height: 20, margin: "0 12px" }} />
+            <span style={{ fontSize: 13, color: "#8c8c8c" }}>
+              <span style={{ color: "#374151", fontWeight: 500 }}>
+                {selectedRow.fullName}
+              </span>{" "}
+              &mdash; {selectedRow.workDate}
+            </span>
+          </>
+        )}
       </div>
 
       <Table
@@ -350,6 +389,41 @@ export default function DtrDetailTable({ data, loading }: Props) {
         <DtrAttendanceLogsModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
+          employeeId={selectedRow.employeeId}
+          employeeName={selectedRow.fullName}
+          workDate={selectedRow.workDate}
+        />
+      )}
+
+      {selectedRow && (
+        <DtrChangeTimeShiftModal
+          open={shiftModalOpen}
+          onClose={() => setShiftModalOpen(false)}
+          onSuccess={() => onChanged?.()}
+          employeeId={selectedRow.employeeId}
+          employeeName={selectedRow.fullName}
+          workDate={selectedRow.workDate}
+          currentShiftId={selectedRow.shiftId}
+          currentShiftName={selectedRow.shiftName}
+        />
+      )}
+
+      {selectedRow && (
+        <DtrChangeRestDayModal
+          open={restDayModalOpen}
+          onClose={() => setRestDayModalOpen(false)}
+          onSuccess={() => onChanged?.()}
+          employeeId={selectedRow.employeeId}
+          employeeName={selectedRow.fullName}
+          workDate={selectedRow.workDate}
+        />
+      )}
+
+      {selectedRow && (
+        <DtrSetRestDayModal
+          open={restDayDateModalOpen}
+          onClose={() => setRestDayDateModalOpen(false)}
+          onSuccess={() => onChanged?.()}
           employeeId={selectedRow.employeeId}
           employeeName={selectedRow.fullName}
           workDate={selectedRow.workDate}
