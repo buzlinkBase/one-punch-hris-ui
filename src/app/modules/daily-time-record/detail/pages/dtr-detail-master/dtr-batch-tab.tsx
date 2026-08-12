@@ -239,6 +239,7 @@ export default function DtrBatchTab() {
         data={records}
         loading={isLoading}
         onChanged={() => refetch()}
+        readOnly
       />
     </>
   );

@@ -1,8 +1,13 @@
 import { useState } from "react";
-import { Button, DatePicker, Form, Modal } from "antd";
+import { Button, DatePicker, Empty, Form, List, Modal, Popconfirm } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
-import { useCreateRestDayDate } from "@/app/modules/change-schedule/rest-day-date/hooks/use-rest-day-date-queries";
+import {
+  useCreateRestDayDate,
+  useDeleteRestDayDate,
+  useRestDayDatesByEmployee,
+} from "@/app/modules/change-schedule/rest-day-date/hooks/use-rest-day-date-queries";
 import { getNotify } from "@/shared/utils/notify";
 
 interface Props {
@@ -24,6 +29,10 @@ export default function DtrSetRestDayModal({
 }: Props) {
   const { mutateAsync: createRestDayDate, isPending: isSubmitting } =
     useCreateRestDayDate();
+  const { data: existingRestDays = [], isLoading: isLoadingExisting } =
+    useRestDayDatesByEmployee(employeeId, { enabled: open });
+  const { mutateAsync: deleteRestDayDate, isPending: isDeleting } =
+    useDeleteRestDayDate();
 
   const handleSave = async (payrollDate: Dayjs) => {
     try {
@@ -41,6 +50,22 @@ export default function DtrSetRestDayModal({
       getNotify().error({
         message: "Save Failed",
         description: "Failed to set the rest day date. Please try again.",
+      });
+    }
+  };
+
+  const handleDelete = async (id: string, payrollDate: string) => {
+    try {
+      await deleteRestDayDate(id);
+      onSuccess();
+      getNotify().success({
+        message: "Rest Day Removed",
+        description: `${dayjs(payrollDate).format("MMM DD, YYYY")} is no longer set as a rest day.`,
+      });
+    } catch {
+      getNotify().error({
+        message: "Delete Failed",
+        description: "Failed to remove the rest day date. Please try again.",
       });
     }
   };
@@ -68,6 +93,51 @@ export default function DtrSetRestDayModal({
         onCancel={onClose}
         onSave={handleSave}
       />
+
+      <div className="mt-5">
+        <div className="mb-2" style={{ fontSize: 13, color: "#8c8c8c" }}>
+          Previously set rest days
+        </div>
+        <List
+          size="small"
+          loading={isLoadingExisting}
+          bordered
+          dataSource={existingRestDays}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No rest days set yet"
+              />
+            ),
+          }}
+          renderItem={(item) => (
+            <List.Item
+              actions={[
+                <Popconfirm
+                  key="delete"
+                  title="Remove rest day"
+                  description={`Remove ${dayjs(item.payrollDate).format("MMM DD, YYYY")} as a rest day?`}
+                  okText="Remove"
+                  okButtonProps={{ danger: true }}
+                  cancelText="Cancel"
+                  onConfirm={() => handleDelete(item.id, item.payrollDate)}
+                >
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    loading={isDeleting}
+                  />
+                </Popconfirm>,
+              ]}
+            >
+              {dayjs(item.payrollDate).format("MMM DD, YYYY (ddd)")}
+            </List.Item>
+          )}
+        />
+      </div>
     </Modal>
   );
 }

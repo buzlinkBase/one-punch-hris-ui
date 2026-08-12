@@ -9,4 +9,18 @@ export const restDayDateApi = {
   create(data: CreateRestDayDate): Promise<RestDayDateResponse> {
     return httpClient.postUnwrapped<RestDayDateResponse>(ENDPOINT, data);
   },
+
+  async getAllByEmployee(employeeId: string): Promise<RestDayDateResponse[]> {
+    try {
+      return await httpClient.getUnwrapped<RestDayDateResponse[]>(ENDPOINT, {
+        params: { employee_id: employeeId },
+      });
+    } catch {
+      return [];
+    }
+  },
+
+  remove(id: string): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/${id}`);
+  },
 };
