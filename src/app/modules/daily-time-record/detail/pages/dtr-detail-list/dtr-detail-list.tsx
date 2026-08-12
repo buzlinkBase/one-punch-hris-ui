@@ -118,10 +118,14 @@ export default function DtrDetailList() {
     label: e.name ?? e.id,
   }));
 
-  const { data: records = [], isLoading } = useDtrDetailRecords(
-    committedFilter ?? EMPTY_FILTER,
-    { enabled: hasGenerated, generateKey },
-  );
+  const {
+    data: records = [],
+    isLoading,
+    refetch,
+  } = useDtrDetailRecords(committedFilter ?? EMPTY_FILTER, {
+    enabled: hasGenerated,
+    generateKey,
+  });
 
   const { mutateAsync: saveRecords, isPending: isSaving } = useSaveDtrDetail();
 
@@ -491,7 +495,11 @@ export default function DtrDetailList() {
         </Card>
       )}
 
-      <DtrDetailTable data={records} loading={isLoading} />
+      <DtrDetailTable
+        data={records}
+        loading={isLoading}
+        onChanged={() => refetch()}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ export interface DtrDetailResponse {
   workType: string;
   workTypeEnum: number;
   fullName?: string;
+  shiftId?: string | null;
   employeeId: string;
   workDate: string;
   shiftName: string;

@@ -235,7 +235,11 @@ export default function DtrBatchTab() {
         </Button>
       </div>
 
-      <DtrDetailTable data={records} loading={isLoading} />
+      <DtrDetailTable
+        data={records}
+        loading={isLoading}
+        onChanged={() => refetch()}
+      />
     </>
   );
 }
