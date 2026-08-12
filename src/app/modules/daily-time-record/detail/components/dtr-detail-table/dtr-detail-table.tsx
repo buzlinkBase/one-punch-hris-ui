@@ -1,8 +1,7 @@
 import { useState } from "react";
 import dayjs from "dayjs";
-import { Button, Divider, Space, Table, Tooltip } from "antd";
+import { Button, Space, Table, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { Key } from "react";
 import {
   CalendarOutlined,
   EyeOutlined,
@@ -22,6 +21,7 @@ interface Props {
   data: DtrDetailResponse[];
   loading?: boolean;
   onChanged?: () => void;
+  readOnly?: boolean;
 }
 
 function rowKey(r: DtrDetailResponse) {
@@ -46,7 +46,12 @@ const groupHeader = (bg: string) => (): object => ({
   style: { backgroundColor: bg, color: "#374151", fontWeight: 600 },
 });
 
-export default function DtrDetailTable({ data, loading, onChanged }: Props) {
+export default function DtrDetailTable({
+  data,
+  loading,
+  onChanged,
+  readOnly,
+}: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [shiftModalOpen, setShiftModalOpen] = useState(false);
@@ -55,7 +60,6 @@ export default function DtrDetailTable({ data, loading, onChanged }: Props) {
 
   // Derive selected row from current data — auto-clears when data is replaced
   const selectedRow = data.find((r) => rowKey(r) === selectedKey) ?? null;
-  const activeKeys: Key[] = selectedRow ? [selectedKey as string] : [];
 
   const { widths, handleResize } = useResizableColumns({
     fullName: 260,
@@ -119,7 +123,65 @@ export default function DtrDetailTable({ data, loading, onChanged }: Props) {
     },
   });
 
+  const actionsColumn: ColumnsType<DtrDetailResponse>[number] = {
+    key: "row-actions",
+    width: 130,
+    title: "",
+    render: (_: unknown, record: DtrDetailResponse) => {
+      const select = () => setSelectedKey(rowKey(record));
+      return (
+        <Space size={4}>
+          <Tooltip title="View Attendance">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                select();
+                setModalOpen(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Change Time Shift">
+            <Button
+              size="small"
+              icon={<SwapOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                select();
+                setShiftModalOpen(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Change Rest Day">
+            <Button
+              size="small"
+              icon={<CalendarOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                select();
+                setRestDayModalOpen(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Set Restday Date">
+            <Button
+              size="small"
+              icon={<PushpinOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                select();
+                setRestDayDateModalOpen(true);
+              }}
+            />
+          </Tooltip>
+        </Space>
+      );
+    },
+  };
+
   const columns: ColumnsType<DtrDetailResponse> = [
+    ...(readOnly ? [] : [actionsColumn]),
     {
       title: DTR_DETAIL_LABEL.EMPLOYEE,
       dataIndex: "fullName",
@@ -314,50 +376,6 @@ export default function DtrDetailTable({ data, loading, onChanged }: Props) {
 
   return (
     <>
-      <div className="flex items-center mb-3">
-        <Space size={8}>
-          <Tooltip title="View Attendance">
-            <Button
-              icon={<EyeOutlined />}
-              disabled={!selectedRow}
-              onClick={() => setModalOpen(true)}
-            />
-          </Tooltip>
-          <Tooltip title="Change Time Shift">
-            <Button
-              icon={<SwapOutlined />}
-              disabled={!selectedRow}
-              onClick={() => setShiftModalOpen(true)}
-            />
-          </Tooltip>
-          <Tooltip title="Change Rest Day">
-            <Button
-              icon={<CalendarOutlined />}
-              disabled={!selectedRow}
-              onClick={() => setRestDayModalOpen(true)}
-            />
-          </Tooltip>
-          <Tooltip title="Set Restday Date">
-            <Button
-              icon={<PushpinOutlined />}
-              disabled={!selectedRow}
-              onClick={() => setRestDayDateModalOpen(true)}
-            />
-          </Tooltip>
-        </Space>
-        {selectedRow && (
-          <>
-            <Divider type="vertical" style={{ height: 20, margin: "0 12px" }} />
-            <span style={{ fontSize: 13, color: "#8c8c8c" }}>
-              <span style={{ color: "#374151", fontWeight: 500 }}>
-                {selectedRow.fullName}
-              </span>{" "}
-              &mdash; {selectedRow.workDate}
-            </span>
-          </>
-        )}
-      </div>
-
       <Table
         rowKey={rowKey}
         dataSource={data}
@@ -369,13 +387,9 @@ export default function DtrDetailTable({ data, loading, onChanged }: Props) {
         bordered
         sticky
         components={{ header: { cell: ResizableTitle } }}
-        rowSelection={{
-          type: "radio",
-          selectedRowKeys: activeKeys,
-          onChange: (keys) => {
-            setSelectedKey((keys[0] as string) ?? null);
-          },
-        }}
+        rowClassName={(record) =>
+          rowKey(record) === selectedKey ? "ant-table-row-selected" : ""
+        }
         onRow={(record) => ({
           onClick: () => {
             const key = rowKey(record);
