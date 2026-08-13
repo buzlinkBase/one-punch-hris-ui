@@ -39,6 +39,8 @@ const GC = {
   specialHol: { group: "#ebe6f5", sub: "#f8f5fd" },
   restLegal: { group: "#d3ece8", sub: "#f0faf8" },
   restSpecial: { group: "#d4edd4", sub: "#f0faf0" },
+  doubleLegal: { group: "#f0cccc", sub: "#fdf0f0" },
+  restDoubleLegal: { group: "#dcd4f0", sub: "#f5f0fd" },
   ob: { group: "#ccece6", sub: "#f0faf8" },
 };
 
@@ -95,6 +97,14 @@ export default function DtrDetailTable({
     restSpecialDayOTHours: 75,
     restSpecialDayNDHours: 75,
     restSpecialDayNDOTHours: 80,
+    doubleLegalHours: 75,
+    doubleLegalOTHours: 75,
+    doubleLegalNDHours: 75,
+    doubleLegalNDOTHours: 90,
+    restDoubleLegalHours: 75,
+    restDoubleLegalOTHours: 75,
+    restDoubleLegalNDHours: 75,
+    restDoubleLegalNDOTHours: 90,
     obHours: 75,
   });
 
@@ -363,6 +373,31 @@ export default function DtrDetailTable({
             col("OT", "restSpecialDayOTHours", 75, GC.restSpecial.sub),
             col("ND", "restSpecialDayNDHours", 75, GC.restSpecial.sub),
             col("ND-OT", "restSpecialDayNDOTHours", 80, GC.restSpecial.sub),
+          ],
+        },
+        {
+          title: "Double Legal Holiday",
+          onHeaderCell: groupHeader(GC.doubleLegal.group),
+          children: [
+            col("Hrs", "doubleLegalHours", 75, GC.doubleLegal.sub),
+            col("OT", "doubleLegalOTHours", 75, GC.doubleLegal.sub),
+            col("ND", "doubleLegalNDHours", 75, GC.doubleLegal.sub),
+            col("ND-OT", "doubleLegalNDOTHours", 90, GC.doubleLegal.sub),
+          ],
+        },
+        {
+          title: "Rest + Double Legal",
+          onHeaderCell: groupHeader(GC.restDoubleLegal.group),
+          children: [
+            col("Hrs", "restDoubleLegalHours", 75, GC.restDoubleLegal.sub),
+            col("OT", "restDoubleLegalOTHours", 75, GC.restDoubleLegal.sub),
+            col("ND", "restDoubleLegalNDHours", 75, GC.restDoubleLegal.sub),
+            col(
+              "ND-OT",
+              "restDoubleLegalNDOTHours",
+              90,
+              GC.restDoubleLegal.sub,
+            ),
           ],
         },
         {

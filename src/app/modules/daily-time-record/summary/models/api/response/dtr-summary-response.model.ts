@@ -31,4 +31,12 @@ export interface DtrSummaryResponse {
   restSpecialDayOTHours: number;
   restSpecialDayNDHours: number;
   restSpecialDayNDOTHours: number;
+  doubleLegalHours: number;
+  doubleLegalOTHours: number;
+  doubleLegalNDHours: number;
+  doubleLegalNDOTHours: number;
+  restDoubleLegalHours: number;
+  restDoubleLegalOTHours: number;
+  restDoubleLegalNDHours: number;
+  restDoubleLegalNDOTHours: number;
 }

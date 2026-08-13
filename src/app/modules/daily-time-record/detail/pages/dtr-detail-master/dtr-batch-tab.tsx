@@ -91,6 +91,14 @@ export default function DtrBatchTab() {
       RestSpecial_OT_hr: r.restSpecialDayOTHours,
       RestSpecial_ND_hr: r.restSpecialDayNDHours,
       RestSpecial_ND_OT_hr: r.restSpecialDayNDOTHours,
+      DoubleLegal_hr: r.doubleLegalHours,
+      DoubleLegal_OT_hr: r.doubleLegalOTHours,
+      DoubleLegal_ND_hr: r.doubleLegalNDHours,
+      DoubleLegal_ND_OT_hr: r.doubleLegalNDOTHours,
+      RestDoubleLegal_hr: r.restDoubleLegalHours,
+      RestDoubleLegal_OT_hr: r.restDoubleLegalOTHours,
+      RestDoubleLegal_ND_hr: r.restDoubleLegalNDHours,
+      RestDoubleLegal_ND_OT_hr: r.restDoubleLegalNDOTHours,
     }));
 
   const buildCsv = (rows: AnyRow[]): string => {

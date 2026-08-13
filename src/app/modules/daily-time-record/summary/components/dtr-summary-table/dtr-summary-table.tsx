@@ -20,6 +20,8 @@ const GC = {
   specialHol: { group: "#ebe6f5", sub: "#f8f5fd" },
   restLegal: { group: "#d3ece8", sub: "#f0faf8" },
   restSpecial: { group: "#d4edd4", sub: "#f0faf0" },
+  doubleLegal: { group: "#f0cccc", sub: "#fdf0f0" },
+  restDoubleLegal: { group: "#dcd4f0", sub: "#f5f0fd" },
   ob: { group: "#ccece6", sub: "#f0faf8" },
 };
 
@@ -58,6 +60,14 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     restSpecialDayOTHours: 75,
     restSpecialDayNDHours: 75,
     restSpecialDayNDOTHours: 80,
+    doubleLegalHours: 75,
+    doubleLegalOTHours: 75,
+    doubleLegalNDHours: 75,
+    doubleLegalNDOTHours: 90,
+    restDoubleLegalHours: 75,
+    restDoubleLegalOTHours: 75,
+    restDoubleLegalNDHours: 75,
+    restDoubleLegalNDOTHours: 90,
     obHours: 75,
   });
 
@@ -94,6 +104,14 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       restSpecialDayOTHours: sum("restSpecialDayOTHours"),
       restSpecialDayNDHours: sum("restSpecialDayNDHours"),
       restSpecialDayNDOTHours: sum("restSpecialDayNDOTHours"),
+      doubleLegalHours: sum("doubleLegalHours"),
+      doubleLegalOTHours: sum("doubleLegalOTHours"),
+      doubleLegalNDHours: sum("doubleLegalNDHours"),
+      doubleLegalNDOTHours: sum("doubleLegalNDOTHours"),
+      restDoubleLegalHours: sum("restDoubleLegalHours"),
+      restDoubleLegalOTHours: sum("restDoubleLegalOTHours"),
+      restDoubleLegalNDHours: sum("restDoubleLegalNDHours"),
+      restDoubleLegalNDOTHours: sum("restDoubleLegalNDOTHours"),
       obHours: sum("obHours"),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -231,6 +249,31 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           ],
         },
         {
+          title: "Double Legal Holiday",
+          onHeaderCell: groupHeader(GC.doubleLegal.group),
+          children: [
+            col("Hrs", "doubleLegalHours", 75, GC.doubleLegal.sub),
+            col("OT", "doubleLegalOTHours", 75, GC.doubleLegal.sub),
+            col("ND", "doubleLegalNDHours", 75, GC.doubleLegal.sub),
+            col("ND-OT", "doubleLegalNDOTHours", 90, GC.doubleLegal.sub),
+          ],
+        },
+        {
+          title: "Rest + Double Legal",
+          onHeaderCell: groupHeader(GC.restDoubleLegal.group),
+          children: [
+            col("Hrs", "restDoubleLegalHours", 75, GC.restDoubleLegal.sub),
+            col("OT", "restDoubleLegalOTHours", 75, GC.restDoubleLegal.sub),
+            col("ND", "restDoubleLegalNDHours", 75, GC.restDoubleLegal.sub),
+            col(
+              "ND-OT",
+              "restDoubleLegalNDOTHours",
+              90,
+              GC.restDoubleLegal.sub,
+            ),
+          ],
+        },
+        {
           title: "Official Business",
           onHeaderCell: groupHeader(GC.ob.group),
           children: [col("OB Hrs", "obHours", 75, GC.ob.sub)],
@@ -357,7 +400,39 @@ export default function DtrSummaryTable({ data, loading }: Props) {
                     index={28}
                     {...tc(totals.restSpecialDayNDOTHours)}
                   />
-                  <Table.Summary.Cell index={29} {...tc(totals.obHours)} />
+                  <Table.Summary.Cell
+                    index={29}
+                    {...tc(totals.doubleLegalHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={30}
+                    {...tc(totals.doubleLegalOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={31}
+                    {...tc(totals.doubleLegalNDHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={32}
+                    {...tc(totals.doubleLegalNDOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={33}
+                    {...tc(totals.restDoubleLegalHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={34}
+                    {...tc(totals.restDoubleLegalOTHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={35}
+                    {...tc(totals.restDoubleLegalNDHours)}
+                  />
+                  <Table.Summary.Cell
+                    index={36}
+                    {...tc(totals.restDoubleLegalNDOTHours)}
+                  />
+                  <Table.Summary.Cell index={37} {...tc(totals.obHours)} />
                 </Table.Summary.Row>
               </Table.Summary>
             )
