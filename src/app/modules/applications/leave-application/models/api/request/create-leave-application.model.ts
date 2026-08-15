@@ -1,10 +1,15 @@
 export interface CreateLeaveApplication {
   employeeId: string;
   leaveId: string;
+  durationType: "SingleDay" | "MultiDay" | "Partial";
   leaveDateFrom: string;
   leaveDateTo: string;
-  dayType: string;
+  dayFraction: "FullDay" | "AM" | "PM";
   payType: string;
+  isManualEntry: boolean;
+  startTime?: string | null;
+  endTime?: string | null;
+  totalMinutes?: number | null;
   applicationRemarks?: string;
-  approvalStatus?: string;
+  supportingDocumentUrl?: string;
 }

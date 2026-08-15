@@ -745,10 +745,6 @@ const LeaveApplicationList = lazy(
   () =>
     import("@/app/modules/applications/leave-application/pages/leave-application-list"),
 );
-const LeaveApplicationBatch = lazy(
-  () =>
-    import("@/app/modules/applications/leave-application/pages/leave-application-batch"),
-);
 const LeaveApplicationDetail = lazy(
   () =>
     import("@/app/modules/applications/leave-application/pages/leave-application-detail"),
@@ -812,7 +808,7 @@ const leaveApplicationIndexRoute = createRoute({
 const leaveApplicationCreateRoute = createRoute({
   getParentRoute: () => leaveApplicationRoute,
   path: "create",
-  component: withSuspense(LeaveApplicationBatch),
+  component: withSuspense(LeaveApplicationDetail),
 });
 
 const leaveApplicationDetailRoute = createRoute({

@@ -22,6 +22,8 @@ interface Props {
   loading?: boolean;
   onChanged?: () => void;
   readOnly?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 function rowKey(r: DtrDetailResponse) {
@@ -53,6 +55,8 @@ export default function DtrDetailTable({
   loading,
   onChanged,
   readOnly,
+  dateFrom,
+  dateTo,
 }: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -106,6 +110,7 @@ export default function DtrDetailTable({
     restDoubleLegalNDHours: 75,
     restDoubleLegalNDOTHours: 90,
     obHours: 75,
+    leaveHours: 75,
   });
 
   const col = (
@@ -405,6 +410,11 @@ export default function DtrDetailTable({
           onHeaderCell: groupHeader(GC.ob.group),
           children: [col("OB Hrs", "obHours", 75, GC.ob.sub)],
         },
+        {
+          title: "Leave",
+          onHeaderCell: groupHeader(GC.ob.group),
+          children: [col("Leave Hrs", "leaveHours", 75, GC.ob.sub)],
+        },
       ],
     },
   ];
@@ -476,6 +486,8 @@ export default function DtrDetailTable({
           employeeId={selectedRow.employeeId}
           employeeName={selectedRow.fullName}
           workDate={selectedRow.workDate}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
         />
       )}
     </>

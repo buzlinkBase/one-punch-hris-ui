@@ -15,13 +15,36 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 const PAY_SOURCE_COLOR: Record<string, string> = {
   Company: "blue",
   Government: "green",
+  Shared: "cyan",
   Unpaid: "default",
   Other: "orange",
+};
+
+const PAY_SOURCE_LABEL: Record<string, string> = {
+  Company: "Company (employer-funded)",
+  Government: "Government (SSS / GSIS)",
+  Shared: "Shared (employer advances, government reimburses)",
+  Unpaid: "Unpaid (no pay)",
+  Other: "Other",
 };
 
 const RESET_LABELS: Record<string, string> = {
   PerEvent: "Per Event",
   PerPeriod: "Per Period",
+};
+
+const ACCRUAL_LABELS: Record<string, string> = {
+  None: "Manual",
+  Monthly: "Monthly",
+  Annually: "Annually",
+  PerPayPeriod: "Per Pay Period",
+  PerEvent: "Per Event",
+};
+
+const CARRY_OVER_COLOR: Record<string, string> = {
+  Forfeit: "red",
+  Unlimited: "green",
+  Capped: "orange",
 };
 
 interface Props {
@@ -37,10 +60,14 @@ export default function LeaveTypeTable({ data, loading, onDelete }: Props) {
   const { widths, handleResize } = useResizableColumns({
     code: 100,
     description: 200,
-    category: 120,
-    credits: 110,
-    paySource: 120,
-    leaveReset: 120,
+    category: 110,
+    credits: 90,
+    accrualBasis: 120,
+    paySource: 130,
+    leaveReset: 110,
+    carryOverType: 110,
+    isStatutory: 90,
+    minServiceMonths: 100,
   });
 
   const filtered = data.filter((item) =>
@@ -91,7 +118,7 @@ export default function LeaveTypeTable({ data, loading, onDelete }: Props) {
         ),
     },
     {
-      title: LEAVE_TYPE_LABEL.CREDITS,
+      title: "Entitlement",
       dataIndex: "credits",
       key: "credits",
       width: widths.credits,
@@ -100,7 +127,28 @@ export default function LeaveTypeTable({ data, loading, onDelete }: Props) {
           width: widths.credits,
           onResize: (w: number) => handleResize("credits", w),
         }) as object,
-      render: (val: number) => `${val} day${val !== 1 ? "s" : ""}`,
+      render: (_: unknown, record: LeaveTypeResponse) => {
+        if (record.accrualBasis === "Monthly")
+          return `${record.accrualRate}/mo`;
+        if (record.accrualBasis === "Annually")
+          return `${record.accrualRate}/yr`;
+        if (record.accrualBasis === "PerPayPeriod")
+          return `${record.accrualRate}/pp`;
+        const val = record.credits;
+        return `${val} day${val !== 1 ? "s" : ""}`;
+      },
+    },
+    {
+      title: "Accrual",
+      dataIndex: "accrualBasis",
+      key: "accrualBasis",
+      width: widths.accrualBasis,
+      onHeaderCell: () =>
+        ({
+          width: widths.accrualBasis,
+          onResize: (w: number) => handleResize("accrualBasis", w),
+        }) as object,
+      render: (val: string) => ACCRUAL_LABELS[val] ?? val,
     },
     {
       title: LEAVE_TYPE_LABEL.PAY_SOURCE,
@@ -113,11 +161,13 @@ export default function LeaveTypeTable({ data, loading, onDelete }: Props) {
           onResize: (w: number) => handleResize("paySource", w),
         }) as object,
       render: (val: string) => (
-        <Tag color={PAY_SOURCE_COLOR[val] ?? "default"}>{val}</Tag>
+        <Tag color={PAY_SOURCE_COLOR[val] ?? "default"}>
+          {PAY_SOURCE_LABEL[val] ?? val}
+        </Tag>
       ),
     },
     {
-      title: LEAVE_TYPE_LABEL.LEAVE_RESET,
+      title: "Reset",
       dataIndex: "leaveReset",
       key: "leaveReset",
       width: widths.leaveReset,
@@ -127,6 +177,50 @@ export default function LeaveTypeTable({ data, loading, onDelete }: Props) {
           onResize: (w: number) => handleResize("leaveReset", w),
         }) as object,
       render: (val: string) => RESET_LABELS[val] ?? val,
+    },
+    {
+      title: "Carry-Over",
+      dataIndex: "carryOverType",
+      key: "carryOverType",
+      width: widths.carryOverType,
+      onHeaderCell: () =>
+        ({
+          width: widths.carryOverType,
+          onResize: (w: number) => handleResize("carryOverType", w),
+        }) as object,
+      render: (val: string) => (
+        <Tag color={CARRY_OVER_COLOR[val] ?? "default"}>{val}</Tag>
+      ),
+    },
+    {
+      title: "Min. Service",
+      dataIndex: "minServiceMonths",
+      key: "minServiceMonths",
+      width: widths.minServiceMonths,
+      onHeaderCell: () =>
+        ({
+          width: widths.minServiceMonths,
+          onResize: (w: number) => handleResize("minServiceMonths", w),
+        }) as object,
+      render: (val: number) =>
+        val === 0 ? (
+          <span style={{ color: "#8c8c8c" }}>Immediate</span>
+        ) : (
+          `${val} mo.`
+        ),
+    },
+    {
+      title: "Statutory",
+      dataIndex: "isStatutory",
+      key: "isStatutory",
+      width: widths.isStatutory,
+      onHeaderCell: () =>
+        ({
+          width: widths.isStatutory,
+          onResize: (w: number) => handleResize("isStatutory", w),
+        }) as object,
+      render: (val: boolean) =>
+        val ? <Tag color="gold">Statutory</Tag> : null,
     },
     {
       title: "Actions",

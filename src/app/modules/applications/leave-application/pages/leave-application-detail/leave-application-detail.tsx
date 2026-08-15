@@ -1,25 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Form,
   Input,
+  InputNumber,
   Button,
   Select,
   DatePicker,
+  TimePicker,
   Typography,
   Space,
   Tag,
   Card,
   Descriptions,
+  Radio,
+  Alert,
 } from "antd";
+import {
+  ClockCircleOutlined,
+  CalendarOutlined,
+  ExclamationCircleOutlined,
+  FileTextOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
   leaveApplicationFormSchema,
   type LeaveApplicationFormValues,
 } from "../../models/forms/leave-application-form.schema";
+import type { LeaveApplicationResponse } from "../../models/api/response/leave-application-response.model";
 import {
   useLeaveApplication,
   useCreateLeaveApplication,
@@ -33,9 +45,21 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 const { Title } = Typography;
 const { TextArea } = Input;
 
-const DAY_TYPE_OPTIONS = [
-  { value: "WholeDay", label: "Whole Day" },
-  { value: "HalfDay", label: "Half Day" },
+const ALL_DURATION_MODE_OPTIONS = [
+  { label: "Single Day", value: "singleday" },
+  { label: "Multi-Day Range", value: "multiday" },
+  { label: "Partial Day / Hourly", value: "partial" },
+];
+
+const ALL_DAY_FRACTION_OPTIONS = [
+  { label: "Full Day", value: "fullday" },
+  { label: "AM Half", value: "am" },
+  { label: "PM Half", value: "pm" },
+];
+
+const PARTIAL_MODE_OPTIONS = [
+  { label: "Time Range", value: "timerange" },
+  { label: "Hours Only", value: "hours" },
 ];
 
 const PAY_TYPE_OPTIONS = [
@@ -57,6 +81,22 @@ const STATUS_COLOR: Record<string, string> = {
   Declined: "error",
 };
 
+const PAY_SOURCE_COLOR: Record<string, string> = {
+  Company: "blue",
+  Government: "green",
+  Shared: "cyan",
+  Unpaid: "default",
+  Other: "orange",
+};
+
+const PAY_SOURCE_LABEL: Record<string, string> = {
+  Company: "Company (employer-funded)",
+  Government: "Government (SSS / GSIS)",
+  Shared: "Shared (employer advances, government reimburses)",
+  Unpaid: "Unpaid (no pay)",
+  Other: "Other",
+};
+
 const filterOption = (
   input: string,
   option?: { label?: string | number | boolean },
@@ -64,6 +104,76 @@ const filterOption = (
   String(option?.label ?? "")
     .toLowerCase()
     .includes(input.toLowerCase());
+
+function isCrossMidnight(start: string, end: string): boolean {
+  return !!start && !!end && end < start;
+}
+
+function buildStartDateTime(date: string, time: string): string {
+  if (!date || !time) return "";
+  return dayjs(`${date}T${time}`).format("YYYY-MM-DDTHH:mm:ss");
+}
+
+function buildEndDateTime(
+  _startDate: string,
+  endDate: string,
+  startTime: string,
+  endTime: string,
+): string {
+  const end = dayjs(`${endDate}T${endTime}`);
+  const adjusted = endTime < startTime ? end.add(1, "day") : end;
+  return adjusted.format("YYYY-MM-DDTHH:mm:ss");
+}
+
+function countBusinessDays(from: string, to: string): number {
+  if (!from || !to) return 0;
+  let count = 0;
+  let current = dayjs(from);
+  const end = dayjs(to);
+  while (!current.isAfter(end)) {
+    const dow = current.day();
+    if (dow !== 0 && dow !== 6) count++;
+    current = current.add(1, "day");
+  }
+  return count;
+}
+
+function parseDurationType(
+  raw: string | undefined,
+): "singleday" | "multiday" | "partial" | undefined {
+  if (raw === "SingleDay") return "singleday";
+  if (raw === "MultiDay") return "multiday";
+  if (raw === "Partial") return "partial";
+  return undefined;
+}
+
+function deriveEditState(r: LeaveApplicationResponse): {
+  mode: "singleday" | "multiday" | "partial";
+  dayFraction: "fullday" | "am" | "pm";
+  partialMode: "timerange" | "hours";
+} {
+  const mode: "singleday" | "multiday" | "partial" =
+    parseDurationType(r.durationType) ??
+    (r.leaveDateFrom !== r.leaveDateTo
+      ? "multiday"
+      : r.dayFraction === "AM" || r.dayFraction === "PM"
+        ? "singleday"
+        : r.startTime || r.endTime || r.isManualEntry
+          ? "partial"
+          : "singleday");
+
+  let dayFraction: "fullday" | "am" | "pm" = "fullday";
+  if (mode === "singleday") {
+    if (r.dayFraction === "AM") dayFraction = "am";
+    else if (r.dayFraction === "PM") dayFraction = "pm";
+  }
+
+  const partialMode: "timerange" | "hours" = r.isManualEntry
+    ? "hours"
+    : "timerange";
+
+  return { mode, dayFraction, partialMode };
+}
 
 export default function LeaveApplicationDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -93,49 +203,212 @@ export default function LeaveApplicationDetail() {
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<LeaveApplicationFormValues>({
     resolver: zodResolver(leaveApplicationFormSchema),
     defaultValues: {
       employeeId: "",
       leaveId: "",
+      mode: "singleday",
+      leaveDate: "",
+      dayFraction: "fullday",
       leaveDateFrom: "",
       leaveDateTo: "",
-      dayType: "WholeDay",
+      partialMode: "timerange",
+      startTime: "",
+      endTime: "",
+      totalHours: undefined,
       payType: "WithPay",
       applicationRemarks: "",
-      approvalStatus: "Approved",
+      supportingDocumentUrl: "",
+      approvalStatus: "ForApproval",
     },
   });
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const dateFrom = watch("leaveDateFrom");
-  const dateTo = watch("leaveDateTo");
+  const mode = useWatch({ control, name: "mode" });
+  const partialMode = useWatch({ control, name: "partialMode" });
+  const leaveDate = useWatch({ control, name: "leaveDate" });
+  const leaveDateFrom = useWatch({ control, name: "leaveDateFrom" });
+  const leaveDateTo = useWatch({ control, name: "leaveDateTo" });
+  const startTime = useWatch({ control, name: "startTime" });
+  const endTime = useWatch({ control, name: "endTime" });
+  const leaveId = useWatch({ control, name: "leaveId" });
+  const dayFraction = useWatch({ control, name: "dayFraction" });
+
+  const policy = useMemo(
+    () => leaveTypes.find((l) => l.id === leaveId) ?? null,
+    [leaveTypes, leaveId],
+  );
+
+  // Filter duration modes based on policy
+  const durationModeOptions = useMemo(() => {
+    if (!policy) return ALL_DURATION_MODE_OPTIONS;
+    return ALL_DURATION_MODE_OPTIONS.filter(
+      (o) => o.value !== "partial" || policy.allowPartial,
+    );
+  }, [policy]);
+
+  // Filter day fraction options based on policy
+  const dayFractionOptions = useMemo(() => {
+    if (!policy || policy.allowHalfDay) return ALL_DAY_FRACTION_OPTIONS;
+    return ALL_DAY_FRACTION_OPTIONS.map((o) => ({
+      ...o,
+      disabled: o.value === "am" || o.value === "pm",
+    }));
+  }, [policy]);
+
+  const clearEntryFields = () => {
+    setValue("leaveDate", "");
+    setValue("dayFraction", "fullday");
+    setValue("leaveDateFrom", "");
+    setValue("leaveDateTo", "");
+    setValue("partialMode", "timerange");
+    setValue("startTime", "");
+    setValue("endTime", "");
+    setValue("totalHours", undefined);
+  };
+
+  // If selected mode becomes unavailable after policy load, reset to singleday
+  useEffect(() => {
+    if (policy && mode === "partial" && !policy.allowPartial) {
+      setValue("mode", "singleday");
+      clearEntryFields();
+    }
+    if (
+      policy &&
+      !policy.allowHalfDay &&
+      (dayFraction === "am" || dayFraction === "pm")
+    ) {
+      setValue("dayFraction", "fullday");
+    }
+  }, [policy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isEdit && selected) {
+      const {
+        mode: editMode,
+        dayFraction,
+        partialMode: pMode,
+      } = deriveEditState(selected);
       reset({
         employeeId: selected.employeeId,
         leaveId: selected.leaveId,
-        leaveDateFrom: selected.leaveDateFrom,
-        leaveDateTo: selected.leaveDateTo,
-        dayType: selected.dayType,
+        mode: editMode,
+        leaveDate: editMode !== "multiday" ? selected.leaveDateFrom : "",
+        dayFraction,
+        leaveDateFrom: editMode === "multiday" ? selected.leaveDateFrom : "",
+        leaveDateTo: editMode === "multiday" ? selected.leaveDateTo : "",
+        partialMode: pMode,
+        startTime:
+          editMode === "partial" && pMode === "timerange" && selected.startTime
+            ? dayjs(selected.startTime).format("HH:mm:ss")
+            : "",
+        endTime:
+          editMode === "partial" && pMode === "timerange" && selected.endTime
+            ? dayjs(selected.endTime).format("HH:mm:ss")
+            : "",
+        totalHours:
+          editMode === "partial" &&
+          pMode === "hours" &&
+          selected.totalMinutes != null
+            ? selected.totalMinutes / 60
+            : undefined,
         payType: selected.payType ?? "WithPay",
         applicationRemarks: selected.applicationRemarks ?? "",
+        supportingDocumentUrl: selected.supportingDocumentUrl ?? "",
         approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: LeaveApplicationFormValues) => {
-    if (isEdit && id) {
-      await update({ id, ...values });
+    const isMultiDay = values.mode === "multiday";
+    const dateFrom = isMultiDay ? values.leaveDateFrom! : values.leaveDate!;
+    const dateTo = isMultiDay ? values.leaveDateTo! : values.leaveDate!;
+
+    const durationType: "SingleDay" | "MultiDay" | "Partial" =
+      values.mode === "multiday"
+        ? "MultiDay"
+        : values.mode === "partial"
+          ? "Partial"
+          : "SingleDay";
+
+    let dayFractionPayload: "FullDay" | "AM" | "PM" = "FullDay";
+    if (values.mode === "singleday") {
+      if (values.dayFraction === "am") dayFractionPayload = "AM";
+      else if (values.dayFraction === "pm") dayFractionPayload = "PM";
+    }
+
+    let timePayload: {
+      isManualEntry: boolean;
+      startTime?: string | null;
+      endTime?: string | null;
+      totalMinutes?: number | null;
+    };
+
+    const pMode = values.partialMode ?? "timerange";
+    if (values.mode === "partial" && pMode === "timerange") {
+      timePayload = {
+        isManualEntry: false,
+        startTime: buildStartDateTime(dateFrom, values.startTime ?? ""),
+        endTime: buildEndDateTime(
+          dateFrom,
+          dateTo,
+          values.startTime ?? "",
+          values.endTime ?? "",
+        ),
+        totalMinutes: null,
+      };
+    } else if (values.mode === "partial" && pMode === "hours") {
+      timePayload = {
+        isManualEntry: true,
+        startTime: null,
+        endTime: null,
+        totalMinutes: Math.round((values.totalHours ?? 0) * 60),
+      };
     } else {
-      await add(values);
+      timePayload = {
+        isManualEntry: false,
+        startTime: null,
+        endTime: null,
+        totalMinutes: null,
+      };
+    }
+
+    const basePayload = {
+      employeeId: values.employeeId,
+      leaveId: values.leaveId,
+      durationType,
+      leaveDateFrom: dateFrom,
+      leaveDateTo: dateTo,
+      dayFraction: dayFractionPayload,
+      payType: values.payType,
+      applicationRemarks: values.applicationRemarks,
+      supportingDocumentUrl: values.supportingDocumentUrl || undefined,
+      ...timePayload,
+    };
+
+    if (isEdit && id) {
+      await update({
+        id,
+        approvalStatus: values.approvalStatus,
+        ...basePayload,
+      });
+    } else {
+      await add(basePayload);
     }
     navigate({ to: "/applications/leave" });
   };
+
+  const crossMidnight =
+    mode === "partial" &&
+    partialMode === "timerange" &&
+    isCrossMidnight(startTime ?? "", endTime ?? "");
+
+  const businessDays =
+    mode === "multiday"
+      ? countBusinessDays(leaveDateFrom ?? "", leaveDateTo ?? "")
+      : 0;
 
   return (
     <div className="content-page">
@@ -233,21 +506,159 @@ export default function LeaveApplicationDetail() {
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-4 gap-x-6">
+          {/* Policy info panel */}
+          {policy && (
+            <Card
+              size="small"
+              className="mb-4"
+              style={{
+                background: "var(--ant-color-bg-container-disabled, #fafafa)",
+              }}
+            >
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+                <span>
+                  <Tag
+                    color={PAY_SOURCE_COLOR[policy.paySource] ?? "default"}
+                    style={{ fontSize: 11 }}
+                  >
+                    {PAY_SOURCE_LABEL[policy.paySource] ?? policy.paySource}
+                  </Tag>
+                  {policy.isStatutory && (
+                    <Tag color="gold" style={{ fontSize: 11 }}>
+                      Statutory
+                    </Tag>
+                  )}
+                </span>
+                {policy.credits > 0 && (
+                  <span>
+                    <CalendarOutlined className="mr-1" />
+                    {policy.credits} credit{policy.credits !== 1 ? "s" : ""}
+                  </span>
+                )}
+                {policy.maxDaysPerYear != null && (
+                  <span>
+                    <ClockCircleOutlined className="mr-1" />
+                    Max {policy.maxDaysPerYear} day
+                    {policy.maxDaysPerYear !== 1 ? "s" : ""}/year
+                  </span>
+                )}
+                {policy.maxConsecutiveDays != null && (
+                  <span>
+                    <ClockCircleOutlined className="mr-1" />
+                    Max {policy.maxConsecutiveDays} consecutive day
+                    {policy.maxConsecutiveDays !== 1 ? "s" : ""}
+                  </span>
+                )}
+                {policy.minServiceMonths > 0 && (
+                  <span>
+                    <UserOutlined className="mr-1" />
+                    Requires {policy.minServiceMonths} mo. service
+                  </span>
+                )}
+                {policy.genderRestriction !== "None" && (
+                  <span style={{ color: "#d48806" }}>
+                    <ExclamationCircleOutlined className="mr-1" />
+                    {policy.genderRestriction === "MaleOnly"
+                      ? "Male only"
+                      : "Female only"}
+                  </span>
+                )}
+                {!policy.allowHalfDay && (
+                  <span style={{ color: "#8c8c8c" }}>Half-day not allowed</span>
+                )}
+                {!policy.allowPartial && (
+                  <span style={{ color: "#8c8c8c" }}>
+                    Partial/hourly not allowed
+                  </span>
+                )}
+              </div>
+
+              {policy.requiresSupportingDocument && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  banner
+                  message="Supporting document required for this leave type"
+                  className="mt-2"
+                  style={{ fontSize: 12 }}
+                />
+              )}
+            </Card>
+          )}
+
+          <Form.Item label="Duration Type">
+            <Controller
+              name="mode"
+              control={control}
+              render={({ field }) => (
+                <Radio.Group
+                  {...field}
+                  options={durationModeOptions}
+                  optionType="button"
+                  buttonStyle="solid"
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    clearEntryFields();
+                  }}
+                />
+              )}
+            />
+          </Form.Item>
+
+          {/* Single Day */}
+          {mode === "singleday" && (
+            <div className="grid grid-cols-2 gap-x-6" style={{ maxWidth: 520 }}>
+              <Form.Item
+                label="Leave Date"
+                validateStatus={errors.leaveDate ? "error" : ""}
+                help={errors.leaveDate?.message}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  value={leaveDate ? dayjs(leaveDate) : null}
+                  onChange={(d) =>
+                    setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
+                  }
+                />
+              </Form.Item>
+              <Form.Item
+                label="Day Fraction"
+                validateStatus={errors.dayFraction ? "error" : ""}
+                help={errors.dayFraction?.message}
+              >
+                <Controller
+                  name="dayFraction"
+                  control={control}
+                  render={({ field }) => (
+                    <Radio.Group
+                      {...field}
+                      options={dayFractionOptions}
+                      optionType="button"
+                    />
+                  )}
+                />
+              </Form.Item>
+            </div>
+          )}
+
+          {/* Multi-Day Range */}
+          {mode === "multiday" && (
             <Form.Item
               label="Leave Date Range"
-              className="col-span-2"
               validateStatus={
                 errors.leaveDateFrom || errors.leaveDateTo ? "error" : ""
               }
               help={
                 errors.leaveDateFrom?.message ?? errors.leaveDateTo?.message
               }
+              style={{ maxWidth: 420 }}
             >
               <DatePicker.RangePicker
                 style={{ width: "100%" }}
                 value={
-                  dateFrom && dateTo ? [dayjs(dateFrom), dayjs(dateTo)] : null
+                  leaveDateFrom && leaveDateTo
+                    ? [dayjs(leaveDateFrom), dayjs(leaveDateTo)]
+                    : null
                 }
                 onChange={(dates) => {
                   setValue(
@@ -260,22 +671,142 @@ export default function LeaveApplicationDetail() {
                   );
                 }}
               />
+              {leaveDateFrom && leaveDateTo && (
+                <div className="mt-1 text-xs text-gray-500">
+                  {businessDays} business day{businessDays !== 1 ? "s" : ""}
+                </div>
+              )}
             </Form.Item>
+          )}
 
-            <Form.Item
-              label={LEAVE_APPLICATION_LABEL.DAY_TYPE}
-              validateStatus={errors.dayType ? "error" : ""}
-              help={errors.dayType?.message}
-            >
-              <Controller
-                name="dayType"
-                control={control}
-                render={({ field }) => (
-                  <Select {...field} options={DAY_TYPE_OPTIONS} />
-                )}
-              />
-            </Form.Item>
+          {/* Partial Day / Hourly */}
+          {mode === "partial" && (
+            <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-4 pt-4 pb-1 mb-6">
+              <Form.Item label="Entry Method">
+                <Controller
+                  name="partialMode"
+                  control={control}
+                  render={({ field }) => (
+                    <Radio.Group
+                      {...field}
+                      options={PARTIAL_MODE_OPTIONS}
+                      optionType="button"
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                        setValue("startTime", "");
+                        setValue("endTime", "");
+                        setValue("totalHours", undefined);
+                      }}
+                    />
+                  )}
+                />
+              </Form.Item>
 
+              {partialMode === "hours" ? (
+                <div
+                  className="grid grid-cols-2 gap-x-6"
+                  style={{ maxWidth: 480 }}
+                >
+                  <Form.Item
+                    label="Leave Date"
+                    validateStatus={errors.leaveDate ? "error" : ""}
+                    help={errors.leaveDate?.message}
+                  >
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      value={leaveDate ? dayjs(leaveDate) : null}
+                      onChange={(d) =>
+                        setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Total Hours"
+                    validateStatus={errors.totalHours ? "error" : ""}
+                    help={errors.totalHours?.message}
+                  >
+                    <Controller
+                      name="totalHours"
+                      control={control}
+                      render={({ field }) => (
+                        <InputNumber
+                          {...field}
+                          style={{ width: "100%" }}
+                          min={0.25}
+                          max={999}
+                          step={0.25}
+                          precision={2}
+                          addonAfter="hrs"
+                          placeholder="e.g. 4"
+                          onChange={(val) => field.onChange(val ?? undefined)}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-x-6">
+                  <Form.Item
+                    label="Leave Date"
+                    validateStatus={errors.leaveDate ? "error" : ""}
+                    help={errors.leaveDate?.message}
+                  >
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      value={leaveDate ? dayjs(leaveDate) : null}
+                      onChange={(d) =>
+                        setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Start Time"
+                    validateStatus={errors.startTime ? "error" : ""}
+                    help={errors.startTime?.message}
+                  >
+                    <TimePicker
+                      style={{ width: "100%" }}
+                      use12Hours
+                      format="hh:mm A"
+                      value={startTime ? dayjs(startTime, "HH:mm:ss") : null}
+                      onChange={(t) =>
+                        setValue("startTime", t?.format("HH:mm:ss") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label={
+                      <span className="flex items-center gap-2">
+                        End Time
+                        {crossMidnight && (
+                          <Tag
+                            color="blue"
+                            className="text-[11px] leading-none"
+                          >
+                            +1 day
+                          </Tag>
+                        )}
+                      </span>
+                    }
+                    validateStatus={errors.endTime ? "error" : ""}
+                    help={errors.endTime?.message}
+                  >
+                    <TimePicker
+                      style={{ width: "100%" }}
+                      use12Hours
+                      format="hh:mm A"
+                      value={endTime ? dayjs(endTime, "HH:mm:ss") : null}
+                      onChange={(t) =>
+                        setValue("endTime", t?.format("HH:mm:ss") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-4 gap-x-6">
             <Form.Item
               label={LEAVE_APPLICATION_LABEL.PAY_TYPE}
               validateStatus={errors.payType ? "error" : ""}
@@ -289,17 +820,17 @@ export default function LeaveApplicationDetail() {
                 )}
               />
             </Form.Item>
-          </div>
 
-          <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
-            <Controller
-              name="approvalStatus"
-              control={control}
-              render={({ field }) => (
-                <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
-              )}
-            />
-          </Form.Item>
+            <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
+              <Controller
+                name="approvalStatus"
+                control={control}
+                render={({ field }) => (
+                  <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+                )}
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item
             label={LEAVE_APPLICATION_LABEL.REMARKS}
@@ -318,6 +849,31 @@ export default function LeaveApplicationDetail() {
               )}
             />
           </Form.Item>
+
+          {policy?.requiresSupportingDocument && (
+            <Form.Item
+              label={
+                <span className="flex items-center gap-1">
+                  <FileTextOutlined />
+                  Supporting Document URL
+                </span>
+              }
+              validateStatus={errors.supportingDocumentUrl ? "error" : ""}
+              help={errors.supportingDocumentUrl?.message}
+            >
+              <Controller
+                name="supportingDocumentUrl"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    placeholder="Paste a link to the uploaded supporting document"
+                    allowClear
+                  />
+                )}
+              />
+            </Form.Item>
+          )}
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">

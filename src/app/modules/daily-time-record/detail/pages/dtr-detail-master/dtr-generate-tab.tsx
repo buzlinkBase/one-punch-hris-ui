@@ -473,6 +473,8 @@ export default function DtrGenerateTab() {
         data={records}
         loading={isLoading}
         onChanged={() => refetch()}
+        dateFrom={committedFilter?.fromDate}
+        dateTo={committedFilter?.toDate}
       />
     </>
   );

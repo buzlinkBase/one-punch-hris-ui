@@ -21,6 +21,7 @@ export interface DtrDetailResponse {
   holCount: number;
   spCount: number;
   leaveHours: number;
+  creditsSpent: number;
   regularNetHours: number;
   regularOTHours: number;
   regularNDHours: number;
