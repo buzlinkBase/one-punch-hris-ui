@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Form, Modal, Select } from "antd";
+import { Button, Form, Modal, Select } from "antd";
+import { UnorderedListOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import { useCreateWorkRotation } from "@/app/modules/change-schedule/work-rotation/hooks/use-work-rotation-queries";
 import { getNotify } from "@/shared/utils/notify";
@@ -56,6 +58,8 @@ export default function DtrChangeTimeShiftModal({
         ? `${s.shiftName} (${s.startTime} – ${s.endTime})`
         : s.shiftName,
   }));
+
+  const navigate = useNavigate();
 
   const handleClose = () => {
     setTimeShiftId(null);
@@ -135,6 +139,20 @@ export default function DtrChangeTimeShiftModal({
           />
         </Form.Item>
       </Form>
+      <div className="mt-3">
+        <Button
+          type="link"
+          size="small"
+          icon={<UnorderedListOutlined />}
+          style={{ padding: 0, fontSize: 12 }}
+          onClick={() => {
+            handleClose();
+            navigate({ to: "/change-schedule/work-rotation" });
+          }}
+        >
+          View Work Rotation Plan
+        </Button>
+      </div>
     </Modal>
   );
 }

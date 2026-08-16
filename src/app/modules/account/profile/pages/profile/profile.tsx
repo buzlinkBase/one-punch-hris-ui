@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Form, Input, Button, Typography, Tag, notification } from "antd";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import {
@@ -149,6 +150,8 @@ function ChangePasswordForm({ email }: { email: string }) {
     defaultValues: { oldPassword: "", newPassword: "", confirmPassword: "" },
   });
 
+  const newPassword = useWatch({ control, name: "newPassword" });
+
   const onSubmit = async (values: ChangePasswordFormValues) => {
     try {
       await changePassword({ email, ...values });
@@ -187,7 +190,6 @@ function ChangePasswordForm({ email }: { email: string }) {
         label="New Password"
         validateStatus={errors.newPassword ? "error" : ""}
         help={errors.newPassword?.message}
-        extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
       >
         <Controller
           name="newPassword"
@@ -196,6 +198,7 @@ function ChangePasswordForm({ email }: { email: string }) {
             <Input.Password {...field} placeholder="Min. 8 characters" />
           )}
         />
+        <PasswordRequirements value={newPassword} />
       </Form.Item>
 
       <Form.Item
@@ -232,6 +235,8 @@ function SetPasswordForm() {
     defaultValues: { password: "", confirmPassword: "" },
   });
 
+  const password = useWatch({ control, name: "password" });
+
   const onSubmit = async (values: SetPasswordFormValues) => {
     try {
       await setPassword(values);
@@ -255,7 +260,6 @@ function SetPasswordForm() {
         label="Password"
         validateStatus={errors.password ? "error" : ""}
         help={errors.password?.message}
-        extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
       >
         <Controller
           name="password"
@@ -264,6 +268,7 @@ function SetPasswordForm() {
             <Input.Password {...field} placeholder="Min. 8 characters" />
           )}
         />
+        <PasswordRequirements value={password} />
       </Form.Item>
 
       <Form.Item

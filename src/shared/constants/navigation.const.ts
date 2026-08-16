@@ -2,6 +2,7 @@ export interface NavItem {
   key: string;
   label: string;
   path?: string;
+  type?: "group";
   children?: NavItem[];
 }
 
@@ -128,58 +129,81 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     label: "Setup",
     children: [
       {
-        key: "Time Shift",
-        label: "Time Shift",
+        key: "setup-group-shifts",
+        label: "Time Shifts",
+        type: "group",
         children: [
           {
             key: "setup-fixed-shift",
-            label: "Fixed Time Shift",
+            label: "Fixed",
             path: "/setup/time-shift/fixed",
           },
           {
             key: "setup-split-shift",
-            label: "Split Shift",
+            label: "Split",
             path: "/setup/time-shift/split",
           },
-          // {
-          //   key: "setup-flexi-shift",
-          //   label: "Flexi Time Shift",
-          //   path: "/setup/time-shift/flexi",
-          // },
         ],
       },
-      { key: "setup-branch", label: "Branch", path: "/setup/branch" },
       {
-        key: "setup-project-site",
-        label: "Project Site",
-        path: "/setup/project-site",
+        key: "setup-group-org",
+        label: "Organization",
+        type: "group",
+        children: [
+          {
+            key: "setup-department",
+            label: "Department",
+            path: "/setup/department",
+          },
+          { key: "setup-section", label: "Section", path: "/setup/section" },
+          {
+            key: "setup-position",
+            label: "Position",
+            path: "/setup/position",
+          },
+          { key: "setup-branch", label: "Branch", path: "/setup/branch" },
+          {
+            key: "setup-project-site",
+            label: "Project Site",
+            path: "/setup/project-site",
+          },
+        ],
       },
       {
-        key: "setup-department",
-        label: "Department",
-        path: "/setup/department",
+        key: "setup-group-workforce",
+        label: "Workforce",
+        type: "group",
+        children: [
+          { key: "setup-client", label: "Client", path: "/setup/client" },
+          {
+            key: "setup-payroll-group",
+            label: "Payroll Group",
+            path: "/setup/payroll-group",
+          },
+          {
+            key: "setup-employee",
+            label: "Employee",
+            path: "/setup/employee",
+          },
+        ],
       },
-      { key: "setup-section", label: "Section", path: "/setup/section" },
-      { key: "setup-position", label: "Position", path: "/setup/position" },
       {
-        key: "setup-payroll-group",
-        label: "Payroll Group",
-        path: "/setup/payroll-group",
+        key: "setup-group-policy",
+        label: "Policy",
+        type: "group",
+        children: [
+          {
+            key: "setup-holiday",
+            label: "Holiday",
+            path: "/setup/holiday",
+          },
+          {
+            key: "setup-leave-type",
+            label: "Leave Types",
+            path: "/setup/leave-type",
+          },
+        ],
       },
-      { key: "setup-client", label: "Client", path: "/setup/client" },
-      { key: "setup-employee", label: "Employee", path: "/setup/employee" },
-      { key: "setup-holiday", label: "Holiday", path: "/setup/holiday" },
-      {
-        key: "setup-leave-type",
-        label: "Leave Types",
-        path: "/setup/leave-type",
-      },
-      // {
-      //   key: "setup-deduction-type",
-      //   label: "Deduction Type",
-      //   path: "/setup/deduction-type",
-      // },
-      // { key: "setup-deduction", label: "Deduction", path: "/setup/deduction" },
     ],
   },
   {

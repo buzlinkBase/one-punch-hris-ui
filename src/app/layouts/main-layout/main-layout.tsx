@@ -21,7 +21,9 @@ import {
   CheckOutlined,
   ClockCircleOutlined,
   DownOutlined,
+  EnvironmentOutlined,
   FileTextOutlined,
+  FileProtectOutlined,
   FieldTimeOutlined,
   IdcardOutlined,
   MenuFoldOutlined,
@@ -32,6 +34,7 @@ import {
   SafetyCertificateOutlined,
   SafetyOutlined,
   SettingOutlined,
+  SolutionOutlined,
   SwapOutlined,
   TeamOutlined,
   UserOutlined,
@@ -120,9 +123,15 @@ function getNavIcon(key: string): ReactNode {
     "setup-split-shift": <FieldTimeOutlined />,
     "setup-flexi-shift": <FieldTimeOutlined />,
     "setup-department": <ApartmentOutlined />,
+    "setup-section": <ApartmentOutlined />,
+    "setup-position": <SolutionOutlined />,
+    "setup-branch": <BankOutlined />,
+    "setup-project-site": <EnvironmentOutlined />,
+    "setup-client": <TeamOutlined />,
     "setup-operation-area": <BankOutlined />,
     "setup-payroll-group": <IdcardOutlined />,
     "setup-holiday": <CalendarOutlined />,
+    "setup-leave-type": <FileProtectOutlined />,
     "setup-employee": <UserOutlined />,
     clients: <TeamOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
@@ -145,6 +154,29 @@ function buildMenuItems(
   atRoot = true,
 ): MenuItem[] {
   return items.map((item) => {
+    if (item.type === "group") {
+      return {
+        type: "group" as const,
+        key: item.key,
+        label: (
+          <span
+            style={{
+              color: "#1DA081",
+              fontWeight: 600,
+              fontSize: 10,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            {item.label}
+          </span>
+        ),
+        children: item.children
+          ? buildMenuItems(item.children, hrDbReady, false)
+          : undefined,
+      };
+    }
+
     const disabled =
       atRoot && !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
     const label = disabled ? (
@@ -710,6 +742,16 @@ export default function MainLayout() {
                   </Badge>
                 </button>
               </Dropdown>
+              <Tooltip title="Company Policy">
+                <button
+                  type="button"
+                  className="header-collapse-trigger"
+                  aria-label="Company Policy"
+                  onClick={() => navigate({ to: "/setup/company-policy" })}
+                >
+                  <SettingOutlined />
+                </button>
+              </Tooltip>
             </div>
           </div>
         </Header>

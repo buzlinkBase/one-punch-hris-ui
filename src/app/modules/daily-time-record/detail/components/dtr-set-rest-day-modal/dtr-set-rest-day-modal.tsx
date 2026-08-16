@@ -17,6 +17,8 @@ interface Props {
   employeeId: string;
   employeeName: string | null | undefined;
   workDate: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export default function DtrSetRestDayModal({
@@ -26,11 +28,13 @@ export default function DtrSetRestDayModal({
   employeeId,
   employeeName,
   workDate,
+  dateFrom,
+  dateTo,
 }: Props) {
   const { mutateAsync: createRestDayDate, isPending: isSubmitting } =
     useCreateRestDayDate();
   const { data: existingRestDays = [], isLoading: isLoadingExisting } =
-    useRestDayDatesByEmployee(employeeId, { enabled: open });
+    useRestDayDatesByEmployee(employeeId, { enabled: open, dateFrom, dateTo });
   const { mutateAsync: deleteRestDayDate, isPending: isDeleting } =
     useDeleteRestDayDate();
 
@@ -97,6 +101,12 @@ export default function DtrSetRestDayModal({
       <div className="mt-5">
         <div className="mb-2" style={{ fontSize: 13, color: "#8c8c8c" }}>
           Previously set rest days
+          {dateFrom && dateTo && (
+            <span style={{ marginLeft: 6 }}>
+              ({dayjs(dateFrom).format("MMM DD")} –{" "}
+              {dayjs(dateTo).format("MMM DD, YYYY")})
+            </span>
+          )}
         </div>
         <List
           size="small"

@@ -1,13 +1,17 @@
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   Input,
+  InputNumber,
   Button,
   Select,
   DatePicker,
+  TimePicker,
   Typography,
   Space,
+  Tag,
+  Radio,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -24,11 +28,22 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
 const { TextArea } = Input;
-const { RangePicker } = DatePicker;
 
-const DAY_TYPE_OPTIONS = [
-  { label: "Whole Day", value: "WholeDay" },
-  { label: "Half Day", value: "HalfDay" },
+const DURATION_MODE_OPTIONS = [
+  { label: "Single Day", value: "singleday" },
+  { label: "Multi-Day Range", value: "multiday" },
+  { label: "Partial Day / Hourly", value: "partial" },
+];
+
+const DAY_FRACTION_OPTIONS = [
+  { label: "Full Day", value: "fullday" },
+  { label: "AM Half", value: "am" },
+  { label: "PM Half", value: "pm" },
+];
+
+const PARTIAL_MODE_OPTIONS = [
+  { label: "Time Range", value: "timerange" },
+  { label: "Hours Only", value: "hours" },
 ];
 
 const PAY_TYPE_OPTIONS = [
@@ -44,10 +59,42 @@ const filterOption = (
     .toLowerCase()
     .includes(input.toLowerCase());
 
+function isCrossMidnight(start: string, end: string): boolean {
+  return !!start && !!end && end < start;
+}
+
+function buildStartDateTime(date: string, time: string): string {
+  if (!date || !time) return "";
+  return dayjs(`${date}T${time}`).format("YYYY-MM-DDTHH:mm:ss");
+}
+
+function buildEndDateTime(
+  _startDate: string,
+  endDate: string,
+  startTime: string,
+  endTime: string,
+): string {
+  const end = dayjs(`${endDate}T${endTime}`);
+  const adjusted = endTime < startTime ? end.add(1, "day") : end;
+  return adjusted.format("YYYY-MM-DDTHH:mm:ss");
+}
+
+function countBusinessDays(from: string, to: string): number {
+  if (!from || !to) return 0;
+  let count = 0;
+  let current = dayjs(from);
+  const end = dayjs(to);
+  while (!current.isAfter(end)) {
+    const dow = current.day();
+    if (dow !== 0 && dow !== 6) count++;
+    current = current.add(1, "day");
+  }
+  return count;
+}
+
 const defaultEntry = () => ({
   employeeId: "",
   leaveId: "",
-  dayType: "WholeDay",
   payType: "WithPay",
   applicationRemarks: "",
 });
@@ -72,14 +119,20 @@ export default function LeaveApplicationBatch() {
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<BatchLeaveFormValues>({
     resolver: zodResolver(batchLeaveFormSchema),
     defaultValues: {
+      mode: "singleday",
+      leaveDate: "",
+      dayFraction: "fullday",
       leaveDateFrom: "",
       leaveDateTo: "",
+      partialMode: "timerange",
+      startTime: "",
+      endTime: "",
+      totalHours: undefined,
       entries: [defaultEntry()],
     },
   });
@@ -89,20 +142,101 @@ export default function LeaveApplicationBatch() {
     name: "entries",
   });
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const leaveDateFrom = watch("leaveDateFrom");
-  const leaveDateTo = watch("leaveDateTo");
+  const mode = useWatch({ control, name: "mode" });
+  const partialMode = useWatch({ control, name: "partialMode" });
+  const leaveDate = useWatch({ control, name: "leaveDate" });
+  const leaveDateFrom = useWatch({ control, name: "leaveDateFrom" });
+  const leaveDateTo = useWatch({ control, name: "leaveDateTo" });
+  const startTime = useWatch({ control, name: "startTime" });
+  const endTime = useWatch({ control, name: "endTime" });
+
+  const clearEntryFields = () => {
+    setValue("leaveDate", "");
+    setValue("dayFraction", "fullday");
+    setValue("leaveDateFrom", "");
+    setValue("leaveDateTo", "");
+    setValue("partialMode", "timerange");
+    setValue("startTime", "");
+    setValue("endTime", "");
+    setValue("totalHours", undefined);
+  };
+
+  const crossMidnight =
+    mode === "partial" &&
+    partialMode === "timerange" &&
+    isCrossMidnight(startTime ?? "", endTime ?? "");
+
+  const businessDays =
+    mode === "multiday"
+      ? countBusinessDays(leaveDateFrom ?? "", leaveDateTo ?? "")
+      : 0;
 
   const onSubmit = async (values: BatchLeaveFormValues) => {
+    const isMultiDay = values.mode === "multiday";
+    const dateFrom = isMultiDay ? values.leaveDateFrom! : values.leaveDate!;
+    const dateTo = isMultiDay ? values.leaveDateTo! : values.leaveDate!;
+
+    const durationType =
+      values.mode === "multiday"
+        ? "MultiDay"
+        : values.mode === "partial"
+          ? "Partial"
+          : "SingleDay";
+
+    let dayFractionPayload: "FullDay" | "AM" | "PM" = "FullDay";
+    if (values.mode === "singleday") {
+      if (values.dayFraction === "am") dayFractionPayload = "AM";
+      else if (values.dayFraction === "pm") dayFractionPayload = "PM";
+    }
+
+    const pMode = values.partialMode ?? "timerange";
+    let timePayload: {
+      isManualEntry: boolean;
+      startTime?: string | null;
+      endTime?: string | null;
+      totalMinutes?: number | null;
+    };
+
+    if (values.mode === "partial" && pMode === "timerange") {
+      timePayload = {
+        isManualEntry: false,
+        startTime: buildStartDateTime(dateFrom, values.startTime ?? ""),
+        endTime: buildEndDateTime(
+          dateFrom,
+          dateTo,
+          values.startTime ?? "",
+          values.endTime ?? "",
+        ),
+        totalMinutes: null,
+      };
+    } else if (values.mode === "partial" && pMode === "hours") {
+      timePayload = {
+        isManualEntry: true,
+        startTime: null,
+        endTime: null,
+        totalMinutes: Math.round((values.totalHours ?? 0) * 60),
+      };
+    } else {
+      timePayload = {
+        isManualEntry: false,
+        startTime: null,
+        endTime: null,
+        totalMinutes: null,
+      };
+    }
+
     const payload: CreateLeaveApplication[] = values.entries.map((entry) => ({
       employeeId: entry.employeeId,
       leaveId: entry.leaveId,
-      leaveDateFrom: values.leaveDateFrom,
-      leaveDateTo: values.leaveDateTo,
-      dayType: entry.dayType,
+      durationType,
+      leaveDateFrom: dateFrom,
+      leaveDateTo: dateTo,
+      dayFraction: dayFractionPayload,
       payType: entry.payType,
       applicationRemarks: entry.applicationRemarks,
+      ...timePayload,
     }));
+
     await createBatch(payload);
     navigate({ to: "/applications/leave" });
   };
@@ -116,7 +250,8 @@ export default function LeaveApplicationBatch() {
               File Leave
             </Title>
             <p className="page-toolbar-subtitle">
-              File leave for multiple employees with the same date range.
+              File leave for one or more employees with the same duration and
+              date.
             </p>
           </div>
           <Space>
@@ -129,37 +264,232 @@ export default function LeaveApplicationBatch() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          {/* Shared date range */}
-          <Form.Item
-            label="Leave Period"
-            validateStatus={
-              errors.leaveDateFrom || errors.leaveDateTo ? "error" : ""
-            }
-            help={errors.leaveDateFrom?.message ?? errors.leaveDateTo?.message}
-            style={{ maxWidth: 360 }}
-          >
-            <RangePicker
-              style={{ width: "100%" }}
-              value={[
-                leaveDateFrom ? dayjs(leaveDateFrom) : null,
-                leaveDateTo ? dayjs(leaveDateTo) : null,
-              ]}
-              onChange={(dates) => {
-                setValue(
-                  "leaveDateFrom",
-                  dates?.[0]?.format("YYYY-MM-DD") ?? "",
-                );
-                setValue("leaveDateTo", dates?.[1]?.format("YYYY-MM-DD") ?? "");
-              }}
+          {/* Shared duration settings */}
+          <Form.Item label="Duration Type">
+            <Controller
+              name="mode"
+              control={control}
+              render={({ field }) => (
+                <Radio.Group
+                  {...field}
+                  options={DURATION_MODE_OPTIONS}
+                  optionType="button"
+                  buttonStyle="solid"
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    clearEntryFields();
+                  }}
+                />
+              )}
             />
           </Form.Item>
 
-          {/* Table */}
+          {/* Single Day */}
+          {mode === "singleday" && (
+            <div className="grid grid-cols-2 gap-x-6" style={{ maxWidth: 520 }}>
+              <Form.Item
+                label="Leave Date"
+                validateStatus={errors.leaveDate ? "error" : ""}
+                help={errors.leaveDate?.message}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  value={leaveDate ? dayjs(leaveDate) : null}
+                  onChange={(d) =>
+                    setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
+                  }
+                />
+              </Form.Item>
+              <Form.Item
+                label="Day Fraction"
+                validateStatus={errors.dayFraction ? "error" : ""}
+                help={errors.dayFraction?.message}
+              >
+                <Controller
+                  name="dayFraction"
+                  control={control}
+                  render={({ field }) => (
+                    <Radio.Group
+                      {...field}
+                      options={DAY_FRACTION_OPTIONS}
+                      optionType="button"
+                    />
+                  )}
+                />
+              </Form.Item>
+            </div>
+          )}
+
+          {/* Multi-Day Range */}
+          {mode === "multiday" && (
+            <Form.Item
+              label="Leave Date Range"
+              validateStatus={
+                errors.leaveDateFrom || errors.leaveDateTo ? "error" : ""
+              }
+              help={
+                errors.leaveDateFrom?.message ?? errors.leaveDateTo?.message
+              }
+              style={{ maxWidth: 420 }}
+            >
+              <DatePicker.RangePicker
+                style={{ width: "100%" }}
+                value={
+                  leaveDateFrom && leaveDateTo
+                    ? [dayjs(leaveDateFrom), dayjs(leaveDateTo)]
+                    : null
+                }
+                onChange={(dates) => {
+                  setValue(
+                    "leaveDateFrom",
+                    dates?.[0]?.format("YYYY-MM-DD") ?? "",
+                  );
+                  setValue(
+                    "leaveDateTo",
+                    dates?.[1]?.format("YYYY-MM-DD") ?? "",
+                  );
+                }}
+              />
+              {leaveDateFrom && leaveDateTo && (
+                <div className="mt-1 text-xs text-gray-500">
+                  {businessDays} business day{businessDays !== 1 ? "s" : ""}
+                </div>
+              )}
+            </Form.Item>
+          )}
+
+          {/* Partial Day / Hourly */}
+          {mode === "partial" && (
+            <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-4 pt-4 pb-1 mb-6">
+              <Form.Item label="Entry Method">
+                <Controller
+                  name="partialMode"
+                  control={control}
+                  render={({ field }) => (
+                    <Radio.Group
+                      {...field}
+                      options={PARTIAL_MODE_OPTIONS}
+                      optionType="button"
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                        setValue("startTime", "");
+                        setValue("endTime", "");
+                        setValue("totalHours", undefined);
+                      }}
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              {partialMode === "hours" ? (
+                <div
+                  className="grid grid-cols-2 gap-x-6"
+                  style={{ maxWidth: 480 }}
+                >
+                  <Form.Item
+                    label="Leave Date"
+                    validateStatus={errors.leaveDate ? "error" : ""}
+                    help={errors.leaveDate?.message}
+                  >
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      value={leaveDate ? dayjs(leaveDate) : null}
+                      onChange={(d) =>
+                        setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Total Hours"
+                    validateStatus={errors.totalHours ? "error" : ""}
+                    help={errors.totalHours?.message}
+                  >
+                    <Controller
+                      name="totalHours"
+                      control={control}
+                      render={({ field }) => (
+                        <InputNumber
+                          {...field}
+                          style={{ width: "100%" }}
+                          min={0.25}
+                          max={999}
+                          step={0.25}
+                          precision={2}
+                          addonAfter="hrs"
+                          placeholder="e.g. 4"
+                          onChange={(val) => field.onChange(val ?? undefined)}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-x-6">
+                  <Form.Item
+                    label="Leave Date"
+                    validateStatus={errors.leaveDate ? "error" : ""}
+                    help={errors.leaveDate?.message}
+                  >
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      value={leaveDate ? dayjs(leaveDate) : null}
+                      onChange={(d) =>
+                        setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Start Time"
+                    validateStatus={errors.startTime ? "error" : ""}
+                    help={errors.startTime?.message}
+                  >
+                    <TimePicker
+                      style={{ width: "100%" }}
+                      use12Hours
+                      format="hh:mm A"
+                      value={startTime ? dayjs(startTime, "HH:mm:ss") : null}
+                      onChange={(t) =>
+                        setValue("startTime", t?.format("HH:mm:ss") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label={
+                      <span className="flex items-center gap-2">
+                        End Time
+                        {crossMidnight && (
+                          <Tag
+                            color="blue"
+                            className="text-[11px] leading-none"
+                          >
+                            +1 day
+                          </Tag>
+                        )}
+                      </span>
+                    }
+                    validateStatus={errors.endTime ? "error" : ""}
+                    help={errors.endTime?.message}
+                  >
+                    <TimePicker
+                      style={{ width: "100%" }}
+                      use12Hours
+                      format="hh:mm A"
+                      value={endTime ? dayjs(endTime, "HH:mm:ss") : null}
+                      onChange={(t) =>
+                        setValue("endTime", t?.format("HH:mm:ss") ?? "")
+                      }
+                    />
+                  </Form.Item>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Employee entries */}
           <div className="rounded-lg border border-gray-200 overflow-hidden">
-            <div className="grid grid-cols-[1fr_1fr_100px_110px_1fr_36px] gap-2 px-3 py-2 bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
+            <div className="grid grid-cols-[1fr_1fr_110px_1fr_36px] gap-2 px-3 py-2 bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
               <span>Employee</span>
               <span>Leave Type</span>
-              <span>Day Type</span>
               <span>Pay Type</span>
               <span>Remarks</span>
               <span />
@@ -171,7 +501,7 @@ export default function LeaveApplicationBatch() {
                 return (
                   <div
                     key={field.id}
-                    className="grid grid-cols-[1fr_1fr_100px_110px_1fr_36px] gap-2 px-3 py-2 items-start"
+                    className="grid grid-cols-[1fr_1fr_110px_1fr_36px] gap-2 px-3 py-2 items-start"
                   >
                     <Form.Item
                       className="mb-0"
@@ -211,20 +541,6 @@ export default function LeaveApplicationBatch() {
                             filterOption={filterOption}
                             value={f.value || undefined}
                           />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      className="mb-0"
-                      validateStatus={entryErrors?.dayType ? "error" : ""}
-                      help={entryErrors?.dayType?.message}
-                    >
-                      <Controller
-                        name={`entries.${index}.dayType`}
-                        control={control}
-                        render={({ field: f }) => (
-                          <Select {...f} options={DAY_TYPE_OPTIONS} />
                         )}
                       />
                     </Form.Item>
@@ -279,7 +595,7 @@ export default function LeaveApplicationBatch() {
             className="mt-3 w-full"
             onClick={() => append(defaultEntry())}
           >
-            Add Row
+            Add Employee
           </Button>
 
           <div className="form-action-footer mt-4">

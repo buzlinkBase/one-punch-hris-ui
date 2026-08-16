@@ -499,6 +499,8 @@ export default function DtrDetailList() {
         data={records}
         loading={isLoading}
         onChanged={() => refetch()}
+        dateFrom={committedFilter?.fromDate}
+        dateTo={committedFilter?.toDate}
       />
     </div>
   );

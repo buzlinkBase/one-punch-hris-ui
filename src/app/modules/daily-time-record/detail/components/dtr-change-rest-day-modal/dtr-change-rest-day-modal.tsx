@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, DatePicker, Form, Modal, Space } from "antd";
-import { ArrowRightOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useCreateChangeRestDay } from "@/app/modules/change-schedule/change-rest-day/hooks/use-change-rest-day-queries";
@@ -71,6 +72,7 @@ export default function DtrChangeRestDayModal({
         isSubmitting={isSubmitting}
         onCancel={onClose}
         onSave={handleSave}
+        onNavigateAway={onClose}
       />
     </Modal>
   );
@@ -81,6 +83,7 @@ interface FormProps {
   isSubmitting: boolean;
   onCancel: () => void;
   onSave: (priorDate: Dayjs, newDate: Dayjs) => void;
+  onNavigateAway: () => void;
 }
 
 function ChangeRestDayForm({
@@ -88,7 +91,9 @@ function ChangeRestDayForm({
   isSubmitting,
   onCancel,
   onSave,
+  onNavigateAway,
 }: FormProps) {
+  const navigate = useNavigate();
   const [priorDate, setPriorDate] = useState<Dayjs | null>(dayjs(workDate));
   const [newDate, setNewDate] = useState<Dayjs | null>(null);
 
@@ -148,7 +153,22 @@ function ChangeRestDayForm({
         </div>
       </Form>
 
-      <div className="flex justify-end gap-2 mt-5">
+      <div className="mt-3">
+        <Button
+          type="link"
+          size="small"
+          icon={<UnorderedListOutlined />}
+          style={{ padding: 0, fontSize: 12 }}
+          onClick={() => {
+            onNavigateAway();
+            navigate({ to: "/change-schedule/change-rest-day" });
+          }}
+        >
+          View Rest Day Master List
+        </Button>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-3">
         <Button onClick={onCancel}>Cancel</Button>
         <Button type="primary" loading={isSubmitting} onClick={handleOk}>
           Save

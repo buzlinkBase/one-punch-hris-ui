@@ -6,6 +6,7 @@ export interface DtrSummaryResponse {
   utHours: number;
   overHours: number;
   absentCount: number;
+  leaveHours: number;
   obHours: number;
   regularNetHours: number;
   regularOTHours: number;
@@ -31,4 +32,12 @@ export interface DtrSummaryResponse {
   restSpecialDayOTHours: number;
   restSpecialDayNDHours: number;
   restSpecialDayNDOTHours: number;
+  doubleLegalHours: number;
+  doubleLegalOTHours: number;
+  doubleLegalNDHours: number;
+  doubleLegalNDOTHours: number;
+  restDoubleLegalHours: number;
+  restDoubleLegalOTHours: number;
+  restDoubleLegalNDHours: number;
+  restDoubleLegalNDOTHours: number;
 }

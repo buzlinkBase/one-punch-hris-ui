@@ -44,6 +44,18 @@ export interface CreateDailyRecord {
   restSpecialDayOTHours: number;
   restSpecialDayNDHours: number;
   restSpecialDayNDOTHours: number;
+  specialWorkDayHours: number;
+  specialWorkDayOTHours: number;
+  specialWorkDayNDHours: number;
+  specialWorkDayNDOTHours: number;
+  doubleLegalHours: number;
+  doubleLegalOTHours: number;
+  doubleLegalNDHours: number;
+  doubleLegalNDOTHours: number;
+  restDoubleLegalHours: number;
+  restDoubleLegalOTHours: number;
+  restDoubleLegalNDHours: number;
+  restDoubleLegalNDOTHours: number;
   note: string;
   userId?: string;
   branchId?: string;

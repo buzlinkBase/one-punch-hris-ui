@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import {
   useLeaveApplications,
   useDeleteLeaveApplication,
+  useChangeLeaveApplicationStatus,
 } from "../../hooks/use-leave-application-queries";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
@@ -29,6 +30,7 @@ export default function LeaveApplicationList() {
     dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
   );
   const { mutate: remove } = useDeleteLeaveApplication();
+  const { mutate: changeStatus } = useChangeLeaveApplicationStatus();
   const { data: leaveTypes = [] } = useLeaveTypes();
   const { data: employees = [] } = useEmployeeFilter();
 
@@ -110,6 +112,8 @@ export default function LeaveApplicationList() {
         leaveTypes={leaveTypes}
         loading={isLoading || isFetching}
         onDelete={remove}
+        onApprove={(record) => changeStatus({ record, status: "Approved" })}
+        onDecline={(record) => changeStatus({ record, status: "Declined" })}
       />
     </div>
   );

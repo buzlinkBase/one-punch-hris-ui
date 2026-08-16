@@ -1,8 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { notification } from "antd";
 import { leaveApplicationApi } from "../services/leave-application.api";
 import type { CreateLeaveApplication } from "../models/api/request/create-leave-application.model";
 import type { UpdateLeaveApplication } from "../models/api/request/update-leave-application.model";
 import type { LeaveApplicationResponse } from "../models/api/response/leave-application-response.model";
+import type { ErrorResponse } from "@/shared/types/api-response.model";
+import type { AxiosError } from "axios";
 
 const QUERY_KEY = ["leave-applications"];
 
@@ -78,6 +81,20 @@ export function useChangeLeaveApplicationStatus() {
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error: AxiosError<ErrorResponse>) => {
+      const pd = error.response?.data?.data;
+      const description =
+        pd?.innerException ??
+        pd?.detail ??
+        error.message ??
+        "An unexpected error occurred.";
+      notification.error({
+        message: "Status Update Failed",
+        description,
+        placement: "topRight",
+        duration: 6,
+      });
     },
   });
 }

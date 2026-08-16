@@ -16,12 +16,24 @@ export function useCreateRestDayDate() {
 
 export function useRestDayDatesByEmployee(
   employeeId: string,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; dateFrom?: string; dateTo?: string },
 ) {
   return useQuery({
-    queryKey: [...QUERY_KEY, "by-employee", employeeId],
-    queryFn: () => restDayDateApi.getAllByEmployee(employeeId),
+    queryKey: [
+      ...QUERY_KEY,
+      "by-employee",
+      employeeId,
+      options?.dateFrom,
+      options?.dateTo,
+    ],
+    queryFn: () =>
+      restDayDateApi.getAllByEmployee(
+        employeeId,
+        options?.dateFrom,
+        options?.dateTo,
+      ),
     enabled: (options?.enabled ?? true) && !!employeeId,
+    staleTime: 0,
   });
 }
 

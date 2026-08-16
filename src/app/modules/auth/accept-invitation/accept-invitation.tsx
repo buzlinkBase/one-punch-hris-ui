@@ -10,7 +10,8 @@ import {
 } from "antd";
 import { MailOutlined, TeamOutlined, WarningOutlined } from "@ant-design/icons";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import {
@@ -57,6 +58,8 @@ export default function AcceptInvitation() {
     resolver: zodResolver(acceptInvitationFormSchema),
     defaultValues: { name: "", password: "", confirmPassword: "" },
   });
+
+  const password = useWatch({ control, name: "password" });
 
   const onSubmit = async ({
     confirmPassword: _,
@@ -208,7 +211,6 @@ export default function AcceptInvitation() {
           label="Password"
           validateStatus={errors.password ? "error" : ""}
           help={errors.password?.message}
-          extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
           className="login-form-item"
         >
           <Controller
@@ -222,6 +224,7 @@ export default function AcceptInvitation() {
               />
             )}
           />
+          <PasswordRequirements value={password} />
         </Form.Item>
 
         <Form.Item
