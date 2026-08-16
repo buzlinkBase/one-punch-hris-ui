@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import {
   useTravelOrders,
   useDeleteTravelOrder,
+  useChangeTravelOrderStatus,
 } from "../../hooks/use-travel-order-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import TravelOrderTable from "../../components/travel-order-table";
@@ -28,6 +29,7 @@ export default function TravelOrderList() {
     dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
   );
   const { mutate: remove } = useDeleteTravelOrder();
+  const { mutate: changeStatus } = useChangeTravelOrderStatus();
   const { data: rawEmployees = [] } = useEmployees();
 
   const employees = rawEmployees.map((e) => ({
@@ -113,6 +115,8 @@ export default function TravelOrderList() {
         data={filtered}
         employees={employees}
         loading={isLoading || isFetching}
+        onApprove={(record) => changeStatus({ record, status: "Approved" })}
+        onDecline={(record) => changeStatus({ record, status: "Declined" })}
         onDelete={remove}
       />
     </div>
