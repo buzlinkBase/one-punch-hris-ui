@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import {
   useOvertimeApplications,
   useDeleteOvertimeApplication,
+  useChangeOvertimeApplicationStatus,
 } from "../../hooks/use-overtime-application-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import OvertimeApplicationTable from "../../components/overtime-application-table";
@@ -28,6 +29,7 @@ export default function OvertimeApplicationList() {
     dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
   );
   const { mutate: remove } = useDeleteOvertimeApplication();
+  const { mutate: changeStatus } = useChangeOvertimeApplicationStatus();
   const { data: rawEmployees = [] } = useEmployees();
 
   const employees = rawEmployees.map((e) => ({
@@ -111,6 +113,8 @@ export default function OvertimeApplicationList() {
         data={filtered}
         employees={employees}
         loading={isLoading || isFetching}
+        onApprove={(record) => changeStatus({ record, status: "Approved" })}
+        onDecline={(record) => changeStatus({ record, status: "Declined" })}
         onDelete={remove}
       />
     </div>

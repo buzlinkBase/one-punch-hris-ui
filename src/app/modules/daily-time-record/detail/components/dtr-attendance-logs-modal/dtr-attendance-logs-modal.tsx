@@ -1,7 +1,13 @@
-import { Modal, Table, Tag } from "antd";
-import dayjs from "dayjs";
+import { useEffect, useRef, useState } from "react";
+import { Button, DatePicker, Modal, Space, Table, Tag } from "antd";
+import { CheckOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
+import dayjs, { type Dayjs } from "dayjs";
 import type { ColumnsType } from "antd/es/table";
-import { useAttendanceEntryRecords } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import {
+  useDtrViewAttendanceLogs,
+  useUpdateAttendanceEntry,
+} from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { getNotify } from "@/shared/utils/notify";
 import type { AttendanceEntryResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/attendance-entry-response.model";
 
 interface Props {
@@ -10,43 +16,9 @@ interface Props {
   employeeId: string;
   employeeName: string | null | undefined;
   workDate: string;
+  startTime?: string | null;
+  endTime?: string | null;
 }
-
-const COLUMNS: ColumnsType<AttendanceEntryResponse> = [
-  {
-    title: "Time Log",
-    dataIndex: "timeLog",
-    key: "timeLog",
-    width: 180,
-    render: (v: string) => (v ? dayjs(v).format("YYYY-MM-DD HH:mm:ss") : "—"),
-  },
-  {
-    title: "Log Source",
-    dataIndex: "logSource",
-    key: "logSource",
-    width: 130,
-    render: (v: string) =>
-      v ? <Tag color={v === "BIOMETRIC" ? "blue" : "purple"}>{v}</Tag> : "—",
-  },
-  {
-    title: "Branch",
-    dataIndex: "branch",
-    key: "branch",
-    render: (v: string | null) => v ?? "—",
-  },
-  {
-    title: "Client",
-    dataIndex: "client",
-    key: "client",
-    render: (v: string | null) => v ?? "—",
-  },
-  {
-    title: "Area",
-    dataIndex: "area",
-    key: "area",
-    render: (v: string | null) => v ?? "—",
-  },
-];
 
 export default function DtrAttendanceLogsModal({
   open,
@@ -54,31 +26,180 @@ export default function DtrAttendanceLogsModal({
   employeeId,
   employeeName,
   workDate,
+  startTime,
+  endTime,
 }: Props) {
-  const { data: records = [], isFetching } = useAttendanceEntryRecords(
-    { fromDate: workDate, toDate: workDate, employeeId },
-    { enabled: open && !!employeeId && !!workDate },
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState<Dayjs | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
+  const prevOpen = useRef(false);
+
+  useEffect(() => {
+    if (open && !prevOpen.current) {
+      setFetchKey((k) => k + 1);
+    }
+    prevOpen.current = open;
+  }, [open]);
+
+  const fromDate = startTime ? dayjs(startTime).format("YYYY-MM-DD") : workDate;
+  const toDate = endTime ? dayjs(endTime).format("YYYY-MM-DD") : workDate;
+
+  const dateLabel = fromDate !== toDate ? `${fromDate} – ${toDate}` : fromDate;
+
+  const {
+    data: records = [],
+    isFetching,
+    refetch,
+  } = useDtrViewAttendanceLogs(
+    { fromDate, toDate, employeeId },
+    { enabled: open && !!employeeId && !!fromDate, searchKey: fetchKey },
   );
+
+  const { mutateAsync: updateEntry, isPending: isSaving } =
+    useUpdateAttendanceEntry();
+
+  const startEdit = (record: AttendanceEntryResponse) => {
+    setEditingId(record.id);
+    setEditingValue(record.timeLog ? dayjs(record.timeLog) : null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingValue(null);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editingValue) return;
+    try {
+      await updateEntry({
+        id,
+        workTime: editingValue
+          .second(0)
+          .millisecond(0)
+          .format("YYYY-MM-DDTHH:mm:ss"),
+      });
+      getNotify().success({ message: "Attendance log updated." });
+      refetch();
+    } catch {
+      getNotify().error({ message: "Failed to update attendance log." });
+    } finally {
+      setEditingId(null);
+      setEditingValue(null);
+    }
+  };
+
+  const columns: ColumnsType<AttendanceEntryResponse> = [
+    {
+      title: "Time Log",
+      dataIndex: "timeLog",
+      key: "timeLog",
+      width: 220,
+      render: (v: string, record) => {
+        if (editingId === record.id) {
+          return (
+            <DatePicker
+              showTime={{ format: "HH:mm" }}
+              value={editingValue}
+              onChange={setEditingValue}
+              format="YYYY-MM-DD HH:mm"
+              size="small"
+              style={{ width: 190 }}
+            />
+          );
+        }
+        return v ? dayjs(v).format("YYYY-MM-DD HH:mm:ss") : "—";
+      },
+    },
+    {
+      title: "Log Source",
+      dataIndex: "logSource",
+      key: "logSource",
+      width: 130,
+      render: (v: string) =>
+        v ? <Tag color={v === "BIOMETRIC" ? "blue" : "purple"}>{v}</Tag> : "—",
+    },
+    {
+      title: "Branch",
+      dataIndex: "branch",
+      key: "branch",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "Client",
+      dataIndex: "client",
+      key: "client",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "Area",
+      dataIndex: "area",
+      key: "area",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: "",
+      key: "actions",
+      width: 80,
+      fixed: "right",
+      render: (_, record) => {
+        if (record.logSource !== "MANUAL") return null;
+
+        if (editingId === record.id) {
+          return (
+            <Space size={4}>
+              <Button
+                type="text"
+                size="small"
+                icon={<CheckOutlined />}
+                style={{ color: "#52c41a" }}
+                loading={isSaving}
+                onClick={() => saveEdit(record.id)}
+              />
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<CloseOutlined />}
+                onClick={cancelEdit}
+              />
+            </Space>
+          );
+        }
+
+        return (
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => startEdit(record)}
+          />
+        );
+      },
+    },
+  ];
 
   return (
     <Modal
       open={open}
-      onCancel={onClose}
+      onCancel={() => {
+        cancelEdit();
+        onClose();
+      }}
       footer={null}
       title={
         <div>
           <div>Attendance Logs</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: "#8c8c8c" }}>
-            {employeeName ?? employeeId} &mdash; {workDate}
+            {employeeName ?? employeeId} &mdash; {dateLabel}
           </div>
         </div>
       }
-      width={720}
+      width={760}
       destroyOnClose
     >
       <Table<AttendanceEntryResponse>
         rowKey="id"
-        columns={COLUMNS}
+        columns={columns}
         dataSource={records}
         loading={isFetching}
         size="small"

@@ -287,7 +287,28 @@ export default function DtrDetailTable({
           width: widths.endTime,
           onResize: (w: number) => handleResize("endTime", w),
         }) as object,
-      render: (v: string | null) => (v ? dayjs(v).format("HH:mm") : null),
+      render: (v: string | null, record) => {
+        if (!v) return null;
+        const endDay = dayjs(v);
+        const isCrossDate = endDay.isAfter(dayjs(record.workDate), "day");
+        return (
+          <span>
+            {endDay.format("HH:mm")}
+            {isCrossDate && (
+              <sup
+                style={{
+                  color: "#1DA081",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  marginLeft: 2,
+                }}
+              >
+                +1
+              </sup>
+            )}
+          </span>
+        );
+      },
     },
     // ── MINUTES ──────────────────────────────────────────────────────────────────
     {
@@ -451,6 +472,8 @@ export default function DtrDetailTable({
           employeeId={selectedRow.employeeId}
           employeeName={selectedRow.fullName}
           workDate={selectedRow.workDate}
+          startTime={selectedRow.startTime}
+          endTime={selectedRow.endTime}
         />
       )}
 

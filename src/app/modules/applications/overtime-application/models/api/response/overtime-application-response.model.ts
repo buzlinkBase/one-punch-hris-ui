@@ -7,7 +7,7 @@ export interface OvertimeApplicationResponse {
   remarks: string;
   approvalStatus: string;
   isManualEntry: boolean;
-  manualOtMinutes: number;
+  manualOTMinutes: number;
   otBeforeOverride: number;
   flexiEndTime: boolean;
   paidByNetDutyTime: boolean;

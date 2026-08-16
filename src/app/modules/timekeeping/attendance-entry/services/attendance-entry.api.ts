@@ -40,6 +40,25 @@ function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
 }
 
 export const attendanceEntryApi = {
+  async getDtrViewLogs(
+    filter: AttendanceEntryFilter = {},
+  ): Promise<AttendanceEntryResponse[]> {
+    const params: Record<string, string> = {};
+    if (filter.fromDate) params.fromDate = filter.fromDate;
+    if (filter.toDate) params.toDate = filter.toDate;
+    if (filter.employeeId) params.employeeId = filter.employeeId;
+
+    try {
+      const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
+        `${ENDPOINT}/dtr-view-att`,
+        { params },
+      );
+      return raw.map(mapRecord);
+    } catch {
+      return [];
+    }
+  },
+
   async getAll(
     filter: AttendanceEntryFilter = {},
   ): Promise<AttendanceEntryResponse[]> {

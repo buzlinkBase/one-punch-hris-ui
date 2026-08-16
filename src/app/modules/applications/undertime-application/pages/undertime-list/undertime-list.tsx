@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import {
   useUndertimeApplications,
   useDeleteUndertimeApplication,
+  useChangeUndertimeApplicationStatus,
 } from "../../hooks/use-undertime-application-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import UndertimeTable from "../../components/undertime-table";
@@ -28,6 +29,7 @@ export default function UndertimeList() {
     dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
   );
   const { mutate: remove } = useDeleteUndertimeApplication();
+  const { mutate: changeStatus } = useChangeUndertimeApplicationStatus();
   const { data: rawEmployees = [] } = useEmployees();
 
   const employees = rawEmployees.map((e) => ({
@@ -111,6 +113,8 @@ export default function UndertimeList() {
         data={filtered}
         employees={employees}
         loading={isLoading || isFetching}
+        onApprove={(record) => changeStatus({ record, status: "Approved" })}
+        onDecline={(record) => changeStatus({ record, status: "Declined" })}
         onDelete={remove}
       />
     </div>

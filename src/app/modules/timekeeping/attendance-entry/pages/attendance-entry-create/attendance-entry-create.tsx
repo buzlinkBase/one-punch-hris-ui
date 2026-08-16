@@ -98,7 +98,6 @@ export default function AttendanceEntryCreate() {
   const [timeShiftId, setTimeShiftId] = useState<string | null>(null);
   const [includeIn, setIncludeIn] = useState(true);
   const [inTime, setInTime] = useState<Dayjs | null>(null);
-  const [inDayOffset, setInDayOffset] = useState(0);
   const [includeOut, setIncludeOut] = useState(true);
   const [outTime, setOutTime] = useState<Dayjs | null>(null);
   const [outDayOffset, setOutDayOffset] = useState(0);
@@ -167,6 +166,24 @@ export default function AttendanceEntryCreate() {
 
   const handleDeselectAll = () => setSelectedIds(new Set());
 
+  const handleInTimeChange = (t: Dayjs | null) => {
+    setInTime(t);
+    if (t && outTime && includeOut) {
+      const inMin = t.hour() * 60 + t.minute();
+      const outMin = outTime.hour() * 60 + outTime.minute();
+      setOutDayOffset(outMin < inMin ? 1 : 0);
+    }
+  };
+
+  const handleOutTimeChange = (t: Dayjs | null) => {
+    setOutTime(t);
+    if (t && inTime && includeIn) {
+      const outMin = t.hour() * 60 + t.minute();
+      const inMin = inTime.hour() * 60 + inTime.minute();
+      setOutDayOffset(outMin < inMin ? 1 : 0);
+    }
+  };
+
   const handleTimeShiftChange = (v: string | undefined) => {
     const id = v ?? null;
     setTimeShiftId(id);
@@ -174,7 +191,6 @@ export default function AttendanceEntryCreate() {
       const shift = timeShifts.find((ts) => ts.id === id);
       if (shift) {
         setInTime(shiftTimeToDayjs(shift.startTime));
-        setInDayOffset(parseDayOffset(shift.startTime));
         setOutTime(shiftTimeToDayjs(shift.endTime));
         setOutDayOffset(parseDayOffset(shift.endTime));
       }
@@ -334,7 +350,6 @@ export default function AttendanceEntryCreate() {
       if (includeIn && inTime) {
         punches.push(
           current
-            .add(inDayOffset, "day")
             .hour(inTime.hour())
             .minute(inTime.minute())
             .second(0)
@@ -610,17 +625,10 @@ export default function AttendanceEntryCreate() {
                   format="HH:mm"
                   minuteStep={5}
                   value={inTime}
-                  onChange={(t) => setInTime(t)}
+                  onChange={handleInTimeChange}
                   disabled={!includeIn}
                   style={{ flex: 1 }}
                 />
-                <Checkbox
-                  checked={inDayOffset === 1}
-                  disabled={!includeIn}
-                  onChange={(e) => setInDayOffset(e.target.checked ? 1 : 0)}
-                >
-                  +1d
-                </Checkbox>
               </div>
             </Form.Item>
             <Form.Item className="mb-0">
@@ -635,15 +643,11 @@ export default function AttendanceEntryCreate() {
                   format="HH:mm"
                   minuteStep={5}
                   value={outTime}
-                  onChange={(t) => setOutTime(t)}
+                  onChange={handleOutTimeChange}
                   disabled={!includeOut}
                   style={{ flex: 1 }}
                 />
-                <Checkbox
-                  checked={outDayOffset === 1}
-                  disabled={!includeOut}
-                  onChange={(e) => setOutDayOffset(e.target.checked ? 1 : 0)}
-                >
+                <Checkbox checked={outDayOffset === 1} disabled>
                   +1d
                 </Checkbox>
               </div>

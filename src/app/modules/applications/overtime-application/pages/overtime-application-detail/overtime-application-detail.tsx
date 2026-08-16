@@ -146,8 +146,8 @@ export default function OvertimeApplicationDetail() {
             ? dayjs(selected.endTime).format("HH:mm:ss")
             : "",
         manualOTMinutes:
-          editMode === "hours" && selected.manualOtMinutes
-            ? selected.manualOtMinutes / 60
+          editMode === "hours" && selected.manualOTMinutes
+            ? selected.manualOTMinutes / 60
             : undefined,
         remarks: selected.remarks ?? "",
         approvalStatus: selected.approvalStatus,
@@ -239,8 +239,8 @@ export default function OvertimeApplicationDetail() {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={OVERTIME_APPLICATION_LABEL.OT_MINUTES}>
-                {selected.manualOtMinutes != null
-                  ? `${(selected.manualOtMinutes / 60).toFixed(2)} hrs`
+                {selected.manualOTMinutes != null
+                  ? `${(selected.manualOTMinutes / 60).toFixed(2)} hrs`
                   : "-"}
               </Descriptions.Item>
             </Descriptions>

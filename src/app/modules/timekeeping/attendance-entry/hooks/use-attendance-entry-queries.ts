@@ -6,6 +6,17 @@ import type { UpdateAttendanceEntry } from "../models/api/request/update-attenda
 
 const QUERY_KEY = ["timekeeping", "attendance-entry"];
 
+export function useDtrViewAttendanceLogs(
+  filter: AttendanceEntryFilter = {},
+  options: { enabled?: boolean; searchKey?: number } = {},
+) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "dtr-view", filter, options.searchKey ?? 0],
+    queryFn: () => attendanceEntryApi.getDtrViewLogs(filter),
+    enabled: options.enabled ?? true,
+  });
+}
+
 export function useAttendanceEntryRecords(
   filter: AttendanceEntryFilter = {},
   options: { enabled?: boolean; searchKey?: number } = {},

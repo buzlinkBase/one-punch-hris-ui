@@ -1,5 +1,10 @@
 import type { DashboardOverview } from "../models/api/response/dashboard-response.model";
 
+function dayLabel(offsetFromMonday: number): string {
+  const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  return labels[offsetFromMonday % labels.length];
+}
+
 const DEPARTMENT_NAMES = ["HR", "Finance", "Operations", "IT", "Sales"];
 
 const MOCK_DATA: DashboardOverview = {
@@ -12,15 +17,12 @@ const MOCK_DATA: DashboardOverview = {
     pendingRequests: 7,
     newHiresThisMonth: 5,
   },
-  attendanceTrend: Array.from({ length: 7 }, (_, i) => {
-    const day = dayLabel(i);
-    return {
-      date: day,
-      present: 190 + ((i * 7) % 30),
-      late: 8 + ((i * 3) % 12),
-      absent: 4 + ((i * 2) % 8),
-    };
-  }),
+  attendanceTrend: Array.from({ length: 7 }, (_, i) => ({
+    date: dayLabel(i),
+    present: 190 + ((i * 7) % 30),
+    late: 8 + ((i * 3) % 12),
+    absent: 4 + ((i * 2) % 8),
+  })),
   departmentHeadcount: DEPARTMENT_NAMES.map((name, i) => ({
     departmentId: `dept-${i + 1}`,
     departmentName: name,
@@ -111,14 +113,7 @@ const MOCK_DATA: DashboardOverview = {
   ],
 };
 
-function dayLabel(offsetFromMonday: number): string {
-  const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  return labels[offsetFromMonday % labels.length];
-}
-
 export const dashboardApi = {
-  // API call disabled for now — serving MOCK_DATA directly until the dashboard
-  // overview endpoint is ready.
   async getOverview(): Promise<DashboardOverview> {
     return MOCK_DATA;
   },

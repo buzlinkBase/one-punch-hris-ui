@@ -65,7 +65,7 @@ export const overtimeApplicationApi = {
         otDate: record.otDate,
         startTime: record.startTime,
         endTime: record.endTime,
-        manualOtMinutes: record.manualOtMinutes,
+        manualOTMinutes: record.manualOTMinutes,
         isManualEntry: record.isManualEntry,
         remarks: record.remarks,
         approvalStatus: status,
