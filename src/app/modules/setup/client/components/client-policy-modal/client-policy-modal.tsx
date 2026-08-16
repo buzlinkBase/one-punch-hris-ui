@@ -11,6 +11,7 @@ import {
   useUpdateClientPolicy,
 } from "../../hooks/use-client-policy-queries";
 import {
+  COMPANY_POLICY_LABEL,
   OT_INCLUSION_OPTIONS,
   OT_ELIGIBILITY_OPTIONS,
 } from "@/app/modules/setup/company-policy/constants/label.const";
@@ -68,7 +69,7 @@ export default function ClientPolicyModal({
         </div>
       ) : (
         <Form layout="vertical" className="mt-4">
-          <Form.Item label="OT Eligibility">
+          <Form.Item label={COMPANY_POLICY_LABEL.OT_ELIGIBILITY}>
             <Controller
               name="otEligibility"
               control={control}
@@ -83,7 +84,7 @@ export default function ClientPolicyModal({
               )}
             />
           </Form.Item>
-          <Form.Item label="OT Inclusion Policy">
+          <Form.Item label={COMPANY_POLICY_LABEL.OT_INCLUSION}>
             <Controller
               name="otInclusionPolicy"
               control={control}

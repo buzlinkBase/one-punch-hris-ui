@@ -20,32 +20,39 @@ export const COMPANY_POLICY_LABEL = {
   ATT_FILL_LIMIT: "Manual Attendance Fill Limit",
   HOLIDAY_TIME_BASIS: "Holiday Hours Basis",
   IS_HOL_PLUS_REG: "Include Regular Hours in Holiday Column",
-  TIME_IN_ALLOWANCE: "Clock-In Window (minutes before shift)",
+  TIME_IN_ALLOWANCE: "Earliest Allowed Clock-In (minutes before shift start)",
   DOUBLE_PUNCH_GAP: "Double Punch Gap (minutes)",
-  CHECK_AFTER_HOLIDAY: "Check Day After Holiday",
+  CHECK_AFTER_HOLIDAY:
+    "Require attendance after holiday to be eligible for holiday pay",
 };
 
 export const OT_INCLUSION_OPTIONS = [
-  { value: "UseEarlyClockIn", label: "Include early clock-in before shift" },
-  { value: "UsePostShiftWork", label: "Include work after shift ends" },
+  {
+    value: "UseEarlyClockIn",
+    label: "OT earned by clocking in before shift starts",
+  },
+  {
+    value: "UsePostShiftWork",
+    label: "OT earned by working after shift ends",
+  },
   {
     value: "UseAllExcessOver8Hours",
-    label: "Count all hours beyond 8 as overtime",
+    label: "Any hours beyond 8 per day count as OT",
   },
 ];
 
 export const OT_ELIGIBILITY_OPTIONS = [
   {
     value: "RequireFullRegularHours",
-    label: "Must complete full regular hours first",
+    label: "Must complete regular hours before earning OT",
   },
   {
     value: "OffsetAgainstUndertimeOrLateness",
-    label: "Offset against undertime / lateness",
+    label: "OT offsets late or undertime first",
   },
   {
     value: "IndependentOfAttendanceIssues",
-    label: "Independent of attendance issues",
+    label: "OT counted regardless of late or undertime",
   },
 ];
 
@@ -59,9 +66,12 @@ export const ATT_FILL_LIMIT_OPTIONS = [
 ];
 
 export const HOLIDAY_TIME_BASIS_OPTIONS = [
-  { value: "BasedOnTimeInDayType", label: "Based on day type at time-in" },
+  {
+    value: "BasedOnTimeInDayType",
+    label: "Full shift treated as holiday based on shift start day",
+  },
   {
     value: "BasedOnActualWorkHours",
-    label: "Based on actual hours worked in holiday",
+    label: "Count only hours that actually fall within the holiday",
   },
 ];
