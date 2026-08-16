@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, Form, Input, Button, Typography, notification } from "antd";
 import { MailOutlined, UserAddOutlined } from "@ant-design/icons";
 import { Link } from "@tanstack/react-router";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import {
@@ -31,6 +32,8 @@ export default function Register() {
       confirmPassword: "",
     },
   });
+
+  const password = useWatch({ control, name: "password" });
 
   const onSubmit = async ({
     confirmPassword: _,
@@ -135,7 +138,6 @@ export default function Register() {
           label="Password"
           validateStatus={errors.password ? "error" : ""}
           help={errors.password?.message}
-          extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
           className="login-form-item"
         >
           <Controller
@@ -149,6 +151,7 @@ export default function Register() {
               />
             )}
           />
+          <PasswordRequirements value={password} />
         </Form.Item>
 
         <Form.Item

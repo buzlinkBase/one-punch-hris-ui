@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tooltip } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -11,6 +12,7 @@ import type { ClientResponse } from "../../models/api/response/client-response.m
 import { CLIENT_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import ClientPolicyModal from "../client-policy-modal";
 
 interface Props {
   data: ClientResponse[];
@@ -21,6 +23,10 @@ interface Props {
 export default function ClientTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [policyClient, setPolicyClient] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const { widths, handleResize } = useResizableColumns({
     code: 120,
@@ -74,9 +80,18 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 110,
       render: (_, record) => (
         <Space>
+          <Tooltip title="OT Policy">
+            <Button
+              type="text"
+              icon={<SettingOutlined />}
+              onClick={() =>
+                setPolicyClient({ id: record.id, name: record.name })
+              }
+            />
+          </Tooltip>
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -99,6 +114,13 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
+      {policyClient && (
+        <ClientPolicyModal
+          clientId={policyClient.id}
+          clientName={policyClient.name}
+          onClose={() => setPolicyClient(null)}
+        />
+      )}
       <Input
         prefix={<SearchOutlined />}
         placeholder="Search..."

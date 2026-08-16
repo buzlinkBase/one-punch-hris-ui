@@ -1208,7 +1208,7 @@ export default function EmployeeDetail() {
                   <div style={{ paddingTop: 16, maxWidth: 480 }}>
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center justify-between">
-                        <span>Eligible for Overtime</span>
+                        <span>Eligible for Overtime Pay</span>
                         <Controller
                           name="settings.isEligibleForOvertime"
                           control={control}
@@ -1234,7 +1234,7 @@ export default function EmployeeDetail() {
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Eligible for Night Differential</span>
+                        <span>Eligible for Night Differential Pay</span>
                         <Controller
                           name="settings.isEligibleForNightDifferential"
                           control={control}
@@ -1247,7 +1247,7 @@ export default function EmployeeDetail() {
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Eligible for Leave Credits</span>
+                        <span>Eligible for Leave Credits Pay</span>
                         <Controller
                           name="settings.isEligibleForLeaveCredits"
                           control={control}

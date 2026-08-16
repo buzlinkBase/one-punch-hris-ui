@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { Form, Input, Button, Select, Typography, Space, Tag } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   userFormSchema,
@@ -54,6 +55,8 @@ export default function UserDetail() {
       status: "",
     },
   });
+
+  const password = useWatch({ control, name: "password" });
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -151,13 +154,13 @@ export default function UserDetail() {
               label={USER_LABEL.PASSWORD}
               validateStatus={errors.password ? "error" : ""}
               help={errors.password?.message}
-              extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
             >
               <Controller
                 name="password"
                 control={control}
                 render={({ field }) => <Input.Password {...field} />}
               />
+              <PasswordRequirements value={password ?? ""} />
             </Form.Item>
 
             <Form.Item

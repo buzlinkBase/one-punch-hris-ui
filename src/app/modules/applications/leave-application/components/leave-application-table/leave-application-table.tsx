@@ -111,7 +111,6 @@ export default function LeaveApplicationTable({
     },
     {
       title: LEAVE_APPLICATION_LABEL.DAY_TYPE,
-      dataIndex: "dayType",
       key: "dayType",
       width: widths.dayType,
       onHeaderCell: () =>
@@ -119,7 +118,14 @@ export default function LeaveApplicationTable({
           width: widths.dayType,
           onResize: (w: number) => handleResize("dayType", w),
         }) as object,
-      render: (val: string) => (val === "HalfDay" ? "Half Day" : "Whole Day"),
+      render: (_: unknown, r: LeaveApplicationResponse) => {
+        if (r.durationType === "MultiDay") return <Tag>Multi-Day</Tag>;
+        if (r.durationType === "Partial")
+          return <Tag color="blue">Partial</Tag>;
+        if (r.dayFraction === "AM") return "AM Half";
+        if (r.dayFraction === "PM") return "PM Half";
+        return "Full Day";
+      },
     },
     {
       title: LEAVE_APPLICATION_LABEL.PAY_TYPE,

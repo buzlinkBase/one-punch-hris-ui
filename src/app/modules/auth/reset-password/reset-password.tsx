@@ -10,7 +10,8 @@ import {
 } from "antd";
 import { KeyOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useState } from "react";
@@ -38,6 +39,8 @@ export default function ResetPassword() {
     resolver: zodResolver(resetPasswordFormSchema),
     defaultValues: { newPassword: "", confirmPassword: "" },
   });
+
+  const newPassword = useWatch({ control, name: "newPassword" });
 
   const onSubmit = async ({ newPassword }: ResetPasswordFormValues) => {
     try {
@@ -111,7 +114,6 @@ export default function ResetPassword() {
           label="New Password"
           validateStatus={errors.newPassword ? "error" : ""}
           help={errors.newPassword?.message}
-          extra="8+ chars · uppercase (A-Z) · lowercase (a-z) · number (0-9) · special character (@#!$)"
           className="login-form-item"
         >
           <Controller
@@ -126,6 +128,7 @@ export default function ResetPassword() {
               />
             )}
           />
+          <PasswordRequirements value={newPassword} />
         </Form.Item>
 
         <Form.Item
