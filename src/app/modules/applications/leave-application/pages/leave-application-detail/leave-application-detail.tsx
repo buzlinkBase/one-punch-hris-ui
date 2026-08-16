@@ -14,6 +14,7 @@ import {
   Descriptions,
   Radio,
   Alert,
+  notification,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -38,6 +39,7 @@ import {
   useUpdateLeaveApplication,
 } from "../../hooks/use-leave-application-queries";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
+import { useEmployee } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
@@ -234,11 +236,28 @@ export default function LeaveApplicationDetail() {
   const endTime = useWatch({ control, name: "endTime" });
   const leaveId = useWatch({ control, name: "leaveId" });
   const dayFraction = useWatch({ control, name: "dayFraction" });
+  const employeeId = useWatch({ control, name: "employeeId" });
+
+  const { data: employee } = useEmployee(employeeId || undefined);
 
   const policy = useMemo(
     () => leaveTypes.find((l) => l.id === leaveId) ?? null,
     [leaveTypes, leaveId],
   );
+
+  const minServiceError = useMemo(() => {
+    if (!policy || !employee) return null;
+    const required = policy.minServiceMonths ?? 0;
+    if (required === 0) return null;
+    if (!employee.hireDate) return null;
+    const effectiveDate = mode === "multiday" ? leaveDateFrom : leaveDate;
+    const checkDate = effectiveDate ? dayjs(effectiveDate) : dayjs();
+    const monthsServed = checkDate.diff(dayjs(employee.hireDate), "month");
+    if (monthsServed < required) {
+      return `${employee.firstName} ${employee.lastName} has ${monthsServed} month${monthsServed !== 1 ? "s" : ""} of service. This leave type requires at least ${required} month${required !== 1 ? "s" : ""}.`;
+    }
+    return null;
+  }, [policy, employee, mode, leaveDate, leaveDateFrom]);
 
   // Filter duration modes based on policy
   const durationModeOptions = useMemo(() => {
@@ -322,6 +341,14 @@ export default function LeaveApplicationDetail() {
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: LeaveApplicationFormValues) => {
+    if (minServiceError) {
+      notification.error({
+        message: "Minimum Service Requirement Not Met",
+        description: minServiceError,
+        placement: "topRight",
+      });
+      return;
+    }
     const isMultiDay = values.mode === "multiday";
     const dateFrom = isMultiDay ? values.leaveDateFrom! : values.leaveDate!;
     const dateTo = isMultiDay ? values.leaveDateTo! : values.leaveDate!;
@@ -584,6 +611,16 @@ export default function LeaveApplicationDetail() {
                 />
               )}
             </Card>
+          )}
+
+          {minServiceError && (
+            <Alert
+              type="error"
+              showIcon
+              message="Minimum Service Requirement Not Met"
+              description={minServiceError}
+              className="mb-4"
+            />
           )}
 
           <Form.Item label="Duration Type">

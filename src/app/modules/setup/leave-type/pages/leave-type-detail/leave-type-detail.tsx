@@ -258,7 +258,7 @@ export default function LeaveTypeDetail() {
         paySource: selected.paySource,
         employerAdvancesPayment: selected.employerAdvancesPayment ?? false,
         accrualBasis: selected.accrualBasis ?? "None",
-        credits: selected.credits,
+        credits: selected.credits ?? 0,
         accrualRate: selected.accrualRate ?? 0,
         maxAccrualBalance: selected.maxAccrualBalance ?? null,
         proRateFirstYear: selected.proRateFirstYear ?? false,
@@ -578,6 +578,7 @@ export default function LeaveTypeDetail() {
                         render={({ field }) => (
                           <InputNumber
                             {...field}
+                            onChange={(v) => field.onChange(v ?? 0)}
                             min={0}
                             step={0.25}
                             className="w-full"
@@ -596,6 +597,7 @@ export default function LeaveTypeDetail() {
                         render={({ field }) => (
                           <InputNumber
                             {...field}
+                            onChange={(v) => field.onChange(v ?? 0)}
                             min={0}
                             step={0.5}
                             className="w-full"
@@ -671,6 +673,7 @@ export default function LeaveTypeDetail() {
                     render={({ field }) => (
                       <InputNumber
                         {...field}
+                        onChange={(v) => field.onChange(v ?? 0)}
                         min={0}
                         className="w-full"
                         placeholder="0 = immediately eligible"
@@ -849,6 +852,7 @@ export default function LeaveTypeDetail() {
                       render={({ field }) => (
                         <InputNumber
                           {...field}
+                          onChange={(v) => field.onChange(v ?? 0)}
                           min={0}
                           step={0.5}
                           className="w-full"
@@ -910,6 +914,7 @@ export default function LeaveTypeDetail() {
                       render={({ field }) => (
                         <InputNumber
                           {...field}
+                          onChange={(v) => field.onChange(v ?? 0)}
                           min={0}
                           max={1}
                           step={0.1}
