@@ -16,7 +16,7 @@ export const COMPANY_POLICY_LABEL = {
   HALF_DAY_THRESHOLD: "Half-Day Late Threshold (minutes)",
   IS_WHOLE_DAY_LATE: "Enable Whole-Day Late",
   WHOLE_DAY_THRESHOLD: "Whole-Day Late Threshold (minutes)",
-  NIGHT_DIFF_THRESHOLD: "Night Diff Start (minutes before 10 PM)",
+  NIGHT_DIFF_THRESHOLD: "Night Diff Threshold (minutes)",
   ATT_FILL_LIMIT: "Manual Attendance Fill Limit",
   HOLIDAY_TIME_BASIS: "Holiday Hours Basis",
   IS_HOL_PLUS_REG: "Include Regular Hours in Holiday Column",
