@@ -13,6 +13,7 @@ export const employeeMapper = {
       civilStatus: response.civilStatus ?? "",
       dob: response.dob ?? null,
       bloodType: response.bloodType ?? "",
+      email: response.email ?? "",
       contact: response.contact ?? "",
       address1: response.address1 ?? "",
       address2: response.address2 ?? "",

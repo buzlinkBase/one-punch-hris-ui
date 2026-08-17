@@ -10,6 +10,9 @@ export const employeeFormSchema = z.object({
   civilStatus: z.string().optional(),
   dob: z.string().nullable().optional(),
   bloodType: z.string().optional(),
+  email: z
+    .union([z.literal(""), z.string().email("Enter a valid email")])
+    .optional(),
   contact: z.string().optional(),
   address1: z.string().optional(),
   address2: z.string().optional(),

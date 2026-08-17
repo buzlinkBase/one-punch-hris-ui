@@ -50,13 +50,17 @@ export default function AwaitingInvitation() {
       });
       const claims = authStorage.getTenantClaims(result.accessToken);
       const user = authStorage.getUser();
+      const resultIds = new Set(result.tenants.map((t) => t.tenantId));
+      const preserved = (user?.tenants ?? []).filter(
+        (t) => !resultIds.has(t.tenantId),
+      );
       authStorage.save(result.accessToken, {
         ...user!,
-        tenants: result.tenants,
+        tenants: [...result.tenants, ...preserved],
         tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
         tenantName: claims.tenantName,
       });
-      navigate({ to: "/dashboard" });
+      window.location.assign("/dashboard");
     } catch (err) {
       const description = axios.isAxiosError(err)
         ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data

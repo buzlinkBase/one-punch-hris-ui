@@ -86,7 +86,7 @@ export const authApi = {
         tenants: [],
         email: user?.email ?? "",
         name: user?.name ?? "",
-        role: user?.role ?? "",
+        roles: user?.roles ?? [],
       };
     }
   },
@@ -138,6 +138,11 @@ export const authApi = {
     return httpClient.postUnwrapped<void>(
       `${INVITATIONS_URL}/send-invite`,
       data,
+    );
+  },
+  getRoles(): Promise<string[]> {
+    return httpClient.getUnwrapped<string[]>(
+      buildApiUrl(API_PREFIX.auth, "roles"),
     );
   },
 };

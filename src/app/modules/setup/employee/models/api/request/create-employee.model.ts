@@ -46,6 +46,7 @@ export interface CreateEmployee {
   phicNo?: string;
   hdmfNo?: string;
   tin?: string;
+  email?: string;
   contact?: string;
   address1?: string;
   address2?: string;

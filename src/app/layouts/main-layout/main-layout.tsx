@@ -62,7 +62,7 @@ type NavWithTrail = {
 
 interface SessionUser {
   name: string;
-  role: string;
+  roles: string[];
   email: string;
   tenantId: string | null;
   tenantName: string | null;
@@ -80,7 +80,7 @@ function getInitials(name: string): string {
 function getSessionUser(): SessionUser {
   const fallbackUser: SessionUser = {
     name: "Current User",
-    role: "HR Administrator",
+    roles: [],
     email: "user@onepunch.local",
     tenantId: null,
     tenantName: null,
@@ -92,7 +92,7 @@ function getSessionUser(): SessionUser {
 
   return {
     name: stored.name?.trim() || fallbackUser.name,
-    role: stored.role?.trim() || fallbackUser.role,
+    roles: stored.roles ?? [],
     email: stored.email?.trim() || fallbackUser.email,
     tenantId: stored.tenantId ?? null,
     tenantName: stored.tenantName ?? null,
@@ -335,10 +335,8 @@ export default function MainLayout() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_refresh_token");
-    localStorage.removeItem("auth_user");
-    navigate({ to: "/login", replace: true });
+    authStorage.clear();
+    window.location.assign("/login");
   };
 
   const handleSwitchTenant = async (tenantId: string) => {
@@ -617,7 +615,7 @@ export default function MainLayout() {
               >
                 <p className="side-user-name">{sessionUser.name}</p>
                 <p className="side-user-subtitle">
-                  {sessionUser.role}
+                  {sessionUser.roles.join(", ")}
                   {sessionUser.email ? ` · ${sessionUser.email}` : ""}
                 </p>
               </button>
