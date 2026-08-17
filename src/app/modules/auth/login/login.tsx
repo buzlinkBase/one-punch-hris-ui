@@ -23,6 +23,8 @@ import { useGoogleLogin } from "@react-oauth/google";
 
 const { Title, Text } = Typography;
 
+const PENDING_INVITE_KEY = "pending_invite_token";
+
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 48 48" style={{ display: "block" }}>
     <path
@@ -67,12 +69,39 @@ export default function Login() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       const result = await authApi.login(values);
+      const claims = authStorage.getTenantClaims(result.accessToken);
       authStorage.save(result.accessToken, {
         email: values.email,
         name: result.name,
-        role: result.role,
+        roles: result.roles,
         tenants: result.tenants,
+        tenantId: claims.tenantId || undefined,
+        tenantName: claims.tenantName || undefined,
       });
+
+      const pendingToken = sessionStorage.getItem(PENDING_INVITE_KEY);
+      if (pendingToken) {
+        sessionStorage.removeItem(PENDING_INVITE_KEY);
+        try {
+          const acceptResult = await authApi.acceptInvitation({
+            token: pendingToken,
+          });
+          const user = authStorage.getUser();
+          const resultIds = new Set(
+            acceptResult.tenants.map((t) => t.tenantId),
+          );
+          const preserved = (user?.tenants ?? []).filter(
+            (t) => !resultIds.has(t.tenantId),
+          );
+          authStorage.save(authStorage.getToken()!, {
+            ...user!,
+            tenants: [...acceptResult.tenants, ...preserved],
+          });
+        } catch {
+          // Don't block login if invite acceptance fails silently
+        }
+      }
+
       await proceedAfterLogin();
     } catch (err) {
       const description = axios.isAxiosError(err)
@@ -92,12 +121,39 @@ export default function Login() {
     onSuccess: async ({ code }) => {
       try {
         const result = await authApi.loginWithGoogle(code);
+        const googleClaims = authStorage.getTenantClaims(result.accessToken);
         authStorage.save(result.accessToken, {
           email: result.email,
           name: result.name,
-          role: result.role,
+          roles: result.roles,
           tenants: result.tenants,
+          tenantId: googleClaims.tenantId || undefined,
+          tenantName: googleClaims.tenantName || undefined,
         });
+
+        const pendingToken = sessionStorage.getItem(PENDING_INVITE_KEY);
+        if (pendingToken) {
+          sessionStorage.removeItem(PENDING_INVITE_KEY);
+          try {
+            const acceptResult = await authApi.acceptInvitation({
+              token: pendingToken,
+            });
+            const user = authStorage.getUser();
+            const resultIds = new Set(
+              acceptResult.tenants.map((t) => t.tenantId),
+            );
+            const preserved = (user?.tenants ?? []).filter(
+              (t) => !resultIds.has(t.tenantId),
+            );
+            authStorage.save(authStorage.getToken()!, {
+              ...user!,
+              tenants: [...acceptResult.tenants, ...preserved],
+            });
+          } catch {
+            // Don't block login if invite acceptance fails silently
+          }
+        }
+
         await proceedAfterLogin();
       } catch (err) {
         const description = axios.isAxiosError(err)

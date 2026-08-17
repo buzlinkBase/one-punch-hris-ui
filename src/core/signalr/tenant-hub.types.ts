@@ -15,7 +15,7 @@ export const TENANT_HUB_METHODS = {
 export interface TenantCreatedNotification {
   tenantId: string;
   tenantName: string;
-  role: string;
+  roles: string[];
 }
 
 export interface HrDbCreatedNotification {

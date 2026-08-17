@@ -4,6 +4,7 @@ import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
+  MailOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -16,9 +17,15 @@ interface Props {
   data: EmployeeResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
+  onInvite?: (record: EmployeeResponse) => void;
 }
 
-export default function EmployeeTable({ data, loading, onDelete }: Props) {
+export default function EmployeeTable({
+  data,
+  loading,
+  onDelete,
+  onInvite,
+}: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
@@ -273,7 +280,7 @@ export default function EmployeeTable({ data, loading, onDelete }: Props) {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 110,
       render: (_, record) => (
         <Space>
           <Button
@@ -281,6 +288,14 @@ export default function EmployeeTable({ data, loading, onDelete }: Props) {
             icon={<EditOutlined />}
             onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
           />
+          {onInvite && (
+            <Button
+              type="text"
+              icon={<MailOutlined />}
+              title="Invite to workspace"
+              onClick={() => onInvite(record)}
+            />
+          )}
           {onDelete && (
             <Popconfirm
               title="Delete this employee?"

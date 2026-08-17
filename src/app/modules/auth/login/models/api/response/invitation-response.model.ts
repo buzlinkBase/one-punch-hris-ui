@@ -12,5 +12,5 @@ export interface InvitationResponse {
   token: string;
   expiry: string;
   status: InvitationStatus;
-  role: string;
+  roles: string[];
 }

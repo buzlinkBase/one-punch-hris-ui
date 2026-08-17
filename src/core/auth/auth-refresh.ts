@@ -23,14 +23,14 @@ export async function refreshAccessToken(): Promise<string> {
   isRefreshing = true;
 
   try {
-    const { accessToken, email, name, role } = await authApi.refresh();
+    const { accessToken, email, name, roles } = await authApi.refresh();
     const user = authStorage.getUser();
     authStorage.save(
       accessToken,
       user ?? {
         email,
         name,
-        role,
+        roles,
       },
     );
 

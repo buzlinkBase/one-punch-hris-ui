@@ -23,11 +23,15 @@ export async function resolveTenantDestination(): Promise<TenantRedirect> {
     const result = await authApi.selectTenant(tenant.tenantId);
     const claims = authStorage.getTenantClaims(result.accessToken);
     const user = authStorage.getUser();
+    const resultIds = new Set(result.tenants.map((t) => t.tenantId));
+    const preserved = (user?.tenants ?? []).filter(
+      (t) => !resultIds.has(t.tenantId),
+    );
     authStorage.save(result.accessToken, {
       ...user!,
       tenantId: claims.tenantId ?? tenant.tenantId,
       tenantName: claims.tenantName ?? tenant.name,
-      tenants: result.tenants ?? user?.tenants,
+      tenants: [...result.tenants, ...preserved],
     });
     return null;
   }

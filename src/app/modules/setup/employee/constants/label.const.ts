@@ -10,6 +10,7 @@ export const EMPLOYEE_LABEL = {
   CIVIL_STATUS: "Civil Status",
   DOB: "Date of Birth",
   BLOOD_TYPE: "Blood Type",
+  EMAIL: "Email Address",
   CONTACT: "Contact No.",
   ADDRESS1: "Address Line 1",
   ADDRESS2: "Address Line 2",

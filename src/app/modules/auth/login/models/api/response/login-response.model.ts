@@ -7,5 +7,5 @@ export interface LoginResponse {
   expiry: string;
   email: string;
   name: string;
-  role: string;
+  roles: string[];
 }

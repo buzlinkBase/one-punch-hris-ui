@@ -63,7 +63,7 @@ export default function CreateTenant() {
         tenantId: tenantId ?? "",
         name: values.tenantName,
         state: "Provisioning",
-        role: currentUser.role ?? "Admin",
+        roles: currentUser.roles ?? ["Admin"],
         hrDbStatus: null,
         hrDbReady: false,
       };
