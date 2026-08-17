@@ -1,26 +1,34 @@
 import { useEffect } from "react";
-import { Form, Input, Modal, Select, notification } from "antd";
+import { Form, Input, Modal, Select, notification, Typography } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   inviteUserFormSchema,
   type InviteUserFormValues,
 } from "../../models/forms/invite-user-form.schema";
-import { useSendInvitation } from "../../hooks/use-user-queries";
+import { useSendInvitation, useAuthRoles } from "../../hooks/use-user-queries";
 
-const ROLE_OPTIONS = [
-  { label: "Administrator", value: "Admin" },
-  { label: "HR", value: "HR" },
-  { label: "Employee", value: "Employee" },
-];
+const { Text } = Typography;
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  employeeId?: string;
+  employeeName?: string;
+  /** Pre-existing email on the employee record — pre-fills the email field. */
+  employeeEmail?: string;
 }
 
-export default function InviteUserModal({ open, onClose }: Props) {
+export default function InviteUserModal({
+  open,
+  onClose,
+  employeeId,
+  employeeName,
+  employeeEmail,
+}: Props) {
   const { mutate: sendInvitation, isPending } = useSendInvitation();
+  const { data: roles = [], isLoading: loadingRoles } = useAuthRoles();
 
   const {
     control,
@@ -29,16 +37,20 @@ export default function InviteUserModal({ open, onClose }: Props) {
     formState: { errors },
   } = useForm<InviteUserFormValues>({
     resolver: zodResolver(inviteUserFormSchema),
-    defaultValues: { email: "", role: "" },
+    defaultValues: { email: "", roles: [] },
   });
 
   useEffect(() => {
-    if (!open) reset();
-  }, [open, reset]);
+    if (open) {
+      reset({ email: employeeEmail ?? "", roles: [] });
+    } else {
+      reset();
+    }
+  }, [open, employeeEmail, reset]);
 
   const onSubmit = (values: InviteUserFormValues) => {
     sendInvitation(
-      { email: values.email, roles: [values.role] },
+      { email: values.email, roles: values.roles, employeeId },
       {
         onSuccess: () => {
           notification.success({
@@ -59,9 +71,11 @@ export default function InviteUserModal({ open, onClose }: Props) {
     );
   };
 
+  const roleOptions = roles.map((r) => ({ label: r, value: r }));
+
   return (
     <Modal
-      title="Invite User"
+      title={employeeName ? `Invite ${employeeName}` : "Invite User"}
       open={open}
       onCancel={onClose}
       onOk={handleSubmit(onSubmit)}
@@ -69,6 +83,18 @@ export default function InviteUserModal({ open, onClose }: Props) {
       confirmLoading={isPending}
       destroyOnClose
     >
+      {employeeName && (
+        <div className="flex items-center gap-2 mb-4 mt-2 px-3 py-2 rounded bg-gray-50 dark:bg-gray-800">
+          <UserOutlined className="text-gray-400" />
+          <Text type="secondary" className="text-sm">
+            Inviting employee:{" "}
+          </Text>
+          <Text strong className="text-sm">
+            {employeeName}
+          </Text>
+        </div>
+      )}
+
       <Form layout="vertical" className="mt-4">
         <Form.Item
           label="Email Address"
@@ -81,6 +107,7 @@ export default function InviteUserModal({ open, onClose }: Props) {
             render={({ field }) => (
               <Input
                 {...field}
+                type="email"
                 placeholder="user@example.com"
                 autoComplete="off"
               />
@@ -89,18 +116,20 @@ export default function InviteUserModal({ open, onClose }: Props) {
         </Form.Item>
 
         <Form.Item
-          label="Role"
-          validateStatus={errors.role ? "error" : ""}
-          help={errors.role?.message}
+          label="Roles"
+          validateStatus={errors.roles ? "error" : ""}
+          help={errors.roles?.message}
         >
           <Controller
-            name="role"
+            name="roles"
             control={control}
             render={({ field }) => (
               <Select
                 {...field}
-                placeholder="Select a role"
-                options={ROLE_OPTIONS}
+                mode="multiple"
+                placeholder="Select one or more roles"
+                options={roleOptions}
+                loading={loadingRoles}
               />
             )}
           />

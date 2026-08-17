@@ -5,5 +5,5 @@ export interface AcceptInvitationResponse {
   tenants: TenantSummary[];
   email: string;
   name: string;
-  role: string;
+  roles: string[];
 }

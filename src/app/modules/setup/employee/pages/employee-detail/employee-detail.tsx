@@ -611,6 +611,25 @@ export default function EmployeeDetail() {
                         render={({ field }) => <Input {...field} />}
                       />
                     </Form.Item>
+
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.EMAIL}
+                      validateStatus={errors.email ? "error" : ""}
+                      help={errors.email?.message}
+                    >
+                      <Controller
+                        name="email"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="employee@example.com"
+                            autoComplete="off"
+                          />
+                        )}
+                      />
+                    </Form.Item>
                   </div>
                 ),
               },

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button, Dropdown, Space, Typography, message } from "antd";
 import {
   DownloadOutlined,
@@ -16,6 +16,8 @@ import {
 } from "../../hooks/use-employee-queries";
 import EmployeeTable from "../../components/employee-table";
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
+import InviteUserModal from "@/app/modules/security/users/components/invite-user-modal/invite-user-modal";
+import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
 
 const { Title } = Typography;
 
@@ -34,6 +36,10 @@ export default function EmployeeList() {
   const { mutate: uploadEmployees, isPending: uploading } =
     useUploadEmployees();
   const [messageApi, contextHolder] = message.useMessage();
+
+  const [inviteTarget, setInviteTarget] = useState<EmployeeResponse | null>(
+    null,
+  );
 
   const handleDownloadTemplate = () => {
     downloadTemplate(undefined, {
@@ -121,7 +127,24 @@ export default function EmployeeList() {
         </div>
       </div>
 
-      <EmployeeTable data={employees} loading={isLoading} onDelete={remove} />
+      <EmployeeTable
+        data={employees}
+        loading={isLoading}
+        onDelete={remove}
+        onInvite={(record) => setInviteTarget(record)}
+      />
+
+      <InviteUserModal
+        open={!!inviteTarget}
+        onClose={() => setInviteTarget(null)}
+        employeeId={inviteTarget?.id}
+        employeeName={
+          inviteTarget
+            ? `${inviteTarget.firstName} ${inviteTarget.lastName}`
+            : undefined
+        }
+        employeeEmail={inviteTarget?.email ?? undefined}
+      />
     </div>
   );
 }

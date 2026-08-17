@@ -4,8 +4,6 @@ import type { TenantSummary } from "@/app/modules/auth/login/models/api/response
 const KEYS = {
   token: "auth_token",
   user: "auth_user",
-  name: "name",
-  role: "role",
 } as const;
 
 const EXPIRY_BUFFER_MS = 60_000;
@@ -13,7 +11,7 @@ const EXPIRY_BUFFER_MS = 60_000;
 export interface AuthUser {
   email: string;
   name: string;
-  role: string;
+  roles: string[];
   tenantId?: string | null;
   tenantName?: string | null;
   tenants?: TenantSummary[];
@@ -36,7 +34,14 @@ export const authStorage = {
 
   getUser(): AuthUser | null {
     const raw = localStorage.getItem(KEYS.user);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AuthUser & { role?: string };
+    // Migrate old sessions that stored role: string instead of roles: string[]
+    if (!parsed.roles && parsed.role) {
+      parsed.roles = [parsed.role];
+    }
+    parsed.roles ??= [];
+    return parsed;
   },
 
   getTenants(): TenantSummary[] {

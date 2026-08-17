@@ -5,5 +5,5 @@ export interface CreateTenantResponse {
   tenants: TenantSummary[];
   email: string;
   name: string;
-  role: string;
+  roles: string[];
 }
