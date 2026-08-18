@@ -18,9 +18,25 @@ const LOG_KEYS = Array.from(
   (_, i) => `log${i + 1}` as keyof CleanAttendanceLogColumnar,
 );
 
-function fmtTime(v: string | null | undefined): string {
+function renderTime(v: string | null | undefined, workDate: string) {
   if (!v) return "";
-  return dayjs(v).format("HH:mm");
+  const t = dayjs(v);
+  if (!t.isAfter(dayjs(workDate), "day")) return t.format("HH:mm");
+  return (
+    <span>
+      {t.format("HH:mm")}
+      <sup
+        style={{
+          color: "#1DA081",
+          fontSize: 9,
+          fontWeight: 700,
+          marginLeft: 2,
+        }}
+      >
+        +1
+      </sup>
+    </span>
+  );
 }
 
 export default function CleanColumnarTable({ data, loading }: Props) {
@@ -42,7 +58,7 @@ export default function CleanColumnarTable({ data, loading }: Props) {
   });
 
   const valid = useMemo(
-    () => data.filter((r) => r.employeeId !== EMPTY_GUID && r.empNo !== ""),
+    () => data.filter((r) => r.employeeId !== EMPTY_GUID),
     [data],
   );
 
@@ -131,7 +147,8 @@ export default function CleanColumnarTable({ data, loading }: Props) {
           width: widths.shiftStart,
           onResize: (w: number) => handleResize("shiftStart", w),
         }) as object,
-      render: (v: string) => fmtTime(v),
+      render: (v: string, record: CleanAttendanceLogColumnar) =>
+        renderTime(v, record.workDate),
     },
     {
       title: "Shift End",
@@ -143,7 +160,8 @@ export default function CleanColumnarTable({ data, loading }: Props) {
           width: widths.shiftEnd,
           onResize: (w: number) => handleResize("shiftEnd", w),
         }) as object,
-      render: (v: string) => fmtTime(v),
+      render: (v: string, record: CleanAttendanceLogColumnar) =>
+        renderTime(v, record.workDate),
     },
     {
       title: "Break Out",
@@ -155,7 +173,8 @@ export default function CleanColumnarTable({ data, loading }: Props) {
           width: widths.breakOut,
           onResize: (w: number) => handleResize("breakOut", w),
         }) as object,
-      render: (v: string | null) => fmtTime(v),
+      render: (v: string | null, record: CleanAttendanceLogColumnar) =>
+        renderTime(v, record.workDate),
     },
     {
       title: "Break In",
@@ -167,7 +186,8 @@ export default function CleanColumnarTable({ data, loading }: Props) {
           width: widths.breakIn,
           onResize: (w: number) => handleResize("breakIn", w),
         }) as object,
-      render: (v: string | null) => fmtTime(v),
+      render: (v: string | null, record: CleanAttendanceLogColumnar) =>
+        renderTime(v, record.workDate),
     },
   ];
 
@@ -184,9 +204,25 @@ export default function CleanColumnarTable({ data, loading }: Props) {
       render: (_: unknown, record: CleanAttendanceLogColumnar) => {
         const entry = record[k] as { attId: string; workTime: string } | null;
         if (!entry) return <span style={{ color: "#bbb" }}>—</span>;
+        const t = dayjs(entry.workTime);
+        const isCross = t.isAfter(dayjs(record.workDate), "day");
         return (
-          <Tooltip title={dayjs(entry.workTime).format("MMM DD HH:mm")}>
-            <span>{fmtTime(entry.workTime)}</span>
+          <Tooltip title={t.format("MMM DD HH:mm")}>
+            <span>
+              {t.format("HH:mm")}
+              {isCross && (
+                <sup
+                  style={{
+                    color: "#1DA081",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    marginLeft: 2,
+                  }}
+                >
+                  +1
+                </sup>
+              )}
+            </span>
           </Tooltip>
         );
       },
