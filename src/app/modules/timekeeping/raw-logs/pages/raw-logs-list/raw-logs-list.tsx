@@ -180,26 +180,24 @@ export default function RawLogsList() {
       case "raw-columnar":
         return {
           name: "raw-columnar",
-          rows: rawColumnarLogs
-            .filter((r) => r.empNo !== "")
-            .map((r) => ({
-              EmpNo: r.empNo,
-              FullName: r.fullName,
-              Department: r.department,
-              WorkDate: r.workDate,
-              ShiftName: r.shiftName,
-              ShiftStart: r.shiftStart,
-              ShiftEnd: r.shiftEnd,
-              BreakOut: r.breakOut ?? "",
-              BreakIn: r.breakIn ?? "",
-              ...Object.fromEntries(
-                Array.from({ length: 20 }, (_, i) => {
-                  const k = `log${i + 1}` as keyof typeof r;
-                  const v = r[k] as { workTime: string } | null;
-                  return [`Log${i + 1}`, v?.workTime ?? ""];
-                }).filter(([, v]) => v !== ""),
-              ),
-            })),
+          rows: rawColumnarLogs.map((r) => ({
+            EmpNo: r.empNo,
+            FullName: r.fullName,
+            Department: r.department,
+            WorkDate: r.workDate,
+            ShiftName: r.shiftName,
+            ShiftStart: r.shiftStart,
+            ShiftEnd: r.shiftEnd,
+            BreakOut: r.breakOut ?? "",
+            BreakIn: r.breakIn ?? "",
+            ...Object.fromEntries(
+              Array.from({ length: 20 }, (_, i) => {
+                const k = `log${i + 1}` as keyof typeof r;
+                const v = r[k] as { workTime: string } | null;
+                return [`Log${i + 1}`, v?.workTime ?? ""];
+              }).filter(([, v]) => v !== ""),
+            ),
+          })),
         };
       case "clean-row":
         return {
@@ -220,26 +218,24 @@ export default function RawLogsList() {
       case "clean-columnar":
         return {
           name: "clean-columnar",
-          rows: cleanColumnarLogs
-            .filter((r) => r.empNo !== "")
-            .map((r) => ({
-              EmpNo: r.empNo,
-              FullName: r.fullName,
-              Department: r.department,
-              WorkDate: r.workDate,
-              ShiftName: r.shiftName,
-              ShiftStart: r.shiftStart,
-              ShiftEnd: r.shiftEnd,
-              BreakOut: r.breakOut ?? "",
-              BreakIn: r.breakIn ?? "",
-              ...Object.fromEntries(
-                Array.from({ length: 20 }, (_, i) => {
-                  const k = `log${i + 1}` as keyof typeof r;
-                  const v = r[k] as { workTime: string } | null;
-                  return [`Log${i + 1}`, v?.workTime ?? ""];
-                }).filter(([, v]) => v !== ""),
-              ),
-            })),
+          rows: cleanColumnarLogs.map((r) => ({
+            EmpNo: r.empNo,
+            FullName: r.fullName,
+            Department: r.department,
+            WorkDate: r.workDate,
+            ShiftName: r.shiftName,
+            ShiftStart: r.shiftStart,
+            ShiftEnd: r.shiftEnd,
+            BreakOut: r.breakOut ?? "",
+            BreakIn: r.breakIn ?? "",
+            ...Object.fromEntries(
+              Array.from({ length: 20 }, (_, i) => {
+                const k = `log${i + 1}` as keyof typeof r;
+                const v = r[k] as { workTime: string } | null;
+                return [`Log${i + 1}`, v?.workTime ?? ""];
+              }).filter(([, v]) => v !== ""),
+            ),
+          })),
         };
       default:
         return { rows: [], name: activeTab };

@@ -202,7 +202,7 @@ export default function CleanRowTable({ data, loading }: Props) {
   ];
 
   const valid = useMemo(
-    () => data.filter((r) => r.employeeId !== EMPTY_GUID && r.empNo !== ""),
+    () => data.filter((r) => r.employeeId !== EMPTY_GUID),
     [data],
   );
 
