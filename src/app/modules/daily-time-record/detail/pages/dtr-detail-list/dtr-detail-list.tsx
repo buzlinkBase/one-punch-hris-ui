@@ -27,7 +27,11 @@ import {
 import DtrDetailTable from "../../components/dtr-detail-table";
 import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
-import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
+import {
+  buildDtrCsv,
+  buildDtrExcel,
+  triggerDownload,
+} from "../../utils/dtr-export.utils";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
@@ -167,113 +171,24 @@ export default function DtrDetailList() {
 
   // ── Export ──────────────────────────────────────────────────────────────────
 
-  type AnyRow = Record<string, unknown>;
-
-  const toExportRows = (): AnyRow[] =>
-    records.map((r: DtrDetailResponse) => ({
-      Employee: r.fullName,
-      WorkType: r.workType,
-      WorkDate: r.workDate,
-      ShiftName: r.shiftName,
-      Start: r.startTime ? dayjs(r.startTime).format("HH:mm") : "",
-      End: r.endTime ? dayjs(r.endTime).format("HH:mm") : "",
-      // Minutes
-      Late_min: r.lateMinutes,
-      UT_min: r.utMinutes,
-      OverBreak_min: r.overMinutes,
-      Leave_hr: r.leaveHours,
-      // Hours – regular
-      RegNet_hr: r.regularNetHours,
-      RegOT_hr: r.regularOTHours,
-      RegND_hr: r.regularNDHours,
-      RegND_OT_hr: r.regularNDOTHours,
-      // Hours – rest day
-      RD_hr: r.restDayHours,
-      RD_OT_hr: r.restDayOTHours,
-      RD_ND_hr: r.restDayNDHours,
-      RD_ND_OT_hr: r.restDayNDOTHours,
-      // Hours – legal holiday
-      LH_hr: r.legalHolHours,
-      LH_OT_hr: r.legalHolOTHours,
-      LH_ND_hr: r.legalHolNightDiffHours,
-      LH_ND_OT_hr: r.legalHolNightDiffOTHours,
-      // Hours – special holiday
-      SPH_hr: r.specialHolHours,
-      SPH_OT_hr: r.specialHolOTHours,
-      SPH_ND_hr: r.specialHolNightDiffHours,
-      SPH_ND_OT_hr: r.specialHolNightDiffOTHours,
-      // Hours – rest + legal/special
-      RestLegal_hr: r.restLegalDayHours,
-      RestLegal_OT_hr: r.restLegalDayOTHours,
-      RestLegal_ND_hr: r.restLegalDayNDHours,
-      RestLegal_ND_OT_hr: r.restLegalDayNDOTHours,
-      RestSpecial_hr: r.restSpecialDayHours,
-      RestSpecial_OT_hr: r.restSpecialDayOTHours,
-      RestSpecial_ND_hr: r.restSpecialDayNDHours,
-      RestSpecial_ND_OT_hr: r.restSpecialDayNDOTHours,
-    }));
-
-  const buildCsv = (rows: AnyRow[]): string => {
-    if (!rows.length) return "";
-    const headers = Object.keys(rows[0]);
-    return [
-      headers.join(","),
-      ...rows.map((r) =>
-        headers
-          .map((h) => `"${String(r[h] ?? "").replaceAll('"', '""')}"`)
-          .join(","),
-      ),
-    ].join("\n");
-  };
-
-  const escapeHtml = (v: string) =>
-    v
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-
-  const buildExcel = (rows: AnyRow[]): string => {
-    if (!rows.length) return "";
-    const headers = Object.keys(rows[0]);
-    const th = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
-    const trs = rows
-      .map(
-        (r) =>
-          `<tr>${headers.map((h) => `<td>${escapeHtml(String(r[h] ?? ""))}</td>`).join("")}</tr>`,
-      )
-      .join("");
-    return `<html><head><meta charset="utf-8"/></head><body><table><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></body></html>`;
-  };
-
   const handleExport = (format: "csv" | "excel") => {
-    const rows = toExportRows();
-    if (!rows.length) {
+    if (!records.length) {
       messageApi.info("No data to export. Click Generate first.");
       return;
     }
     const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      const a = document.createElement("a");
-      a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv(rows))}`;
-      a.download = `dtr-detail-${date}.csv`;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      triggerDownload(
+        buildDtrCsv(records),
+        `dtr-detail-${date}.csv`,
+        "text/plain",
+      );
     } else {
-      const blob = new Blob([buildExcel(rows)], {
-        type: "application/vnd.ms-excel;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `dtr-detail-${date}.xls`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      triggerDownload(
+        buildDtrExcel(records),
+        `dtr-detail-${date}.xls`,
+        "application/vnd.ms-excel;charset=utf-8;",
+      );
     }
   };
 

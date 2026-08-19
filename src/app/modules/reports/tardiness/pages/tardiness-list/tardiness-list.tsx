@@ -42,6 +42,11 @@ import TardinessSummaryTable from "../../components/tardiness-summary-table/tard
 import { TARDINESS_LABEL } from "../../constants/label.const";
 import type { TardinessFilter } from "../../models/api/request/tardiness-filter.model";
 import type { TardinessResponse } from "../../models/api/response/tardiness-response.model";
+import {
+  buildFlatCsv,
+  buildFlatExcel,
+  triggerDownload,
+} from "@/shared/utils/export.utils";
 
 const { Title } = Typography;
 
@@ -57,27 +62,20 @@ const EMPLOYEE_OPTIONS = Array.from({ length: 20 }, (_, i) => ({
   label: `Employee ${i + 1}`,
 }));
 
-function escapeHtml(v: string) {
-  return v
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
+const TARDINESS_HEADERS = [
+  "Date",
+  "Employee ID",
+  "Name",
+  "Department",
+  "Scheduled In",
+  "Actual In",
+  "Grace Period (Mins)",
+  "Tardiness (Mins)",
+  "Deductible (Mins)",
+];
 
-function buildCsv(records: TardinessResponse[]) {
-  const header = [
-    "Date",
-    "Employee ID",
-    "Name",
-    "Department",
-    "Scheduled In",
-    "Actual In",
-    "Grace Period (Mins)",
-    "Tardiness (Mins)",
-    "Deductible (Mins)",
-  ];
-  const rows = records.map((r) => [
+function toTardinessRows(records: TardinessResponse[]): string[][] {
+  return records.map((r) => [
     r.workDate,
     r.employeeNo,
     r.fullName ?? "",
@@ -88,46 +86,6 @@ function buildCsv(records: TardinessResponse[]) {
     String(r.tardinessMinutes),
     String(r.deductibleMinutes),
   ]);
-  return [header, ...rows]
-    .map((line) => line.map((v) => `"${v.replaceAll('"', '""')}"`).join(","))
-    .join("\n");
-}
-
-function buildExcel(records: TardinessResponse[]) {
-  const th = (v: string) => `<th>${escapeHtml(v)}</th>`;
-  const td = (v: string) => `<td>${escapeHtml(v)}</td>`;
-  const header = [
-    "Date",
-    "Employee ID",
-    "Name",
-    "Department",
-    "Scheduled In",
-    "Actual In",
-    "Grace Period (Mins)",
-    "Tardiness (Mins)",
-    "Deductible (Mins)",
-  ]
-    .map(th)
-    .join("");
-  const body = records
-    .map(
-      (r) =>
-        `<tr>${[
-          r.workDate,
-          r.employeeNo,
-          r.fullName ?? "",
-          r.department ?? "",
-          r.scheduledIn,
-          r.actualIn ?? "",
-          String(r.gracePeriodMinutes),
-          String(r.tardinessMinutes),
-          String(r.deductibleMinutes),
-        ]
-          .map(td)
-          .join("")}</tr>`,
-    )
-    .join("");
-  return `<html><head><meta charset="utf-8"/></head><body><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></body></html>`;
 }
 
 export default function TardinessList() {
@@ -158,26 +116,20 @@ export default function TardinessList() {
       messageApi.info("No records to export.");
       return;
     }
+    const rows = toTardinessRows(records);
+    const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      const a = document.createElement("a");
-      a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv(records))}`;
-      a.download = `tardiness-${dayjs().format("YYYYMMDD")}.csv`;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      triggerDownload(
+        buildFlatCsv(TARDINESS_HEADERS, rows),
+        `tardiness-${date}.csv`,
+        "text/plain",
+      );
     } else {
-      const blob = new Blob([buildExcel(records)], {
-        type: "application/vnd.ms-excel;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `tardiness-${dayjs().format("YYYYMMDD")}.xls`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      triggerDownload(
+        buildFlatExcel(TARDINESS_HEADERS, rows),
+        `tardiness-${date}.xls`,
+        "application/vnd.ms-excel;charset=utf-8;",
+      );
     }
   };
 

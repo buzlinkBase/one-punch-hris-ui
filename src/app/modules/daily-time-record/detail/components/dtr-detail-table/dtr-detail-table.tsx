@@ -1,6 +1,6 @@
 import { useState } from "react";
 import dayjs from "dayjs";
-import { Button, Space, Table, Tooltip } from "antd";
+import { Button, Space, Table, Tooltip, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   CalendarOutlined,
@@ -16,6 +16,7 @@ import DtrAttendanceLogsModal from "../dtr-attendance-logs-modal/dtr-attendance-
 import DtrChangeTimeShiftModal from "../dtr-change-time-shift-modal/dtr-change-time-shift-modal";
 import DtrChangeRestDayModal from "../dtr-change-rest-day-modal/dtr-change-rest-day-modal";
 import DtrSetRestDayModal from "../dtr-set-rest-day-modal/dtr-set-rest-day-modal";
+import { useThemeStore } from "@/core/stores/theme.store";
 
 interface Props {
   data: DtrDetailResponse[];
@@ -33,22 +34,31 @@ function rowKey(r: DtrDetailResponse) {
 const R = "right" as const;
 const L = "left" as const;
 
-const GC = {
-  minutes: { group: "#e4e9ee", sub: "#f8fafc" },
-  regular: { group: "#dae8f5", sub: "#f4f9fe" },
-  restDay: { group: "#f3e9d4", sub: "#fdfaf3" },
-  legalHol: { group: "#f3dcdc", sub: "#fdf5f5" },
-  specialHol: { group: "#ebe6f5", sub: "#f8f5fd" },
-  restLegal: { group: "#d3ece8", sub: "#f0faf8" },
-  restSpecial: { group: "#d4edd4", sub: "#f0faf0" },
-  doubleLegal: { group: "#f0cccc", sub: "#fdf0f0" },
-  restDoubleLegal: { group: "#dcd4f0", sub: "#f5f0fd" },
-  ob: { group: "#ccece6", sub: "#f0faf8" },
-};
-
-const groupHeader = (bg: string) => (): object => ({
-  style: { backgroundColor: bg, color: "#374151", fontWeight: 600 },
-});
+function makeGC(isDark: boolean) {
+  const g = isDark ? 0.45 : 0.22;
+  const s = isDark ? 0.18 : 0.07;
+  return {
+    minutes: { group: `rgba(100,116,139,${g})`, sub: `rgba(100,116,139,${s})` }, // slate  — penalties/minutes
+    regular: { group: `rgba(37,99,235,${g})`, sub: `rgba(37,99,235,${s})` }, // blue   — regular work
+    restDay: { group: `rgba(234,88,12,${g})`, sub: `rgba(234,88,12,${s})` }, // orange — rest day work
+    legalHol: { group: `rgba(220,38,38,${g})`, sub: `rgba(220,38,38,${s})` }, // red    — legal holiday
+    specialHol: {
+      group: `rgba(147,51,234,${g})`,
+      sub: `rgba(147,51,234,${s})`,
+    }, // violet — special holiday
+    restLegal: { group: `rgba(5,150,105,${g})`, sub: `rgba(5,150,105,${s})` }, // emerald — rest+legal
+    restSpecial: {
+      group: `rgba(101,163,13,${g})`,
+      sub: `rgba(101,163,13,${s})`,
+    }, // lime   — rest+special
+    doubleLegal: { group: `rgba(190,18,60,${g})`, sub: `rgba(190,18,60,${s})` }, // rose   — double legal
+    restDoubleLegal: {
+      group: `rgba(109,40,217,${g})`,
+      sub: `rgba(109,40,217,${s})`,
+    }, // purple — rest+double
+    ob: { group: `rgba(8,145,178,${g})`, sub: `rgba(8,145,178,${s})` }, // cyan   — official business
+  };
+}
 
 export default function DtrDetailTable({
   data,
@@ -58,6 +68,12 @@ export default function DtrDetailTable({
   dateFrom,
   dateTo,
 }: Props) {
+  const { token } = theme.useToken();
+  const isDark = useThemeStore((s) => s.mode) === "dark";
+  const GC = makeGC(isDark);
+  const groupHeader = (bg: string) => (): object => ({
+    style: { backgroundColor: bg, color: token.colorText, fontWeight: 600 },
+  });
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [shiftModalOpen, setShiftModalOpen] = useState(false);
@@ -133,7 +149,11 @@ export default function DtrDetailTable({
     render: (v: number | null | undefined) => {
       const n = v ?? 0;
       if (n === 0)
-        return <span style={{ color: "#d9d9d9", userSelect: "none" }}>—</span>;
+        return (
+          <span style={{ color: token.colorTextDisabled, userSelect: "none" }}>
+            —
+          </span>
+        );
       return <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>;
     },
   });
@@ -255,7 +275,7 @@ export default function DtrDetailTable({
           <div style={{ lineHeight: 1.3 }}>
             <div>{name}</div>
             {(start || end) && (
-              <div style={{ fontSize: 11, color: "#8c8c8c" }}>
+              <div style={{ fontSize: 11, color: token.colorTextTertiary }}>
                 {start ?? "—"} – {end ?? "—"}
               </div>
             )}
@@ -297,7 +317,7 @@ export default function DtrDetailTable({
             {isCrossDate && (
               <sup
                 style={{
-                  color: "#1DA081",
+                  color: token.colorPrimary,
                   fontSize: 9,
                   fontWeight: 700,
                   marginLeft: 2,

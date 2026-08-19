@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, DatePicker, Form, Modal, Space } from "antd";
+import { Button, DatePicker, Form, Modal, Space, theme } from "antd";
 import { ArrowRightOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import type { Dayjs } from "dayjs";
@@ -24,6 +24,7 @@ export default function DtrChangeRestDayModal({
   employeeName,
   workDate,
 }: Props) {
+  const { token } = theme.useToken();
   const { mutateAsync: createChangeRestDay, isPending: isSubmitting } =
     useCreateChangeRestDay();
 
@@ -58,7 +59,13 @@ export default function DtrChangeRestDayModal({
       title={
         <div>
           <div>Change Rest Day</div>
-          <div style={{ fontSize: 13, fontWeight: 400, color: "#8c8c8c" }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 400,
+              color: token.colorTextTertiary,
+            }}
+          >
             {employeeName ?? employeeId}
           </div>
         </div>
@@ -93,6 +100,7 @@ function ChangeRestDayForm({
   onSave,
   onNavigateAway,
 }: FormProps) {
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const [priorDate, setPriorDate] = useState<Dayjs | null>(dayjs(workDate));
   const [newDate, setNewDate] = useState<Dayjs | null>(null);
@@ -134,7 +142,7 @@ function ChangeRestDayForm({
           <Form.Item
             label={
               <Space size={4}>
-                <ArrowRightOutlined style={{ color: "#1DA081" }} />
+                <ArrowRightOutlined style={{ color: token.colorPrimary }} />
                 New Rest Day Date
               </Space>
             }

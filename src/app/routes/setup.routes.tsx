@@ -119,6 +119,63 @@ const CompanyPolicy = lazy(
     import("@/app/modules/setup/company-policy/pages/company-policy/company-policy"),
 );
 
+const SssTableList = lazy(
+  () => import("@/app/modules/setup/sss-table/pages/sss-table-list"),
+);
+const SssTableDetail = lazy(
+  () => import("@/app/modules/setup/sss-table/pages/sss-table-detail"),
+);
+
+const PhicTableList = lazy(
+  () => import("@/app/modules/setup/phic-table/pages/phic-table-list"),
+);
+const PhicTableDetail = lazy(
+  () => import("@/app/modules/setup/phic-table/pages/phic-table-detail"),
+);
+
+const HdmfTableList = lazy(
+  () => import("@/app/modules/setup/hdmf-table/pages/hdmf-table-list"),
+);
+const HdmfTableDetail = lazy(
+  () => import("@/app/modules/setup/hdmf-table/pages/hdmf-table-detail"),
+);
+
+const WtaxTableList = lazy(
+  () => import("@/app/modules/setup/wtax-table/pages/wtax-table-list"),
+);
+const WtaxTableDetail = lazy(
+  () => import("@/app/modules/setup/wtax-table/pages/wtax-table-detail"),
+);
+
+const AnnualTaxTableList = lazy(
+  () =>
+    import("@/app/modules/setup/annual-tax-table/pages/annual-tax-table-list"),
+);
+const AnnualTaxTableDetail = lazy(
+  () =>
+    import("@/app/modules/setup/annual-tax-table/pages/annual-tax-table-detail"),
+);
+
+const PayrollRateConfig = lazy(
+  () => import("@/app/modules/setup/payroll-rate/pages/payroll-rate-config"),
+);
+
+const OtherIncomeTypeList = lazy(
+  () =>
+    import("@/app/modules/setup/other-income-type/pages/other-income-type-list"),
+);
+const OtherIncomeTypeDetail = lazy(
+  () =>
+    import("@/app/modules/setup/other-income-type/pages/other-income-type-detail"),
+);
+
+const OtherIncomeList = lazy(
+  () => import("@/app/modules/setup/other-income/pages/other-income-list"),
+);
+const OtherIncomeDetail = lazy(
+  () => import("@/app/modules/setup/other-income/pages/other-income-detail"),
+);
+
 export interface SetupRouteConfig {
   path: string;
   component: LazyExoticComponent<ComponentType>;
@@ -186,4 +243,34 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "leave-type/$id", component: LeaveTypeDetail },
 
   { path: "company-policy", component: CompanyPolicy },
+
+  { path: "sss-table", component: SssTableList },
+  { path: "sss-table/create", component: SssTableDetail },
+  { path: "sss-table/$id", component: SssTableDetail },
+
+  { path: "phic-table", component: PhicTableList },
+  { path: "phic-table/create", component: PhicTableDetail },
+  { path: "phic-table/$id", component: PhicTableDetail },
+
+  { path: "hdmf-table", component: HdmfTableList },
+  { path: "hdmf-table/create", component: HdmfTableDetail },
+  { path: "hdmf-table/$id", component: HdmfTableDetail },
+
+  { path: "wtax-table", component: WtaxTableList },
+  { path: "wtax-table/create", component: WtaxTableDetail },
+  { path: "wtax-table/$id", component: WtaxTableDetail },
+
+  { path: "annual-tax-table", component: AnnualTaxTableList },
+  { path: "annual-tax-table/create", component: AnnualTaxTableDetail },
+  { path: "annual-tax-table/$id", component: AnnualTaxTableDetail },
+
+  { path: "payroll-rate", component: PayrollRateConfig },
+
+  { path: "other-income-type", component: OtherIncomeTypeList },
+  { path: "other-income-type/create", component: OtherIncomeTypeDetail },
+  { path: "other-income-type/$id", component: OtherIncomeTypeDetail },
+
+  { path: "other-income", component: OtherIncomeList },
+  { path: "other-income/create", component: OtherIncomeDetail },
+  { path: "other-income/$id", component: OtherIncomeDetail },
 ];

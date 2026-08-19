@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, Modal, Select } from "antd";
+import { Button, Form, Modal, Select, theme } from "antd";
 import { UnorderedListOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
@@ -35,6 +35,7 @@ export default function DtrChangeTimeShiftModal({
   currentShiftId,
   currentShiftName,
 }: Props) {
+  const { token } = theme.useToken();
   // `timeShiftId` is only set once the user makes an explicit choice; until
   // then the Select falls back to the row's current shift (matched by id,
   // falling back to name for older records without one), so it opens
@@ -101,7 +102,13 @@ export default function DtrChangeTimeShiftModal({
       title={
         <div>
           <div>Change Time Shift</div>
-          <div style={{ fontSize: 13, fontWeight: 400, color: "#8c8c8c" }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 400,
+              color: token.colorTextTertiary,
+            }}
+          >
             {employeeName ?? employeeId} &mdash; {workDate}
           </div>
         </div>
@@ -121,7 +128,7 @@ export default function DtrChangeTimeShiftModal({
             fontSize: 13,
           }}
         >
-          <span style={{ color: "#8c8c8c" }}>Current shift</span>
+          <span style={{ color: token.colorTextTertiary }}>Current shift</span>
           <span style={{ fontWeight: 500 }}>{currentShiftName}</span>
         </div>
       )}

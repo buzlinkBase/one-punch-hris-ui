@@ -31,7 +31,7 @@ const ACTIONS = [
   },
   {
     key: "attendance-entry",
-    label: "Attendance Entry",
+    label: "Manual Attendance Entry",
     icon: <FileTextOutlined />,
     to: "/timekeeping/attendance-entry",
     color: "#13C2C2",

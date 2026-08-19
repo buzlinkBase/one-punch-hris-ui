@@ -1,110 +1,241 @@
-import { Typography } from "antd";
+import { useState } from "react";
 import {
-  CalendarOutlined,
-  ClockCircleOutlined,
-  TeamOutlined,
-  UserAddOutlined,
-  UserSwitchOutlined,
-} from "@ant-design/icons";
-import { useDashboardOverview } from "./hooks/use-dashboard-queries";
-import StatCard from "./components/stat-card";
-import AttendanceOverviewCard from "./components/attendance-overview-card";
-import DepartmentHeadcountCard from "./components/department-headcount-card";
+  Avatar,
+  Badge,
+  Card,
+  Input,
+  Skeleton,
+  Tag,
+  Typography,
+  theme,
+} from "antd";
+import { SearchOutlined, UserOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import { authStorage } from "@/core/auth/auth-storage";
+import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
+import DtrBatchesCard from "./components/dtr-batches-card";
+import PayrollSnapshotCard from "./components/payroll-snapshot-card";
 import UpcomingHolidaysCard from "./components/upcoming-holidays-card";
-import RecentActivityCard from "./components/recent-activity-card";
 import PendingRequestsCard from "./components/pending-requests-card";
-import QuickActionsCard from "./components/quick-actions-card";
-import { DASHBOARD_LABEL } from "./constants/label.const";
+import { useDashboardOverview } from "./hooks/use-dashboard-queries";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+const STATUS_COLOR: Record<string, string> = {
+  Regular: "green",
+  Probationary: "blue",
+  Contract: "orange",
+  Temporary: "orange",
+  Casual: "default",
+  PartTime: "purple",
+  Intern: "cyan",
+  OnLeave: "gold",
+  Suspended: "warning",
+  Terminated: "red",
+  Resigned: "default",
+  Retired: "default",
+  Deceased: "default",
+};
+
+function EmployeeDirectoryCard() {
+  const { token } = theme.useToken();
+  const [search, setSearch] = useState("");
+  const { data: employees = [], isLoading } = useEmployees();
+
+  const q = search.toLowerCase().trim();
+  const filtered = q
+    ? employees.filter(
+        (e) =>
+          e.fullName?.toLowerCase().includes(q) ||
+          e.positionName?.toLowerCase().includes(q) ||
+          e.departmentName?.toLowerCase().includes(q),
+      )
+    : employees;
+
+  return (
+    <Card
+      size="small"
+      title={
+        <span style={{ fontWeight: 600, fontSize: 14 }}>
+          Employee Directory
+          <Tag
+            style={{ marginLeft: 8, fontWeight: 400, fontSize: 11 }}
+            color="default"
+          >
+            {employees.length}
+          </Tag>
+        </span>
+      }
+      style={{ height: "100%" }}
+    >
+      <Input
+        prefix={<SearchOutlined style={{ color: "#9ca3af" }} />}
+        placeholder="Search by name, position, or department…"
+        size="small"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={{ marginBottom: 10 }}
+        allowClear
+      />
+
+      {isLoading ? (
+        <Skeleton active paragraph={{ rows: 5 }} />
+      ) : (
+        <div
+          style={{
+            maxHeight: 260,
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
+          {filtered.length === 0 ? (
+            <Text
+              type="secondary"
+              style={{
+                fontSize: 12,
+                textAlign: "center",
+                padding: "16px 0",
+                display: "block",
+              }}
+            >
+              No employees found
+            </Text>
+          ) : (
+            filtered.slice(0, 20).map((emp) => (
+              <div
+                key={emp.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "6px 4px",
+                  borderRadius: 6,
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLElement).style.background =
+                    token.colorFillQuaternary)
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLElement).style.background =
+                    "transparent")
+                }
+              >
+                <Avatar
+                  size={32}
+                  icon={emp.fullName ? undefined : <UserOutlined />}
+                  style={{ background: "#1DA081", flexShrink: 0, fontSize: 12 }}
+                >
+                  {emp.fullName ? getInitials(emp.fullName) : null}
+                </Avatar>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {emp.fullName ?? "—"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: token.colorTextTertiary,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {emp.positionName ?? emp.departmentName ?? "—"}
+                  </div>
+                </div>
+                {emp.employmentStatus && (
+                  <Badge
+                    color={STATUS_COLOR[emp.employmentStatus] ?? "default"}
+                    text={
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: token.colorTextSecondary,
+                        }}
+                      >
+                        {emp.employmentStatus}
+                      </span>
+                    }
+                  />
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
 
 export default function Dashboard() {
   const { data, isLoading } = useDashboardOverview();
-  const stats = data?.stats;
 
-  const attendanceRate =
-    stats && stats.totalEmployees > 0
-      ? Math.round((stats.presentToday / stats.totalEmployees) * 100)
-      : null;
+  const user = authStorage.getUser();
+  const firstName = user?.name?.split(" ")[0] ?? "there";
+  const today = dayjs().format("dddd, MMMM D, YYYY");
 
   return (
     <div className="content-page">
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              {DASHBOARD_LABEL.TITLE}
-            </Title>
-            <p className="page-toolbar-subtitle">{DASHBOARD_LABEL.SUBTITLE}</p>
-          </div>
-        </div>
+      {/* Greeting */}
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0 }}>
+          {getGreeting()}, {firstName}
+        </Title>
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          {today}
+        </Text>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard
-          title={DASHBOARD_LABEL.TOTAL_EMPLOYEES}
-          value={stats?.totalEmployees ?? 0}
-          icon={<TeamOutlined />}
-          color="#1DA081"
-          loading={isLoading}
-        />
-        <StatCard
-          title={DASHBOARD_LABEL.PRESENT_TODAY}
-          value={stats?.presentToday ?? 0}
-          icon={<ClockCircleOutlined />}
-          color="#1890FF"
-          loading={isLoading}
-          subtext={
-            attendanceRate !== null
-              ? `${attendanceRate}% attendance`
-              : undefined
-          }
-        />
-        <StatCard
-          title={DASHBOARD_LABEL.LATE_TODAY}
-          value={stats?.lateToday ?? 0}
-          icon={<ClockCircleOutlined />}
-          color="#FAAD14"
-          loading={isLoading}
-        />
-        <StatCard
-          title={DASHBOARD_LABEL.ABSENT_TODAY}
-          value={stats?.absentToday ?? 0}
-          icon={<UserSwitchOutlined />}
-          color="#F5222D"
-          loading={isLoading}
-        />
-        <StatCard
-          title={DASHBOARD_LABEL.ON_LEAVE_TODAY}
-          value={stats?.onLeaveToday ?? 0}
-          icon={<CalendarOutlined />}
-          color="#722ED1"
-          loading={isLoading}
-        />
-        <StatCard
-          title={DASHBOARD_LABEL.NEW_HIRES}
-          value={stats?.newHiresThisMonth ?? 0}
-          icon={<UserAddOutlined />}
-          color="#13C2C2"
-          loading={isLoading}
-        />
+      {/* Timekeeping + Payroll snapshot */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 280px",
+          gap: 16,
+          alignItems: "start",
+          marginBottom: 16,
+        }}
+      >
+        <DtrBatchesCard />
+        <PayrollSnapshotCard />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="xl:col-span-2">
-          <AttendanceOverviewCard
-            data={data?.attendanceTrend ?? []}
-            loading={isLoading}
-          />
-        </div>
-        <QuickActionsCard />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <DepartmentHeadcountCard
-          data={data?.departmentHeadcount ?? []}
-          loading={isLoading}
-        />
+      {/* Bottom row: directory, holidays, actions */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+        }}
+      >
+        <EmployeeDirectoryCard />
         <UpcomingHolidaysCard
           data={data?.upcomingHolidays ?? []}
           loading={isLoading}
@@ -114,11 +245,6 @@ export default function Dashboard() {
           loading={isLoading}
         />
       </div>
-
-      <RecentActivityCard
-        data={data?.recentActivity ?? []}
-        loading={isLoading}
-      />
     </div>
   );
 }

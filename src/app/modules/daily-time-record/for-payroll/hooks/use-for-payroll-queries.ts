@@ -1,12 +1,62 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { forPayrollApi } from "../services/for-payroll.api";
-import type { ForPayrollFilter } from "../models/api/request/for-payroll-filter.model";
+import type { PayrollRunRequest } from "../models/api/request/payroll-run-request.model";
 
-const QUERY_KEY = ["daily-time-record", "for-payroll"];
+const BATCH_KEY = ["dtr-batches"];
 
-export function useForPayrollRecords(filter: ForPayrollFilter = {}) {
+export function useDtrBatches(from?: string, to?: string) {
   return useQuery({
-    queryKey: [...QUERY_KEY, filter],
-    queryFn: () => forPayrollApi.getAll(filter),
+    queryKey: [...BATCH_KEY, from, to],
+    queryFn: () => forPayrollApi.getBatches(from, to),
+  });
+}
+
+export function usePostDtrBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchCode: string) => forPayrollApi.postBatch(batchCode),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BATCH_KEY }),
+  });
+}
+
+export function useUnpostDtrBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchCode: string) => forPayrollApi.unpostBatch(batchCode),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BATCH_KEY }),
+  });
+}
+
+export function useCalculatePayroll() {
+  return useMutation({
+    mutationFn: (payload: PayrollRunRequest) =>
+      forPayrollApi.calculate(payload),
+  });
+}
+
+export function useGeneratePayroll() {
+  return useMutation({
+    mutationFn: (payload: PayrollRunRequest) => forPayrollApi.generate(payload),
+  });
+}
+
+export function usePayrolls(params: {
+  from?: string;
+  to?: string;
+  employeeId?: string;
+  clientId?: string;
+  payrollGroupId?: string;
+}) {
+  return useQuery({
+    queryKey: ["payrolls", params],
+    queryFn: () =>
+      forPayrollApi.getPayrolls({
+        from: params.from!,
+        to: params.to!,
+        employeeId: params.employeeId,
+        clientId: params.clientId,
+        payrollGroupId: params.payrollGroupId,
+      }),
+    enabled: !!params.from && !!params.to,
   });
 }
