@@ -352,8 +352,7 @@ export default function OvertimeApplicationDetail() {
               label="OT Hours"
               validateStatus={errors.manualOTMinutes ? "error" : ""}
               help={
-                errors.manualOTMinutes?.message ??
-                "Enter the total approved OT minutes (e.g. 120 for 2 hours, 90 for 1 hr 30 min)."
+                errors.manualOTMinutes?.message ?? "Enter the total approved OT"
               }
             >
               <Controller
