@@ -1,10 +1,9 @@
-export type UserType = "Administrator" | "HR" | "Employee";
-
 export interface UserResponse {
-  id: string;
-  code: string;
+  userId: string;
+  email: string;
   fullName: string;
-  username: string;
-  userType: UserType;
+  roles: string[];
   status: string;
 }
+
+export type UserType = "Owner | Admin" | "Member" | "Employee";

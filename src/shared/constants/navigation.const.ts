@@ -135,12 +135,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         children: [
           {
             key: "setup-fixed-shift",
-            label: "Fixed",
+            label: "Fixed Shift",
             path: "/setup/time-shift/fixed",
           },
           {
             key: "setup-split-shift",
-            label: "Split",
+            label: "Split/Broken Shift",
             path: "/setup/time-shift/split",
           },
         ],
