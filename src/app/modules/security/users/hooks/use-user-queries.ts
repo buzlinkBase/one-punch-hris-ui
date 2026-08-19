@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "../services/user.api";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
-import type { CreateUser } from "../models/api/request/create-user.model";
-import type { UpdateUser } from "../models/api/request/update-user.model";
 import type { SendInvitationRequest } from "../models/api/request/send-invitation-request.model";
 
 const QUERY_KEY = ["users"];
@@ -22,31 +20,22 @@ export function useUser(id: string | undefined) {
   });
 }
 
-export function useCreateUser() {
+export function useReplaceRoles() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateUser) => userApi.create(data),
+    mutationFn: ({ userId, roles }: { userId: string; roles: string[] }) =>
+      userApi.replaceRoles(userId, roles),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 }
 
-export function useUpdateUser() {
+export function useUpdateMemberStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateUser) => userApi.update(data),
-    onSuccess: (updated) => {
-      queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-    },
-  });
-}
-
-export function useDeleteUser() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => userApi.remove(id),
+    mutationFn: ({ userId, status }: { userId: string; status: string }) =>
+      userApi.updateStatus(userId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

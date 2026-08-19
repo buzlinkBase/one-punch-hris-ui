@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
@@ -23,10 +23,9 @@ export default function UserTable({ data, loading, onDelete }: Props) {
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
-    code: 120,
+    email: 200,
     fullName: 200,
-    username: 160,
-    userType: 120,
+    roles: 160,
     status: 120,
   });
 
@@ -38,16 +37,22 @@ export default function UserTable({ data, loading, onDelete }: Props) {
     ),
   );
 
+  const roleColors: Record<string, string> = {
+    Owner: "red",
+    Admin: "blue",
+    Member: "green",
+  };
+
   const columns: ColumnsType<UserResponse> = [
     {
-      title: USER_LABEL.CODE,
-      dataIndex: "code",
-      key: "code",
-      width: widths.code,
+      title: USER_LABEL.EMAIL,
+      dataIndex: "email",
+      key: "email",
+      width: widths.email,
       onHeaderCell: () =>
         ({
-          width: widths.code,
-          onResize: (w: number) => handleResize("code", w),
+          width: widths.email,
+          onResize: (w: number) => handleResize("email", w),
         }) as object,
     },
     {
@@ -62,26 +67,24 @@ export default function UserTable({ data, loading, onDelete }: Props) {
         }) as object,
     },
     {
-      title: USER_LABEL.USERNAME,
-      dataIndex: "username",
-      key: "username",
-      width: widths.username,
+      title: USER_LABEL.ROLES,
+      dataIndex: "roles",
+      key: "roles",
+      width: widths.roles,
       onHeaderCell: () =>
         ({
-          width: widths.username,
-          onResize: (w: number) => handleResize("username", w),
+          width: widths.roles,
+          onResize: (w: number) => handleResize("roles", w),
         }) as object,
-    },
-    {
-      title: USER_LABEL.USER_TYPE,
-      dataIndex: "userType",
-      key: "userType",
-      width: widths.userType,
-      onHeaderCell: () =>
-        ({
-          width: widths.userType,
-          onResize: (w: number) => handleResize("userType", w),
-        }) as object,
+      render: (roles: string[]) => (
+        <Space size={[0, 4]} wrap>
+          {roles?.map((role) => (
+            <Tag key={role} color={roleColors[role] || "default"}>
+              {role}
+            </Tag>
+          ))}
+        </Space>
+      ),
     },
     {
       title: USER_LABEL.STATUS,
@@ -93,6 +96,15 @@ export default function UserTable({ data, loading, onDelete }: Props) {
           width: widths.status,
           onResize: (w: number) => handleResize("status", w),
         }) as object,
+      render: (status: string) => {
+        const color =
+          status === "Active" || status === "ACTIVE"
+            ? "success"
+            : status === "Invited"
+              ? "warning"
+              : "error";
+        return <Tag color={color}>{status}</Tag>;
+      },
     },
     {
       title: "Actions",
@@ -104,12 +116,12 @@ export default function UserTable({ data, loading, onDelete }: Props) {
           <Button
             type="text"
             icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/security/users/${record.id}` })}
+            onClick={() => navigate({ to: `/security/users/${record.userId}` })}
           />
           {onDelete && (
             <Popconfirm
               title="Delete this user?"
-              onConfirm={() => onDelete(record.id)}
+              onConfirm={() => onDelete(record.userId)}
               okText="Yes"
               cancelText="No"
             >
@@ -132,7 +144,7 @@ export default function UserTable({ data, loading, onDelete }: Props) {
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey="id"
+        rowKey="userId"
         dataSource={filtered}
         columns={columns}
         size="small"
