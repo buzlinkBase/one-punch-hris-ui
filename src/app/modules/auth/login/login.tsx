@@ -26,7 +26,7 @@ const { Title, Text } = Typography;
 const PENDING_INVITE_KEY = "pending_invite_token";
 
 const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 48 48" style={{ display: "block" }}>
+  <svg width="18" height="18" viewBox="0 0 48 48" className="block">
     <path
       fill="#EA4335"
       d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -216,23 +216,13 @@ export default function Login() {
 
         <Form.Item
           label={
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                width: "100%",
-              }}
-            >
+            <div className="flex justify-between w-full">
               <span>Password</span>
               <Link
                 to="/forgot-password"
-                style={{
-                  fontWeight: "normal",
-                  fontSize: 13,
-                  marginLeft: "5px",
-                }}
+                className="font-normal text-[13px] ml-1.5"
               >
-                <span>Forgot password?</span>
+                Forgot password?
               </Link>
             </div>
           }
@@ -272,18 +262,13 @@ export default function Login() {
           size="large"
           icon={<GoogleIcon />}
           onClick={handleGoogleLogin}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
+          className="flex items-center justify-center gap-2"
         >
           Continue with Google
         </Button>
       </Form>
 
-      <div style={{ textAlign: "center", marginTop: 16 }}>
+      <div className="text-center mt-4">
         <Text type="secondary">Don't have an account? </Text>
         <Link to="/register">Create account</Link>
       </div>

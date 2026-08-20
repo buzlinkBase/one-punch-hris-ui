@@ -2,11 +2,12 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   Badge,
   Button,
+  Drawer,
   Dropdown,
   Empty,
-  Input,
   Layout,
   Menu,
+  Select,
   Spin,
   Tag,
   Tooltip,
@@ -20,21 +21,24 @@ import {
   CalendarOutlined,
   CheckOutlined,
   ClockCircleOutlined,
-  DownOutlined,
+  DollarOutlined,
   EnvironmentOutlined,
   FileTextOutlined,
   FileProtectOutlined,
   FieldTimeOutlined,
   IdcardOutlined,
   MenuFoldOutlined,
+  MenuOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
   PlusOutlined,
   SearchOutlined,
   SafetyCertificateOutlined,
   SafetyOutlined,
+  MoonOutlined,
   SettingOutlined,
   SolutionOutlined,
+  SunOutlined,
   SwapOutlined,
   TeamOutlined,
   UserOutlined,
@@ -42,6 +46,8 @@ import {
 import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
 import { NAVIGATION_ITEMS } from "@/shared/constants/navigation.const";
+import type { NavItem } from "@/shared/constants/navigation.const";
+import { useThemeStore } from "@/core/stores/theme.store";
 import { authStorage } from "@/core/auth/auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
@@ -52,6 +58,33 @@ import type { TenantSummary } from "@/app/modules/auth/login/models/api/response
 import type { MenuProps } from "antd";
 
 const { Header, Sider, Content } = Layout;
+
+interface NavSearchOption {
+  value: string;
+  label: string;
+  breadcrumb: string;
+}
+
+function flattenNavItems(
+  items: NavItem[],
+  trail: string[] = [],
+): NavSearchOption[] {
+  const results: NavSearchOption[] = [];
+  for (const item of items) {
+    if (item.type === "divider") continue;
+    if (item.path) {
+      const breadcrumb = trail.length ? trail.join(" › ") : "";
+      results.push({ value: item.path, label: item.label, breadcrumb });
+    }
+    if (item.children) {
+      const nextTrail = item.path ? trail : [...trail, item.label];
+      results.push(...flattenNavItems(item.children, nextTrail));
+    }
+  }
+  return results;
+}
+
+const NAV_OPTIONS = flattenNavItems(NAVIGATION_ITEMS);
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -102,6 +135,9 @@ function getSessionUser(): SessionUser {
 
 function getNavIcon(key: string): ReactNode {
   const iconMap: Record<string, ReactNode> = {
+    "nav-dtr": <ClockCircleOutlined />,
+    "nav-payroll": <DollarOutlined />,
+    "nav-admin": <SettingOutlined />,
     timekeeping: <ClockCircleOutlined />,
     "timekeeping-upload-attendance": <FileTextOutlined />,
     "timekeeping-raw-logs": <FileTextOutlined />,
@@ -119,6 +155,11 @@ function getNavIcon(key: string): ReactNode {
     reports: <BarChartOutlined />,
     "reports-tardiness": <ClockCircleOutlined />,
     setup: <SettingOutlined />,
+    "setup-group-shifts": <FieldTimeOutlined />,
+    "setup-group-org": <ApartmentOutlined />,
+    "setup-group-workforce": <TeamOutlined />,
+    "setup-group-policy": <FileProtectOutlined />,
+    "setup-group-statutory": <SafetyOutlined />,
     "setup-fixed-shift": <FieldTimeOutlined />,
     "setup-split-shift": <FieldTimeOutlined />,
     "setup-flexi-shift": <FieldTimeOutlined />,
@@ -132,6 +173,7 @@ function getNavIcon(key: string): ReactNode {
     "setup-payroll-group": <IdcardOutlined />,
     "setup-holiday": <CalendarOutlined />,
     "setup-leave-type": <FileProtectOutlined />,
+    "setup-payroll-rate": <BarChartOutlined />,
     "setup-employee": <UserOutlined />,
     clients: <TeamOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
@@ -151,43 +193,44 @@ const HR_DB_INDEPENDENT_KEYS = new Set(["dashboard"]);
 function buildMenuItems(
   items: typeof NAVIGATION_ITEMS,
   hrDbReady: boolean,
+  collapsed = false,
   atRoot = true,
 ): MenuItem[] {
   return items.map((item) => {
+    if (item.type === "divider") {
+      return { type: "divider" as const, key: item.key };
+    }
+
     if (item.type === "group") {
       return {
-        type: "group" as const,
         key: item.key,
-        label: (
-          <span
-            style={{
-              color: "#1DA081",
-              fontWeight: 600,
-              fontSize: 10,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            {item.label}
-          </span>
-        ),
+        label: item.label,
+        icon: getNavIcon(item.key),
         children: item.children
-          ? buildMenuItems(item.children, hrDbReady, false)
+          ? buildMenuItems(item.children, hrDbReady, collapsed, atRoot)
           : undefined,
       };
     }
 
     const disabled =
       atRoot && !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
-    const label = disabled ? (
+
+    // When collapsed, AntD's built-in popup already shows the label text on hover —
+    // wrapping in Tooltip creates a nested tooltip that breaks the popup text rendering.
+    // Use a plain string when collapsed; use the truncating span when expanded.
+    const label = collapsed ? (
+      item.label
+    ) : disabled ? (
       <Tooltip
         title="Available once your workspace resources finish setting up"
         placement="right"
       >
-        <span>{item.label}</span>
+        <span className="block overflow-hidden text-ellipsis">
+          {item.label}
+        </span>
       </Tooltip>
     ) : (
-      item.label
+      <span className="block overflow-hidden text-ellipsis">{item.label}</span>
     );
 
     return {
@@ -196,10 +239,30 @@ function buildMenuItems(
       icon: getNavIcon(item.key),
       disabled,
       children: item.children
-        ? buildMenuItems(item.children, hrDbReady, false)
+        ? buildMenuItems(item.children, hrDbReady, collapsed, false)
         : undefined,
     };
   });
+}
+
+function findAncestorKeys(
+  path: string,
+  items: typeof NAVIGATION_ITEMS,
+  ancestors: string[] = [],
+): string[] | null {
+  for (const item of items) {
+    if (item.type === "divider") continue;
+    if (item.path === path) return ancestors;
+    if (item.children) {
+      const found = findAncestorKeys(
+        path,
+        item.children as typeof NAVIGATION_ITEMS,
+        [...ancestors, item.key],
+      );
+      if (found !== null) return found;
+    }
+  }
+  return null;
 }
 
 function flattenNavigation(
@@ -207,6 +270,7 @@ function flattenNavigation(
   parentTrail: string[] = [],
 ): NavWithTrail[] {
   return items.flatMap((item) => {
+    if (item.type === "divider") return [];
     const currentTrail = [...parentTrail, item.label];
     const current = item.path ? [{ path: item.path, trail: currentTrail }] : [];
     const children = item.children
@@ -300,7 +364,12 @@ function getTenantStateTag(state: string): { color: string; show: boolean } {
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia("(max-width: 767px)").matches,
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
+  const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
   const sessionUser = getSessionUser();
@@ -314,10 +383,20 @@ export default function MainLayout() {
   const hrDbFailed =
     hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
 
-  const menuItems = buildMenuItems(NAVIGATION_ITEMS, hrDb.ready);
+  const menuItems = buildMenuItems(NAVIGATION_ITEMS, hrDb.ready, collapsed);
   const navEntries = flattenNavigation(NAVIGATION_ITEMS);
   const headerContext = buildHeaderContext(location.pathname, navEntries);
   const activeMenuKey = resolveActiveMenuKey(location.pathname, navEntries);
+
+  const [openKeys, setOpenKeys] = useState<string[]>(
+    () => findAncestorKeys(location.pathname, NAVIGATION_ITEMS) ?? [],
+  );
+
+  useEffect(() => {
+    const keys = findAncestorKeys(location.pathname, NAVIGATION_ITEMS);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (keys) setOpenKeys((prev) => Array.from(new Set([...prev, ...keys])));
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!hrDb.known || hrDb.ready) return;
@@ -330,6 +409,7 @@ export default function MainLayout() {
 
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
     if (key.startsWith("/")) {
+      if (isMobile) setMobileMenuOpen(false);
       navigate({ to: key });
     }
   };
@@ -410,245 +490,179 @@ export default function MainLayout() {
     }
   };
 
-  const toggleCollapsed = () => {
-    setCollapsed((prev) => !prev);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches);
+      if (e.matches) setMobileMenuOpen(false);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const handleToggle = () => {
+    if (isMobile) setMobileMenuOpen((v) => !v);
+    else setCollapsed((v) => !v);
   };
 
-  return (
-    <Layout style={{ minHeight: "100vh" }} className="app-shell">
-      <Sider
-        collapsed={collapsed}
-        width={252}
-        collapsedWidth={88}
-        trigger={null}
-        className="app-sider"
+  const siderContent = (
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        className="brand-chip m-4 rounded-xl px-3 py-3 text-white shadow-sm cursor-pointer"
+        onClick={() => navigate({ to: "/" })}
+        onKeyDown={(e) => e.key === "Enter" && navigate({ to: "/" })}
       >
-        <div className="brand-chip m-4 rounded-xl px-3 py-3 text-white shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center text-base">
-              <SafetyCertificateOutlined />
-            </div>
-            {!collapsed && (
-              <div className="min-w-0 leading-tight">
-                <p className="m-0 text-sm font-semibold tracking-wider truncate">
-                  {import.meta.env.VITE_APP_NAME ?? "One Punch HRIS"}
-                </p>
-                <p className="m-0 text-[10px] tracking-[0.16em] uppercase text-white/85 truncate">
-                  Human Resources
-                </p>
-              </div>
-            )}
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center text-base">
+            <SafetyCertificateOutlined />
           </div>
-        </div>
-        {sessionUser.tenants.length > 0 && (
-          <div className="mx-3 mb-2 border-b border-gray-100 pb-2">
-            {!collapsed && (
-              <p className="m-0 px-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-                Select Tenant
+          {(!collapsed || isMobile) && (
+            <div className="min-w-0 leading-tight">
+              <p className="m-0 text-sm font-semibold tracking-wider truncate">
+                {import.meta.env.VITE_APP_NAME ?? "One Punch HRIS"}
               </p>
-            )}
-            <Dropdown
-              menu={{
-                style: { minWidth: 224 },
-                items: [
-                  ...sessionUser.tenants.map((t) => {
-                    const isActive = t.tenantId === sessionUser.tenantId;
-                    const liveState = liveTenantStates[t.tenantId] ?? t.state;
-                    const stateTag = getTenantStateTag(liveState);
-                    return {
-                      key: t.tenantId,
-                      disabled: switchingTenant !== null || isActive,
-                      onClick: isActive
-                        ? undefined
-                        : () => void handleSwitchTenant(t.tenantId),
-                      icon: isActive ? (
-                        <CheckOutlined style={{ color: "#1DA081" }} />
-                      ) : (
-                        <BankOutlined style={{ color: "#bfbfbf" }} />
-                      ),
-                      label: (
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 8,
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: 13,
-                              fontWeight: isActive ? 600 : 400,
-                              color: isActive ? "#1DA081" : undefined,
-                            }}
-                          >
-                            {t.name}
-                          </span>
-                          {stateTag.show && (
-                            <Tag
-                              color={stateTag.color}
-                              style={{
-                                margin: 0,
-                                fontSize: 10,
-                                lineHeight: "16px",
-                                padding: "0 5px",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {liveState}
-                            </Tag>
-                          )}
-                        </div>
-                      ),
-                    };
-                  }),
-                  { type: "divider" as const },
-                  {
-                    key: "__create-tenant",
-                    icon: <PlusOutlined style={{ color: "#1DA081" }} />,
-                    label: (
-                      <span
-                        style={{
-                          color: "#1DA081",
-                          fontWeight: 500,
-                          fontSize: 13,
-                        }}
-                      >
-                        New workspace
-                      </span>
-                    ),
-                    onClick: () => navigate({ to: "/create-tenant" }),
-                  },
-                ],
-              }}
-              trigger={["click"]}
-              placement="bottomLeft"
-            >
-              <button
-                type="button"
-                className={`flex items-center w-full rounded-xl px-2 py-2 cursor-pointer bg-transparent border-0 transition-colors hover:bg-emerald-50 ${collapsed ? "justify-center" : "gap-3"}`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                  {switchingTenant ? (
-                    <Spin size="small" />
-                  ) : (
-                    <BankOutlined style={{ color: "#1DA081", fontSize: 14 }} />
-                  )}
-                </div>
-                {!collapsed && (
-                  <>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="m-0 text-xs font-semibold text-gray-800 truncate leading-snug">
-                        {sessionUser.tenants.find(
-                          (t) => t.tenantId === sessionUser.tenantId,
-                        )?.name ??
-                          sessionUser.tenantName ??
-                          "Select workspace"}
-                      </p>
-                      <p className="m-0 text-[11px] text-gray-400 leading-snug">
-                        Switch workspace
-                      </p>
-                    </div>
-                    <DownOutlined
-                      style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0 }}
-                    />
-                  </>
-                )}
-              </button>
-            </Dropdown>
-          </div>
-        )}
-        <div className="app-sider-menu-scroll">
-          <Menu
-            theme="light"
-            mode="inline"
-            className="app-menu"
-            selectedKeys={[activeMenuKey]}
-            items={menuItems}
-            onClick={handleMenuClick}
-          />
-        </div>
-        <div className="app-sider-user">
-          {collapsed ? (
-            <div className="side-user-collapsed">
-              <button
-                type="button"
-                className="side-user-avatar"
-                style={{ border: 0, padding: 0, cursor: "pointer" }}
-                title={`${sessionUser.name} · View profile`}
-                onClick={() => navigate({ to: "/profile" })}
-              >
-                {getInitials(sessionUser.name)}
-              </button>
-              <Button
-                type="text"
-                size="small"
-                icon={<LogoutOutlined />}
-                className="side-user-logout-icon"
-                onClick={handleLogout}
-                aria-label="Logout"
-              />
-            </div>
-          ) : (
-            <div className="side-user-chip">
-              <button
-                type="button"
-                className="side-user-avatar"
-                style={{ border: 0, padding: 0, cursor: "pointer" }}
-                title="View profile"
-                onClick={() => navigate({ to: "/profile" })}
-              >
-                {getInitials(sessionUser.name)}
-              </button>
-              <button
-                type="button"
-                className="side-user-meta"
-                style={{
-                  border: 0,
-                  padding: 0,
-                  background: "transparent",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  font: "inherit",
-                }}
-                onClick={() => navigate({ to: "/profile" })}
-              >
-                <p className="side-user-name">{sessionUser.name}</p>
-                <p className="side-user-subtitle">
-                  {sessionUser.roles.join(", ")}
-                  {sessionUser.email ? ` · ${sessionUser.email}` : ""}
-                </p>
-              </button>
-              <Button
-                type="text"
-                size="small"
-                icon={<LogoutOutlined />}
-                className="side-user-logout"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
+              <p className="m-0 text-[10px] tracking-[0.16em] uppercase text-white/85 truncate">
+                Human Resources
+              </p>
             </div>
           )}
         </div>
-      </Sider>
+      </div>
+      <div className="app-sider-menu-scroll">
+        <Menu
+          theme="light"
+          mode="inline"
+          className="app-menu"
+          selectedKeys={[activeMenuKey]}
+          openKeys={openKeys}
+          onOpenChange={(keys) => setOpenKeys(keys as string[])}
+          items={menuItems}
+          onClick={handleMenuClick}
+        />
+      </div>
+      <div className="app-sider-user">
+        {collapsed && !isMobile ? (
+          <div className="side-user-collapsed">
+            <button
+              type="button"
+              className="side-user-avatar"
+              style={{ border: 0, padding: 0, cursor: "pointer" }}
+              title={`${sessionUser.name} · View profile`}
+              onClick={() => navigate({ to: "/profile" })}
+            >
+              {getInitials(sessionUser.name)}
+            </button>
+            <Button
+              type="text"
+              size="small"
+              icon={<LogoutOutlined />}
+              className="side-user-logout-icon"
+              onClick={handleLogout}
+              aria-label="Logout"
+            />
+          </div>
+        ) : (
+          <div className="side-user-chip">
+            <button
+              type="button"
+              className="side-user-avatar"
+              style={{ border: 0, padding: 0, cursor: "pointer" }}
+              title="View profile"
+              onClick={() => navigate({ to: "/profile" })}
+            >
+              {getInitials(sessionUser.name)}
+            </button>
+            <button
+              type="button"
+              className="side-user-meta"
+              style={{
+                border: 0,
+                padding: 0,
+                background: "transparent",
+                cursor: "pointer",
+                textAlign: "left",
+                font: "inherit",
+              }}
+              onClick={() => navigate({ to: "/profile" })}
+            >
+              <p className="side-user-subtitle">Profile</p>
+            </button>
+            <Button
+              type="text"
+              size="small"
+              icon={<LogoutOutlined />}
+              className="side-user-logout"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <Layout style={{ minHeight: "100vh" }} className="app-shell">
+      {isMobile ? (
+        <Drawer
+          placement="left"
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          width={252}
+          title={null}
+          closeIcon={null}
+          rootClassName="app-mobile-drawer"
+          styles={{
+            body: {
+              padding: 0,
+              background: "var(--bg-sider)",
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              overflow: "hidden",
+            },
+          }}
+        >
+          {siderContent}
+        </Drawer>
+      ) : (
+        <Sider
+          collapsed={collapsed}
+          width={252}
+          collapsedWidth={88}
+          trigger={null}
+          className="app-sider"
+        >
+          {siderContent}
+        </Sider>
+      )}
       <Layout className="app-main-layout">
-        <Header className="app-header px-7">
+        <Header className="app-header">
           <div className="header-grid">
             <div className="header-context">
               <div className="header-context-top">
                 <button
                   type="button"
                   className="header-collapse-trigger"
-                  onClick={toggleCollapsed}
+                  onClick={handleToggle}
                   aria-label={
-                    collapsed ? "Expand navigation" : "Collapse navigation"
-                  }
-                  title={
-                    collapsed ? "Expand navigation" : "Collapse navigation"
+                    isMobile
+                      ? "Open navigation"
+                      : collapsed
+                        ? "Expand navigation"
+                        : "Collapse navigation"
                   }
                 >
-                  {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  {isMobile ? (
+                    <MenuOutlined />
+                  ) : collapsed ? (
+                    <MenuUnfoldOutlined />
+                  ) : (
+                    <MenuFoldOutlined />
+                  )}
                 </button>
                 <p className="header-context-trail">
                   {headerContext.trailText}
@@ -661,12 +675,44 @@ export default function MainLayout() {
               className="header-search-wrap"
               style={{ display: "flex", gap: 12, alignItems: "center" }}
             >
-              <Input
+              <Select
+                showSearch
                 className="header-search"
-                prefix={<SearchOutlined />}
-                placeholder="Quick search (coming soon)"
+                placeholder="Quick search…"
+                suffixIcon={
+                  <SearchOutlined style={{ pointerEvents: "none" }} />
+                }
+                filterOption={(input, option) =>
+                  `${option?.label ?? ""} ${option?.breadcrumb ?? ""}`
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+                options={NAV_OPTIONS.map((o) => ({
+                  value: o.value,
+                  label: o.label,
+                  breadcrumb: o.breadcrumb,
+                }))}
+                optionRender={(opt) => (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>
+                      {opt.data.label}
+                    </div>
+                    {opt.data.breadcrumb && (
+                      <div style={{ fontSize: 11, color: "#9ca3af" }}>
+                        {opt.data.breadcrumb}
+                      </div>
+                    )}
+                  </div>
+                )}
+                onChange={(path) => {
+                  if (!path) return;
+                  const ancestors = findAncestorKeys(path, NAVIGATION_ITEMS);
+                  if (ancestors) setOpenKeys(ancestors);
+                  navigate({ to: path });
+                }}
+                value={undefined}
+                style={{ width: 240 }}
                 allowClear
-                disabled
               />
               <Dropdown
                 trigger={["click"]}
@@ -740,6 +786,124 @@ export default function MainLayout() {
                   </Badge>
                 </button>
               </Dropdown>
+              {sessionUser.tenants.length > 0 && (
+                <Tooltip
+                  title={
+                    sessionUser.tenants.find(
+                      (t) => t.tenantId === sessionUser.tenantId,
+                    )?.name ??
+                    sessionUser.tenantName ??
+                    "Workspace"
+                  }
+                >
+                  <Dropdown
+                    trigger={["click"]}
+                    placement="bottomRight"
+                    menu={{
+                      style: { minWidth: 224 },
+                      items: [
+                        ...sessionUser.tenants.map((t) => {
+                          const isActive = t.tenantId === sessionUser.tenantId;
+                          const liveState =
+                            liveTenantStates[t.tenantId] ?? t.state;
+                          const stateTag = getTenantStateTag(liveState);
+                          return {
+                            key: t.tenantId,
+                            disabled: switchingTenant !== null || isActive,
+                            onClick: isActive
+                              ? undefined
+                              : () => void handleSwitchTenant(t.tenantId),
+                            icon: isActive ? (
+                              <CheckOutlined style={{ color: "#1DA081" }} />
+                            ) : (
+                              <BankOutlined style={{ color: "#bfbfbf" }} />
+                            ),
+                            label: (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  gap: 8,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 13,
+                                    fontWeight: isActive ? 600 : 400,
+                                    color: isActive ? "#1DA081" : undefined,
+                                  }}
+                                >
+                                  {t.name}
+                                </span>
+                                {stateTag.show && (
+                                  <Tag
+                                    color={stateTag.color}
+                                    style={{
+                                      margin: 0,
+                                      fontSize: 10,
+                                      lineHeight: "16px",
+                                      padding: "0 5px",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {liveState}
+                                  </Tag>
+                                )}
+                              </div>
+                            ),
+                          };
+                        }),
+                        { type: "divider" as const },
+                        {
+                          key: "__create-tenant",
+                          icon: <PlusOutlined style={{ color: "#1DA081" }} />,
+                          label: (
+                            <span
+                              style={{
+                                color: "#1DA081",
+                                fontWeight: 500,
+                                fontSize: 13,
+                              }}
+                            >
+                              New workspace
+                            </span>
+                          ),
+                          onClick: () => navigate({ to: "/create-tenant" }),
+                        },
+                      ],
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="header-collapse-trigger"
+                      aria-label="Switch workspace"
+                    >
+                      {switchingTenant ? (
+                        <Spin size="small" />
+                      ) : (
+                        <BankOutlined />
+                      )}
+                    </button>
+                  </Dropdown>
+                </Tooltip>
+              )}
+              <Tooltip
+                title={
+                  themeMode === "dark"
+                    ? "Switch to light mode"
+                    : "Switch to dark mode"
+                }
+              >
+                <button
+                  type="button"
+                  className="header-collapse-trigger"
+                  aria-label="Toggle theme"
+                  onClick={toggleTheme}
+                >
+                  {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
+                </button>
+              </Tooltip>
               <Tooltip title="Company Policy">
                 <button
                   type="button"
@@ -753,7 +917,7 @@ export default function MainLayout() {
             </div>
           </div>
         </Header>
-        <Content className="app-content-surface app-content-scroll m-6 p-6 rounded-2xl min-h-70 relative">
+        <Content className="app-content-surface app-content-scroll m-2 p-4 md:m-6 md:p-6 rounded-2xl min-h-70 relative">
           {!hrDb.ready ? (
             <ProvisioningScreen
               tenantName={sessionUser.tenantName}

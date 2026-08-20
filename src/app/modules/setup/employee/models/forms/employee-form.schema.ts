@@ -76,6 +76,40 @@ export const employeeFormSchema = z.object({
   hdmfNo: z.string().optional(),
   tin: z.string().optional(),
 
+  // Statutory rates
+  sssRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      eR: z.coerce.number().optional(),
+      eC: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
+  phicRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      eR: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
+  hdmfRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      eR: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
+  taxRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
+
   // Profile
   profileImg: z.string().optional(),
 

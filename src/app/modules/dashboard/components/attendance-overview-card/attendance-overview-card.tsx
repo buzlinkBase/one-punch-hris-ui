@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, Skeleton, Typography } from "antd";
+import { Card, Skeleton, Typography, theme } from "antd";
 import type { AttendanceTrendPoint } from "../../models/api/response/dashboard-response.model";
 import { DASHBOARD_LABEL } from "../../constants/label.const";
 
@@ -40,6 +40,7 @@ export default function AttendanceOverviewCard({
   loading,
 }: AttendanceOverviewCardProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const { token } = theme.useToken();
 
   const rawMax = Math.max(
     1,
@@ -80,7 +81,10 @@ export default function AttendanceOverviewCard({
           <Text type="secondary" className="text-xs">
             {DASHBOARD_LABEL.ATTENDANCE_OVERVIEW_SUBTITLE}
             {" · "}
-            <span className="font-semibold" style={{ color: "#1DA081" }}>
+            <span
+              className="font-semibold"
+              style={{ color: token.colorPrimary }}
+            >
               {avgRate}% avg attendance rate
             </span>
           </Text>
@@ -134,7 +138,11 @@ export default function AttendanceOverviewCard({
                       y1={y}
                       x2={IW}
                       y2={y}
-                      stroke={tick === 0 ? "#e2e8f0" : "#f1f5f9"}
+                      stroke={
+                        tick === 0
+                          ? token.colorBorderSecondary
+                          : token.colorFillTertiary
+                      }
                       strokeWidth={1}
                     />
                     <text
@@ -143,7 +151,7 @@ export default function AttendanceOverviewCard({
                       textAnchor="end"
                       dominantBaseline="middle"
                       fontSize={9}
-                      fill="#c0c0c0"
+                      fill={token.colorTextTertiary}
                     >
                       {tick}
                     </text>
@@ -165,7 +173,7 @@ export default function AttendanceOverviewCard({
                         y={0}
                         width={zoneW - 4}
                         height={IH}
-                        fill="#f8fafc"
+                        fill={token.colorFillQuaternary}
                         rx={4}
                       />
                     )}
@@ -195,7 +203,9 @@ export default function AttendanceOverviewCard({
                               cx={sx}
                               cy={sy}
                               r={isHovered ? 5 : 3.5}
-                              fill={isHovered ? s.color : "#fff"}
+                              fill={
+                                isHovered ? s.color : token.colorBgContainer
+                              }
                               stroke={s.color}
                               strokeWidth={isHovered ? 0 : 2}
                               opacity={isHovered ? 1 : 0.85}
@@ -211,7 +221,9 @@ export default function AttendanceOverviewCard({
                       y={IH + 17}
                       textAnchor="middle"
                       fontSize={10}
-                      fill={isHovered ? "#374151" : "#c0c0c0"}
+                      fill={
+                        isHovered ? token.colorText : token.colorTextTertiary
+                      }
                       fontWeight={isHovered ? "600" : "400"}
                     >
                       {point.date}
@@ -238,15 +250,18 @@ export default function AttendanceOverviewCard({
           <div
             className="mt-2 rounded-lg px-3 py-2 flex items-center gap-4 text-xs"
             style={{
-              background: hovered ? "#fafafa" : "transparent",
-              border: `1px solid ${hovered ? "#f0f0f0" : "transparent"}`,
+              background: hovered ? token.colorFillQuaternary : "transparent",
+              border: `1px solid ${hovered ? token.colorBorderSecondary : "transparent"}`,
               minHeight: 34,
               transition: "background 0.15s, border-color 0.15s",
             }}
           >
             {hovered ? (
               <>
-                <span className="font-semibold text-gray-700">
+                <span
+                  className="font-semibold"
+                  style={{ color: token.colorText }}
+                >
                   {hovered.date}
                 </span>
                 {SERIES.map((s) => (
@@ -255,21 +270,35 @@ export default function AttendanceOverviewCard({
                       className="inline-block w-2 h-2 rounded-full"
                       style={{ background: s.color }}
                     />
-                    <span className="text-gray-400">{s.label}</span>
-                    <span className="font-semibold text-gray-800 tabular-nums">
+                    <span style={{ color: token.colorTextSecondary }}>
+                      {s.label}
+                    </span>
+                    <span
+                      className="font-semibold tabular-nums"
+                      style={{ color: token.colorText }}
+                    >
                       {hovered[s.key]}
                     </span>
                   </span>
                 ))}
-                <span className="ml-auto text-gray-400 tabular-nums">
+                <span
+                  className="ml-auto tabular-nums"
+                  style={{ color: token.colorTextSecondary }}
+                >
                   Total{" "}
-                  <span className="font-semibold text-gray-700">
+                  <span
+                    className="font-semibold"
+                    style={{ color: token.colorText }}
+                  >
                     {hovered.present + hovered.late + hovered.absent}
                   </span>
                 </span>
               </>
             ) : (
-              <span className="text-gray-300 text-[11px]">
+              <span
+                className="text-[11px]"
+                style={{ color: token.colorTextQuaternary }}
+              >
                 Hover a date to see breakdown
               </span>
             )}

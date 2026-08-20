@@ -37,6 +37,11 @@ import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries"
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import {
+  buildFlatCsv,
+  buildFlatExcel,
+  triggerDownload,
+} from "@/shared/utils/export.utils";
 
 const { Title, Text } = Typography;
 
@@ -163,7 +168,7 @@ export default function RawLogsList() {
 
   // ── Export helpers ──────────────────────────────────────────────────────────
 
-  type AnyRow = Record<string, unknown>;
+  type AnyRow = Record<string, string>;
 
   const activeTabData = (): { rows: AnyRow[]; name: string } => {
     switch (activeTab) {
@@ -242,67 +247,27 @@ export default function RawLogsList() {
     }
   };
 
-  const buildCsv = (rows: AnyRow[]): string => {
-    if (!rows.length) return "";
-    const headers = Object.keys(rows[0]);
-    return [
-      headers.join(","),
-      ...rows.map((r) =>
-        headers
-          .map((h) => `"${String(r[h] ?? "").replaceAll('"', '""')}"`)
-          .join(","),
-      ),
-    ].join("\n");
-  };
-
-  const escapeHtml = (v: string) =>
-    v
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-
-  const buildExcel = (rows: AnyRow[]): string => {
-    if (!rows.length) return "";
-    const headers = Object.keys(rows[0]);
-    const th = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
-    const trs = rows
-      .map(
-        (r) =>
-          `<tr>${headers.map((h) => `<td>${escapeHtml(String(r[h] ?? ""))}</td>`).join("")}</tr>`,
-      )
-      .join("");
-    return `<html><head><meta charset="utf-8"/></head><body><table><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></body></html>`;
-  };
-
   const handleExport = (format: "csv" | "excel") => {
     const { rows, name } = activeTabData();
     if (!rows.length) {
       messageApi.info("No data to export. Click Generate first.");
       return;
     }
+    const headers = Object.keys(rows[0]);
+    const strRows = rows.map((r) => headers.map((h) => r[h] ?? ""));
     const date = new Date().toISOString().split("T")[0];
     if (format === "csv") {
-      const a = document.createElement("a");
-      a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv(rows))}`;
-      a.download = `${name}-${date}.csv`;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      triggerDownload(
+        buildFlatCsv(headers, strRows),
+        `${name}-${date}.csv`,
+        "text/plain",
+      );
     } else {
-      const blob = new Blob([buildExcel(rows)], {
-        type: "application/vnd.ms-excel;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${name}-${date}.xls`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      triggerDownload(
+        buildFlatExcel(headers, strRows),
+        `${name}-${date}.xls`,
+        "application/vnd.ms-excel;charset=utf-8;",
+      );
     }
   };
 

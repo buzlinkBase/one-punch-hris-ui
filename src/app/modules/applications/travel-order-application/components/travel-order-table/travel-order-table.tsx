@@ -98,6 +98,19 @@ export default function TravelOrderTable({
           width: widths.dateTo,
           onResize: (w: number) => handleResize("dateTo", w),
         }) as object,
+      render: (val: string, r) => {
+        const crossDay = val && r.startDate && val !== r.startDate;
+        return (
+          <Space size={4}>
+            {val ?? "—"}
+            {crossDay && (
+              <Tag color="orange" className="text-[10px]! m-0!">
+                +1
+              </Tag>
+            )}
+          </Space>
+        );
+      },
     },
     {
       title: "Duration",

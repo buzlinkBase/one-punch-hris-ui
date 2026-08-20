@@ -76,8 +76,9 @@ export default function OvertimeApplicationList() {
         </div>
       </div>
 
-      <div className="mb-3 flex items-center gap-3 flex-wrap">
+      <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <RangePicker
+          style={{ width: "100%" }}
           value={[
             dateRange ? dayjs(dateRange[0]) : null,
             dateRange ? dayjs(dateRange[1]) : null,
@@ -100,7 +101,7 @@ export default function OvertimeApplicationList() {
           options={employeeOptions}
           value={employeeFilter}
           onChange={setEmployeeFilter}
-          style={{ width: 240 }}
+          style={{ width: "100%" }}
           filterOption={(input, opt) =>
             String(opt?.label ?? "")
               .toLowerCase()

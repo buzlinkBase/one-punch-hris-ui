@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Button, DatePicker, Empty, Form, List, Modal, Popconfirm } from "antd";
+import {
+  Button,
+  DatePicker,
+  Empty,
+  Form,
+  List,
+  Modal,
+  Popconfirm,
+  theme,
+} from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
@@ -31,6 +40,7 @@ export default function DtrSetRestDayModal({
   dateFrom,
   dateTo,
 }: Props) {
+  const { token } = theme.useToken();
   const { mutateAsync: createRestDayDate, isPending: isSubmitting } =
     useCreateRestDayDate();
   const { data: existingRestDays = [], isLoading: isLoadingExisting } =
@@ -82,7 +92,13 @@ export default function DtrSetRestDayModal({
       title={
         <div>
           <div>Set Restday Date</div>
-          <div style={{ fontSize: 13, fontWeight: 400, color: "#8c8c8c" }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 400,
+              color: token.colorTextTertiary,
+            }}
+          >
             {employeeName ?? employeeId}
           </div>
         </div>
@@ -99,7 +115,10 @@ export default function DtrSetRestDayModal({
       />
 
       <div className="mt-5">
-        <div className="mb-2" style={{ fontSize: 13, color: "#8c8c8c" }}>
+        <div
+          className="mb-2"
+          style={{ fontSize: 13, color: token.colorTextTertiary }}
+        >
           Previously set rest days
           {dateFrom && dateTo && (
             <span style={{ marginLeft: 6 }}>

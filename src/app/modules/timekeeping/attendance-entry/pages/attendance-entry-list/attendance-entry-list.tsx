@@ -36,6 +36,11 @@ import {
 } from "../../hooks/use-attendance-entry-queries";
 import type { AttendanceEntryFilter } from "../../models/api/request/attendance-entry-filter.model";
 import type { AttendanceEntryResponse } from "../../models/api/response/attendance-entry-response.model";
+import {
+  buildFlatCsv,
+  buildFlatExcel,
+  triggerDownload,
+} from "@/shared/utils/export.utils";
 
 const { Title, Text } = Typography;
 
@@ -158,64 +163,31 @@ export default function AttendanceEntryList() {
     messageApi.success(`Batch ${batchCode} deleted.`);
   };
 
-  const buildCsv = () => {
-    const header = ["Employee", "Time Log", "Batch Code"];
-    const rows = records.map((r) => [
-      r.employeeName ?? "",
-      r.timeLog,
-      r.batchCode ?? "",
-    ]);
-    return [header, ...rows]
-      .map((line) =>
-        line.map((v) => `"${String(v).replaceAll('"', '""')}"`).join(","),
-      )
-      .join("\n");
-  };
-
-  const escapeHtml = (v: string) =>
-    v
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-
-  const buildExcelTable = () => {
-    const rows = records
-      .map(
-        (r) =>
-          `<tr><td>${escapeHtml(r.employeeName ?? "")}</td><td>${escapeHtml(r.timeLog)}</td><td>${escapeHtml(r.batchCode ?? "")}</td></tr>`,
-      )
-      .join("");
-    return `<html><head><meta charset="utf-8" /></head><body><table><thead><tr><th>Employee</th><th>Time Log</th><th>Batch Code</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
-  };
-
   const handleExport = (format: "csv" | "excel") => {
     if (!records.length) {
       messageApi.info("No records available for export.");
       return;
     }
     setIsExporting(true);
+    const headers = ["Employee", "Time Log", "Batch Code"];
+    const strRows = records.map((r) => [
+      r.employeeName ?? "",
+      r.timeLog,
+      r.batchCode ?? "",
+    ]);
+    const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      const a = document.createElement("a");
-      a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv())}`;
-      a.download = `attendance-${dayjs().format("YYYYMMDD")}.csv`;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      triggerDownload(
+        buildFlatCsv(headers, strRows),
+        `attendance-${date}.csv`,
+        "text/plain",
+      );
     } else {
-      const blob = new Blob([buildExcelTable()], {
-        type: "application/vnd.ms-excel;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `attendance-${dayjs().format("YYYYMMDD")}.xls`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      triggerDownload(
+        buildFlatExcel(headers, strRows),
+        `attendance-${date}.xls`,
+        "application/vnd.ms-excel;charset=utf-8;",
+      );
     }
     setIsExporting(false);
   };

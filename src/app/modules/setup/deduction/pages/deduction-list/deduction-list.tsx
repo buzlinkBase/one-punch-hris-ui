@@ -1,5 +1,5 @@
-import { Button, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Typography } from "antd";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useDeductions,
@@ -13,7 +13,12 @@ const { Title } = Typography;
 
 export default function DeductionList() {
   const navigate = useNavigate();
-  const { data: deductions = [], isLoading } = useDeductions();
+  const {
+    data: deductions = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useDeductions();
   const { data: deductionTypes = [] } = useDeductionTypes();
   const { mutate: remove } = useDeleteDeduction();
 
@@ -29,13 +34,20 @@ export default function DeductionList() {
               Manage deduction types applied to employee payroll computations.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/setup/deduction/create" })}
-          >
-            Add Deduction
-          </Button>
+          <Space>
+            <Button
+              icon={<ReloadOutlined spin={isFetching} />}
+              onClick={() => refetch()}
+              loading={isFetching && !isLoading}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/setup/deduction/create" })}
+            >
+              Add Deduction
+            </Button>
+          </Space>
         </div>
       </div>
       <DeductionTable

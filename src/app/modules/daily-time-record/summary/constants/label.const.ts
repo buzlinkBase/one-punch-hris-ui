@@ -1,5 +1,5 @@
 export const DTR_SUMMARY_LABEL = {
-  TITLE: "DTR Summary",
+  TITLE: "Daily Record Summary",
   BIO_ID: "BioId",
   EMPLOYEE: "Employee",
   // Time shift

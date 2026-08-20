@@ -165,7 +165,7 @@ export default function ResetPassword() {
         </Form.Item>
       </Form>
 
-      <div style={{ textAlign: "center" }}>
+      <div className="text-center">
         <Link to="/login">Back to Sign In</Link>
       </div>
     </Card>

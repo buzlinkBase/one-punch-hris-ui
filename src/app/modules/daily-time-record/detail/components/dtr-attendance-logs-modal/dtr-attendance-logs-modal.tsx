@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, DatePicker, Modal, Space, Table, Tag } from "antd";
+import { Button, DatePicker, Modal, Space, Table, Tag, theme } from "antd";
 import { CheckOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import type { ColumnsType } from "antd/es/table";
@@ -29,6 +29,7 @@ export default function DtrAttendanceLogsModal({
   startTime,
   endTime,
 }: Props) {
+  const { token } = theme.useToken();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<Dayjs | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
@@ -151,7 +152,7 @@ export default function DtrAttendanceLogsModal({
                 type="text"
                 size="small"
                 icon={<CheckOutlined />}
-                style={{ color: "#52c41a" }}
+                style={{ color: token.colorSuccess }}
                 loading={isSaving}
                 onClick={() => saveEdit(record.id)}
               />
@@ -189,7 +190,13 @@ export default function DtrAttendanceLogsModal({
       title={
         <div>
           <div>Attendance Logs</div>
-          <div style={{ fontSize: 13, fontWeight: 400, color: "#8c8c8c" }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 400,
+              color: token.colorTextTertiary,
+            }}
+          >
             {employeeName ?? employeeId} &mdash; {dateLabel}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input, Select, Tag } from "antd";
 import {
   SearchOutlined,
@@ -41,7 +41,6 @@ export default function DeductionTable({
     code: 120,
     name: 200,
     deductionTypeId: 160,
-    amount: 130,
     status: 100,
   });
 
@@ -54,13 +53,9 @@ export default function DeductionTable({
 
   const filtered = data.filter((item) => {
     const typeName = typeMap.get(item.deductionTypeId) ?? "";
-    const matchesSearch = [
-      item.code,
-      item.name,
-      typeName,
-      String(item.amount),
-      item.status,
-    ].some((val) => val.toLowerCase().includes(search.toLowerCase()));
+    const matchesSearch = [item.code, item.name, typeName, item.status].some(
+      (val) => val.toLowerCase().includes(search.toLowerCase()),
+    );
     const matchesType = !typeFilter || item.deductionTypeId === typeFilter;
     const matchesStatus = !statusFilter || item.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
@@ -100,20 +95,6 @@ export default function DeductionTable({
           onResize: (w: number) => handleResize("deductionTypeId", w),
         }) as object,
       render: (id: string) => typeMap.get(id) ?? id,
-    },
-    {
-      title: DEDUCTION_LABEL.AMOUNT,
-      dataIndex: "amount",
-      key: "amount",
-      width: widths.amount,
-      onHeaderCell: () =>
-        ({
-          width: widths.amount,
-          onResize: (w: number) => handleResize("amount", w),
-        }) as object,
-      align: "right",
-      render: (amount: number) =>
-        amount.toLocaleString("en-PH", { style: "currency", currency: "PHP" }),
     },
     {
       title: DEDUCTION_LABEL.STATUS,

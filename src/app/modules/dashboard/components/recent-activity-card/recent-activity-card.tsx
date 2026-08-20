@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card, Empty, Skeleton, Typography } from "antd";
+import { Card, Empty, Skeleton, Typography, theme } from "antd";
 import {
   ClockCircleOutlined,
   FileTextOutlined,
@@ -46,6 +46,7 @@ export default function RecentActivityCard({
   data,
   loading,
 }: RecentActivityCardProps) {
+  const { token } = theme.useToken();
   return (
     <Card size="small" className="h-full">
       <Title level={5} className="mb-4!">
@@ -69,9 +70,11 @@ export default function RecentActivityCard({
                 {ACTIVITY_ICON[activity.type]}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-sm text-gray-800">
+                <p className="m-0 text-sm" style={{ color: token.colorText }}>
                   <span className="font-medium">{activity.employeeName}</span>{" "}
-                  <span className="text-gray-500">{activity.description}</span>
+                  <span style={{ color: token.colorTextSecondary }}>
+                    {activity.description}
+                  </span>
                 </p>
                 <Text type="secondary" className="text-xs">
                   {dayjs(activity.timestamp).fromNow()}

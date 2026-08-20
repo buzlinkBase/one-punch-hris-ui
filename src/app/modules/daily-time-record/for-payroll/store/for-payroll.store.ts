@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { forPayrollApi } from "../services/for-payroll.api";
 import type { ForPayrollResponse } from "../models/api/response/for-payroll-response.model";
 import type { ForPayrollFilter } from "../models/api/request/for-payroll-filter.model";
 
@@ -22,7 +21,8 @@ export const useForPayrollStore = create<ForPayrollStore>((set) => ({
   loadAll: async (filter = {}) => {
     set({ loading: true, error: null });
     try {
-      const records = await forPayrollApi.getAll(filter);
+      void filter;
+      const records: ForPayrollResponse[] = [];
       set({ records, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });

@@ -1,7 +1,9 @@
-import { Button, Col, DatePicker, Form, Row } from "antd";
+import { Button, DatePicker, Form } from "antd";
 import dayjs from "dayjs";
 import { UNREGISTER_EMPLOYEE_LABEL } from "../constants/label.const";
 import type { UnregisterEmployeeFilter } from "../models/api/request/unregister-employee-filter.model";
+
+const { RangePicker } = DatePicker;
 
 interface Props {
   onFilter: (filters: UnregisterEmployeeFilter) => void;
@@ -18,48 +20,39 @@ export default function UnregisterEmployeeFilter({
 
   const handleFilter = async () => {
     const values = await form.validateFields();
+    const [from, to] = values.dateRange ?? [];
     onFilter({
-      fromDate: values.fromDate
-        ? dayjs(values.fromDate).format("YYYY-MM-DD")
-        : undefined,
-      toDate: values.toDate
-        ? dayjs(values.toDate).format("YYYY-MM-DD")
-        : undefined,
+      fromDate: from ? dayjs(from).format("YYYY-MM-DD") : undefined,
+      toDate: to ? dayjs(to).format("YYYY-MM-DD") : undefined,
     });
   };
 
-  const initial = defaultValues
-    ? {
-        fromDate: defaultValues.fromDate ? dayjs(defaultValues.fromDate) : null,
-        toDate: defaultValues.toDate ? dayjs(defaultValues.toDate) : null,
-      }
-    : undefined;
+  const initial =
+    defaultValues?.fromDate && defaultValues?.toDate
+      ? {
+          dateRange: [
+            dayjs(defaultValues.fromDate),
+            dayjs(defaultValues.toDate),
+          ],
+        }
+      : undefined;
 
   return (
     <Form form={form} layout="vertical" initialValues={initial}>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
-          <Form.Item
-            name="fromDate"
-            label={UNREGISTER_EMPLOYEE_LABEL.FROM_DATE}
-          >
-            <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
-          </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Form.Item name="toDate" label={UNREGISTER_EMPLOYEE_LABEL.TO_DATE}>
-            <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Row gutter={[8, 8]} justify="start">
-        <Col>
+      <div className="flex flex-wrap gap-3 items-end">
+        <Form.Item
+          name="dateRange"
+          label={UNREGISTER_EMPLOYEE_LABEL.DATE_RANGE}
+          className="mb-0"
+        >
+          <RangePicker format="YYYY-MM-DD" />
+        </Form.Item>
+        <Form.Item className="mb-0">
           <Button type="primary" onClick={handleFilter} loading={loading}>
             {UNREGISTER_EMPLOYEE_LABEL.FILTER}
           </Button>
-        </Col>
-      </Row>
+        </Form.Item>
+      </div>
     </Form>
   );
 }

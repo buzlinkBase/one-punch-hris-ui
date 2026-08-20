@@ -1,5 +1,5 @@
 export const INCOMPLETE_PUNCHES_LABEL = {
-  TITLE: "Incomplete Punches",
+  TITLE: "Incomplete Logs",
   SUBTITLE: "Review and manage incomplete time punch records.",
 
   // Filter labels

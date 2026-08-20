@@ -89,6 +89,10 @@ const ForPayrollList = lazy(
   () =>
     import("@/app/modules/daily-time-record/for-payroll/pages/for-payroll-list"),
 );
+const PayrollSummary = lazy(
+  () =>
+    import("@/app/modules/daily-time-record/for-payroll/pages/payroll-summary/payroll-summary"),
+);
 const DtrSummaryList = lazy(
   () =>
     import("@/app/modules/daily-time-record/summary/pages/dtr-summary-list"),
@@ -626,6 +630,18 @@ const forPayrollIndexRoute = createRoute({
   component: withSuspense(ForPayrollList),
 });
 
+const payrollSummaryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/summary",
+  component: MainLayout,
+});
+
+const payrollSummaryIndexRoute = createRoute({
+  getParentRoute: () => payrollSummaryRoute,
+  path: "/",
+  component: withSuspense(PayrollSummary),
+});
+
 const tardinessRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "reports/tardiness",
@@ -773,6 +789,36 @@ const TravelOrderDetail = lazy(
   () =>
     import("@/app/modules/applications/travel-order-application/pages/travel-order-detail"),
 );
+const PassSlipList = lazy(
+  () => import("@/app/modules/applications/pass-slip/pages/pass-slip-list"),
+);
+const PassSlipDetail = lazy(
+  () => import("@/app/modules/applications/pass-slip/pages/pass-slip-detail"),
+);
+const DeductionApplicationList = lazy(
+  () =>
+    import("@/app/modules/applications/deduction-application/pages/deduction-application-list"),
+);
+const DeductionApplicationDetail = lazy(
+  () =>
+    import("@/app/modules/applications/deduction-application/pages/deduction-application-detail"),
+);
+const OtherIncomeApplicationList = lazy(
+  () =>
+    import("@/app/modules/applications/other-income-application/pages/other-income-application-list"),
+);
+const OtherIncomeApplicationDetail = lazy(
+  () =>
+    import("@/app/modules/applications/other-income-application/pages/other-income-application-detail"),
+);
+const SalaryAdjustmentList = lazy(
+  () =>
+    import("@/app/modules/applications/salary-adjustment/pages/salary-adjustment-list/salary-adjustment-list"),
+);
+const SalaryAdjustmentDetail = lazy(
+  () =>
+    import("@/app/modules/applications/salary-adjustment/pages/salary-adjustment-detail/salary-adjustment-detail"),
+);
 // const UndertimeList = lazy(
 //   () =>
 //     import("@/app/modules/applications/undertime-application/pages/undertime-list"),
@@ -829,6 +875,30 @@ const travelOrderRoute = createRoute({
   component: MainLayout,
 });
 
+const passSlipRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/pass-slip",
+  component: MainLayout,
+});
+
+const deductionApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/deduction-application",
+  component: MainLayout,
+});
+
+const otherIncomeApplicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/other-income",
+  component: MainLayout,
+});
+
+const salaryAdjustmentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/salary-adjustment",
+  component: MainLayout,
+});
+
 // const undertimeRoute = createRoute({
 //   getParentRoute: () => rootRoute,
 //   path: "applications/undertime",
@@ -869,6 +939,78 @@ const travelOrderDetailRoute = createRoute({
   getParentRoute: () => travelOrderRoute,
   path: "$id",
   component: withSuspense(TravelOrderDetail),
+});
+
+const passSlipIndexRoute = createRoute({
+  getParentRoute: () => passSlipRoute,
+  path: "/",
+  component: withSuspense(PassSlipList),
+});
+
+const passSlipCreateRoute = createRoute({
+  getParentRoute: () => passSlipRoute,
+  path: "create",
+  component: withSuspense(PassSlipDetail),
+});
+
+const passSlipDetailRoute = createRoute({
+  getParentRoute: () => passSlipRoute,
+  path: "$id",
+  component: withSuspense(PassSlipDetail),
+});
+
+const deductionApplicationIndexRoute = createRoute({
+  getParentRoute: () => deductionApplicationRoute,
+  path: "/",
+  component: withSuspense(DeductionApplicationList),
+});
+
+const deductionApplicationCreateRoute = createRoute({
+  getParentRoute: () => deductionApplicationRoute,
+  path: "create",
+  component: withSuspense(DeductionApplicationDetail),
+});
+
+const deductionApplicationDetailRoute = createRoute({
+  getParentRoute: () => deductionApplicationRoute,
+  path: "$id",
+  component: withSuspense(DeductionApplicationDetail),
+});
+
+const otherIncomeApplicationIndexRoute = createRoute({
+  getParentRoute: () => otherIncomeApplicationRoute,
+  path: "/",
+  component: withSuspense(OtherIncomeApplicationList),
+});
+
+const otherIncomeApplicationCreateRoute = createRoute({
+  getParentRoute: () => otherIncomeApplicationRoute,
+  path: "create",
+  component: withSuspense(OtherIncomeApplicationDetail),
+});
+
+const otherIncomeApplicationDetailRoute = createRoute({
+  getParentRoute: () => otherIncomeApplicationRoute,
+  path: "$id",
+  component: withSuspense(OtherIncomeApplicationDetail),
+});
+
+const salaryAdjustmentIndexRoute = createRoute({
+  getParentRoute: () => salaryAdjustmentRoute,
+  path: "/",
+  component: withSuspense(SalaryAdjustmentList),
+});
+
+const salaryAdjustmentCreateRoute = createRoute({
+  getParentRoute: () => salaryAdjustmentRoute,
+  path: "create",
+  component: withSuspense(SalaryAdjustmentDetail),
+});
+
+const salaryAdjustmentDetailRoute = createRoute({
+  getParentRoute: () => salaryAdjustmentRoute,
+  path: "$id",
+  component: withSuspense(SalaryAdjustmentDetail),
 });
 
 // const undertimeIndexRoute = createRoute({
@@ -990,6 +1132,7 @@ const routeTree = rootRoute.addChildren([
   dtrDetailMasterRoute.addChildren([dtrDetailMasterIndexRoute]),
   dtrSummaryRoute.addChildren([dtrSummaryIndexRoute]),
   forPayrollRoute.addChildren([forPayrollIndexRoute]),
+  payrollSummaryRoute.addChildren([payrollSummaryIndexRoute]),
   appSectionRoute("reports", "Reports"),
   tardinessRoute.addChildren([tardinessIndexRoute]),
   clientsRoute.addChildren([
@@ -1036,6 +1179,26 @@ const routeTree = rootRoute.addChildren([
     travelOrderIndexRoute,
     travelOrderCreateRoute,
     travelOrderDetailRoute,
+  ]),
+  passSlipRoute.addChildren([
+    passSlipIndexRoute,
+    passSlipCreateRoute,
+    passSlipDetailRoute,
+  ]),
+  deductionApplicationRoute.addChildren([
+    deductionApplicationIndexRoute,
+    deductionApplicationCreateRoute,
+    deductionApplicationDetailRoute,
+  ]),
+  otherIncomeApplicationRoute.addChildren([
+    otherIncomeApplicationIndexRoute,
+    otherIncomeApplicationCreateRoute,
+    otherIncomeApplicationDetailRoute,
+  ]),
+  salaryAdjustmentRoute.addChildren([
+    salaryAdjustmentIndexRoute,
+    salaryAdjustmentCreateRoute,
+    salaryAdjustmentDetailRoute,
   ]),
   // undertimeRoute.addChildren([
   //   undertimeIndexRoute,

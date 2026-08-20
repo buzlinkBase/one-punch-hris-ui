@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card, Skeleton, Statistic } from "antd";
+import { Card, Skeleton, Statistic, theme } from "antd";
 
 interface StatCardProps {
   title: string;
@@ -20,6 +20,7 @@ export default function StatCard({
   suffix,
   subtext,
 }: StatCardProps) {
+  const { token } = theme.useToken();
   return (
     <Card size="small" className="h-full">
       {loading ? (
@@ -34,7 +35,14 @@ export default function StatCard({
           </div>
           <div className="min-w-0">
             <Statistic
-              title={<span className="text-xs text-gray-500">{title}</span>}
+              title={
+                <span
+                  className="text-xs"
+                  style={{ color: token.colorTextSecondary }}
+                >
+                  {title}
+                </span>
+              }
               value={value}
               suffix={suffix}
               valueStyle={{ fontSize: 20, fontWeight: 600, lineHeight: 1.2 }}

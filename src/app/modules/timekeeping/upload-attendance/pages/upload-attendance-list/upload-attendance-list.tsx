@@ -114,7 +114,7 @@ export default function UploadAttendanceList() {
         </div>
       </div>
 
-      <Card title="Upload Attendance Log">
+      <Card>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Left: filters + file picker */}
           <div className="flex flex-col gap-3">

@@ -1,4 +1,4 @@
-import { Card, Progress, Skeleton, Typography } from "antd";
+import { Card, Progress, Skeleton, Typography, theme } from "antd";
 import type { DepartmentHeadcount } from "../../models/api/response/dashboard-response.model";
 import { DASHBOARD_LABEL } from "../../constants/label.const";
 
@@ -13,6 +13,7 @@ export default function DepartmentHeadcountCard({
   data,
   loading,
 }: DepartmentHeadcountCardProps) {
+  const { token } = theme.useToken();
   const max = Math.max(1, ...data.map((d) => d.headcount));
 
   return (
@@ -29,10 +30,13 @@ export default function DepartmentHeadcountCard({
             .map((dept) => (
               <div key={dept.departmentId}>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm" style={{ color: token.colorText }}>
                     {dept.departmentName}
                   </span>
-                  <span className="text-sm font-medium text-gray-800">
+                  <span
+                    className="text-sm font-medium tabular-nums"
+                    style={{ color: token.colorText }}
+                  >
                     {dept.headcount}
                   </span>
                 </div>
@@ -40,7 +44,7 @@ export default function DepartmentHeadcountCard({
                   percent={(dept.headcount / max) * 100}
                   showInfo={false}
                   strokeColor="#1DA081"
-                  trailColor="#eef7f4"
+                  trailColor={token.colorFillSecondary}
                   size="small"
                 />
               </div>

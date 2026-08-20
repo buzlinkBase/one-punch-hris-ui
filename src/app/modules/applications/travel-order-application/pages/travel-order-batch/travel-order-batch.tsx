@@ -1,4 +1,4 @@
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+﻿import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -196,7 +196,7 @@ export default function TravelOrderBatch() {
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           {/* Row 1: Travel Period | Entry Mode — mirrors OT / single-entry layout */}
-          <div className="grid grid-cols-3 gap-x-6">
+          <div className="form-grid-3">
             <Form.Item
               label="Travel Period"
               className="col-span-2"
@@ -238,7 +238,7 @@ export default function TravelOrderBatch() {
           </div>
 
           {/* Time entry group */}
-          <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-4 pt-4 pb-1 mb-6">
+          <div className="rounded-lg border border-(--ant-color-primary-border) bg-(--ant-color-primary-bg) px-4 pt-4 pb-1 mb-6">
             {mode === "timerange" ? (
               <>
                 <Form.Item
@@ -279,7 +279,7 @@ export default function TravelOrderBatch() {
                   />
                 </Form.Item>
 
-                <div className="grid grid-cols-2 gap-x-6">
+                <div className="form-grid-2">
                   <Form.Item
                     label={TRAVEL_ORDER_LABEL.START_TIME}
                     validateStatus={errors.startTime ? "error" : ""}
@@ -356,7 +356,7 @@ export default function TravelOrderBatch() {
           </div>
 
           {/* Destination | Classification */}
-          <div className="grid grid-cols-2 gap-x-6">
+          <div className="form-grid-2">
             <Form.Item
               label={TRAVEL_ORDER_LABEL.DESTINATION}
               validateStatus={errors.destination ? "error" : ""}
@@ -411,14 +411,14 @@ export default function TravelOrderBatch() {
           </Form.Item>
 
           {/* Per-employee rows */}
-          <div className="rounded-lg border border-gray-200 overflow-hidden">
-            <div className="grid grid-cols-[1fr_1fr_36px] gap-2 px-3 py-2 bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
+          <div className="rounded-lg border border-(--ant-color-border) overflow-hidden">
+            <div className="grid grid-cols-[1fr_1fr_36px] gap-2 px-3 py-2 bg-(--ant-color-fill-quaternary) text-xs font-medium text-(--ant-color-text-secondary) border-b border-(--ant-color-border)">
               <span>Employee</span>
               <span>Remarks</span>
               <span />
             </div>
 
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-(--ant-color-border-secondary)">
               {fields.map((field, index) => {
                 const entryErrors = errors.entries?.[index];
                 return (
