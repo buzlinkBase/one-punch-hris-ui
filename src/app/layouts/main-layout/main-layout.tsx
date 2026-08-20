@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   Badge,
   Button,
+  Drawer,
   Dropdown,
   Empty,
   Layout,
@@ -27,6 +28,7 @@ import {
   FieldTimeOutlined,
   IdcardOutlined,
   MenuFoldOutlined,
+  MenuOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
   PlusOutlined,
@@ -191,6 +193,7 @@ const HR_DB_INDEPENDENT_KEYS = new Set(["dashboard"]);
 function buildMenuItems(
   items: typeof NAVIGATION_ITEMS,
   hrDbReady: boolean,
+  collapsed = false,
   atRoot = true,
 ): MenuItem[] {
   return items.map((item) => {
@@ -204,40 +207,30 @@ function buildMenuItems(
         label: item.label,
         icon: getNavIcon(item.key),
         children: item.children
-          ? buildMenuItems(item.children, hrDbReady, atRoot)
+          ? buildMenuItems(item.children, hrDbReady, collapsed, atRoot)
           : undefined,
       };
     }
 
     const disabled =
       atRoot && !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
-    const label = disabled ? (
+
+    // When collapsed, AntD's built-in popup already shows the label text on hover —
+    // wrapping in Tooltip creates a nested tooltip that breaks the popup text rendering.
+    // Use a plain string when collapsed; use the truncating span when expanded.
+    const label = collapsed ? (
+      item.label
+    ) : disabled ? (
       <Tooltip
         title="Available once your workspace resources finish setting up"
         placement="right"
       >
-        <span
-          style={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "block",
-          }}
-        >
+        <span className="block overflow-hidden text-ellipsis">
           {item.label}
         </span>
       </Tooltip>
     ) : (
-      <Tooltip title={item.label} placement="right" mouseEnterDelay={0.5}>
-        <span
-          style={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "block",
-          }}
-        >
-          {item.label}
-        </span>
-      </Tooltip>
+      <span className="block overflow-hidden text-ellipsis">{item.label}</span>
     );
 
     return {
@@ -246,7 +239,7 @@ function buildMenuItems(
       icon: getNavIcon(item.key),
       disabled,
       children: item.children
-        ? buildMenuItems(item.children, hrDbReady, false)
+        ? buildMenuItems(item.children, hrDbReady, collapsed, false)
         : undefined,
     };
   });
@@ -371,6 +364,10 @@ function getTenantStateTag(state: string): { color: string; show: boolean } {
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia("(max-width: 767px)").matches,
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
@@ -386,7 +383,7 @@ export default function MainLayout() {
   const hrDbFailed =
     hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
 
-  const menuItems = buildMenuItems(NAVIGATION_ITEMS, hrDb.ready);
+  const menuItems = buildMenuItems(NAVIGATION_ITEMS, hrDb.ready, collapsed);
   const navEntries = flattenNavigation(NAVIGATION_ITEMS);
   const headerContext = buildHeaderContext(location.pathname, navEntries);
   const activeMenuKey = resolveActiveMenuKey(location.pathname, navEntries);
@@ -412,6 +409,7 @@ export default function MainLayout() {
 
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
     if (key.startsWith("/")) {
+      if (isMobile) setMobileMenuOpen(false);
       navigate({ to: key });
     }
   };
@@ -492,131 +490,179 @@ export default function MainLayout() {
     }
   };
 
-  const toggleCollapsed = () => {
-    setCollapsed((prev) => !prev);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches);
+      if (e.matches) setMobileMenuOpen(false);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const handleToggle = () => {
+    if (isMobile) setMobileMenuOpen((v) => !v);
+    else setCollapsed((v) => !v);
   };
 
-  return (
-    <Layout style={{ minHeight: "100vh" }} className="app-shell">
-      <Sider
-        collapsed={collapsed}
-        width={252}
-        collapsedWidth={88}
-        trigger={null}
-        className="app-sider"
+  const siderContent = (
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        className="brand-chip m-4 rounded-xl px-3 py-3 text-white shadow-sm cursor-pointer"
+        onClick={() => navigate({ to: "/" })}
+        onKeyDown={(e) => e.key === "Enter" && navigate({ to: "/" })}
       >
-        <div
-          role="button"
-          tabIndex={0}
-          className="brand-chip m-4 rounded-xl px-3 py-3 text-white shadow-sm cursor-pointer"
-          onClick={() => navigate({ to: "/" })}
-          onKeyDown={(e) => e.key === "Enter" && navigate({ to: "/" })}
-        >
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center text-base">
-              <SafetyCertificateOutlined />
-            </div>
-            {!collapsed && (
-              <div className="min-w-0 leading-tight">
-                <p className="m-0 text-sm font-semibold tracking-wider truncate">
-                  {import.meta.env.VITE_APP_NAME ?? "One Punch HRIS"}
-                </p>
-                <p className="m-0 text-[10px] tracking-[0.16em] uppercase text-white/85 truncate">
-                  Human Resources
-                </p>
-              </div>
-            )}
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center text-base">
+            <SafetyCertificateOutlined />
           </div>
-        </div>
-        <div className="app-sider-menu-scroll">
-          <Menu
-            theme="light"
-            mode="inline"
-            className="app-menu"
-            selectedKeys={[activeMenuKey]}
-            openKeys={openKeys}
-            onOpenChange={(keys) => setOpenKeys(keys as string[])}
-            items={menuItems}
-            onClick={handleMenuClick}
-          />
-        </div>
-        <div className="app-sider-user">
-          {collapsed ? (
-            <div className="side-user-collapsed">
-              <button
-                type="button"
-                className="side-user-avatar"
-                style={{ border: 0, padding: 0, cursor: "pointer" }}
-                title={`${sessionUser.name} · View profile`}
-                onClick={() => navigate({ to: "/profile" })}
-              >
-                {getInitials(sessionUser.name)}
-              </button>
-              <Button
-                type="text"
-                size="small"
-                icon={<LogoutOutlined />}
-                className="side-user-logout-icon"
-                onClick={handleLogout}
-                aria-label="Logout"
-              />
-            </div>
-          ) : (
-            <div className="side-user-chip">
-              <button
-                type="button"
-                className="side-user-avatar"
-                style={{ border: 0, padding: 0, cursor: "pointer" }}
-                title="View profile"
-                onClick={() => navigate({ to: "/profile" })}
-              >
-                {getInitials(sessionUser.name)}
-              </button>
-              <button
-                type="button"
-                className="side-user-meta"
-                style={{
-                  border: 0,
-                  padding: 0,
-                  background: "transparent",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  font: "inherit",
-                }}
-                onClick={() => navigate({ to: "/profile" })}
-              >
-                <p className="side-user-subtitle">Profile</p>
-              </button>
-              <Button
-                type="text"
-                size="small"
-                icon={<LogoutOutlined />}
-                className="side-user-logout"
-                onClick={handleLogout}
-              >
-                Logout
-              </Button>
+          {(!collapsed || isMobile) && (
+            <div className="min-w-0 leading-tight">
+              <p className="m-0 text-sm font-semibold tracking-wider truncate">
+                {import.meta.env.VITE_APP_NAME ?? "One Punch HRIS"}
+              </p>
+              <p className="m-0 text-[10px] tracking-[0.16em] uppercase text-white/85 truncate">
+                Human Resources
+              </p>
             </div>
           )}
         </div>
-      </Sider>
+      </div>
+      <div className="app-sider-menu-scroll">
+        <Menu
+          theme="light"
+          mode="inline"
+          className="app-menu"
+          selectedKeys={[activeMenuKey]}
+          openKeys={openKeys}
+          onOpenChange={(keys) => setOpenKeys(keys as string[])}
+          items={menuItems}
+          onClick={handleMenuClick}
+        />
+      </div>
+      <div className="app-sider-user">
+        {collapsed && !isMobile ? (
+          <div className="side-user-collapsed">
+            <button
+              type="button"
+              className="side-user-avatar"
+              style={{ border: 0, padding: 0, cursor: "pointer" }}
+              title={`${sessionUser.name} · View profile`}
+              onClick={() => navigate({ to: "/profile" })}
+            >
+              {getInitials(sessionUser.name)}
+            </button>
+            <Button
+              type="text"
+              size="small"
+              icon={<LogoutOutlined />}
+              className="side-user-logout-icon"
+              onClick={handleLogout}
+              aria-label="Logout"
+            />
+          </div>
+        ) : (
+          <div className="side-user-chip">
+            <button
+              type="button"
+              className="side-user-avatar"
+              style={{ border: 0, padding: 0, cursor: "pointer" }}
+              title="View profile"
+              onClick={() => navigate({ to: "/profile" })}
+            >
+              {getInitials(sessionUser.name)}
+            </button>
+            <button
+              type="button"
+              className="side-user-meta"
+              style={{
+                border: 0,
+                padding: 0,
+                background: "transparent",
+                cursor: "pointer",
+                textAlign: "left",
+                font: "inherit",
+              }}
+              onClick={() => navigate({ to: "/profile" })}
+            >
+              <p className="side-user-subtitle">Profile</p>
+            </button>
+            <Button
+              type="text"
+              size="small"
+              icon={<LogoutOutlined />}
+              className="side-user-logout"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <Layout style={{ minHeight: "100vh" }} className="app-shell">
+      {isMobile ? (
+        <Drawer
+          placement="left"
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          width={252}
+          title={null}
+          closeIcon={null}
+          rootClassName="app-mobile-drawer"
+          styles={{
+            body: {
+              padding: 0,
+              background: "var(--bg-sider)",
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              overflow: "hidden",
+            },
+          }}
+        >
+          {siderContent}
+        </Drawer>
+      ) : (
+        <Sider
+          collapsed={collapsed}
+          width={252}
+          collapsedWidth={88}
+          trigger={null}
+          className="app-sider"
+        >
+          {siderContent}
+        </Sider>
+      )}
       <Layout className="app-main-layout">
-        <Header className="app-header px-7">
+        <Header className="app-header">
           <div className="header-grid">
             <div className="header-context">
               <div className="header-context-top">
                 <button
                   type="button"
                   className="header-collapse-trigger"
-                  onClick={toggleCollapsed}
+                  onClick={handleToggle}
                   aria-label={
-                    collapsed ? "Expand navigation" : "Collapse navigation"
-                  }
-                  title={
-                    collapsed ? "Expand navigation" : "Collapse navigation"
+                    isMobile
+                      ? "Open navigation"
+                      : collapsed
+                        ? "Expand navigation"
+                        : "Collapse navigation"
                   }
                 >
-                  {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                  {isMobile ? (
+                    <MenuOutlined />
+                  ) : collapsed ? (
+                    <MenuUnfoldOutlined />
+                  ) : (
+                    <MenuFoldOutlined />
+                  )}
                 </button>
                 <p className="header-context-trail">
                   {headerContext.trailText}
@@ -871,7 +917,7 @@ export default function MainLayout() {
             </div>
           </div>
         </Header>
-        <Content className="app-content-surface app-content-scroll m-6 p-6 rounded-2xl min-h-70 relative">
+        <Content className="app-content-surface app-content-scroll m-2 p-4 md:m-6 md:p-6 rounded-2xl min-h-70 relative">
           {!hrDb.ready ? (
             <ProvisioningScreen
               tenantName={sessionUser.tenantName}

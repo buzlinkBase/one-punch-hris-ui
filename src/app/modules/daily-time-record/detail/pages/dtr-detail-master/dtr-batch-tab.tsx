@@ -90,9 +90,9 @@ export default function DtrBatchTab() {
   ];
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       {contextHolder}
-      <div className="flex justify-end mb-3">
+      <div className="flex justify-end">
         <Space>
           <Popconfirm
             title="Delete batch"
@@ -124,7 +124,7 @@ export default function DtrBatchTab() {
         </Space>
       </div>
 
-      <div className="mb-4 flex gap-2" style={{ maxWidth: 660 }}>
+      <div className="flex gap-2" style={{ maxWidth: 660 }}>
         <Button
           icon={<ReloadOutlined />}
           loading={isLoadingCodes}
@@ -162,6 +162,6 @@ export default function DtrBatchTab() {
         onChanged={() => refetch()}
         readOnly
       />
-    </>
+    </div>
   );
 }

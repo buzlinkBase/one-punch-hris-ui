@@ -22,4 +22,10 @@ export const payrollRateApi = {
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/${id}`);
   },
+  clearAll(): Promise<void> {
+    return httpClient.delete<void>(ENDPOINT);
+  },
+  bulkReplace(data: CreatePayrollRate[]): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/bulk`, data);
+  },
 };

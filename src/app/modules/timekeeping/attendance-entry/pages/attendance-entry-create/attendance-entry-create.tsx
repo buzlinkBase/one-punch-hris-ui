@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -459,7 +459,7 @@ export default function AttendanceEntryCreate() {
         }
       >
         <Form layout="vertical">
-          <div className="grid grid-cols-3 gap-x-4">
+          <div className="form-grid-3">
             <Form.Item label="Branch" className="mb-3">
               <Select
                 placeholder="All branches"
@@ -587,7 +587,7 @@ export default function AttendanceEntryCreate() {
         }
       >
         <Form layout="vertical">
-          <div className="grid grid-cols-2 gap-x-4">
+          <div className="form-grid-2">
             <Form.Item label="Date Range" required className="mb-3">
               <DatePicker.RangePicker
                 style={{ width: "100%" }}
@@ -612,7 +612,7 @@ export default function AttendanceEntryCreate() {
               />
             </Form.Item>
           </div>
-          <div className="grid grid-cols-2 gap-x-4">
+          <div className="form-grid-2">
             <Form.Item className="mb-0">
               <div className="flex items-center gap-2">
                 <Checkbox

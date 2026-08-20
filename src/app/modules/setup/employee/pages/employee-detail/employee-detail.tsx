@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import {
   Form,
   Input,
@@ -16,7 +16,12 @@ import {
   Avatar,
   message,
 } from "antd";
-import { UserOutlined, CameraOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  CameraOutlined,
+  PlusOutlined,
+  PrinterOutlined,
+} from "@ant-design/icons";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import {
@@ -48,6 +53,7 @@ import {
   GENDER_OPTIONS,
   CIVIL_STATUS_OPTIONS,
   BLOOD_TYPE_OPTIONS,
+  COMPUTATION_BASIS_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
@@ -67,8 +73,21 @@ import QuickAddClientModal from "../../components/quick-add-client-modal";
 import QuickAddSectionModal from "../../components/quick-add-section-modal";
 import QuickAddBranchModal from "../../components/quick-add-branch-modal";
 import QuickAddPositionModal from "../../components/quick-add-position-modal";
+import EmployeeDependentsTab from "../../components/employee-dependents-tab";
+import EmployeeEducationTab from "../../components/employee-education-tab";
+import EmployeeSkillsTab from "../../components/employee-skills-tab";
+import EmployeeDocRecordsTab from "../../components/employee-doc-records-tab";
+import EmployeeEmploymentHistoryTab from "../../components/employee-employment-history-tab";
+import EmployeeAssignAssetsTab from "../../components/employee-assign-assets-tab";
+
+const Employee201Modal = lazy(
+  () => import("@/app/modules/reports/employee-201/employee-201-modal"),
+);
 
 const { Title, Text } = Typography;
+
+const capitalizeFirst = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
 
 const STATUS_COLORS: Record<string, string> = {
   Regular: "success",
@@ -159,6 +178,7 @@ export default function EmployeeDetail() {
     defaultValues: employeeMapper.toDefaultValues(),
   });
 
+  const [show201, setShow201] = useState(false);
   const [deptModalOpen, setDeptModalOpen] = useState(false);
   const [areaModalOpen, setAreaModalOpen] = useState(false);
   const [pgModalOpen, setPgModalOpen] = useState(false);
@@ -192,8 +212,11 @@ export default function EmployeeDetail() {
       }),
     };
     try {
-      if (isEdit && id) await update({ id, ...payload });
-      else await add(payload);
+      if (isEdit && id) {
+        await update({ id, ...payload });
+      } else {
+        await add(payload);
+      }
       navigate({ to: "/setup/employee" });
     } catch {
       // handled by global error interceptor
@@ -347,6 +370,14 @@ export default function EmployeeDetail() {
             <Tag color={isEdit ? "processing" : "success"}>
               {isEdit ? "Editing" : "New Record"}
             </Tag>
+            {isEdit && id && (
+              <Button
+                icon={<PrinterOutlined />}
+                onClick={() => setShow201(true)}
+              >
+                Print 201
+              </Button>
+            )}
             <Button onClick={() => navigate({ to: "/setup/employee" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
@@ -495,7 +526,14 @@ export default function EmployeeDetail() {
                       <Controller
                         name="firstName"
                         control={control}
-                        render={({ field }) => <Input {...field} />}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(capitalizeFirst(e.target.value))
+                            }
+                          />
+                        )}
                       />
                     </Form.Item>
 
@@ -508,7 +546,14 @@ export default function EmployeeDetail() {
                       <Controller
                         name="lastName"
                         control={control}
-                        render={({ field }) => <Input {...field} />}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(capitalizeFirst(e.target.value))
+                            }
+                          />
+                        )}
                       />
                     </Form.Item>
 
@@ -516,7 +561,14 @@ export default function EmployeeDetail() {
                       <Controller
                         name="middleName"
                         control={control}
-                        render={({ field }) => <Input {...field} />}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(capitalizeFirst(e.target.value))
+                            }
+                          />
+                        )}
                       />
                     </Form.Item>
 
@@ -525,7 +577,13 @@ export default function EmployeeDetail() {
                         name="suffix"
                         control={control}
                         render={({ field }) => (
-                          <Input {...field} placeholder="Jr., Sr., III…" />
+                          <Input
+                            {...field}
+                            placeholder="Jr., Sr., III…"
+                            onChange={(e) =>
+                              field.onChange(capitalizeFirst(e.target.value))
+                            }
+                          />
                         )}
                       />
                     </Form.Item>
@@ -663,7 +721,9 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <Controller
                           name="departmentId"
                           control={control}
@@ -694,7 +754,9 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.SECTION}>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <Controller
                           name="sectionId"
                           control={control}
@@ -722,7 +784,9 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.AREA}>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <Controller
                           name="areaId"
                           control={control}
@@ -755,7 +819,9 @@ export default function EmployeeDetail() {
                       validateStatus={errors.payrollGroupId ? "error" : ""}
                       help={errors.payrollGroupId?.message}
                     >
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <Controller
                           name="payrollGroupId"
                           control={control}
@@ -783,7 +849,9 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.CLIENT}>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <Controller
                           name="clientId"
                           control={control}
@@ -811,7 +879,9 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.BRANCH}>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <Controller
                           name="branchId"
                           control={control}
@@ -839,7 +909,9 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.POSITION}>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
                         <Controller
                           name="positionId"
                           control={control}
@@ -1181,41 +1253,289 @@ export default function EmployeeDetail() {
               },
               {
                 key: "govids",
-                label: "Gov't IDs",
+                label: "Gov't IDs & Rates",
                 forceRender: true,
                 children: (
-                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
-                    <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
-                      <Controller
-                        name="sssNo"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
+                  <div className="pt-4 flex flex-col gap-3">
+                    {/* SSS */}
+                    <Card size="small" title="SSS">
+                      <div className="form-grid-2">
+                        <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
+                          <Controller
+                            name="sssNo"
+                            control={control}
+                            render={({ field }) => <Input {...field} />}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Computation Basis">
+                          <Controller
+                            name="sssRate.computationType"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                options={COMPUTATION_BASIS_OPTIONS}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="EE Rate">
+                          <Controller
+                            name="sssRate.eE"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="ER Rate">
+                          <Controller
+                            name="sssRate.eR"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="EC">
+                          <Controller
+                            name="sssRate.eC"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Add-Ons">
+                          <Controller
+                            name="sssRate.addOns"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                      </div>
+                    </Card>
 
-                    <Form.Item label={EMPLOYEE_LABEL.PHIC_NO}>
-                      <Controller
-                        name="phicNo"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
+                    {/* PhilHealth */}
+                    <Card size="small" title="PhilHealth (PHIC)">
+                      <div className="form-grid-2">
+                        <Form.Item label={EMPLOYEE_LABEL.PHIC_NO}>
+                          <Controller
+                            name="phicNo"
+                            control={control}
+                            render={({ field }) => <Input {...field} />}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Computation Basis">
+                          <Controller
+                            name="phicRate.computationType"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                options={COMPUTATION_BASIS_OPTIONS}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="EE Rate">
+                          <Controller
+                            name="phicRate.eE"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="ER Rate">
+                          <Controller
+                            name="phicRate.eR"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Add-Ons" className="col-span-2">
+                          <Controller
+                            name="phicRate.addOns"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                      </div>
+                    </Card>
 
-                    <Form.Item label={EMPLOYEE_LABEL.HDMF_NO}>
-                      <Controller
-                        name="hdmfNo"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
+                    {/* Pag-IBIG */}
+                    <Card size="small" title="Pag-IBIG (HDMF)">
+                      <div className="form-grid-2">
+                        <Form.Item label={EMPLOYEE_LABEL.HDMF_NO}>
+                          <Controller
+                            name="hdmfNo"
+                            control={control}
+                            render={({ field }) => <Input {...field} />}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Computation Basis">
+                          <Controller
+                            name="hdmfRate.computationType"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                options={COMPUTATION_BASIS_OPTIONS}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="EE Rate">
+                          <Controller
+                            name="hdmfRate.eE"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="ER Rate">
+                          <Controller
+                            name="hdmfRate.eR"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Add-Ons" className="col-span-2">
+                          <Controller
+                            name="hdmfRate.addOns"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                      </div>
+                    </Card>
 
-                    <Form.Item label={EMPLOYEE_LABEL.TIN}>
-                      <Controller
-                        name="tin"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
+                    {/* Tax / BIR */}
+                    <Card size="small" title="Income Tax (BIR)">
+                      <div className="form-grid-2">
+                        <Form.Item label={EMPLOYEE_LABEL.TIN}>
+                          <Controller
+                            name="tin"
+                            control={control}
+                            render={({ field }) => <Input {...field} />}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Computation Basis">
+                          <Controller
+                            name="taxRate.computationType"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                options={COMPUTATION_BASIS_OPTIONS}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="EE Rate">
+                          <Controller
+                            name="taxRate.eE"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Add-Ons">
+                          <Controller
+                            name="taxRate.addOns"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                {...field}
+                                className="w-full"
+                                min={0}
+                                step={0.01}
+                                precision={4}
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                      </div>
+                    </Card>
                   </div>
                 ),
               },
@@ -1295,6 +1615,66 @@ export default function EmployeeDetail() {
                   </div>
                 ),
               },
+              {
+                key: "dependents",
+                label: "Dependents",
+                disabled: !isEdit,
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <EmployeeDependentsTab employeeId={id} />
+                  </div>
+                ),
+              },
+              {
+                key: "education",
+                label: "Education",
+                disabled: !isEdit,
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <EmployeeEducationTab employeeId={id} />
+                  </div>
+                ),
+              },
+              {
+                key: "skills",
+                label: "Skills",
+                disabled: !isEdit,
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <EmployeeSkillsTab employeeId={id} />
+                  </div>
+                ),
+              },
+              {
+                key: "employment-history",
+                label: "Employment History",
+                disabled: !isEdit,
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <EmployeeEmploymentHistoryTab employeeId={id} />
+                  </div>
+                ),
+              },
+              {
+                key: "doc-records",
+                label: "Documents",
+                disabled: !isEdit,
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <EmployeeDocRecordsTab employeeId={id} />
+                  </div>
+                ),
+              },
+              {
+                key: "assets",
+                label: "Assets",
+                disabled: !isEdit,
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <EmployeeAssignAssetsTab employeeId={id} />
+                  </div>
+                ),
+              },
             ]}
           />
         </Card>
@@ -1315,6 +1695,16 @@ export default function EmployeeDetail() {
           </Space>
         </div>
       </Form>
+
+      {isEdit && id && show201 && (
+        <Suspense fallback={null}>
+          <Employee201Modal
+            employeeId={id}
+            open={show201}
+            onClose={() => setShow201(false)}
+          />
+        </Suspense>
+      )}
 
       <QuickAddDepartmentModal
         open={deptModalOpen}

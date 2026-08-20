@@ -71,6 +71,17 @@ export default function OtherIncomeTable({
         ),
     },
     {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 90,
+      render: (v: string) => (
+        <Tag color={v === "Active" ? "success" : "default"}>
+          {v ?? "Active"}
+        </Tag>
+      ),
+    },
+    {
       title: "Actions",
       key: "actions",
       width: 100,

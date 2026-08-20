@@ -37,7 +37,7 @@
   --bg-chip: #1a2e28;
   --bg-hover: #1d3530;
   --bg-toolbar: rgba(17, 31, 27, 0.98);
-  --bg-footer: rgba(17, 31, 27, 0.98);
+  --bg-footer: rgba(22, 40, 32, 0.98);
 
   --border-subtle: #1e3830;
   --border-chip: #244035;
@@ -79,13 +79,24 @@ body {
 
 /* ─── App shell ──────────────────────────────────────── */
 .app-shell {
-  @apply bg-transparent h-screen overflow-hidden;
+  @apply bg-transparent min-h-screen;
 }
 
 .app-sider {
-  @apply h-screen overflow-hidden;
+  position: sticky !important;
+  top: 0;
+  height: 100vh !important;
+  max-height: 100vh;
+  overflow: hidden;
+  align-self: flex-start;
   border-right: 1px solid var(--border-subtle);
   box-shadow: 0 8px 28px rgba(29, 160, 129, 0.08);
+}
+
+/* Mobile nav drawer */
+.ant-drawer.app-mobile-drawer .ant-drawer-content {
+  background: var(--bg-sider);
+  border-right: 1px solid var(--border-subtle);
 }
 
 .app-sider .ant-layout-sider-children {
@@ -269,7 +280,7 @@ body {
 
 /* ─── Header ─────────────────────────────────────────── */
 .app-header {
-  @apply min-h-[74px] flex items-center py-2.5;
+  @apply sticky top-0 z-30 min-h-[74px] flex items-center py-2.5 px-7;
   background: var(--bg-header) !important;
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-subtle);
@@ -328,7 +339,7 @@ body {
 
 /* ─── Main layout ────────────────────────────────────── */
 .app-main-layout {
-  @apply h-screen overflow-hidden;
+  @apply flex-1 min-w-0;
 }
 
 .app-content-surface {
@@ -339,30 +350,35 @@ body {
 
 /* ─── Content scroll ─────────────────────────────────── */
 .app-content-scroll {
-  @apply flex-1 min-h-0 overflow-y-auto overflow-x-hidden;
+  @apply flex-1;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
   scrollbar-gutter: stable;
 }
 
-.app-content-scroll:hover {
+html {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+html:hover {
   scrollbar-color: rgba(29, 160, 129, 0.3) transparent;
 }
 
-.app-content-scroll::-webkit-scrollbar {
+html::-webkit-scrollbar {
   width: 6px;
 }
 
-.app-content-scroll:not(:hover)::-webkit-scrollbar-thumb {
+html:not(:hover)::-webkit-scrollbar-thumb {
   background: transparent;
 }
 
-.app-content-scroll:hover::-webkit-scrollbar-thumb {
+html:hover::-webkit-scrollbar-thumb {
   background: rgba(29, 160, 129, 0.3);
   border-radius: 4px;
 }
 
-.app-content-scroll::-webkit-scrollbar-track {
+html::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -372,13 +388,10 @@ body {
 }
 
 .page-toolbar {
-  @apply sticky z-20;
-  top: -24px;
   margin: -24px -24px 0;
   padding: 16px 24px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-toolbar);
-  backdrop-filter: blur(8px);
 }
 
 .page-toolbar-row {
@@ -393,7 +406,7 @@ body {
 /* ─── Section jump bar ───────────────────────────────── */
 .section-jump-bar {
   @apply sticky z-[18] flex flex-wrap gap-2;
-  top: 56px;
+  top: 74px;
   padding: 10px 0 4px;
   background: linear-gradient(180deg, var(--bg-surface), transparent);
 }
@@ -418,7 +431,7 @@ body {
 }
 
 .form-section-anchor {
-  @apply scroll-mt-[132px];
+  @apply scroll-mt-[112px];
 }
 
 .form-section-card {
@@ -436,18 +449,39 @@ body {
   @apply grid grid-cols-2 gap-x-4;
 }
 
+.form-grid-3 {
+  @apply grid grid-cols-3 gap-x-4;
+}
+
+.form-grid-4 {
+  @apply grid grid-cols-4 gap-x-4;
+}
+
 .form-action-footer {
   @apply sticky z-[22];
   bottom: -24px;
   margin: 8px -24px -24px;
   padding: 12px 24px;
-  border-top: 1px solid var(--border-subtle);
   background: var(--bg-footer);
   backdrop-filter: blur(8px);
 }
 
 .form-action-footer-row {
   @apply w-full flex justify-end items-center gap-2;
+}
+
+/* ─── Browser autofill dark-mode fix ────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--ant-color-bg-container) inset !important;
+  -webkit-text-fill-color: var(--ant-color-text) !important;
+  caret-color: var(--ant-color-text);
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 /* ─── Auth ───────────────────────────────────────────── */
@@ -463,18 +497,23 @@ body {
       rgba(29, 160, 129, 0.13),
       transparent 34%
     ),
-    #f7fbfa;
+    var(--bg-body);
 }
 
 .auth-card {
   @apply rounded-[18px];
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-surface);
   box-shadow: 0 22px 44px rgba(29, 160, 129, 0.14);
+}
+
+.dark .auth-card {
+  background: var(--bg-surface);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.35);
 }
 
 .login-card {
   @apply overflow-hidden;
-  border: 1px solid #dff2ec;
+  border: 1px solid var(--border-subtle);
 }
 
 .login-header {
@@ -483,51 +522,54 @@ body {
 
 .login-icon-placeholder {
   @apply w-[74px] h-[74px] inline-flex items-center justify-center rounded-[20px] text-[28px];
-  border: 1px dashed #9ad6c5;
+  border: 1px dashed var(--border-chip);
   background:
     radial-gradient(
       circle at 30% 25%,
       rgba(29, 160, 129, 0.15),
       transparent 50%
     ),
-    #f5fcfa;
-  color: #2f7466;
+    var(--bg-chip);
+  color: var(--primary);
 }
 
 .login-kicker {
   @apply text-[11px] font-semibold uppercase tracking-[0.14em];
-  color: #348977;
+  color: var(--text-chip);
 }
 
 .login-title {
-  @apply m-0! text-[#1f4c43]!;
+  @apply m-0!;
+  color: var(--text-heading) !important;
 }
 
 .login-subtitle {
   @apply max-w-[280px] leading-[1.45];
-  color: #628178;
+  color: var(--text-secondary);
 }
 
 .login-form-item .ant-form-item-label > label {
   @apply font-semibold;
-  color: #335d54;
+  color: var(--text-base);
 }
 
 /* ─── Responsive ─────────────────────────────────────── */
 @media (max-width: 768px) {
   .app-header {
+    @apply px-3;
     height: auto;
     padding-top: 10px;
     padding-bottom: 10px;
   }
 
   .header-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
   }
 
-  .header-search-wrap {
-    display: none;
+  /* Hide search input but keep action buttons in the wrap */
+  .header-search {
+    display: none !important;
   }
 
   .header-context-subtitle {
@@ -547,7 +589,6 @@ body {
   }
 
   .page-toolbar {
-    top: -16px;
     margin: -16px -16px 0;
     padding: 12px 16px;
   }
@@ -561,11 +602,30 @@ body {
   }
 
   .section-jump-bar {
-    top: 48px;
+    top: 74px;
   }
 
   .form-grid-2 {
     @apply grid-cols-1;
+  }
+
+  .form-grid-3 {
+    @apply grid-cols-1;
+  }
+
+  .form-grid-4 {
+    @apply grid-cols-2;
+  }
+
+  /* Toolbar row: wrap title + buttons on narrow screens */
+  .page-toolbar-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Unwrap AntD Space so buttons wrap too */
+  .page-toolbar-row .ant-space {
+    flex-wrap: wrap;
   }
 
   .form-action-footer {

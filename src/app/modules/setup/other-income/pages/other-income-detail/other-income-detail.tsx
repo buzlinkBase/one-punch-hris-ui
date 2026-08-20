@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Button,
   Form,
@@ -38,6 +38,7 @@ import type { OtherIncomeTypeResponse } from "@/app/modules/setup/other-income-t
 import {
   INCOME_CLASS_OPTIONS,
   OTHER_INCOME_LABEL,
+  STATUS_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
@@ -128,29 +129,18 @@ function ManageIncomeTypesModal({
       destroyOnHidden
     >
       {/* Mini form */}
-      <div
-        style={{
-          background: "#fafafa",
-          border: "1px solid #f0f0f0",
-          borderRadius: 8,
-          padding: "12px 16px",
-          marginBottom: 16,
-        }}
-      >
-        <Text
-          strong
-          style={{ fontSize: 13, display: "block", marginBottom: 8 }}
-        >
+      <div className="rounded-lg border border-solid border-(--ant-color-border) bg-(--ant-color-fill-quaternary) px-4 py-3 mb-4">
+        <Text strong className="text-sm block mb-2">
           {editingId ? "Edit Type" : "Add New Type"}
         </Text>
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, marginBottom: 4 }}>Description</div>
+        <div className="flex gap-2 items-end">
+          <div className="flex-1">
+            <div className="text-xs mb-1">Description</div>
             <Input
               size="small"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. Allowance, Bonus"
+              placeholder="e.g. Allowance, Special Bonus"
               onPressEnter={handleSave}
             />
           </div>
@@ -214,6 +204,7 @@ export default function OtherIncomeDetail() {
       incomeClass: "Regular",
       incomeTypeId: undefined,
       isTaxable: false,
+      status: "Active",
     },
   });
 
@@ -225,6 +216,7 @@ export default function OtherIncomeDetail() {
         incomeClass: selected.incomeClass,
         incomeTypeId: selected.incomeTypeId ?? undefined,
         isTaxable: selected.isTaxable,
+        status: selected.status ?? "Active",
       });
     }
   }, [selected, isEdit, reset]);
@@ -265,7 +257,7 @@ export default function OtherIncomeDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-2 gap-x-6">
+          <div className="form-grid-2">
             <Form.Item
               label={OTHER_INCOME_LABEL.CODE}
               validateStatus={errors.code ? "error" : ""}
@@ -295,7 +287,7 @@ export default function OtherIncomeDetail() {
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6">
+          <div className="form-grid-2">
             <Form.Item
               label={OTHER_INCOME_LABEL.INCOME_CLASS}
               validateStatus={errors.incomeClass ? "error" : ""}
@@ -349,20 +341,36 @@ export default function OtherIncomeDetail() {
             </Form.Item>
           </div>
 
-          <Form.Item label={OTHER_INCOME_LABEL.IS_TAXABLE}>
-            <Controller
-              name="isTaxable"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  checked={field.value}
-                  onChange={field.onChange}
-                  checkedChildren="Taxable"
-                  unCheckedChildren="Non-Taxable"
-                />
-              )}
-            />
-          </Form.Item>
+          <div className="form-grid-2">
+            <Form.Item label={OTHER_INCOME_LABEL.IS_TAXABLE}>
+              <Controller
+                name="isTaxable"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onChange={field.onChange}
+                    checkedChildren="Taxable"
+                    unCheckedChildren="Non-Taxable"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={OTHER_INCOME_LABEL.STATUS}
+              validateStatus={errors.status ? "error" : ""}
+              help={errors.status?.message}
+            >
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <Select {...field} options={STATUS_OPTIONS} />
+                )}
+              />
+            </Form.Item>
+          </div>
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">

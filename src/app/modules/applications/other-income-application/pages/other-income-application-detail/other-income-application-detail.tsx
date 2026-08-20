@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -107,7 +107,7 @@ const scheduleColumns: ColumnsType<ScheduleRow> = [
     key: "amount",
     align: "right",
     render: (v: number) =>
-      v.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
   },
 ];
 
@@ -504,7 +504,7 @@ export default function OtherIncomeApplicationDetail() {
                   {schedule.length} payments · Total:{" "}
                   <strong>
                     ₱
-                    {totalAmount.toLocaleString("en-PH", {
+                    {(totalAmount ?? 0).toLocaleString("en-PH", {
                       minimumFractionDigits: 2,
                     })}
                   </strong>
@@ -528,7 +528,7 @@ export default function OtherIncomeApplicationDetail() {
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={2} align="right">
                         <strong>
-                          {tot.toLocaleString("en-PH", {
+                          {(tot ?? 0).toLocaleString("en-PH", {
                             minimumFractionDigits: 2,
                           })}
                         </strong>

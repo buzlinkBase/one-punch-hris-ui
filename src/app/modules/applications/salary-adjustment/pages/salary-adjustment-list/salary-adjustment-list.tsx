@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import {
   Button,
   Popconfirm,
@@ -95,7 +95,7 @@ export default function SalaryAdjustmentList() {
       key: "amount",
       align: "right",
       render: (v: number) =>
-        v.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+        (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
     },
     {
       title: "Remarks",

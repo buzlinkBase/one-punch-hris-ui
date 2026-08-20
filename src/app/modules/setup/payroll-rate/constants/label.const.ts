@@ -15,6 +15,7 @@ export const BUILDING_BLOCKS = new Set([
   "SPECIAL_WORKING",
   "SPECIAL_NON_WORKING",
   "RESTDAY_SPECIAL",
+  "HOLIDAY_OT",
 ]);
 
 export const RATE_TYPE_LABEL: Record<string, string> = {
@@ -27,12 +28,14 @@ export const RATE_TYPE_LABEL: Record<string, string> = {
   SPECIAL_WORKING: "Special Working Holiday",
   SPECIAL_NON_WORKING: "Special Non-Working Holiday",
   RESTDAY_SPECIAL: "Rest Day + Special Holiday",
+  HOLIDAY_OT: "Holiday / Rest Day OT Premium",
 };
 
 export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
   REGULAR: "Base multiplier for regular working hours.",
   NIGHTDIFF: "Applied to hours worked between 10 PM and 6 AM.",
-  OVERTIME: "Applied to hours worked beyond the regular shift.",
+  OVERTIME:
+    "Applied to hours worked beyond the regular shift (regular days only).",
   RESTDAY_DUTY: "Applied when an employee works on their designated rest day.",
   LEGAL_HOLIDAY: "Pay for unworked legal holidays (no-work, paid).",
   LEGAL_HOLIDAY_DUTY: "Applied when an employee works on a legal holiday.",
@@ -41,6 +44,8 @@ export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
     "Applied when an employee works on a special non-working holiday.",
   RESTDAY_SPECIAL:
     "Applied when an employee works on both a rest day and special holiday.",
+  HOLIDAY_OT:
+    "OT premium multiplied on top of the day's rate for overtime on rest days and holidays. DOLE default: ×1.30.",
 };
 
 export const BASE_RATE_DEFAULTS: Record<string, number> = {
@@ -53,6 +58,7 @@ export const BASE_RATE_DEFAULTS: Record<string, number> = {
   SPECIAL_WORKING: 1.0,
   SPECIAL_NON_WORKING: 1.3,
   RESTDAY_SPECIAL: 1.5,
+  HOLIDAY_OT: 1.3,
 };
 
 // Ordered list for display
@@ -60,6 +66,7 @@ export const BASE_RATE_KEYS = [
   "REGULAR",
   "NIGHTDIFF",
   "OVERTIME",
+  "HOLIDAY_OT",
   "RESTDAY_DUTY",
   "LEGAL_HOLIDAY",
   "LEGAL_HOLIDAY_DUTY",

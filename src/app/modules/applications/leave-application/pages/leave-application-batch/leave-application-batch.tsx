@@ -1,4 +1,4 @@
-import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
+﻿import { useForm, useFieldArray, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -286,7 +286,7 @@ export default function LeaveApplicationBatch() {
 
           {/* Single Day */}
           {mode === "singleday" && (
-            <div className="grid grid-cols-2 gap-x-6" style={{ maxWidth: 520 }}>
+            <div className="form-grid-2" style={{ maxWidth: 520 }}>
               <Form.Item
                 label="Leave Date"
                 validateStatus={errors.leaveDate ? "error" : ""}
@@ -382,10 +382,7 @@ export default function LeaveApplicationBatch() {
               </Form.Item>
 
               {partialMode === "hours" ? (
-                <div
-                  className="grid grid-cols-2 gap-x-6"
-                  style={{ maxWidth: 480 }}
-                >
+                <div className="form-grid-2" style={{ maxWidth: 480 }}>
                   <Form.Item
                     label="Leave Date"
                     validateStatus={errors.leaveDate ? "error" : ""}
@@ -424,7 +421,7 @@ export default function LeaveApplicationBatch() {
                   </Form.Item>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-x-6">
+                <div className="form-grid-3">
                   <Form.Item
                     label="Leave Date"
                     validateStatus={errors.leaveDate ? "error" : ""}

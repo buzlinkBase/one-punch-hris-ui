@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   Button,
   DatePicker,
@@ -129,7 +129,7 @@ function EditPassSlip({ id }: { id: string }) {
         </div>
       )}
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-2 gap-x-6">
+        <div className="form-grid-2">
           <Form.Item
             label="Employee"
             validateStatus={errors.employeeId ? "error" : ""}
@@ -287,7 +287,7 @@ function CreatePassSlip() {
     <div className="form-page-body">
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         {/* ── Shared header ── */}
-        <div className="grid grid-cols-2 gap-x-6">
+        <div className="form-grid-2">
           <Form.Item
             label="Employee"
             validateStatus={errors.employeeId ? "error" : ""}
@@ -381,12 +381,8 @@ function CreatePassSlip() {
                     {index + 1}.
                   </Text>
                   <div
-                    style={{
-                      flex: 1,
-                      display: "grid",
-                      gridTemplateColumns: "180px 1fr",
-                      gap: 8,
-                    }}
+                    className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2"
+                    style={{ flex: 1 }}
                   >
                     <Form.Item
                       style={{ marginBottom: 0 }}

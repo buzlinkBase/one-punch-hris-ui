@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   Form,
   Input,
@@ -230,7 +230,7 @@ export default function OvertimeApplicationDetail() {
       <div className="form-page-body">
         {isEdit && selected && (
           <Card size="small" className="mb-4">
-            <Descriptions size="small" column={2}>
+            <Descriptions size="small" column={{ xs: 1, sm: 2 }}>
               <Descriptions.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>
                 <Tag color={STATUS_COLOR[selected.approvalStatus] ?? "default"}>
                   {selected.approvalStatus === "ForApproval"
@@ -248,7 +248,7 @@ export default function OvertimeApplicationDetail() {
         )}
 
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-3 gap-x-6">
+          <div className="form-grid-3">
             <Form.Item
               label={OVERTIME_APPLICATION_LABEL.EMPLOYEE}
               validateStatus={errors.employeeId ? "error" : ""}
@@ -305,7 +305,7 @@ export default function OvertimeApplicationDetail() {
           </div>
 
           {mode === "datetime" ? (
-            <div className="grid grid-cols-2 gap-x-6">
+            <div className="form-grid-2">
               <Form.Item
                 label={OVERTIME_APPLICATION_LABEL.START_TIME}
                 validateStatus={errors.startTime ? "error" : ""}
@@ -361,7 +361,7 @@ export default function OvertimeApplicationDetail() {
                 render={({ field }) => (
                   <InputNumber
                     {...field}
-                    style={{ width: 200 }}
+                    style={{ width: "100%", maxWidth: 240 }}
                     min={0.25}
                     max={24}
                     step={0.25}

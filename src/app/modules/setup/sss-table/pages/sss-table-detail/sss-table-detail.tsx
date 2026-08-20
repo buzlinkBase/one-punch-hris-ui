@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   Form,
   Button,
@@ -162,7 +162,7 @@ export default function SssTableDetail() {
           {isEdit && selected && (
             <Descriptions size="small" bordered column={1}>
               <Descriptions.Item label={SSS_TABLE_LABEL.TOTAL}>
-                {selected.totalContibution.toLocaleString("en-PH", {
+                {(selected.totalContibution ?? 0).toLocaleString("en-PH", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

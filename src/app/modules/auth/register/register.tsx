@@ -74,7 +74,7 @@ export default function Register() {
             Open it to activate your account before signing in.
           </Text>
         </div>
-        <div style={{ textAlign: "center" }}>
+        <div className="text-center">
           <Link to="/login">Back to sign in</Link>
         </div>
       </Card>
@@ -100,9 +100,7 @@ export default function Register() {
       </div>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0 16px" }}
-        >
+        <div className="grid grid-cols-1">
           <Form.Item
             label="First Name"
             validateStatus={errors.name ? "error" : ""}

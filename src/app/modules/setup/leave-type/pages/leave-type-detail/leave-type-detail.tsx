@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   Form,
   Input,
@@ -408,7 +408,7 @@ export default function LeaveTypeDetail() {
           <div className="grid grid-cols-1 gap-4">
             {/* ── Basic Information ───────────────────────────────────────────── */}
             <Card size="small" title={sectionTitle("Basic Information")}>
-              <div className="grid grid-cols-2 gap-x-6">
+              <div className="form-grid-2">
                 {fi(
                   LEAVE_TYPE_LABEL.CODE,
                   "code",
@@ -456,7 +456,7 @@ export default function LeaveTypeDetail() {
                 TIPS.description,
               )}
 
-              <div className="grid grid-cols-2 gap-x-6">
+              <div className="form-grid-2">
                 {fi(
                   "Legal Basis",
                   "legalBasis",
@@ -511,7 +511,7 @@ export default function LeaveTypeDetail() {
 
             {/* ── Pay & Source ────────────────────────────────────────────────── */}
             <Card size="small" title={sectionTitle("Pay & Source")}>
-              <div className="grid grid-cols-2 gap-x-6">
+              <div className="form-grid-2">
                 {fi(
                   LEAVE_TYPE_LABEL.PAY_SOURCE,
                   "paySource",
@@ -555,7 +555,7 @@ export default function LeaveTypeDetail() {
 
             {/* ── Accrual & Reset ─────────────────────────────────────────────── */}
             <Card size="small" title={sectionTitle("Accrual & Reset")}>
-              <div className="grid grid-cols-3 gap-x-6">
+              <div className="form-grid-3">
                 {fi(
                   "Accrual Basis",
                   "accrualBasis",
@@ -628,7 +628,7 @@ export default function LeaveTypeDetail() {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-x-6">
+              <div className="form-grid-3">
                 {fi(
                   "Reset Policy",
                   "leaveReset",
@@ -663,7 +663,7 @@ export default function LeaveTypeDetail() {
 
             {/* ── Eligibility ──────────────────────────────────────────────────── */}
             <Card size="small" title={sectionTitle("Eligibility")}>
-              <div className="grid grid-cols-3 gap-x-6">
+              <div className="form-grid-3">
                 {fi(
                   "Minimum Service (months)",
                   "minServiceMonths",
@@ -733,7 +733,7 @@ export default function LeaveTypeDetail() {
 
             {/* ── Application Rules ────────────────────────────────────────────── */}
             <Card size="small" title={sectionTitle("Application Rules")}>
-              <div className="grid grid-cols-3 gap-x-6">
+              <div className="form-grid-3">
                 {fi(
                   "Max Days per Year",
                   "maxDaysPerYear",
@@ -829,7 +829,7 @@ export default function LeaveTypeDetail() {
               size="small"
               title={sectionTitle("Carry-Over & Cash Conversion")}
             >
-              <div className="grid grid-cols-3 gap-x-6">
+              <div className="form-grid-3">
                 {fi(
                   "Carry-Over Type",
                   "carryOverType",
@@ -904,7 +904,7 @@ export default function LeaveTypeDetail() {
               </div>
 
               {convertToCash && (
-                <div className="grid grid-cols-3 gap-x-6">
+                <div className="form-grid-3">
                   {fi(
                     "Cash Conversion Rate",
                     "cashConversionRate",

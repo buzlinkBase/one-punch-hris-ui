@@ -4,4 +4,5 @@ export interface CreateOtherIncome {
   incomeClass: string;
   incomeTypeId?: string;
   isTaxable: boolean;
+  status: string;
 }

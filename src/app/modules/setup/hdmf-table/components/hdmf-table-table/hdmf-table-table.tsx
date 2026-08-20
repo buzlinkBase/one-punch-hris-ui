@@ -1,4 +1,4 @@
-import { Table, Button, Space, Popconfirm } from "antd";
+﻿import { Table, Button, Space, Popconfirm } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const fmt = (v: number) =>
-  v.toLocaleString("en-PH", {
+  (v ?? 0).toLocaleString("en-PH", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

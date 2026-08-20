@@ -13,10 +13,10 @@ import { SearchOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { authStorage } from "@/core/auth/auth-storage";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import DtrBatchesCard from "./components/dtr-batches-card";
-import PayrollSnapshotCard from "./components/payroll-snapshot-card";
-import UpcomingHolidaysCard from "./components/upcoming-holidays-card";
-import PendingRequestsCard from "./components/pending-requests-card";
+import DtrBatchesCard from "./components/dtr-batches-card/dtr-batches-card";
+import PayrollSnapshotCard from "./components/payroll-snapshot-card/payroll-snapshot-card";
+import UpcomingHolidaysCard from "./components/upcoming-holidays-card/upcoming-holidays-card";
+import PendingRequestsCard from "./components/pending-requests-card/pending-requests-card";
 import { useDashboardOverview } from "./hooks/use-dashboard-queries";
 
 const { Title, Text } = Typography;
@@ -204,7 +204,7 @@ export default function Dashboard() {
   return (
     <div className="content-page">
       {/* Greeting */}
-      <div style={{ marginBottom: 24 }}>
+      <div className="mb-6">
         <Title level={4} style={{ margin: 0 }}>
           {getGreeting()}, {firstName}
         </Title>
@@ -214,27 +214,13 @@ export default function Dashboard() {
       </div>
 
       {/* Timekeeping + Payroll snapshot */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 280px",
-          gap: 16,
-          alignItems: "start",
-          marginBottom: 16,
-        }}
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 items-start mb-4">
         <DtrBatchesCard />
         <PayrollSnapshotCard />
       </div>
 
-      {/* Bottom row: directory, holidays, actions */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-        }}
-      >
+      {/* Bottom row: directory, holidays, pending */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <EmployeeDirectoryCard />
         <UpcomingHolidaysCard
           data={data?.upcomingHolidays ?? []}

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   Form,
   Input,
@@ -287,7 +287,7 @@ export default function TravelOrderDetail() {
 
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           {/* Row 1: Employee | Date Range | Entry Mode — mirrors OT's 3-col top row */}
-          <div className="grid grid-cols-3 gap-x-6">
+          <div className="form-grid-3">
             <Form.Item
               label={TRAVEL_ORDER_LABEL.EMPLOYEE}
               validateStatus={errors.employeeId ? "error" : ""}
@@ -350,7 +350,7 @@ export default function TravelOrderDetail() {
           </div>
 
           {/* Time entry group */}
-          <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-4 pt-4 pb-1 mb-6">
+          <div className="rounded-lg border border-(--ant-color-border) bg-(--ant-color-fill-quaternary) px-4 pt-4 pb-1 mb-6">
             {mode === "timerange" ? (
               <>
                 <Form.Item
@@ -391,7 +391,7 @@ export default function TravelOrderDetail() {
                   />
                 </Form.Item>
 
-                <div className="grid grid-cols-2 gap-x-6">
+                <div className="form-grid-2">
                   <Form.Item
                     label={TRAVEL_ORDER_LABEL.START_TIME}
                     validateStatus={errors.startTime ? "error" : ""}
@@ -468,7 +468,7 @@ export default function TravelOrderDetail() {
           </div>
 
           {/* Destination | Classification */}
-          <div className="grid grid-cols-2 gap-x-6">
+          <div className="form-grid-2">
             <Form.Item
               label={TRAVEL_ORDER_LABEL.DESTINATION}
               validateStatus={errors.destination ? "error" : ""}

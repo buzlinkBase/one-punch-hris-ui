@@ -198,9 +198,9 @@ export default function DtrGenerateTab() {
   ];
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       {contextHolder}
-      <div className="flex justify-end mb-3">
+      <div className="flex justify-end">
         <Space>
           <Dropdown
             menu={{ items: exportMenuItems }}
@@ -233,7 +233,7 @@ export default function DtrGenerateTab() {
       </div>
 
       {filtersOpen && (
-        <Card size="small" className="mb-4">
+        <Card size="small">
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4">
               <Form.Item
@@ -389,6 +389,6 @@ export default function DtrGenerateTab() {
         dateFrom={committedFilter?.fromDate}
         dateTo={committedFilter?.toDate}
       />
-    </>
+    </div>
   );
 }

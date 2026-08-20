@@ -160,6 +160,10 @@ const PayrollRateConfig = lazy(
   () => import("@/app/modules/setup/payroll-rate/pages/payroll-rate-config"),
 );
 
+const PayrollSettingsPage = lazy(
+  () => import("@/app/modules/setup/payroll-settings/pages/payroll-settings"),
+);
+
 const OtherIncomeTypeList = lazy(
   () =>
     import("@/app/modules/setup/other-income-type/pages/other-income-type-list"),
@@ -265,6 +269,7 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "annual-tax-table/$id", component: AnnualTaxTableDetail },
 
   { path: "payroll-rate", component: PayrollRateConfig },
+  { path: "payroll-settings", component: PayrollSettingsPage },
 
   { path: "other-income-type", component: OtherIncomeTypeList },
   { path: "other-income-type/create", component: OtherIncomeTypeDetail },

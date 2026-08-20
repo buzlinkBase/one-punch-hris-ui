@@ -20,6 +20,15 @@ export function useEmployee(id: string | undefined) {
   });
 }
 
+export function useEmployeeFull(id: string | undefined) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, id, "full"],
+    queryFn: () => employeeApi.getFullById(id!),
+    enabled: !!id,
+    staleTime: 0,
+  });
+}
+
 export function useCreateEmployee() {
   const queryClient = useQueryClient();
   return useMutation({

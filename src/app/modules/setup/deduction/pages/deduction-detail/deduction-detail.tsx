@@ -3,7 +3,6 @@ import {
   Button,
   Form,
   Input,
-  InputNumber,
   Modal,
   Popconfirm,
   Select,
@@ -110,7 +109,7 @@ function ManageDeductionTypesModal({
       render: (v) => (
         <Tag
           color={v === "ACTIVE" ? "success" : "default"}
-          style={{ fontSize: 11 }}
+          className="text-[11px]"
         >
           {v === "ACTIVE" ? "Active" : "Inactive"}
         </Tag>
@@ -156,31 +155,13 @@ function ManageDeductionTypesModal({
       destroyOnHidden
     >
       {/* Mini form */}
-      <div
-        style={{
-          background: "#fafafa",
-          border: "1px solid #f0f0f0",
-          borderRadius: 8,
-          padding: "12px 16px",
-          marginBottom: 16,
-        }}
-      >
-        <Text
-          strong
-          style={{ fontSize: 13, display: "block", marginBottom: 8 }}
-        >
+      <div className="rounded-lg border border-solid border-(--ant-color-border) bg-(--ant-color-fill-quaternary) px-4 py-3 mb-4">
+        <Text strong className="text-sm block mb-2">
           {editingId ? "Edit Type" : "Add New Type"}
         </Text>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 8,
-            marginBottom: 8,
-          }}
-        >
+        <div className="form-grid-2 gap-2 mb-2">
           <div>
-            <div style={{ fontSize: 12, marginBottom: 4 }}>Code</div>
+            <div className="text-xs mb-1">Code</div>
             <Input
               size="small"
               value={code}
@@ -189,7 +170,7 @@ function ManageDeductionTypesModal({
             />
           </div>
           <div>
-            <div style={{ fontSize: 12, marginBottom: 4 }}>Name</div>
+            <div className="text-xs mb-1">Name</div>
             <Input
               size="small"
               value={name}
@@ -198,13 +179,13 @@ function ManageDeductionTypesModal({
             />
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="flex items-center gap-2">
           <Select
             size="small"
             value={status}
             onChange={setStatus}
             options={STATUS_OPTIONS}
-            style={{ width: 120 }}
+            className="w-30"
           />
           <Button
             type="primary"
@@ -265,7 +246,6 @@ export default function DeductionDetail() {
       code: "",
       name: "",
       deductionTypeId: "",
-      amount: 0,
       status: "ACTIVE",
     },
   });
@@ -276,7 +256,6 @@ export default function DeductionDetail() {
         code: selected.code,
         name: selected.name,
         deductionTypeId: selected.deductionTypeId,
-        amount: selected.amount,
         status: selected.status,
       });
     }
@@ -370,26 +349,6 @@ export default function DeductionDetail() {
                   optionFilterProp="label"
                   options={deductionTypeOptions}
                   placeholder="Select deduction type"
-                />
-              )}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label={DEDUCTION_LABEL.AMOUNT}
-            validateStatus={errors.amount ? "error" : ""}
-            help={errors.amount?.message}
-          >
-            <Controller
-              name="amount"
-              control={control}
-              render={({ field }) => (
-                <InputNumber
-                  {...field}
-                  min={0}
-                  precision={2}
-                  prefix="₱"
-                  style={{ width: "100%" }}
                 />
               )}
             />

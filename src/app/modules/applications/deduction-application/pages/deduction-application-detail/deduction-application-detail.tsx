@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -135,7 +135,7 @@ const breakdownColumns: ColumnsType<BreakdownRow> = [
     key: "principal",
     align: "right",
     render: (v: number) =>
-      v.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
   },
   {
     title: "Interest",
@@ -143,7 +143,7 @@ const breakdownColumns: ColumnsType<BreakdownRow> = [
     key: "interest",
     align: "right",
     render: (v: number) =>
-      v.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
   },
   {
     title: "Payment",
@@ -151,7 +151,7 @@ const breakdownColumns: ColumnsType<BreakdownRow> = [
     key: "amount",
     align: "right",
     render: (v: number) =>
-      v.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
   },
   {
     title: "Balance",
@@ -159,7 +159,7 @@ const breakdownColumns: ColumnsType<BreakdownRow> = [
     key: "balance",
     align: "right",
     render: (v: number) =>
-      v.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
   },
 ];
 
@@ -601,7 +601,7 @@ export default function DeductionApplicationDetail() {
                   {breakdown.length} periods · Total:{" "}
                   <strong>
                     ₱
-                    {totalAmount.toLocaleString("en-PH", {
+                    {(totalAmount ?? 0).toLocaleString("en-PH", {
                       minimumFractionDigits: 2,
                     })}
                   </strong>
@@ -625,7 +625,9 @@ export default function DeductionApplicationDetail() {
                   const totInterest = rows.reduce((s, r) => s + r.interest, 0);
                   const totPayment = rows.reduce((s, r) => s + r.amount, 0);
                   const fmt = (v: number) =>
-                    v.toLocaleString("en-PH", { minimumFractionDigits: 2 });
+                    (v ?? 0).toLocaleString("en-PH", {
+                      minimumFractionDigits: 2,
+                    });
                   return (
                     <Table.Summary.Row>
                       <Table.Summary.Cell index={0} colSpan={2}>

@@ -1,7 +1,10 @@
 import httpClient from "@/core/http/http-client";
 import axiosInstance from "@/core/http/axios.instance";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
-import type { EmployeeResponse } from "../models/api/response/employee-response.model";
+import type {
+  EmployeeFullResponse,
+  EmployeeResponse,
+} from "../models/api/response/employee-response.model";
 import type { CreateEmployee } from "../models/api/request/create-employee.model";
 import type { UpdateEmployee } from "../models/api/request/update-employee.model";
 import type { PaginatedResponse } from "@/core/pagination-model";
@@ -23,6 +26,12 @@ export const employeeApi = {
 
   async getById(id: string): Promise<EmployeeResponse> {
     return httpClient.getUnwrapped<EmployeeResponse>(`${BASE_URL}/${id}`);
+  },
+
+  async getFullById(id: string): Promise<EmployeeFullResponse> {
+    return httpClient.getUnwrapped<EmployeeFullResponse>(
+      `${BASE_URL}/${id}/full`,
+    );
   },
 
   create(data: CreateEmployee): Promise<EmployeeResponse> {

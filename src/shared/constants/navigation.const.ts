@@ -168,150 +168,149 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     type: "group",
     children: [
       {
-        key: "setup",
-        label: "Setup",
+        key: "setup-group-shifts",
+        label: "Time Shifts",
+        type: "group",
         children: [
           {
-            key: "setup-group-shifts",
-            label: "Time Shifts",
-            type: "group",
-            children: [
-              {
-                key: "setup-fixed-shift",
-                label: "Fixed Shift",
-                path: "/setup/time-shift/fixed",
-              },
-              {
-                key: "setup-split-shift",
-                label: "Split/Broken Shift",
-                path: "/setup/time-shift/split",
-              },
-            ],
+            key: "setup-fixed-shift",
+            label: "Fixed Shift",
+            path: "/setup/time-shift/fixed",
           },
           {
-            key: "setup-group-org",
-            label: "Organization",
-            type: "group",
-            children: [
-              {
-                key: "setup-department",
-                label: "Department",
-                path: "/setup/department",
-              },
-              {
-                key: "setup-section",
-                label: "Section",
-                path: "/setup/section",
-              },
-              {
-                key: "setup-position",
-                label: "Position",
-                path: "/setup/position",
-              },
-              {
-                key: "setup-branch",
-                label: "Branch",
-                path: "/setup/branch",
-              },
-              {
-                key: "setup-project-site",
-                label: "Project Site",
-                path: "/setup/project-site",
-              },
-            ],
+            key: "setup-split-shift",
+            label: "Split/Broken Shift",
+            path: "/setup/time-shift/split",
+          },
+        ],
+      },
+      {
+        key: "setup-group-org",
+        label: "Organization",
+        type: "group",
+        children: [
+          {
+            key: "setup-department",
+            label: "Department",
+            path: "/setup/department",
           },
           {
-            key: "setup-group-workforce",
-            label: "Workforce",
-            type: "group",
-            children: [
-              {
-                key: "setup-client",
-                label: "Client",
-                path: "/setup/client",
-              },
-              {
-                key: "setup-payroll-group",
-                label: "Payroll Group",
-                path: "/setup/payroll-group",
-              },
-              {
-                key: "setup-employee",
-                label: "Employee",
-                path: "/setup/employee",
-              },
-            ],
+            key: "setup-section",
+            label: "Section",
+            path: "/setup/section",
           },
           {
-            key: "setup-group-policy",
-            label: "Policy",
-            type: "group",
-            children: [
-              {
-                key: "setup-holiday",
-                label: "Holiday",
-                path: "/setup/holiday",
-              },
-              {
-                key: "setup-leave-type",
-                label: "Leave Types",
-                path: "/setup/leave-type",
-              },
-              {
-                key: "setup-payroll-rate",
-                label: "Rate Multipliers",
-                path: "/setup/payroll-rate",
-              },
-            ],
+            key: "setup-position",
+            label: "Position",
+            path: "/setup/position",
           },
           {
-            key: "setup-group-deductions-income",
-            label: "Deductions & Income",
-            type: "group",
-            children: [
-              {
-                key: "setup-deduction",
-                label: "Deductions",
-                path: "/setup/deduction",
-              },
-              {
-                key: "setup-other-income",
-                label: "Other Income",
-                path: "/setup/other-income",
-              },
-            ],
+            key: "setup-branch",
+            label: "Branch",
+            path: "/setup/branch",
           },
           {
-            key: "setup-group-statutory",
-            label: "Statutory",
-            type: "group",
-            children: [
-              {
-                key: "setup-sss-table",
-                label: "SSS Table",
-                path: "/setup/sss-table",
-              },
-              {
-                key: "setup-phic-table",
-                label: "PHIC Table",
-                path: "/setup/phic-table",
-              },
-              {
-                key: "setup-hdmf-table",
-                label: "HDMF Table",
-                path: "/setup/hdmf-table",
-              },
-              {
-                key: "setup-wtax-table",
-                label: "WTax Table",
-                path: "/setup/wtax-table",
-              },
-              {
-                key: "setup-annual-tax-table",
-                label: "Annual Tax Table",
-                path: "/setup/annual-tax-table",
-              },
-            ],
+            key: "setup-project-site",
+            label: "Project Site",
+            path: "/setup/project-site",
+          },
+        ],
+      },
+      {
+        key: "setup-group-workforce",
+        label: "Workforce",
+        type: "group",
+        children: [
+          {
+            key: "setup-client",
+            label: "Client",
+            path: "/setup/client",
+          },
+          {
+            key: "setup-payroll-group",
+            label: "Payroll Group",
+            path: "/setup/payroll-group",
+          },
+          {
+            key: "setup-employee",
+            label: "Employee",
+            path: "/setup/employee",
+          },
+        ],
+      },
+      {
+        key: "setup-group-policy",
+        label: "Policy",
+        type: "group",
+        children: [
+          {
+            key: "setup-leave-type",
+            label: "Leave Types",
+            path: "/setup/leave-type",
+          },
+          {
+            key: "setup-holiday",
+            label: "Holidays",
+            path: "/setup/holiday",
+          },
+          {
+            key: "setup-payroll-rate",
+            label: "Rate Multipliers",
+            path: "/setup/payroll-rate",
+          },
+          {
+            key: "setup-payroll-settings",
+            label: "Payroll Settings",
+            path: "/setup/payroll-settings",
+          },
+        ],
+      },
+      {
+        key: "setup-group-deductions-income",
+        label: "Deductions & Income",
+        type: "group",
+        children: [
+          {
+            key: "setup-deduction",
+            label: "Deductions",
+            path: "/setup/deduction",
+          },
+          {
+            key: "setup-other-income",
+            label: "Other Income",
+            path: "/setup/other-income",
+          },
+        ],
+      },
+      {
+        key: "setup-group-statutory",
+        label: "Statutory",
+        type: "group",
+        children: [
+          {
+            key: "setup-sss-table",
+            label: "SSS Table",
+            path: "/setup/sss-table",
+          },
+          {
+            key: "setup-phic-table",
+            label: "PHIC Table",
+            path: "/setup/phic-table",
+          },
+          {
+            key: "setup-hdmf-table",
+            label: "HDMF Table",
+            path: "/setup/hdmf-table",
+          },
+          {
+            key: "setup-wtax-table",
+            label: "WTax Table",
+            path: "/setup/wtax-table",
+          },
+          {
+            key: "setup-annual-tax-table",
+            label: "Annual Tax Table",
+            path: "/setup/annual-tax-table",
           },
         ],
       },

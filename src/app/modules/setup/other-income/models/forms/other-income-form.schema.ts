@@ -6,6 +6,7 @@ export const otherIncomeFormSchema = z.object({
   incomeClass: z.string().min(1, "Income class is required"),
   incomeTypeId: z.string().optional(),
   isTaxable: z.boolean(),
+  status: z.string().min(1, "Status is required"),
 });
 
 export type OtherIncomeFormValues = z.infer<typeof otherIncomeFormSchema>;

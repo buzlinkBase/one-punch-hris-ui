@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Alert,
   App,
@@ -300,7 +300,7 @@ function CreateBatchForm() {
         }
       >
         <Form layout="vertical">
-          <div className="grid grid-cols-4 gap-x-4">
+          <div className="form-grid-4">
             <Form.Item label="Day-Off Date" required className="mb-3">
               <DatePicker
                 style={{ width: "100%" }}
@@ -424,7 +424,7 @@ function CreateBatchForm() {
         }
       >
         <Form layout="vertical">
-          <div className="grid grid-cols-2 gap-x-4">
+          <div className="form-grid-2">
             <Form.Item
               label={
                 <Space size={4}>

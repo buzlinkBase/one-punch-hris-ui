@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   App,
@@ -549,7 +549,7 @@ function CreateForm() {
         }
       >
         <Form layout="vertical">
-          <div className="grid grid-cols-3 gap-x-4">
+          <div className="form-grid-3">
             <Form.Item label="Branch" className="mb-3">
               <Select
                 placeholder="All branches"
@@ -678,7 +678,7 @@ function CreateForm() {
         }
       >
         <Form layout="vertical">
-          <div className="grid grid-cols-2 gap-x-8">
+          <div className="form-grid-2">
             <Form.Item
               label={WORK_ROTATION_LABEL.USE_TIME_SHIFT}
               required
@@ -702,10 +702,12 @@ function CreateForm() {
             </Form.Item>
 
             <Form.Item label="Payroll Dates" required className="mb-3">
-              <MultiDatePicker
-                value={payrollDates}
-                onChange={setPayrollDates}
-              />
+              <div style={{ overflowX: "auto" }}>
+                <MultiDatePicker
+                  value={payrollDates}
+                  onChange={setPayrollDates}
+                />
+              </div>
             </Form.Item>
           </div>
 

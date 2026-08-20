@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Button, DatePicker, Form, Modal, Space, theme } from "antd";
 import { ArrowRightOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -126,7 +126,7 @@ function ChangeRestDayForm({
   return (
     <>
       <Form layout="vertical">
-        <div className="grid grid-cols-2 gap-x-4">
+        <div className="form-grid-2">
           <Form.Item label="Old Rest Day Date" required className="mb-0">
             <DatePicker
               style={{ width: "100%" }}

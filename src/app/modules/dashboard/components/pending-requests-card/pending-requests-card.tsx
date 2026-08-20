@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card, Empty, Skeleton, Tag, Typography } from "antd";
+import { Card, Empty, Skeleton, Tag, Typography, theme } from "antd";
 import {
   CalendarOutlined,
   ClockCircleOutlined,
@@ -57,6 +57,7 @@ export default function PendingRequestsCard({
   data,
   loading,
 }: PendingRequestsCardProps) {
+  const { token } = theme.useToken();
   return (
     <Card size="small" className="h-full">
       <Title level={5} className="mb-4!">
@@ -83,7 +84,10 @@ export default function PendingRequestsCard({
                     {REQUEST_TYPE_ICON[req.type]}
                   </div>
                   <div className="min-w-0">
-                    <p className="m-0 text-sm font-medium text-gray-800 truncate">
+                    <p
+                      className="m-0 text-sm font-medium truncate"
+                      style={{ color: token.colorText }}
+                    >
                       {req.employeeName}
                     </p>
                     <Text type="secondary" className="text-xs">

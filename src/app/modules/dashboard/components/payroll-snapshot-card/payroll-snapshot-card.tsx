@@ -1,4 +1,4 @@
-import { Card, Skeleton, Typography, theme } from "antd";
+﻿import { Card, Skeleton, Typography, theme } from "antd";
 import { ArrowRightOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useNavigate } from "@tanstack/react-router";
@@ -200,7 +200,7 @@ const MOCK: PayrollRunResult[] = [
 ];
 
 const peso = (n: number) =>
-  "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
+  "₱" + (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
 function Line({
   label,

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   Form,
   Button,
@@ -176,7 +176,7 @@ export default function HdmfTableDetail() {
           {isEdit && selected && (
             <Descriptions size="small" bordered column={1}>
               <Descriptions.Item label={HDMF_TABLE_LABEL.TOTAL}>
-                {selected.totalContribution.toLocaleString("en-PH", {
+                {(selected.totalContribution ?? 0).toLocaleString("en-PH", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
