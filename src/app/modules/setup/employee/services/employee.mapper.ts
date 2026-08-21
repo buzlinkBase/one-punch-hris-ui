@@ -101,7 +101,7 @@ export const employeeMapper = {
       bioId: null,
       dateRegistered: dayjs().format("YYYY-MM-DD"),
       modeOfPayment: "ATM",
-      salaryType: "MONTHLY_VARIABLE",
+      salaryType: "VARIABLE",
       employmentStatus: "Probationary",
       monthlyRate: 0,
       dailyRate: 0,

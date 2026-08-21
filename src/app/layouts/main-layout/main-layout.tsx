@@ -917,7 +917,8 @@ export default function MainLayout() {
             </div>
           </div>
         </Header>
-        <Content className="app-content-surface app-content-scroll m-2 p-4 md:m-6 md:p-6 rounded-2xl min-h-70 relative">
+
+        <Content className="app-content-surface app-content-scroll m-2 p-4 md:m-6 md:p-6  min-h-70 relative">
           {!hrDb.ready ? (
             <ProvisioningScreen
               tenantName={sessionUser.tenantName}

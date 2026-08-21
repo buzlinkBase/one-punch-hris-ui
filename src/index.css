@@ -28,8 +28,8 @@
   --text-chip: #2f665b;
 }
 
-/* Dark overrides */
-.dark {
+/* Dark overrides — html.dark has specificity (0,1,1) which beats :root's (0,1,0) regardless of rule order */
+html.dark {
   --bg-body: #0e1c19;
   --bg-surface: #162820;
   --bg-sider: #111f1b;

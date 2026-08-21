@@ -1,5 +1,5 @@
 export type ModeOfPayment = "Cash" | "ATM";
-export type SalaryType = "DAILY" | "MONTHLY_VARIABLE" | "MONTHLY_FIXED";
+export type SalaryType = "VARIABLE" | "FIXED";
 export type EmploymentStatus =
   | "Regular"
   | "PartTime"
