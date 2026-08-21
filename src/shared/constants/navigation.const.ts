@@ -102,51 +102,51 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Payroll Summary",
         path: "/payroll/summary",
       },
+    ],
+  },
+  {
+    key: "applications",
+    label: "Applications",
+    children: [
       {
-        key: "applications",
-        label: "Applications",
-        children: [
-          {
-            key: "applications-leave",
-            label: "Leave",
-            path: "/applications/leave",
-          },
-          {
-            key: "applications-overtime",
-            label: "Overtime",
-            path: "/applications/overtime",
-          },
-          {
-            key: "applications-official-business",
-            label: "Official Business",
-            path: "/applications/official-business",
-          },
-          {
-            key: "applications-pass-slip",
-            label: "Pass Slip",
-            path: "/applications/pass-slip",
-          },
-          {
-            key: "applications-divider-1",
-            label: "",
-            type: "divider",
-          },
-          {
-            key: "applications-deduction",
-            label: "Loans & Deductions",
-            path: "/applications/deduction-application",
-          },
-          {
-            key: "applications-other-income",
-            label: "Other Income",
-            path: "/applications/other-income",
-          },
-          {
-            key: "applications-salary-adjustment",
-            label: "Salary Adjustments",
-            path: "/applications/salary-adjustment",
-          },
-        ],
+        key: "applications-leave",
+        label: "Leave",
+        path: "/applications/leave",
+      },
+      {
+        key: "applications-overtime",
+        label: "Overtime",
+        path: "/applications/overtime",
+      },
+      {
+        key: "applications-official-business",
+        label: "Official Business",
+        path: "/applications/official-business",
+      },
+      {
+        key: "applications-pass-slip",
+        label: "Pass Slip",
+        path: "/applications/pass-slip",
+      },
+      {
+        key: "applications-divider-1",
+        label: "",
+        type: "divider",
+      },
+      {
+        key: "applications-deduction",
+        label: "Loans & Deductions",
+        path: "/applications/deduction-application",
+      },
+      {
+        key: "applications-other-income",
+        label: "Other Income",
+        path: "/applications/other-income",
+      },
+      {
+        key: "applications-salary-adjustment",
+        label: "Salary Adjustments",
+        path: "/applications/salary-adjustment",
       },
     ],
   },
