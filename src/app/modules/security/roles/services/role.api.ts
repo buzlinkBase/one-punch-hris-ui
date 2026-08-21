@@ -6,32 +6,13 @@ import type { UpdateRole } from "../models/api/request/update-role.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "roles");
 
-const MOCK_ROLES: RoleResponse[] = [
-  { id: "role-1", roleName: "Administrator", status: "ACTIVE" },
-  { id: "role-2", roleName: "Manager", status: "ACTIVE" },
-  { id: "role-3", roleName: "Supervisor", status: "ACTIVE" },
-  { id: "role-4", roleName: "Payroll Encoder", status: "ACTIVE" },
-  { id: "role-5", roleName: "Timekeeper", status: "INACTIVE" },
-];
-
 export const roleApi = {
   async getAll(): Promise<RoleResponse[]> {
-    try {
-      const data = await httpClient.getUnwrapped<RoleResponse[]>(ENDPOINT);
-      return data.length ? data : MOCK_ROLES;
-    } catch {
-      return MOCK_ROLES;
-    }
+    return httpClient.getUnwrapped<RoleResponse[]>(ENDPOINT);
   },
 
   async getById(id: string): Promise<RoleResponse> {
-    try {
-      return await httpClient.getUnwrapped<RoleResponse>(`${ENDPOINT}/${id}`);
-    } catch {
-      const match = MOCK_ROLES.find((item) => item.id === id);
-      if (match) return match;
-      throw new Error(`Role ${id} not found`);
-    }
+    return httpClient.getUnwrapped<RoleResponse>(`${ENDPOINT}/${id}`);
   },
 
   create(data: CreateRole): Promise<RoleResponse> {
