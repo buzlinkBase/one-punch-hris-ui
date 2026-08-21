@@ -63,7 +63,7 @@ export const employeeFormSchema = z.object({
 
   // Compensation
   modeOfPayment: z.enum(["Cash", "ATM"]),
-  salaryType: z.enum(["DAILY", "MONTHLY_VARIABLE", "MONTHLY_FIXED"]),
+  salaryType: z.enum(["VARIABLE", "FIXED"]),
   monthlyRate: z.coerce.number().optional(),
   dailyRate: z.coerce.number().optional(),
   cola: z.coerce.number().optional(),

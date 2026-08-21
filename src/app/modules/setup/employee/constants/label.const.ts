@@ -54,8 +54,8 @@ export const MODE_OF_PAYMENT_OPTIONS = [
 ];
 
 export const SALARY_TYPE_OPTIONS = [
-  { value: "MONTHLY_VARIABLE", label: "Variable" },
-  { value: "MONTHLY_FIXED", label: "Fixed" },
+  { value: "VARIABLE", label: "Variable" },
+  { value: "FIXED", label: "Fixed" },
 ];
 
 export const EMPLOYMENT_STATUS_OPTIONS = [
