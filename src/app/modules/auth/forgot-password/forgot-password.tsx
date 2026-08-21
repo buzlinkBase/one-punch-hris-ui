@@ -110,7 +110,7 @@ export default function ForgotPassword() {
           />
         </Form.Item>
 
-        <Form.Item className="!mb-4">
+        <Form.Item className="mb-4!">
           <Button
             type="primary"
             htmlType="submit"
@@ -123,7 +123,7 @@ export default function ForgotPassword() {
         </Form.Item>
       </Form>
 
-      <div style={{ textAlign: "center" }}>
+      <div className="text-center">
         <Link to="/login">Back to Sign In</Link>
       </div>
     </Card>

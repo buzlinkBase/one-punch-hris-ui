@@ -47,6 +47,38 @@ export const employeeMapper = {
       phicNo: response.phicNo ?? "",
       hdmfNo: response.hdmfNo ?? "",
       tin: response.tin ?? "",
+      sssRate: response.sssRate
+        ? {
+            computationType: response.sssRate.computationType ?? "None",
+            eE: response.sssRate.eE ?? 0,
+            eR: response.sssRate.eR ?? 0,
+            eC: response.sssRate.eC ?? 0,
+            addOns: response.sssRate.addOns ?? 0,
+          }
+        : { computationType: "None", eE: 0, eR: 0, eC: 0, addOns: 0 },
+      phicRate: response.phicRate
+        ? {
+            computationType: response.phicRate.computationType ?? "None",
+            eE: response.phicRate.eE ?? 0,
+            eR: response.phicRate.eR ?? 0,
+            addOns: response.phicRate.addOns ?? 0,
+          }
+        : { computationType: "None", eE: 0, eR: 0, addOns: 0 },
+      hdmfRate: response.hdmfRate
+        ? {
+            computationType: response.hdmfRate.computationType ?? "None",
+            eE: response.hdmfRate.eE ?? 0,
+            eR: response.hdmfRate.eR ?? 0,
+            addOns: response.hdmfRate.addOns ?? 0,
+          }
+        : { computationType: "None", eE: 0, eR: 0, addOns: 0 },
+      taxRate: response.taxRate
+        ? {
+            computationType: response.taxRate.computationType ?? "None",
+            eE: response.taxRate.eE ?? 0,
+            addOns: response.taxRate.addOns ?? 0,
+          }
+        : { computationType: "None", eE: 0, addOns: 0 },
       profileImg: response.profileImg ?? "",
       settings: {
         id: response.settings?.id,
@@ -69,12 +101,16 @@ export const employeeMapper = {
       bioId: null,
       dateRegistered: dayjs().format("YYYY-MM-DD"),
       modeOfPayment: "ATM",
-      salaryType: "MONTHLY_VARIABLE",
+      salaryType: "VARIABLE",
       employmentStatus: "Probationary",
       monthlyRate: 0,
       dailyRate: 0,
       cola: 0,
       restDays: [],
+      sssRate: { computationType: "None", eE: 0, eR: 0, eC: 0, addOns: 0 },
+      phicRate: { computationType: "None", eE: 0, eR: 0, addOns: 0 },
+      hdmfRate: { computationType: "None", eE: 0, eR: 0, addOns: 0 },
+      taxRate: { computationType: "None", eE: 0, addOns: 0 },
       settings: {
         isEligibleForOvertime: false,
         isEligibleForHolidayPay: false,

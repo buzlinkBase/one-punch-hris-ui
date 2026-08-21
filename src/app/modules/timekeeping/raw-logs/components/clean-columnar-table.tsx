@@ -50,8 +50,7 @@ export default function CleanColumnarTable({ data, loading }: Props) {
     shiftName: 110,
     shiftStart: 90,
     shiftEnd: 90,
-    breakOut: 90,
-    breakIn: 90,
+
     ...Object.fromEntries(
       Array.from({ length: 20 }, (_, i) => [`log${i + 1}`, 80]),
     ),
@@ -81,17 +80,6 @@ export default function CleanColumnarTable({ data, loading }: Props) {
 
   const fixedColumns: ColumnsType<CleanAttendanceLogColumnar> = [
     {
-      title: "Emp No",
-      dataIndex: "empNo",
-      key: "empNo",
-      width: widths.empNo,
-      onHeaderCell: () =>
-        ({
-          width: widths.empNo,
-          onResize: (w: number) => handleResize("empNo", w),
-        }) as object,
-    },
-    {
       title: "Full Name",
       dataIndex: "fullName",
       key: "fullName",
@@ -101,6 +89,17 @@ export default function CleanColumnarTable({ data, loading }: Props) {
         ({
           width: widths.fullName,
           onResize: (w: number) => handleResize("fullName", w),
+        }) as object,
+    },
+    {
+      title: "Emp No",
+      dataIndex: "empNo",
+      key: "empNo",
+      width: widths.empNo,
+      onHeaderCell: () =>
+        ({
+          width: widths.empNo,
+          onResize: (w: number) => handleResize("empNo", w),
         }) as object,
     },
     {
@@ -161,32 +160,6 @@ export default function CleanColumnarTable({ data, loading }: Props) {
           onResize: (w: number) => handleResize("shiftEnd", w),
         }) as object,
       render: (v: string, record: CleanAttendanceLogColumnar) =>
-        renderTime(v, record.workDate),
-    },
-    {
-      title: "Break Out",
-      dataIndex: "breakOut",
-      key: "breakOut",
-      width: widths.breakOut,
-      onHeaderCell: () =>
-        ({
-          width: widths.breakOut,
-          onResize: (w: number) => handleResize("breakOut", w),
-        }) as object,
-      render: (v: string | null, record: CleanAttendanceLogColumnar) =>
-        renderTime(v, record.workDate),
-    },
-    {
-      title: "Break In",
-      dataIndex: "breakIn",
-      key: "breakIn",
-      width: widths.breakIn,
-      onHeaderCell: () =>
-        ({
-          width: widths.breakIn,
-          onResize: (w: number) => handleResize("breakIn", w),
-        }) as object,
-      render: (v: string | null, record: CleanAttendanceLogColumnar) =>
         renderTime(v, record.workDate),
     },
   ];

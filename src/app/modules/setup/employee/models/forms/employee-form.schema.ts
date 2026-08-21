@@ -63,7 +63,7 @@ export const employeeFormSchema = z.object({
 
   // Compensation
   modeOfPayment: z.enum(["Cash", "ATM"]),
-  salaryType: z.enum(["DAILY", "MONTHLY_VARIABLE", "MONTHLY_FIXED"]),
+  salaryType: z.enum(["VARIABLE", "FIXED"]),
   monthlyRate: z.coerce.number().optional(),
   dailyRate: z.coerce.number().optional(),
   cola: z.coerce.number().optional(),
@@ -75,6 +75,40 @@ export const employeeFormSchema = z.object({
   phicNo: z.string().optional(),
   hdmfNo: z.string().optional(),
   tin: z.string().optional(),
+
+  // Statutory rates
+  sssRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      eR: z.coerce.number().optional(),
+      eC: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
+  phicRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      eR: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
+  hdmfRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      eR: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
+  taxRate: z
+    .object({
+      computationType: z.string().optional(),
+      eE: z.coerce.number().optional(),
+      addOns: z.coerce.number().optional(),
+    })
+    .optional(),
 
   // Profile
   profileImg: z.string().optional(),

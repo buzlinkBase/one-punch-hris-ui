@@ -1,4 +1,4 @@
-import { Card, Empty, Skeleton, Tag, Typography } from "antd";
+import { Card, Empty, Skeleton, Tag, Typography, theme } from "antd";
 import { CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { UpcomingHoliday } from "../../models/api/response/dashboard-response.model";
@@ -15,6 +15,7 @@ export default function UpcomingHolidaysCard({
   data,
   loading,
 }: UpcomingHolidaysCardProps) {
+  const { token } = theme.useToken();
   return (
     <Card size="small" className="h-full">
       <Title level={5} className="mb-4!">
@@ -28,11 +29,20 @@ export default function UpcomingHolidaysCard({
         <div className="flex flex-col gap-3">
           {data.map((holiday) => (
             <div key={holiday.id} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                style={{
+                  background: `${token.colorPrimary}15`,
+                  color: token.colorPrimary,
+                }}
+              >
                 <CalendarOutlined />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-sm font-medium text-gray-800 truncate">
+                <p
+                  className="m-0 text-sm font-medium truncate"
+                  style={{ color: token.colorText }}
+                >
                   {holiday.name}
                 </p>
                 <Text type="secondary" className="text-xs">

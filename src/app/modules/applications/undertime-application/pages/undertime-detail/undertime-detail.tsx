@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   Form,
   Input,
@@ -153,7 +153,7 @@ export default function UndertimeDetail() {
         />
 
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-2 gap-x-6">
+          <div className="form-grid-2">
             <Form.Item
               label={UNDERTIME_LABEL.EMPLOYEE}
               validateStatus={errors.employeeId ? "error" : ""}

@@ -14,9 +14,11 @@ import {
   useDeleteDtrBatch,
 } from "../../hooks/use-dtr-detail-queries";
 import DtrDetailTable from "../../components/dtr-detail-table";
-import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
-
-type AnyRow = Record<string, unknown>;
+import {
+  buildDtrCsv,
+  buildDtrExcel,
+  triggerDownload,
+} from "../../utils/dtr-export.utils";
 
 export default function DtrBatchTab() {
   const [selectedBatchCode, setSelectedBatchCode] = useState<
@@ -55,89 +57,8 @@ export default function DtrBatchTab() {
     label: item.code ?? "",
   }));
 
-  const toExportRows = (): AnyRow[] =>
-    records.map((r: DtrDetailResponse) => ({
-      Employee: r.fullName,
-      WorkType: r.workType,
-      WorkDate: r.workDate,
-      ShiftName: r.shiftName,
-      Start: r.startTime ? dayjs(r.startTime).format("HH:mm") : "",
-      End: r.endTime ? dayjs(r.endTime).format("HH:mm") : "",
-      Late_min: r.lateMinutes,
-      UT_min: r.utMinutes,
-      OverBreak_min: r.overMinutes,
-      Leave_hr: r.leaveHours,
-      Reg_hr: r.regularNetHours,
-      Reg_OT_hr: r.regularOTHours,
-      Reg_ND_hr: r.regularNDHours,
-      Reg_ND_OT_hr: r.regularNDOTHours,
-      RD_hr: r.restDayHours,
-      RD_OT_hr: r.restDayOTHours,
-      RD_ND_hr: r.restDayNDHours,
-      RD_ND_OT_hr: r.restDayNDOTHours,
-      LH_hr: r.legalHolHours,
-      LH_OT_hr: r.legalHolOTHours,
-      LH_ND_hr: r.legalHolNightDiffHours,
-      LH_ND_OT_hr: r.legalHolNightDiffOTHours,
-      SPH_hr: r.specialHolHours,
-      SPH_OT_hr: r.specialHolOTHours,
-      SPH_ND_hr: r.specialHolNightDiffHours,
-      SPH_ND_OT_hr: r.specialHolNightDiffOTHours,
-      RestLegal_hr: r.restLegalDayHours,
-      RestLegal_OT_hr: r.restLegalDayOTHours,
-      RestLegal_ND_hr: r.restLegalDayNDHours,
-      RestLegal_ND_OT_hr: r.restLegalDayNDOTHours,
-      RestSpecial_hr: r.restSpecialDayHours,
-      RestSpecial_OT_hr: r.restSpecialDayOTHours,
-      RestSpecial_ND_hr: r.restSpecialDayNDHours,
-      RestSpecial_ND_OT_hr: r.restSpecialDayNDOTHours,
-      DoubleLegal_hr: r.doubleLegalHours,
-      DoubleLegal_OT_hr: r.doubleLegalOTHours,
-      DoubleLegal_ND_hr: r.doubleLegalNDHours,
-      DoubleLegal_ND_OT_hr: r.doubleLegalNDOTHours,
-      RestDoubleLegal_hr: r.restDoubleLegalHours,
-      RestDoubleLegal_OT_hr: r.restDoubleLegalOTHours,
-      RestDoubleLegal_ND_hr: r.restDoubleLegalNDHours,
-      RestDoubleLegal_ND_OT_hr: r.restDoubleLegalNDOTHours,
-    }));
-
-  const buildCsv = (rows: AnyRow[]): string => {
-    if (!rows.length) return "";
-    const headers = Object.keys(rows[0]);
-    return [
-      headers.join(","),
-      ...rows.map((r) =>
-        headers
-          .map((h) => `"${String(r[h] ?? "").replaceAll('"', '""')}"`)
-          .join(","),
-      ),
-    ].join("\n");
-  };
-
-  const escapeHtml = (v: string) =>
-    v
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
-
-  const buildExcel = (rows: AnyRow[]): string => {
-    if (!rows.length) return "";
-    const headers = Object.keys(rows[0]);
-    const th = headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
-    const trs = rows
-      .map(
-        (r) =>
-          `<tr>${headers.map((h) => `<td>${escapeHtml(String(r[h] ?? ""))}</td>`).join("")}</tr>`,
-      )
-      .join("");
-    return `<html><head><meta charset="utf-8"/></head><body><table><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></body></html>`;
-  };
-
   const handleExport = (format: "csv" | "excel") => {
-    const rows = toExportRows();
-    if (!rows.length) {
+    if (!records.length) {
       messageApi.info("No data to export. Click Search first.");
       return;
     }
@@ -145,25 +66,17 @@ export default function DtrBatchTab() {
       ? selectedBatchCode.replace(/[^a-zA-Z0-9_-]/g, "_")
       : dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      const a = document.createElement("a");
-      a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(buildCsv(rows))}`;
-      a.download = `dtr-detail-${suffix}.csv`;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      triggerDownload(
+        buildDtrCsv(records),
+        `dtr-detail-${suffix}.csv`,
+        "text/plain",
+      );
     } else {
-      const blob = new Blob([buildExcel(rows)], {
-        type: "application/vnd.ms-excel;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `dtr-detail-${suffix}.xls`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      triggerDownload(
+        buildDtrExcel(records),
+        `dtr-detail-${suffix}.xls`,
+        "application/vnd.ms-excel;charset=utf-8;",
+      );
     }
   };
 
@@ -177,9 +90,9 @@ export default function DtrBatchTab() {
   ];
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       {contextHolder}
-      <div className="flex justify-end mb-3">
+      <div className="flex justify-end">
         <Space>
           <Popconfirm
             title="Delete batch"
@@ -211,7 +124,7 @@ export default function DtrBatchTab() {
         </Space>
       </div>
 
-      <div className="mb-4 flex gap-2" style={{ maxWidth: 660 }}>
+      <div className="flex gap-2" style={{ maxWidth: 660 }}>
         <Button
           icon={<ReloadOutlined />}
           loading={isLoadingCodes}
@@ -249,6 +162,6 @@ export default function DtrBatchTab() {
         onChanged={() => refetch()}
         readOnly
       />
-    </>
+    </div>
   );
 }

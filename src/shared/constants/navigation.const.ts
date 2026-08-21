@@ -2,7 +2,7 @@ export interface NavItem {
   key: string;
   label: string;
   path?: string;
-  type?: "group";
+  type?: "group" | "divider";
   children?: NavItem[];
 }
 
@@ -13,77 +13,141 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     path: "/dashboard",
   },
   {
-    key: "timekeeping",
+    key: "nav-dtr",
     label: "Time Keeping",
-    path: "/timekeeping",
+    type: "group",
     children: [
       {
-        key: "timekeeping-upload-attendance",
-        label: "Upload Attendance",
-        path: "/timekeeping/upload-attendance",
+        key: "daily-time-record",
+        label: "Time Records View",
+        children: [
+          {
+            key: "daily-time-record-master",
+            label: "Generate DTR",
+            path: "/daily-time-record/master",
+          },
+          {
+            key: "daily-time-record-summary",
+            label: "DTR Summary",
+            path: "/daily-time-record/summary",
+          },
+        ],
       },
       {
-        key: "timekeeping-attendance-entry",
-        label: "Attendance Entry",
-        path: "/timekeeping/attendance-entry",
+        key: "change-schedule",
+        label: "Change Schedule",
+        children: [
+          {
+            key: "change-schedule-work-rotation",
+            label: "Work Rotation Plan",
+            path: "/change-schedule/work-rotation",
+          },
+          {
+            key: "change-schedule-change-rest-day",
+            label: "Change Rest Day",
+            path: "/change-schedule/change-rest-day",
+          },
+          {
+            key: "change-schedule-change-holiday",
+            label: "Change Holiday",
+            path: "/change-schedule/change-holiday",
+          },
+        ],
       },
       {
-        key: "timekeeping-raw-logs",
-        label: "Raw Logs",
-        path: "/timekeeping/raw-logs",
-      },
-      {
-        key: "timekeeping-unregistered-employees",
-        label: "Unregistered Employees",
-        path: "/timekeeping/unregistered-employees",
-      },
-      {
-        key: "timekeeping-incomplete-punches",
-        label: "Incomplete Punches",
-        path: "/timekeeping/incomplete-punches",
+        key: "manage-logs",
+        label: "Logs Management",
+        children: [
+          {
+            key: "timekeeping-upload-attendance",
+            label: "Upload Attendance",
+            path: "/timekeeping/upload-attendance",
+          },
+          {
+            key: "timekeeping-attendance-entry",
+            label: "Manual Attendance Entry",
+            path: "/timekeeping/attendance-entry",
+          },
+          {
+            key: "timekeeping-raw-logs",
+            label: "Attendance Logs",
+            path: "/timekeeping/raw-logs",
+          },
+          {
+            key: "timekeeping-unregistered-employees",
+            label: "Unregistered Employees",
+            path: "/timekeeping/unregistered-employees",
+          },
+          {
+            key: "timekeeping-incomplete-punches",
+            label: "Incomplete Logs",
+            path: "/timekeeping/incomplete-punches",
+          },
+        ],
       },
     ],
   },
   {
-    key: "change-schedule",
-    label: "Change Schedule",
+    key: "nav-payroll",
+    label: "Payroll Generation",
+    type: "group",
     children: [
       {
-        key: "change-schedule-work-rotation",
-        label: "Work Rotation Plan",
-        path: "/change-schedule/work-rotation",
+        key: "payroll-run",
+        label: "Payroll Run",
+        path: "/daily-time-record/for-payroll",
       },
       {
-        key: "change-schedule-change-rest-day",
-        label: "Change Rest Day",
-        path: "/change-schedule/change-rest-day",
+        key: "payroll-summary",
+        label: "Payroll Summary",
+        path: "/payroll/summary",
       },
       {
-        key: "change-schedule-change-holiday",
-        label: "Change Holiday",
-        path: "/change-schedule/change-holiday",
+        key: "applications",
+        label: "Applications",
+        children: [
+          {
+            key: "applications-leave",
+            label: "Leave",
+            path: "/applications/leave",
+          },
+          {
+            key: "applications-overtime",
+            label: "Overtime",
+            path: "/applications/overtime",
+          },
+          {
+            key: "applications-official-business",
+            label: "Official Business",
+            path: "/applications/official-business",
+          },
+          {
+            key: "applications-pass-slip",
+            label: "Pass Slip",
+            path: "/applications/pass-slip",
+          },
+          {
+            key: "applications-divider-1",
+            label: "",
+            type: "divider",
+          },
+          {
+            key: "applications-deduction",
+            label: "Loans & Deductions",
+            path: "/applications/deduction-application",
+          },
+          {
+            key: "applications-other-income",
+            label: "Other Income",
+            path: "/applications/other-income",
+          },
+          {
+            key: "applications-salary-adjustment",
+            label: "Salary Adjustments",
+            path: "/applications/salary-adjustment",
+          },
+        ],
       },
-    ],
-  },
-  {
-    key: "daily-time-record",
-    label: "Daily Time Record",
-    children: [
-      {
-        key: "daily-time-record-master",
-        label: "DTR Detail",
-        path: "/daily-time-record/master",
-      },
-      {
-        key: "daily-time-record-summary",
-        label: "DTR Summary",
-        path: "/daily-time-record/summary",
-      },
-      // {
-      //   key: "daily-time-record-for-payroll",
-      //   label: "For Payroll",
-      //   path: "/daily-time-record/for-payroll",
-      // },
     ],
   },
   {
@@ -99,34 +163,9 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   {
-    key: "applications",
-    label: "Applications",
-    children: [
-      {
-        key: "applications-leave",
-        label: "Leave",
-        path: "/applications/leave",
-      },
-      {
-        key: "applications-overtime",
-        label: "Overtime",
-        path: "/applications/overtime",
-      },
-      {
-        key: "applications-official-business",
-        label: "Official Business",
-        path: "/applications/official-business",
-      },
-      // {
-      //   key: "applications-undertime",
-      //   label: "Undertime",
-      //   path: "/applications/undertime",
-      // },
-    ],
-  },
-  {
-    key: "setup",
-    label: "Setup",
+    key: "nav-admin",
+    label: "Admin",
+    type: "group",
     children: [
       {
         key: "setup-group-shifts",
@@ -155,13 +194,21 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             label: "Department",
             path: "/setup/department",
           },
-          { key: "setup-section", label: "Section", path: "/setup/section" },
+          {
+            key: "setup-section",
+            label: "Section",
+            path: "/setup/section",
+          },
           {
             key: "setup-position",
             label: "Position",
             path: "/setup/position",
           },
-          { key: "setup-branch", label: "Branch", path: "/setup/branch" },
+          {
+            key: "setup-branch",
+            label: "Branch",
+            path: "/setup/branch",
+          },
           {
             key: "setup-project-site",
             label: "Project Site",
@@ -174,7 +221,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Workforce",
         type: "group",
         children: [
-          { key: "setup-client", label: "Client", path: "/setup/client" },
+          {
+            key: "setup-client",
+            label: "Client",
+            path: "/setup/client",
+          },
           {
             key: "setup-payroll-group",
             label: "Payroll Group",
@@ -193,47 +244,118 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         type: "group",
         children: [
           {
-            key: "setup-holiday",
-            label: "Holiday",
-            path: "/setup/holiday",
-          },
-          {
             key: "setup-leave-type",
             label: "Leave Types",
             path: "/setup/leave-type",
           },
+          {
+            key: "setup-holiday",
+            label: "Holidays",
+            path: "/setup/holiday",
+          },
+          {
+            key: "setup-payroll-rate",
+            label: "Rate Multipliers",
+            path: "/setup/payroll-rate",
+          },
+          {
+            key: "setup-payroll-settings",
+            label: "Payroll Settings",
+            path: "/setup/payroll-settings",
+          },
         ],
       },
-    ],
-  },
-  {
-    key: "biometric",
-    label: "Biometric",
-    children: [
       {
-        key: "enroll-biometrics",
-        label: "Enroll Biometrics",
-        path: "/enroll-biometrics",
+        key: "setup-group-deductions-income",
+        label: "Deductions & Income",
+        type: "group",
+        children: [
+          {
+            key: "setup-deduction",
+            label: "Deductions",
+            path: "/setup/deduction",
+          },
+          {
+            key: "setup-other-income",
+            label: "Other Income",
+            path: "/setup/other-income",
+          },
+        ],
       },
       {
-        key: "biometric-manage-devices",
-        label: "Manage Devices",
-        path: "/biometric/manage-devices",
+        key: "setup-group-statutory",
+        label: "Statutory",
+        type: "group",
+        children: [
+          {
+            key: "setup-sss-table",
+            label: "SSS Table",
+            path: "/setup/sss-table",
+          },
+          {
+            key: "setup-phic-table",
+            label: "PHIC Table",
+            path: "/setup/phic-table",
+          },
+          {
+            key: "setup-hdmf-table",
+            label: "HDMF Table",
+            path: "/setup/hdmf-table",
+          },
+          {
+            key: "setup-wtax-table",
+            label: "WTax Table",
+            path: "/setup/wtax-table",
+          },
+          {
+            key: "setup-annual-tax-table",
+            label: "Annual Tax Table",
+            path: "/setup/annual-tax-table",
+          },
+        ],
       },
-    ],
-  },
-  {
-    key: "security",
-    label: "Security",
-    children: [
-      { key: "security-users", label: "Users", path: "/security/users" },
-      { key: "security-roles", label: "Roles", path: "/security/roles" },
       {
-        key: "security-permissions",
-        label: "Permissions",
-        path: "/security/permissions",
+        key: "biometric",
+        label: "Biometric",
+        children: [
+          {
+            key: "enroll-biometrics",
+            label: "Enroll Biometrics",
+            path: "/enroll-biometrics",
+          },
+          {
+            key: "biometric-manage-devices",
+            label: "Manage Devices",
+            path: "/biometric/manage-devices",
+          },
+        ],
       },
-      { key: "security-audit", label: "Audit", path: "/security/audit" },
+      {
+        key: "security",
+        label: "Security",
+        children: [
+          {
+            key: "security-users",
+            label: "Users",
+            path: "/security/users",
+          },
+          {
+            key: "security-roles",
+            label: "Roles",
+            path: "/security/roles",
+          },
+          {
+            key: "security-permissions",
+            label: "Permissions",
+            path: "/security/permissions",
+          },
+          {
+            key: "security-audit",
+            label: "Audit",
+            path: "/security/audit",
+          },
+        ],
+      },
     ],
   },
 ];

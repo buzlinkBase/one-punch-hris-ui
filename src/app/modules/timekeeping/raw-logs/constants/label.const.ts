@@ -1,5 +1,5 @@
 export const RAW_LOGS_LABEL = {
-  TITLE: "Raw Attendance Logs",
+  TITLE: "Attendance Logs",
   SUBTITLE: "Manage and review raw attendance data from all sources.",
 
   // Tab titles

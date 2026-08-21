@@ -54,9 +54,8 @@ export const MODE_OF_PAYMENT_OPTIONS = [
 ];
 
 export const SALARY_TYPE_OPTIONS = [
-  { value: "DAILY", label: "Daily" },
-  { value: "MONTHLY_VARIABLE", label: "Monthly Variable" },
-  { value: "MONTHLY_FIXED", label: "Monthly Fixed" },
+  { value: "VARIABLE", label: "Variable" },
+  { value: "FIXED", label: "Fixed" },
 ];
 
 export const EMPLOYMENT_STATUS_OPTIONS = [
@@ -107,6 +106,13 @@ export const BLOOD_TYPE_OPTIONS = [
   { value: "AB-", label: "AB-" },
   { value: "O+", label: "O+" },
   { value: "O-", label: "O-" },
+];
+
+export const COMPUTATION_BASIS_OPTIONS = [
+  { value: "None", label: "None" },
+  { value: "FixedPerPayroll", label: "Fixed Per Payroll" },
+  { value: "FixedMonthly", label: "Fixed Monthly" },
+  { value: "Table", label: "Table" },
 ];
 
 // kept for backward compatibility

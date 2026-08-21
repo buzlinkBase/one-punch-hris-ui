@@ -1,5 +1,5 @@
 export type ModeOfPayment = "Cash" | "ATM";
-export type SalaryType = "DAILY" | "MONTHLY_VARIABLE" | "MONTHLY_FIXED";
+export type SalaryType = "VARIABLE" | "FIXED";
 export type EmploymentStatus =
   | "Regular"
   | "PartTime"
@@ -45,6 +45,57 @@ export interface EmployeeSettingModel {
   isEligibleForNightDifferential: boolean;
   isEligibleForLeaveCredits: boolean;
   isEligibleFor13thMonth: boolean;
+}
+
+export interface StatutoryRate {
+  computationType?: string;
+  eE?: number;
+  eR?: number;
+  eC?: number;
+  addOns?: number;
+}
+
+export interface EmployeeFullResponse extends EmployeeResponse {
+  skills?: { id: string; name: string; level: number }[];
+  educations?: { id: string; schoolName: string; yearGraduated: number }[];
+  dependents?: {
+    id: string;
+    fullName: string;
+    relationship: string;
+    gender: string;
+    dob: string;
+  }[];
+  employeeRecords?: {
+    id: string;
+    recordType: string;
+    description: string;
+    file: string;
+  }[];
+  employments?: {
+    id: string;
+    companyName: string;
+    position: string;
+    fromDate: string;
+    toDate: string;
+  }[];
+  assets?: {
+    id: string;
+    assetType: string;
+    assetDescription: string;
+    model: string;
+    brand: string;
+    serialNo: string;
+    qty: number;
+    issuanceDate: string;
+    returnedDate?: string;
+    status: string;
+    remarks: string;
+    file: string;
+  }[];
+  sssRate?: StatutoryRate;
+  phicRate?: StatutoryRate;
+  hdmfRate?: StatutoryRate;
+  taxRate?: StatutoryRate & { total?: number };
 }
 
 export interface EmployeeResponse {
@@ -95,6 +146,10 @@ export interface EmployeeResponse {
   status: string;
   restDays?: RestDayModel[];
   settings?: EmployeeSettingModel;
+  sssRate?: StatutoryRate;
+  phicRate?: StatutoryRate;
+  hdmfRate?: StatutoryRate;
+  taxRate?: StatutoryRate & { total?: number };
   // Computed/joined fields from API
   fullName?: string;
   departmentName?: string;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+﻿import { useEffect, useMemo } from "react";
 import {
   Form,
   Input,
@@ -489,7 +489,7 @@ export default function LeaveApplicationDetail() {
         )}
 
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-2 gap-x-6">
+          <div className="form-grid-2">
             <Form.Item
               label={LEAVE_APPLICATION_LABEL.EMPLOYEE}
               validateStatus={errors.employeeId ? "error" : ""}
@@ -644,7 +644,7 @@ export default function LeaveApplicationDetail() {
 
           {/* Single Day */}
           {mode === "singleday" && (
-            <div className="grid grid-cols-2 gap-x-6" style={{ maxWidth: 520 }}>
+            <div className="form-grid-2" style={{ maxWidth: 520 }}>
               <Form.Item
                 label="Leave Date"
                 validateStatus={errors.leaveDate ? "error" : ""}
@@ -740,10 +740,7 @@ export default function LeaveApplicationDetail() {
               </Form.Item>
 
               {partialMode === "hours" ? (
-                <div
-                  className="grid grid-cols-2 gap-x-6"
-                  style={{ maxWidth: 480 }}
-                >
+                <div className="form-grid-2" style={{ maxWidth: 480 }}>
                   <Form.Item
                     label="Leave Date"
                     validateStatus={errors.leaveDate ? "error" : ""}
@@ -782,7 +779,7 @@ export default function LeaveApplicationDetail() {
                   </Form.Item>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-x-6">
+                <div className="form-grid-3">
                   <Form.Item
                     label="Leave Date"
                     validateStatus={errors.leaveDate ? "error" : ""}
@@ -843,7 +840,7 @@ export default function LeaveApplicationDetail() {
             </div>
           )}
 
-          <div className="grid grid-cols-4 gap-x-6">
+          <div className="form-grid-4">
             <Form.Item
               label={LEAVE_APPLICATION_LABEL.PAY_TYPE}
               validateStatus={errors.payType ? "error" : ""}

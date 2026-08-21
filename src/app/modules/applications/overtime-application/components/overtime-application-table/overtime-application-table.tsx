@@ -103,7 +103,23 @@ export default function OvertimeApplicationTable({
           width: widths.endTime,
           onResize: (w: number) => handleResize("endTime", w),
         }) as object,
-      render: (val: string) => (val ? dayjs(val).format("hh:mm A") : ""),
+      render: (val: string, r) => {
+        if (!val) return "";
+        const crossDay =
+          r.startTime &&
+          dayjs(val).format("YYYY-MM-DD") !==
+            dayjs(r.startTime).format("YYYY-MM-DD");
+        return (
+          <Space size={4}>
+            {dayjs(val).format("hh:mm A")}
+            {crossDay && (
+              <Tag color="orange" className="text-[10px]! m-0!">
+                +1
+              </Tag>
+            )}
+          </Space>
+        );
+      },
     },
     {
       title: OVERTIME_APPLICATION_LABEL.OT_MINUTES,
