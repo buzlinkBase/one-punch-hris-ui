@@ -17,6 +17,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
+  EyeOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
   SaveOutlined,
@@ -29,6 +30,7 @@ import {
 } from "../../hooks/use-for-payroll-queries";
 import type { DtrBatchModel } from "../../models/api/response/dtr-batch-response.model";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -43,6 +45,7 @@ export default function ForPayrollList() {
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
+  const [previewBatchCode, setPreviewBatchCode] = useState<string | null>(null);
 
   const {
     data: batches = [],
@@ -116,6 +119,21 @@ export default function ForPayrollList() {
       title: "Period",
       key: "period",
       render: (_, r) => `${fmtDate(r.fromDate)} — ${fmtDate(r.toDate)}`,
+    },
+    {
+      title: "",
+      key: "view",
+      width: 40,
+      render: (_, r) => (
+        <Tooltip title="View DTR contents">
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => setPreviewBatchCode(r.code)}
+          />
+        </Tooltip>
+      ),
     },
   ];
 
@@ -442,6 +460,12 @@ export default function ForPayrollList() {
           </div>
         </Card>
       )}
+
+      <DtrBatchPreviewModal
+        open={!!previewBatchCode}
+        batchCode={previewBatchCode}
+        onClose={() => setPreviewBatchCode(null)}
+      />
     </div>
   );
 }

@@ -89,7 +89,8 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     restDoubleLegalNDHours: 75,
     restDoubleLegalNDOTHours: 90,
     obHours: 75,
-    leaveHours: 75,
+    leaveHours: 100,
+    unpaidLeaveHours: 105,
   });
 
   const sum = (field: keyof DtrSummaryResponse) =>
@@ -135,6 +136,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       restDoubleLegalNDOTHours: sum("restDoubleLegalNDOTHours"),
       obHours: sum("obHours"),
       leaveHours: sum("leaveHours"),
+      unpaidLeaveHours: sum("unpaidLeaveHours"),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data],
@@ -309,7 +311,10 @@ export default function DtrSummaryTable({ data, loading }: Props) {
         {
           title: "Leave",
           onHeaderCell: groupHeader(GC.ob.group),
-          children: [col("Leave Hrs", "leaveHours", 75, GC.ob.sub)],
+          children: [
+            col("Paid Leave Hours", "leaveHours", 100, GC.ob.sub),
+            col("Unpaid Leave Hours", "unpaidLeaveHours", 105, GC.ob.sub),
+          ],
         },
       ],
     },
@@ -467,6 +472,10 @@ export default function DtrSummaryTable({ data, loading }: Props) {
                   />
                   <Table.Summary.Cell index={37} {...tc(totals.obHours)} />
                   <Table.Summary.Cell index={38} {...tc(totals.leaveHours)} />
+                  <Table.Summary.Cell
+                    index={39}
+                    {...tc(totals.unpaidLeaveHours)}
+                  />
                 </Table.Summary.Row>
               </Table.Summary>
             )

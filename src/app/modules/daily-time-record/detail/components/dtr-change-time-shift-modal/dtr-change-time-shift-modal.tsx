@@ -123,7 +123,7 @@ export default function DtrChangeTimeShiftModal({
             alignItems: "center",
             padding: "8px 12px",
             marginBottom: 16,
-            background: "#fafafa",
+            background: token.colorFillTertiary,
             borderRadius: 8,
             fontSize: 13,
           }}

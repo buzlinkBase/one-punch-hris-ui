@@ -445,6 +445,10 @@ html::-webkit-scrollbar-track {
   border-bottom-color: #edf7f4;
 }
 
+.form-grid-1 {
+  @apply grid grid-cols-1 gap-x-4;
+}
+
 .form-grid-2 {
   @apply grid grid-cols-2 gap-x-4;
 }
@@ -553,6 +557,27 @@ textarea:-webkit-autofill:focus {
   color: var(--text-base);
 }
 
+/* ─── Responsive: tablet (sider auto-collapses via JS at this width too) ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .page-toolbar {
+    margin: -20px -20px 0;
+    padding: 14px 20px;
+  }
+
+  .form-grid-3.form-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-grid-4.form-grid-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .form-action-footer {
+    margin: 8px -20px -20px;
+    padding: 12px 20px;
+  }
+}
+
 /* ─── Responsive ─────────────────────────────────────── */
 @media (max-width: 768px) {
   .app-header {
@@ -605,16 +630,16 @@ textarea:-webkit-autofill:focus {
     top: 74px;
   }
 
-  .form-grid-2 {
-    @apply grid-cols-1;
+  .form-grid-2.form-grid-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
-  .form-grid-3 {
-    @apply grid-cols-1;
+  .form-grid-3.form-grid-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
-  .form-grid-4 {
-    @apply grid-cols-2;
+  .form-grid-4.form-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* Toolbar row: wrap title + buttons on narrow screens */

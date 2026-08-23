@@ -107,7 +107,13 @@ export const GROUPED_COLS: TopGroup[] = [
         label: "Official Business",
         cols: [{ key: "obHours", label: "OB Hrs" }],
       },
-      { label: "Leave", cols: [{ key: "leaveHours", label: "Leave Hrs" }] },
+      {
+        label: "Leave",
+        cols: [
+          { key: "paidLeaveHours", label: "Paid Leave Hrs" },
+          { key: "unpaidLeaveHours", label: "Unpaid Leave Hrs" },
+        ],
+      },
     ],
   },
 ];

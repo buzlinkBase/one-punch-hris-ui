@@ -65,6 +65,27 @@ export const authStorage = {
     );
   },
 
+  /**
+   * Persists a tenant's HR-DB provisioning status into the cached tenant list so the next
+   * page load seeds `useTenantHubStore` with the up-to-date value instead of replaying
+   * whatever "not ready" snapshot was cached at login — without this, a refresh after
+   * provisioning finishes still flashes/sticks on the provisioning screen until a fresh
+   * REST round-trip corrects it.
+   */
+  updateTenantHrDbStatus(
+    tenantId: string,
+    hrDbStatus: string | null,
+    hrDbReady: boolean,
+  ) {
+    const user = this.getUser();
+    if (!user?.tenants) return;
+    const idx = user.tenants.findIndex((t) => t.tenantId === tenantId);
+    if (idx === -1) return;
+    const tenants = [...user.tenants];
+    tenants[idx] = { ...tenants[idx], hrDbStatus, hrDbReady };
+    localStorage.setItem(KEYS.user, JSON.stringify({ ...user, tenants }));
+  },
+
   /** Decodes the `tenantId`/`tenantName` claims off any access token (e.g. a fresh one from an API response, not yet saved). */
   getTenantClaims(token: string): TenantClaims {
     const payload = decodeJwt<{ tenantId?: string; tenantName?: string }>(

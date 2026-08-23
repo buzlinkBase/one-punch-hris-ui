@@ -7,6 +7,7 @@ export interface DtrSummaryResponse {
   overHours: number;
   absentCount: number;
   leaveHours: number;
+  unpaidLeaveHours: number;
   obHours: number;
   regularNetHours: number;
   regularOTHours: number;

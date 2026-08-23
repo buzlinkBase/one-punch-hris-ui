@@ -363,7 +363,11 @@ function getTenantStateTag(state: string): { color: string; show: boolean } {
 }
 
 export default function MainLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  // Tablets (and narrower desktop windows) start with the sider collapsed to
+  // icon-only so setup pages (e.g. Employee) get enough width for 2-column forms.
+  const [collapsed, setCollapsed] = useState(
+    () => window.matchMedia("(max-width: 1024px)").matches,
+  );
   const [isMobile, setIsMobile] = useState(
     () => window.matchMedia("(max-width: 767px)").matches,
   );
@@ -430,11 +434,27 @@ export default function MainLayout() {
       // Merge: use fresh data from backend for tenants it returns, but keep any
       // locally-tracked tenants it omits (e.g. still-provisioning workspaces that
       // the backend excludes from the list until membership becomes Active).
+      const localTenants = user?.tenants ?? [];
+      const localById = new Map(localTenants.map((t) => [t.tenantId, t]));
       const resultIds = new Set(result.tenants.map((t) => t.tenantId));
-      const preserved = (user?.tenants ?? []).filter(
-        (t) => !resultIds.has(t.tenantId),
-      );
-      const mergedTenants = [...result.tenants, ...preserved];
+
+      // Never let a stale backend snapshot regress a tenant we've already confirmed
+      // ready (via live hub push or REST poll) back to "not ready" — DB provisioning
+      // doesn't un-finish, so once locally-confirmed ready it stays ready per tenant,
+      // independent of which tenant is active right now.
+      const reconciled = result.tenants.map((t) => {
+        const local = localById.get(t.tenantId);
+        return local?.hrDbReady && !t.hrDbReady
+          ? {
+              ...t,
+              hrDbReady: true,
+              hrDbStatus: local.hrDbStatus ?? t.hrDbStatus,
+            }
+          : t;
+      });
+
+      const preserved = localTenants.filter((t) => !resultIds.has(t.tenantId));
+      const mergedTenants = [...reconciled, ...preserved];
 
       authStorage.save(result.accessToken, {
         ...user!,

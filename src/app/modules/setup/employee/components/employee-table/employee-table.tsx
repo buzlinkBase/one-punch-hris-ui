@@ -319,7 +319,7 @@ export default function EmployeeTable({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         allowClear
-        style={{ maxWidth: 320 }}
+        className="w-full sm:max-w-xs"
       />
       <Table
         rowKey="id"

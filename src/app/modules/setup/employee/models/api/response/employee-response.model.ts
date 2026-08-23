@@ -1,5 +1,11 @@
 export type ModeOfPayment = "Cash" | "ATM";
 export type SalaryType = "VARIABLE" | "FIXED";
+export type DailyRateMode = "Manual" | "CalculatedEDR" | "MonthlyTotalDays";
+/** Annual/monthly divisor used by Calculated EDR mode — see FACTOR_DAYS_OPTIONS for the
+ * full curated list (PH DOLE standards, international/enterprise, continuous-ops, and
+ * monthly-averaging conventions). Not a closed literal union since several conventions
+ * (30.4167, 393.90, 337.80, ...) are non-integer. */
+export type FactorDays = number;
 export type EmploymentStatus =
   | "Regular"
   | "PartTime"
@@ -127,6 +133,21 @@ export interface EmployeeResponse {
   monthlyRate?: number;
   dailyRate?: number;
   cola?: number;
+  /** FIXED salary type only — Manual entry vs. computed (MonthlyRate * 12) / FactorDays. */
+  dailyRateMode?: DailyRateMode;
+  /** FIXED + CalculatedEDR mode only — the annual factor days divisor (365/313/261/252). */
+  factorDays?: FactorDays | null;
+  /** FIXED + MonthlyTotalDays mode only — divide by the actual days in the payroll month
+   * (28/29/30/31) instead of the fixed factorDays denominator. */
+  useActualMonthDays?: boolean;
+  /** FIXED salary type only — the monthly rate already includes rest day pay. */
+  isRestDayPaid?: boolean;
+  /** FIXED salary type only — the monthly rate already includes regular holiday pay. */
+  isRegularHolidayIncluded?: boolean;
+  /** FIXED salary type only — the monthly rate already includes special non-working holiday pay. */
+  isSpecialNonWorkingIncluded?: boolean;
+  /** FIXED salary type only — the monthly rate already includes the mandatory night differential. */
+  isNightDiffIncluded?: boolean;
   dob?: string | null;
   bloodType?: string;
   modeOfPayment: ModeOfPayment;

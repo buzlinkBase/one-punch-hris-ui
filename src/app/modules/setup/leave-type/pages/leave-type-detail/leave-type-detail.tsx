@@ -286,11 +286,23 @@ export default function LeaveTypeDetail() {
 
   const onSubmit = async (values: LeaveTypeFormValues) => {
     try {
+      // credits/accrualRate: only the one relevant to the selected accrualBasis is
+      // guaranteed by the schema — the hidden one may be undefined, but the API expects
+      // a concrete number for both, so default the inactive one to 0.
+      const payload = {
+        ...values,
+        credits: values.credits ?? 0,
+        accrualRate: values.accrualRate ?? 0,
+      };
       if (isEdit && id) {
-        await update({ id, ...values });
+        await update({ id, ...payload });
       } else {
-        await add(values);
+        await add(payload);
       }
+      notification.success({
+        message: isEdit ? "Leave Type Updated" : "Leave Type Created",
+        description: `"${values.description}" was saved successfully.`,
+      });
       navigate({ to: "/setup/leave-type" });
     } catch (err: unknown) {
       const msg =
