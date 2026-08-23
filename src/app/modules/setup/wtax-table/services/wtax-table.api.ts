@@ -15,6 +15,11 @@ export const wtaxTableApi = {
       `${ENDPOINT}?effectivity=${effectivity}&payrollType=${payrollType}`,
     );
   },
+  getVersions(payrollType: string): Promise<string[]> {
+    return httpClient.getUnwrapped<string[]>(
+      `${ENDPOINT}/versions?payrollType=${payrollType}`,
+    );
+  },
   getById(id: string): Promise<WtaxTableResponse> {
     return httpClient.getUnwrapped<WtaxTableResponse>(`${ENDPOINT}/${id}`);
   },

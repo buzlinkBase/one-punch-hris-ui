@@ -6,6 +6,7 @@ import type {
   EmploymentStatus,
   JobLevel,
   RestDayModel,
+  EmployeeFixedScheduleDayModel,
   EmployeeSettingModel,
 } from "../response/employee-response.model";
 
@@ -61,5 +62,6 @@ export interface CreateEmployee {
   address2?: string;
   profileImg?: string;
   restDays?: RestDayModel[];
+  fixedSchedule?: EmployeeFixedScheduleDayModel[];
   settings?: EmployeeSettingModel;
 }

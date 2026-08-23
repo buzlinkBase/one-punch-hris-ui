@@ -33,8 +33,11 @@ export function useCreateEmployee() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateEmployee) => employeeApi.create(data),
-    onSuccess: () => {
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["employee-fixed-schedule", created.id],
+      });
     },
   });
 }
@@ -46,6 +49,9 @@ export function useUpdateEmployee() {
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["employee-fixed-schedule", updated.id],
+      });
     },
   });
 }

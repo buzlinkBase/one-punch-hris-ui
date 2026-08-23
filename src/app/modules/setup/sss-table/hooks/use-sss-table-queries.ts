@@ -13,6 +13,13 @@ export function useSssTableRows(effectivity: string | undefined) {
   });
 }
 
+export function useSssTableVersions() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "versions"],
+    queryFn: () => sssTableApi.getVersions(),
+  });
+}
+
 export function useSssTableRow(id: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY, "row", id],

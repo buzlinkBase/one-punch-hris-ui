@@ -12,6 +12,9 @@ export const annualTaxTableApi = {
       `${ENDPOINT}?effectivity=${effectivity}`,
     );
   },
+  getVersions(): Promise<string[]> {
+    return httpClient.getUnwrapped<string[]>(`${ENDPOINT}/versions`);
+  },
   getById(id: string): Promise<AnnualTaxTableResponse> {
     return httpClient.getUnwrapped<AnnualTaxTableResponse>(`${ENDPOINT}/${id}`);
   },

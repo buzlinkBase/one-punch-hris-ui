@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Button, DatePicker, Select, Space, Typography } from "antd";
+import { Button, Select, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
-import dayjs, { type Dayjs } from "dayjs";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useWtaxTableRows,
+  useWtaxTableVersions,
   useDeleteWtaxTableRow,
 } from "../../hooks/use-wtax-table-queries";
 import WtaxTableTable from "../../components/wtax-table-table";
@@ -17,18 +17,29 @@ const { Title } = Typography;
 
 export default function WtaxTableList() {
   const navigate = useNavigate();
-  const [effectivity, setEffectivity] = useState<string>(
-    dayjs().format("YYYY-MM-DD"),
-  );
   const [payrollType, setPayrollType] = useState<string>("SEMI_MONTHLY");
+  const [effectivity, setEffectivity] = useState<string | undefined>(undefined);
+
+  const { data: versions = [], isLoading: isLoadingVersions } =
+    useWtaxTableVersions(payrollType);
+
+  // Default to the most recent effectivity date for the selected payroll type.
+  // Derived inline rather than synced via effect: whenever the current pick
+  // isn't valid for this payroll type (nothing picked yet, or it switched and
+  // the old date isn't offered anymore), this falls back to the newest date
+  // that's actually available.
+  const resolvedEffectivity =
+    effectivity && versions.includes(effectivity) ? effectivity : versions[0];
 
   const {
     data: rows = [],
     isLoading,
     refetch,
     isFetching,
-  } = useWtaxTableRows(effectivity, payrollType);
+  } = useWtaxTableRows(resolvedEffectivity, payrollType);
   const { mutate: remove } = useDeleteWtaxTableRow();
+
+  const versionOptions = versions.map((v) => ({ value: v, label: v }));
 
   return (
     <div className="content-page">
@@ -60,21 +71,24 @@ export default function WtaxTableList() {
         </div>
         <div className="page-toolbar-row">
           <Space>
-            <span>Effectivity Date:</span>
-            <DatePicker
-              value={dayjs(effectivity)}
-              onChange={(d: Dayjs | null) => {
-                if (d) setEffectivity(d.format("YYYY-MM-DD"));
-              }}
-              format="YYYY-MM-DD"
-              allowClear={false}
-            />
             <span>{WTAX_TABLE_LABEL.PAYROLL_TYPE}:</span>
             <Select
               value={payrollType}
               onChange={setPayrollType}
               options={PAYROLL_TYPE_OPTIONS}
               style={{ width: 160 }}
+            />
+            <span>Effectivity Date:</span>
+            <Select
+              value={resolvedEffectivity}
+              onChange={setEffectivity}
+              options={versionOptions}
+              loading={isLoadingVersions}
+              placeholder="Select effectivity date"
+              style={{ width: 180 }}
+              notFoundContent={
+                isLoadingVersions ? undefined : "No dates on file"
+              }
             />
           </Space>
         </div>

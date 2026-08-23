@@ -16,6 +16,14 @@ export function useWtaxTableRows(
   });
 }
 
+export function useWtaxTableVersions(payrollType: string | undefined) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "versions", payrollType],
+    queryFn: () => wtaxTableApi.getVersions(payrollType!),
+    enabled: !!payrollType,
+  });
+}
+
 export function useWtaxTableRow(id: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY, "row", id],

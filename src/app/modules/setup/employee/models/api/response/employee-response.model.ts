@@ -44,6 +44,12 @@ export interface RestDayModel {
   dayName: DayName;
 }
 
+export interface EmployeeFixedScheduleDayModel {
+  id?: string;
+  dayName: DayName;
+  timeShiftId: string;
+}
+
 export interface EmployeeSettingModel {
   id?: string;
   isEligibleForOvertime: boolean;
