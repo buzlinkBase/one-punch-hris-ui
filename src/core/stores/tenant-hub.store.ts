@@ -60,13 +60,17 @@ export const useTenantHubStore = create<TenantHubStore>((set, get) => ({
     set((s) => ({
       liveTenantStates: { ...s.liveTenantStates, [tenantId]: state },
     })),
-  setHrDbStatus: (tenantId, status, ready) =>
+  setHrDbStatus: (tenantId, status, ready) => {
+    // Persist to localStorage too, so the next page load seeds from the real
+    // last-known status instead of whatever was cached at login/tenant-switch.
+    authStorage.updateTenantHrDbStatus(tenantId, status, ready);
     set((s) => ({
       hrDbStatuses: {
         ...s.hrDbStatuses,
         [tenantId]: { status, ready, known: true },
       },
-    })),
+    }));
+  },
   getHrDbStatus: (tenantId) =>
     (tenantId && get().hrDbStatuses[tenantId]) || UNKNOWN_HR_DB_STATUS,
   addNotification: (notification) =>

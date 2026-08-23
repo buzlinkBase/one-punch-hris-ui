@@ -126,7 +126,8 @@ export default function DtrDetailTable({
     restDoubleLegalNDHours: 75,
     restDoubleLegalNDOTHours: 90,
     obHours: 75,
-    leaveHours: 75,
+    paidLeaveHours: 75,
+    unpaidLeaveHours: 85,
   });
 
   const col = (
@@ -454,7 +455,49 @@ export default function DtrDetailTable({
         {
           title: "Leave",
           onHeaderCell: groupHeader(GC.ob.group),
-          children: [col("Leave Hrs", "leaveHours", 75, GC.ob.sub)],
+          children: [
+            {
+              ...col("Paid Leave Hrs", "paidLeaveHours", 75, GC.ob.sub),
+              render: (
+                v: number | null | undefined,
+                record: DtrDetailResponse,
+              ) => {
+                const n = v ?? 0;
+                const cell =
+                  n === 0 ? (
+                    <span
+                      style={{
+                        color: token.colorTextDisabled,
+                        userSelect: "none",
+                      }}
+                    >
+                      —
+                    </span>
+                  ) : (
+                    <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>
+                  );
+                if (!record.leavesInfo || record.leavesInfo.length === 0)
+                  return cell;
+                return (
+                  <Tooltip
+                    title={
+                      <div>
+                        {record.leavesInfo.map((li, idx) => (
+                          <div key={`${li.leaveId}-${idx}`}>
+                            {li.name ?? "Leave"}: {li.hours.toFixed(1)} hrs (
+                            {li.payType === "WithoutPay" ? "Unpaid" : "Paid"})
+                          </div>
+                        ))}
+                      </div>
+                    }
+                  >
+                    {cell}
+                  </Tooltip>
+                );
+              },
+            },
+            col("Unpaid Leave Hrs", "unpaidLeaveHours", 85, GC.ob.sub),
+          ],
         },
       ],
     },

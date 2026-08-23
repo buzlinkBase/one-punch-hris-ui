@@ -12,8 +12,11 @@ import {
   Tag,
   Checkbox,
   Switch,
+  Divider,
+  Radio,
   Tabs,
   Avatar,
+  Tooltip,
   message,
 } from "antd";
 import {
@@ -21,9 +24,11 @@ import {
   CameraOutlined,
   PlusOutlined,
   PrinterOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 import {
   useForm,
   Controller,
@@ -48,6 +53,11 @@ import {
   EMPLOYEE_LABEL,
   MODE_OF_PAYMENT_OPTIONS,
   SALARY_TYPE_OPTIONS,
+  DAILY_RATE_MODE_OPTIONS,
+  FACTOR_DAYS_OPTIONS,
+  FACTOR_DAYS_GROUPS,
+  FACTOR_DAYS_DEFAULT_FLAGS,
+  MONTHLY_TOTAL_DAYS_OPTIONS,
   EMPLOYMENT_STATUS_OPTIONS,
   JOB_LEVEL_OPTIONS,
   GENDER_OPTIONS,
@@ -141,11 +151,51 @@ const datePicker = (
   />
 );
 
+const computationBasisLabel = (
+  <span>
+    Computation Basis
+    <Tooltip
+      title={
+        <div>
+          <div>
+            <strong>None</strong> — nothing gets deducted for this contribution.
+          </div>
+          <div className="mt-1">
+            <strong>Fixed Per Payroll</strong> — the EE/ER amounts below are
+            deducted in full every time payroll runs, no matter how often that
+            is. Paid semi-monthly? It's deducted twice a month, not split in
+            half.
+          </div>
+          <div className="mt-1">
+            <strong>Fixed Monthly</strong> — the EE/ER amounts below are the
+            total for the whole month. The system automatically divides that
+            across however many payroll runs happen that month (e.g. split in
+            half for semi-monthly).
+          </div>
+          <div className="mt-1">
+            <strong>Table</strong> — the amounts below are ignored. The system
+            looks up the correct amount from the official government
+            contribution table instead, based on what the employee actually
+            earns each period.
+          </div>
+        </div>
+      }
+      overlayStyle={{ maxWidth: 360 }}
+    >
+      <InfoCircleOutlined
+        style={{ color: "#8c8c8c", fontSize: 13, marginLeft: 4 }}
+      />
+    </Tooltip>
+  </span>
+);
+
 export default function EmployeeDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const formGridClass = isMobile ? "form-grid-1" : "form-grid-2";
   const { data: selected } = useEmployee(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateEmployee();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployee();
@@ -261,6 +311,77 @@ export default function EmployeeDetail() {
     control,
     name: "employmentStatus",
   });
+  const watchedSalaryType = useWatch({ control, name: "salaryType" });
+  const watchedDailyRateMode = useWatch({ control, name: "dailyRateMode" });
+  const watchedFactorDays = useWatch({ control, name: "factorDays" });
+  const watchedUseActualMonthDays = useWatch({
+    control,
+    name: "useActualMonthDays",
+  });
+  const watchedMonthlyRate = useWatch({ control, name: "monthlyRate" });
+
+  const sssComputationType = useWatch({
+    control,
+    name: "sssRate.computationType",
+  });
+  const phicComputationType = useWatch({
+    control,
+    name: "phicRate.computationType",
+  });
+  const hdmfComputationType = useWatch({
+    control,
+    name: "hdmfRate.computationType",
+  });
+  const taxComputationType = useWatch({
+    control,
+    name: "taxRate.computationType",
+  });
+  const isSSSRateDisabled =
+    sssComputationType === "Table" || sssComputationType === "None";
+  const isPHICRateDisabled =
+    phicComputationType === "Table" || phicComputationType === "None";
+  const isHDMFRateDisabled =
+    hdmfComputationType === "Table" || hdmfComputationType === "None";
+  const isTaxRateDisabled =
+    taxComputationType === "Table" || taxComputationType === "None";
+
+  const isCalculatedEDR =
+    watchedSalaryType === "FIXED" && watchedDailyRateMode === "CalculatedEDR";
+  const isMonthlyTotalDays =
+    watchedSalaryType === "FIXED" &&
+    watchedDailyRateMode === "MonthlyTotalDays";
+  const isDailyRateComputed = isCalculatedEDR || isMonthlyTotalDays;
+
+  // Keep Daily Rate in sync with the selected formula:
+  // Calculated EDR:     (Monthly Rate * 12) / Factor Days — annual factor
+  // Monthly Total Days: Monthly Rate / Factor Days (flat) — or / actual days in the
+  //                     current calendar month when "Use Actual Days in Month" is on
+  //                     (preview only; the payroll run resolves this per pay period).
+  useEffect(() => {
+    if (isCalculatedEDR && watchedFactorDays) {
+      const computed = ((watchedMonthlyRate ?? 0) * 12) / watchedFactorDays;
+      setValue("dailyRate", Math.round(computed * 100) / 100, {
+        shouldDirty: true,
+      });
+    } else if (isMonthlyTotalDays && watchedUseActualMonthDays) {
+      const computed = (watchedMonthlyRate ?? 0) / dayjs().daysInMonth();
+      setValue("dailyRate", Math.round(computed * 100) / 100, {
+        shouldDirty: true,
+      });
+    } else if (isMonthlyTotalDays && watchedFactorDays) {
+      const computed = (watchedMonthlyRate ?? 0) / watchedFactorDays;
+      setValue("dailyRate", Math.round(computed * 100) / 100, {
+        shouldDirty: true,
+      });
+    }
+  }, [
+    isCalculatedEDR,
+    isMonthlyTotalDays,
+    watchedFactorDays,
+    watchedUseActualMonthDays,
+    watchedMonthlyRate,
+    setValue,
+  ]);
 
   const isRefLoading =
     isDepartmentsLoading ||
@@ -388,7 +509,7 @@ export default function EmployeeDetail() {
       <Form layout="vertical" onFinish={handleSubmit(onSubmit, handleInvalid)}>
         {/* ── 201 File Header ── */}
         <Card className="mb-4">
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <div className="flex flex-wrap items-center gap-5">
             <Controller
               name="profileImg"
               control={control}
@@ -452,7 +573,7 @@ export default function EmployeeDetail() {
                 </div>
               )}
             />
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: "1 1 200px", minWidth: 180 }}>
               <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
                 {displayName ?? (
                   <Text
@@ -516,7 +637,7 @@ export default function EmployeeDetail() {
                 label: "Personal Information",
                 forceRender: true,
                 children: (
-                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
+                  <div className={formGridClass} style={{ paddingTop: 16 }}>
                     <Form.Item
                       label={EMPLOYEE_LABEL.FIRST_NAME}
                       required
@@ -696,7 +817,7 @@ export default function EmployeeDetail() {
                 label: "Employment Details",
                 forceRender: true,
                 children: (
-                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
+                  <div className={formGridClass} style={{ paddingTop: 16 }}>
                     <Form.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
                       <Controller
                         name="employeeNo"
@@ -1142,7 +1263,7 @@ export default function EmployeeDetail() {
                 label: "Compensation",
                 forceRender: true,
                 children: (
-                  <div className="form-grid-2" style={{ paddingTop: 16 }}>
+                  <div className={formGridClass} style={{ paddingTop: 16 }}>
                     <Form.Item
                       label={EMPLOYEE_LABEL.SALARY_TYPE}
                       required
@@ -1158,7 +1279,14 @@ export default function EmployeeDetail() {
                       />
                     </Form.Item>
 
-                    <Form.Item label={EMPLOYEE_LABEL.MONTHLY_RATE}>
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.MONTHLY_RATE}
+                      help={
+                        watchedSalaryType === "VARIABLE"
+                          ? "Not applicable for Variable salary"
+                          : undefined
+                      }
+                    >
                       <Controller
                         name="monthlyRate"
                         control={control}
@@ -1168,6 +1296,7 @@ export default function EmployeeDetail() {
                             className="w-full"
                             min={0}
                             precision={2}
+                            disabled={watchedSalaryType === "VARIABLE"}
                             formatter={(v) =>
                               `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                             }
@@ -1176,7 +1305,185 @@ export default function EmployeeDetail() {
                       />
                     </Form.Item>
 
-                    <Form.Item label={EMPLOYEE_LABEL.DAILY_RATE}>
+                    {watchedSalaryType === "FIXED" && (
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.DAILY_RATE_MODE}
+                        className="col-span-2"
+                      >
+                        <Controller
+                          name="dailyRateMode"
+                          control={control}
+                          render={({ field }) => (
+                            <Radio.Group
+                              value={field.value ?? "Manual"}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              options={DAILY_RATE_MODE_OPTIONS.map((o) =>
+                                o.value === "CalculatedEDR"
+                                  ? {
+                                      ...o,
+                                      label: (
+                                        <Tooltip title="EDR = Equivalent Daily Rate. Divides the annualized monthly salary (Monthly Rate × 12) by the selected Factor Days to derive a standard daily rate.">
+                                          <span>
+                                            {o.label}{" "}
+                                            <InfoCircleOutlined className="text-[11px] opacity-70" />
+                                          </span>
+                                        </Tooltip>
+                                      ),
+                                    }
+                                  : o,
+                              )}
+                              optionType="button"
+                            />
+                          )}
+                        />
+                      </Form.Item>
+                    )}
+
+                    {isCalculatedEDR && (
+                      <Form.Item label={EMPLOYEE_LABEL.FACTOR_DAYS}>
+                        <Controller
+                          name="factorDays"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => {
+                                field.onChange(v);
+                                const defaults =
+                                  FACTOR_DAYS_DEFAULT_FLAGS[
+                                    v as keyof typeof FACTOR_DAYS_DEFAULT_FLAGS
+                                  ];
+                                if (defaults) {
+                                  setValue(
+                                    "isRestDayPaid",
+                                    defaults.isRestDayPaid,
+                                  );
+                                  setValue(
+                                    "isRegularHolidayIncluded",
+                                    defaults.isRegularHolidayIncluded,
+                                  );
+                                  setValue(
+                                    "isSpecialNonWorkingIncluded",
+                                    defaults.isSpecialNonWorkingIncluded,
+                                  );
+                                }
+                              }}
+                              options={FACTOR_DAYS_GROUPS.map((g) => ({
+                                label: g.group,
+                                options: g.options.map((o) => ({
+                                  value: o.value,
+                                  label: o.label,
+                                })),
+                              }))}
+                              showSearch
+                              filterOption={(input, option) =>
+                                typeof option?.label === "string" &&
+                                option.label
+                                  .toLowerCase()
+                                  .includes(input.toLowerCase())
+                              }
+                              placeholder="Select factor days"
+                            />
+                          )}
+                        />
+                        {watchedFactorDays && (
+                          <Text type="secondary" className="text-xs mt-1 block">
+                            {
+                              FACTOR_DAYS_OPTIONS.find(
+                                (o) => o.value === watchedFactorDays,
+                              )?.description
+                            }
+                          </Text>
+                        )}
+                      </Form.Item>
+                    )}
+
+                    {isMonthlyTotalDays && (
+                      <Form.Item
+                        label="Use Actual Days in Month"
+                        className="col-span-2"
+                      >
+                        <Controller
+                          name="useActualMonthDays"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                        <Text type="secondary" className="text-xs mt-1 block">
+                          Divides by the real number of days in each payroll
+                          month (28–31), resolved per pay period, instead of a
+                          fixed divisor below.
+                        </Text>
+                      </Form.Item>
+                    )}
+
+                    {isMonthlyTotalDays && !watchedUseActualMonthDays && (
+                      <Form.Item label={EMPLOYEE_LABEL.FACTOR_DAYS}>
+                        <Controller
+                          name="factorDays"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => {
+                                field.onChange(v);
+                                const defaults =
+                                  FACTOR_DAYS_DEFAULT_FLAGS[
+                                    v as keyof typeof FACTOR_DAYS_DEFAULT_FLAGS
+                                  ];
+                                if (defaults) {
+                                  setValue(
+                                    "isRestDayPaid",
+                                    defaults.isRestDayPaid,
+                                  );
+                                  setValue(
+                                    "isRegularHolidayIncluded",
+                                    defaults.isRegularHolidayIncluded,
+                                  );
+                                  setValue(
+                                    "isSpecialNonWorkingIncluded",
+                                    defaults.isSpecialNonWorkingIncluded,
+                                  );
+                                }
+                              }}
+                              options={MONTHLY_TOTAL_DAYS_OPTIONS.map((o) => ({
+                                value: o.value,
+                                label: o.label,
+                              }))}
+                              placeholder="Select monthly divisor"
+                            />
+                          )}
+                        />
+                        {watchedFactorDays && (
+                          <Text type="secondary" className="text-xs mt-1 block">
+                            {
+                              MONTHLY_TOTAL_DAYS_OPTIONS.find(
+                                (o) => o.value === watchedFactorDays,
+                              )?.description
+                            }
+                          </Text>
+                        )}
+                      </Form.Item>
+                    )}
+
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.DAILY_RATE}
+                      help={
+                        isCalculatedEDR
+                          ? "Computed as (Monthly Rate × 12) / Factor Days"
+                          : isMonthlyTotalDays && watchedUseActualMonthDays
+                            ? "Computed as Monthly Rate / days in the payroll month (preview uses the current month)"
+                            : isMonthlyTotalDays
+                              ? "Computed as Monthly Rate / Factor Days"
+                              : undefined
+                      }
+                    >
                       <Controller
                         name="dailyRate"
                         control={control}
@@ -1186,6 +1493,7 @@ export default function EmployeeDetail() {
                             className="w-full"
                             min={0}
                             precision={2}
+                            disabled={isDailyRateComputed}
                             formatter={(v) =>
                               `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                             }
@@ -1211,6 +1519,74 @@ export default function EmployeeDetail() {
                         )}
                       />
                     </Form.Item>
+
+                    {watchedSalaryType === "FIXED" && (
+                      <div className="col-span-2 flex flex-col gap-2 mb-2">
+                        <Divider className="my-1!" />
+                        <Text type="secondary" className="text-xs -mt-1">
+                          Fixed monthly rate — indicate whether it already
+                          covers these, so payroll doesn't add them again.
+                          Toggling on pays only the differential premium above
+                          the base rate; off pays the full rate multiplier.
+                        </Text>
+                        <div className="flex items-center justify-between max-w-120">
+                          <span>Monthly Rate Includes Rest Day Pay</span>
+                          <Controller
+                            name="isRestDayPaid"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between max-w-120">
+                          <span>Monthly Rate Includes Regular Holiday Pay</span>
+                          <Controller
+                            name="isRegularHolidayIncluded"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between max-w-120">
+                          <span>
+                            Monthly Rate Includes Special Non-Working Holiday
+                            Pay
+                          </span>
+                          <Controller
+                            name="isSpecialNonWorkingIncluded"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between max-w-120">
+                          <span>Monthly Rate Includes Night Differential</span>
+                          <Controller
+                            name="isNightDiffIncluded"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        <Divider className="my-1!" />
+                      </div>
+                    )}
 
                     <Form.Item
                       label={EMPLOYEE_LABEL.MODE_OF_PAYMENT}
@@ -1259,7 +1635,7 @@ export default function EmployeeDetail() {
                   <div className="pt-4 flex flex-col gap-3">
                     {/* SSS */}
                     <Card size="small" title="SSS">
-                      <div className="form-grid-2">
+                      <div className={formGridClass}>
                         <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
                           <Controller
                             name="sssNo"
@@ -1267,7 +1643,7 @@ export default function EmployeeDetail() {
                             render={({ field }) => <Input {...field} />}
                           />
                         </Form.Item>
-                        <Form.Item label="Computation Basis">
+                        <Form.Item label={computationBasisLabel}>
                           <Controller
                             name="sssRate.computationType"
                             control={control}
@@ -1290,6 +1666,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isSSSRateDisabled}
                               />
                             )}
                           />
@@ -1305,6 +1682,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isSSSRateDisabled}
                               />
                             )}
                           />
@@ -1320,6 +1698,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isSSSRateDisabled}
                               />
                             )}
                           />
@@ -1335,6 +1714,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isSSSRateDisabled}
                               />
                             )}
                           />
@@ -1344,7 +1724,7 @@ export default function EmployeeDetail() {
 
                     {/* PhilHealth */}
                     <Card size="small" title="PhilHealth (PHIC)">
-                      <div className="form-grid-2">
+                      <div className={formGridClass}>
                         <Form.Item label={EMPLOYEE_LABEL.PHIC_NO}>
                           <Controller
                             name="phicNo"
@@ -1352,7 +1732,7 @@ export default function EmployeeDetail() {
                             render={({ field }) => <Input {...field} />}
                           />
                         </Form.Item>
-                        <Form.Item label="Computation Basis">
+                        <Form.Item label={computationBasisLabel}>
                           <Controller
                             name="phicRate.computationType"
                             control={control}
@@ -1375,6 +1755,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isPHICRateDisabled}
                               />
                             )}
                           />
@@ -1390,6 +1771,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isPHICRateDisabled}
                               />
                             )}
                           />
@@ -1405,6 +1787,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isPHICRateDisabled}
                               />
                             )}
                           />
@@ -1414,7 +1797,7 @@ export default function EmployeeDetail() {
 
                     {/* Pag-IBIG */}
                     <Card size="small" title="Pag-IBIG (HDMF)">
-                      <div className="form-grid-2">
+                      <div className={formGridClass}>
                         <Form.Item label={EMPLOYEE_LABEL.HDMF_NO}>
                           <Controller
                             name="hdmfNo"
@@ -1422,7 +1805,7 @@ export default function EmployeeDetail() {
                             render={({ field }) => <Input {...field} />}
                           />
                         </Form.Item>
-                        <Form.Item label="Computation Basis">
+                        <Form.Item label={computationBasisLabel}>
                           <Controller
                             name="hdmfRate.computationType"
                             control={control}
@@ -1445,6 +1828,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isHDMFRateDisabled}
                               />
                             )}
                           />
@@ -1460,6 +1844,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isHDMFRateDisabled}
                               />
                             )}
                           />
@@ -1475,6 +1860,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isHDMFRateDisabled}
                               />
                             )}
                           />
@@ -1484,7 +1870,7 @@ export default function EmployeeDetail() {
 
                     {/* Tax / BIR */}
                     <Card size="small" title="Income Tax (BIR)">
-                      <div className="form-grid-2">
+                      <div className={formGridClass}>
                         <Form.Item label={EMPLOYEE_LABEL.TIN}>
                           <Controller
                             name="tin"
@@ -1492,7 +1878,7 @@ export default function EmployeeDetail() {
                             render={({ field }) => <Input {...field} />}
                           />
                         </Form.Item>
-                        <Form.Item label="Computation Basis">
+                        <Form.Item label={computationBasisLabel}>
                           <Controller
                             name="taxRate.computationType"
                             control={control}
@@ -1515,6 +1901,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isTaxRateDisabled}
                               />
                             )}
                           />
@@ -1530,6 +1917,7 @@ export default function EmployeeDetail() {
                                 min={0}
                                 step={0.01}
                                 precision={4}
+                                disabled={isTaxRateDisabled}
                               />
                             )}
                           />

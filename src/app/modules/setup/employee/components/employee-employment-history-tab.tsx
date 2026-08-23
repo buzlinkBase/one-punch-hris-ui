@@ -20,6 +20,7 @@ import {
   useDeleteEmploymentHistory,
 } from "../hooks/use-employee-relations-queries";
 import type { EmploymentHistoryResponse } from "../models/api/response/employee-relations-response.models";
+import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 
 const EMPTY = { companyName: "", position: "", fromDate: "", toDate: "" };
 
@@ -35,6 +36,7 @@ export default function EmployeeEmploymentHistoryTab({
   onDraftChange,
 }: Props) {
   const isLive = !!employeeId;
+  const isMobile = useIsMobile();
 
   const { data: apiData = [], isLoading } = useEmploymentHistoriesByEmployee(
     employeeId ?? "",
@@ -204,7 +206,7 @@ export default function EmployeeEmploymentHistoryTab({
               }
             />
           </Form.Item>
-          <div className="form-grid-2">
+          <div className={isMobile ? "form-grid-1" : "form-grid-2"}>
             <Form.Item label="From Date">
               <DatePicker
                 className="w-full"

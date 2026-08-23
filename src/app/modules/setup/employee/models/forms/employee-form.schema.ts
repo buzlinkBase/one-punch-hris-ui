@@ -67,6 +67,15 @@ export const employeeFormSchema = z.object({
   monthlyRate: z.coerce.number().optional(),
   dailyRate: z.coerce.number().optional(),
   cola: z.coerce.number().optional(),
+  dailyRateMode: z
+    .enum(["Manual", "CalculatedEDR", "MonthlyTotalDays"])
+    .optional(),
+  factorDays: z.number().positive().nullable().optional(),
+  useActualMonthDays: z.boolean().optional(),
+  isRestDayPaid: z.boolean().optional(),
+  isRegularHolidayIncluded: z.boolean().optional(),
+  isSpecialNonWorkingIncluded: z.boolean().optional(),
+  isNightDiffIncluded: z.boolean().optional(),
   bankName: z.string().optional(),
   bankNo: z.string().optional(),
 

@@ -23,6 +23,7 @@ import {
   useDeleteAssignAsset,
 } from "../hooks/use-employee-relations-queries";
 import type { AssignAssetResponse } from "../models/api/response/employee-relations-response.models";
+import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 
 const { TextArea } = Input;
 
@@ -70,6 +71,7 @@ export default function EmployeeAssignAssetsTab({
   onDraftChange,
 }: Props) {
   const isLive = !!employeeId;
+  const isMobile = useIsMobile();
 
   const { data: apiData = [], isLoading } = useAssignAssetsByEmployee(
     employeeId ?? "",
@@ -257,7 +259,7 @@ export default function EmployeeAssignAssetsTab({
         width={600}
       >
         <Form layout="vertical" style={{ paddingTop: 8 }}>
-          <div className="form-grid-2">
+          <div className={isMobile ? "form-grid-1" : "form-grid-2"}>
             <Form.Item label="Asset Type" required>
               <Input
                 value={form.assetType}
@@ -280,7 +282,7 @@ export default function EmployeeAssignAssetsTab({
               onChange={f("assetDescription")}
             />
           </Form.Item>
-          <div className="form-grid-2">
+          <div className={isMobile ? "form-grid-1" : "form-grid-2"}>
             <Form.Item label="Brand">
               <Input value={form.brand} onChange={f("brand")} />
             </Form.Item>
@@ -288,7 +290,7 @@ export default function EmployeeAssignAssetsTab({
               <Input value={form.model} onChange={f("model")} />
             </Form.Item>
           </div>
-          <div className="form-grid-2">
+          <div className={isMobile ? "form-grid-1" : "form-grid-2"}>
             <Form.Item label="Serial No.">
               <Input value={form.serialNo} onChange={f("serialNo")} />
             </Form.Item>
@@ -302,7 +304,7 @@ export default function EmployeeAssignAssetsTab({
               />
             </Form.Item>
           </div>
-          <div className="form-grid-2">
+          <div className={isMobile ? "form-grid-1" : "form-grid-2"}>
             <Form.Item label="Issuance Date">
               <DatePicker
                 className="w-full"

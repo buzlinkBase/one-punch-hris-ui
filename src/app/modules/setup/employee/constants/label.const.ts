@@ -35,6 +35,8 @@ export const EMPLOYEE_LABEL = {
   SALARY_TYPE: "Salary Type",
   MONTHLY_RATE: "Monthly Rate",
   DAILY_RATE: "Daily Rate",
+  DAILY_RATE_MODE: "Daily Rate Mode",
+  FACTOR_DAYS: "Factor Days",
   COLA: "COLA (Per Payroll)",
   BANK_NAME: "Bank Name",
   BANK_NO: "Bank Account No.",
@@ -56,6 +58,259 @@ export const MODE_OF_PAYMENT_OPTIONS = [
 export const SALARY_TYPE_OPTIONS = [
   { value: "VARIABLE", label: "Variable" },
   { value: "FIXED", label: "Fixed" },
+];
+
+export const DAILY_RATE_MODE_OPTIONS = [
+  { value: "Manual", label: "Manual Entry" },
+  { value: "CalculatedEDR", label: "Calculated (EDR)" },
+  { value: "MonthlyTotalDays", label: "Monthly Total Days" },
+];
+
+export interface FactorDaysFlags {
+  isRestDayPaid: boolean;
+  isRegularHolidayIncluded: boolean;
+  isSpecialNonWorkingIncluded: boolean;
+}
+
+export const FACTOR_DAYS_DEFAULT_FLAGS: Record<number, FactorDaysFlags> = {
+  // Standard (PH DOLE) — holiday premium adjustments embedded in the divisor itself
+  365: {
+    isRestDayPaid: true,
+    isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: true,
+  },
+  313: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: false,
+  },
+  261: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  252: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+
+  // International / Enterprise — straight calendar math, no holiday premium embedded
+  312: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  305: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  260: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  253: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+
+  // Continuous operations (24/7/365) — premium factors already baked into the divisor
+  394.4: {
+    isRestDayPaid: true,
+    isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: true,
+  },
+  393.9: {
+    isRestDayPaid: true,
+    isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: true,
+  },
+  393.5: {
+    isRestDayPaid: true,
+    isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: true,
+  },
+  337.8: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: false,
+  },
+
+  // Custom / averaging — flat monthly denominators, no premium semantics
+  30.4167: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  30: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  31: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  26: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  22: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+  21.67: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
+};
+
+interface FactorDaysOption {
+  value: number;
+  label: string;
+  description: string;
+}
+
+export const FACTOR_DAYS_GROUPS: {
+  group: string;
+  options: FactorDaysOption[];
+}[] = [
+  {
+    group: "Standard (PH DOLE)",
+    options: [
+      {
+        value: 365,
+        label: "365 Days",
+        description:
+          "All calendar days pre-funded in base pay — rest days and holidays are fully paid.",
+      },
+      {
+        value: 313,
+        label: "313 Days",
+        description: "Working days + regular holidays pre-funded in base pay.",
+      },
+      {
+        value: 261,
+        label: "261 Days",
+        description: "Working days only pre-funded in base pay.",
+      },
+      {
+        value: 252,
+        label: "252 Days",
+        description:
+          "Working days only (5-day work week) pre-funded in base pay.",
+      },
+    ],
+  },
+  {
+    group: "International / Enterprise",
+    options: [
+      {
+        value: 312,
+        label: "312 Days",
+        description:
+          "Alternate 6-day work week (52 × 6). Rest days unpaid; holidays treated as normal workdays — no holiday premium embedded.",
+      },
+      {
+        value: 305,
+        label: "305 Days",
+        description:
+          "6-day work week variant — the 8 regular holidays are deducted from the 313 schedule (unpaid if unworked).",
+      },
+      {
+        value: 260,
+        label: "260 Days",
+        description:
+          "Corporate global baseline for a 5-day work week (52 × 5). No holiday premium embedded.",
+      },
+      {
+        value: 253,
+        label: "253 Days",
+        description:
+          "5-day work week variant — the 8 regular holidays are deducted from the 261 schedule (unpaid if unworked).",
+      },
+    ],
+  },
+  {
+    group: "Continuous Operations (24/7/365)",
+    options: [
+      {
+        value: 394.4,
+        label: "394.40 Days",
+        description:
+          "For employees required to work every day, including Sundays/rest days and holidays — factors in premium rates for those worked days.",
+      },
+      {
+        value: 393.9,
+        label: "393.90 Days",
+        description:
+          "DOLE Advisory No. 001-10 variation — precise mathematical weight for worked holidays in continuous operations.",
+      },
+      {
+        value: 393.5,
+        label: "393.50 Days",
+        description:
+          "Alternate DOLE Advisory No. 001-10 weighting for worked holidays in continuous operations.",
+      },
+      {
+        value: 337.8,
+        label: "337.80 Days",
+        description:
+          "6-day work week where employees are contractually required to work all regular holidays falling on normal workdays.",
+      },
+    ],
+  },
+];
+
+export const FACTOR_DAYS_OPTIONS: FactorDaysOption[] =
+  FACTOR_DAYS_GROUPS.flatMap((g) => g.options);
+
+// Monthly Total Days mode — flat monthly denominators (not annual factors), so DailyRate =
+// MonthlyRate / FactorDays directly, without annualizing first like Calculated EDR does.
+// The "actual days in month" option isn't in this list — it's a separate toggle (see
+// employee-detail.tsx's "Use Actual Days in Month" switch) since it resolves dynamically
+// per payroll period (28/29/30/31) instead of being a fixed value.
+export const MONTHLY_TOTAL_DAYS_OPTIONS: FactorDaysOption[] = [
+  {
+    value: 30.4167,
+    label: "30.4167 Days",
+    description:
+      "Exact average number of days per month (365 ÷ 12) — a flat monthly daily rate without a yearly factor.",
+  },
+  {
+    value: 30,
+    label: "30 Days",
+    description:
+      "Simplified flat convention — every month treated as exactly 30 days, common in manual payroll setups.",
+  },
+  {
+    value: 31,
+    label: "31 Days",
+    description:
+      "Conservative flat convention — every month treated as exactly 31 days for consistency.",
+  },
+  {
+    value: 26,
+    label: "26 Days",
+    description: "Fixed monthly denominator — average working days per month.",
+  },
+  {
+    value: 22,
+    label: "22 Days",
+    description: "Fixed monthly denominator — average working days per month.",
+  },
+  {
+    value: 21.67,
+    label: "21.67 Days",
+    description: "Fixed monthly denominator — average working days per month.",
+  },
 ];
 
 export const EMPLOYMENT_STATUS_OPTIONS = [

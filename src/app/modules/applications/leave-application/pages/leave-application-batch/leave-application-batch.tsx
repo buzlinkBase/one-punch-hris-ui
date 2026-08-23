@@ -12,6 +12,7 @@ import {
   Space,
   Tag,
   Radio,
+  Alert,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -382,44 +383,54 @@ export default function LeaveApplicationBatch() {
               </Form.Item>
 
               {partialMode === "hours" ? (
-                <div className="form-grid-2" style={{ maxWidth: 480 }}>
-                  <Form.Item
-                    label="Leave Date"
-                    validateStatus={errors.leaveDate ? "error" : ""}
-                    help={errors.leaveDate?.message}
-                  >
-                    <DatePicker
-                      style={{ width: "100%" }}
-                      value={leaveDate ? dayjs(leaveDate) : null}
-                      onChange={(d) =>
-                        setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
-                      }
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label="Total Hours"
-                    validateStatus={errors.totalHours ? "error" : ""}
-                    help={errors.totalHours?.message}
-                  >
-                    <Controller
-                      name="totalHours"
-                      control={control}
-                      render={({ field }) => (
-                        <InputNumber
-                          {...field}
-                          style={{ width: "100%" }}
-                          min={0.25}
-                          max={999}
-                          step={0.25}
-                          precision={2}
-                          addonAfter="hrs"
-                          placeholder="e.g. 4"
-                          onChange={(val) => field.onChange(val ?? undefined)}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </div>
+                <>
+                  <div className="form-grid-2" style={{ maxWidth: 480 }}>
+                    <Form.Item
+                      label="Leave Date"
+                      validateStatus={errors.leaveDate ? "error" : ""}
+                      help={errors.leaveDate?.message}
+                    >
+                      <DatePicker
+                        style={{ width: "100%" }}
+                        value={leaveDate ? dayjs(leaveDate) : null}
+                        onChange={(d) =>
+                          setValue("leaveDate", d?.format("YYYY-MM-DD") ?? "")
+                        }
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label="Total Hours"
+                      validateStatus={errors.totalHours ? "error" : ""}
+                      help={errors.totalHours?.message}
+                    >
+                      <Controller
+                        name="totalHours"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            style={{ width: "100%" }}
+                            min={0.25}
+                            max={999}
+                            step={0.25}
+                            precision={2}
+                            addonAfter="hrs"
+                            placeholder="e.g. 4"
+                            onChange={(val) => field.onChange(val ?? undefined)}
+                          />
+                        )}
+                      />
+                    </Form.Item>
+                  </div>
+                  <Alert
+                    type="info"
+                    showIcon
+                    className="mb-4"
+                    style={{ maxWidth: 480 }}
+                    message="Declaring hours only will be treated as starting from the beginning of the employee's shift."
+                    description="Example: a 4-hour leave on a shift that starts at 8:00 AM is recorded as 8:00 AM – 12:00 PM. If the leave doesn't start at shift-start, use Time Range instead."
+                  />
+                </>
               ) : (
                 <div className="form-grid-3">
                   <Form.Item

@@ -7,6 +7,7 @@ import {
   Select,
   Space,
   Tag,
+  theme,
   Tooltip,
   Typography,
   message,
@@ -226,6 +227,7 @@ function EditPassSlip({ id }: { id: string }) {
 // ── Create mode: multi-entry form ──────────────────────────────────────────────
 
 function CreatePassSlip() {
+  const { token } = theme.useToken();
   const navigate = useNavigate();
   const { mutateAsync: add, isPending: isCreating } = useCreatePassSlip();
   const { data: rawEmployees = [] } = useEmployees();
@@ -351,7 +353,7 @@ function CreatePassSlip() {
 
         <div
           style={{
-            border: "1px solid #f0f0f0",
+            border: `1px solid ${token.colorBorderSecondary}`,
             borderRadius: 8,
             overflow: "hidden",
             marginBottom: 16,
@@ -367,8 +369,13 @@ function CreatePassSlip() {
                 style={{
                   padding: "12px 16px",
                   borderBottom:
-                    index < fields.length - 1 ? "1px solid #f0f0f0" : undefined,
-                  background: index % 2 === 0 ? "#fafafa" : "#fff",
+                    index < fields.length - 1
+                      ? `1px solid ${token.colorBorderSecondary}`
+                      : undefined,
+                  background:
+                    index % 2 === 0
+                      ? token.colorFillAlter
+                      : token.colorBgContainer,
                 }}
               >
                 <div

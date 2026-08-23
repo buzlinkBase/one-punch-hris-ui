@@ -13,12 +13,14 @@ import {
   Select,
   Space,
   Table,
+  Tooltip,
   Typography,
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ArrowLeftOutlined,
+  InfoCircleOutlined,
   SaveOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
@@ -470,6 +472,18 @@ export default function OtherIncomeApplicationDetail() {
                     onChange={(e) => field.onChange(e.target.checked)}
                   >
                     Prorated
+                    <Tooltip
+                      title="Check this if the income should be spread out a little at a time for government contribution purposes, instead of counted all at once in the month it was given. For example, a one-time signing bonus can be divided across several months rather than treated as a big spike in just one. This doesn't change the amounts in the payment schedule below."
+                      overlayStyle={{ maxWidth: 320 }}
+                    >
+                      <InfoCircleOutlined
+                        style={{
+                          color: "#8c8c8c",
+                          fontSize: 13,
+                          marginLeft: 4,
+                        }}
+                      />
+                    </Tooltip>
                   </Checkbox>
                 )}
               />

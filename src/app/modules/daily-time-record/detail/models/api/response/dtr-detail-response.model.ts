@@ -1,3 +1,12 @@
+export interface LeaveMetaData {
+  leaveId: string;
+  name?: string;
+  hours: number;
+  startDateTime: string;
+  endDateTime: string;
+  payType: string;
+}
+
 export interface DtrDetailResponse {
   id?: string;
   batchCode?: string;
@@ -20,8 +29,9 @@ export interface DtrDetailResponse {
   absentCount: number;
   holCount: number;
   spCount: number;
-  leaveHours: number;
-  creditsSpent: number;
+  paidLeaveHours: number;
+  unpaidLeaveHours: number;
+  leavesInfo?: LeaveMetaData[] | null;
   regularNetHours: number;
   regularOTHours: number;
   regularNDHours: number;

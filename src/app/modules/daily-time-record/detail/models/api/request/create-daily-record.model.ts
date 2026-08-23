@@ -1,3 +1,5 @@
+import type { LeaveMetaData } from "../response/dtr-detail-response.model";
+
 export interface CreateDailyRecord {
   id?: string;
   batchCode?: string;
@@ -19,7 +21,9 @@ export interface CreateDailyRecord {
   absentCount: number;
   holCount: number;
   spCount: number;
-  leaveHours: number;
+  paidLeaveHours: number;
+  unpaidLeaveHours: number;
+  leavesInfo?: LeaveMetaData[] | null;
   regularNetHours: number;
   regularOTHours: number;
   regularNDHours: number;

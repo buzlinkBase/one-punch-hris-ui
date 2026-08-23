@@ -1,6 +1,8 @@
 import type {
   ModeOfPayment,
   SalaryType,
+  DailyRateMode,
+  FactorDays,
   EmploymentStatus,
   JobLevel,
   RestDayModel,
@@ -35,6 +37,13 @@ export interface CreateEmployee {
   monthlyRate?: number;
   dailyRate?: number;
   cola?: number;
+  dailyRateMode?: DailyRateMode;
+  factorDays?: FactorDays | null;
+  useActualMonthDays?: boolean;
+  isRestDayPaid?: boolean;
+  isRegularHolidayIncluded?: boolean;
+  isSpecialNonWorkingIncluded?: boolean;
+  isNightDiffIncluded?: boolean;
   dob?: string | null;
   bloodType?: string;
   modeOfPayment: ModeOfPayment;
