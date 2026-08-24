@@ -137,7 +137,7 @@ function getNavIcon(key: string): ReactNode {
   const iconMap: Record<string, ReactNode> = {
     "nav-dtr": <ClockCircleOutlined />,
     "nav-payroll": <DollarOutlined />,
-    "nav-admin": <SettingOutlined />,
+    "nav-setup": <SettingOutlined />,
     timekeeping: <ClockCircleOutlined />,
     "timekeeping-upload-attendance": <FileTextOutlined />,
     "timekeeping-raw-logs": <FileTextOutlined />,
@@ -176,6 +176,7 @@ function getNavIcon(key: string): ReactNode {
     "setup-payroll-rate": <BarChartOutlined />,
     "setup-employee": <UserOutlined />,
     clients: <TeamOutlined />,
+    biometric: <SafetyCertificateOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
     security: <SafetyOutlined />,
     "security-users": <UserOutlined />,
