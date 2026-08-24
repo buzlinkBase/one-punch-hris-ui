@@ -13,6 +13,13 @@ export function useHdmfTableRows(effectivity: string | undefined) {
   });
 }
 
+export function useHdmfTableVersions() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "versions"],
+    queryFn: () => hdmfTableApi.getVersions(),
+  });
+}
+
 export function useHdmfTableRow(id: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY, "row", id],

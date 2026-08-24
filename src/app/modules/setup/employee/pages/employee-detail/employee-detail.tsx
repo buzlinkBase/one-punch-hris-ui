@@ -85,6 +85,9 @@ import QuickAddBranchModal from "../../components/quick-add-branch-modal";
 import QuickAddPositionModal from "../../components/quick-add-position-modal";
 import EmployeeDependentsTab from "../../components/employee-dependents-tab";
 import EmployeeEducationTab from "../../components/employee-education-tab";
+import EmployeeFixedScheduleTab from "../../components/employee-fixed-schedule-tab";
+import { useEmployeeFixedSchedule } from "@/app/modules/change-schedule/fixed-schedule/hooks/use-employee-fixed-schedule-queries";
+import type { EmployeeFixedScheduleDayModel } from "../../models/api/response/employee-response.model";
 import EmployeeSkillsTab from "../../components/employee-skills-tab";
 import EmployeeDocRecordsTab from "../../components/employee-doc-records-tab";
 import EmployeeEmploymentHistoryTab from "../../components/employee-employment-history-tab";
@@ -237,6 +240,35 @@ export default function EmployeeDetail() {
   const [branchModalOpen, setBranchModalOpen] = useState(false);
   const [positionModalOpen, setPositionModalOpen] = useState(false);
 
+  const [fixedSchedule, setFixedSchedule] = useState<
+    EmployeeFixedScheduleDayModel[]
+  >([]);
+  const { data: existingFixedSchedule, isFetching: isFetchingFixedSchedule } =
+    useEmployeeFixedSchedule(id);
+  const fixedScheduleLoaded = useRef(false);
+
+  useEffect(() => {
+    // With refetchOnMount: "always", `data` can be populated synchronously from a
+    // stale cache entry while a background refetch is still in flight — wait for
+    // isFetching to settle so the draft is seeded from the fresh result, not a
+    // leftover value from a previous visit to this employee.
+    if (
+      isEdit &&
+      existingFixedSchedule &&
+      !isFetchingFixedSchedule &&
+      !fixedScheduleLoaded.current
+    ) {
+      fixedScheduleLoaded.current = true;
+      setFixedSchedule(
+        existingFixedSchedule.map((s) => ({
+          id: s.id,
+          dayName: s.dayName,
+          timeShiftId: s.timeShiftId,
+        })),
+      );
+    }
+  }, [isEdit, existingFixedSchedule, isFetchingFixedSchedule]);
+
   useEffect(() => {
     if (isEdit && selected) {
       reset(employeeMapper.toFormValues(selected));
@@ -256,10 +288,13 @@ export default function EmployeeDetail() {
     const selectedDays = values.restDays ?? [];
     const payload = {
       ...values,
-      restDays: selectedDays.map((dayName) => {
-        const existing = selected?.restDays?.find((r) => r.dayName === dayName);
-        return { id: existing?.id, dayName: dayName as DayName };
-      }),
+      restDays: selectedDays.map((dayName) => ({
+        dayName: dayName as DayName,
+      })),
+      fixedSchedule: fixedSchedule.map(({ dayName, timeShiftId }) => ({
+        dayName,
+        timeShiftId,
+      })),
     };
     try {
       if (isEdit && id) {
@@ -2000,6 +2035,18 @@ export default function EmployeeDetail() {
                         />
                       </div>
                     </div>
+                  </div>
+                ),
+              },
+              {
+                key: "fixedSchedule",
+                label: "Fixed Schedule",
+                children: (
+                  <div style={{ paddingTop: 16 }}>
+                    <EmployeeFixedScheduleTab
+                      value={fixedSchedule}
+                      onChange={setFixedSchedule}
+                    />
                   </div>
                 ),
               },

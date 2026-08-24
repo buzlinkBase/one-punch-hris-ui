@@ -12,6 +12,9 @@ export const hdmfTableApi = {
       `${ENDPOINT}?effectivity=${effectivity}`,
     );
   },
+  getVersions(): Promise<string[]> {
+    return httpClient.getUnwrapped<string[]>(`${ENDPOINT}/versions`);
+  },
   getById(id: string): Promise<HdmfTableResponse> {
     return httpClient.getUnwrapped<HdmfTableResponse>(`${ENDPOINT}/${id}`);
   },

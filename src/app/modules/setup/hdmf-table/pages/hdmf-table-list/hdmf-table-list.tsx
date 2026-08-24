@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Button, DatePicker, Space, Typography } from "antd";
+import { Button, Select, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
-import dayjs, { type Dayjs } from "dayjs";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useHdmfTableRows,
+  useHdmfTableVersions,
   useDeleteHdmfTableRow,
 } from "../../hooks/use-hdmf-table-queries";
 import HdmfTableTable from "../../components/hdmf-table-table";
@@ -14,17 +14,25 @@ const { Title } = Typography;
 
 export default function HdmfTableList() {
   const navigate = useNavigate();
-  const [effectivity, setEffectivity] = useState<string>(
-    dayjs().format("YYYY-MM-DD"),
-  );
+  const [effectivity, setEffectivity] = useState<string | undefined>(undefined);
+
+  const { data: versions = [], isLoading: isLoadingVersions } =
+    useHdmfTableVersions();
+
+  // Default to the most recent effectivity date once versions load. Derived
+  // inline rather than synced via effect: no explicit pick yet just falls
+  // back to the newest version each render.
+  const resolvedEffectivity = effectivity ?? versions[0];
 
   const {
     data: rows = [],
     isLoading,
     refetch,
     isFetching,
-  } = useHdmfTableRows(effectivity);
+  } = useHdmfTableRows(resolvedEffectivity);
   const { mutate: remove } = useDeleteHdmfTableRow();
+
+  const versionOptions = versions.map((v) => ({ value: v, label: v }));
 
   return (
     <div className="content-page">
@@ -56,13 +64,16 @@ export default function HdmfTableList() {
         <div className="page-toolbar-row">
           <Space>
             <span>Effectivity Date:</span>
-            <DatePicker
-              value={dayjs(effectivity)}
-              onChange={(d: Dayjs | null) => {
-                if (d) setEffectivity(d.format("YYYY-MM-DD"));
-              }}
-              format="YYYY-MM-DD"
-              allowClear={false}
+            <Select
+              value={resolvedEffectivity}
+              onChange={setEffectivity}
+              options={versionOptions}
+              loading={isLoadingVersions}
+              placeholder="Select effectivity date"
+              style={{ width: 180 }}
+              notFoundContent={
+                isLoadingVersions ? undefined : "No dates on file"
+              }
             />
           </Space>
         </div>

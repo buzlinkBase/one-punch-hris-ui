@@ -13,6 +13,13 @@ export function usePhicTableRows(effectivity: string | undefined) {
   });
 }
 
+export function usePhicTableVersions() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "versions"],
+    queryFn: () => phicTableApi.getVersions(),
+  });
+}
+
 export function usePhicTableRow(id: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY, "row", id],

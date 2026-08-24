@@ -13,6 +13,13 @@ export function useAnnualTaxTableRows(effectivity: string | undefined) {
   });
 }
 
+export function useAnnualTaxTableVersions() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "versions"],
+    queryFn: () => annualTaxTableApi.getVersions(),
+  });
+}
+
 export function useAnnualTaxTableRow(id: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY, "row", id],

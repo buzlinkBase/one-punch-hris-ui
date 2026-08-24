@@ -32,7 +32,6 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
     code: 120,
     name: 200,
     payrollFrequency: 160,
-    cutoffDays: 200,
     status: 120,
   });
 
@@ -78,25 +77,6 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
           onResize: (w: number) => handleResize("payrollFrequency", w),
         }) as object,
       render: (v: string) => freqLabel(v),
-    },
-    {
-      title: PAYROLL_GROUP_LABEL.CUTOFF_DAYS,
-      key: "cutoffDays",
-      width: widths.cutoffDays,
-      onHeaderCell: () =>
-        ({
-          width: widths.cutoffDays,
-          onResize: (w: number) => handleResize("cutoffDays", w),
-        }) as object,
-      render: (_, record) =>
-        record.cutoffDays?.length
-          ? record.cutoffDays
-              .map(
-                (c) =>
-                  c.label || `Day ${c.day}${c.isEndOfMonth ? " (EOM)" : ""}`,
-              )
-              .join(", ")
-          : undefined,
     },
     {
       title: PAYROLL_GROUP_LABEL.STATUS,

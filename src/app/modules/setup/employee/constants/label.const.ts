@@ -22,7 +22,7 @@ export const EMPLOYEE_LABEL = {
   SECTION: "Section",
   POSITION: "Position",
   JOB_LEVEL: "Job Level",
-  TIME_SHIFT: "Time Shift",
+  TIME_SHIFT: "Permanent Shift",
   EMPLOYMENT_STATUS: "Employment Status",
   HIRING_ENTITY: "Hiring Entity",
   DATE_REGISTERED: "Date Registered",
