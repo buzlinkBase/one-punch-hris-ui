@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
@@ -18,6 +19,19 @@ interface Props {
   loading?: boolean;
   onDelete?: (id: string) => void;
   onInvite?: (record: EmployeeResponse) => void;
+}
+
+const JOB_LEVEL_LABELS: Record<string, string> = {
+  RankandFile: "Rank and File",
+  EntryLevel: "Entry Level",
+  TechnicalSpecialist: "Technical Specialist",
+};
+
+function formatFullName(record: EmployeeResponse) {
+  if (record.fullName) return record.fullName;
+  return `${record.lastName}, ${record.firstName} ${record.middleName ?? ""} ${record.suffix ?? ""}`
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export default function EmployeeTable({
@@ -32,17 +46,22 @@ export default function EmployeeTable({
   const { widths, handleResize } = useResizableColumns({
     employeeNo: 120,
     bioId: 80,
-    lastName: 140,
-    firstName: 140,
-    middleName: 130,
-    suffix: 80,
+    fullName: 220,
+    positionName: 160,
     departmentName: 160,
+    clientName: 150,
     areaName: 160,
+    branchName: 140,
     payrollGroupName: 150,
+    jobLevel: 140,
     timeShiftName: 200,
     restDays: 220,
-    gender: 90,
+    salaryType: 110,
+    hireDate: 120,
     employmentStatus: 150,
+    status: 100,
+    gender: 90,
+    contact: 160,
     sssNo: 130,
     phicNo: 140,
     hdmfNo: 130,
@@ -62,6 +81,7 @@ export default function EmployeeTable({
       title: EMPLOYEE_LABEL.EMPLOYEE_NO,
       dataIndex: "employeeNo",
       key: "employeeNo",
+      fixed: "left",
       width: widths.employeeNo,
       onHeaderCell: () =>
         ({
@@ -81,47 +101,26 @@ export default function EmployeeTable({
         }) as object,
     },
     {
-      title: EMPLOYEE_LABEL.LAST_NAME,
-      dataIndex: "lastName",
-      key: "lastName",
-      width: widths.lastName,
+      title: "Full Name",
+      key: "fullName",
+      fixed: "left",
+      width: widths.fullName,
       onHeaderCell: () =>
         ({
-          width: widths.lastName,
-          onResize: (w: number) => handleResize("lastName", w),
+          width: widths.fullName,
+          onResize: (w: number) => handleResize("fullName", w),
         }) as object,
+      render: (_, record) => formatFullName(record),
     },
     {
-      title: EMPLOYEE_LABEL.FIRST_NAME,
-      dataIndex: "firstName",
-      key: "firstName",
-      width: widths.firstName,
+      title: EMPLOYEE_LABEL.POSITION,
+      dataIndex: "positionName",
+      key: "positionName",
+      width: widths.positionName,
       onHeaderCell: () =>
         ({
-          width: widths.firstName,
-          onResize: (w: number) => handleResize("firstName", w),
-        }) as object,
-    },
-    {
-      title: EMPLOYEE_LABEL.MIDDLE_NAME,
-      dataIndex: "middleName",
-      key: "middleName",
-      width: widths.middleName,
-      onHeaderCell: () =>
-        ({
-          width: widths.middleName,
-          onResize: (w: number) => handleResize("middleName", w),
-        }) as object,
-    },
-    {
-      title: EMPLOYEE_LABEL.SUFFIX,
-      dataIndex: "suffix",
-      key: "suffix",
-      width: widths.suffix,
-      onHeaderCell: () =>
-        ({
-          width: widths.suffix,
-          onResize: (w: number) => handleResize("suffix", w),
+          width: widths.positionName,
+          onResize: (w: number) => handleResize("positionName", w),
         }) as object,
     },
     {
@@ -136,6 +135,17 @@ export default function EmployeeTable({
         }) as object,
     },
     {
+      title: EMPLOYEE_LABEL.CLIENT,
+      dataIndex: "clientName",
+      key: "clientName",
+      width: widths.clientName,
+      onHeaderCell: () =>
+        ({
+          width: widths.clientName,
+          onResize: (w: number) => handleResize("clientName", w),
+        }) as object,
+    },
+    {
       title: EMPLOYEE_LABEL.AREA,
       dataIndex: "areaName",
       key: "areaName",
@@ -144,6 +154,17 @@ export default function EmployeeTable({
         ({
           width: widths.areaName,
           onResize: (w: number) => handleResize("areaName", w),
+        }) as object,
+    },
+    {
+      title: EMPLOYEE_LABEL.BRANCH,
+      dataIndex: "branchName",
+      key: "branchName",
+      width: widths.branchName,
+      onHeaderCell: () =>
+        ({
+          width: widths.branchName,
+          onResize: (w: number) => handleResize("branchName", w),
         }) as object,
     },
     {
@@ -156,6 +177,18 @@ export default function EmployeeTable({
           width: widths.payrollGroupName,
           onResize: (w: number) => handleResize("payrollGroupName", w),
         }) as object,
+    },
+    {
+      title: EMPLOYEE_LABEL.JOB_LEVEL,
+      dataIndex: "jobLevel",
+      key: "jobLevel",
+      width: widths.jobLevel,
+      onHeaderCell: () =>
+        ({
+          width: widths.jobLevel,
+          onResize: (w: number) => handleResize("jobLevel", w),
+        }) as object,
+      render: (v?: string) => (v ? (JOB_LEVEL_LABELS[v] ?? v) : null),
     },
     {
       title: EMPLOYEE_LABEL.TIME_SHIFT,
@@ -188,15 +221,29 @@ export default function EmployeeTable({
           : null,
     },
     {
-      title: EMPLOYEE_LABEL.GENDER,
-      dataIndex: "gender",
-      key: "gender",
-      width: widths.gender,
+      title: EMPLOYEE_LABEL.SALARY_TYPE,
+      dataIndex: "salaryType",
+      key: "salaryType",
+      width: widths.salaryType,
       onHeaderCell: () =>
         ({
-          width: widths.gender,
-          onResize: (w: number) => handleResize("gender", w),
+          width: widths.salaryType,
+          onResize: (w: number) => handleResize("salaryType", w),
         }) as object,
+      render: (v?: string) =>
+        v ? <Tag>{v === "FIXED" ? "Fixed" : "Variable"}</Tag> : null,
+    },
+    {
+      title: EMPLOYEE_LABEL.HIRE_DATE,
+      dataIndex: "hireDate",
+      key: "hireDate",
+      width: widths.hireDate,
+      onHeaderCell: () =>
+        ({
+          width: widths.hireDate,
+          onResize: (w: number) => handleResize("hireDate", w),
+        }) as object,
+      render: (v?: string) => (v ? dayjs(v).format("MMM DD, YYYY") : null),
     },
     {
       title: EMPLOYEE_LABEL.EMPLOYMENT_STATUS,
@@ -231,6 +278,42 @@ export default function EmployeeTable({
         };
         return <Tag color={colors[v] ?? "default"}>{labels[v] ?? v}</Tag>;
       },
+    },
+    {
+      title: EMPLOYEE_LABEL.STATUS,
+      dataIndex: "status",
+      key: "status",
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
+      render: (v?: string) => (
+        <Tag color={v === "Active" ? "success" : "default"}>{v ?? "—"}</Tag>
+      ),
+    },
+    {
+      title: EMPLOYEE_LABEL.GENDER,
+      dataIndex: "gender",
+      key: "gender",
+      width: widths.gender,
+      onHeaderCell: () =>
+        ({
+          width: widths.gender,
+          onResize: (w: number) => handleResize("gender", w),
+        }) as object,
+    },
+    {
+      title: "Contact",
+      key: "contact",
+      width: widths.contact,
+      onHeaderCell: () =>
+        ({
+          width: widths.contact,
+          onResize: (w: number) => handleResize("contact", w),
+        }) as object,
+      render: (_, record) => record.email || record.contact || null,
     },
     {
       title: EMPLOYEE_LABEL.SSS_NO,
