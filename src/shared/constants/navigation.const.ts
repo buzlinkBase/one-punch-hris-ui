@@ -34,27 +34,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         ],
       },
       {
-        key: "change-schedule",
-        label: "Change Schedule",
-        children: [
-          {
-            key: "change-schedule-work-rotation",
-            label: "Work Rotation Plan",
-            path: "/change-schedule/work-rotation",
-          },
-          {
-            key: "change-schedule-change-rest-day",
-            label: "Change Rest Day",
-            path: "/change-schedule/change-rest-day",
-          },
-          {
-            key: "change-schedule-change-holiday",
-            label: "Change Holiday",
-            path: "/change-schedule/change-holiday",
-          },
-        ],
-      },
-      {
         key: "manage-logs",
         label: "Logs Management",
         children: [
@@ -84,6 +63,29 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/timekeeping/incomplete-punches",
           },
         ],
+      },
+    ],
+  },
+  // Promoted to its own top-level group — schedule adjustments feed directly
+  // into DTR calculation, so they sit right after Time Keeping.
+  {
+    key: "change-schedule",
+    label: "Change Schedule",
+    children: [
+      {
+        key: "change-schedule-work-rotation",
+        label: "Work Rotation Plan",
+        path: "/change-schedule/work-rotation",
+      },
+      {
+        key: "change-schedule-change-rest-day",
+        label: "Change Rest Day",
+        path: "/change-schedule/change-rest-day",
+      },
+      {
+        key: "change-schedule-change-holiday",
+        label: "Change Holiday",
+        path: "/change-schedule/change-holiday",
       },
     ],
   },
@@ -150,40 +152,14 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
     ],
   },
+  // Every master-data/configuration screen lives here, consolidated under one
+  // group instead of being split across top-level Organization/Workforce
+  // entries plus a catch-all "Admin" group.
   {
-    key: "reports",
-    label: "Reports",
-    path: "/reports",
-    children: [
-      {
-        key: "reports-tardiness",
-        label: "Tardiness",
-        path: "/reports/tardiness",
-      },
-    ],
-  },
-  {
-    key: "nav-admin",
-    label: "Admin",
+    key: "nav-setup",
+    label: "Setup",
     type: "group",
     children: [
-      {
-        key: "setup-group-shifts",
-        label: "Time Shifts",
-        type: "group",
-        children: [
-          {
-            key: "setup-fixed-shift",
-            label: "Fixed Shift",
-            path: "/setup/time-shift/fixed",
-          },
-          {
-            key: "setup-split-shift",
-            label: "Split/Broken Shift",
-            path: "/setup/time-shift/split",
-          },
-        ],
-      },
       {
         key: "setup-group-org",
         label: "Organization",
@@ -239,29 +215,36 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         ],
       },
       {
-        key: "setup-group-policy",
-        label: "Policy",
+        key: "setup-group-shifts",
+        label: "Time Shifts",
         type: "group",
         children: [
           {
-            key: "setup-leave-type",
-            label: "Leave Types",
-            path: "/setup/leave-type",
+            key: "setup-fixed-shift",
+            label: "Fixed Shift",
+            path: "/setup/time-shift/fixed",
           },
           {
-            key: "setup-holiday",
-            label: "Holidays",
-            path: "/setup/holiday",
+            key: "setup-split-shift",
+            label: "Split/Broken Shift",
+            path: "/setup/time-shift/split",
+          },
+        ],
+      },
+      {
+        key: "biometric",
+        label: "Biometric",
+        type: "group",
+        children: [
+          {
+            key: "enroll-biometrics",
+            label: "Enroll Biometrics",
+            path: "/enroll-biometrics",
           },
           {
-            key: "setup-payroll-rate",
-            label: "Rate Multipliers",
-            path: "/setup/payroll-rate",
-          },
-          {
-            key: "setup-payroll-settings",
-            label: "Payroll Settings",
-            path: "/setup/payroll-settings",
+            key: "biometric-manage-devices",
+            label: "Manage Devices",
+            path: "/biometric/manage-devices",
           },
         ],
       },
@@ -315,46 +298,69 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         ],
       },
       {
-        key: "biometric",
-        label: "Biometric",
+        key: "setup-group-policy",
+        label: "Policy",
+        type: "group",
         children: [
           {
-            key: "enroll-biometrics",
-            label: "Enroll Biometrics",
-            path: "/enroll-biometrics",
+            key: "setup-leave-type",
+            label: "Leave Types",
+            path: "/setup/leave-type",
           },
           {
-            key: "biometric-manage-devices",
-            label: "Manage Devices",
-            path: "/biometric/manage-devices",
+            key: "setup-holiday",
+            label: "Holidays",
+            path: "/setup/holiday",
+          },
+          {
+            key: "setup-payroll-rate",
+            label: "Rate Multipliers",
+            path: "/setup/payroll-rate",
+          },
+          {
+            key: "setup-payroll-settings",
+            label: "Payroll Settings",
+            path: "/setup/payroll-settings",
           },
         ],
       },
+    ],
+  },
+  {
+    key: "reports",
+    label: "Reports",
+    path: "/reports",
+    children: [
       {
-        key: "security",
-        label: "Security",
-        children: [
-          {
-            key: "security-users",
-            label: "Users",
-            path: "/security/users",
-          },
-          {
-            key: "security-roles",
-            label: "Roles",
-            path: "/security/roles",
-          },
-          {
-            key: "security-permissions",
-            label: "Permissions",
-            path: "/security/permissions",
-          },
-          {
-            key: "security-audit",
-            label: "Audit",
-            path: "/security/audit",
-          },
-        ],
+        key: "reports-tardiness",
+        label: "Tardiness",
+        path: "/reports/tardiness",
+      },
+    ],
+  },
+  {
+    key: "security",
+    label: "Security",
+    children: [
+      {
+        key: "security-users",
+        label: "Users",
+        path: "/security/users",
+      },
+      {
+        key: "security-roles",
+        label: "Roles",
+        path: "/security/roles",
+      },
+      {
+        key: "security-permissions",
+        label: "Permissions",
+        path: "/security/permissions",
+      },
+      {
+        key: "security-audit",
+        label: "Audit",
+        path: "/security/audit",
       },
     ],
   },
