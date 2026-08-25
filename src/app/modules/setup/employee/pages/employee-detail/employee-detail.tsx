@@ -66,6 +66,7 @@ import {
   COMPUTATION_BASIS_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { isActiveStatus } from "@/shared/utils/status.util";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
@@ -83,6 +84,7 @@ import QuickAddClientModal from "../../components/quick-add-client-modal";
 import QuickAddSectionModal from "../../components/quick-add-section-modal";
 import QuickAddBranchModal from "../../components/quick-add-branch-modal";
 import QuickAddPositionModal from "../../components/quick-add-position-modal";
+import QuickAddTimeShiftModal from "../../components/quick-add-time-shift-modal";
 import EmployeeDependentsTab from "../../components/employee-dependents-tab";
 import EmployeeEducationTab from "../../components/employee-education-tab";
 import EmployeeFixedScheduleTab from "../../components/employee-fixed-schedule-tab";
@@ -239,6 +241,7 @@ export default function EmployeeDetail() {
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
   const [branchModalOpen, setBranchModalOpen] = useState(false);
   const [positionModalOpen, setPositionModalOpen] = useState(false);
+  const [timeShiftModalOpen, setTimeShiftModalOpen] = useState(false);
 
   const [fixedSchedule, setFixedSchedule] = useState<
     EmployeeFixedScheduleDayModel[]
@@ -430,18 +433,24 @@ export default function EmployeeDetail() {
     isBranchesLoading ||
     isPositionsLoading;
 
-  const departmentOptions = departments.map((d) => ({
-    value: d.id,
-    label: `${d.code} - ${d.name}`,
-  }));
-  const areaOptions = operationAreas.map((a) => ({
-    value: a.id,
-    label: `${a.code} - ${a.name}`,
-  }));
-  const payrollGroupOptions = payrollGroups.map((p) => ({
-    value: p.id,
-    label: `${p.code} - ${p.name}`,
-  }));
+  const departmentOptions = departments
+    .filter((d) => isActiveStatus(d.status))
+    .map((d) => ({
+      value: d.id,
+      label: `${d.code} - ${d.name}`,
+    }));
+  const areaOptions = operationAreas
+    .filter((a) => isActiveStatus(a.status))
+    .map((a) => ({
+      value: a.id,
+      label: `${a.code} - ${a.name}`,
+    }));
+  const payrollGroupOptions = payrollGroups
+    .filter((p) => isActiveStatus(p.status))
+    .map((p) => ({
+      value: p.id,
+      label: `${p.code} - ${p.name}`,
+    }));
 
   const formatShiftTime = (t: string) => {
     const dot = t.indexOf(".");
@@ -484,21 +493,29 @@ export default function EmployeeDetail() {
       })),
   ];
 
-  const clientOptions = clients.map((c) => ({
-    value: c.id,
-    label: `${c.code} - ${c.name}`,
-  }));
-  const branchOptions = branches.map((b) => ({
-    value: b.id,
-    label: `${b.code} - ${b.name}`,
-  }));
-  const positionOptions = positions.map((p) => ({
-    value: p.id,
-    label: `${p.code} - ${p.name}`,
-  }));
+  const clientOptions = clients
+    .filter((c) => isActiveStatus(c.status))
+    .map((c) => ({
+      value: c.id,
+      label: `${c.code} - ${c.name}`,
+    }));
+  const branchOptions = branches
+    .filter((b) => isActiveStatus(b.status))
+    .map((b) => ({
+      value: b.id,
+      label: `${b.code} - ${b.name}`,
+    }));
+  const positionOptions = positions
+    .filter((p) => isActiveStatus(p.status))
+    .map((p) => ({
+      value: p.id,
+      label: `${p.code} - ${p.name}`,
+    }));
   const sectionOptions = sections
     .filter(
-      (s) => !watchedDepartmentId || s.departmentId === watchedDepartmentId,
+      (s) =>
+        isActiveStatus(s.status) &&
+        (!watchedDepartmentId || s.departmentId === watchedDepartmentId),
     )
     .map((s) => ({ value: s.id, label: `${s.code} - ${s.name}` }));
 
@@ -1115,71 +1132,86 @@ export default function EmployeeDetail() {
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
-                      <Controller
-                        name="timeShiftId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
-                            options={timeShiftOptions}
-                            loading={isRefLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select time shift"
-                            optionRender={(opt) => {
-                              const o =
-                                opt.data as (typeof timeShiftOptions)[number];
-                              const isFixed = o.shiftType === "FIXED";
-                              return (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    gap: 8,
-                                  }}
-                                >
-                                  <span style={{ fontWeight: 500 }}>
-                                    {o.shiftName}
-                                  </span>
-                                  <span
+                      <div
+                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                      >
+                        <Controller
+                          name="timeShiftId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => field.onChange(v ?? null)}
+                              options={timeShiftOptions}
+                              loading={isRefLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select time shift"
+                              style={{ flex: 1 }}
+                              optionRender={(opt) => {
+                                const o =
+                                  opt.data as (typeof timeShiftOptions)[number];
+                                const isFixed = o.shiftType === "FIXED";
+                                return (
+                                  <div
                                     style={{
                                       display: "flex",
+                                      justifyContent: "space-between",
                                       alignItems: "center",
-                                      gap: 6,
-                                      flexShrink: 0,
+                                      gap: 8,
                                     }}
                                   >
-                                    <span
-                                      style={{ fontSize: 11, color: "#6b7280" }}
-                                    >
-                                      {formatShiftTime(o.startTime)} –{" "}
-                                      {formatShiftTime(o.endTime)}
+                                    <span style={{ fontWeight: 500 }}>
+                                      {o.shiftName}
                                     </span>
                                     <span
                                       style={{
-                                        fontSize: 10,
-                                        fontWeight: 600,
-                                        padding: "1px 6px",
-                                        borderRadius: 4,
-                                        background: isFixed
-                                          ? "#d1fae5"
-                                          : "#ede9fe",
-                                        color: isFixed ? "#065f46" : "#5b21b6",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        flexShrink: 0,
                                       }}
                                     >
-                                      {isFixed ? "Fixed" : "Split"}
+                                      <span
+                                        style={{
+                                          fontSize: 11,
+                                          color: "#6b7280",
+                                        }}
+                                      >
+                                        {formatShiftTime(o.startTime)} –{" "}
+                                        {formatShiftTime(o.endTime)}
+                                      </span>
+                                      <span
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: 600,
+                                          padding: "1px 6px",
+                                          borderRadius: 4,
+                                          background: isFixed
+                                            ? "#d1fae5"
+                                            : "#ede9fe",
+                                          color: isFixed
+                                            ? "#065f46"
+                                            : "#5b21b6",
+                                        }}
+                                      >
+                                        {isFixed ? "Fixed" : "Split"}
+                                      </span>
                                     </span>
-                                  </span>
-                                </div>
-                              );
-                            }}
-                          />
-                        )}
-                      />
+                                  </div>
+                                );
+                              }}
+                            />
+                          )}
+                        />
+                        <Button
+                          icon={<PlusOutlined />}
+                          onClick={() => setTimeShiftModalOpen(true)}
+                          title="Add new time shift"
+                        />
+                      </div>
                     </Form.Item>
 
                     <Form.Item
@@ -2197,6 +2229,14 @@ export default function EmployeeDetail() {
         onCreated={(id) => {
           setValue("positionId", id);
           setPositionModalOpen(false);
+        }}
+      />
+      <QuickAddTimeShiftModal
+        open={timeShiftModalOpen}
+        onClose={() => setTimeShiftModalOpen(false)}
+        onCreated={(id) => {
+          setValue("timeShiftId", id);
+          setTimeShiftModalOpen(false);
         }}
       />
     </div>

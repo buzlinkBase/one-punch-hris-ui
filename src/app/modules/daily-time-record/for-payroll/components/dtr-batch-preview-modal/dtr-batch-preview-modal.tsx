@@ -24,7 +24,7 @@ export default function DtrBatchPreviewModal({
       onCancel={onClose}
       footer={null}
       width="90vw"
-      title={batchCode ? `DTR Batch — ${batchCode}` : "DTR Batch"}
+      title={batchCode ? `${batchCode}` : "DTR Batch"}
       destroyOnClose
     >
       <DtrSummaryTable data={records} loading={isLoading} />

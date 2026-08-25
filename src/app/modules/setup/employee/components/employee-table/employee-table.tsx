@@ -81,7 +81,6 @@ export default function EmployeeTable({
       title: EMPLOYEE_LABEL.EMPLOYEE_NO,
       dataIndex: "employeeNo",
       key: "employeeNo",
-      fixed: "left",
       width: widths.employeeNo,
       onHeaderCell: () =>
         ({
@@ -103,7 +102,6 @@ export default function EmployeeTable({
     {
       title: "Full Name",
       key: "fullName",
-      fixed: "left",
       width: widths.fullName,
       onHeaderCell: () =>
         ({
@@ -362,7 +360,6 @@ export default function EmployeeTable({
     {
       title: "Actions",
       key: "actions",
-      fixed: "right",
       width: 110,
       render: (_, record) => (
         <Space>

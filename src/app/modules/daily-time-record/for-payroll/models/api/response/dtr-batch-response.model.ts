@@ -4,4 +4,5 @@ export interface DtrBatchModel {
   toDate: string;
   employeeCount: number;
   isPosted: boolean;
+  postingDescription?: string | null;
 }

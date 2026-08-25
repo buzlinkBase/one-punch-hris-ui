@@ -44,6 +44,7 @@ import {
   OTHER_INCOME_APPLICATION_LABEL,
 } from "../../constants/label.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { isActiveStatus } from "@/shared/utils/status.util";
 
 const { Title } = Typography;
 
@@ -202,10 +203,12 @@ export default function OtherIncomeApplicationDetail() {
       `${e.lastName}, ${e.firstName} ${e.middleName ?? ""}`.trim(),
   }));
 
-  const incomeOptions = rawIncomes.map((i) => ({
-    value: i.id,
-    label: `${i.code} — ${i.name}`,
-  }));
+  const incomeOptions = rawIncomes
+    .filter((i) => isActiveStatus(i.status))
+    .map((i) => ({
+      value: i.id,
+      label: `${i.code} — ${i.name}`,
+    }));
 
   const onSubmit = (values: OtherIncomeApplicationFormValues) => {
     if (!schedule.length) {

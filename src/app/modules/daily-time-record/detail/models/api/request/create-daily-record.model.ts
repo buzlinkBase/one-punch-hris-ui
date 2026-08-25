@@ -61,6 +61,7 @@ export interface CreateDailyRecord {
   restDoubleLegalNDHours: number;
   restDoubleLegalNDOTHours: number;
   note: string;
+  postingDescription?: string | null;
   userId?: string;
   branchId?: string;
   departmentId?: string;

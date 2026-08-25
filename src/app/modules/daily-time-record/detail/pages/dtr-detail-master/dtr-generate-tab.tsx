@@ -24,6 +24,7 @@ import {
   useSaveDtrDetail,
 } from "../../hooks/use-dtr-detail-queries";
 import DtrDetailTable from "../../components/dtr-detail-table";
+import DtrPostModal from "../../components/dtr-post-modal";
 import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
 import {
   buildDtrCsv,
@@ -128,13 +129,20 @@ export default function DtrGenerateTab() {
   });
 
   const { mutateAsync: saveRecords, isPending: isSaving } = useSaveDtrDetail();
+  const [postModalOpen, setPostModalOpen] = useState(false);
 
-  const handleSave = async () => {
+  const handlePostClick = () => {
     if (!records.length) {
       messageApi.warning("No data to save. Click Generate first.");
       return;
     }
-    await saveRecords(records);
+    setPostModalOpen(true);
+  };
+
+  const handleConfirmPost = async (postingDescription: string) => {
+    const payload = records.map((r) => ({ ...r, postingDescription }));
+    await saveRecords(payload);
+    setPostModalOpen(false);
     messageApi.success(
       `${records.length} record${records.length !== 1 ? "s" : ""} saved.`,
     );
@@ -216,7 +224,7 @@ export default function DtrGenerateTab() {
             icon={<SaveOutlined />}
             disabled={!records.length}
             loading={isSaving}
-            onClick={handleSave}
+            onClick={handlePostClick}
           >
             Post
           </Button>
@@ -388,6 +396,14 @@ export default function DtrGenerateTab() {
         onChanged={() => refetch()}
         dateFrom={committedFilter?.fromDate}
         dateTo={committedFilter?.toDate}
+      />
+
+      <DtrPostModal
+        open={postModalOpen}
+        recordCount={records.length}
+        isSaving={isSaving}
+        onClose={() => setPostModalOpen(false)}
+        onConfirm={handleConfirmPost}
       />
     </div>
   );

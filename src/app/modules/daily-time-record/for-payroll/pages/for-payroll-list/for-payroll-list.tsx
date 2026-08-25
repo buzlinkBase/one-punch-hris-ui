@@ -121,6 +121,20 @@ export default function ForPayrollList() {
       render: (_, r) => `${fmtDate(r.fromDate)} — ${fmtDate(r.toDate)}`,
     },
     {
+      title: "Posting Description",
+      dataIndex: "postingDescription",
+      key: "postingDescription",
+      ellipsis: { showTitle: false },
+      render: (v?: string | null) =>
+        v ? (
+          <Tooltip title={v}>
+            <Text type="secondary">{v}</Text>
+          </Tooltip>
+        ) : (
+          <Text type="secondary">—</Text>
+        ),
+    },
+    {
       title: "",
       key: "view",
       width: 40,

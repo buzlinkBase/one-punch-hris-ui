@@ -14,6 +14,7 @@ import {
   useUpdateSection,
 } from "../../hooks/use-section-queries";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
+import { isActiveStatus } from "@/shared/utils/status.util";
 import { SECTION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
@@ -69,10 +70,12 @@ export default function SectionDetail() {
     navigate({ to: "/setup/section" });
   };
 
-  const departmentOptions = departments.map((d) => ({
-    value: d.id,
-    label: `${d.code} - ${d.name}`,
-  }));
+  const departmentOptions = departments
+    .filter((d) => isActiveStatus(d.status))
+    .map((d) => ({
+      value: d.id,
+      label: `${d.code} - ${d.name}`,
+    }));
 
   return (
     <div className="content-page">

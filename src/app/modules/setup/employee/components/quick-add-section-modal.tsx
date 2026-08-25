@@ -8,6 +8,7 @@ import {
 } from "@/app/modules/setup/section/models/forms/section-form.schema";
 import { useCreateSection } from "@/app/modules/setup/section/hooks/use-section-queries";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
+import { isActiveStatus } from "@/shared/utils/status.util";
 
 interface Props {
   open: boolean;
@@ -64,10 +65,12 @@ export default function QuickAddSectionModal({
   const { mutateAsync: create, isPending } = useCreateSection();
   const { data: departments = [], isLoading: isDeptLoading } = useDepartments();
 
-  const deptOptions = departments.map((d) => ({
-    value: d.id,
-    label: `${d.code} - ${d.name}`,
-  }));
+  const deptOptions = departments
+    .filter((d) => isActiveStatus(d.status))
+    .map((d) => ({
+      value: d.id,
+      label: `${d.code} - ${d.name}`,
+    }));
 
   const onSubmit = async (values: SectionFormValues) => {
     try {
