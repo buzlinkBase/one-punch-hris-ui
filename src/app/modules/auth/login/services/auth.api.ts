@@ -48,6 +48,13 @@ export const authApi = {
       { _skipErrorNotification: true },
     );
   },
+  signUpWithGoogle(code: string): Promise<LoginResponse> {
+    return httpClient.postUnwrapped<LoginResponse>(
+      `${USERS_URL}/signup-google-callback`,
+      { code },
+      { _skipErrorNotification: true },
+    );
+  },
   selectTenant(tenantId: string): Promise<LoginResponse> {
     return httpClient.postUnwrapped<LoginResponse>(
       `${USERS_URL}/set-default-tenant`,
