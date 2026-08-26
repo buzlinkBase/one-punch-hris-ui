@@ -157,8 +157,8 @@ export default function Login() {
         await proceedAfterLogin();
       } catch (err) {
         const description = axios.isAxiosError(err)
-          ? ((err.response?.data as ApiResponse<unknown>)?.message ??
-            "Google login failed.")
+          ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
+              ?.errorMessage ?? "Google login failed.")
           : "An unexpected error occurred.";
         notification.error({ message: "Login failed", description });
       }
