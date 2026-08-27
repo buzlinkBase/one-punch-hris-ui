@@ -36,9 +36,29 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const fmt = (n: number) =>
-  n?.toLocaleString("en-PH", { minimumFractionDigits: 2 }) ?? "0.00";
+  n?.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) ?? "0.00";
 const fmtDate = (d: string) =>
   d ? dayjs(d.replace(/Z$/, "")).format("MMM DD, YYYY") : "—";
+
+const BAND_CLASS = {
+  earnings: "bg-emerald-50 dark:bg-emerald-950/30",
+  deductions: "bg-rose-50 dark:bg-rose-950/30",
+  attendance: "bg-amber-50 dark:bg-amber-950/30",
+};
+
+// Applies a band's background className to every leaf column in it, so the
+// whole column group (header + body cells) reads as one colored band.
+const withBand = (
+  columns: ColumnsType<PayrollRunResult>,
+  className: string,
+): ColumnsType<PayrollRunResult> =>
+  columns.map((c) => ({
+    ...c,
+    className: [c.className, className].filter(Boolean).join(" "),
+  }));
 
 export default function ForPayrollList() {
   const { token } = theme.useToken();
@@ -160,101 +180,207 @@ export default function ForPayrollList() {
       fixed: "left",
     },
     {
-      title: "Basic",
-      dataIndex: "basicSalary",
-      key: "basicSalary",
+      title: "Salary Type",
+      dataIndex: "salaryType",
+      key: "salaryType",
+      width: 100,
+      render: (v: PayrollRunResult["salaryType"]) => (
+        <Tag color={v === "FIXED" ? "blue" : "default"}>
+          {v === "FIXED" ? "Fixed" : "Variable"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Daily Rate",
+      dataIndex: "dailyRate",
+      key: "dailyRate",
+      width: 100,
       align: "right",
       render: fmt,
     },
     {
-      title: "OT",
-      dataIndex: "overtimePay",
-      key: "overtimePay",
-      align: "right",
-      render: fmt,
+      title: "Earnings",
+      key: "earnings-band",
+      className: BAND_CLASS.earnings,
+      children: withBand(
+        [
+          {
+            title: "Basic",
+            dataIndex: "basicPay",
+            key: "basicPay",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "OT",
+            dataIndex: "overtimePay",
+            key: "overtimePay",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "ND",
+            dataIndex: "nightDifferentialPay",
+            key: "nd",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "NDOT",
+            dataIndex: "nightDifferentialOTPay",
+            key: "ndot",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Rest Day",
+            dataIndex: "restDayPay",
+            key: "restDayPay",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Holiday",
+            dataIndex: "holidayPay",
+            key: "holidayPay",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Allowances",
+            dataIndex: "totalRegularAllowances",
+            key: "allowances",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "COLA",
+            dataIndex: "cola",
+            key: "cola",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Bonuses",
+            dataIndex: "totalBonuses",
+            key: "bonuses",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Commissions",
+            dataIndex: "totalCommissions",
+            key: "commissions",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "De Minimis",
+            dataIndex: "totalDeminimises",
+            key: "deminimis",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Other Income",
+            dataIndex: "totalOtherIncome",
+            key: "otherIncome",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Reimbursement",
+            dataIndex: "reimbursement",
+            key: "reimbursement",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Gross",
+            dataIndex: "grossIncome",
+            key: "grossIncome",
+            align: "right",
+            render: fmt,
+            className: "font-semibold",
+          },
+        ],
+        BAND_CLASS.earnings,
+      ),
     },
     {
-      title: "ND",
-      dataIndex: "nightDifferentialPay",
-      key: "nd",
-      align: "right",
-      render: fmt,
+      title: "Deductions",
+      key: "deductions-band",
+      className: BAND_CLASS.deductions,
+      children: withBand(
+        [
+          {
+            title: "SSS",
+            dataIndex: "sssContribution",
+            key: "sss",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "PhilHealth",
+            dataIndex: "philHealthContribution",
+            key: "phic",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Pag-IBIG",
+            dataIndex: "pagIbigContribution",
+            key: "hdmf",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "W-Tax",
+            dataIndex: "withholdingTax",
+            key: "tax",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Other Ded.",
+            dataIndex: "otherDeductions",
+            key: "otherDed",
+            align: "right",
+            render: fmt,
+          },
+        ],
+        BAND_CLASS.deductions,
+      ),
     },
     {
-      title: "Holiday",
-      dataIndex: "holidayPay",
-      key: "holidayPay",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Allowances",
-      dataIndex: "totalRegularAllowances",
-      key: "allowances",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Other Income",
-      dataIndex: "totalOtherIncome",
-      key: "otherIncome",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Gross",
-      dataIndex: "grossIncome",
-      key: "grossIncome",
-      align: "right",
-      render: fmt,
-      className: "font-semibold",
-    },
-    {
-      title: "SSS",
-      dataIndex: "sssContribution",
-      key: "sss",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "PhilHealth",
-      dataIndex: "philHealthContribution",
-      key: "phic",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Pag-IBIG",
-      dataIndex: "pagIbigContribution",
-      key: "hdmf",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "W-Tax",
-      dataIndex: "withholdingTax",
-      key: "tax",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Other Ded.",
-      dataIndex: "otherDeductions",
-      key: "otherDed",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Late/UT",
-      key: "lateCut",
-      align: "right",
-      render: (_, r) => fmt(r.lateAmount + r.underTimeAmount),
-    },
-    {
-      title: "Absent",
-      key: "absent",
-      align: "right",
-      render: (_, r) => fmt(r.absences),
+      title: "Attendance",
+      key: "attendance-band",
+      className: BAND_CLASS.attendance,
+      children: withBand(
+        [
+          {
+            title: "Late",
+            dataIndex: "lateAmount",
+            key: "lateAmount",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "UT",
+            dataIndex: "underTimeAmount",
+            key: "underTimeAmount",
+            align: "right",
+            render: fmt,
+          },
+          {
+            title: "Absent",
+            key: "absent",
+            align: "right",
+            render: (_, r) => fmt(r.absences),
+          },
+        ],
+        BAND_CLASS.attendance,
+      ),
     },
     {
       title: "Net Pay",
@@ -414,55 +540,69 @@ export default function ForPayrollList() {
               pagination={{ pageSize: 50, showSizeChanger: false }}
               scroll={{ x: "max-content" }}
               summary={(rows) => {
+                const sum = (pick: (r: PayrollRunResult) => number) =>
+                  rows.reduce((s, r) => s + (pick(r) ?? 0), 0);
+
                 const totals = {
-                  basic: rows.reduce((s, r) => s + r.basicSalary, 0),
-                  ot: rows.reduce((s, r) => s + r.overtimePay, 0),
-                  nd: rows.reduce((s, r) => s + r.nightDifferentialPay, 0),
-                  holiday: rows.reduce((s, r) => s + r.holidayPay, 0),
-                  allowances: rows.reduce(
-                    (s, r) => s + r.totalRegularAllowances,
-                    0,
-                  ),
-                  otherIncome: rows.reduce((s, r) => s + r.totalOtherIncome, 0),
-                  gross: rows.reduce((s, r) => s + r.grossIncome, 0),
-                  sss: rows.reduce((s, r) => s + r.sssContribution, 0),
-                  phic: rows.reduce((s, r) => s + r.philHealthContribution, 0),
-                  hdmf: rows.reduce((s, r) => s + r.pagIbigContribution, 0),
-                  tax: rows.reduce((s, r) => s + r.withholdingTax, 0),
-                  otherDed: rows.reduce((s, r) => s + r.otherDeductions, 0),
-                  lateCut: rows.reduce(
-                    (s, r) => s + r.lateAmount + r.underTimeAmount,
-                    0,
-                  ),
-                  absent: rows.reduce((s, r) => s + r.absences, 0),
-                  net: rows.reduce((s, r) => s + r.netPay, 0),
+                  basic: sum((r) => r.basicPay),
+                  ot: sum((r) => r.overtimePay),
+                  nd: sum((r) => r.nightDifferentialPay),
+                  ndot: sum((r) => r.nightDifferentialOTPay),
+                  restDay: sum((r) => r.restDayPay),
+                  holiday: sum((r) => r.holidayPay),
+                  allowances: sum((r) => r.totalRegularAllowances),
+                  cola: sum((r) => r.cola),
+                  bonuses: sum((r) => r.totalBonuses),
+                  commissions: sum((r) => r.totalCommissions),
+                  deminimis: sum((r) => r.totalDeminimises),
+                  otherIncome: sum((r) => r.totalOtherIncome),
+                  reimbursement: sum((r) => r.reimbursement),
+                  gross: sum((r) => r.grossIncome),
+                  sss: sum((r) => r.sssContribution),
+                  phic: sum((r) => r.philHealthContribution),
+                  hdmf: sum((r) => r.pagIbigContribution),
+                  tax: sum((r) => r.withholdingTax),
+                  otherDed: sum((r) => r.otherDeductions),
+                  late: sum((r) => r.lateAmount),
+                  ut: sum((r) => r.underTimeAmount),
+                  absent: sum((r) => r.absences),
+                  net: sum((r) => r.netPay),
                 };
+                const cells = [
+                  totals.basic,
+                  totals.ot,
+                  totals.nd,
+                  totals.ndot,
+                  totals.restDay,
+                  totals.holiday,
+                  totals.allowances,
+                  totals.cola,
+                  totals.bonuses,
+                  totals.commissions,
+                  totals.deminimis,
+                  totals.otherIncome,
+                  totals.reimbursement,
+                  totals.gross,
+                  totals.sss,
+                  totals.phic,
+                  totals.hdmf,
+                  totals.tax,
+                  totals.otherDed,
+                  totals.late,
+                  totals.ut,
+                  totals.absent,
+                ];
                 return (
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={0}>
+                    <Table.Summary.Cell index={0} colSpan={3}>
                       <strong>Total</strong>
                     </Table.Summary.Cell>
-                    {[
-                      totals.basic,
-                      totals.ot,
-                      totals.nd,
-                      totals.holiday,
-                      totals.allowances,
-                      totals.otherIncome,
-                      totals.gross,
-                      totals.sss,
-                      totals.phic,
-                      totals.hdmf,
-                      totals.tax,
-                      totals.otherDed,
-                      totals.lateCut,
-                      totals.absent,
-                    ].map((val, i) => (
-                      <Table.Summary.Cell key={i} index={i + 1} align="right">
+                    {cells.map((val, i) => (
+                      <Table.Summary.Cell key={i} index={i + 3} align="right">
                         <strong>{fmt(val)}</strong>
                       </Table.Summary.Cell>
                     ))}
-                    <Table.Summary.Cell index={15} align="right">
+                    <Table.Summary.Cell index={cells.length + 3} align="right">
                       <Text strong style={{ color: token.colorPrimary }}>
                         {fmt(totals.net)}
                       </Text>

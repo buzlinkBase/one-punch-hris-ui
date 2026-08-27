@@ -78,6 +78,39 @@ export default function EmployeeTable({
 
   const columns: ColumnsType<EmployeeResponse> = [
     {
+      title: "Actions",
+      key: "actions",
+      width: 110,
+      fixed: "left",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
+          />
+          {onInvite && (
+            <Button
+              type="text"
+              icon={<MailOutlined />}
+              title="Invite to workspace"
+              onClick={() => onInvite(record)}
+            />
+          )}
+          {onDelete && (
+            <Popconfirm
+              title="Delete this employee?"
+              onConfirm={() => onDelete(record.id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          )}
+        </Space>
+      ),
+    },
+    {
       title: EMPLOYEE_LABEL.EMPLOYEE_NO,
       dataIndex: "employeeNo",
       key: "employeeNo",
@@ -356,38 +389,6 @@ export default function EmployeeTable({
           width: widths.tin,
           onResize: (w: number) => handleResize("tin", w),
         }) as object,
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      width: 110,
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
-          />
-          {onInvite && (
-            <Button
-              type="text"
-              icon={<MailOutlined />}
-              title="Invite to workspace"
-              onClick={() => onInvite(record)}
-            />
-          )}
-          {onDelete && (
-            <Popconfirm
-              title="Delete this employee?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          )}
-        </Space>
-      ),
     },
   ];
 

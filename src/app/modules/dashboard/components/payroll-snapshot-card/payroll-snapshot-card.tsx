@@ -10,15 +10,19 @@ const { Title, Text } = Typography;
 const MOCK: PayrollRunResult[] = [
   {
     employeeId: "emp-1",
+    salaryType: "VARIABLE",
+    dailyRate: 0,
     fullName: "Maria Santos",
     payPeriodStart: "2026-08-01",
     payPeriodEnd: "2026-08-15",
-    basicSalary: 12500,
+    basicPay: 12500,
     overtimeHour: 4,
     overtimePay: 625,
     nightDifferentialHour: 0,
     nightDifferentialPay: 0,
+    nightDifferentialOTPay: 0,
     holidayPay: 0,
+    restDayPay: 0,
     cola: 1000,
     totalRegularAllowances: 1500,
     totalBonuses: 0,
@@ -73,15 +77,19 @@ const MOCK: PayrollRunResult[] = [
   },
   {
     employeeId: "emp-2",
+    salaryType: "VARIABLE",
+    dailyRate: 0,
     fullName: "Juan Dela Cruz",
     payPeriodStart: "2026-08-01",
     payPeriodEnd: "2026-08-15",
-    basicSalary: 15000,
+    basicPay: 15000,
     overtimeHour: 0,
     overtimePay: 0,
     nightDifferentialHour: 16,
     nightDifferentialPay: 300,
+    nightDifferentialOTPay: 0,
     holidayPay: 0,
+    restDayPay: 0,
     cola: 1000,
     totalRegularAllowances: 2000,
     totalBonuses: 0,
@@ -136,15 +144,19 @@ const MOCK: PayrollRunResult[] = [
   },
   {
     employeeId: "emp-3",
+    salaryType: "VARIABLE",
+    dailyRate: 0,
     fullName: "Angela Reyes",
     payPeriodStart: "2026-08-01",
     payPeriodEnd: "2026-08-15",
-    basicSalary: 10000,
+    basicPay: 10000,
     overtimeHour: 8,
     overtimePay: 1000,
     nightDifferentialHour: 0,
     nightDifferentialPay: 0,
+    nightDifferentialOTPay: 0,
     holidayPay: 1250,
+    restDayPay: 0,
     cola: 800,
     totalRegularAllowances: 1000,
     totalBonuses: 0,
@@ -238,7 +250,7 @@ export default function PayrollSnapshotCard() {
   const { data, isLoading } = usePayrolls({ from, to });
   const rows = data?.data?.length ? data.data : MOCK;
 
-  const totalBasic = rows.reduce((s, r) => s + r.basicSalary, 0);
+  const totalBasic = rows.reduce((s, r) => s + r.basicPay, 0);
   const totalOT = rows.reduce(
     (s, r) => s + r.overtimePay + r.nightDifferentialPay,
     0,

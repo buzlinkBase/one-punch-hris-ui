@@ -12,4 +12,5 @@ export interface UpdateCompanyPolicy {
   timeInAllowance: number;
   doublePunchGap: number;
   checkAfterHoliday: boolean;
+  waivePriorDayRequirement: boolean;
 }

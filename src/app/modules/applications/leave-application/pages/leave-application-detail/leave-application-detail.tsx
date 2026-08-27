@@ -431,15 +431,12 @@ export default function LeaveApplicationDetail() {
       payType: values.payType,
       applicationRemarks: values.applicationRemarks,
       supportingDocumentUrl: values.supportingDocumentUrl || undefined,
+      approvalStatus: values.approvalStatus,
       ...timePayload,
     };
 
     if (isEdit && id) {
-      await update({
-        id,
-        approvalStatus: values.approvalStatus,
-        ...basePayload,
-      });
+      await update({ id, ...basePayload });
     } else {
       await add(basePayload);
     }

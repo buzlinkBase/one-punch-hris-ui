@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Button, Dropdown, Popconfirm, Select, Space, message } from "antd";
+import {
+  Button,
+  Dropdown,
+  Popconfirm,
+  Select,
+  Space,
+  Tooltip,
+  message,
+} from "antd";
 import type { MenuProps } from "antd";
 import {
   DeleteOutlined,
@@ -57,6 +65,12 @@ export default function DtrBatchTab() {
     label: item.code ?? "",
   }));
 
+  const selectedBatch = batchCodes.find(
+    (item) => item.code === selectedBatchCode,
+  );
+  const isSelectedPosted = selectedBatch?.isPosted ?? false;
+  const canDelete = !!selectedBatchCode && !isSelectedPosted;
+
   const handleExport = (format: "csv" | "excel") => {
     if (!records.length) {
       messageApi.info("No data to export. Click Search first.");
@@ -94,24 +108,32 @@ export default function DtrBatchTab() {
       {contextHolder}
       <div className="flex justify-end">
         <Space>
-          <Popconfirm
-            title="Delete batch"
-            description={`Delete all records in "${selectedBatchCode}"?`}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-            cancelText="Cancel"
-            onConfirm={handleDelete}
-            disabled={!selectedBatchCode}
+          <Tooltip
+            title={
+              isSelectedPosted
+                ? "Payroll has already been generated and saved from this batch — it can no longer be deleted."
+                : ""
+            }
           >
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              disabled={!selectedBatchCode}
-              loading={isDeleting}
+            <Popconfirm
+              title="Delete batch"
+              description={`Delete all records in "${selectedBatchCode}"?`}
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
+              onConfirm={handleDelete}
+              disabled={!canDelete}
             >
-              Delete
-            </Button>
-          </Popconfirm>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                disabled={!canDelete}
+                loading={isDeleting}
+              >
+                Delete
+              </Button>
+            </Popconfirm>
+          </Tooltip>
           <Dropdown
             menu={{ items: exportMenuItems }}
             trigger={["click"]}

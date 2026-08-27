@@ -49,6 +49,7 @@ export const employeeMapper = {
       isSpecialNonWorkingIncluded:
         response.isSpecialNonWorkingIncluded ?? false,
       isNightDiffIncluded: response.isNightDiffIncluded ?? false,
+      useEmployeeOverride: response.useEmployeeOverride ?? true,
       bankName: response.bankName ?? "",
       bankNo: response.bankNo ?? "",
       sssNo: response.sssNo ?? "",
@@ -121,6 +122,7 @@ export const employeeMapper = {
       isRegularHolidayIncluded: false,
       isSpecialNonWorkingIncluded: false,
       isNightDiffIncluded: false,
+      useEmployeeOverride: false,
       restDays: [],
       sssRate: { computationType: "None", eE: 0, eR: 0, eC: 0, addOns: 0 },
       phicRate: { computationType: "None", eE: 0, eR: 0, addOns: 0 },

@@ -7,6 +7,7 @@ import {
   Select,
   Space,
   Switch,
+  Tabs,
   Typography,
   notification,
 } from "antd";
@@ -26,10 +27,11 @@ import {
   OT_ELIGIBILITY_OPTIONS,
   HOLIDAY_TIME_BASIS_OPTIONS,
 } from "../../constants/label.const";
+import FixedSalaryDefaultsTab from "./fixed-salary-defaults-tab";
 
 const { Title } = Typography;
 
-export default function CompanyPolicy() {
+function GeneralPolicyTab() {
   const { data: policy, isLoading } = useCompanyPolicy();
   const { mutateAsync: update, isPending } = useUpdateCompanyPolicy();
 
@@ -54,6 +56,7 @@ export default function CompanyPolicy() {
       timeInAllowance: -120,
       doublePunchGap: 2,
       checkAfterHoliday: false,
+      waivePriorDayRequirement: false,
     },
   });
 
@@ -76,6 +79,7 @@ export default function CompanyPolicy() {
         timeInAllowance: policy.timeInAllowance,
         doublePunchGap: policy.doublePunchGap,
         checkAfterHoliday: policy.checkAfterHoliday,
+        waivePriorDayRequirement: policy.waivePriorDayRequirement,
       });
     }
   }, [policy, reset]);
@@ -98,6 +102,263 @@ export default function CompanyPolicy() {
   };
 
   return (
+    <Form
+      layout="vertical"
+      onFinish={handleSubmit(onSubmit)}
+      className="form-page-body"
+    >
+      <div className="flex flex-col gap-4">
+        {/* Overtime */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_OVERTIME}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.OT_INCLUSION}
+              validateStatus={errors.otInclusionPolicy ? "error" : ""}
+              help={errors.otInclusionPolicy?.message}
+            >
+              <Controller
+                name="otInclusionPolicy"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={OT_INCLUSION_OPTIONS}
+                    placeholder="Select OT inclusion rule"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.OT_ELIGIBILITY}
+              validateStatus={errors.otEligibility ? "error" : ""}
+              help={errors.otEligibility?.message}
+            >
+              <Controller
+                name="otEligibility"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={OT_ELIGIBILITY_OPTIONS}
+                    placeholder="Select OT eligibility rule"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Late Policy */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_LATE}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item label={COMPANY_POLICY_LABEL.IS_HALF_DAY_LATE}>
+              <Controller
+                name="isHalfDayLateOn"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.HALF_DAY_THRESHOLD}
+              validateStatus={errors.halfDayLateThresholdMinutes ? "error" : ""}
+              help={errors.halfDayLateThresholdMinutes?.message}
+            >
+              <Controller
+                name="halfDayLateThresholdMinutes"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    min={0}
+                    style={{ width: "100%" }}
+                    disabled={!isHalfDayLateOn}
+                    addonAfter="min"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item label={COMPANY_POLICY_LABEL.IS_WHOLE_DAY_LATE}>
+              <Controller
+                name="isWholeDayLateOn"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.WHOLE_DAY_THRESHOLD}
+              validateStatus={
+                errors.wholeDayLateThresholdMinutes ? "error" : ""
+              }
+              help={errors.wholeDayLateThresholdMinutes?.message}
+            >
+              <Controller
+                name="wholeDayLateThresholdMinutes"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    min={0}
+                    style={{ width: "100%" }}
+                    disabled={!isWholeDayLateOn}
+                    addonAfter="min"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Night Differential */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_NIGHT_DIFF}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.NIGHT_DIFF_THRESHOLD}
+              validateStatus={errors.nightDiffThreshold ? "error" : ""}
+              help={errors.nightDiffThreshold?.message}
+            >
+              <Controller
+                name="nightDiffThreshold"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    min={0}
+                    style={{ width: "100%" }}
+                    addonAfter="min"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Attendance Rules */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_ATTENDANCE_RULES}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.TIME_IN_ALLOWANCE}
+              validateStatus={errors.timeInAllowance ? "error" : ""}
+              help={errors.timeInAllowance?.message}
+            >
+              <Controller
+                name="timeInAllowance"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    style={{ width: "100%" }}
+                    addonAfter="min"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.DOUBLE_PUNCH_GAP}
+              validateStatus={errors.doublePunchGap ? "error" : ""}
+              help={errors.doublePunchGap?.message}
+            >
+              <Controller
+                name="doublePunchGap"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    min={0}
+                    style={{ width: "100%" }}
+                    addonAfter="min"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Holiday */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_HOLIDAY}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.HOLIDAY_TIME_BASIS}
+              validateStatus={errors.holidayTimeBasis ? "error" : ""}
+              help={errors.holidayTimeBasis?.message}
+            >
+              <Controller
+                name="holidayTimeBasis"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={HOLIDAY_TIME_BASIS_OPTIONS}
+                    placeholder="Select holiday hours basis"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item label={COMPANY_POLICY_LABEL.WAIVE_PRIOR_DAY_REQUIREMENT}>
+              <Controller
+                name="waivePriorDayRequirement"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item label={COMPANY_POLICY_LABEL.CHECK_AFTER_HOLIDAY}>
+              <Controller
+                name="checkAfterHoliday"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+      </div>
+
+      <div className="form-action-footer">
+        <Space className="form-action-footer-row">
+          <Button type="primary" htmlType="submit" loading={isPending}>
+            Save Settings
+          </Button>
+        </Space>
+      </div>
+    </Form>
+  );
+}
+
+export default function CompanyPolicy() {
+  return (
     <div className="content-page">
       <div className="page-toolbar">
         <div className="page-toolbar-row">
@@ -112,250 +373,23 @@ export default function CompanyPolicy() {
         </div>
       </div>
 
-      <Form
-        layout="vertical"
-        onFinish={handleSubmit(onSubmit)}
-        className="form-page-body"
-      >
-        <div className="flex flex-col gap-4">
-          {/* Overtime */}
-          <Card
-            title={COMPANY_POLICY_LABEL.SECTION_OVERTIME}
-            loading={isLoading}
-            size="small"
-          >
-            <div className="form-grid-2">
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.OT_INCLUSION}
-                validateStatus={errors.otInclusionPolicy ? "error" : ""}
-                help={errors.otInclusionPolicy?.message}
-              >
-                <Controller
-                  name="otInclusionPolicy"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={OT_INCLUSION_OPTIONS}
-                      placeholder="Select OT inclusion rule"
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.OT_ELIGIBILITY}
-                validateStatus={errors.otEligibility ? "error" : ""}
-                help={errors.otEligibility?.message}
-              >
-                <Controller
-                  name="otEligibility"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={OT_ELIGIBILITY_OPTIONS}
-                      placeholder="Select OT eligibility rule"
-                    />
-                  )}
-                />
-              </Form.Item>
-            </div>
-          </Card>
-
-          {/* Late Policy */}
-          <Card
-            title={COMPANY_POLICY_LABEL.SECTION_LATE}
-            loading={isLoading}
-            size="small"
-          >
-            <div className="form-grid-2">
-              <Form.Item label={COMPANY_POLICY_LABEL.IS_HALF_DAY_LATE}>
-                <Controller
-                  name="isHalfDayLateOn"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.HALF_DAY_THRESHOLD}
-                validateStatus={
-                  errors.halfDayLateThresholdMinutes ? "error" : ""
-                }
-                help={errors.halfDayLateThresholdMinutes?.message}
-              >
-                <Controller
-                  name="halfDayLateThresholdMinutes"
-                  control={control}
-                  render={({ field }) => (
-                    <InputNumber
-                      {...field}
-                      min={0}
-                      style={{ width: "100%" }}
-                      disabled={!isHalfDayLateOn}
-                      addonAfter="min"
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item label={COMPANY_POLICY_LABEL.IS_WHOLE_DAY_LATE}>
-                <Controller
-                  name="isWholeDayLateOn"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.WHOLE_DAY_THRESHOLD}
-                validateStatus={
-                  errors.wholeDayLateThresholdMinutes ? "error" : ""
-                }
-                help={errors.wholeDayLateThresholdMinutes?.message}
-              >
-                <Controller
-                  name="wholeDayLateThresholdMinutes"
-                  control={control}
-                  render={({ field }) => (
-                    <InputNumber
-                      {...field}
-                      min={0}
-                      style={{ width: "100%" }}
-                      disabled={!isWholeDayLateOn}
-                      addonAfter="min"
-                    />
-                  )}
-                />
-              </Form.Item>
-            </div>
-          </Card>
-
-          {/* Night Differential */}
-          <Card
-            title={COMPANY_POLICY_LABEL.SECTION_NIGHT_DIFF}
-            loading={isLoading}
-            size="small"
-          >
-            <div className="form-grid-2">
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.NIGHT_DIFF_THRESHOLD}
-                validateStatus={errors.nightDiffThreshold ? "error" : ""}
-                help={errors.nightDiffThreshold?.message}
-              >
-                <Controller
-                  name="nightDiffThreshold"
-                  control={control}
-                  render={({ field }) => (
-                    <InputNumber
-                      {...field}
-                      min={0}
-                      style={{ width: "100%" }}
-                      addonAfter="min"
-                    />
-                  )}
-                />
-              </Form.Item>
-            </div>
-          </Card>
-
-          {/* Attendance Rules */}
-          <Card
-            title={COMPANY_POLICY_LABEL.SECTION_ATTENDANCE_RULES}
-            loading={isLoading}
-            size="small"
-          >
-            <div className="form-grid-2">
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.TIME_IN_ALLOWANCE}
-                validateStatus={errors.timeInAllowance ? "error" : ""}
-                help={errors.timeInAllowance?.message}
-              >
-                <Controller
-                  name="timeInAllowance"
-                  control={control}
-                  render={({ field }) => (
-                    <InputNumber
-                      {...field}
-                      style={{ width: "100%" }}
-                      addonAfter="min"
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.DOUBLE_PUNCH_GAP}
-                validateStatus={errors.doublePunchGap ? "error" : ""}
-                help={errors.doublePunchGap?.message}
-              >
-                <Controller
-                  name="doublePunchGap"
-                  control={control}
-                  render={({ field }) => (
-                    <InputNumber
-                      {...field}
-                      min={0}
-                      style={{ width: "100%" }}
-                      addonAfter="min"
-                    />
-                  )}
-                />
-              </Form.Item>
-            </div>
-          </Card>
-
-          {/* Holiday */}
-          <Card
-            title={COMPANY_POLICY_LABEL.SECTION_HOLIDAY}
-            loading={isLoading}
-            size="small"
-          >
-            <div className="form-grid-2">
-              <Form.Item
-                label={COMPANY_POLICY_LABEL.HOLIDAY_TIME_BASIS}
-                validateStatus={errors.holidayTimeBasis ? "error" : ""}
-                help={errors.holidayTimeBasis?.message}
-              >
-                <Controller
-                  name="holidayTimeBasis"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={HOLIDAY_TIME_BASIS_OPTIONS}
-                      placeholder="Select holiday hours basis"
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              <Form.Item label={COMPANY_POLICY_LABEL.CHECK_AFTER_HOLIDAY}>
-                <Controller
-                  name="checkAfterHoliday"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-              </Form.Item>
-            </div>
-          </Card>
-        </div>
-
-        <div className="form-action-footer">
-          <Space className="form-action-footer-row">
-            <Button type="primary" htmlType="submit" loading={isPending}>
-              Save Settings
-            </Button>
-          </Space>
-        </div>
-      </Form>
+      <Tabs
+        type="card"
+        items={[
+          {
+            key: "general",
+            label: COMPANY_POLICY_LABEL.TAB_GENERAL,
+            forceRender: true,
+            children: <GeneralPolicyTab />,
+          },
+          {
+            key: "fixed-salary-defaults",
+            label: COMPANY_POLICY_LABEL.TAB_FIXED_SALARY_DEFAULTS,
+            forceRender: true,
+            children: <FixedSalaryDefaultsTab />,
+          },
+        ]}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, lazy, Suspense } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import {
   Form,
   Input,
@@ -28,6 +28,8 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import httpClient from "@/core/http/http-client";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 import {
   useForm,
@@ -77,6 +79,7 @@ import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries"
 import { useSections } from "@/app/modules/setup/section/hooks/use-section-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
+import { usePayrollInclusionDefaults } from "@/app/modules/setup/company-policy/hooks/use-payroll-inclusion-defaults-queries";
 import QuickAddPayrollGroupModal from "../../components/quick-add-payroll-group-modal";
 import QuickAddDepartmentModal from "../../components/quick-add-department-modal";
 import QuickAddOperationAreaModal from "../../components/quick-add-operation-area-modal";
@@ -94,10 +97,6 @@ import EmployeeSkillsTab from "../../components/employee-skills-tab";
 import EmployeeDocRecordsTab from "../../components/employee-doc-records-tab";
 import EmployeeEmploymentHistoryTab from "../../components/employee-employment-history-tab";
 import EmployeeAssignAssetsTab from "../../components/employee-assign-assets-tab";
-
-const Employee201Modal = lazy(
-  () => import("@/app/modules/reports/employee-201/employee-201-modal"),
-);
 
 const { Title, Text } = Typography;
 
@@ -221,6 +220,7 @@ export default function EmployeeDetail() {
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
   const { data: positions = [], isLoading: isPositionsLoading } =
     usePositions();
+  const { data: payrollInclusionDefaults } = usePayrollInclusionDefaults();
 
   const {
     control,
@@ -233,7 +233,6 @@ export default function EmployeeDetail() {
     defaultValues: employeeMapper.toDefaultValues(),
   });
 
-  const [show201, setShow201] = useState(false);
   const [deptModalOpen, setDeptModalOpen] = useState(false);
   const [areaModalOpen, setAreaModalOpen] = useState(false);
   const [pgModalOpen, setPgModalOpen] = useState(false);
@@ -350,6 +349,10 @@ export default function EmployeeDetail() {
     name: "employmentStatus",
   });
   const watchedSalaryType = useWatch({ control, name: "salaryType" });
+  const watchedUseEmployeeOverride = useWatch({
+    control,
+    name: "useEmployeeOverride",
+  });
   const watchedDailyRateMode = useWatch({ control, name: "dailyRateMode" });
   const watchedFactorDays = useWatch({ control, name: "factorDays" });
   const watchedUseActualMonthDays = useWatch({
@@ -357,6 +360,57 @@ export default function EmployeeDetail() {
     name: "useActualMonthDays",
   });
   const watchedMonthlyRate = useWatch({ control, name: "monthlyRate" });
+
+  // Applies the Rest Day/Regular Holiday/Special Non-Working conventions baked into a
+  // Factor Days denominator to the employee's own 3 inclusion toggles (Night Diff has no
+  // Factor-Days convention, so it's left untouched). Reused by the Factor Days selects and
+  // by "Use Employee-Specific Fixed Salary Inclusions" turning back on.
+  const applyFactorDaysBooleanDefaults = (days: number | null | undefined) => {
+    const defaults =
+      days != null
+        ? FACTOR_DAYS_DEFAULT_FLAGS[
+            days as keyof typeof FACTOR_DAYS_DEFAULT_FLAGS
+          ]
+        : undefined;
+    if (!defaults) return;
+    setValue("isRestDayPaid", defaults.isRestDayPaid);
+    setValue("isRegularHolidayIncluded", defaults.isRegularHolidayIncluded);
+    setValue(
+      "isSpecialNonWorkingIncluded",
+      defaults.isSpecialNonWorkingIncluded,
+    );
+  };
+
+  // Applies the company-wide Fixed Salary Defaults (Company Policy) to the employee's 4
+  // inclusion toggles. Used when "Use Employee-Specific Fixed Salary Inclusions" turns off.
+  const applyTenantInclusionDefaults = () => {
+    setValue(
+      "isRestDayPaid",
+      payrollInclusionDefaults?.defaultRestDayPaid ?? false,
+    );
+    setValue(
+      "isRegularHolidayIncluded",
+      payrollInclusionDefaults?.defaultRegularHolidayIncluded ?? false,
+    );
+    setValue(
+      "isSpecialNonWorkingIncluded",
+      payrollInclusionDefaults?.defaultSpecialNonWorkingIncluded ?? false,
+    );
+    setValue(
+      "isNightDiffIncluded",
+      payrollInclusionDefaults?.defaultNightDiffIncluded ?? false,
+    );
+  };
+
+  // Keep the 4 inclusion toggles showing the live company-wide Fixed Salary Defaults
+  // whenever the override is off — covers the initial state (new employees default to
+  // override-off) and existing employees loaded with their override already off, not
+  // just the moment the switch is flipped.
+  useEffect(() => {
+    if (watchedUseEmployeeOverride) return;
+    applyTenantInclusionDefaults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedUseEmployeeOverride, payrollInclusionDefaults, setValue]);
 
   const sssComputationType = useWatch({
     control,
@@ -546,7 +600,24 @@ export default function EmployeeDetail() {
             {isEdit && id && (
               <Button
                 icon={<PrinterOutlined />}
-                onClick={() => setShow201(true)}
+                onClick={async () => {
+                  // Open the tab synchronously (before the await) so popup blockers
+                  // treat it as a direct response to the click.
+                  const printTab = window.open("about:blank", "_blank");
+                  try {
+                    const blob = await httpClient.get<Blob>(
+                      `${buildApiUrl(API_PREFIX.hrms, "employees")}/${id}/print-201`,
+                      { responseType: "blob" },
+                    );
+                    const url = URL.createObjectURL(blob);
+                    if (printTab) printTab.location.href = url;
+                  } catch {
+                    printTab?.close();
+                    message.error(
+                      "Failed to generate the 201 file. Please try again.",
+                    );
+                  }
+                }}
               >
                 Print 201
               </Button>
@@ -1383,7 +1454,32 @@ export default function EmployeeDetail() {
                           render={({ field }) => (
                             <Radio.Group
                               value={field.value ?? "Manual"}
-                              onChange={(e) => field.onChange(e.target.value)}
+                              onChange={(e) => {
+                                const newMode = e.target.value;
+                                field.onChange(newMode);
+                                if (newMode === "CalculatedEDR") {
+                                  const isValid = FACTOR_DAYS_OPTIONS.some(
+                                    (o) => o.value === watchedFactorDays,
+                                  );
+                                  if (!isValid) {
+                                    setValue("factorDays", 252);
+                                    if (watchedUseEmployeeOverride) {
+                                      applyFactorDaysBooleanDefaults(252);
+                                    }
+                                  }
+                                } else if (newMode === "MonthlyTotalDays") {
+                                  const isValid =
+                                    MONTHLY_TOTAL_DAYS_OPTIONS.some(
+                                      (o) => o.value === watchedFactorDays,
+                                    );
+                                  if (!isValid) {
+                                    setValue("factorDays", 26);
+                                    if (watchedUseEmployeeOverride) {
+                                      applyFactorDaysBooleanDefaults(26);
+                                    }
+                                  }
+                                }
+                              }}
                               options={DAILY_RATE_MODE_OPTIONS.map((o) =>
                                 o.value === "CalculatedEDR"
                                   ? {
@@ -1417,23 +1513,8 @@ export default function EmployeeDetail() {
                               value={field.value ?? undefined}
                               onChange={(v) => {
                                 field.onChange(v);
-                                const defaults =
-                                  FACTOR_DAYS_DEFAULT_FLAGS[
-                                    v as keyof typeof FACTOR_DAYS_DEFAULT_FLAGS
-                                  ];
-                                if (defaults) {
-                                  setValue(
-                                    "isRestDayPaid",
-                                    defaults.isRestDayPaid,
-                                  );
-                                  setValue(
-                                    "isRegularHolidayIncluded",
-                                    defaults.isRegularHolidayIncluded,
-                                  );
-                                  setValue(
-                                    "isSpecialNonWorkingIncluded",
-                                    defaults.isSpecialNonWorkingIncluded,
-                                  );
+                                if (watchedUseEmployeeOverride) {
+                                  applyFactorDaysBooleanDefaults(v);
                                 }
                               }}
                               options={FACTOR_DAYS_GROUPS.map((g) => ({
@@ -1500,23 +1581,8 @@ export default function EmployeeDetail() {
                               value={field.value ?? undefined}
                               onChange={(v) => {
                                 field.onChange(v);
-                                const defaults =
-                                  FACTOR_DAYS_DEFAULT_FLAGS[
-                                    v as keyof typeof FACTOR_DAYS_DEFAULT_FLAGS
-                                  ];
-                                if (defaults) {
-                                  setValue(
-                                    "isRestDayPaid",
-                                    defaults.isRestDayPaid,
-                                  );
-                                  setValue(
-                                    "isRegularHolidayIncluded",
-                                    defaults.isRegularHolidayIncluded,
-                                  );
-                                  setValue(
-                                    "isSpecialNonWorkingIncluded",
-                                    defaults.isSpecialNonWorkingIncluded,
-                                  );
+                                if (watchedUseEmployeeOverride) {
+                                  applyFactorDaysBooleanDefaults(v);
                                 }
                               }}
                               options={MONTHLY_TOTAL_DAYS_OPTIONS.map((o) => ({
@@ -1597,6 +1663,33 @@ export default function EmployeeDetail() {
                           the base rate; off pays the full rate multiplier.
                         </Text>
                         <div className="flex items-center justify-between max-w-120">
+                          <span>{EMPLOYEE_LABEL.USE_EMPLOYEE_OVERRIDE}</span>
+                          <Controller
+                            name="useEmployeeOverride"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? true}
+                                onChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) {
+                                    applyFactorDaysBooleanDefaults(
+                                      watchedFactorDays,
+                                    );
+                                  } else {
+                                    applyTenantInclusionDefaults();
+                                  }
+                                }}
+                              />
+                            )}
+                          />
+                        </div>
+                        <Text type="secondary" className="text-xs -mt-1">
+                          When off, payroll uses the company-wide Fixed Salary
+                          Defaults from Company Policy instead of the toggles
+                          below.
+                        </Text>
+                        <div className="flex items-center justify-between max-w-120">
                           <span>Monthly Rate Includes Rest Day Pay</span>
                           <Controller
                             name="isRestDayPaid"
@@ -1605,6 +1698,7 @@ export default function EmployeeDetail() {
                               <Switch
                                 checked={field.value ?? false}
                                 onChange={field.onChange}
+                                disabled={!watchedUseEmployeeOverride}
                               />
                             )}
                           />
@@ -1618,6 +1712,7 @@ export default function EmployeeDetail() {
                               <Switch
                                 checked={field.value ?? false}
                                 onChange={field.onChange}
+                                disabled={!watchedUseEmployeeOverride}
                               />
                             )}
                           />
@@ -1634,6 +1729,7 @@ export default function EmployeeDetail() {
                               <Switch
                                 checked={field.value ?? false}
                                 onChange={field.onChange}
+                                disabled={!watchedUseEmployeeOverride}
                               />
                             )}
                           />
@@ -1647,6 +1743,7 @@ export default function EmployeeDetail() {
                               <Switch
                                 checked={field.value ?? false}
                                 onChange={field.onChange}
+                                disabled={!watchedUseEmployeeOverride}
                               />
                             )}
                           />
@@ -2162,16 +2259,6 @@ export default function EmployeeDetail() {
           </Space>
         </div>
       </Form>
-
-      {isEdit && id && show201 && (
-        <Suspense fallback={null}>
-          <Employee201Modal
-            employeeId={id}
-            open={show201}
-            onClose={() => setShow201(false)}
-          />
-        </Suspense>
-      )}
 
       <QuickAddDepartmentModal
         open={deptModalOpen}

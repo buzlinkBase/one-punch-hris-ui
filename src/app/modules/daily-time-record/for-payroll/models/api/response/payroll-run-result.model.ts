@@ -3,13 +3,17 @@ export interface PayrollRunResult {
   fullName: string;
   payPeriodStart: string;
   payPeriodEnd: string;
+  salaryType: "VARIABLE" | "FIXED";
+  dailyRate: number;
   // Earnings
-  basicSalary: number;
+  basicPay: number;
   overtimeHour: number;
   overtimePay: number;
   nightDifferentialHour: number;
   nightDifferentialPay: number;
+  nightDifferentialOTPay: number;
   holidayPay: number;
+  restDayPay: number;
   cola: number;
   totalRegularAllowances: number;
   totalBonuses: number;

@@ -188,7 +188,6 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       title: "Employee",
       dataIndex: "fullName",
       key: "fullName",
-      fixed: "left" as const,
       width: widths.fullName ?? 260,
       onHeaderCell: () =>
         ({
