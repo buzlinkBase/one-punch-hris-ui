@@ -474,26 +474,28 @@ html::-webkit-scrollbar-track {
   @apply w-full flex justify-end items-center gap-2;
 }
 
-/* ─── Modals: always full-screen ─────────────────────── */
-.ant-modal {
-  top: 0 !important;
-  width: 100vw !important;
-  max-width: 100vw !important;
-  margin: 0 !important;
-  padding-bottom: 0 !important;
-}
+/* ─── Modals: full-screen on mobile only, normal on desktop ─── */
+@media (max-width: 767px) {
+  .ant-modal {
+    top: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    padding-bottom: 0 !important;
+  }
 
-.ant-modal .ant-modal-content {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  border-radius: 0 !important;
-}
+  .ant-modal .ant-modal-content {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0 !important;
+  }
 
-.ant-modal .ant-modal-body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+  .ant-modal .ant-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
 }
 
 /* ─── Browser autofill dark-mode fix ────────────────── */

@@ -9,6 +9,7 @@ export const COMPANY_POLICY_LABEL = {
   SECTION_ATT_FILL: "Attendance Entry",
   SECTION_HOLIDAY: "Holiday",
   SECTION_ATTENDANCE_RULES: "Attendance Rules",
+  SECTION_STATUTORY: "Cross-Month Cutoff Credit Policies",
 
   OT_INCLUSION: "OT Inclusion",
   OT_ELIGIBILITY: "OT Eligibility",
@@ -26,6 +27,10 @@ export const COMPANY_POLICY_LABEL = {
     "Require attendance after holiday to be eligible for holiday pay",
   WAIVE_PRIOR_DAY_REQUIREMENT:
     "Waive prior-day attendance requirement for holiday eligibility",
+  CROSS_MONTH_STATUTORY_CREDIT_POLICY: "Credit SSS/PhilHealth/Pag-IBIG To",
+  WTAX_CROSS_MONTH_CREDIT_POLICY: "Credit Withholding Tax To",
+  TREAT_NDOT_AS_ND:
+    "Treat Night Diff + OT as Night Diff only (no OT premium stacked)",
 
   TAB_GENERAL: "General",
   TAB_FIXED_SALARY_DEFAULTS: "Fixed Salary Defaults",
@@ -86,5 +91,20 @@ export const HOLIDAY_TIME_BASIS_OPTIONS = [
   {
     value: "BasedOnActualWorkHours",
     label: "Count only hours that actually fall within the holiday",
+  },
+];
+
+export const CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS = [
+  {
+    value: "CutoffStartMonth",
+    label: "Month the cutoff starts (standard practice)",
+  },
+  {
+    value: "CutoffEndMonth",
+    label: "Month the cutoff ends (payout month)",
+  },
+  {
+    value: "PayDate",
+    label: "Explicit Pay/Release Date (entered per payroll run)",
   },
 ];

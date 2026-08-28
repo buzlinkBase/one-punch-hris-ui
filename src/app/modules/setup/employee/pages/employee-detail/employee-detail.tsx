@@ -749,7 +749,7 @@ export default function EmployeeDetail() {
             </div>
           </div>
         </Card>
-
+        <div className="mb-2"></div>
         {/* ── Tabbed Sections ── */}
         <Card>
           <Tabs

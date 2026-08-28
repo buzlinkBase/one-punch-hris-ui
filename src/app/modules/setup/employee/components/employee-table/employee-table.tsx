@@ -1,11 +1,5 @@
-import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MailOutlined,
-} from "@ant-design/icons";
+import { Table, Button, Space, Popconfirm, Tag } from "antd";
+import { EditOutlined, DeleteOutlined, MailOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -41,7 +35,6 @@ export default function EmployeeTable({
   onInvite,
 }: Props) {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
     employeeNo: 120,
@@ -67,14 +60,6 @@ export default function EmployeeTable({
     hdmfNo: 130,
     tin: 120,
   });
-
-  const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
-      String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-    ),
-  );
 
   const columns: ColumnsType<EmployeeResponse> = [
     {
@@ -394,17 +379,9 @@ export default function EmployeeTable({
 
   return (
     <div className="flex flex-col gap-3">
-      <Input
-        prefix={<SearchOutlined />}
-        placeholder="Search..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        allowClear
-        className="w-full sm:max-w-xs"
-      />
       <Table
         rowKey="id"
-        dataSource={filtered}
+        dataSource={data}
         columns={columns}
         size="small"
         loading={loading}

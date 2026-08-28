@@ -23,6 +23,7 @@ import {
   SaveOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import axios from "axios";
 import {
   useDtrBatches,
   useCalculatePayroll,
@@ -30,10 +31,19 @@ import {
 } from "../../hooks/use-for-payroll-queries";
 import type { DtrBatchModel } from "../../models/api/response/dtr-batch-response.model";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import type { ErrorResponse } from "@/shared/types/api-response.model";
 import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
+
+// ValidationException messages (e.g. "A Pay/Release Date is required...") land in
+// data.detail via GlobalExceptionHandler — surface that instead of a generic fallback.
+const getErrorDetail = (err: unknown, fallback: string) =>
+  axios.isAxiosError(err)
+    ? ((err.response?.data as ErrorResponse | undefined)?.data?.detail ??
+      fallback)
+    : fallback;
 
 const fmt = (n: number) =>
   n?.toLocaleString("en-PH", {
@@ -66,6 +76,7 @@ export default function ForPayrollList() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
   const [previewBatchCode, setPreviewBatchCode] = useState<string | null>(null);
+  const [payDate, setPayDate] = useState<string | null>(null);
 
   const {
     data: batches = [],
@@ -91,7 +102,7 @@ export default function ForPayrollList() {
 
   const clearSelection = () => setSelected(new Set());
 
-  const buildPayload = () => ({ batchCodes: [...selected] });
+  const buildPayload = () => ({ batchCodes: [...selected], payDate });
 
   const runPayroll = () => {
     if (!canRun) return;
@@ -100,7 +111,8 @@ export default function ForPayrollList() {
         setResults(res.data);
         message.success(`Preview: ${res.total} employee(s) calculated.`);
       },
-      onError: () => message.error("Payroll calculation failed."),
+      onError: (err) =>
+        message.error(getErrorDetail(err, "Payroll calculation failed.")),
     });
   };
 
@@ -113,7 +125,8 @@ export default function ForPayrollList() {
           `Payroll generated and saved for ${res.total} employee(s).`,
         );
       },
-      onError: () => message.error("Payroll generation failed."),
+      onError: (err) =>
+        message.error(getErrorDetail(err, "Payroll generation failed.")),
     });
   };
 
@@ -417,6 +430,16 @@ export default function ForPayrollList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
+            <Tooltip title="Pay/Release Date — only required when Company Policy's cross-month statutory posting is set to use the pay date">
+              <DatePicker
+                size="middle"
+                placeholder="Pay/Release Date"
+                value={payDate ? dayjs(payDate) : null}
+                onChange={(date) =>
+                  setPayDate(date ? date.format("YYYY-MM-DD") : null)
+                }
+              />
+            </Tooltip>
             <Tooltip title={!canRun ? "Select at least one posted batch" : ""}>
               <Button
                 icon={<PlayCircleOutlined />}

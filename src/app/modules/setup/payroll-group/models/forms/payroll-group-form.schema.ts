@@ -10,6 +10,11 @@ export const payrollGroupFormSchema = z.object({
   code: z.string().min(1, "Code is required"),
   name: z.string().min(1, "Name is required"),
   payrollFrequency: z.enum(["DAILY", "WEEKLY", "SEMI_MONTHLY", "MONTHLY"]),
+  statutoryDeductionSchedule: z.enum([
+    "PerPayroll",
+    "FirstHalfMonth",
+    "SecondHalfMonth",
+  ]),
   cutoffDays: z.array(cutoffModelSchema).optional(),
   status: z.string().min(1, "Status is required"),
 });

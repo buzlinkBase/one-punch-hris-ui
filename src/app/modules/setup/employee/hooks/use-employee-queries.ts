@@ -16,10 +16,10 @@ function invalidateEmployeeFilter(
   queryClient.invalidateQueries({ queryKey: ATTENDANCE_ENTRY_QUERY_KEY });
 }
 
-export function useEmployees() {
+export function useEmployees(keyword?: string) {
   return useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: () => employeeApi.getAll(),
+    queryKey: [...QUERY_KEY, { keyword: keyword ?? "" }],
+    queryFn: () => employeeApi.getAll(keyword),
   });
 }
 

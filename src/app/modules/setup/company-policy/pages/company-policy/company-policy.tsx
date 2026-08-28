@@ -26,6 +26,7 @@ import {
   OT_INCLUSION_OPTIONS,
   OT_ELIGIBILITY_OPTIONS,
   HOLIDAY_TIME_BASIS_OPTIONS,
+  CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
 import FixedSalaryDefaultsTab from "./fixed-salary-defaults-tab";
 
@@ -57,6 +58,9 @@ function GeneralPolicyTab() {
       doublePunchGap: 2,
       checkAfterHoliday: false,
       waivePriorDayRequirement: false,
+      crossMonthStatutoryCreditPolicy: "CutoffStartMonth",
+      wTaxCrossMonthCreditPolicy: "CutoffEndMonth",
+      treatNdotAsNdOnly: false,
     },
   });
 
@@ -80,6 +84,11 @@ function GeneralPolicyTab() {
         doublePunchGap: policy.doublePunchGap,
         checkAfterHoliday: policy.checkAfterHoliday,
         waivePriorDayRequirement: policy.waivePriorDayRequirement,
+        crossMonthStatutoryCreditPolicy:
+          policy.crossMonthStatutoryCreditPolicy ?? "CutoffStartMonth",
+        wTaxCrossMonthCreditPolicy:
+          policy.wTaxCrossMonthCreditPolicy ?? "CutoffEndMonth",
+        treatNdotAsNdOnly: policy.treatNdotAsNdOnly,
       });
     }
   }, [policy, reset]);
@@ -249,6 +258,16 @@ function GeneralPolicyTab() {
                 )}
               />
             </Form.Item>
+
+            <Form.Item label={COMPANY_POLICY_LABEL.TREAT_NDOT_AS_ND}>
+              <Controller
+                name="treatNdotAsNdOnly"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
           </div>
         </Card>
 
@@ -263,6 +282,7 @@ function GeneralPolicyTab() {
               label={COMPANY_POLICY_LABEL.TIME_IN_ALLOWANCE}
               validateStatus={errors.timeInAllowance ? "error" : ""}
               help={errors.timeInAllowance?.message}
+              extra="Applies to Fixed shift schedules only — Flexi and broken shifts have no shift-start time to measure against."
             >
               <Controller
                 name="timeInAllowance"
@@ -339,6 +359,53 @@ function GeneralPolicyTab() {
                 control={control}
                 render={({ field }) => (
                   <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Cross-Month Cutoff Credit Policies */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_STATUTORY}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.CROSS_MONTH_STATUTORY_CREDIT_POLICY}
+              validateStatus={
+                errors.crossMonthStatutoryCreditPolicy ? "error" : ""
+              }
+              help={errors.crossMonthStatutoryCreditPolicy?.message}
+            >
+              <Controller
+                name="crossMonthStatutoryCreditPolicy"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS}
+                    placeholder="Select credit month policy"
+                  />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.WTAX_CROSS_MONTH_CREDIT_POLICY}
+              validateStatus={errors.wTaxCrossMonthCreditPolicy ? "error" : ""}
+              help={errors.wTaxCrossMonthCreditPolicy?.message}
+            >
+              <Controller
+                name="wTaxCrossMonthCreditPolicy"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS}
+                    placeholder="Select credit month policy"
+                  />
                 )}
               />
             </Form.Item>

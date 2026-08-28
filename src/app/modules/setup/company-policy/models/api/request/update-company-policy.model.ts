@@ -13,4 +13,7 @@ export interface UpdateCompanyPolicy {
   doublePunchGap: number;
   checkAfterHoliday: boolean;
   waivePriorDayRequirement: boolean;
+  crossMonthStatutoryCreditPolicy: string;
+  wTaxCrossMonthCreditPolicy: string;
+  treatNdotAsNdOnly: boolean;
 }
