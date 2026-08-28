@@ -336,6 +336,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Tardiness",
         path: "/reports/tardiness",
       },
+      {
+        key: "reports-rostering",
+        label: "Rostering",
+        path: "/reports/rostering",
+      },
     ],
   },
   {

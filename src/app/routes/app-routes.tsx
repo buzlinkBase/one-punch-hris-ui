@@ -73,6 +73,9 @@ const RoleDetail = lazy(
 const TardinessList = lazy(
   () => import("@/app/modules/reports/tardiness/pages/tardiness-list"),
 );
+const RosterList = lazy(
+  () => import("@/app/modules/reports/rostering/pages/roster-list"),
+);
 const EnrollBiometrics = lazy(
   () =>
     import("@/app/modules/biometric/enroll-biometrics/pages/enroll-biometrics"),
@@ -654,6 +657,18 @@ const tardinessIndexRoute = createRoute({
   component: withSuspense(TardinessList),
 });
 
+const rosterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "reports/rostering",
+  component: MainLayout,
+});
+
+const rosterIndexRoute = createRoute({
+  getParentRoute: () => rosterRoute,
+  path: "/",
+  component: withSuspense(RosterList),
+});
+
 const clientsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "clients",
@@ -1135,6 +1150,7 @@ const routeTree = rootRoute.addChildren([
   payrollSummaryRoute.addChildren([payrollSummaryIndexRoute]),
   appSectionRoute("reports", "Reports"),
   tardinessRoute.addChildren([tardinessIndexRoute]),
+  rosterRoute.addChildren([rosterIndexRoute]),
   clientsRoute.addChildren([
     clientsIndexRoute,
     clientsCreateRoute,

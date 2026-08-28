@@ -16,6 +16,9 @@ importers:
       '@ant-design/icons':
         specifier: ^6.3.2
         version: 6.3.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@daypilot/daypilot-lite-react':
+        specifier: ^5.10.1
+        version: 5.10.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@geoman-io/leaflet-geoman-free':
         specifier: ^2.20.0
         version: 2.20.0(leaflet@1.9.4)
@@ -250,6 +253,15 @@ packages:
   '@babel/types@7.29.7':
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
+
+  '@daypilot/daypilot-lite-javascript@5.10.1':
+    resolution: {integrity: sha512-9LgvWO3NNFXw2JlN7ApPwo/6QLwqDzkUIGpqM2jathX7OBr1zLIdd06Qg/SOkFK0puQzllkxRjfsKpvE0glnLA==}
+
+  '@daypilot/daypilot-lite-react@5.10.1':
+    resolution: {integrity: sha512-0sALmmPRrVtUPLdfopfOX1UkbuPlaVg3HUXaEGVzvjN9Ah/CC4WDoL/2KhyBoFR8IKVY6a9V8br2QnoAsCyDTg==}
+    peerDependencies:
+      react: '>=16.0.0'
+      react-dom: '>=16.0.0'
 
   '@emnapi/core@1.11.1':
     resolution: {integrity: sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ==}
@@ -1227,6 +1239,9 @@ packages:
 
   cookie-es@3.1.1:
     resolution: {integrity: sha512-UaXxwISYJPTr9hwQxMFYZ7kNhSXboMXP+Z3TRX6f1/NyaGPfuNUZOWP1pUEb75B2HjfklIYLVRfWiFZJyC6Npg==}
+
+  create-react-class@15.7.0:
+    resolution: {integrity: sha512-QZv4sFWG9S5RUvkTYWbflxeZX+JG7Cz0Tn33rQBJ+WFQTqTfUTjMjiv9tnfXazjsO5r0KhPs+AqCjyrQX6h2ng==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -2362,6 +2377,15 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@daypilot/daypilot-lite-javascript@5.10.1': {}
+
+  '@daypilot/daypilot-lite-react@5.10.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@daypilot/daypilot-lite-javascript': 5.10.1
+      create-react-class: 15.7.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
 
   '@emnapi/core@1.11.1':
     dependencies:
@@ -3535,6 +3559,11 @@ snapshots:
   convert-source-map@2.0.0: {}
 
   cookie-es@3.1.1: {}
+
+  create-react-class@15.7.0:
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
 
   cross-spawn@7.0.6:
     dependencies:
