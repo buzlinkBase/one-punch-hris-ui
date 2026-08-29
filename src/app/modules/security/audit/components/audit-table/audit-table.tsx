@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Input, Tag, Select, DatePicker, Space } from "antd";
+import { Table, Button, Input, Tag, Select } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -12,8 +12,7 @@ import {
 } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
-
-const { RangePicker } = DatePicker;
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const ACTION_OPTIONS = [
   { value: "", label: "All Actions" },
@@ -195,13 +194,12 @@ export default function AuditTable({ data, loading }: Props) {
           onChange={setStatusFilter}
           style={{ minWidth: 140 }}
         />
-        <Space.Compact>
-          <RangePicker
-            onChange={(range) =>
-              setDateRange(range ? [range[0] ?? null, range[1] ?? null] : null)
-            }
-          />
-        </Space.Compact>
+        <MobileRangePicker
+          value={dateRange}
+          onChange={(range) =>
+            setDateRange(range ? [range[0] ?? null, range[1] ?? null] : null)
+          }
+        />
       </div>
       <Table
         rowKey="id"

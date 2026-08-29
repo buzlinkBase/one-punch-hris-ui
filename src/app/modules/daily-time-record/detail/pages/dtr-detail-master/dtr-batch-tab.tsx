@@ -146,36 +146,43 @@ export default function DtrBatchTab() {
         </Space>
       </div>
 
-      <div className="flex gap-2" style={{ maxWidth: 660 }}>
-        <Button
-          icon={<ReloadOutlined />}
-          loading={isLoadingCodes}
-          onClick={() => refetchBatchCodes()}
-          title="Refresh batch codes"
-        />
-        <Select
-          showSearch
-          allowClear
-          loading={isLoadingCodes}
-          placeholder="Select or search a DTR batch code…"
-          style={{ flex: 1 }}
-          options={options}
-          value={selectedBatchCode}
-          onChange={setSelectedBatchCode}
-          filterOption={(input, option) =>
-            String(option?.label ?? "")
-              .toLowerCase()
-              .includes(input.toLowerCase())
-          }
-        />
-        <Button
-          type="primary"
-          disabled={!selectedBatchCode}
-          loading={isLoading}
-          onClick={() => refetch()}
-        >
-          Search
-        </Button>
+      <div className="flex flex-col gap-1" style={{ maxWidth: 660 }}>
+        <div className="flex gap-2">
+          <Button
+            icon={<ReloadOutlined />}
+            loading={isLoadingCodes}
+            onClick={() => refetchBatchCodes()}
+            title="Refresh batch codes"
+          />
+          <Select
+            showSearch
+            allowClear
+            loading={isLoadingCodes}
+            placeholder="Select or search a DTR batch code…"
+            style={{ flex: 1 }}
+            options={options}
+            value={selectedBatchCode}
+            onChange={setSelectedBatchCode}
+            filterOption={(input, option) =>
+              String(option?.label ?? "")
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            }
+          />
+          <Button
+            type="primary"
+            disabled={!selectedBatchCode}
+            loading={isLoading}
+            onClick={() => refetch()}
+          >
+            Search
+          </Button>
+        </div>
+        {selectedBatch?.postingDescription && (
+          <p className="text-sm text-gray-500 m-0">
+            {selectedBatch.postingDescription}
+          </p>
+        )}
       </div>
 
       <DtrDetailTable

@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Checkbox,
-  DatePicker,
   Form,
   Select,
   Space,
@@ -35,6 +34,7 @@ import {
 } from "../../hooks/use-attendance-entry-queries";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
 
@@ -589,7 +589,7 @@ export default function AttendanceEntryCreate() {
         <Form layout="vertical">
           <div className="form-grid-2">
             <Form.Item label="Date Range" required className="mb-3">
-              <DatePicker.RangePicker
+              <MobileRangePicker
                 style={{ width: "100%" }}
                 value={dateRange}
                 onChange={(range) => {

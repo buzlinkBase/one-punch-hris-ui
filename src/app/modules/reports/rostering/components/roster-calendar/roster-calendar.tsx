@@ -1,6 +1,15 @@
 import { useMemo, useRef, useState } from "react";
 import { DayPilot, DayPilotScheduler } from "@daypilot/daypilot-lite-react";
-import { Button, Modal, Select, Space, Tag, Tooltip, message } from "antd";
+import {
+  Card,
+  Button,
+  Modal,
+  Select,
+  Space,
+  Tag,
+  Tooltip,
+  message,
+} from "antd";
 import dayjs from "dayjs";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
@@ -13,10 +22,22 @@ import {
 } from "@/app/modules/change-schedule/work-rotation/hooks/use-work-rotation-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import { SCHEDULE_SOURCE_LABEL } from "../../constants/label.const";
+import { useThemeStore } from "@/core/stores/theme.store";
+import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 
 const SHIFT_COLOR = "#1DA081";
-const REST_DAY_COLOR = "#94a3b8";
-const UNASSIGNED_COLOR = "#e5e7eb";
+const REST_DAY_COLOR = "#8b93a7";
+const UNASSIGNED_COLOR_LIGHT = "#eef2f6";
+const UNASSIGNED_COLOR_DARK = "#22332e";
+const FONT_FAMILY =
+  "Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif";
+
+function eventCardHtml(title: string, subtitle: string) {
+  return `<div style="display:flex;flex-direction:column;justify-content:center;height:100%;padding:2px 4px;line-height:1.35;overflow:hidden;">
+    <div style="font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</div>
+    <div style="font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${subtitle}</div>
+  </div>`;
+}
 
 interface EventTags {
   shiftId: string | null;
@@ -41,8 +62,10 @@ interface Props {
 }
 
 export default function RosterCalendar({ data, fromDate, toDate }: Props) {
-  const schedulerRef = useRef<DayPilot.Scheduler>();
+  const schedulerRef = useRef<DayPilot.Scheduler | null>(null);
   const queryClient = useQueryClient();
+  const isDark = useThemeStore((s) => s.mode) === "dark";
+  const isMobile = useIsMobile();
   const { mutateAsync: createWorkRotation, isPending: isAssigning } =
     useCreateWorkRotation();
   const { mutateAsync: deleteWorkRotation, isPending: isRemoving } =
@@ -60,6 +83,16 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         ? `${s.shiftName} (${s.startTime} – ${s.endTime})`
         : s.shiftName,
   }));
+
+  // For the same-shift-already-there drop guard: what shift (if any) is
+  // currently resolved for a given employee/date, keyed the same way as event ids.
+  const shiftByEmployeeDate = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const r of data) {
+      m.set(`${r.employeeId}_${r.workDate}`, r.shiftId);
+    }
+    return m;
+  }, [data]);
 
   const resources = useMemo(() => {
     const byEmployee = new Map<string, string>();
@@ -88,6 +121,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
           end: dayEnd,
           text: "Rest Day",
           backColor: REST_DAY_COLOR,
+          fontColor: "#ffffff",
           tags: {
             shiftId: null,
             isRestDay: true,
@@ -97,14 +131,17 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         };
       }
       if (r.shiftId && r.shiftStart && r.shiftEnd) {
+        const timeRange = `${dayjs(r.shiftStart).format("h:mm A")} – ${dayjs(r.shiftEnd).format("h:mm A")}`;
         return {
           id: `${r.employeeId}_${r.workDate}`,
           resource: r.employeeId,
           start: r.shiftStart,
           end: r.shiftEnd,
           text: r.shiftName,
+          html: eventCardHtml(r.shiftName, timeRange),
           backColor: SHIFT_COLOR,
-          toolTip: `${r.shiftName} — ${SCHEDULE_SOURCE_LABEL[r.scheduleSource]?.label ?? r.scheduleSource}`,
+          fontColor: "#ffffff",
+          toolTip: `${r.shiftName} (${timeRange}) — ${SCHEDULE_SOURCE_LABEL[r.scheduleSource]?.label ?? r.scheduleSource}`,
           tags: {
             shiftId: r.shiftId,
             isRestDay: false,
@@ -119,8 +156,8 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         start: dayStart,
         end: dayEnd,
         text: "Unassigned",
-        backColor: UNASSIGNED_COLOR,
-        fontColor: "#6b7280",
+        backColor: isDark ? UNASSIGNED_COLOR_DARK : UNASSIGNED_COLOR_LIGHT,
+        fontColor: isDark ? "#7c8f88" : "#8a94a6",
         tags: {
           shiftId: null,
           isRestDay: false,
@@ -129,7 +166,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         } satisfies EventTags,
       };
     });
-  }, [data]);
+  }, [data, isDark]);
 
   const days = useMemo(
     () => Math.max(1, dayjs(toDate).diff(dayjs(fromDate), "day") + 1),
@@ -188,72 +225,142 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
     }
   };
 
+  // DayPilot's own default theme re-declares every --dp-scheduler-* variable
+  // directly on its root element's class (.scheduler_default_main), which beats
+  // any value merely inherited from an ancestor like a Card's inline style —
+  // setting these vars there has no effect. Overriding via a same-or-higher
+  // specificity selector on that exact class is the only way to win the cascade.
+  const schedulerThemeCss = `
+    .roster-scheduler-theme .scheduler_default_main {
+      --dp-scheduler-border-color: ${isDark ? "#1e3830" : "#e3f3ef"};
+      --dp-scheduler-border-inner-color: ${isDark ? "#1e3830" : "#eef6f4"};
+      --dp-scheduler-grid-line-color: ${isDark ? "#1c322b" : "#eef6f4"};
+      --dp-scheduler-grid-line-break-color: ${isDark ? "#254238" : "#dceee8"};
+      --dp-scheduler-cell-bg-color: ${isDark ? "#162820" : "#ffffff"};
+      --dp-scheduler-cell-business-bg-color: ${isDark ? "#162820" : "#ffffff"};
+      --dp-scheduler-header-bg-color: ${isDark ? "#111f1b" : "#f7fbfa"};
+      --dp-scheduler-header-color: ${isDark ? "#c8e6df" : "#305b52"};
+      --dp-scheduler-font-family: ${FONT_FAMILY};
+      --dp-scheduler-font-size: 13px;
+      --dp-scheduler-event-border-radius: 8px;
+      --dp-scheduler-event-border: none;
+      --dp-scheduler-event-box-shadow: ${
+        isDark ? "0 1px 3px rgba(0,0,0,0.5)" : "0 1px 2px rgba(16,24,40,0.08)"
+      };
+      --dp-scheduler-event-padding: 0px;
+      --dp-scheduler-rowheader-padding: 10px 14px;
+      --dp-scheduler-timeheader-padding: 8px;
+      --dp-scheduler-link-color: ${SHIFT_COLOR};
+    }
+  `;
+
   return (
     <div>
       {contextHolder}
-      <DayPilotScheduler
-        controlRef={(c) => (schedulerRef.current = c)}
-        startDate={fromDate}
-        days={days}
-        scale="Day"
-        timeHeaders={[{ groupBy: "Day", format: "ddd, MMM d" }]}
-        rowHeaderWidth={200}
-        cellWidth={140}
-        eventHeight={40}
-        heightSpec="Auto"
-        resources={resources}
-        events={events}
-        eventMoveHandling="Update"
-        eventClickHandling="Enabled"
-        timeRangeSelectedHandling="Enabled"
-        onEventClicked={(args) => {
-          const tags = args.e.data.tags as EventTags;
-          openAssignModal(
-            String(args.e.resource()),
-            args.e.start().toString("yyyy-MM-dd"),
-            tags.shiftId,
-            tags.overrideId,
-            tags.scheduleSource,
-          );
-        }}
-        onTimeRangeSelected={(args) => {
-          schedulerRef.current?.clearSelection();
-          openAssignModal(
-            String(args.resource),
-            args.start.toString("yyyy-MM-dd"),
-            null,
-            null,
-            null,
-          );
-        }}
-        onEventMove={(args) => {
-          const tags = args.e.data.tags as EventTags;
-          if (!tags.shiftId || tags.isRestDay) {
-            args.preventDefault();
-            messageApi.info(
-              tags.isRestDay
-                ? "Rest days can't be reassigned from this calendar — use Change Rest Day."
-                : "Unassigned days have no shift to move — click it to assign one.",
+      <style>{schedulerThemeCss}</style>
+      <Card
+        size="small"
+        className="roster-scheduler-theme"
+        styles={{ body: { padding: 0, overflowX: "auto" } }}
+      >
+        <DayPilotScheduler
+          controlRef={(c: DayPilot.Scheduler) => (schedulerRef.current = c)}
+          startDate={fromDate}
+          days={days}
+          scale="Day"
+          timeHeaders={[
+            { groupBy: "Day", format: isMobile ? "d" : "ddd, MMM d" },
+          ]}
+          rowHeaderWidth={isMobile ? 130 : 200}
+          cellWidth={isMobile ? 96 : 150}
+          eventHeight={48}
+          heightSpec="Auto"
+          resources={resources}
+          events={events}
+          eventMoveHandling="Update"
+          eventClickHandling="Enabled"
+          timeRangeSelectedHandling="Enabled"
+          onBeforeCellRender={(args) => {
+            const dow = args.cell.start.getDayOfWeek();
+            if (dow === 0 || dow === 6) {
+              args.cell.properties.backColor = isDark
+                ? "rgba(255,255,255,0.02)"
+                : "rgba(15,23,42,0.02)";
+            }
+          }}
+          onEventClicked={(args) => {
+            const tags = args.e.data.tags as EventTags;
+            openAssignModal(
+              String(args.e.resource()),
+              args.e.start().toString("yyyy-MM-dd"),
+              tags.shiftId,
+              tags.overrideId,
+              tags.scheduleSource,
             );
-          }
-        }}
-        onEventMoved={async (args) => {
-          const tags = args.e.data.tags as EventTags;
-          if (!tags.shiftId) return;
-          try {
-            await createWorkRotation({
-              employeeIds: [String(args.newResource)],
-              timeShiftId: tags.shiftId,
-              payrollDates: [args.newStart.toString("yyyy-MM-dd")],
-            });
-            messageApi.success("Shift reassigned.");
-          } catch {
-            messageApi.error("Failed to save the reassignment.");
-          } finally {
-            queryClient.invalidateQueries({ queryKey: ["roster"] });
-          }
-        }}
-      />
+          }}
+          onTimeRangeSelected={(args) => {
+            schedulerRef.current?.clearSelection();
+            openAssignModal(
+              String(args.resource),
+              args.start.toString("yyyy-MM-dd"),
+              null,
+              null,
+              null,
+            );
+          }}
+          onEventMove={(args) => {
+            // Dropped back on the exact same employee/date — not a real move,
+            // just cancel silently so it doesn't fire an unnecessary save.
+            const droppedOnSameSlot =
+              String(args.newResource) === String(args.e.resource()) &&
+              args.newStart.toString("yyyy-MM-dd") ===
+                args.e.start().toString("yyyy-MM-dd");
+            if (droppedOnSameSlot) {
+              args.preventDefault();
+              return;
+            }
+
+            const tags = args.e.data.tags as EventTags;
+
+            // Target day already resolves to this exact shift for this employee
+            // (via override, Fixed Schedule, or Permanent Shift) — nothing to change.
+            const targetDate = args.newStart.toString("yyyy-MM-dd");
+            const targetShiftId = shiftByEmployeeDate.get(
+              `${args.newResource}_${targetDate}`,
+            );
+            if (tags.shiftId && targetShiftId === tags.shiftId) {
+              args.preventDefault();
+              messageApi.info("That day already has this same shift assigned.");
+              return;
+            }
+
+            if (!tags.shiftId || tags.isRestDay) {
+              args.preventDefault();
+              messageApi.info(
+                tags.isRestDay
+                  ? "Rest days can't be reassigned from this calendar — use Change Rest Day."
+                  : "Unassigned days have no shift to move — click it to assign one.",
+              );
+            }
+          }}
+          onEventMoved={async (args) => {
+            const tags = args.e.data.tags as EventTags;
+            if (!tags.shiftId) return;
+            try {
+              await createWorkRotation({
+                employeeIds: [String(args.newResource)],
+                timeShiftId: tags.shiftId,
+                payrollDates: [args.newStart.toString("yyyy-MM-dd")],
+              });
+              messageApi.success("Shift reassigned.");
+            } catch {
+              messageApi.error("Failed to save the reassignment.");
+            } finally {
+              queryClient.invalidateQueries({ queryKey: ["roster"] });
+            }
+          }}
+        />
+      </Card>
 
       <Modal
         title={

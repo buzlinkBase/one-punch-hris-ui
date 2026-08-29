@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  DatePicker,
   Dropdown,
   Form,
   Select,
@@ -42,6 +41,7 @@ import {
   buildFlatExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
 
@@ -358,7 +358,7 @@ export default function RawLogsList() {
                   !pending.fromDate || !pending.toDate ? "Required" : undefined
                 }
               >
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   status={
                     !pending.fromDate || !pending.toDate ? "error" : undefined

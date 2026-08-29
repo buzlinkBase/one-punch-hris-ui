@@ -1,9 +1,8 @@
-import { Button, DatePicker, Form } from "antd";
+import { Button, Form } from "antd";
 import dayjs from "dayjs";
 import { UNREGISTER_EMPLOYEE_LABEL } from "../constants/label.const";
 import type { UnregisterEmployeeFilter } from "../models/api/request/unregister-employee-filter.model";
-
-const { RangePicker } = DatePicker;
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 interface Props {
   onFilter: (filters: UnregisterEmployeeFilter) => void;
@@ -45,7 +44,7 @@ export default function UnregisterEmployeeFilter({
           label={UNREGISTER_EMPLOYEE_LABEL.DATE_RANGE}
           className="mb-0"
         >
-          <RangePicker format="YYYY-MM-DD" />
+          <MobileRangePicker format="YYYY-MM-DD" />
         </Form.Item>
         <Form.Item className="mb-0">
           <Button type="primary" onClick={handleFilter} loading={loading}>

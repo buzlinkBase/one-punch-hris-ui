@@ -5,7 +5,6 @@ import {
   InputNumber,
   Button,
   Select,
-  DatePicker,
   TimePicker,
   Typography,
   Space,
@@ -34,10 +33,10 @@ import {
   TRAVEL_CLASSIFICATION_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 const { TextArea } = Input;
-const { RangePicker } = DatePicker;
 
 const MODE_OPTIONS = [
   { label: "Time Range", value: "timerange" },
@@ -314,7 +313,7 @@ export default function TravelOrderDetail() {
               validateStatus={errors.startDate || errors.endDate ? "error" : ""}
               help={errors.startDate?.message ?? errors.endDate?.message}
             >
-              <RangePicker
+              <MobileRangePicker
                 style={{ width: "100%" }}
                 value={
                   startDate && endDate

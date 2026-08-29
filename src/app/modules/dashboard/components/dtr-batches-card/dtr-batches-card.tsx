@@ -18,6 +18,7 @@ const MOCK_BATCHES: DtrBatchModel[] = [
     toDate: "2026-08-15",
     employeeCount: 42,
     isPosted: true,
+    isPayrollGenerated: true,
   },
   {
     code: "DTR-2026-08-B",
@@ -25,6 +26,7 @@ const MOCK_BATCHES: DtrBatchModel[] = [
     toDate: "2026-08-31",
     employeeCount: 42,
     isPosted: false,
+    isPayrollGenerated: false,
   },
   {
     code: "DTR-2026-07-A",
@@ -32,6 +34,7 @@ const MOCK_BATCHES: DtrBatchModel[] = [
     toDate: "2026-07-15",
     employeeCount: 40,
     isPosted: true,
+    isPayrollGenerated: true,
   },
   {
     code: "DTR-2026-07-B",
@@ -39,6 +42,7 @@ const MOCK_BATCHES: DtrBatchModel[] = [
     toDate: "2026-07-31",
     employeeCount: 40,
     isPosted: true,
+    isPayrollGenerated: false,
   },
 ];
 

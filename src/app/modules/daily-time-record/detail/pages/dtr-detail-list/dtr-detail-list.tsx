@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  DatePicker,
   Dropdown,
   Form,
   Select,
@@ -39,6 +38,7 @@ import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-pa
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 
@@ -279,7 +279,7 @@ export default function DtrDetailList() {
                   !pending.fromDate || !pending.toDate ? "Required" : undefined
                 }
               >
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   status={
                     !pending.fromDate || !pending.toDate ? "error" : undefined

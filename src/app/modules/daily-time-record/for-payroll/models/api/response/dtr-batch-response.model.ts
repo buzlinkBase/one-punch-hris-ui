@@ -5,4 +5,5 @@ export interface DtrBatchModel {
   employeeCount: number;
   isPosted: boolean;
   postingDescription?: string | null;
+  isPayrollGenerated: boolean;
 }

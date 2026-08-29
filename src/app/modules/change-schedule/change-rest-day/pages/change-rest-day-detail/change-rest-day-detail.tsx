@@ -42,6 +42,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
 import type { CreateChangeRestDay } from "../../models/api/request/create-change-rest-day.model";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
 
@@ -598,7 +599,7 @@ function EditForm({ id }: { id: string }) {
                 validateStatus={errors.fromDate || errors.toDate ? "error" : ""}
                 help={errors.fromDate?.message ?? errors.toDate?.message}
               >
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   value={
                     fromDate && toDate ? [dayjs(fromDate), dayjs(toDate)] : null

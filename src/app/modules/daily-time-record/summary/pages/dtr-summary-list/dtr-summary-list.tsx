@@ -37,6 +37,10 @@ export default function DtrSummaryList() {
     label: item.code ?? "",
   }));
 
+  const selectedBatch = batchCodes.find(
+    (item) => item.code === selectedBatchCode,
+  );
+
   // ── Export ────────────────────────────────────────────────────────────────────
 
   const handleExport = (format: "csv" | "excel") => {
@@ -99,30 +103,37 @@ export default function DtrSummaryList() {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-2" style={{ maxWidth: 620 }}>
-        <Select
-          showSearch
-          allowClear
-          loading={isLoadingCodes}
-          placeholder="Select or search a DTR batch code…"
-          style={{ flex: 1 }}
-          options={options}
-          value={selectedBatchCode}
-          onChange={setSelectedBatchCode}
-          filterOption={(input, option) =>
-            String(option?.label ?? "")
-              .toLowerCase()
-              .includes(input.toLowerCase())
-          }
-        />
-        <Button
-          type="primary"
-          disabled={!selectedBatchCode}
-          loading={isLoadingRecords}
-          onClick={() => refetch()}
-        >
-          Search
-        </Button>
+      <div className="mb-4 flex flex-col gap-1" style={{ maxWidth: 620 }}>
+        <div className="flex gap-2">
+          <Select
+            showSearch
+            allowClear
+            loading={isLoadingCodes}
+            placeholder="Select or search a DTR batch code…"
+            style={{ flex: 1 }}
+            options={options}
+            value={selectedBatchCode}
+            onChange={setSelectedBatchCode}
+            filterOption={(input, option) =>
+              String(option?.label ?? "")
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            }
+          />
+          <Button
+            type="primary"
+            disabled={!selectedBatchCode}
+            loading={isLoadingRecords}
+            onClick={() => refetch()}
+          >
+            Search
+          </Button>
+        </div>
+        {selectedBatch?.postingDescription && (
+          <p className="text-sm text-gray-500 m-0">
+            {selectedBatch.postingDescription}
+          </p>
+        )}
       </div>
 
       <DtrSummaryTable data={records} loading={isLoadingRecords} />

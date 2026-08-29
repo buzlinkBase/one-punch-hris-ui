@@ -3,28 +3,100 @@ import {
   Button,
   Card,
   Col,
-  DatePicker,
+  Dropdown,
   Row,
   Space,
   Statistic,
   Table,
   Tabs,
+  Tooltip,
   Typography,
+  message,
   theme,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { ReloadOutlined, FileTextOutlined } from "@ant-design/icons";
+import type { MenuProps } from "antd";
+import {
+  ReloadOutlined,
+  FileTextOutlined,
+  PrinterOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { usePayrolls } from "../../hooks/use-for-payroll-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import {
+  buildFlatCsv,
+  buildFlatExcel,
+  triggerDownload,
+} from "@/shared/utils/export.utils";
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 const fmtH = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }) + " h";
+
+// Holiday-category totals, mirroring PayslipDocument.cs's formulas exactly — each folds
+// its own base + OT + ND + NDOT tiers into one figure; "Holiday Duty" excludes the
+// unworked portion of Legal Holiday pay, and "Double Legal" folds in the rest-day variant.
+function holidayDuty(r: PayrollRunResult) {
+  return (
+    (r.legalPay ?? 0) -
+    (r.legalHolidayUnworkedPay ?? 0) +
+    (r.legalOTPay ?? 0) +
+    (r.legalNDPay ?? 0) +
+    (r.legalNDOTPay ?? 0)
+  );
+}
+function restLegalTotal(r: PayrollRunResult) {
+  return (
+    (r.restLegalPay ?? 0) +
+    (r.restLegalOTPay ?? 0) +
+    (r.restLegalNDPay ?? 0) +
+    (r.restLegalNDOTPay ?? 0)
+  );
+}
+function restSpecialTotal(r: PayrollRunResult) {
+  return (
+    (r.restSpecialPay ?? 0) +
+    (r.restSpecialOTPay ?? 0) +
+    (r.restSpecialNDPay ?? 0) +
+    (r.restSpecialNDOTPay ?? 0)
+  );
+}
+function specialTotal(r: PayrollRunResult) {
+  return (
+    (r.specialPay ?? 0) +
+    (r.specialOTPay ?? 0) +
+    (r.specialNDPay ?? 0) +
+    (r.specialNDOTPay ?? 0)
+  );
+}
+function doubleLegalTotal(r: PayrollRunResult) {
+  return (
+    (r.doubleLegalPay ?? 0) +
+    (r.doubleLegalOTPay ?? 0) +
+    (r.doubleLegalNDPay ?? 0) +
+    (r.doubleLegalNDOTPay ?? 0) +
+    (r.restDoubleLegalPay ?? 0) +
+    (r.restDoubleLegalOTPay ?? 0) +
+    (r.restDoubleLegalNDPay ?? 0) +
+    (r.restDoubleLegalNDOTPay ?? 0)
+  );
+}
+function restDayTotal(r: PayrollRunResult) {
+  return (
+    (r.restDayPay ?? 0) +
+    (r.restDayOTPay ?? 0) +
+    (r.restDayNDPay ?? 0) +
+    (r.restDayNDOTPay ?? 0)
+  );
+}
 
 export default function PayrollSummary() {
   const { token } = theme.useToken();
@@ -48,6 +120,171 @@ export default function PayrollSummary() {
     [response],
   );
 
+  const handlePrintPayslip = async (record: PayrollRunResult) => {
+    if (!record.id) {
+      message.error("This payroll record has no printable payslip yet.");
+      return;
+    }
+    const printTab = window.open("about:blank", "_blank");
+    try {
+      const blob = await httpClient.get<Blob>(
+        `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/${record.id}/print`,
+        { responseType: "blob" },
+      );
+      const url = URL.createObjectURL(blob);
+      if (printTab) printTab.location.href = url;
+    } catch {
+      printTab?.close();
+      message.error("Failed to generate the payslip. Please try again.");
+    }
+  };
+
+  const handlePrintSummary = async () => {
+    if (!results.length) {
+      message.info("No data to print. Adjust the date range first.");
+      return;
+    }
+    const printTab = window.open("about:blank", "_blank");
+    try {
+      const blob = await httpClient.get<Blob>(
+        `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/print-summary`,
+        {
+          params: { from: dateRange[0], to: dateRange[1] },
+          responseType: "blob",
+        },
+      );
+      const url = URL.createObjectURL(blob);
+      if (printTab) printTab.location.href = url;
+    } catch {
+      printTab?.close();
+      message.error("Failed to generate the report. Please try again.");
+    }
+  };
+
+  // ── Export ────────────────────────────────────────────────────────────────
+
+  const EXPORT_HEADERS = [
+    "Employee",
+    "Period Start",
+    "Period End",
+    "Salary Type",
+    "Daily Rate",
+    "Basic",
+    "OT Pay",
+    "OT Premium",
+    "ND Pay",
+    "ND Premium",
+    "ND-OT Pay",
+    "Rest Day",
+    "Legal Holiday (Unworked)",
+    "Holiday Duty (Worked)",
+    "Rest Day + Legal Holiday",
+    "Rest Day + Special Holiday",
+    "Special Holiday",
+    "Double Legal Holiday",
+    "Holiday Total",
+    "COLA",
+    "Allowances",
+    "Bonuses",
+    "Commissions",
+    "De Minimis",
+    "Other Income",
+    "Reimbursement",
+    "Gross Income",
+    "SSS",
+    "PhilHealth",
+    "Pag-IBIG",
+    "W-Tax",
+    "Loans",
+    "Other Deductions",
+    "Late",
+    "Under Time",
+    "Absent",
+    "Total Deductions",
+    "Net Pay",
+    "ER SSS",
+    "ER PhilHealth",
+    "ER Pag-IBIG",
+    "EC",
+  ];
+
+  const buildExportRows = () =>
+    results.map((r) => [
+      r.fullName,
+      r.payPeriodStart ? dayjs(r.payPeriodStart).format("YYYY-MM-DD") : "",
+      r.payPeriodEnd ? dayjs(r.payPeriodEnd).format("YYYY-MM-DD") : "",
+      r.salaryType,
+      fmt(r.dailyRate),
+      fmt(r.basicPay),
+      fmt(r.overtimePay),
+      fmt(r.otPremiumPay ?? 0),
+      fmt(r.nightDifferentialPay),
+      fmt(r.ndPremiumPay ?? 0),
+      fmt(r.nightDifferentialOTPay),
+      fmt(restDayTotal(r)),
+      fmt(r.legalHolidayUnworkedPay ?? 0),
+      fmt(holidayDuty(r)),
+      fmt(restLegalTotal(r)),
+      fmt(restSpecialTotal(r)),
+      fmt(specialTotal(r)),
+      fmt(doubleLegalTotal(r)),
+      fmt(r.holidayPay),
+      fmt(r.cola),
+      fmt(r.totalRegularAllowances),
+      fmt(r.totalBonuses),
+      fmt(r.totalCommissions),
+      fmt(r.totalDeminimises),
+      fmt(r.totalOtherIncome),
+      fmt(r.reimbursement),
+      fmt(r.grossIncome),
+      fmt(r.sssContribution),
+      fmt(r.philHealthContribution),
+      fmt(r.pagIbigContribution),
+      fmt(r.withholdingTax),
+      fmt(r.totalLoans),
+      fmt(r.otherDeductions - r.totalLoans),
+      fmt(r.lateAmount),
+      fmt(r.underTimeAmount),
+      fmt(r.absences),
+      fmt(r.totalDeductions),
+      fmt(r.netPay),
+      fmt(r.employerSSSContribution),
+      fmt(r.employerPhilHealthContribution),
+      fmt(r.employerPagIbigContribution),
+      fmt(r.employerECContribution),
+    ]);
+
+  const handleExport = (format: "csv" | "excel") => {
+    if (!results.length) {
+      message.info("No data to export. Adjust the date range first.");
+      return;
+    }
+    const rows = buildExportRows();
+    const suffix = `${dateRange[0]}_${dateRange[1]}`;
+    if (format === "csv") {
+      triggerDownload(
+        buildFlatCsv(EXPORT_HEADERS, rows),
+        `payroll-summary-${suffix}.csv`,
+        "text/plain",
+      );
+    } else {
+      triggerDownload(
+        buildFlatExcel(EXPORT_HEADERS, rows),
+        `payroll-summary-${suffix}.xls`,
+        "application/vnd.ms-excel;charset=utf-8;",
+      );
+    }
+  };
+
+  const exportMenuItems: MenuProps["items"] = [
+    { key: "csv", label: "Export as CSV", onClick: () => handleExport("csv") },
+    {
+      key: "excel",
+      label: "Export as Excel",
+      onClick: () => handleExport("excel"),
+    },
+  ];
+
   const totals = useMemo(
     () => ({
       gross: results.reduce((s, r) => s + r.grossIncome, 0),
@@ -63,6 +300,26 @@ export default function PayrollSummary() {
     [results],
   );
 
+  const printColumn: ColumnsType<PayrollRunResult>[number] = {
+    title: "",
+    key: "print",
+    width: 48,
+    fixed: "right",
+    render: (_, r) => (
+      <Tooltip
+        title={r.id ? "Print payslip" : "Not yet available for this record"}
+      >
+        <Button
+          type="text"
+          size="small"
+          icon={<PrinterOutlined />}
+          disabled={!r.id}
+          onClick={() => handlePrintPayslip(r)}
+        />
+      </Tooltip>
+    ),
+  };
+
   const earningsColumns: ColumnsType<PayrollRunResult> = [
     {
       title: "Employee",
@@ -70,6 +327,19 @@ export default function PayrollSummary() {
       key: "name",
       width: 160,
       fixed: "left",
+    },
+    {
+      title: "Salary Type",
+      dataIndex: "salaryType",
+      key: "salaryType",
+      render: (v: string) => (v === "FIXED" ? "Fixed" : "Variable"),
+    },
+    {
+      title: "Daily Rate",
+      dataIndex: "dailyRate",
+      key: "dailyRate",
+      align: "right",
+      render: fmt,
     },
     {
       title: "Period Start",
@@ -85,7 +355,7 @@ export default function PayrollSummary() {
     },
     {
       title: "Basic",
-      dataIndex: "basicSalary",
+      dataIndex: "basicPay",
       key: "basic",
       align: "right",
       render: fmt,
@@ -105,9 +375,22 @@ export default function PayrollSummary() {
       render: fmt,
     },
     {
-      title: "Holiday",
+      title: "Rest Day",
+      key: "restDay",
+      align: "right",
+      render: (_, r) => fmt(restDayTotal(r)),
+    },
+    {
+      title: "Holiday Total",
       dataIndex: "holidayPay",
       key: "hol",
+      align: "right",
+      render: fmt,
+    },
+    {
+      title: "COLA",
+      dataIndex: "cola",
+      key: "cola",
       align: "right",
       render: fmt,
     },
@@ -115,6 +398,27 @@ export default function PayrollSummary() {
       title: "Allowances",
       dataIndex: "totalRegularAllowances",
       key: "allow",
+      align: "right",
+      render: fmt,
+    },
+    {
+      title: "Bonuses",
+      dataIndex: "totalBonuses",
+      key: "bonuses",
+      align: "right",
+      render: fmt,
+    },
+    {
+      title: "Commissions",
+      dataIndex: "totalCommissions",
+      key: "commissions",
+      align: "right",
+      render: fmt,
+    },
+    {
+      title: "De Minimis",
+      dataIndex: "totalDeminimises",
+      key: "deminimis",
       align: "right",
       render: fmt,
     },
@@ -136,6 +440,61 @@ export default function PayrollSummary() {
       title: "Gross",
       dataIndex: "grossIncome",
       key: "gross",
+      align: "right",
+      fixed: "right",
+      render: (v: number) => <Text strong>{fmt(v)}</Text>,
+    },
+    printColumn,
+  ];
+
+  const holidayColumns: ColumnsType<PayrollRunResult> = [
+    {
+      title: "Employee",
+      dataIndex: "fullName",
+      key: "name",
+      width: 160,
+      fixed: "left",
+    },
+    {
+      title: "Legal Holiday (Unworked)",
+      key: "legalUnworked",
+      align: "right",
+      render: (_, r) => fmt(r.legalHolidayUnworkedPay ?? 0),
+    },
+    {
+      title: "Holiday Duty (Worked)",
+      key: "holidayDuty",
+      align: "right",
+      render: (_, r) => fmt(holidayDuty(r)),
+    },
+    {
+      title: "Rest Day + Legal Holiday",
+      key: "restLegal",
+      align: "right",
+      render: (_, r) => fmt(restLegalTotal(r)),
+    },
+    {
+      title: "Rest Day + Special Holiday",
+      key: "restSpecial",
+      align: "right",
+      render: (_, r) => fmt(restSpecialTotal(r)),
+    },
+    {
+      title: "Special Holiday",
+      key: "special",
+      align: "right",
+      render: (_, r) => fmt(specialTotal(r)),
+    },
+    {
+      title: "Double Legal Holiday",
+      key: "doubleLegal",
+      align: "right",
+      render: (_, r) => fmt(doubleLegalTotal(r)),
+    },
+    {
+      title: "Holiday Total",
+      dataIndex: "holidayPay",
+      key: "hol",
       align: "right",
       fixed: "right",
       render: (v: number) => <Text strong>{fmt(v)}</Text>,
@@ -179,11 +538,17 @@ export default function PayrollSummary() {
       render: fmt,
     },
     {
-      title: "Loans & Deductions",
-      dataIndex: "otherDeductions",
-      key: "other",
+      title: "Loans",
+      dataIndex: "totalLoans",
+      key: "loans",
       align: "right",
       render: fmt,
+    },
+    {
+      title: "Other Deductions",
+      key: "otherDed",
+      align: "right",
+      render: (_, r) => fmt(r.otherDeductions - r.totalLoans),
     },
     {
       title: "Late/UT",
@@ -407,8 +772,8 @@ export default function PayrollSummary() {
               hour breakdown.
             </p>
           </div>
-          <Space>
-            <RangePicker
+          <Space wrap>
+            <MobileRangePicker
               value={[dayjs(dateRange[0]), dayjs(dateRange[1])]}
               onChange={(dates) => {
                 if (dates)
@@ -423,6 +788,22 @@ export default function PayrollSummary() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
+            <Dropdown
+              menu={{ items: exportMenuItems }}
+              trigger={["click"]}
+              disabled={!results.length}
+            >
+              <Button icon={<DownloadOutlined />} disabled={!results.length}>
+                Export
+              </Button>
+            </Dropdown>
+            <Button
+              icon={<PrinterOutlined />}
+              disabled={!results.length}
+              onClick={handlePrintSummary}
+            >
+              Print
+            </Button>
           </Space>
         </div>
       </div>
@@ -492,6 +873,17 @@ export default function PayrollSummary() {
                 <Table
                   dataSource={results}
                   columns={earningsColumns}
+                  {...tableProps}
+                />
+              ),
+            },
+            {
+              key: "holidays",
+              label: "Holiday Breakdown",
+              children: (
+                <Table
+                  dataSource={results}
+                  columns={holidayColumns}
                   {...tableProps}
                 />
               ),

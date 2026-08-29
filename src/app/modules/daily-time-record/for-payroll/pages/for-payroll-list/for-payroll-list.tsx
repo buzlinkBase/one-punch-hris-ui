@@ -3,9 +3,7 @@ import {
   Button,
   Card,
   Checkbox,
-  Col,
   DatePicker,
-  Row,
   Space,
   Statistic,
   Table,
@@ -33,9 +31,9 @@ import type { DtrBatchModel } from "../../models/api/response/dtr-batch-response
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 // ValidationException messages (e.g. "A Pay/Release Date is required...") land in
 // data.detail via GlobalExceptionHandler — surface that instead of a generic fallback.
@@ -98,7 +96,10 @@ export default function ForPayrollList() {
     });
   };
 
-  const selectAll = () => setSelected(new Set(batches.map((b) => b.code)));
+  const selectAll = () =>
+    setSelected(
+      new Set(batches.filter((b) => !b.isPayrollGenerated).map((b) => b.code)),
+    );
 
   const clearSelection = () => setSelected(new Set());
 
@@ -136,27 +137,50 @@ export default function ForPayrollList() {
       key: "check",
       width: 40,
       render: (_, r) => (
-        <Checkbox
-          checked={selected.has(r.code)}
-          onChange={() => toggleSelect(r.code)}
-        />
+        <Tooltip
+          title={
+            r.isPayrollGenerated
+              ? "Payroll has already been generated from this batch."
+              : ""
+          }
+        >
+          <Checkbox
+            checked={selected.has(r.code)}
+            disabled={r.isPayrollGenerated}
+            onChange={() => toggleSelect(r.code)}
+          />
+        </Tooltip>
       ),
     },
     {
       title: "Batch Code",
       dataIndex: "code",
       key: "code",
-      render: (v) => <Text code>{v}</Text>,
+      width: 220,
+      render: (v, r) => (
+        <Space size={4}>
+          <Text code className="whitespace-nowrap">
+            {v}
+          </Text>
+          {r.isPayrollGenerated && (
+            <Tag color="default" className="whitespace-nowrap">
+              Payroll Generated
+            </Tag>
+          )}
+        </Space>
+      ),
     },
     {
       title: "Period",
       key: "period",
+      width: 190,
       render: (_, r) => `${fmtDate(r.fromDate)} — ${fmtDate(r.toDate)}`,
     },
     {
       title: "Posting Description",
       dataIndex: "postingDescription",
       key: "postingDescription",
+      width: 220,
       ellipsis: { showTitle: false },
       render: (v?: string | null) =>
         v ? (
@@ -471,31 +495,24 @@ export default function ForPayrollList() {
         </div>
       </div>
 
-      <Card
-        size="small"
-        className="mb-4"
-        title={
-          <Space>
-            <span>DTR Batches</span>
-            <RangePicker
-              size="small"
-              value={
-                dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null
-              }
-              onChange={(dates) =>
-                setDateRange(
-                  dates
-                    ? [
-                        dates[0]?.format("YYYY-MM-DD") ?? "",
-                        dates[1]?.format("YYYY-MM-DD") ?? "",
-                      ]
-                    : null,
-                )
-              }
-            />
-          </Space>
-        }
-        extra={
+      <Card size="small" className="mb-4" title="DTR Batches">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+          <MobileRangePicker
+            size="small"
+            value={
+              dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null
+            }
+            onChange={(dates) =>
+              setDateRange(
+                dates
+                  ? [
+                      dates[0]?.format("YYYY-MM-DD") ?? "",
+                      dates[1]?.format("YYYY-MM-DD") ?? "",
+                    ]
+                  : null,
+              )
+            }
+          />
           <Space size="small">
             <Button size="small" onClick={selectAll}>
               Select All
@@ -508,8 +525,7 @@ export default function ForPayrollList() {
               Clear
             </Button>
           </Space>
-        }
-      >
+        </div>
         <Table
           rowKey="code"
           dataSource={batches}
@@ -517,6 +533,7 @@ export default function ForPayrollList() {
           loading={isLoading}
           size="small"
           pagination={false}
+          scroll={{ x: "max-content" }}
           rowClassName={(r) =>
             selected.has(r.code) ? "ant-table-row-selected" : ""
           }
@@ -532,26 +549,22 @@ export default function ForPayrollList() {
             </Space>
           }
           extra={
-            <Row gutter={32}>
-              <Col>
-                <Statistic
-                  title="Total Gross"
-                  value={totalGross}
-                  precision={2}
-                  prefix="₱"
-                  valueStyle={{ fontSize: 14 }}
-                />
-              </Col>
-              <Col>
-                <Statistic
-                  title="Total Net Pay"
-                  value={totalNetPay}
-                  precision={2}
-                  prefix="₱"
-                  valueStyle={{ fontSize: 14, color: token.colorPrimary }}
-                />
-              </Col>
-            </Row>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-8">
+              <Statistic
+                title="Total Gross"
+                value={totalGross}
+                precision={2}
+                prefix="₱"
+                valueStyle={{ fontSize: 14 }}
+              />
+              <Statistic
+                title="Total Net Pay"
+                value={totalNetPay}
+                precision={2}
+                prefix="₱"
+                valueStyle={{ fontSize: 14, color: token.colorPrimary }}
+              />
+            </div>
           }
         >
           <div style={{ overflowX: "auto" }}>

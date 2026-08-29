@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   Button,
-  DatePicker,
   Form,
   Popconfirm,
   Select,
@@ -33,6 +32,7 @@ import { CHANGE_HOLIDAY_LABEL } from "../../constants/label.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { ChangeHolidayFilter } from "../../models/api/request/change-holiday-filter.model";
 import type { ChangeHolidayResponse } from "../../models/api/response/change-holiday-response.model";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
 
@@ -406,7 +406,7 @@ export default function ChangeHolidayList() {
       <Form layout="vertical" className="mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
           <Form.Item label="Entry Date" className="mb-0 sm:col-span-2">
-            <DatePicker.RangePicker
+            <MobileRangePicker
               style={{ width: "100%" }}
               value={
                 pending.fromDate && pending.toDate

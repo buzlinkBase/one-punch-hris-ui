@@ -25,6 +25,7 @@ export default function DtrBatchPreviewModal({
       open={open}
       onCancel={onClose}
       footer={null}
+      className="modal-fullscreen"
       title={
         batchCode ? (
           <Text

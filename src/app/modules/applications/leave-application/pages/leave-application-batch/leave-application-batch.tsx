@@ -26,6 +26,7 @@ import { useCreateLeaveApplicationBatch } from "../../hooks/use-leave-applicatio
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -333,7 +334,7 @@ export default function LeaveApplicationBatch() {
               }
               style={{ maxWidth: 420 }}
             >
-              <DatePicker.RangePicker
+              <MobileRangePicker
                 style={{ width: "100%" }}
                 value={
                   leaveDateFrom && leaveDateTo

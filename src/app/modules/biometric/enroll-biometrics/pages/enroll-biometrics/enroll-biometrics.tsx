@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   Collapse,
-  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -51,9 +50,9 @@ import {
   useRegistryReset,
   useDeleteEmployeesBulk,
 } from "../../hooks/use-commands-queries";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
-const { RangePicker } = DatePicker;
 
 const BIO_ID_REQUIRED_NOTE =
   "Only employees who already have a Bio ID appear here. Bio ID is a critical, device-level identifier — it isn't assigned from this screen; set it on the employee's record first (Setup → Employee).";
@@ -727,10 +726,11 @@ function ControlsSection({ sn }: { sn: string }) {
       {/* Pull Attendance */}
       <Card title="Pull Attendance Logs" size="small">
         <Space direction="vertical" className="w-full">
-          <RangePicker
+          <MobileRangePicker
             className="w-full"
             showTime={{ format: "HH:mm" }}
             format="YYYY-MM-DD HH:mm"
+            value={pullDates}
             onChange={(vals) =>
               setPullDates(vals as [Dayjs | null, Dayjs | null] | null)
             }

@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  DatePicker,
   Dropdown,
   Form,
   Segmented,
@@ -37,6 +36,7 @@ import {
   buildFlatExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 
@@ -158,7 +158,7 @@ export default function RosterList() {
               Schedules, and permanent shift assignments.
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Segmented
               value={view}
               onChange={(v) => setView(v as "table" | "calendar")}
@@ -194,7 +194,7 @@ export default function RosterList() {
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-4">
               <Form.Item label="Date Range" className="mb-0 sm:col-span-2">
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   value={
                     pending.fromDate && pending.toDate

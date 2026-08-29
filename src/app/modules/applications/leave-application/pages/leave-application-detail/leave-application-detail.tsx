@@ -43,6 +43,7 @@ import { useEmployee } from "@/app/modules/setup/employee/hooks/use-employee-que
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -716,7 +717,7 @@ export default function LeaveApplicationDetail() {
               }
               style={{ maxWidth: 420 }}
             >
-              <DatePicker.RangePicker
+              <MobileRangePicker
                 style={{ width: "100%" }}
                 value={
                   leaveDateFrom && leaveDateTo
