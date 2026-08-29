@@ -154,6 +154,9 @@ export interface EmployeeResponse {
   isSpecialNonWorkingIncluded?: boolean;
   /** FIXED salary type only — the monthly rate already includes the mandatory night differential. */
   isNightDiffIncluded?: boolean;
+  /** FIXED salary type only — when false, ignores the 4 toggles above and uses the
+   * company-wide Fixed Salary Defaults (Company Policy) instead. */
+  useEmployeeOverride?: boolean;
   dob?: string | null;
   bloodType?: string;
   modeOfPayment: ModeOfPayment;

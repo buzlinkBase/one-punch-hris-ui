@@ -12,7 +12,7 @@ import type { ClientResponse } from "../../models/api/response/client-response.m
 import { CLIENT_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
-import ClientPolicyModal from "../client-policy-modal";
+import ClientSettingsModal from "../client-settings-modal/client-settings-modal";
 
 interface Props {
   data: ClientResponse[];
@@ -23,7 +23,7 @@ interface Props {
 export default function ClientTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [policyClient, setPolicyClient] = useState<{
+  const [settingsClient, setSettingsClient] = useState<{
     id: string;
     name: string;
   } | null>(null);
@@ -80,15 +80,15 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 110,
+      width: 150,
       render: (_, record) => (
         <Space>
-          <Tooltip title="OT Policy">
+          <Tooltip title="Client Settings">
             <Button
               type="text"
               icon={<SettingOutlined />}
               onClick={() =>
-                setPolicyClient({ id: record.id, name: record.name })
+                setSettingsClient({ id: record.id, name: record.name })
               }
             />
           </Tooltip>
@@ -114,11 +114,11 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      {policyClient && (
-        <ClientPolicyModal
-          clientId={policyClient.id}
-          clientName={policyClient.name}
-          onClose={() => setPolicyClient(null)}
+      {settingsClient && (
+        <ClientSettingsModal
+          clientId={settingsClient.id}
+          clientName={settingsClient.name}
+          onClose={() => setSettingsClient(null)}
         />
       )}
       <Input

@@ -6,7 +6,6 @@ import {
   InputNumber,
   Button,
   Select,
-  DatePicker,
   TimePicker,
   Typography,
   Space,
@@ -28,10 +27,10 @@ import {
   TRAVEL_CLASSIFICATION_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 const { TextArea } = Input;
-const { RangePicker } = DatePicker;
 
 const MODE_OPTIONS = [
   { label: "Time Range", value: "timerange" },
@@ -203,7 +202,7 @@ export default function TravelOrderBatch() {
               validateStatus={errors.startDate || errors.endDate ? "error" : ""}
               help={errors.startDate?.message ?? errors.endDate?.message}
             >
-              <RangePicker
+              <MobileRangePicker
                 style={{ width: "100%" }}
                 value={[
                   startDate ? dayjs(startDate) : null,
@@ -412,7 +411,7 @@ export default function TravelOrderBatch() {
 
           {/* Per-employee rows */}
           <div className="rounded-lg border border-(--ant-color-border) overflow-hidden">
-            <div className="grid grid-cols-[1fr_1fr_36px] gap-2 px-3 py-2 bg-(--ant-color-fill-quaternary) text-xs font-medium text-(--ant-color-text-secondary) border-b border-(--ant-color-border)">
+            <div className="hidden sm:grid grid-cols-[1fr_1fr_36px] gap-2 px-3 py-2 bg-(--ant-color-fill-quaternary) text-xs font-medium text-(--ant-color-text-secondary) border-b border-(--ant-color-border)">
               <span>Employee</span>
               <span>Remarks</span>
               <span />
@@ -424,10 +423,11 @@ export default function TravelOrderBatch() {
                 return (
                   <div
                     key={field.id}
-                    className="grid grid-cols-[1fr_1fr_36px] gap-2 px-3 py-2 items-start"
+                    className="grid grid-cols-1 gap-3 px-3 py-3 sm:grid-cols-[1fr_1fr_36px] sm:gap-2 sm:py-2 sm:items-start"
                   >
                     <Form.Item
-                      className="mb-0"
+                      label="Employee"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
                       validateStatus={entryErrors?.employeeId ? "error" : ""}
                       help={entryErrors?.employeeId?.message}
                     >
@@ -447,7 +447,10 @@ export default function TravelOrderBatch() {
                       />
                     </Form.Item>
 
-                    <Form.Item className="mb-0">
+                    <Form.Item
+                      label="Remarks"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
+                    >
                       <Controller
                         name={`entries.${index}.applicationRemarks`}
                         control={control}
@@ -462,7 +465,7 @@ export default function TravelOrderBatch() {
                       />
                     </Form.Item>
 
-                    <div className="pt-1">
+                    <div className="flex justify-end sm:block sm:pt-1">
                       <Button
                         type="text"
                         danger

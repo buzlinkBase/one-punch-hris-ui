@@ -19,6 +19,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { isActiveStatus } from "@/shared/utils/status.util";
 
 const { Title } = Typography;
 
@@ -42,20 +43,26 @@ export default function ManageDevicesDetail() {
   const { data: clients = [] } = useClients();
   const { data: areas = [] } = useOperationAreas();
 
-  const branchOptions: SelectProps["options"] = branches.map((b) => ({
-    value: b.id,
-    label: b.name,
-  }));
+  const branchOptions: SelectProps["options"] = branches
+    .filter((b) => isActiveStatus(b.status))
+    .map((b) => ({
+      value: b.id,
+      label: b.name,
+    }));
 
-  const clientOptions: SelectProps["options"] = clients.map((c) => ({
-    value: c.id,
-    label: c.name,
-  }));
+  const clientOptions: SelectProps["options"] = clients
+    .filter((c) => isActiveStatus(c.status))
+    .map((c) => ({
+      value: c.id,
+      label: c.name,
+    }));
 
-  const areaOptions: SelectProps["options"] = areas.map((a) => ({
-    value: a.id,
-    label: a.name,
-  }));
+  const areaOptions: SelectProps["options"] = areas
+    .filter((a) => isActiveStatus(a.status))
+    .map((a) => ({
+      value: a.id,
+      label: a.name,
+    }));
 
   const {
     control,

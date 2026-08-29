@@ -73,6 +73,9 @@ const RoleDetail = lazy(
 const TardinessList = lazy(
   () => import("@/app/modules/reports/tardiness/pages/tardiness-list"),
 );
+const RosterList = lazy(
+  () => import("@/app/modules/reports/rostering/pages/roster-list"),
+);
 const EnrollBiometrics = lazy(
   () =>
     import("@/app/modules/biometric/enroll-biometrics/pages/enroll-biometrics"),
@@ -92,6 +95,39 @@ const ForPayrollList = lazy(
 const PayrollSummary = lazy(
   () =>
     import("@/app/modules/daily-time-record/for-payroll/pages/payroll-summary/payroll-summary"),
+);
+const SssRemittance = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/sss-remittance"),
+);
+const PhilHealthRemittance = lazy(
+  () =>
+    import("@/app/modules/reports/payroll-reports/pages/philhealth-remittance"),
+);
+const PagIbigRemittance = lazy(
+  () =>
+    import("@/app/modules/reports/payroll-reports/pages/pagibig-remittance"),
+);
+const WTaxRemittance = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/wtax-remittance"),
+);
+const BankDisbursement = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/bank-disbursement"),
+);
+const LoanLedger = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/loan-ledger"),
+);
+const LeaveLedger = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/leave-ledger"),
+);
+const CostSummary = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/cost-summary"),
+);
+const YtdSummary = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/ytd-summary"),
+);
+const ThirteenthMonthPay = lazy(
+  () =>
+    import("@/app/modules/reports/payroll-reports/pages/thirteenth-month-pay"),
 );
 const DtrSummaryList = lazy(
   () =>
@@ -642,6 +678,116 @@ const payrollSummaryIndexRoute = createRoute({
   component: withSuspense(PayrollSummary),
 });
 
+const sssRemittanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/sss-remittance",
+  component: MainLayout,
+});
+const sssRemittanceIndexRoute = createRoute({
+  getParentRoute: () => sssRemittanceRoute,
+  path: "/",
+  component: withSuspense(SssRemittance),
+});
+
+const philHealthRemittanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/philhealth-remittance",
+  component: MainLayout,
+});
+const philHealthRemittanceIndexRoute = createRoute({
+  getParentRoute: () => philHealthRemittanceRoute,
+  path: "/",
+  component: withSuspense(PhilHealthRemittance),
+});
+
+const pagIbigRemittanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/pagibig-remittance",
+  component: MainLayout,
+});
+const pagIbigRemittanceIndexRoute = createRoute({
+  getParentRoute: () => pagIbigRemittanceRoute,
+  path: "/",
+  component: withSuspense(PagIbigRemittance),
+});
+
+const wtaxRemittanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/wtax-remittance",
+  component: MainLayout,
+});
+const wtaxRemittanceIndexRoute = createRoute({
+  getParentRoute: () => wtaxRemittanceRoute,
+  path: "/",
+  component: withSuspense(WTaxRemittance),
+});
+
+const bankDisbursementRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/bank-disbursement",
+  component: MainLayout,
+});
+const bankDisbursementIndexRoute = createRoute({
+  getParentRoute: () => bankDisbursementRoute,
+  path: "/",
+  component: withSuspense(BankDisbursement),
+});
+
+const loanLedgerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/loan-ledger",
+  component: MainLayout,
+});
+const loanLedgerIndexRoute = createRoute({
+  getParentRoute: () => loanLedgerRoute,
+  path: "/",
+  component: withSuspense(LoanLedger),
+});
+
+const leaveLedgerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/leave-ledger",
+  component: MainLayout,
+});
+const leaveLedgerIndexRoute = createRoute({
+  getParentRoute: () => leaveLedgerRoute,
+  path: "/",
+  component: withSuspense(LeaveLedger),
+});
+
+const costSummaryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/cost-summary",
+  component: MainLayout,
+});
+const costSummaryIndexRoute = createRoute({
+  getParentRoute: () => costSummaryRoute,
+  path: "/",
+  component: withSuspense(CostSummary),
+});
+
+const ytdSummaryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/ytd-summary",
+  component: MainLayout,
+});
+const ytdSummaryIndexRoute = createRoute({
+  getParentRoute: () => ytdSummaryRoute,
+  path: "/",
+  component: withSuspense(YtdSummary),
+});
+
+const thirteenthMonthPayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/13th-month-pay",
+  component: MainLayout,
+});
+const thirteenthMonthPayIndexRoute = createRoute({
+  getParentRoute: () => thirteenthMonthPayRoute,
+  path: "/",
+  component: withSuspense(ThirteenthMonthPay),
+});
+
 const tardinessRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "reports/tardiness",
@@ -652,6 +798,18 @@ const tardinessIndexRoute = createRoute({
   getParentRoute: () => tardinessRoute,
   path: "/",
   component: withSuspense(TardinessList),
+});
+
+const rosterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "reports/rostering",
+  component: MainLayout,
+});
+
+const rosterIndexRoute = createRoute({
+  getParentRoute: () => rosterRoute,
+  path: "/",
+  component: withSuspense(RosterList),
 });
 
 const clientsRoute = createRoute({
@@ -1133,8 +1291,19 @@ const routeTree = rootRoute.addChildren([
   dtrSummaryRoute.addChildren([dtrSummaryIndexRoute]),
   forPayrollRoute.addChildren([forPayrollIndexRoute]),
   payrollSummaryRoute.addChildren([payrollSummaryIndexRoute]),
+  sssRemittanceRoute.addChildren([sssRemittanceIndexRoute]),
+  philHealthRemittanceRoute.addChildren([philHealthRemittanceIndexRoute]),
+  pagIbigRemittanceRoute.addChildren([pagIbigRemittanceIndexRoute]),
+  wtaxRemittanceRoute.addChildren([wtaxRemittanceIndexRoute]),
+  bankDisbursementRoute.addChildren([bankDisbursementIndexRoute]),
+  loanLedgerRoute.addChildren([loanLedgerIndexRoute]),
+  leaveLedgerRoute.addChildren([leaveLedgerIndexRoute]),
+  costSummaryRoute.addChildren([costSummaryIndexRoute]),
+  ytdSummaryRoute.addChildren([ytdSummaryIndexRoute]),
+  thirteenthMonthPayRoute.addChildren([thirteenthMonthPayIndexRoute]),
   appSectionRoute("reports", "Reports"),
   tardinessRoute.addChildren([tardinessIndexRoute]),
+  rosterRoute.addChildren([rosterIndexRoute]),
   clientsRoute.addChildren([
     clientsIndexRoute,
     clientsCreateRoute,

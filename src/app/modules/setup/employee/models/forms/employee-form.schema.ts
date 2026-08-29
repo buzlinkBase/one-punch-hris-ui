@@ -76,6 +76,7 @@ export const employeeFormSchema = z.object({
   isRegularHolidayIncluded: z.boolean().optional(),
   isSpecialNonWorkingIncluded: z.boolean().optional(),
   isNightDiffIncluded: z.boolean().optional(),
+  useEmployeeOverride: z.boolean().optional(),
   bankName: z.string().optional(),
   bankNo: z.string().optional(),
 

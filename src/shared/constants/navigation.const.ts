@@ -104,6 +104,62 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Payroll Summary",
         path: "/payroll/summary",
       },
+      {
+        key: "payroll-reports",
+        label: "Payroll Reports",
+        children: [
+          {
+            key: "payroll-reports-sss",
+            label: "SSS Remittance",
+            path: "/payroll/reports/sss-remittance",
+          },
+          {
+            key: "payroll-reports-philhealth",
+            label: "PhilHealth Remittance",
+            path: "/payroll/reports/philhealth-remittance",
+          },
+          {
+            key: "payroll-reports-pagibig",
+            label: "Pag-IBIG Remittance",
+            path: "/payroll/reports/pagibig-remittance",
+          },
+          {
+            key: "payroll-reports-wtax",
+            label: "BIR Withholding Tax",
+            path: "/payroll/reports/wtax-remittance",
+          },
+          {
+            key: "payroll-reports-bank",
+            label: "Bank Disbursement",
+            path: "/payroll/reports/bank-disbursement",
+          },
+          {
+            key: "payroll-reports-loans",
+            label: "Loan Ledger",
+            path: "/payroll/reports/loan-ledger",
+          },
+          {
+            key: "payroll-reports-leave",
+            label: "Leave Ledger",
+            path: "/payroll/reports/leave-ledger",
+          },
+          {
+            key: "payroll-reports-cost",
+            label: "Cost Summary",
+            path: "/payroll/reports/cost-summary",
+          },
+          {
+            key: "payroll-reports-ytd",
+            label: "YTD Summary",
+            path: "/payroll/reports/ytd-summary",
+          },
+          {
+            key: "payroll-reports-13th",
+            label: "13th Month Pay",
+            path: "/payroll/reports/13th-month-pay",
+          },
+        ],
+      },
     ],
   },
   {
@@ -335,6 +391,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "reports-tardiness",
         label: "Tardiness",
         path: "/reports/tardiness",
+      },
+      {
+        key: "reports-rostering",
+        label: "Rostering",
+        path: "/reports/rostering",
       },
     ],
   },

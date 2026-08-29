@@ -1,6 +1,8 @@
-import { Modal } from "antd";
+import { Modal, Typography } from "antd";
 import { useDtrSummaryByBatch } from "@/app/modules/daily-time-record/summary/hooks/use-dtr-summary-queries";
 import DtrSummaryTable from "@/app/modules/daily-time-record/summary/components/dtr-summary-table";
+
+const { Text } = Typography;
 
 interface Props {
   open: boolean;
@@ -23,8 +25,19 @@ export default function DtrBatchPreviewModal({
       open={open}
       onCancel={onClose}
       footer={null}
-      width="90vw"
-      title={batchCode ? `DTR Batch — ${batchCode}` : "DTR Batch"}
+      className="modal-fullscreen"
+      title={
+        batchCode ? (
+          <Text
+            ellipsis={{ tooltip: batchCode }}
+            className="block max-w-[calc(100%-32px)] text-sm sm:text-base"
+          >
+            {batchCode}
+          </Text>
+        ) : (
+          "DTR Batch"
+        )
+      }
       destroyOnClose
     >
       <DtrSummaryTable data={records} loading={isLoading} />

@@ -1,9 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, DatePicker, Modal, Space, Table, Tag, theme } from "antd";
-import { CheckOutlined, CloseOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  Button,
+  DatePicker,
+  Modal,
+  Popconfirm,
+  Space,
+  Table,
+  Tag,
+  theme,
+} from "antd";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  DeleteOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import type { ColumnsType } from "antd/es/table";
 import {
+  useDeleteAttendanceEntryLog,
   useDtrViewAttendanceLogs,
   useUpdateAttendanceEntry,
 } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
@@ -32,6 +47,7 @@ export default function DtrAttendanceLogsModal({
   const { token } = theme.useToken();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<Dayjs | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
   const prevOpen = useRef(false);
 
@@ -58,6 +74,7 @@ export default function DtrAttendanceLogsModal({
 
   const { mutateAsync: updateEntry, isPending: isSaving } =
     useUpdateAttendanceEntry();
+  const { mutateAsync: deleteEntry } = useDeleteAttendanceEntryLog();
 
   const startEdit = (record: AttendanceEntryResponse) => {
     setEditingId(record.id);
@@ -86,6 +103,19 @@ export default function DtrAttendanceLogsModal({
     } finally {
       setEditingId(null);
       setEditingValue(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteEntry(id);
+      getNotify().success({ message: "Attendance log deleted." });
+      refetch();
+    } catch {
+      getNotify().error({ message: "Failed to delete attendance log." });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -140,7 +170,7 @@ export default function DtrAttendanceLogsModal({
     {
       title: "",
       key: "actions",
-      width: 80,
+      width: 110,
       fixed: "right",
       render: (_, record) => {
         if (record.logSource !== "MANUAL") return null;
@@ -168,12 +198,28 @@ export default function DtrAttendanceLogsModal({
         }
 
         return (
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => startEdit(record)}
-          />
+          <Space size={4}>
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => startEdit(record)}
+            />
+            <Popconfirm
+              title="Delete this attendance log?"
+              onConfirm={() => handleDelete(record.id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                loading={deletingId === record.id}
+              />
+            </Popconfirm>
+          </Space>
         );
       },
     },

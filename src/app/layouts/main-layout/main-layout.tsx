@@ -195,7 +195,6 @@ function buildMenuItems(
   items: typeof NAVIGATION_ITEMS,
   hrDbReady: boolean,
   collapsed = false,
-  atRoot = true,
 ): MenuItem[] {
   return items.map((item) => {
     if (item.type === "divider") {
@@ -208,13 +207,12 @@ function buildMenuItems(
         label: item.label,
         icon: getNavIcon(item.key),
         children: item.children
-          ? buildMenuItems(item.children, hrDbReady, collapsed, atRoot)
+          ? buildMenuItems(item.children, hrDbReady, collapsed)
           : undefined,
       };
     }
 
-    const disabled =
-      atRoot && !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
+    const disabled = !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
 
     // When collapsed, AntD's built-in popup already shows the label text on hover —
     // wrapping in Tooltip creates a nested tooltip that breaks the popup text rendering.
@@ -240,7 +238,7 @@ function buildMenuItems(
       icon: getNavIcon(item.key),
       disabled,
       children: item.children
-        ? buildMenuItems(item.children, hrDbReady, collapsed, false)
+        ? buildMenuItems(item.children, hrDbReady, collapsed)
         : undefined,
     };
   });

@@ -3,12 +3,18 @@ import {
   Button,
   Card,
   InputNumber,
+  Popover,
   Space,
   Tag,
   Typography,
   message,
 } from "antd";
-import { LockOutlined, ReloadOutlined, SaveOutlined } from "@ant-design/icons";
+import {
+  InfoCircleOutlined,
+  LockOutlined,
+  ReloadOutlined,
+  SaveOutlined,
+} from "@ant-design/icons";
 import { usePayrollRates } from "../../hooks/use-payroll-rate-queries";
 import { payrollRateApi } from "../../services/payroll-rate.api";
 import {
@@ -91,8 +97,37 @@ export default function PayrollRateConfig() {
       <div className="page-toolbar">
         <div className="page-toolbar-row">
           <div>
-            <Title level={4} className="mb-0!">
+            <Title level={4} className="mb-0! inline-flex items-center gap-2">
               Rate Multipliers
+              <Popover
+                trigger="click"
+                title="Why some rates already include the base 100%"
+                content={
+                  <div className="max-w-md text-xs leading-relaxed">
+                    <strong>
+                      Regular, Rest Day, Legal Holiday (Worked), Special
+                      Non-Working, and Rest Day + Special Holiday
+                    </strong>{" "}
+                    are day-type rates — each multiplier is the employee&apos;s{" "}
+                    <em>full</em> pay for that day (e.g. Rest Day = 130% of the
+                    daily rate), matching how DOLE publishes holiday pay tables,
+                    so the base 100% is already baked in — it isn&apos;t an
+                    extra amount added to a separate 100% base pay.{" "}
+                    <strong>
+                      Night Differential, Overtime, and the Holiday/Rest Day OT
+                      Premium
+                    </strong>{" "}
+                    work differently: they&apos;re stacking premiums that
+                    multiply on top of whichever day-type rate already applies,
+                    since OT and night work can happen on any kind of day.
+                    That&apos;s why combined scenarios — like a rest day worked
+                    with night-shift overtime — are computed by multiplying
+                    these together rather than adding percentages.
+                  </div>
+                }
+              >
+                <InfoCircleOutlined className="text-sm text-(--ant-color-text-tertiary) cursor-pointer align-middle" />
+              </Popover>
             </Title>
             <p className="page-toolbar-subtitle">
               Configure the base pay multipliers. The payroll engine derives all

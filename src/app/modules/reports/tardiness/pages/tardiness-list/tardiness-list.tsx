@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  DatePicker,
   Dropdown,
   Form,
   Select,
@@ -47,6 +46,7 @@ import {
   buildFlatExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 
@@ -184,7 +184,7 @@ export default function TardinessList() {
           <Form layout="vertical">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-4">
               <Form.Item label="Date Range" className="mb-0 sm:col-span-2">
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   value={
                     pending.fromDate && pending.toDate

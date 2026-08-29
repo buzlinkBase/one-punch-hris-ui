@@ -32,6 +32,7 @@ import {
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { isActiveStatus } from "@/shared/utils/status.util";
 
 const { Title } = Typography;
 
@@ -112,10 +113,12 @@ export default function HolidayDetail() {
     navigate({ to: "/setup/holiday" });
   };
 
-  const areaOptions = areas.map((a) => ({
-    value: a.id,
-    label: `${a.code} - ${a.name}`,
-  }));
+  const areaOptions = areas
+    .filter((a) => isActiveStatus(a.status))
+    .map((a) => ({
+      value: a.id,
+      label: `${a.code} - ${a.name}`,
+    }));
 
   return (
     <div className="content-page">

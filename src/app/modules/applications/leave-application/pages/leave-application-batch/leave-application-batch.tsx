@@ -26,6 +26,7 @@ import { useCreateLeaveApplicationBatch } from "../../hooks/use-leave-applicatio
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -333,7 +334,7 @@ export default function LeaveApplicationBatch() {
               }
               style={{ maxWidth: 420 }}
             >
-              <DatePicker.RangePicker
+              <MobileRangePicker
                 style={{ width: "100%" }}
                 value={
                   leaveDateFrom && leaveDateTo
@@ -495,7 +496,7 @@ export default function LeaveApplicationBatch() {
 
           {/* Employee entries */}
           <div className="rounded-lg border border-gray-200 overflow-hidden">
-            <div className="grid grid-cols-[1fr_1fr_110px_1fr_36px] gap-2 px-3 py-2 bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
+            <div className="hidden sm:grid grid-cols-[1fr_1fr_110px_1fr_36px] gap-2 px-3 py-2 bg-gray-50 text-xs font-medium text-gray-500 border-b border-gray-200">
               <span>Employee</span>
               <span>Leave Type</span>
               <span>Pay Type</span>
@@ -509,10 +510,11 @@ export default function LeaveApplicationBatch() {
                 return (
                   <div
                     key={field.id}
-                    className="grid grid-cols-[1fr_1fr_110px_1fr_36px] gap-2 px-3 py-2 items-start"
+                    className="grid grid-cols-1 gap-3 px-3 py-3 sm:grid-cols-[1fr_1fr_110px_1fr_36px] sm:gap-2 sm:py-2 sm:items-start"
                   >
                     <Form.Item
-                      className="mb-0"
+                      label="Employee"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
                       validateStatus={entryErrors?.employeeId ? "error" : ""}
                       help={entryErrors?.employeeId?.message}
                     >
@@ -533,7 +535,8 @@ export default function LeaveApplicationBatch() {
                     </Form.Item>
 
                     <Form.Item
-                      className="mb-0"
+                      label="Leave Type"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
                       validateStatus={entryErrors?.leaveId ? "error" : ""}
                       help={entryErrors?.leaveId?.message}
                     >
@@ -554,7 +557,8 @@ export default function LeaveApplicationBatch() {
                     </Form.Item>
 
                     <Form.Item
-                      className="mb-0"
+                      label="Pay Type"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
                       validateStatus={entryErrors?.payType ? "error" : ""}
                       help={entryErrors?.payType?.message}
                     >
@@ -567,7 +571,10 @@ export default function LeaveApplicationBatch() {
                       />
                     </Form.Item>
 
-                    <Form.Item className="mb-0">
+                    <Form.Item
+                      label="Remarks"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
+                    >
                       <Controller
                         name={`entries.${index}.applicationRemarks`}
                         control={control}
@@ -582,7 +589,7 @@ export default function LeaveApplicationBatch() {
                       />
                     </Form.Item>
 
-                    <div className="pt-1">
+                    <div className="flex justify-end sm:block sm:pt-1">
                       <Button
                         type="text"
                         danger

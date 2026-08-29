@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  DatePicker,
   Dropdown,
   Form,
   Select,
@@ -25,6 +24,7 @@ import {
   useSaveDtrDetail,
 } from "../../hooks/use-dtr-detail-queries";
 import DtrDetailTable from "../../components/dtr-detail-table";
+import DtrPostModal from "../../components/dtr-post-modal";
 import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
 import {
@@ -38,6 +38,7 @@ import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-pa
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
 
@@ -122,6 +123,10 @@ export default function DtrDetailList() {
     label: e.name ?? e.id,
   }));
 
+  // Pre-fill with the first payroll group when the user hasn't picked one yet.
+  const effectivePayrollGroupId =
+    pending.payrollGroupId ?? payrollGroups[0]?.id;
+
   const {
     data: records = [],
     isLoading,
@@ -132,13 +137,20 @@ export default function DtrDetailList() {
   });
 
   const { mutateAsync: saveRecords, isPending: isSaving } = useSaveDtrDetail();
+  const [postModalOpen, setPostModalOpen] = useState(false);
 
-  const handleSave = async () => {
+  const handlePostClick = () => {
     if (!records.length) {
       messageApi.warning("No data to save. Click Generate first.");
       return;
     }
-    await saveRecords(records);
+    setPostModalOpen(true);
+  };
+
+  const handleConfirmPost = async (postingDescription: string) => {
+    const payload = records.map((r) => ({ ...r, postingDescription }));
+    await saveRecords(payload);
+    setPostModalOpen(false);
     messageApi.success(
       `${records.length} record${records.length !== 1 ? "s" : ""} saved.`,
     );
@@ -150,7 +162,7 @@ export default function DtrDetailList() {
     pending.branchId,
     pending.departmentId,
     pending.clientId,
-    pending.payrollGroupId,
+    effectivePayrollGroupId,
     pending.operationAreaId,
     pending.employeeId,
   ].filter(Boolean).length;
@@ -160,7 +172,11 @@ export default function DtrDetailList() {
       messageApi.warning("Date Range is required.");
       return;
     }
-    setCommittedFilter({ ...pending });
+    if (!effectivePayrollGroupId) {
+      messageApi.warning("Payroll Group is required.");
+      return;
+    }
+    setCommittedFilter({ ...pending, payrollGroupId: effectivePayrollGroupId });
     setGenerateKey((k) => k + 1);
   };
 
@@ -231,7 +247,7 @@ export default function DtrDetailList() {
               icon={<SaveOutlined />}
               disabled={!records.length}
               loading={isSaving}
-              onClick={handleSave}
+              onClick={handlePostClick}
             >
               Post
             </Button>
@@ -263,7 +279,7 @@ export default function DtrDetailList() {
                   !pending.fromDate || !pending.toDate ? "Required" : undefined
                 }
               >
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   status={
                     !pending.fromDate || !pending.toDate ? "error" : undefined
@@ -279,6 +295,30 @@ export default function DtrDetailList() {
                       fromDate: dates?.[0]?.format("YYYY-MM-DD"),
                       toDate: dates?.[1]?.format("YYYY-MM-DD"),
                     }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item
+                label={DTR_DETAIL_LABEL.FILTER_PAYROLL_GROUP}
+                className="mb-3"
+                required
+                validateStatus={!effectivePayrollGroupId ? "error" : ""}
+                help={!effectivePayrollGroupId ? "Required" : undefined}
+              >
+                <Select
+                  showSearch
+                  status={!effectivePayrollGroupId ? "error" : undefined}
+                  filterOption={filterByLabel}
+                  placeholder="Select payroll group"
+                  options={payrollGrpOptions}
+                  optionRender={(opt) =>
+                    opt.data.fullLabel
+                      ? `${opt.data.label} - ${opt.data.fullLabel}`
+                      : String(opt.data.label ?? "")
+                  }
+                  value={effectivePayrollGroupId}
+                  onChange={(v) =>
+                    setPending((f) => ({ ...f, payrollGroupId: v }))
                   }
                 />
               </Form.Item>
@@ -338,27 +378,6 @@ export default function DtrDetailList() {
                   onChange={(v) => setPending((f) => ({ ...f, clientId: v }))}
                 />
               </Form.Item>
-              <Form.Item
-                label={DTR_DETAIL_LABEL.FILTER_PAYROLL_GROUP}
-                className="mb-3"
-              >
-                <Select
-                  allowClear
-                  showSearch
-                  filterOption={filterByLabel}
-                  placeholder="All payroll groups"
-                  options={payrollGrpOptions}
-                  optionRender={(opt) =>
-                    opt.data.fullLabel
-                      ? `${opt.data.label} - ${opt.data.fullLabel}`
-                      : String(opt.data.label ?? "")
-                  }
-                  value={pending.payrollGroupId}
-                  onChange={(v) =>
-                    setPending((f) => ({ ...f, payrollGroupId: v }))
-                  }
-                />
-              </Form.Item>
               <Form.Item label="Project Site" className="mb-3">
                 <Select
                   allowClear
@@ -400,7 +419,11 @@ export default function DtrDetailList() {
                 type="primary"
                 icon={<PlayCircleOutlined />}
                 loading={isLoading}
-                disabled={!pending.fromDate || !pending.toDate}
+                disabled={
+                  !pending.fromDate ||
+                  !pending.toDate ||
+                  !effectivePayrollGroupId
+                }
                 onClick={handleGenerate}
               >
                 Generate
@@ -416,6 +439,14 @@ export default function DtrDetailList() {
         onChanged={() => refetch()}
         dateFrom={committedFilter?.fromDate}
         dateTo={committedFilter?.toDate}
+      />
+
+      <DtrPostModal
+        open={postModalOpen}
+        recordCount={records.length}
+        isSaving={isSaving}
+        onClose={() => setPostModalOpen(false)}
+        onConfirm={handleConfirmPost}
       />
     </div>
   );

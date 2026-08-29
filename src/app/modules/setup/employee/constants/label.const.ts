@@ -38,6 +38,7 @@ export const EMPLOYEE_LABEL = {
   DAILY_RATE_MODE: "Daily Rate Mode",
   FACTOR_DAYS: "Factor Days",
   COLA: "COLA (Per Payroll)",
+  USE_EMPLOYEE_OVERRIDE: "Use Employee-Specific Fixed Salary Inclusions",
   BANK_NAME: "Bank Name",
   BANK_NO: "Bank Account No.",
   SSS_NO: "SSS No.",

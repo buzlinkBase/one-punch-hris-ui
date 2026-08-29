@@ -42,6 +42,7 @@ import {
   PERIODS_PER_YEAR,
 } from "../../constants/label.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { isActiveStatus } from "@/shared/utils/status.util";
 
 const { Title } = Typography;
 
@@ -269,10 +270,12 @@ export default function DeductionApplicationDetail() {
       `${e.lastName}, ${e.firstName} ${e.middleName ?? ""}`.trim(),
   }));
 
-  const deductionOptions = rawDeductions.map((d) => ({
-    value: d.id,
-    label: `${d.code} — ${d.name}`,
-  }));
+  const deductionOptions = rawDeductions
+    .filter((d) => isActiveStatus(d.status))
+    .map((d) => ({
+      value: d.id,
+      label: `${d.code} — ${d.name}`,
+    }));
 
   const onSubmit = (values: DeductionApplicationFormValues) => {
     if (!breakdown.length) {

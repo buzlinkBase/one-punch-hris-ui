@@ -42,6 +42,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
 import type { CreateChangeRestDay } from "../../models/api/request/create-change-rest-day.model";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
 
@@ -125,11 +126,17 @@ function CreateBatchForm() {
   }));
 
   const hasSearched = committedFilter !== null;
+  // Guard against a stale/shared React Query cache: other pages fetch the
+  // full employee list under an equivalent key, so `employees` can be
+  // populated even while this query is disabled. Only show rows once the
+  // user has actually clicked Search.
+  const visibleEmployees = hasSearched ? employees : [];
   const selectedCount = selectedIds.size;
   const allChecked =
-    employees.length > 0 && employees.every((e) => selectedIds.has(e.id));
+    visibleEmployees.length > 0 &&
+    visibleEmployees.every((e) => selectedIds.has(e.id));
   const someChecked =
-    !allChecked && employees.some((e) => selectedIds.has(e.id));
+    !allChecked && visibleEmployees.some((e) => selectedIds.has(e.id));
 
   const handleSearch = () => {
     if (!priorDate) {
@@ -159,7 +166,7 @@ function CreateBatchForm() {
           indeterminate={someChecked}
           onChange={(e) =>
             e.target.checked
-              ? setSelectedIds(new Set(employees.map((e) => e.id)))
+              ? setSelectedIds(new Set(visibleEmployees.map((e) => e.id)))
               : setSelectedIds(new Set())
           }
         />
@@ -307,8 +314,6 @@ function CreateBatchForm() {
                 value={priorDate}
                 onChange={(d) => {
                   setPriorDate(d ?? null);
-                  setCommittedFilter(null);
-                  setSelectedIds(new Set());
                   if (d && newDate && d.isSame(newDate, "day")) {
                     setNewDate(null);
                     messageApi.warning(
@@ -363,7 +368,8 @@ function CreateBatchForm() {
       {hasSearched && (
         <div className="flex items-center justify-between mb-2">
           <Text type="secondary" style={{ fontSize: 13 }}>
-            {employees.length} employee{employees.length !== 1 ? "s" : ""} with{" "}
+            {visibleEmployees.length} employee
+            {visibleEmployees.length !== 1 ? "s" : ""} with{" "}
             <Text strong style={{ fontSize: 13 }}>
               {committedFilter!.priorDate.format("dddd")}
             </Text>{" "}
@@ -379,9 +385,9 @@ function CreateBatchForm() {
             <Button
               size="small"
               onClick={() =>
-                setSelectedIds(new Set(employees.map((e) => e.id)))
+                setSelectedIds(new Set(visibleEmployees.map((e) => e.id)))
               }
-              disabled={employees.length === 0 || allChecked}
+              disabled={visibleEmployees.length === 0 || allChecked}
             >
               Select All
             </Button>
@@ -399,8 +405,8 @@ function CreateBatchForm() {
       <Table<EmployeeFilterResponse>
         rowKey="id"
         columns={columns}
-        dataSource={employees}
-        loading={isEmployeesLoading}
+        dataSource={visibleEmployees}
+        loading={hasSearched && isEmployeesLoading}
         size="small"
         pagination={{ pageSize: 10, size: "small", showSizeChanger: false }}
         className="mb-4"
@@ -593,7 +599,7 @@ function EditForm({ id }: { id: string }) {
                 validateStatus={errors.fromDate || errors.toDate ? "error" : ""}
                 help={errors.fromDate?.message ?? errors.toDate?.message}
               >
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   value={
                     fromDate && toDate ? [dayjs(fromDate), dayjs(toDate)] : null

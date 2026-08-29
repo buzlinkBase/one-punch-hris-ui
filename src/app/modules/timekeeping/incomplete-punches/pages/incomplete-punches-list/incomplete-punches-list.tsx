@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  DatePicker,
   Form,
   Input,
   Select,
@@ -36,6 +35,7 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import { INCOMPLETE_PUNCHES_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
 
@@ -379,7 +379,7 @@ export default function IncompletePunchesList() {
                   !pending.fromDate || !pending.toDate ? "Required" : undefined
                 }
               >
-                <DatePicker.RangePicker
+                <MobileRangePicker
                   style={{ width: "100%" }}
                   status={
                     !pending.fromDate || !pending.toDate ? "error" : undefined

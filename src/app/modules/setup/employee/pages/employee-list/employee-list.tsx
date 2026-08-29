@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
-import { Button, Dropdown, Space, Typography, message } from "antd";
+import { Button, Dropdown, Input, Space, Typography, message } from "antd";
 import {
   DownloadOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SearchOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
@@ -21,15 +22,18 @@ import type { EmployeeResponse } from "../../models/api/response/employee-respon
 
 const { Title } = Typography;
 
+const { Search } = Input;
+
 export default function EmployeeList() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [keyword, setKeyword] = useState("");
   const {
     data: employees = [],
     isLoading,
     refetch,
     isFetching,
-  } = useEmployees();
+  } = useEmployees(keyword);
   const { mutate: remove } = useDeleteEmployee();
   const { mutate: downloadTemplate, isPending: downloading } =
     useDownloadEmployeeTemplate();
@@ -126,6 +130,15 @@ export default function EmployeeList() {
           </Space>
         </div>
       </div>
+
+      <Search
+        placeholder="Search employees..."
+        allowClear
+        enterButton={<SearchOutlined />}
+        loading={isFetching}
+        onSearch={(value) => setKeyword(value.trim())}
+        className="mb-3 w-full sm:max-w-xs"
+      />
 
       <EmployeeTable
         data={employees}

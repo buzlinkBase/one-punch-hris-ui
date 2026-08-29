@@ -4,7 +4,7 @@ import type { AttendanceEntryFilter } from "../models/api/request/attendance-ent
 import type { CreateAttendanceEntry } from "../models/api/request/create-attendance-entry.model";
 import type { UpdateAttendanceEntry } from "../models/api/request/update-attendance-entry.model";
 
-const QUERY_KEY = ["timekeeping", "attendance-entry"];
+export const QUERY_KEY = ["timekeeping", "attendance-entry"];
 
 export function useDtrViewAttendanceLogs(
   filter: AttendanceEntryFilter = {},
