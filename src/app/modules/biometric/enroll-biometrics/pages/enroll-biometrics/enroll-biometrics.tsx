@@ -3,10 +3,10 @@ import type { Key } from "react";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import {
+  Alert,
   Button,
   Card,
   Collapse,
-  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -50,9 +50,12 @@ import {
   useRegistryReset,
   useDeleteEmployeesBulk,
 } from "../../hooks/use-commands-queries";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
-const { RangePicker } = DatePicker;
+
+const BIO_ID_REQUIRED_NOTE =
+  "Only employees who already have a Bio ID appear here. Bio ID is a critical, device-level identifier — it isn't assigned from this screen; set it on the employee's record first (Setup → Employee).";
 
 const FINGER_OPTIONS = [
   { value: 0, label: "0 – Left Pinky" },
@@ -391,17 +394,17 @@ function SyncEmployeesPanel({
 
   const employees = employeeData.filter((e) => (e.bioId ?? 0) > 0);
 
-  const getOverride = (id: string): RowOverride =>
-    overrides[id] ?? { privilege: 0, password: "", card: "" };
+  const getOverride = (row: (typeof employees)[number]): RowOverride =>
+    overrides[row.id] ?? { privilege: 0, password: "", card: "" };
 
   const setField = (
-    id: string,
+    row: (typeof employees)[number],
     field: keyof RowOverride,
     value: string | number,
   ) =>
     setOverrides((prev) => ({
       ...prev,
-      [id]: { ...getOverride(id), [field]: value },
+      [row.id]: { ...getOverride(row), [field]: value },
     }));
 
   const columns = [
@@ -422,8 +425,8 @@ function SyncEmployeesPanel({
         <Select
           size="small"
           options={PRIVILEGE_OPTIONS}
-          value={getOverride(row.id).privilege}
-          onChange={(val) => setField(row.id, "privilege", val as number)}
+          value={getOverride(row).privilege}
+          onChange={(val) => setField(row, "privilege", val as number)}
           style={{ width: "100%" }}
         />
       ),
@@ -436,8 +439,8 @@ function SyncEmployeesPanel({
         <Input
           size="small"
           placeholder="(none)"
-          value={getOverride(row.id).password}
-          onChange={(e) => setField(row.id, "password", e.target.value)}
+          value={getOverride(row).password}
+          onChange={(e) => setField(row, "password", e.target.value)}
         />
       ),
     },
@@ -449,8 +452,8 @@ function SyncEmployeesPanel({
         <Input
           size="small"
           placeholder="(none)"
-          value={getOverride(row.id).card}
-          onChange={(e) => setField(row.id, "card", e.target.value)}
+          value={getOverride(row).card}
+          onChange={(e) => setField(row, "card", e.target.value)}
         />
       ),
     },
@@ -461,7 +464,7 @@ function SyncEmployeesPanel({
     const payload: SetEmployeeCommandPayload[] = selected.map((e) => ({
       bioId: e.bioId!,
       name: e.name ?? "",
-      ...getOverride(e.id),
+      ...getOverride(e),
     }));
     await onSync(payload);
     setSelectedRowKeys([]);
@@ -723,10 +726,11 @@ function ControlsSection({ sn }: { sn: string }) {
       {/* Pull Attendance */}
       <Card title="Pull Attendance Logs" size="small">
         <Space direction="vertical" className="w-full">
-          <RangePicker
+          <MobileRangePicker
             className="w-full"
             showTime={{ format: "HH:mm" }}
             format="YYYY-MM-DD HH:mm"
+            value={pullDates}
             onChange={(vals) =>
               setPullDates(vals as [Dayjs | null, Dayjs | null] | null)
             }
@@ -1053,7 +1057,17 @@ export default function EnrollBiometrics() {
 
       <div className="px-4 pb-4">
         {selectedSN ? (
-          <Tabs key={selectedSN} defaultActiveKey="enroll" items={tabItems} />
+          <>
+            <Alert
+              type="info"
+              showIcon
+              banner
+              message={BIO_ID_REQUIRED_NOTE}
+              className="mb-3"
+              style={{ fontSize: 12 }}
+            />
+            <Tabs key={selectedSN} defaultActiveKey="enroll" items={tabItems} />
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-65 text-center rounded-xl border border-emerald-100 bg-emerald-50/40 mt-4">
             <p className="text-base font-medium text-emerald-900">

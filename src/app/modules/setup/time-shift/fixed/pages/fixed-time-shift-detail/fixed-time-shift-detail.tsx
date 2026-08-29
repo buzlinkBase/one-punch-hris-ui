@@ -134,6 +134,7 @@ export default function FixedTimeShiftDetail() {
   const pmStartTime = useWatch({ control, name: "pmStartTime" });
   const pmEndTime = useWatch({ control, name: "pmEndTime" });
   const withOT = useWatch({ control, name: "withOT" });
+  const otRequireTimeIn = useWatch({ control, name: "otRequireTimeIn" });
   const otStart = useWatch({ control, name: "otStart" });
 
   const shiftStartSec = timeSpanToSeconds(startTime);
@@ -181,7 +182,10 @@ export default function FixedTimeShiftDetail() {
     withPMBreak && !!pmEndTime && !!pmStartTime && pmEndSec <= pmStartSec;
 
   const otBeforeEnd =
-    withOT && !!otStart && timeSpanToSeconds(otStart) < shiftEndSec;
+    withOT &&
+    otRequireTimeIn &&
+    !!otStart &&
+    timeSpanToSeconds(otStart) < shiftEndSec;
 
   useEffect(() => {
     if (isEdit || !startTime) return;

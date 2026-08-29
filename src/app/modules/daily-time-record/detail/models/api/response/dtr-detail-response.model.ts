@@ -69,6 +69,7 @@ export interface DtrDetailResponse {
   restDoubleLegalNDHours: number;
   restDoubleLegalNDOTHours: number;
   note: string;
+  postingDescription?: string | null;
   userId?: string;
   branchId?: string;
   departmentId?: string;

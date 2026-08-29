@@ -45,6 +45,7 @@ export interface CreateEmployee {
   isRegularHolidayIncluded?: boolean;
   isSpecialNonWorkingIncluded?: boolean;
   isNightDiffIncluded?: boolean;
+  useEmployeeOverride?: boolean;
   dob?: string | null;
   bloodType?: string;
   modeOfPayment: ModeOfPayment;

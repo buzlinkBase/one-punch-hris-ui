@@ -3,4 +3,8 @@ export interface ClientResponse {
   code: string;
   name: string;
   status: string;
+  email: string;
+  phone: string;
+  address: string;
+  contactPerson: string;
 }

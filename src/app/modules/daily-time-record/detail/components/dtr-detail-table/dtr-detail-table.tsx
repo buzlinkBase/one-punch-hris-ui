@@ -241,6 +241,17 @@ export default function DtrDetailTable({
           width: widths.workType,
           onResize: (w: number) => handleResize("workType", w),
         }) as object,
+      render: (v: string, record) => {
+        const notEligible =
+          v?.includes("Legal Holiday") && record.holCount === 0;
+        return notEligible ? (
+          <Tooltip title="Not eligible for holiday pay (no qualifying day before the holiday)">
+            <span style={{ color: token.colorError }}>{v}</span>
+          </Tooltip>
+        ) : (
+          v
+        );
+      },
     },
     {
       title: DTR_DETAIL_LABEL.DTR_DATE,

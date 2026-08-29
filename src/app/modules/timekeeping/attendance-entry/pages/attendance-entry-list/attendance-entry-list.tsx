@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   Button,
-  DatePicker,
   Dropdown,
   Form,
   Popconfirm,
@@ -41,6 +40,7 @@ import {
   buildFlatExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
 
@@ -381,7 +381,7 @@ export default function AttendanceEntryList() {
       <Form layout="vertical" className="mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
           <Form.Item label="Date Range" className="mb-0 sm:col-span-2">
-            <DatePicker.RangePicker
+            <MobileRangePicker
               style={{ width: "100%" }}
               value={
                 pending.fromDate && pending.toDate

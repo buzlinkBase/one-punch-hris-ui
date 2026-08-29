@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button, DatePicker, Select, Space, Typography } from "antd";
+import { Button, Select, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -11,9 +11,9 @@ import {
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import UndertimeTable from "../../components/undertime-table";
 import { UNDERTIME_LABEL } from "../../constants/label.const";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title } = Typography;
-const { RangePicker } = DatePicker;
 
 export default function UndertimeList() {
   const navigate = useNavigate();
@@ -77,7 +77,7 @@ export default function UndertimeList() {
       </div>
 
       <div className="mb-3 flex items-center gap-3 flex-wrap">
-        <RangePicker
+        <MobileRangePicker
           value={[
             dateRange ? dayjs(dateRange[0]) : null,
             dateRange ? dayjs(dateRange[1]) : null,

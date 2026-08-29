@@ -168,7 +168,7 @@ export default function OvertimeApplicationBatch() {
           {/* Table */}
           <div className="rounded-lg border border-(--ant-color-border) overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-[1fr_110px_1fr_1fr_36px] gap-2 px-3 py-2 bg-(--ant-color-fill-quaternary) text-xs font-medium text-(--ant-color-text-secondary) border-b border-(--ant-color-border)">
+            <div className="hidden sm:grid grid-cols-[1fr_110px_1fr_1fr_36px] gap-2 px-3 py-2 bg-(--ant-color-fill-quaternary) text-xs font-medium text-(--ant-color-text-secondary) border-b border-(--ant-color-border)">
               <span>Employee</span>
               <span>Mode</span>
               <span>OT Entry</span>
@@ -192,11 +192,12 @@ export default function OvertimeApplicationBatch() {
                 return (
                   <div
                     key={field.id}
-                    className="grid grid-cols-[1fr_110px_1fr_1fr_36px] gap-2 px-3 py-2 items-start"
+                    className="grid grid-cols-1 gap-3 px-3 py-3 sm:grid-cols-[1fr_110px_1fr_1fr_36px] sm:gap-2 sm:py-2 sm:items-start"
                   >
                     {/* Employee */}
                     <Form.Item
-                      className="mb-0"
+                      label="Employee"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
                       validateStatus={entryErrors?.employeeId ? "error" : ""}
                       help={entryErrors?.employeeId?.message}
                     >
@@ -217,7 +218,10 @@ export default function OvertimeApplicationBatch() {
                     </Form.Item>
 
                     {/* Mode */}
-                    <Form.Item className="mb-0">
+                    <Form.Item
+                      label="Mode"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
+                    >
                       <Controller
                         name={`entries.${index}.mode`}
                         control={control}
@@ -238,7 +242,8 @@ export default function OvertimeApplicationBatch() {
 
                     {/* OT Entry — hours or time range */}
                     <Form.Item
-                      className="mb-0"
+                      label="OT Entry"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
                       validateStatus={
                         entryErrors?.otHours ||
                         entryErrors?.startTime ||
@@ -323,7 +328,10 @@ export default function OvertimeApplicationBatch() {
                     </Form.Item>
 
                     {/* Remarks */}
-                    <Form.Item className="mb-0">
+                    <Form.Item
+                      label="Remarks"
+                      className="mb-0 sm:[&_.ant-form-item-label]:hidden"
+                    >
                       <Controller
                         name={`entries.${index}.remarks`}
                         control={control}
@@ -339,7 +347,7 @@ export default function OvertimeApplicationBatch() {
                     </Form.Item>
 
                     {/* Remove */}
-                    <div className="pt-1">
+                    <div className="flex justify-end sm:block sm:pt-1">
                       <Button
                         type="text"
                         danger

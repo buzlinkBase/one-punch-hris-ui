@@ -1,11 +1,5 @@
-import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MailOutlined,
-} from "@ant-design/icons";
+import { Table, Button, Space, Popconfirm, Tag } from "antd";
+import { EditOutlined, DeleteOutlined, MailOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -41,7 +35,6 @@ export default function EmployeeTable({
   onInvite,
 }: Props) {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
     employeeNo: 120,
@@ -68,20 +61,44 @@ export default function EmployeeTable({
     tin: 120,
   });
 
-  const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
-      String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-    ),
-  );
-
   const columns: ColumnsType<EmployeeResponse> = [
+    {
+      title: "Actions",
+      key: "actions",
+      width: 110,
+      fixed: "left",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
+          />
+          {onInvite && (
+            <Button
+              type="text"
+              icon={<MailOutlined />}
+              title="Invite to workspace"
+              onClick={() => onInvite(record)}
+            />
+          )}
+          {onDelete && (
+            <Popconfirm
+              title="Delete this employee?"
+              onConfirm={() => onDelete(record.id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          )}
+        </Space>
+      ),
+    },
     {
       title: EMPLOYEE_LABEL.EMPLOYEE_NO,
       dataIndex: "employeeNo",
       key: "employeeNo",
-      fixed: "left",
       width: widths.employeeNo,
       onHeaderCell: () =>
         ({
@@ -103,7 +120,6 @@ export default function EmployeeTable({
     {
       title: "Full Name",
       key: "fullName",
-      fixed: "left",
       width: widths.fullName,
       onHeaderCell: () =>
         ({
@@ -359,54 +375,13 @@ export default function EmployeeTable({
           onResize: (w: number) => handleResize("tin", w),
         }) as object,
     },
-    {
-      title: "Actions",
-      key: "actions",
-      fixed: "right",
-      width: 110,
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
-          />
-          {onInvite && (
-            <Button
-              type="text"
-              icon={<MailOutlined />}
-              title="Invite to workspace"
-              onClick={() => onInvite(record)}
-            />
-          )}
-          {onDelete && (
-            <Popconfirm
-              title="Delete this employee?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          )}
-        </Space>
-      ),
-    },
   ];
 
   return (
     <div className="flex flex-col gap-3">
-      <Input
-        prefix={<SearchOutlined />}
-        placeholder="Search..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        allowClear
-        className="w-full sm:max-w-xs"
-      />
       <Table
         rowKey="id"
-        dataSource={filtered}
+        dataSource={data}
         columns={columns}
         size="small"
         loading={loading}

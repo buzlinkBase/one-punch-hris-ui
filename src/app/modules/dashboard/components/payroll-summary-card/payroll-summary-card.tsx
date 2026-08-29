@@ -14,15 +14,19 @@ import StatCard from "../stat-card";
 const MOCK_PAYROLL: PayrollRunResult[] = [
   {
     employeeId: "emp-1",
+    salaryType: "VARIABLE",
+    dailyRate: 0,
     fullName: "Maria Santos",
     payPeriodStart: "2026-08-01",
     payPeriodEnd: "2026-08-15",
-    basicSalary: 12500,
+    basicPay: 12500,
     overtimeHour: 4,
     overtimePay: 625,
     nightDifferentialHour: 0,
     nightDifferentialPay: 0,
+    nightDifferentialOTPay: 0,
     holidayPay: 0,
+    restDayPay: 0,
     cola: 1000,
     totalRegularAllowances: 1500,
     totalBonuses: 0,
@@ -36,6 +40,7 @@ const MOCK_PAYROLL: PayrollRunResult[] = [
     withholdingTax: 312,
     otherDeductions: 0,
     totalDeductions: 1393.3,
+    totalLoans: 0,
     absences: 0,
     absentCount: 0,
     lateAmount: 0,
@@ -77,15 +82,19 @@ const MOCK_PAYROLL: PayrollRunResult[] = [
   },
   {
     employeeId: "emp-2",
+    salaryType: "VARIABLE",
+    dailyRate: 0,
     fullName: "Juan Dela Cruz",
     payPeriodStart: "2026-08-01",
     payPeriodEnd: "2026-08-15",
-    basicSalary: 15000,
+    basicPay: 15000,
     overtimeHour: 0,
     overtimePay: 0,
     nightDifferentialHour: 16,
     nightDifferentialPay: 300,
+    nightDifferentialOTPay: 0,
     holidayPay: 0,
+    restDayPay: 0,
     cola: 1000,
     totalRegularAllowances: 2000,
     totalBonuses: 0,
@@ -99,6 +108,7 @@ const MOCK_PAYROLL: PayrollRunResult[] = [
     withholdingTax: 520,
     otherDeductions: 0,
     totalDeductions: 1745,
+    totalLoans: 0,
     absences: 0,
     absentCount: 0,
     lateAmount: 125,
@@ -140,15 +150,19 @@ const MOCK_PAYROLL: PayrollRunResult[] = [
   },
   {
     employeeId: "emp-3",
+    salaryType: "VARIABLE",
+    dailyRate: 0,
     fullName: "Angela Reyes",
     payPeriodStart: "2026-08-01",
     payPeriodEnd: "2026-08-15",
-    basicSalary: 10000,
+    basicPay: 10000,
     overtimeHour: 8,
     overtimePay: 1000,
     nightDifferentialHour: 0,
     nightDifferentialPay: 0,
+    nightDifferentialOTPay: 0,
     holidayPay: 1250,
+    restDayPay: 0,
     cola: 800,
     totalRegularAllowances: 1000,
     totalBonuses: 0,
@@ -162,6 +176,7 @@ const MOCK_PAYROLL: PayrollRunResult[] = [
     withholdingTax: 0,
     otherDeductions: 0,
     totalDeductions: 900,
+    totalLoans: 0,
     absences: 0,
     absentCount: 0,
     lateAmount: 0,
@@ -230,8 +245,8 @@ export default function PayrollSummaryCard() {
     },
     {
       title: "Basic",
-      dataIndex: "basicSalary",
-      key: "basicSalary",
+      dataIndex: "basicPay",
+      key: "basicPay",
       align: "right",
       render: (v) => <Text style={{ fontSize: 12 }}>₱{fmt(v)}</Text>,
     },
@@ -326,7 +341,7 @@ export default function PayrollSummaryCard() {
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
                   <Text strong style={{ fontSize: 12 }}>
-                    ₱{fmt(rows.reduce((s, r) => s + r.basicSalary, 0))}
+                    ₱{fmt(rows.reduce((s, r) => s + r.basicPay, 0))}
                   </Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={2} align="right">

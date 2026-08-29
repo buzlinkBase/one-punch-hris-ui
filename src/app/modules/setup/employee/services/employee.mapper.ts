@@ -49,6 +49,7 @@ export const employeeMapper = {
       isSpecialNonWorkingIncluded:
         response.isSpecialNonWorkingIncluded ?? false,
       isNightDiffIncluded: response.isNightDiffIncluded ?? false,
+      useEmployeeOverride: response.useEmployeeOverride ?? true,
       bankName: response.bankName ?? "",
       bankNo: response.bankNo ?? "",
       sssNo: response.sssNo ?? "",
@@ -57,36 +58,36 @@ export const employeeMapper = {
       tin: response.tin ?? "",
       sssRate: response.sssRate
         ? {
-            computationType: response.sssRate.computationType ?? "None",
+            computationType: response.sssRate.computationType ?? "Table",
             eE: response.sssRate.eE ?? 0,
             eR: response.sssRate.eR ?? 0,
             eC: response.sssRate.eC ?? 0,
             addOns: response.sssRate.addOns ?? 0,
           }
-        : { computationType: "None", eE: 0, eR: 0, eC: 0, addOns: 0 },
+        : { computationType: "Table", eE: 0, eR: 0, eC: 0, addOns: 0 },
       phicRate: response.phicRate
         ? {
-            computationType: response.phicRate.computationType ?? "None",
+            computationType: response.phicRate.computationType ?? "Table",
             eE: response.phicRate.eE ?? 0,
             eR: response.phicRate.eR ?? 0,
             addOns: response.phicRate.addOns ?? 0,
           }
-        : { computationType: "None", eE: 0, eR: 0, addOns: 0 },
+        : { computationType: "Table", eE: 0, eR: 0, addOns: 0 },
       hdmfRate: response.hdmfRate
         ? {
-            computationType: response.hdmfRate.computationType ?? "None",
+            computationType: response.hdmfRate.computationType ?? "Table",
             eE: response.hdmfRate.eE ?? 0,
             eR: response.hdmfRate.eR ?? 0,
             addOns: response.hdmfRate.addOns ?? 0,
           }
-        : { computationType: "None", eE: 0, eR: 0, addOns: 0 },
+        : { computationType: "Table", eE: 0, eR: 0, addOns: 0 },
       taxRate: response.taxRate
         ? {
-            computationType: response.taxRate.computationType ?? "None",
+            computationType: response.taxRate.computationType ?? "Table",
             eE: response.taxRate.eE ?? 0,
             addOns: response.taxRate.addOns ?? 0,
           }
-        : { computationType: "None", eE: 0, addOns: 0 },
+        : { computationType: "Table", eE: 0, addOns: 0 },
       profileImg: response.profileImg ?? "",
       settings: {
         id: response.settings?.id,
@@ -121,11 +122,12 @@ export const employeeMapper = {
       isRegularHolidayIncluded: false,
       isSpecialNonWorkingIncluded: false,
       isNightDiffIncluded: false,
+      useEmployeeOverride: false,
       restDays: [],
-      sssRate: { computationType: "None", eE: 0, eR: 0, eC: 0, addOns: 0 },
-      phicRate: { computationType: "None", eE: 0, eR: 0, addOns: 0 },
-      hdmfRate: { computationType: "None", eE: 0, eR: 0, addOns: 0 },
-      taxRate: { computationType: "None", eE: 0, addOns: 0 },
+      sssRate: { computationType: "Table", eE: 0, eR: 0, eC: 0, addOns: 0 },
+      phicRate: { computationType: "Table", eE: 0, eR: 0, addOns: 0 },
+      hdmfRate: { computationType: "Table", eE: 0, eR: 0, addOns: 0 },
+      taxRate: { computationType: "Table", eE: 0, addOns: 0 },
       settings: {
         isEligibleForOvertime: true,
         isEligibleForHolidayPay: true,

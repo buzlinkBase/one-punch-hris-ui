@@ -16,6 +16,7 @@ import {
 import {
   PAYROLL_GROUP_LABEL,
   PAYROLL_FREQUENCY_OPTIONS,
+  STATUTORY_DEDUCTION_SCHEDULE_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
@@ -48,6 +49,7 @@ export default function PayrollGroupDetail() {
       code: "",
       name: "",
       payrollFrequency: "SEMI_MONTHLY",
+      statutoryDeductionSchedule: "PerPayroll",
       cutoffDays: [],
       status: "ACTIVE",
     },
@@ -59,6 +61,8 @@ export default function PayrollGroupDetail() {
         code: selected.code,
         name: selected.name,
         payrollFrequency: selected.payrollFrequency,
+        statutoryDeductionSchedule:
+          selected.statutoryDeductionSchedule ?? "PerPayroll",
         cutoffDays: [],
         status: selected.status,
       });
@@ -143,6 +147,24 @@ export default function PayrollGroupDetail() {
                   {...field}
                   options={PAYROLL_FREQUENCY_OPTIONS}
                   placeholder="Select frequency"
+                />
+              )}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={PAYROLL_GROUP_LABEL.STATUTORY_DEDUCTION_SCHEDULE}
+            validateStatus={errors.statutoryDeductionSchedule ? "error" : ""}
+            help={errors.statutoryDeductionSchedule?.message}
+          >
+            <Controller
+              name="statutoryDeductionSchedule"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={STATUTORY_DEDUCTION_SCHEDULE_OPTIONS}
+                  placeholder="Select release schedule"
                 />
               )}
             />

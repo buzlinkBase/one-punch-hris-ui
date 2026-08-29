@@ -353,11 +353,17 @@ function CreateForm() {
   }));
 
   const hasSearched = committedFilter !== null;
+  // Guard against a stale/shared React Query cache: other pages fetch the
+  // full employee list under an equivalent key, so `employees` can be
+  // populated even while this query is disabled. Only show rows once the
+  // user has actually clicked Search.
+  const visibleEmployees = hasSearched ? employees : [];
   const selectedCount = selectedIds.size;
   const allChecked =
-    employees.length > 0 && employees.every((e) => selectedIds.has(e.id));
+    visibleEmployees.length > 0 &&
+    visibleEmployees.every((e) => selectedIds.has(e.id));
   const someChecked =
-    !allChecked && employees.some((e) => selectedIds.has(e.id));
+    !allChecked && visibleEmployees.some((e) => selectedIds.has(e.id));
 
   const selectedTimeShift = timeShiftId
     ? timeShiftOptions.find((t) => t.value === timeShiftId)
@@ -393,7 +399,7 @@ function CreateForm() {
           indeterminate={someChecked}
           onChange={(e) =>
             e.target.checked
-              ? setSelectedIds(new Set(employees.map((e) => e.id)))
+              ? setSelectedIds(new Set(visibleEmployees.map((e) => e.id)))
               : setSelectedIds(new Set())
           }
         />
@@ -621,7 +627,8 @@ function CreateForm() {
       {hasSearched && (
         <div className="flex items-center justify-between mb-2">
           <Text type="secondary" style={{ fontSize: 13 }}>
-            {employees.length} employee{employees.length !== 1 ? "s" : ""} found
+            {visibleEmployees.length} employee
+            {visibleEmployees.length !== 1 ? "s" : ""} found
             {selectedCount > 0 && (
               <Text strong style={{ fontSize: 13 }}>
                 {" · "}
@@ -633,9 +640,9 @@ function CreateForm() {
             <Button
               size="small"
               onClick={() =>
-                setSelectedIds(new Set(employees.map((e) => e.id)))
+                setSelectedIds(new Set(visibleEmployees.map((e) => e.id)))
               }
-              disabled={employees.length === 0 || allChecked}
+              disabled={visibleEmployees.length === 0 || allChecked}
             >
               Select All
             </Button>
@@ -653,8 +660,8 @@ function CreateForm() {
       <Table<EmployeeFilterResponse>
         rowKey="id"
         columns={columns}
-        dataSource={employees}
-        loading={isEmployeesLoading}
+        dataSource={visibleEmployees}
+        loading={hasSearched && isEmployeesLoading}
         size="small"
         pagination={{ pageSize: 10, size: "small", showSizeChanger: false }}
         className="mb-4"

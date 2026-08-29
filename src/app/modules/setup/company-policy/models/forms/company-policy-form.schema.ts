@@ -14,6 +14,10 @@ export const companyPolicyFormSchema = z.object({
   timeInAllowance: z.number(),
   doublePunchGap: z.number().min(0, "Must be 0 or greater"),
   checkAfterHoliday: z.boolean(),
+  waivePriorDayRequirement: z.boolean(),
+  crossMonthStatutoryCreditPolicy: z.string().min(1, "Required"),
+  wTaxCrossMonthCreditPolicy: z.string().min(1, "Required"),
+  treatNdotAsNdOnly: z.boolean(),
 });
 
 export type CompanyPolicyFormValues = z.infer<typeof companyPolicyFormSchema>;

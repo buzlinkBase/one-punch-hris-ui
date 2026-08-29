@@ -2,7 +2,6 @@
 import {
   Button,
   Checkbox,
-  DatePicker,
   Drawer,
   Form,
   Select,
@@ -26,6 +25,7 @@ import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import { useCreateAttendanceEntries } from "../../hooks/use-attendance-entry-queries";
+import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Text } = Typography;
 
@@ -487,7 +487,7 @@ export default function CreateAttendanceEntryDrawer({
       <Form layout="vertical">
         <div className="form-grid-2">
           <Form.Item label="Date Range" required className="mb-3">
-            <DatePicker.RangePicker
+            <MobileRangePicker
               style={{ width: "100%" }}
               value={dateRange}
               onChange={(range) => {
