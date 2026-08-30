@@ -58,6 +58,21 @@ export interface CostSummaryResponse {
   employerContributionsCost: number;
 }
 
+export interface AdjustLeaveCreditsRequest {
+  employeeId: string;
+  leaveId: string;
+  year: number;
+  newBalance: number;
+  particulars: string;
+}
+
+export interface AdjustLeaveCreditsResponse {
+  id: string;
+  balance: number;
+  granted: number;
+  used: number;
+}
+
 export interface LeaveCreditsBalanceResponse {
   employeeId: string;
   employeeNo: string;

@@ -41,7 +41,7 @@ const { TextArea } = Input;
 
 const PAY_SOURCE_OPTIONS = [
   { value: "Company", label: "Company (employer-funded)" },
-  { value: "Government", label: "Government (SSS / GSIS)" },
+  { value: "Government", label: "Government (SSS)" },
   {
     value: "Shared",
     label: "Shared (employer advances, government reimburses)",
@@ -113,9 +113,9 @@ const TIPS = {
   remarks: "Internal HR notes. Not visible to employees.",
 
   paySource:
-    "Who funds the leave pay.\n• Company: employer pays directly.\n• Government: SSS or GSIS pays the benefit.\n• Shared: employer advances the pay, then claims SSS/GSIS reimbursement.\n• Unpaid: no compensation during the leave.",
+    "Who funds the leave pay.\n• Company: employer pays directly.\n• Government: SSS pays the benefit.\n• Shared: employer advances the pay, then claims SSS reimbursement.\n• Unpaid: no compensation during the leave.",
   employerAdvancesPayment:
-    "When on, the employer pays the employee upfront and later files for SSS or GSIS reimbursement. This is the standard practice for SSS Maternity Leave under RA 11210.",
+    "When on, the employer pays the employee upfront and later files for SSS reimbursement. This is the standard practice for SSS Maternity Leave under RA 11210.",
 
   accrualBasis:
     "How credits are earned.\n• None: HR grants credits manually or as a lump sum at period start.\n• Monthly / Annually / Per Pay Period: credits accumulate automatically over time using the Accrual Rate.\n• Per Event: the full Credits entitlement is granted each time a qualifying event occurs (e.g. each approved pregnancy for Maternity Leave).",
@@ -556,8 +556,7 @@ export default function LeaveTypeDetail() {
                       </Text>
                       <br />
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        Employer pays first, then claims reimbursement from
-                        SSS/GSIS
+                        Employer pays first, then claims reimbursement from SSS
                       </Text>
                     </div>
                   </div>

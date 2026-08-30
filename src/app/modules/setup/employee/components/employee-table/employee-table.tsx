@@ -1,5 +1,10 @@
-import { Table, Button, Space, Popconfirm, Tag } from "antd";
-import { EditOutlined, DeleteOutlined, MailOutlined } from "@ant-design/icons";
+import { Table, Button, Space, Popconfirm, Tag, Tooltip, message } from "antd";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  MailOutlined,
+  PrinterOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -7,6 +12,8 @@ import type { EmployeeResponse } from "../../models/api/response/employee-respon
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import httpClient from "@/core/http/http-client";
+import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 
 interface Props {
   data: EmployeeResponse[];
@@ -35,6 +42,23 @@ export default function EmployeeTable({
   onInvite,
 }: Props) {
   const navigate = useNavigate();
+
+  const handlePrint201 = async (id: string) => {
+    // Open the tab synchronously (before the await) so popup blockers treat it as a
+    // direct response to the click.
+    const printTab = window.open("about:blank", "_blank");
+    try {
+      const blob = await httpClient.get<Blob>(
+        `${buildApiUrl(API_PREFIX.hrms, "employees")}/${id}/print-201`,
+        { responseType: "blob" },
+      );
+      const url = URL.createObjectURL(blob);
+      if (printTab) printTab.location.href = url;
+    } catch {
+      printTab?.close();
+      message.error("Failed to generate the 201 file. Please try again.");
+    }
+  };
 
   const { widths, handleResize } = useResizableColumns({
     employeeNo: 120,
@@ -65,7 +89,7 @@ export default function EmployeeTable({
     {
       title: "Actions",
       key: "actions",
-      width: 110,
+      width: 145,
       fixed: "left",
       render: (_, record) => (
         <Space>
@@ -74,6 +98,13 @@ export default function EmployeeTable({
             icon={<EditOutlined />}
             onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
           />
+          <Tooltip title="Print 201 File">
+            <Button
+              type="text"
+              icon={<PrinterOutlined />}
+              onClick={() => handlePrint201(record.id)}
+            />
+          </Tooltip>
           {onInvite && (
             <Button
               type="text"

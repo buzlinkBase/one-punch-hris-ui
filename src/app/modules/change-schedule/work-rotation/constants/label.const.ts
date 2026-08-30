@@ -13,4 +13,9 @@ export const WORK_ROTATION_LABEL = {
   FILTER_CLIENT: "Client",
   FILTER_FROM_PAYROLL_DATE: "Payroll Date From",
   FILTER_TO_PAYROLL_DATE: "Payroll Date To",
+  // Tabs
+  TAB_WORK_ROTATION: "Work Rotation",
+  TAB_ENTRIES: "Entries",
+  TAB_BATCHES: "Batches",
+  TAB_ROSTER: "Rostering",
 };

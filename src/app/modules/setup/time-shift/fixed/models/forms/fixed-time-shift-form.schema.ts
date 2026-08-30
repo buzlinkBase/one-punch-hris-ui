@@ -24,6 +24,8 @@ export const fixedTimeShiftFormSchema = z.object({
   otRequireTimeIn: z.boolean(),
   otStart: z.string(),
   overTimeThreshold: z.number().min(0),
+  // Null or 0 = no limit on OT hours creditable for a day on this shift.
+  maxOvertimeHours: z.number().min(0).nullable().optional(),
 });
 
 export type FixedTimeShiftFormValues = z.infer<typeof fixedTimeShiftFormSchema>;

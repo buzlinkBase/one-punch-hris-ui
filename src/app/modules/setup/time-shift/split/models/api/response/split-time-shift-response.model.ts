@@ -24,6 +24,7 @@ export interface SplitTimeShiftResponse {
   otRequireTimeIn: boolean;
   otStart: string;
   overTimeThreshold: number;
+  maxOvertimeHours: number | null;
   minimumWorkMinutes: number;
   maxWorkingMinutes: number;
 }

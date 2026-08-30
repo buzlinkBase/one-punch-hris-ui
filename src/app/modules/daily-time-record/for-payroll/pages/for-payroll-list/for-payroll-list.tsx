@@ -31,6 +31,7 @@ import type { DtrBatchModel } from "../../models/api/response/dtr-batch-response
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
+import PayrollRunPostModal from "../../components/payroll-run-post-modal";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
@@ -75,6 +76,7 @@ export default function ForPayrollList() {
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
   const [previewBatchCode, setPreviewBatchCode] = useState<string | null>(null);
   const [payDate, setPayDate] = useState<string | null>(null);
+  const [postModalOpen, setPostModalOpen] = useState(false);
 
   const {
     data: batches = [],
@@ -103,7 +105,11 @@ export default function ForPayrollList() {
 
   const clearSelection = () => setSelected(new Set());
 
-  const buildPayload = () => ({ batchCodes: [...selected], payDate });
+  const buildPayload = (remarks?: string) => ({
+    batchCodes: [...selected],
+    payDate,
+    remarks,
+  });
 
   const runPayroll = () => {
     if (!canRun) return;
@@ -117,11 +123,11 @@ export default function ForPayrollList() {
     });
   };
 
-  const generatePayroll = () => {
-    if (!canRun) return;
-    generate(buildPayload(), {
+  const handleConfirmGenerate = (remarks: string) => {
+    generate(buildPayload(remarks), {
       onSuccess: (res) => {
         setResults(res.data);
+        setPostModalOpen(false);
         message.success(
           `Payroll generated and saved for ${res.total} employee(s).`,
         );
@@ -484,7 +490,7 @@ export default function ForPayrollList() {
               <Button
                 type="primary"
                 icon={<SaveOutlined />}
-                onClick={generatePayroll}
+                onClick={() => setPostModalOpen(true)}
                 loading={generating}
                 disabled={!canRun}
               >
@@ -655,6 +661,14 @@ export default function ForPayrollList() {
         open={!!previewBatchCode}
         batchCode={previewBatchCode}
         onClose={() => setPreviewBatchCode(null)}
+      />
+
+      <PayrollRunPostModal
+        open={postModalOpen}
+        batchCount={selected.size}
+        isSaving={generating}
+        onClose={() => setPostModalOpen(false)}
+        onConfirm={handleConfirmGenerate}
       />
     </div>
   );

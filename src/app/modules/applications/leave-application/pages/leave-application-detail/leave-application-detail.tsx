@@ -70,6 +70,11 @@ const PAY_TYPE_OPTIONS = [
   { value: "WithoutPay", label: "Without Pay" },
 ];
 
+const PAYOUT_MODE_OPTIONS = [
+  { value: "perday", label: "Per Day" },
+  { value: "onetime", label: "One Time" },
+];
+
 const APPROVAL_STATUS_OPTIONS = [
   { value: "ForApproval", label: "For Approval" },
   { value: "Approved", label: "Approved" },
@@ -94,7 +99,7 @@ const PAY_SOURCE_COLOR: Record<string, string> = {
 
 const PAY_SOURCE_LABEL: Record<string, string> = {
   Company: "Company (employer-funded)",
-  Government: "Government (SSS / GSIS)",
+  Government: "Government (SSS)",
   Shared: "Shared (employer advances, government reimburses)",
   Unpaid: "Unpaid (no pay)",
   Other: "Other",
@@ -222,6 +227,10 @@ export default function LeaveApplicationDetail() {
       endTime: "",
       totalHours: undefined,
       payType: "WithPay",
+      payoutMode: "perday",
+      governmentAmount: undefined,
+      companyAmount: undefined,
+      releasePayrollDate: "",
       applicationRemarks: "",
       supportingDocumentUrl: "",
       approvalStatus: "ForApproval",
@@ -238,6 +247,8 @@ export default function LeaveApplicationDetail() {
   const leaveId = useWatch({ control, name: "leaveId" });
   const dayFraction = useWatch({ control, name: "dayFraction" });
   const employeeId = useWatch({ control, name: "employeeId" });
+  const payType = useWatch({ control, name: "payType" });
+  const payoutMode = useWatch({ control, name: "payoutMode" });
 
   const { data: employee } = useEmployee(employeeId || undefined);
 
@@ -345,6 +356,10 @@ export default function LeaveApplicationDetail() {
             ? selected.totalMinutes / 60
             : undefined,
         payType: selected.payType ?? "WithPay",
+        payoutMode: selected.payoutMode === "OneTime" ? "onetime" : "perday",
+        governmentAmount: selected.governmentAmount ?? undefined,
+        companyAmount: selected.companyAmount ?? undefined,
+        releasePayrollDate: selected.releasePayrollDate ?? "",
         applicationRemarks: selected.applicationRemarks ?? "",
         supportingDocumentUrl: selected.supportingDocumentUrl ?? "",
         approvalStatus: selected.approvalStatus,
@@ -422,6 +437,9 @@ export default function LeaveApplicationDetail() {
       };
     }
 
+    const isOneTimePayout =
+      values.payType === "WithPay" && values.payoutMode === "onetime";
+
     const basePayload = {
       employeeId: values.employeeId,
       leaveId: values.leaveId,
@@ -430,6 +448,15 @@ export default function LeaveApplicationDetail() {
       leaveDateTo: dateTo,
       dayFraction: dayFractionPayload,
       payType: values.payType,
+      payoutMode: (isOneTimePayout ? "OneTime" : "PerDay") as
+        "OneTime" | "PerDay",
+      governmentAmount: isOneTimePayout
+        ? (values.governmentAmount ?? null)
+        : null,
+      companyAmount: isOneTimePayout ? (values.companyAmount ?? null) : null,
+      releasePayrollDate: isOneTimePayout
+        ? (values.releasePayrollDate ?? null)
+        : null,
       applicationRemarks: values.applicationRemarks,
       supportingDocumentUrl: values.supportingDocumentUrl || undefined,
       approvalStatus: values.approvalStatus,
@@ -892,6 +919,18 @@ export default function LeaveApplicationDetail() {
               />
             </Form.Item>
 
+            {payType === "WithPay" && (
+              <Form.Item label={LEAVE_APPLICATION_LABEL.PAYOUT_MODE}>
+                <Controller
+                  name="payoutMode"
+                  control={control}
+                  render={({ field }) => (
+                    <Select {...field} options={PAYOUT_MODE_OPTIONS} />
+                  )}
+                />
+              </Form.Item>
+            )}
+
             <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
               <Controller
                 name="approvalStatus"
@@ -902,6 +941,80 @@ export default function LeaveApplicationDetail() {
               />
             </Form.Item>
           </div>
+
+          {payType === "WithPay" && payoutMode === "onetime" && (
+            <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-4 pt-4 pb-1 mb-6">
+              <div className="form-grid-3">
+                <Form.Item
+                  label={LEAVE_APPLICATION_LABEL.GOVERNMENT_AMOUNT}
+                  validateStatus={errors.governmentAmount ? "error" : ""}
+                  help={errors.governmentAmount?.message}
+                >
+                  <Controller
+                    name="governmentAmount"
+                    control={control}
+                    render={({ field }) => (
+                      <InputNumber
+                        {...field}
+                        style={{ width: "100%" }}
+                        min={0}
+                        precision={2}
+                        addonBefore="₱"
+                        placeholder="0.00"
+                        onChange={(val) => field.onChange(val ?? undefined)}
+                      />
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label={LEAVE_APPLICATION_LABEL.COMPANY_AMOUNT}
+                  validateStatus={errors.companyAmount ? "error" : ""}
+                  help={
+                    errors.companyAmount?.message ??
+                    "Variance covered by the company if the employee's entitlement exceeds the government-released amount"
+                  }
+                >
+                  <Controller
+                    name="companyAmount"
+                    control={control}
+                    render={({ field }) => (
+                      <InputNumber
+                        {...field}
+                        style={{ width: "100%" }}
+                        min={0}
+                        precision={2}
+                        addonBefore="₱"
+                        placeholder="0.00"
+                        onChange={(val) => field.onChange(val ?? undefined)}
+                      />
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label={LEAVE_APPLICATION_LABEL.RELEASE_PAYROLL_DATE}
+                  validateStatus={errors.releasePayrollDate ? "error" : ""}
+                  help={
+                    errors.releasePayrollDate?.message ??
+                    "Which payroll run should pay this out"
+                  }
+                >
+                  <Controller
+                    name="releasePayrollDate"
+                    control={control}
+                    render={({ field }) => (
+                      <DatePicker
+                        style={{ width: "100%" }}
+                        value={field.value ? dayjs(field.value) : null}
+                        onChange={(d) =>
+                          field.onChange(d?.format("YYYY-MM-DD") ?? "")
+                        }
+                      />
+                    )}
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          )}
 
           <Form.Item
             label={LEAVE_APPLICATION_LABEL.REMARKS}

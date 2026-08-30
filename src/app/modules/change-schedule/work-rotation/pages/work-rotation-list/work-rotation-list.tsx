@@ -29,6 +29,7 @@ import {
 } from "../../hooks/use-work-rotation-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { WORK_ROTATION_LABEL } from "../../constants/label.const";
+import RosterList from "@/app/modules/reports/rostering/pages/roster-list";
 import { getNotify } from "@/shared/utils/notify";
 import type { WorkRotationFilter } from "../../models/api/request/work-rotation-filter.model";
 import type { WorkRotationResponse } from "../../models/api/response/work-rotation-response.model";
@@ -67,6 +68,7 @@ const DEFAULT_FILTER = currentSemiMonthlyRange();
 
 export default function WorkRotationList() {
   const navigate = useNavigate();
+  const [outerTab, setOuterTab] = useState("work-rotation");
   const [activeTab, setActiveTab] = useState("entries");
   const [pending, setPending] = useState<WorkRotationFilter>(DEFAULT_FILTER);
   const [committed, setCommitted] =
@@ -370,137 +372,170 @@ export default function WorkRotationList() {
         </div>
       </div>
 
-      <Form layout="vertical" className="mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
-          <Form.Item label="Entry Date" className="mb-0 sm:col-span-2">
-            <MobileRangePicker
-              style={{ width: "100%" }}
-              value={
-                pending.fromDate && pending.toDate
-                  ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
-                  : null
-              }
-              onChange={(dates) =>
-                setPending((c) => ({
-                  ...c,
-                  fromDate: dates?.[0]?.format("YYYY-MM-DD"),
-                  toDate: dates?.[1]?.format("YYYY-MM-DD"),
-                }))
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            label={WORK_ROTATION_LABEL.FILTER_EMPLOYEE}
-            className="mb-0"
-          >
-            <Select
-              allowClear
-              showSearch
-              filterOption={(input, opt) =>
-                String(opt?.label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-              placeholder="All Employees"
-              options={employees}
-              value={pending.employeeId}
-              onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-          <Form.Item label=" " className="mb-0">
-            <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                loading={isLoading}
-                onClick={handleSearch}
-              >
-                Search
-              </Button>
-              <Button icon={<ClearOutlined />} onClick={handleClear}>
-                Clear
-              </Button>
-            </Space>
-          </Form.Item>
-        </div>
-      </Form>
-
       <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
+        activeKey={outerTab}
+        onChange={setOuterTab}
         items={[
           {
-            key: "entries",
-            label: "Entries",
+            key: "work-rotation",
+            label: WORK_ROTATION_LABEL.TAB_WORK_ROTATION,
             children: (
-              <Table<WorkRotationResponse>
-                rowKey="id"
-                dataSource={records}
-                columns={entryColumns}
-                loading={isTableLoading}
-                size="small"
-                pagination={{
-                  pageSize: 15,
-                  size: "small",
-                  showSizeChanger: false,
-                }}
-                scroll={{ x: "max-content" }}
-                sticky
-                components={{ header: { cell: ResizableTitle } }}
-                locale={{
-                  emptyText: "No records found for the selected filters.",
-                }}
-              />
+              <>
+                <Form layout="vertical" className="mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
+                    <Form.Item
+                      label="Entry Date"
+                      className="mb-0 sm:col-span-2"
+                    >
+                      <MobileRangePicker
+                        style={{ width: "100%" }}
+                        value={
+                          pending.fromDate && pending.toDate
+                            ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                            : null
+                        }
+                        onChange={(dates) =>
+                          setPending((c) => ({
+                            ...c,
+                            fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                            toDate: dates?.[1]?.format("YYYY-MM-DD"),
+                          }))
+                        }
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      label={WORK_ROTATION_LABEL.FILTER_EMPLOYEE}
+                      className="mb-0"
+                    >
+                      <Select
+                        allowClear
+                        showSearch
+                        filterOption={(input, opt) =>
+                          String(opt?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
+                        placeholder="All Employees"
+                        options={employees}
+                        value={pending.employeeId}
+                        onChange={(v) =>
+                          setPending((c) => ({ ...c, employeeId: v }))
+                        }
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                    <Form.Item label=" " className="mb-0">
+                      <Space>
+                        <Button
+                          type="primary"
+                          icon={<SearchOutlined />}
+                          loading={isLoading}
+                          onClick={handleSearch}
+                        >
+                          Search
+                        </Button>
+                        <Button icon={<ClearOutlined />} onClick={handleClear}>
+                          Clear
+                        </Button>
+                      </Space>
+                    </Form.Item>
+                  </div>
+                </Form>
+
+                <Tabs
+                  activeKey={activeTab}
+                  onChange={setActiveTab}
+                  items={[
+                    {
+                      key: "entries",
+                      label: WORK_ROTATION_LABEL.TAB_ENTRIES,
+                      children: (
+                        <Table<WorkRotationResponse>
+                          rowKey="id"
+                          dataSource={records}
+                          columns={entryColumns}
+                          loading={isTableLoading}
+                          size="small"
+                          pagination={{
+                            pageSize: 15,
+                            size: "small",
+                            showSizeChanger: false,
+                          }}
+                          scroll={{ x: "max-content" }}
+                          sticky
+                          components={{ header: { cell: ResizableTitle } }}
+                          locale={{
+                            emptyText:
+                              "No records found for the selected filters.",
+                          }}
+                        />
+                      ),
+                    },
+                    {
+                      key: "batches",
+                      label: (
+                        <Space size={4}>
+                          {WORK_ROTATION_LABEL.TAB_BATCHES}
+                          {batchGroups.length > 0 && (
+                            <Tag color="blue" style={{ marginInlineStart: 0 }}>
+                              {batchGroups.length}
+                            </Tag>
+                          )}
+                        </Space>
+                      ),
+                      children: (
+                        <Table<BatchGroup>
+                          rowKey="batchCode"
+                          dataSource={batchGroups}
+                          columns={batchColumns}
+                          loading={isTableLoading}
+                          size="small"
+                          pagination={{
+                            pageSize: 10,
+                            size: "small",
+                            showSizeChanger: false,
+                          }}
+                          scroll={{ x: "max-content" }}
+                          sticky
+                          components={{ header: { cell: ResizableTitle } }}
+                          expandable={{
+                            expandedRowRender: (batch) => (
+                              <div className="pl-8 py-2">
+                                <Table<WorkRotationResponse>
+                                  rowKey="id"
+                                  dataSource={batch.entries}
+                                  columns={batchEntryColumns}
+                                  pagination={false}
+                                  size="small"
+                                  scroll={{ x: "max-content" }}
+                                />
+                              </div>
+                            ),
+                            rowExpandable: (batch) => batch.entries.length > 0,
+                          }}
+                          locale={{
+                            emptyText:
+                              "No batches found for the selected filters.",
+                          }}
+                        />
+                      ),
+                    },
+                  ]}
+                />
+              </>
             ),
           },
           {
-            key: "batches",
-            label: (
-              <Space size={4}>
-                Batches
-                {batchGroups.length > 0 && (
-                  <Tag color="blue" style={{ marginInlineStart: 0 }}>
-                    {batchGroups.length}
-                  </Tag>
-                )}
-              </Space>
-            ),
-            children: (
-              <Table<BatchGroup>
-                rowKey="batchCode"
-                dataSource={batchGroups}
-                columns={batchColumns}
-                loading={isTableLoading}
-                size="small"
-                pagination={{
-                  pageSize: 10,
-                  size: "small",
-                  showSizeChanger: false,
-                }}
-                scroll={{ x: "max-content" }}
-                sticky
-                components={{ header: { cell: ResizableTitle } }}
-                expandable={{
-                  expandedRowRender: (batch) => (
-                    <div className="pl-8 py-2">
-                      <Table<WorkRotationResponse>
-                        rowKey="id"
-                        dataSource={batch.entries}
-                        columns={batchEntryColumns}
-                        pagination={false}
-                        size="small"
-                        scroll={{ x: "max-content" }}
-                      />
-                    </div>
-                  ),
-                  rowExpandable: (batch) => batch.entries.length > 0,
-                }}
-                locale={{
-                  emptyText: "No batches found for the selected filters.",
-                }}
-              />
-            ),
+            key: "roster",
+            label: WORK_ROTATION_LABEL.TAB_ROSTER,
+            // Reuses the standalone Roster Report page (reports/rostering) in embedded mode
+            // — it already resolves the effective schedule (Work Rotation overrides, Fixed
+            // Schedule, permanent shift), which is exactly what a Work Rotation Plan editor
+            // needs to verify. embedded drops the page-level title/toolbar chrome, which
+            // would otherwise bleed past the Tabs pane via its negative-margin styling.
+            // A sibling of Work Rotation rather than nested under its Entries/Batches tabs,
+            // since it's a different concept (effective schedule, not rotation overrides).
+            children: <RosterList embedded />,
           },
         ]}
       />

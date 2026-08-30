@@ -21,6 +21,8 @@ export interface CreateSplitTimeShift {
   otRequireTimeIn: boolean;
   otStart: string;
   overTimeThreshold: number;
+  // Null or 0 = no limit on OT hours creditable for a day on this shift.
+  maxOvertimeHours: number | null;
   minimumWorkMinutes: number;
   maxWorkingMinutes: number;
 }

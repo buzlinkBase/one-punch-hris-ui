@@ -103,6 +103,7 @@ export default function FlexiTimeShiftDetail() {
       maxWorkingMinutes: 480,
       withOT: false,
       overTimeThreshold: 60,
+      maxOvertimeHours: null,
     },
   });
 
@@ -156,6 +157,7 @@ export default function FlexiTimeShiftDetail() {
         maxWorkingMinutes: selected.maxWorkingMinutes,
         withOT: selected.withOT,
         overTimeThreshold: selected.overTimeThreshold,
+        maxOvertimeHours: selected.maxOvertimeHours,
       });
     }
   }, [selected, isEdit, reset]);
@@ -185,6 +187,9 @@ export default function FlexiTimeShiftDetail() {
       otRequireTimeIn: false,
       otStart: "00:00:00",
       overTimeThreshold: values.withOT ? values.overTimeThreshold : 0,
+      maxOvertimeHours: values.withOT
+        ? (values.maxOvertimeHours ?? null)
+        : null,
       minimumWorkMinutes: values.minimumWorkMinutes,
       maxWorkingMinutes: values.maxWorkingMinutes,
     };
@@ -435,6 +440,29 @@ export default function FlexiTimeShiftDetail() {
                       {...field}
                       min={0}
                       suffix="min"
+                    />
+                  )}
+                />
+              </Form.Item>
+              <Form.Item
+                label={FLEXI_TIME_SHIFT_LABEL.MAX_OT_HOURS}
+                validateStatus={errors.maxOvertimeHours ? "error" : ""}
+                help={
+                  errors.maxOvertimeHours?.message ??
+                  "Leave blank or 0 for no limit"
+                }
+              >
+                <Controller
+                  name="maxOvertimeHours"
+                  control={control}
+                  render={({ field }) => (
+                    <InputNumber
+                      className="w-full"
+                      value={field.value ?? undefined}
+                      onChange={(v) => field.onChange(v ?? null)}
+                      min={0}
+                      suffix="hrs"
+                      placeholder="No limit"
                     />
                   )}
                 />

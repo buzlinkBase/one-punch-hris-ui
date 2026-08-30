@@ -60,3 +60,19 @@ export function usePayrolls(params: {
     enabled: !!params.from && !!params.to,
   });
 }
+
+export function usePostPayrollBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchId: string) => forPayrollApi.postPayrollBatch(batchId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payrolls"] }),
+  });
+}
+
+export function useDeletePayrollBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchId: string) => forPayrollApi.deletePayrollBatch(batchId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payrolls"] }),
+  });
+}

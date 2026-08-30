@@ -4,11 +4,14 @@ import {
   Card,
   Col,
   Dropdown,
+  Modal,
+  Popconfirm,
   Row,
   Space,
   Statistic,
   Table,
   Tabs,
+  Tag,
   Tooltip,
   Typography,
   message,
@@ -21,9 +24,15 @@ import {
   FileTextOutlined,
   PrinterOutlined,
   DownloadOutlined,
+  CheckCircleOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { usePayrolls } from "../../hooks/use-for-payroll-queries";
+import {
+  usePayrolls,
+  usePostPayrollBatch,
+  useDeletePayrollBatch,
+} from "../../hooks/use-for-payroll-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import httpClient from "@/core/http/http-client";
@@ -82,7 +91,11 @@ function doubleLegalTotal(r: PayrollRunResult) {
     (r.doubleLegalPay ?? 0) +
     (r.doubleLegalOTPay ?? 0) +
     (r.doubleLegalNDPay ?? 0) +
-    (r.doubleLegalNDOTPay ?? 0) +
+    (r.doubleLegalNDOTPay ?? 0)
+  );
+}
+function restDoubleLegalTotal(r: PayrollRunResult) {
+  return (
     (r.restDoubleLegalPay ?? 0) +
     (r.restDoubleLegalOTPay ?? 0) +
     (r.restDoubleLegalNDPay ?? 0) +
@@ -119,6 +132,69 @@ export default function PayrollSummary() {
     () => response?.data ?? [],
     [response],
   );
+
+  // Every row from one Generate run shares a PayrollBatchId (the id of its PayrollBatch
+  // header row) — grouped here so Post/Delete act on the whole run in one action instead of
+  // one employee at a time. This is a run-level transaction, not a per-employee one: an
+  // employee's payroll was never generated on its own, so it isn't posted or deleted on its
+  // own either (and deleting per-row wouldn't even unblock regenerating — GenerateAsync
+  // blocks re-running a DTR batch while ANY row from it still exists).
+  const batchGroups = useMemo(() => {
+    const map = new Map<
+      string,
+      { payrollBatchId: string; rows: PayrollRunResult[] }
+    >();
+    for (const r of results) {
+      if (!r.id || !r.payrollBatchId) continue;
+      if (!map.has(r.payrollBatchId))
+        map.set(r.payrollBatchId, {
+          payrollBatchId: r.payrollBatchId,
+          rows: [],
+        });
+      map.get(r.payrollBatchId)!.rows.push(r);
+    }
+    return Array.from(map.values())
+      .map((g) => ({
+        payrollBatchId: g.payrollBatchId,
+        count: g.rows.length,
+        allPosted: g.rows.every((r) => r.isPosted),
+        hasPosted: g.rows.some((r) => r.isPosted),
+        fromDate: g.rows[0].payPeriodStart,
+        toDate: g.rows[0].payPeriodEnd,
+        payDate: g.rows[0].payDate,
+        remarks: g.rows[0].remarks,
+      }))
+      .sort((a, b) => b.payrollBatchId.localeCompare(a.payrollBatchId));
+  }, [results]);
+
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+
+  const { mutateAsync: postPayrollBatch, isPending: isPostingBatch } =
+    usePostPayrollBatch();
+  const { mutateAsync: deletePayrollBatch, isPending: isDeletingBatch } =
+    useDeletePayrollBatch();
+
+  const handlePostBatch = async (payrollBatchId: string, count: number) => {
+    try {
+      await postPayrollBatch(payrollBatchId);
+      message.success(
+        `Posted the full payroll run — ${count} record${count !== 1 ? "s" : ""} locked in as final.`,
+      );
+    } catch {
+      message.error("Failed to post this payroll run. Please try again.");
+    }
+  };
+
+  const handleDeleteBatch = async (payrollBatchId: string, count: number) => {
+    try {
+      await deletePayrollBatch(payrollBatchId);
+      message.success(
+        `Deleted the full payroll run — ${count} record${count !== 1 ? "s" : ""} removed. You can regenerate it now.`,
+      );
+    } catch {
+      message.error("Failed to delete this payroll run. Please try again.");
+    }
+  };
 
   const handlePrintPayslip = async (record: PayrollRunResult) => {
     if (!record.id) {
@@ -176,12 +252,14 @@ export default function PayrollSummary() {
     "ND Premium",
     "ND-OT Pay",
     "Rest Day",
+    "Paid Leave",
     "Legal Holiday (Unworked)",
-    "Holiday Duty (Worked)",
+    "Legal Holiday Duty (Worked)",
     "Rest Day + Legal Holiday",
-    "Rest Day + Special Holiday",
     "Special Holiday",
+    "Rest Day + Special Holiday",
     "Double Legal Holiday",
+    "Rest Day + Double Legal Holiday",
     "Holiday Total",
     "COLA",
     "Allowances",
@@ -222,12 +300,16 @@ export default function PayrollSummary() {
       fmt(r.ndPremiumPay ?? 0),
       fmt(r.nightDifferentialOTPay),
       fmt(restDayTotal(r)),
+      r.salaryType === "FIXED"
+        ? fmt(r.nonCompanyPaidLeaves ?? 0)
+        : fmt(r.paidLeaves ?? 0),
       fmt(r.legalHolidayUnworkedPay ?? 0),
       fmt(holidayDuty(r)),
       fmt(restLegalTotal(r)),
-      fmt(restSpecialTotal(r)),
       fmt(specialTotal(r)),
+      fmt(restSpecialTotal(r)),
       fmt(doubleLegalTotal(r)),
+      fmt(restDoubleLegalTotal(r)),
       fmt(r.holidayPay),
       fmt(r.cola),
       fmt(r.totalRegularAllowances),
@@ -300,9 +382,23 @@ export default function PayrollSummary() {
     [results],
   );
 
-  const printColumn: ColumnsType<PayrollRunResult>[number] = {
+  const statusColumn: ColumnsType<PayrollRunResult>[number] = {
+    title: "Status",
+    key: "status",
+    width: 90,
+    render: (_, r) =>
+      r.id ? (
+        <Tag color={r.isPosted ? "success" : "default"}>
+          {r.isPosted ? "Posted" : "Draft"}
+        </Tag>
+      ) : null,
+  };
+
+  // Print is the only per-row action left — Post/Delete are run-level transactions handled
+  // via the "Post / Delete Payroll Run" toolbar button and its batch modal below.
+  const actionsColumn: ColumnsType<PayrollRunResult>[number] = {
     title: "",
-    key: "print",
+    key: "actions",
     width: 48,
     fixed: "right",
     render: (_, r) => (
@@ -328,6 +424,7 @@ export default function PayrollSummary() {
       width: 160,
       fixed: "left",
     },
+    statusColumn,
     {
       title: "Salary Type",
       dataIndex: "salaryType",
@@ -379,6 +476,21 @@ export default function PayrollSummary() {
       key: "restDay",
       align: "right",
       render: (_, r) => fmt(restDayTotal(r)),
+    },
+    {
+      title: "Paid Leave",
+      key: "paidLeaves",
+      align: "right",
+      // FIXED's Basic Pay already embeds Company-funded paid leave (see
+      // PayrollProcessorService.ComputeAllowances), so only the Government/Shared/Other
+      // slice is still a real addition to Gross for FIXED — the full amount only applies
+      // to VARIABLE, whose Basic Pay never includes leave-day pay.
+      render: (_, r) =>
+        r.salaryType === "FIXED"
+          ? r.nonCompanyPaidLeaves
+            ? fmt(r.nonCompanyPaidLeaves)
+            : "—"
+          : fmt(r.paidLeaves ?? 0),
     },
     {
       title: "Holiday Total",
@@ -444,7 +556,7 @@ export default function PayrollSummary() {
       fixed: "right",
       render: (v: number) => <Text strong>{fmt(v)}</Text>,
     },
-    printColumn,
+    actionsColumn,
   ];
 
   const holidayColumns: ColumnsType<PayrollRunResult> = [
@@ -462,7 +574,7 @@ export default function PayrollSummary() {
       render: (_, r) => fmt(r.legalHolidayUnworkedPay ?? 0),
     },
     {
-      title: "Holiday Duty (Worked)",
+      title: "Legal Holiday Duty (Worked)",
       key: "holidayDuty",
       align: "right",
       render: (_, r) => fmt(holidayDuty(r)),
@@ -474,22 +586,28 @@ export default function PayrollSummary() {
       render: (_, r) => fmt(restLegalTotal(r)),
     },
     {
-      title: "Rest Day + Special Holiday",
-      key: "restSpecial",
-      align: "right",
-      render: (_, r) => fmt(restSpecialTotal(r)),
-    },
-    {
       title: "Special Holiday",
       key: "special",
       align: "right",
       render: (_, r) => fmt(specialTotal(r)),
     },
     {
+      title: "Rest Day + Special Holiday",
+      key: "restSpecial",
+      align: "right",
+      render: (_, r) => fmt(restSpecialTotal(r)),
+    },
+    {
       title: "Double Legal Holiday",
       key: "doubleLegal",
       align: "right",
       render: (_, r) => fmt(doubleLegalTotal(r)),
+    },
+    {
+      title: "Rest Day + Double Legal Holiday",
+      key: "restDoubleLegal",
+      align: "right",
+      render: (_, r) => fmt(restDoubleLegalTotal(r)),
     },
     {
       title: "Holiday Total",
@@ -804,6 +922,13 @@ export default function PayrollSummary() {
             >
               Print
             </Button>
+            <Button
+              icon={<CheckCircleOutlined />}
+              disabled={!batchGroups.length}
+              onClick={() => setBatchModalOpen(true)}
+            >
+              Post / Delete Payroll Run
+            </Button>
           </Space>
         </div>
       </div>
@@ -924,6 +1049,138 @@ export default function PayrollSummary() {
           ]}
         />
       </Card>
+
+      <Modal
+        title="Payroll Run"
+        open={batchModalOpen}
+        onCancel={() => setBatchModalOpen(false)}
+        footer={null}
+        width={800}
+      >
+        <p className="mb-4">
+          Each row below is one Generate run for the selected date range. Post
+          locks a run in as final; Delete removes every employee&apos;s payroll
+          in it along with its SSS/PhilHealth/Pag-IBIG/W-Tax contribution
+          records, so you can regenerate it from the same DTR batch(es). Both
+          act on the whole run, not one employee at a time.
+        </p>
+        <Table
+          rowKey="payrollBatchId"
+          size="small"
+          dataSource={batchGroups}
+          pagination={false}
+          scroll={{ x: "max-content" }}
+          columns={[
+            {
+              title: "Period",
+              key: "period",
+              render: (_, g) =>
+                `${dayjs(g.fromDate).format("MMM DD")} – ${dayjs(g.toDate).format("MMM DD, YYYY")}`,
+            },
+            {
+              title: "Payout Date",
+              key: "payDate",
+              render: (_, g) =>
+                g.payDate ? dayjs(g.payDate).format("MMM DD, YYYY") : "—",
+            },
+            {
+              title: "Employees",
+              dataIndex: "count",
+              key: "count",
+              align: "right",
+            },
+            {
+              title: "Remarks",
+              key: "remarks",
+              width: 200,
+              ellipsis: { showTitle: false },
+              render: (_, g) =>
+                g.remarks ? (
+                  <Tooltip title={g.remarks}>
+                    <Text type="secondary">{g.remarks}</Text>
+                  </Tooltip>
+                ) : (
+                  <Text type="secondary">—</Text>
+                ),
+            },
+            {
+              title: "Status",
+              key: "status",
+              render: (_, g) => (
+                <Tag
+                  color={
+                    g.allPosted
+                      ? "success"
+                      : g.hasPosted
+                        ? "warning"
+                        : "default"
+                  }
+                >
+                  {g.allPosted
+                    ? "Posted"
+                    : g.hasPosted
+                      ? "Partially Posted"
+                      : "Draft"}
+                </Tag>
+              ),
+            },
+            {
+              title: "",
+              key: "actions",
+              render: (_, g) => (
+                <Space size={4}>
+                  <Popconfirm
+                    title="Post this entire payroll run?"
+                    description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in this run as final.`}
+                    okText="Post"
+                    cancelText="Cancel"
+                    disabled={g.allPosted}
+                    onConfirm={() => handlePostBatch(g.payrollBatchId, g.count)}
+                  >
+                    <Button
+                      size="small"
+                      icon={<CheckCircleOutlined />}
+                      disabled={g.allPosted}
+                      loading={isPostingBatch}
+                    >
+                      Post
+                    </Button>
+                  </Popconfirm>
+                  <Popconfirm
+                    title="Delete this entire payroll run?"
+                    description={`This removes all ${g.count} record${g.count !== 1 ? "s" : ""} in this run.`}
+                    okText="Delete"
+                    okButtonProps={{ danger: true }}
+                    cancelText="Cancel"
+                    disabled={g.hasPosted}
+                    onConfirm={() =>
+                      handleDeleteBatch(g.payrollBatchId, g.count)
+                    }
+                  >
+                    <Tooltip
+                      title={
+                        g.hasPosted
+                          ? "This run has been posted and can no longer be deleted."
+                          : undefined
+                      }
+                    >
+                      <Button
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        disabled={g.hasPosted}
+                        loading={isDeletingBatch}
+                      >
+                        Delete
+                      </Button>
+                    </Tooltip>
+                  </Popconfirm>
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </Modal>
     </div>
   );
 }

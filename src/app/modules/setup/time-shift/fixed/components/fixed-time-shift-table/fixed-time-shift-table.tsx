@@ -54,6 +54,7 @@ export default function FixedTimeShiftTable({
     pmBreak: 180,
     withOT: 100,
     overTimeThreshold: 120,
+    maxOvertimeHours: 120,
     minimumWorkMinutes: 140,
   });
 
@@ -192,6 +193,19 @@ export default function FixedTimeShiftTable({
           onResize: (w: number) => handleResize("overTimeThreshold", w),
         }) as object,
       render: (val) => `${val} min`,
+      align: "right",
+    },
+    {
+      title: FIXED_TIME_SHIFT_LABEL.MAX_OT_HOURS,
+      dataIndex: "maxOvertimeHours",
+      key: "maxOvertimeHours",
+      width: widths.maxOvertimeHours,
+      onHeaderCell: () =>
+        ({
+          width: widths.maxOvertimeHours,
+          onResize: (w: number) => handleResize("maxOvertimeHours", w),
+        }) as object,
+      render: (val?: number | null) => (val ? `${val} hrs` : "No limit"),
       align: "right",
     },
     {

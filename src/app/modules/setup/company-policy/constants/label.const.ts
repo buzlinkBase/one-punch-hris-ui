@@ -1,7 +1,15 @@
 export const COMPANY_POLICY_LABEL = {
-  TITLE: "Company Policy",
+  TITLE: "Company Settings",
   SUBTITLE:
-    "Configure attendance and payroll computation rules for your organization.",
+    "Manage your company profile and configure attendance and payroll computation rules for your organization.",
+
+  SECTION_COMPANY_INFO: "Company Profile",
+  COMPANY_NAME: "Company Name",
+  SHORT_NAME: "Short Name",
+  ADDRESS: "Address",
+  CONTACT: "Contact Number",
+  EMAIL: "Email",
+  TIN: "TIN",
 
   SECTION_OVERTIME: "Overtime",
   SECTION_LATE: "Late Policy",
@@ -32,7 +40,8 @@ export const COMPANY_POLICY_LABEL = {
   TREAT_NDOT_AS_ND:
     "Treat Night Diff + OT as Night Diff only (no OT premium stacked)",
 
-  TAB_GENERAL: "General",
+  TAB_COMPANY_INFO: "Company Info",
+  TAB_GENERAL: "Attendance & Payroll Policy",
   TAB_FIXED_SALARY_DEFAULTS: "Fixed Salary Defaults",
   SECTION_FIXED_SALARY_DEFAULTS: "Fixed Salary Inclusion Defaults",
   FIXED_SALARY_DEFAULTS_SUBTITLE:

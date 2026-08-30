@@ -2,6 +2,17 @@ export interface PayrollRunResult {
   // Only populated when this row came from GET /payrolls (Payroll Summary — a persisted
   // record); Calculate/Generate preview responses have no saved Payroll.Id yet.
   id?: string;
+  // Draft until explicitly posted (PayrollProcessorService.PostBatchAsync) — a
+  // saved-but-unposted row can still be deleted; a posted one cannot. Only meaningful when
+  // id is set.
+  isPosted?: boolean;
+  // Id of the PayrollBatch header row for the Generate run this row belongs to (assigned
+  // once per run, not per employee) — see PayrollService.GetByBatchIdAsync /
+  // DeleteByBatchIdAsync. Only meaningful when id is set.
+  payrollBatchId?: string;
+  // Free-text identity for the whole run, captured once at Generate time — see
+  // PayrollRunRequest.remarks.
+  remarks?: string | null;
   employeeId: string;
   fullName: string;
   payPeriodStart: string;
@@ -28,6 +39,13 @@ export interface PayrollRunResult {
   restDayOTPay?: number;
   restDayNDPay?: number;
   restDayNDOTPay?: number;
+  // Leave-with-pay days for this cutoff — contributes to grossIncome but has no OT/ND/NDOT
+  // component of its own, so it isn't folded into any of the categories above.
+  paidLeaves?: number;
+  // Subset of paidLeaves funded by Government/Shared/Other (not Company) — for FIXED
+  // employees this is the only slice of paidLeaves that's a real addition to grossIncome,
+  // since Company-funded paid leave is already embedded in their flat monthly rate.
+  nonCompanyPaidLeaves?: number;
   // Raw per-holiday-category pay (base + OT + ND + NDOT tiers), same fields the payslip's
   // Holiday Breakdown section sums from — see PayslipDocument.cs on the backend. Optional:
   // only populated on rows sourced from a real Payroll/PayrollSummaryLine record.

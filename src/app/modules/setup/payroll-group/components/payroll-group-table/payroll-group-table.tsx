@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag, Tooltip } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
@@ -8,6 +8,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { PayrollGroupResponse } from "../../models/api/response/payroll-group-response.model";
+import type { CutoffModel } from "../../models/api/request/create-payroll-group.model";
 import {
   PAYROLL_GROUP_LABEL,
   PAYROLL_FREQUENCY_OPTIONS,
@@ -24,6 +25,18 @@ interface Props {
 const freqLabel = (value: string) =>
   PAYROLL_FREQUENCY_OPTIONS.find((o) => o.value === value)?.label ?? value;
 
+const ordinal = (day: number) => {
+  const rem10 = day % 10;
+  const rem100 = day % 100;
+  if (rem10 === 1 && rem100 !== 11) return `${day}st`;
+  if (rem10 === 2 && rem100 !== 12) return `${day}nd`;
+  if (rem10 === 3 && rem100 !== 13) return `${day}rd`;
+  return `${day}th`;
+};
+
+const cutoffDayText = (c: CutoffModel) =>
+  c.isEndOfMonth ? "End of Month" : ordinal(c.day);
+
 export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -32,6 +45,7 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
     code: 120,
     name: 200,
     payrollFrequency: 160,
+    cutoffDays: 260,
     status: 120,
   });
 
@@ -77,6 +91,29 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
           onResize: (w: number) => handleResize("payrollFrequency", w),
         }) as object,
       render: (v: string) => freqLabel(v),
+    },
+    {
+      title: PAYROLL_GROUP_LABEL.CUTOFF_DAYS,
+      dataIndex: "cutoffDays",
+      key: "cutoffDays",
+      width: widths.cutoffDays,
+      onHeaderCell: () =>
+        ({
+          width: widths.cutoffDays,
+          onResize: (w: number) => handleResize("cutoffDays", w),
+        }) as object,
+      render: (cutoffDays?: CutoffModel[]) =>
+        cutoffDays && cutoffDays.length > 0 ? (
+          <Space size={4} wrap>
+            {cutoffDays.map((c, i) => (
+              <Tooltip key={i} title={c.label || undefined}>
+                <Tag color="blue">{cutoffDayText(c)}</Tag>
+              </Tooltip>
+            ))}
+          </Space>
+        ) : (
+          <Tag>Not configured</Tag>
+        ),
     },
     {
       title: PAYROLL_GROUP_LABEL.STATUS,

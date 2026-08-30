@@ -1,8 +1,25 @@
 import { useEffect } from "react";
-import { Form, Input, Button, Select, Typography, Space, Tag } from "antd";
+import {
+  Form,
+  Input,
+  InputNumber,
+  Checkbox,
+  Button,
+  Select,
+  Typography,
+  Space,
+  Tag,
+  Tooltip,
+} from "antd";
+import { DeleteOutlined, PlusOutlined, UndoOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { useForm, Controller, type Resolver } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  Controller,
+  type Resolver,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   payrollGroupFormSchema,
@@ -17,10 +34,11 @@ import {
   PAYROLL_GROUP_LABEL,
   PAYROLL_FREQUENCY_OPTIONS,
   STATUTORY_DEDUCTION_SCHEDULE_OPTIONS,
+  CUTOFF_DAY_PRESETS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "Active" },
@@ -40,6 +58,7 @@ export default function PayrollGroupDetail() {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<PayrollGroupFormValues>({
     resolver: zodResolver(
@@ -50,10 +69,17 @@ export default function PayrollGroupDetail() {
       name: "",
       payrollFrequency: "SEMI_MONTHLY",
       statutoryDeductionSchedule: "PerPayroll",
-      cutoffDays: [],
+      cutoffDays: CUTOFF_DAY_PRESETS.SEMI_MONTHLY,
       status: "ACTIVE",
     },
   });
+
+  const { fields, append, remove, replace } = useFieldArray({
+    control,
+    name: "cutoffDays",
+  });
+
+  const payrollFrequency = watch("payrollFrequency");
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -63,22 +89,23 @@ export default function PayrollGroupDetail() {
         payrollFrequency: selected.payrollFrequency,
         statutoryDeductionSchedule:
           selected.statutoryDeductionSchedule ?? "PerPayroll",
-        cutoffDays: [],
+        // Cutoff days are genuinely editable now — pre-fill with whatever was saved,
+        // falling back to the frequency's recommended preset only for a record that
+        // somehow has none yet.
+        cutoffDays:
+          selected.cutoffDays && selected.cutoffDays.length > 0
+            ? selected.cutoffDays
+            : CUTOFF_DAY_PRESETS[selected.payrollFrequency],
         status: selected.status,
       });
     }
   }, [selected, isEdit, reset]);
 
-  const DEFAULT_CUTOFF_DAYS = [
-    { day: 10, isEndOfMonth: false, label: "1st Cutoff" },
-    { day: 25, isEndOfMonth: false, label: "2nd Cutoff" },
-  ];
-
   const onSubmit = async (values: PayrollGroupFormValues) => {
     if (isEdit && id) {
-      await update({ id, ...values, cutoffDays: selected?.cutoffDays ?? [] });
+      await update({ id, ...values });
     } else {
-      await add({ ...values, cutoffDays: DEFAULT_CUTOFF_DAYS });
+      await add(values);
     }
     navigate({ to: "/setup/payroll-group" });
   };
@@ -150,6 +177,100 @@ export default function PayrollGroupDetail() {
                 />
               )}
             />
+          </Form.Item>
+
+          <Form.Item
+            label={
+              <Space>
+                {PAYROLL_GROUP_LABEL.CUTOFF_DAYS}
+                <Tooltip title="The day(s) of the month payroll is cut off — e.g. Semi-Monthly is usually the 10th & 25th, or the 15th & End of Month. Determines how statutory deductions are split across cutoffs.">
+                  <Text type="secondary">(?)</Text>
+                </Tooltip>
+              </Space>
+            }
+            validateStatus={errors.cutoffDays ? "error" : ""}
+            help={
+              errors.cutoffDays?.message ?? errors.cutoffDays?.root?.message
+            }
+          >
+            <div className="flex flex-col gap-2">
+              {fields.map((field, index) => {
+                const rowErrors = errors.cutoffDays?.[index];
+                // eslint-disable-next-line react-hooks/incompatible-library
+                const isEom = watch(`cutoffDays.${index}.isEndOfMonth`);
+                return (
+                  <Space key={field.id} align="start" wrap>
+                    <Controller
+                      name={`cutoffDays.${index}.label`}
+                      control={control}
+                      render={({ field: f }) => (
+                        <Input
+                          {...f}
+                          placeholder="Label (e.g. 1st Cutoff)"
+                          style={{ width: 180 }}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name={`cutoffDays.${index}.day`}
+                      control={control}
+                      render={({ field: f }) => (
+                        <InputNumber
+                          {...f}
+                          min={1}
+                          max={31}
+                          disabled={isEom}
+                          addonBefore="Day"
+                          status={rowErrors?.day ? "error" : undefined}
+                          style={{ width: 130 }}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name={`cutoffDays.${index}.isEndOfMonth`}
+                      control={control}
+                      render={({ field: f }) => (
+                        <Checkbox
+                          checked={f.value}
+                          onChange={(e) => f.onChange(e.target.checked)}
+                        >
+                          End of Month
+                        </Checkbox>
+                      )}
+                    />
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      disabled={fields.length <= 1}
+                      onClick={() => remove(index)}
+                    />
+                  </Space>
+                );
+              })}
+              <Space>
+                <Button
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() =>
+                    append({ day: 1, isEndOfMonth: false, label: "" })
+                  }
+                >
+                  Add Cutoff
+                </Button>
+                <Tooltip title="Replace the list above with the recommended cutoffs for the selected Payroll Frequency">
+                  <Button
+                    size="small"
+                    icon={<UndoOutlined />}
+                    onClick={() =>
+                      replace(CUTOFF_DAY_PRESETS[payrollFrequency])
+                    }
+                  >
+                    Use Recommended
+                  </Button>
+                </Tooltip>
+              </Space>
+            </div>
           </Form.Item>
 
           <Form.Item
