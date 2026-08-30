@@ -45,6 +45,7 @@ export default function FlexiTimeShiftTable({
     breakWindow: 180,
     withOT: 100,
     overTimeThreshold: 120,
+    maxOvertimeHours: 120,
   });
 
   const filtered = data.filter((item) =>
@@ -156,6 +157,19 @@ export default function FlexiTimeShiftTable({
           onResize: (w: number) => handleResize("overTimeThreshold", w),
         }) as object,
       render: (val) => `${val} min`,
+      align: "right",
+    },
+    {
+      title: FLEXI_TIME_SHIFT_LABEL.MAX_OT_HOURS,
+      dataIndex: "maxOvertimeHours",
+      key: "maxOvertimeHours",
+      width: widths.maxOvertimeHours,
+      onHeaderCell: () =>
+        ({
+          width: widths.maxOvertimeHours,
+          onResize: (w: number) => handleResize("maxOvertimeHours", w),
+        }) as object,
+      render: (val?: number | null) => (val ? `${val} hrs` : "No limit"),
       align: "right",
     },
     {

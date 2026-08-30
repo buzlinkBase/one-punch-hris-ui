@@ -20,6 +20,7 @@ export const FIXED_TIME_SHIFT_LABEL = {
   OT_REQUIRE_TIME_IN: "Require Time-In for OT",
   OT_START: "OT Start Time",
   OT_THRESHOLD: "OT Threshold (min)",
+  MAX_OT_HOURS: "Max OT Hours",
   CREATE_TITLE: "Create Fixed Time Shift",
   EDIT_TITLE: "Edit Fixed Time Shift",
 };

@@ -22,7 +22,7 @@ const PAY_SOURCE_COLOR: Record<string, string> = {
 
 const PAY_SOURCE_LABEL: Record<string, string> = {
   Company: "Company (employer-funded)",
-  Government: "Government (SSS / GSIS)",
+  Government: "Government (SSS)",
   Shared: "Shared (employer advances, government reimburses)",
   Unpaid: "Unpaid (no pay)",
   Other: "Other",

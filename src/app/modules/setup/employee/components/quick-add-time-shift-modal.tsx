@@ -81,6 +81,7 @@ export default function QuickAddTimeShiftModal({
         otRequireTimeIn: false,
         otStart: "00:00:00",
         overTimeThreshold: 0,
+        maxOvertimeHours: null,
       };
       const created = await create(payload);
       reset();

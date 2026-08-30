@@ -52,4 +52,19 @@ export const forPayrollApi = {
       params,
     });
   },
+
+  // Post and Delete are run-level transactions, not per-employee ones — an employee's
+  // payroll is never generated on its own, so it's never posted or deleted on its own
+  // either. batchId is the PayrollBatch header row's id (PayrollRunResult.payrollBatchId).
+  // See PayrollProcessorService.PostBatchAsync / DeleteBatchAsync.
+  postPayrollBatch(batchId: string): Promise<void> {
+    return httpClient.post<void>(
+      `${PAYROLL_ENDPOINT}/batch/${batchId}/post`,
+      null,
+    );
+  },
+
+  deletePayrollBatch(batchId: string): Promise<void> {
+    return httpClient.delete<void>(`${PAYROLL_ENDPOINT}/batch/${batchId}`);
+  },
 };

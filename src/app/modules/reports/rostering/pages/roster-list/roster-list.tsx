@@ -76,7 +76,14 @@ function toRosterRows(records: RosterResponse[]): string[][] {
   ]);
 }
 
-export default function RosterList() {
+interface Props {
+  // Renders without the page-level toolbar (title/subtitle, negative-margin bleed banner)
+  // when hosted as a tab elsewhere — e.g. Work Rotation Plan's Roster Report tab — rather
+  // than as its own routed page.
+  embedded?: boolean;
+}
+
+export default function RosterList({ embedded = false }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [view, setView] = useState<"table" | "calendar">("calendar");
   const [filter, setFilter] = useState<RosterFilter>(DEFAULT_RANGE);
@@ -143,52 +150,39 @@ export default function RosterList() {
     },
   ];
 
-  return (
-    <div className="content-page">
-      {contextHolder}
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              {ROSTER_LABEL.TITLE}
-            </Title>
-            <p className="page-toolbar-subtitle">
-              View each employee&apos;s assigned shift and rest days for a date
-              range, resolved from Work Rotation Plan overrides, Fixed
-              Schedules, and permanent shift assignments.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Segmented
-              value={view}
-              onChange={(v) => setView(v as "table" | "calendar")}
-              options={[
-                { value: "calendar", icon: <CalendarOutlined /> },
-                { value: "table", icon: <TableOutlined /> },
-              ]}
-            />
-            <Dropdown
-              menu={{ items: exportMenu }}
-              trigger={["click"]}
-              disabled={!records.length}
-            >
-              <Button icon={<DownloadOutlined />} disabled={!records.length}>
-                Export
-              </Button>
-            </Dropdown>
-            <Badge count={activeFilterCount} size="small">
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setFiltersOpen((v) => !v)}
-                type={filtersOpen ? "default" : "text"}
-              >
-                Filters
-              </Button>
-            </Badge>
-          </div>
-        </div>
-      </div>
+  const controls = (
+    <div className="flex flex-wrap gap-2">
+      <Segmented
+        value={view}
+        onChange={(v) => setView(v as "table" | "calendar")}
+        options={[
+          { value: "calendar", icon: <CalendarOutlined /> },
+          { value: "table", icon: <TableOutlined /> },
+        ]}
+      />
+      <Dropdown
+        menu={{ items: exportMenu }}
+        trigger={["click"]}
+        disabled={!records.length}
+      >
+        <Button icon={<DownloadOutlined />} disabled={!records.length}>
+          Export
+        </Button>
+      </Dropdown>
+      <Badge count={activeFilterCount} size="small">
+        <Button
+          icon={<FilterOutlined />}
+          onClick={() => setFiltersOpen((v) => !v)}
+          type={filtersOpen ? "default" : "text"}
+        >
+          Filters
+        </Button>
+      </Badge>
+    </div>
+  );
 
+  const body = (
+    <>
       {filtersOpen && (
         <Card size="small" className="mb-4">
           <Form layout="vertical">
@@ -269,6 +263,38 @@ export default function RosterList() {
       ) : (
         <RosterTable data={records} loading={isLoading} />
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col gap-4">
+        {contextHolder}
+        <div className="flex justify-end">{controls}</div>
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <div className="content-page">
+      {contextHolder}
+      <div className="page-toolbar">
+        <div className="page-toolbar-row">
+          <div>
+            <Title level={4} className="mb-0!">
+              {ROSTER_LABEL.TITLE}
+            </Title>
+            <p className="page-toolbar-subtitle">
+              View each employee&apos;s assigned shift and rest days for a date
+              range, resolved from Work Rotation Plan overrides, Fixed
+              Schedules, and permanent shift assignments.
+            </p>
+          </div>
+          {controls}
+        </div>
+      </div>
+      {body}
     </div>
   );
 }

@@ -29,6 +29,7 @@ import {
   CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
 import FixedSalaryDefaultsTab from "./fixed-salary-defaults-tab";
+import CompanyInfoTab from "./company-info-tab";
 
 const { Title } = Typography;
 
@@ -443,6 +444,12 @@ export default function CompanyPolicy() {
       <Tabs
         type="card"
         items={[
+          {
+            key: "company-info",
+            label: COMPANY_POLICY_LABEL.TAB_COMPANY_INFO,
+            forceRender: true,
+            children: <CompanyInfoTab />,
+          },
           {
             key: "general",
             label: COMPANY_POLICY_LABEL.TAB_GENERAL,

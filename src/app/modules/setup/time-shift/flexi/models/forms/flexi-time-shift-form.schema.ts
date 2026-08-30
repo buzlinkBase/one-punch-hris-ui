@@ -15,6 +15,8 @@ export const flexiTimeShiftFormSchema = z.object({
   maxWorkingMinutes: z.number().min(0),
   withOT: z.boolean(),
   overTimeThreshold: z.number().min(0),
+  // Null or 0 = no limit on OT hours creditable for a day on this shift.
+  maxOvertimeHours: z.number().min(0).nullable().optional(),
 });
 
 export type FlexiTimeShiftFormValues = z.infer<typeof flexiTimeShiftFormSchema>;

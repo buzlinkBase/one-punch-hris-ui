@@ -11,6 +11,7 @@ export const FLEXI_TIME_SHIFT_LABEL = {
   BREAK_DURATION: "Break Duration (min)",
   ALLOW_OT: "Allow Overtime",
   OT_THRESHOLD: "OT Threshold (min)",
+  MAX_OT_HOURS: "Max OT Hours",
   CREATE_TITLE: "Create Flexi Time Shift",
   EDIT_TITLE: "Edit Flexi Time Shift",
 };

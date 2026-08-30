@@ -19,7 +19,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     children: [
       {
         key: "daily-time-record",
-        label: "Time Records View",
+        label: "Generate and Post",
         children: [
           {
             key: "daily-time-record-master",
@@ -35,7 +35,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       {
         key: "manage-logs",
-        label: "Logs Management",
+        label: "Manage Logs",
         children: [
           {
             key: "timekeeping-upload-attendance",
@@ -104,62 +104,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Payroll Summary",
         path: "/payroll/summary",
       },
-      {
-        key: "payroll-reports",
-        label: "Payroll Reports",
-        children: [
-          {
-            key: "payroll-reports-sss",
-            label: "SSS Remittance",
-            path: "/payroll/reports/sss-remittance",
-          },
-          {
-            key: "payroll-reports-philhealth",
-            label: "PhilHealth Remittance",
-            path: "/payroll/reports/philhealth-remittance",
-          },
-          {
-            key: "payroll-reports-pagibig",
-            label: "Pag-IBIG Remittance",
-            path: "/payroll/reports/pagibig-remittance",
-          },
-          {
-            key: "payroll-reports-wtax",
-            label: "BIR Withholding Tax",
-            path: "/payroll/reports/wtax-remittance",
-          },
-          {
-            key: "payroll-reports-bank",
-            label: "Bank Disbursement",
-            path: "/payroll/reports/bank-disbursement",
-          },
-          {
-            key: "payroll-reports-loans",
-            label: "Loan Ledger",
-            path: "/payroll/reports/loan-ledger",
-          },
-          {
-            key: "payroll-reports-leave",
-            label: "Leave Ledger",
-            path: "/payroll/reports/leave-ledger",
-          },
-          {
-            key: "payroll-reports-cost",
-            label: "Cost Summary",
-            path: "/payroll/reports/cost-summary",
-          },
-          {
-            key: "payroll-reports-ytd",
-            label: "YTD Summary",
-            path: "/payroll/reports/ytd-summary",
-          },
-          {
-            key: "payroll-reports-13th",
-            label: "13th Month Pay",
-            path: "/payroll/reports/13th-month-pay",
-          },
-        ],
-      },
     ],
   },
   {
@@ -222,6 +166,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         type: "group",
         children: [
           {
+            key: "setup-payroll-group",
+            label: "Payroll Group",
+            path: "/setup/payroll-group",
+          },
+          {
             key: "setup-department",
             label: "Department",
             path: "/setup/department",
@@ -259,11 +208,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/setup/client",
           },
           {
-            key: "setup-payroll-group",
-            label: "Payroll Group",
-            path: "/setup/payroll-group",
-          },
-          {
             key: "setup-employee",
             label: "Employee",
             path: "/setup/employee",
@@ -282,7 +226,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           },
           {
             key: "setup-split-shift",
-            label: "Split/Broken Shift",
+            label: "Flexi/Split/Broken Shift",
             path: "/setup/time-shift/split",
           },
         ],
@@ -396,6 +340,56 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "reports-rostering",
         label: "Rostering",
         path: "/reports/rostering",
+      },
+      {
+        key: "payroll-reports-sss",
+        label: "SSS Remittance",
+        path: "/payroll/reports/sss-remittance",
+      },
+      {
+        key: "payroll-reports-philhealth",
+        label: "PhilHealth Remittance",
+        path: "/payroll/reports/philhealth-remittance",
+      },
+      {
+        key: "payroll-reports-pagibig",
+        label: "Pag-IBIG Remittance",
+        path: "/payroll/reports/pagibig-remittance",
+      },
+      {
+        key: "payroll-reports-wtax",
+        label: "BIR Withholding Tax",
+        path: "/payroll/reports/wtax-remittance",
+      },
+      {
+        key: "payroll-reports-bank",
+        label: "Bank Disbursement",
+        path: "/payroll/reports/bank-disbursement",
+      },
+      {
+        key: "payroll-reports-loans",
+        label: "Loan Ledger",
+        path: "/payroll/reports/loan-ledger",
+      },
+      {
+        key: "payroll-reports-leave",
+        label: "Leave Ledger",
+        path: "/payroll/reports/leave-ledger",
+      },
+      {
+        key: "payroll-reports-cost",
+        label: "Cost Summary",
+        path: "/payroll/reports/cost-summary",
+      },
+      {
+        key: "payroll-reports-ytd",
+        label: "YTD Summary",
+        path: "/payroll/reports/ytd-summary",
+      },
+      {
+        key: "payroll-reports-13th",
+        label: "13th Month Pay",
+        path: "/payroll/reports/13th-month-pay",
       },
     ],
   },

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { payrollReportsApi } from "../services/payroll-reports.api";
 import type { CostSummaryGroupBy } from "../models/api/response/payroll-reports.model";
 
@@ -48,6 +48,17 @@ export function useLeaveLedger(year: number) {
   return useQuery({
     queryKey: ["payroll-reports", "leave-ledger", year],
     queryFn: () => payrollReportsApi.leaveLedger(year),
+  });
+}
+
+export function useAdjustLeaveCredits() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: payrollReportsApi.adjustLeaveCredits,
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["payroll-reports", "leave-ledger"],
+      }),
   });
 }
 

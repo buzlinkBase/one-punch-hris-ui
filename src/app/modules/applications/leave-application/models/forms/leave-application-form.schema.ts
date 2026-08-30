@@ -14,6 +14,10 @@ export const leaveApplicationFormSchema = z
     endTime: z.string().optional(),
     totalHours: z.number().optional(),
     payType: z.string().min(1, "Pay type is required"),
+    payoutMode: z.enum(["perday", "onetime"]),
+    governmentAmount: z.number().optional(),
+    companyAmount: z.number().optional(),
+    releasePayrollDate: z.string().optional(),
     applicationRemarks: z.string().optional(),
     supportingDocumentUrl: z.string().optional(),
     approvalStatus: z.string(),
@@ -74,6 +78,29 @@ export const leaveApplicationFormSchema = z
             message: "Total hours must be greater than 0",
           });
         }
+      }
+    }
+    if (data.payType === "WithPay" && data.payoutMode === "onetime") {
+      if (data.governmentAmount == null || data.governmentAmount < 0) {
+        ctx.addIssue({
+          path: ["governmentAmount"],
+          code: z.ZodIssueCode.custom,
+          message: "Government amount (0 or more) is required",
+        });
+      }
+      if (data.companyAmount == null || data.companyAmount < 0) {
+        ctx.addIssue({
+          path: ["companyAmount"],
+          code: z.ZodIssueCode.custom,
+          message: "Company amount (0 or more) is required",
+        });
+      }
+      if (!data.releasePayrollDate) {
+        ctx.addIssue({
+          path: ["releasePayrollDate"],
+          code: z.ZodIssueCode.custom,
+          message: "Release payroll date is required",
+        });
       }
     }
   });

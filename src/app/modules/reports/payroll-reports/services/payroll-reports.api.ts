@@ -6,6 +6,8 @@ import type {
   BankDisbursementResponse,
   LoanLedgerResponse,
   LeaveCreditsBalanceResponse,
+  AdjustLeaveCreditsRequest,
+  AdjustLeaveCreditsResponse,
   CostSummaryResponse,
   CostSummaryGroupBy,
   YtdPayrollSummaryResponse,
@@ -13,6 +15,7 @@ import type {
 } from "../models/api/response/payroll-reports.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payroll-reports");
+const LEAVES_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "leaves");
 
 async function get<T>(path: string, params: Record<string, string | number>) {
   const res = await httpClient.getUnwrapped<ReportEnvelope<T>>(
@@ -37,6 +40,11 @@ export const payrollReportsApi = {
     get<LoanLedgerResponse>("loan-ledger", { asOf }),
   leaveLedger: (year: number) =>
     get<LeaveCreditsBalanceResponse>("leave-ledger", { year }),
+  adjustLeaveCredits: (payload: AdjustLeaveCreditsRequest) =>
+    httpClient.postUnwrapped<AdjustLeaveCreditsResponse>(
+      `${LEAVES_ENDPOINT}/credits/adjust`,
+      payload,
+    ),
   costSummary: (from: string, to: string, groupBy: CostSummaryGroupBy) =>
     get<CostSummaryResponse>("cost-summary", { from, to, groupBy }),
   ytdSummary: (year: number) =>

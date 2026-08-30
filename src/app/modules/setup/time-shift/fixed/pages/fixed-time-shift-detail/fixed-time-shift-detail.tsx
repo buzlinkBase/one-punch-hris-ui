@@ -119,6 +119,7 @@ export default function FixedTimeShiftDetail() {
       otRequireTimeIn: false,
       otStart: "17:00:00",
       overTimeThreshold: 60,
+      maxOvertimeHours: null,
     },
   });
 
@@ -230,6 +231,7 @@ export default function FixedTimeShiftDetail() {
         otRequireTimeIn: selected.otRequireTimeIn,
         otStart: selected.otStart,
         overTimeThreshold: selected.overTimeThreshold,
+        maxOvertimeHours: selected.maxOvertimeHours,
       });
     }
   }, [selected, isEdit, reset]);
@@ -262,6 +264,9 @@ export default function FixedTimeShiftDetail() {
       otRequireTimeIn: values.withOT ? values.otRequireTimeIn : false,
       otStart: values.withOT ? values.otStart : "00:00:00",
       overTimeThreshold: values.withOT ? values.overTimeThreshold : 0,
+      maxOvertimeHours: values.withOT
+        ? (values.maxOvertimeHours ?? null)
+        : null,
     };
 
     if (isEdit && id) await update({ id, ...payload });
@@ -734,6 +739,29 @@ export default function FixedTimeShiftDetail() {
                         {...field}
                         min={0}
                         suffix="min"
+                      />
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label={FIXED_TIME_SHIFT_LABEL.MAX_OT_HOURS}
+                  validateStatus={errors.maxOvertimeHours ? "error" : ""}
+                  help={
+                    errors.maxOvertimeHours?.message ??
+                    "Leave blank or 0 for no limit"
+                  }
+                >
+                  <Controller
+                    name="maxOvertimeHours"
+                    control={control}
+                    render={({ field }) => (
+                      <InputNumber
+                        className="w-full"
+                        value={field.value ?? undefined}
+                        onChange={(v) => field.onChange(v ?? null)}
+                        min={0}
+                        suffix="hrs"
+                        placeholder="No limit"
                       />
                     )}
                   />

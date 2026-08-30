@@ -1,4 +1,4 @@
-import { Table, Button, Space, Popconfirm, Tag } from "antd";
+import { Table, Button, Space, Popconfirm, Tag, Tooltip } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -61,6 +61,7 @@ export default function LeaveApplicationTable({
     dateTo: 120,
     dayType: 110,
     payType: 120,
+    payoutMode: 130,
     status: 120,
   });
 
@@ -142,6 +143,31 @@ export default function LeaveApplicationTable({
           {val === "WithoutPay" ? "Without Pay" : "With Pay"}
         </Tag>
       ),
+    },
+    {
+      title: LEAVE_APPLICATION_LABEL.PAYOUT_MODE,
+      key: "payoutMode",
+      width: widths.payoutMode,
+      onHeaderCell: () =>
+        ({
+          width: widths.payoutMode,
+          onResize: (w: number) => handleResize("payoutMode", w),
+        }) as object,
+      render: (_: unknown, r: LeaveApplicationResponse) => {
+        if (r.payType === "WithoutPay" || r.payoutMode !== "OneTime")
+          return null;
+        return (
+          <Tooltip
+            title={
+              r.releasePayrollDate
+                ? `Releases with the ${r.releasePayrollDate} payroll run`
+                : "Release payroll date not set"
+            }
+          >
+            <Tag color="purple">One Time</Tag>
+          </Tooltip>
+        );
+      },
     },
     {
       title: LEAVE_APPLICATION_LABEL.STATUS,
