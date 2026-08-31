@@ -10,6 +10,13 @@ export const COMPANY_POLICY_LABEL = {
   CONTACT: "Contact Number",
   EMAIL: "Email",
   TIN: "TIN",
+  RDO_CODE: "RDO Code",
+  SSS_NUMBER: "SSS Employer No.",
+  PHILHEALTH_NUMBER: "PhilHealth Employer No.",
+  PAGIBIG_NUMBER: "Pag-IBIG Employer No.",
+  AUTHORIZED_SIGNATORY_NAME: "Authorized Signatory Name",
+  AUTHORIZED_SIGNATORY_TITLE: "Authorized Signatory Title",
+  SECTION_AGENCY_REGISTRATION: "Government Agency Registration",
 
   SECTION_OVERTIME: "Overtime",
   SECTION_LATE: "Late Policy",

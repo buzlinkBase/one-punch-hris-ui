@@ -168,6 +168,7 @@ export interface EmployeeResponse {
   phicNo?: string;
   hdmfNo?: string;
   tin?: string;
+  rdoCode?: string;
   email?: string | null;
   contact?: string;
   address1?: string;

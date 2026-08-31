@@ -114,18 +114,34 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         dayjs(r.workDate).add(1, "day").format("YYYY-MM-DD") + "T00:00:00";
 
       if (r.isRestDay) {
+        // The employee's underlying shift (Fixed Schedule/Permanent/Override) still
+        // resolves independently of rest-day status — show it as a subtitle so the
+        // roster reads "Rest Day" but preparers can still see which shift it's covering.
+        const hasShift = r.shiftId && r.shiftStart && r.shiftEnd;
+        const timeRange = hasShift
+          ? `${dayjs(r.shiftStart).format("h:mm A")} – ${dayjs(r.shiftEnd).format("h:mm A")}`
+          : null;
         return {
           id: `${r.employeeId}_${r.workDate}`,
           resource: r.employeeId,
           start: dayStart,
           end: dayEnd,
-          text: "Rest Day",
+          text: hasShift ? `Rest Day (${r.shiftName})` : "Rest Day",
+          html: hasShift
+            ? eventCardHtml("Rest Day", `${r.shiftName} · ${timeRange}`)
+            : undefined,
           backColor: REST_DAY_COLOR,
           fontColor: "#ffffff",
+          toolTip: hasShift
+            ? `Rest Day — underlying shift: ${r.shiftName} (${timeRange})`
+            : "Rest Day",
           tags: {
-            shiftId: null,
+            // Carries the real underlying shift/override — a rest day is treated the
+            // same as a work day for assign/drag-drop purposes; the rest-day flag is a
+            // display/scheduling attribute on top, not a separate no-shift state.
+            shiftId: r.shiftId,
             isRestDay: true,
-            overrideId: null,
+            overrideId: r.overrideId,
             scheduleSource: r.scheduleSource,
           } satisfies EventTags,
         };
@@ -252,6 +268,30 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
       --dp-scheduler-timeheader-padding: 8px;
       --dp-scheduler-link-color: ${SHIFT_COLOR};
     }
+
+    /* The grid is almost always wider than the viewport, so the horizontal scrollbar
+       needs to be an obvious, always-visible affordance here — not the app's default
+       thin/hover-only scrollbar (fine for a sidebar, easy to miss on a wide data grid). */
+    .roster-scheduler-theme .ant-card-body {
+      scrollbar-width: auto;
+      scrollbar-color: ${isDark ? "rgba(29,160,129,0.55) rgba(255,255,255,0.06)" : "rgba(29,160,129,0.55) rgba(15,23,42,0.06)"};
+    }
+    .roster-scheduler-theme .ant-card-body::-webkit-scrollbar {
+      height: 12px;
+    }
+    .roster-scheduler-theme .ant-card-body::-webkit-scrollbar-track {
+      background: ${isDark ? "rgba(255,255,255,0.06)" : "rgba(15,23,42,0.06)"};
+    }
+    .roster-scheduler-theme .ant-card-body::-webkit-scrollbar-thumb {
+      background: rgba(29,160,129,0.55);
+      border-radius: 6px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+    }
+    .roster-scheduler-theme .ant-card-body::-webkit-scrollbar-thumb:hover {
+      background: rgba(29,160,129,0.8);
+      background-clip: content-box;
+    }
   `;
 
   return (
@@ -334,12 +374,12 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
               return;
             }
 
-            if (!tags.shiftId || tags.isRestDay) {
+            // Rest days are treated the same as work days here — only a genuinely
+            // shift-less (Unassigned) day has nothing to drag.
+            if (!tags.shiftId) {
               args.preventDefault();
               messageApi.info(
-                tags.isRestDay
-                  ? "Rest days can't be reassigned from this calendar — use Change Rest Day."
-                  : "Unassigned days have no shift to move — click it to assign one.",
+                "Unassigned days have no shift to move — click it to assign one.",
               );
             }
           }}

@@ -12,9 +12,16 @@ import type {
   CostSummaryGroupBy,
   YtdPayrollSummaryResponse,
   ThirteenthMonthResponse,
+  MonthlyRemittanceReturnResponse,
+  AlphalistEntryResponse,
+  Bir2316Response,
 } from "../models/api/response/payroll-reports.model";
 
-const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payroll-reports");
+// PayrollReportsController's [Route("api/v{version:apiVersion}/[controller]")] resolves the
+// [controller] token to the literal class name (PayrollReports -> payrollreports) — there is
+// no kebab-case/slugify route convention registered for this API, so the segment must match
+// that exactly, not "payroll-reports".
+const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrollreports");
 const LEAVES_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "leaves");
 
 async function get<T>(path: string, params: Record<string, string | number>) {
@@ -51,4 +58,26 @@ export const payrollReportsApi = {
     get<YtdPayrollSummaryResponse>("ytd-summary", { year }),
   thirteenthMonth: (year: number) =>
     get<ThirteenthMonthResponse>("13th-month-pay", { year }),
+  monthlyRemittanceReturn: (from: string, to: string) =>
+    get<MonthlyRemittanceReturnResponse>("1601c", { from, to }),
+  alphalist: (year: number) =>
+    get<AlphalistEntryResponse>("alphalist", { year }),
+  bir2316: (employeeId: string, year: number) =>
+    get<Bir2316Response>("2316", { employeeId, year }),
+  // URL builders for the /print (PDF, opened in a new tab) and /export (raw file download)
+  // actions — these return blobs, not JSON, so they're called directly via
+  // openPdfInNewTab/downloadBlobFile (src/shared/utils/download-file.util.ts) rather than
+  // through the get<T>() JSON helper above.
+  urls: {
+    monthlyRemittanceReturnPrint: `${ENDPOINT}/1601c/print`,
+    alphalistPrint: `${ENDPOINT}/alphalist/print`,
+    alphalistExport: `${ENDPOINT}/alphalist/export`,
+    bir2316Print: `${ENDPOINT}/2316/print`,
+    sssR3Print: `${ENDPOINT}/sss-r3/print`,
+    sssR3Export: `${ENDPOINT}/sss-r3/export`,
+    philHealthEprsPrint: `${ENDPOINT}/philhealth-eprs/print`,
+    philHealthEprsExport: `${ENDPOINT}/philhealth-eprs/export`,
+    pagIbigMcrfPrint: `${ENDPOINT}/pagibig-mcrf/print`,
+    pagIbigMcrfExport: `${ENDPOINT}/pagibig-mcrf/export`,
+  },
 };

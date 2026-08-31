@@ -31,6 +31,12 @@ export default function CompanyInfoTab() {
       contact: "",
       email: "",
       tin: "",
+      rdoCode: "",
+      sssNumber: "",
+      philHealthNumber: "",
+      pagIbigNumber: "",
+      authorizedSignatoryName: "",
+      authorizedSignatoryTitle: "",
     },
   });
 
@@ -45,6 +51,12 @@ export default function CompanyInfoTab() {
       contact: company.contact ?? "",
       email: company.email ?? "",
       tin: company.tin ?? "",
+      rdoCode: company.rdoCode ?? "",
+      sssNumber: company.sssNumber ?? "",
+      philHealthNumber: company.philHealthNumber ?? "",
+      pagIbigNumber: company.pagIbigNumber ?? "",
+      authorizedSignatoryName: company.authorizedSignatoryName ?? "",
+      authorizedSignatoryTitle: company.authorizedSignatoryTitle ?? "",
     });
   }, [company, reset]);
 
@@ -102,6 +114,16 @@ export default function CompanyInfoTab() {
             />
           </Form.Item>
 
+          <Form.Item label={COMPANY_POLICY_LABEL.RDO_CODE}>
+            <Controller
+              name="rdoCode"
+              control={control}
+              render={({ field }) => (
+                <Input {...field} placeholder="e.g. 044" />
+              )}
+            />
+          </Form.Item>
+
           <Form.Item
             label={COMPANY_POLICY_LABEL.ADDRESS}
             className="sm:col-span-2"
@@ -135,6 +157,61 @@ export default function CompanyInfoTab() {
               control={control}
               render={({ field }) => (
                 <Input {...field} placeholder="company@example.com" />
+              )}
+            />
+          </Form.Item>
+        </div>
+      </Card>
+
+      <Card
+        title={COMPANY_POLICY_LABEL.SECTION_AGENCY_REGISTRATION}
+        loading={isLoading}
+        size="small"
+        className="mt-4"
+      >
+        <p className="text-xs text-gray-500 mb-3">
+          Printed on BIR/SSS/PhilHealth/Pag-IBIG report headers and the
+          electronic remittance files generated under Payroll Reports.
+        </p>
+        <div className="form-grid-2">
+          <Form.Item label={COMPANY_POLICY_LABEL.SSS_NUMBER}>
+            <Controller
+              name="sssNumber"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+
+          <Form.Item label={COMPANY_POLICY_LABEL.PHILHEALTH_NUMBER}>
+            <Controller
+              name="philHealthNumber"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+
+          <Form.Item label={COMPANY_POLICY_LABEL.PAGIBIG_NUMBER}>
+            <Controller
+              name="pagIbigNumber"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+
+          <Form.Item label={COMPANY_POLICY_LABEL.AUTHORIZED_SIGNATORY_NAME}>
+            <Controller
+              name="authorizedSignatoryName"
+              control={control}
+              render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+
+          <Form.Item label={COMPANY_POLICY_LABEL.AUTHORIZED_SIGNATORY_TITLE}>
+            <Controller
+              name="authorizedSignatoryTitle"
+              control={control}
+              render={({ field }) => (
+                <Input {...field} placeholder="e.g. HR Manager" />
               )}
             />
           </Form.Item>

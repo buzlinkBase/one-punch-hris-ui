@@ -26,4 +26,26 @@ export const PAYROLL_REPORTS_LABEL = {
   THIRTEENTH_MONTH_TITLE: "13th Month Pay",
   THIRTEENTH_MONTH_SUBTITLE:
     "Total Basic Pay for the year divided by 12, per employee.",
+
+  BIR_1601C_TITLE: "BIR 1601-C Monthly Remittance",
+  BIR_1601C_SUBTITLE:
+    "Withholding tax return figures for the selected posting period — for transcription into eBIRForms/eFPS.",
+  BIR_ALPHALIST_TITLE: "BIR Alphalist of Employees",
+  BIR_ALPHALIST_SUBTITLE:
+    "Annual per-employee compensation and tax breakdown for the selected year.",
+  BIR_2316_TITLE: "BIR 2316 Certificate",
+  BIR_2316_SUBTITLE:
+    "Certificate of Compensation Payment/Tax Withheld for one employee for the selected year.",
+  SSS_R3_TITLE: "SSS R3 (Contribution Collection List)",
+  SSS_R3_SUBTITLE:
+    "Electronic contribution file for upload via the My.SSS employer portal.",
+  PHILHEALTH_EPRS_TITLE: "PhilHealth EPRS Remittance File",
+  PHILHEALTH_EPRS_SUBTITLE:
+    "Electronic premium remittance file for the PhilHealth EPRS portal.",
+  PAGIBIG_MCRF_TITLE: "Pag-IBIG MCRF Remittance File",
+  PAGIBIG_MCRF_SUBTITLE:
+    "Member's Contribution Remittance Form file for the Virtual Pag-IBIG portal.",
+
+  GOV_FILE_FORMAT_NOTICE:
+    "we neeed to verify the file format against the current portal/template before submission.",
 };

@@ -171,12 +171,6 @@ const computationBasisLabel = (
             half.
           </div>
           <div className="mt-1">
-            <strong>Fixed Monthly</strong> — the EE/ER amounts below are the
-            total for the whole month. The system automatically divides that
-            across however many payroll runs happen that month (e.g. split in
-            half for semi-monthly).
-          </div>
-          <div className="mt-1">
             <strong>Table</strong> — the amounts below are ignored. The system
             looks up the correct amount from the official government
             contribution table instead, based on what the employee actually
@@ -2040,6 +2034,15 @@ export default function EmployeeDetail() {
                             name="tin"
                             control={control}
                             render={({ field }) => <Input {...field} />}
+                          />
+                        </Form.Item>
+                        <Form.Item label={EMPLOYEE_LABEL.RDO_CODE}>
+                          <Controller
+                            name="rdoCode"
+                            control={control}
+                            render={({ field }) => (
+                              <Input {...field} placeholder="e.g. 044" />
+                            )}
                           />
                         </Form.Item>
                         <Form.Item label={computationBasisLabel}>
