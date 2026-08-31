@@ -18,51 +18,45 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     type: "group",
     children: [
       {
-        key: "daily-time-record",
-        label: "Generate and Post",
-        children: [
-          {
-            key: "daily-time-record-master",
-            label: "Generate DTR",
-            path: "/daily-time-record/master",
-          },
-          {
-            key: "daily-time-record-summary",
-            label: "DTR Summary",
-            path: "/daily-time-record/summary",
-          },
-        ],
+        key: "timekeeping-upload-attendance",
+        label: "Upload Attendance",
+        path: "/timekeeping/upload-attendance",
       },
       {
-        key: "manage-logs",
-        label: "Manage Logs",
-        children: [
-          {
-            key: "timekeeping-upload-attendance",
-            label: "Upload Attendance",
-            path: "/timekeeping/upload-attendance",
-          },
-          {
-            key: "timekeeping-attendance-entry",
-            label: "Manual Attendance Entry",
-            path: "/timekeeping/attendance-entry",
-          },
-          {
-            key: "timekeeping-raw-logs",
-            label: "Attendance Logs",
-            path: "/timekeeping/raw-logs",
-          },
-          {
-            key: "timekeeping-unregistered-employees",
-            label: "Unregistered Employees",
-            path: "/timekeeping/unregistered-employees",
-          },
-          {
-            key: "timekeeping-incomplete-punches",
-            label: "Incomplete Logs",
-            path: "/timekeeping/incomplete-punches",
-          },
-        ],
+        key: "timekeeping-attendance-entry",
+        label: "Manual Attendance Entry",
+        path: "/timekeeping/attendance-entry",
+      },
+      {
+        key: "timekeeping-raw-logs",
+        label: "Attendance Logs",
+        path: "/timekeeping/raw-logs",
+      },
+      {
+        key: "timekeeping-unregistered-employees",
+        label: "Unregistered Employees",
+        path: "/timekeeping/unregistered-employees",
+      },
+      {
+        key: "timekeeping-incomplete-punches",
+        label: "Incomplete Logs",
+        path: "/timekeeping/incomplete-punches",
+      },
+    ],
+  },
+  {
+    key: "daily-time-record",
+    label: "DTR Posting",
+    children: [
+      {
+        key: "daily-time-record-master",
+        label: "Calculate Daily Time Record",
+        path: "/daily-time-record/master",
+      },
+      {
+        key: "daily-time-record-summary",
+        label: "Posted DTR Summary",
+        path: "/daily-time-record/summary",
       },
     ],
   },
@@ -390,6 +384,36 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "payroll-reports-13th",
         label: "13th Month Pay",
         path: "/payroll/reports/13th-month-pay",
+      },
+      {
+        key: "payroll-reports-bir-1601c",
+        label: "BIR 1601-C Monthly Remittance",
+        path: "/payroll/reports/bir-1601c",
+      },
+      {
+        key: "payroll-reports-bir-alphalist",
+        label: "BIR Alphalist",
+        path: "/payroll/reports/bir-alphalist",
+      },
+      {
+        key: "payroll-reports-bir-2316",
+        label: "BIR 2316 Certificate",
+        path: "/payroll/reports/bir-2316",
+      },
+      {
+        key: "payroll-reports-sss-r3",
+        label: "SSS R3 File",
+        path: "/payroll/reports/sss-r3",
+      },
+      {
+        key: "payroll-reports-philhealth-eprs",
+        label: "PhilHealth EPRS File",
+        path: "/payroll/reports/philhealth-eprs",
+      },
+      {
+        key: "payroll-reports-pagibig-mcrf",
+        label: "Pag-IBIG MCRF File",
+        path: "/payroll/reports/pagibig-mcrf",
       },
     ],
   },

@@ -116,3 +116,50 @@ export interface ThirteenthMonthResponse {
   totalBasicPayForYear: number;
   thirteenthMonthPay: number;
 }
+
+// BIR Form 1601-C's actual return figures for one posting period — company-wide totals,
+// not filed as a raw file upload (BIR requires eBIRForms/eFPS); this exists so the
+// preparer has the exact numbers to transcribe.
+export interface MonthlyRemittanceReturnResponse {
+  periodFrom: string;
+  periodTo: string;
+  employeeCount: number;
+  totalTaxableCompensation: number;
+  totalTaxWithheld: number;
+}
+
+// One row per employee per year — BIR Alphalist entry / also the source for a 2316.
+export interface AlphalistEntryResponse {
+  employeeId: string;
+  employeeNo: string;
+  fullName: string;
+  tin: string;
+  year: number;
+  grossCompensation: number;
+  nonTaxableCompensation: number;
+  taxableCompensation: number;
+  thirteenthMonthPay: number;
+  totalSSS: number;
+  totalPhilHealth: number;
+  totalPagIbig: number;
+  totalTaxWithheld: number;
+}
+
+export interface Bir2316Response {
+  employeeId: string;
+  employeeNo: string;
+  fullName: string;
+  tin: string;
+  rdoCode: string;
+  address: string;
+  civilStatus: string;
+  year: number;
+  grossCompensation: number;
+  nonTaxableCompensation: number;
+  taxableCompensation: number;
+  thirteenthMonthPay: number;
+  totalSSS: number;
+  totalPhilHealth: number;
+  totalPagIbig: number;
+  totalTaxWithheld: number;
+}

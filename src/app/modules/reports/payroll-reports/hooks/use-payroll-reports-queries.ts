@@ -86,3 +86,25 @@ export function useThirteenthMonth(year: number) {
     queryFn: () => payrollReportsApi.thirteenthMonth(year),
   });
 }
+
+export function useMonthlyRemittanceReturn(from: string, to: string) {
+  return useQuery({
+    queryKey: ["payroll-reports", "1601c", from, to],
+    queryFn: () => payrollReportsApi.monthlyRemittanceReturn(from, to),
+  });
+}
+
+export function useAlphalist(year: number) {
+  return useQuery({
+    queryKey: ["payroll-reports", "alphalist", year],
+    queryFn: () => payrollReportsApi.alphalist(year),
+  });
+}
+
+export function useBir2316(employeeId: string, year: number) {
+  return useQuery({
+    queryKey: ["payroll-reports", "2316", employeeId, year],
+    queryFn: () => payrollReportsApi.bir2316(employeeId, year),
+    enabled: !!employeeId,
+  });
+}

@@ -45,6 +45,7 @@ export const EMPLOYEE_LABEL = {
   PHIC_NO: "PhilHealth No.",
   HDMF_NO: "Pag-IBIG No.",
   TIN: "TIN",
+  RDO_CODE: "RDO Code",
   AGE: "Age",
   REST_DAYS: "Rest Days",
   CREATE_TITLE: "Create Employee",
@@ -367,7 +368,6 @@ export const BLOOD_TYPE_OPTIONS = [
 export const COMPUTATION_BASIS_OPTIONS = [
   { value: "None", label: "None" },
   { value: "FixedPerPayroll", label: "Fixed Per Payroll" },
-  { value: "FixedMonthly", label: "Fixed Monthly" },
   { value: "Table", label: "Table" },
 ];
 

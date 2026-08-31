@@ -56,6 +56,7 @@ export const employeeMapper = {
       phicNo: response.phicNo ?? "",
       hdmfNo: response.hdmfNo ?? "",
       tin: response.tin ?? "",
+      rdoCode: response.rdoCode ?? "",
       sssRate: response.sssRate
         ? {
             computationType: response.sssRate.computationType ?? "Table",

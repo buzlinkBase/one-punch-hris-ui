@@ -3,8 +3,10 @@ import {
   Button,
   Card,
   Dropdown,
+  Empty,
   Space,
   Table,
+  Tooltip,
   Typography,
   message,
 } from "antd";
@@ -32,6 +34,18 @@ interface PayrollReportShellProps<T> {
   exportFileName: string;
   exportHeaders: string[];
   exportRows: (data: T[]) => string[][];
+  /** Extra buttons (e.g. "Preview PDF", "Download File") rendered next to Export. */
+  extraActions?: ReactNode;
+  /** Notice banner shown above the filters — e.g. a compliance caveat for government file exports. */
+  notice?: ReactNode;
+  /**
+   * Set when a required filter (e.g. an employee picker with nothing selected) isn't
+   * satisfied yet. Disables Refresh/Export so an incomplete request never reaches the
+   * backend, and shows this message in place of the table instead of a blank/errored grid.
+   * Pages with their own extraActions buttons that depend on the same filter must disable
+   * those themselves — the shell only controls its own built-in actions.
+   */
+  filterValidationMessage?: string;
 }
 
 export function PayrollReportShell<T extends object>({
@@ -46,10 +60,17 @@ export function PayrollReportShell<T extends object>({
   exportFileName,
   exportHeaders,
   exportRows,
+  extraActions,
+  notice,
+  filterValidationMessage,
 }: PayrollReportShellProps<T>) {
   const [messageApi, contextHolder] = message.useMessage();
 
   const handleExport = (format: "csv" | "excel") => {
+    if (filterValidationMessage) {
+      messageApi.warning(filterValidationMessage);
+      return;
+    }
     if (!data.length) {
       messageApi.info("No data to export. Adjust the filters first.");
       return;
@@ -93,23 +114,34 @@ export function PayrollReportShell<T extends object>({
           </div>
           <Space wrap>
             {onRefresh && (
-              <Button
-                icon={<ReloadOutlined spin={loading} />}
-                onClick={onRefresh}
-              />
+              <Tooltip title={filterValidationMessage}>
+                <Button
+                  icon={<ReloadOutlined spin={loading} />}
+                  onClick={onRefresh}
+                  disabled={!!filterValidationMessage}
+                />
+              </Tooltip>
             )}
-            <Dropdown
-              menu={{ items: exportMenu }}
-              trigger={["click"]}
-              disabled={!data.length}
-            >
-              <Button icon={<DownloadOutlined />} disabled={!data.length}>
-                Export
-              </Button>
-            </Dropdown>
+            <Tooltip title={filterValidationMessage}>
+              <Dropdown
+                menu={{ items: exportMenu }}
+                trigger={["click"]}
+                disabled={!data.length || !!filterValidationMessage}
+              >
+                <Button
+                  icon={<DownloadOutlined />}
+                  disabled={!data.length || !!filterValidationMessage}
+                >
+                  Export
+                </Button>
+              </Dropdown>
+            </Tooltip>
+            {extraActions}
           </Space>
         </div>
       </div>
+
+      {notice}
 
       {filters && (
         <Card size="small" className="mb-4">
@@ -118,15 +150,19 @@ export function PayrollReportShell<T extends object>({
       )}
 
       <Card>
-        <Table
-          rowKey={rowKey ?? ((_, i) => String(i ?? 0))}
-          dataSource={data}
-          columns={columns}
-          loading={loading}
-          size="small"
-          scroll={{ x: "max-content" }}
-          pagination={{ pageSize: 50, showSizeChanger: false }}
-        />
+        {filterValidationMessage ? (
+          <Empty description={filterValidationMessage} />
+        ) : (
+          <Table
+            rowKey={rowKey ?? ((_, i) => String(i ?? 0))}
+            dataSource={data}
+            columns={columns}
+            loading={loading}
+            size="small"
+            scroll={{ x: "max-content" }}
+            pagination={{ pageSize: 50, showSizeChanger: false }}
+          />
+        )}
       </Card>
     </div>
   );

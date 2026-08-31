@@ -5,4 +5,10 @@ export interface UpdateCompanyInfo {
   contact?: string;
   email?: string;
   tin?: string;
+  rdoCode?: string;
+  sssNumber?: string;
+  philHealthNumber?: string;
+  pagIbigNumber?: string;
+  authorizedSignatoryName?: string;
+  authorizedSignatoryTitle?: string;
 }

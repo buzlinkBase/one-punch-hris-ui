@@ -85,6 +85,7 @@ export const employeeFormSchema = z.object({
   phicNo: z.string().optional(),
   hdmfNo: z.string().optional(),
   tin: z.string().optional(),
+  rdoCode: z.string().optional(),
 
   // Statutory rates
   sssRate: z

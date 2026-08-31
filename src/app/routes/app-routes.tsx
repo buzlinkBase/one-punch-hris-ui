@@ -129,6 +129,24 @@ const ThirteenthMonthPay = lazy(
   () =>
     import("@/app/modules/reports/payroll-reports/pages/thirteenth-month-pay"),
 );
+const Bir1601C = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/bir-1601c"),
+);
+const BirAlphalist = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/bir-alphalist"),
+);
+const Bir2316 = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/bir-2316"),
+);
+const SssR3 = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/sss-r3"),
+);
+const PhilHealthEprs = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/philhealth-eprs"),
+);
+const PagIbigMcrf = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/pagibig-mcrf"),
+);
 const DtrSummaryList = lazy(
   () =>
     import("@/app/modules/daily-time-record/summary/pages/dtr-summary-list"),
@@ -788,6 +806,72 @@ const thirteenthMonthPayIndexRoute = createRoute({
   component: withSuspense(ThirteenthMonthPay),
 });
 
+const bir1601CRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/bir-1601c",
+  component: MainLayout,
+});
+const bir1601CIndexRoute = createRoute({
+  getParentRoute: () => bir1601CRoute,
+  path: "/",
+  component: withSuspense(Bir1601C),
+});
+
+const birAlphalistRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/bir-alphalist",
+  component: MainLayout,
+});
+const birAlphalistIndexRoute = createRoute({
+  getParentRoute: () => birAlphalistRoute,
+  path: "/",
+  component: withSuspense(BirAlphalist),
+});
+
+const bir2316Route = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/bir-2316",
+  component: MainLayout,
+});
+const bir2316IndexRoute = createRoute({
+  getParentRoute: () => bir2316Route,
+  path: "/",
+  component: withSuspense(Bir2316),
+});
+
+const sssR3Route = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/sss-r3",
+  component: MainLayout,
+});
+const sssR3IndexRoute = createRoute({
+  getParentRoute: () => sssR3Route,
+  path: "/",
+  component: withSuspense(SssR3),
+});
+
+const philHealthEprsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/philhealth-eprs",
+  component: MainLayout,
+});
+const philHealthEprsIndexRoute = createRoute({
+  getParentRoute: () => philHealthEprsRoute,
+  path: "/",
+  component: withSuspense(PhilHealthEprs),
+});
+
+const pagIbigMcrfRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/pagibig-mcrf",
+  component: MainLayout,
+});
+const pagIbigMcrfIndexRoute = createRoute({
+  getParentRoute: () => pagIbigMcrfRoute,
+  path: "/",
+  component: withSuspense(PagIbigMcrf),
+});
+
 const tardinessRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "reports/tardiness",
@@ -1301,6 +1385,12 @@ const routeTree = rootRoute.addChildren([
   costSummaryRoute.addChildren([costSummaryIndexRoute]),
   ytdSummaryRoute.addChildren([ytdSummaryIndexRoute]),
   thirteenthMonthPayRoute.addChildren([thirteenthMonthPayIndexRoute]),
+  bir1601CRoute.addChildren([bir1601CIndexRoute]),
+  birAlphalistRoute.addChildren([birAlphalistIndexRoute]),
+  bir2316Route.addChildren([bir2316IndexRoute]),
+  sssR3Route.addChildren([sssR3IndexRoute]),
+  philHealthEprsRoute.addChildren([philHealthEprsIndexRoute]),
+  pagIbigMcrfRoute.addChildren([pagIbigMcrfIndexRoute]),
   appSectionRoute("reports", "Reports"),
   tardinessRoute.addChildren([tardinessIndexRoute]),
   rosterRoute.addChildren([rosterIndexRoute]),

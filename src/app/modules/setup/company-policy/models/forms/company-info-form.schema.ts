@@ -7,6 +7,12 @@ export const companyInfoFormSchema = z.object({
   contact: z.string().optional(),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   tin: z.string().optional(),
+  rdoCode: z.string().optional(),
+  sssNumber: z.string().optional(),
+  philHealthNumber: z.string().optional(),
+  pagIbigNumber: z.string().optional(),
+  authorizedSignatoryName: z.string().optional(),
+  authorizedSignatoryTitle: z.string().optional(),
 });
 
 export type CompanyInfoFormValues = z.infer<typeof companyInfoFormSchema>;
