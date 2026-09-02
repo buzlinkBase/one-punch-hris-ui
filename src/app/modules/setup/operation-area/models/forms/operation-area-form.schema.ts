@@ -13,6 +13,7 @@ export const operationAreaFormSchema = z.object({
   address: z.string(),
   boundary: geoJsonPolygon,
   status: z.string().min(1, "Status is required"),
+  branchId: z.string().min(1, "Branch is required"),
 });
 
 export type OperationAreaFormValues = z.infer<typeof operationAreaFormSchema>;

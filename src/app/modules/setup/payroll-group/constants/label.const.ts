@@ -29,6 +29,29 @@ export const STATUTORY_DEDUCTION_SCHEDULE_OPTIONS = [
   },
 ];
 
+// PerPayroll withholds balance ÷ configured-cutoff-count on every non-last cutoff, then the
+// last cutoff always takes the exact remaining balance as a true-up (Table*SemiMonthlyCalculator).
+// For a standard 2-cutoff Semi-Monthly group that IS a 50/50 split with true-up — same value,
+// clearer label for the frequency where it actually reads as "50/50".
+export function getStatutoryDeductionScheduleOptions(
+  payrollFrequency?: string,
+) {
+  if (payrollFrequency !== "SEMI_MONTHLY") {
+    return STATUTORY_DEDUCTION_SCHEDULE_OPTIONS;
+  }
+  return STATUTORY_DEDUCTION_SCHEDULE_OPTIONS.map((option) =>
+    option.value === "PerPayroll"
+      ? {
+          ...option,
+          label: "50/50 split (half at first cutoff, balance at second)",
+        }
+      : option,
+  );
+}
+
+export const STATUTORY_DEDUCTION_SCHEDULE_NOTE =
+  "Applies to Fixed-salary employees. Variable-salary employees always deduct against their actual gross earned per cutoff, never a projected or averaged monthly income, regardless of this setting.";
+
 // Recommended cutoff-day starting points per frequency — the most common conventions
 // among PH companies. All fully editable afterward: add/remove rows, change the day,
 // toggle "End of Month". SEMI_MONTHLY defaults to the 10th/25th "straight cutoff" widely

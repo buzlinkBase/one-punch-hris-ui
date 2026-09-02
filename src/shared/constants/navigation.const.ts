@@ -44,22 +44,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
     ],
   },
-  {
-    key: "daily-time-record",
-    label: "DTR Posting",
-    children: [
-      {
-        key: "daily-time-record-master",
-        label: "Calculate Daily Time Record",
-        path: "/daily-time-record/master",
-      },
-      {
-        key: "daily-time-record-summary",
-        label: "Posted DTR Summary",
-        path: "/daily-time-record/summary",
-      },
-    ],
-  },
   // Promoted to its own top-level group — schedule adjustments feed directly
   // into DTR calculation, so they sit right after Time Keeping.
   {
@@ -84,6 +68,22 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   {
+    key: "daily-time-record",
+    label: "DTR Generation",
+    children: [
+      {
+        key: "daily-time-record-master",
+        label: "Calculate Daily Time Record",
+        path: "/daily-time-record/master",
+      },
+      {
+        key: "daily-time-record-summary",
+        label: "Posted DTR Summary",
+        path: "/daily-time-record/summary",
+      },
+    ],
+  },
+  {
     key: "nav-payroll",
     label: "Payroll Generation",
     type: "group",
@@ -97,6 +97,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "payroll-summary",
         label: "Payroll Summary",
         path: "/payroll/summary",
+      },
+      {
+        key: "payroll-run-13th-month",
+        label: "Generate 13th Month Pay",
+        path: "/daily-time-record/for-13th-month",
       },
     ],
   },
@@ -226,23 +231,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         ],
       },
       {
-        key: "biometric",
-        label: "Biometric",
-        type: "group",
-        children: [
-          {
-            key: "enroll-biometrics",
-            label: "Enroll Biometrics",
-            path: "/enroll-biometrics",
-          },
-          {
-            key: "biometric-manage-devices",
-            label: "Manage Devices",
-            path: "/biometric/manage-devices",
-          },
-        ],
-      },
-      {
         key: "setup-group-deductions-income",
         label: "Deductions & Income",
         type: "group",
@@ -256,6 +244,28 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             key: "setup-other-income",
             label: "Other Income",
             path: "/setup/other-income",
+          },
+        ],
+      },
+      {
+        key: "setup-others",
+        label: "Holidays & Leave Types",
+        type: "group",
+        children: [
+          {
+            key: "setup-holiday",
+            label: "Holidays",
+            path: "/setup/holiday",
+          },
+          {
+            key: "setup-leave-type",
+            label: "Leave Types",
+            path: "/setup/leave-type",
+          },
+          {
+            key: "setup-leave-balance",
+            label: "Leave Balances",
+            path: "/setup/leave-balance",
           },
         ],
       },
@@ -292,20 +302,27 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         ],
       },
       {
+        key: "biometric",
+        label: "Biometric",
+        type: "group",
+        children: [
+          {
+            key: "enroll-biometrics",
+            label: "Enroll Biometrics",
+            path: "/enroll-biometrics",
+          },
+          {
+            key: "biometric-manage-devices",
+            label: "Manage Devices",
+            path: "/biometric/manage-devices",
+          },
+        ],
+      },
+      {
         key: "setup-group-policy",
         label: "Policy",
         type: "group",
         children: [
-          {
-            key: "setup-leave-type",
-            label: "Leave Types",
-            path: "/setup/leave-type",
-          },
-          {
-            key: "setup-holiday",
-            label: "Holidays",
-            path: "/setup/holiday",
-          },
           {
             key: "setup-payroll-rate",
             label: "Rate Multipliers",

@@ -114,6 +114,10 @@ const LeaveTypeDetail = lazy(
   () => import("@/app/modules/setup/leave-type/pages/leave-type-detail"),
 );
 
+const LeaveBalanceEntry = lazy(
+  () => import("@/app/modules/setup/leave-balance/pages/leave-balance-entry"),
+);
+
 const CompanyPolicy = lazy(
   () =>
     import("@/app/modules/setup/company-policy/pages/company-policy/company-policy"),
@@ -245,6 +249,8 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "leave-type", component: LeaveTypeList },
   { path: "leave-type/create", component: LeaveTypeDetail },
   { path: "leave-type/$id", component: LeaveTypeDetail },
+
+  { path: "leave-balance", component: LeaveBalanceEntry },
 
   { path: "company-policy", component: CompanyPolicy },
 

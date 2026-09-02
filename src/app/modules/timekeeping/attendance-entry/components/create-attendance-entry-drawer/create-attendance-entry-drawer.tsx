@@ -183,10 +183,12 @@ export default function CreateAttendanceEntryDrawer({
     value: p.id,
     label: `${p.code} - ${p.name}`,
   }));
-  const areaOptions = areas.map((a) => ({
-    value: a.id,
-    label: `${a.code} - ${a.name}`,
-  }));
+  const areaOptions = areas
+    .filter((a) => !branchId || a.branchId === branchId)
+    .map((a) => ({
+      value: a.id,
+      label: `${a.code} - ${a.name}`,
+    }));
   const branchOptions = branches.map((b) => ({
     value: b.id,
     label: `${b.code} - ${b.name}`,
@@ -386,7 +388,11 @@ export default function CreateAttendanceEntryDrawer({
               options={branchOptions}
               value={branchId ?? undefined}
               onChange={(v: string | undefined) =>
-                clearFilter(() => setBranchId(v ?? null))
+                clearFilter(() => {
+                  setBranchId(v ?? null);
+                  // Project Site is restricted to the selected Branch.
+                  setOperationAreaId(null);
+                })
               }
               showSearch={{ filterOption: filterByLabel }}
               allowClear

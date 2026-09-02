@@ -25,6 +25,7 @@ export default function OperationAreaTable({ data, loading, onDelete }: Props) {
   const { widths, handleResize } = useResizableColumns({
     code: 120,
     name: 200,
+    branch: 160,
     address: 200,
     boundary: 120,
     status: 120,
@@ -60,6 +61,19 @@ export default function OperationAreaTable({ data, loading, onDelete }: Props) {
           width: widths.name,
           onResize: (w: number) => handleResize("name", w),
         }) as object,
+    },
+    {
+      title: OPERATION_AREA_LABEL.BRANCH,
+      dataIndex: "branchName",
+      key: "branch",
+      width: widths.branch,
+      onHeaderCell: () =>
+        ({
+          width: widths.branch,
+          onResize: (w: number) => handleResize("branch", w),
+        }) as object,
+      render: (v: string | null | undefined) =>
+        v ?? <Tag color="default">Unassigned</Tag>,
     },
     {
       title: OPERATION_AREA_LABEL.ADDRESS,

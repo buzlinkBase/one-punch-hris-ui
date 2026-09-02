@@ -33,7 +33,8 @@ import {
 import {
   PAYROLL_GROUP_LABEL,
   PAYROLL_FREQUENCY_OPTIONS,
-  STATUTORY_DEDUCTION_SCHEDULE_OPTIONS,
+  getStatutoryDeductionScheduleOptions,
+  STATUTORY_DEDUCTION_SCHEDULE_NOTE,
   CUTOFF_DAY_PRESETS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
@@ -274,9 +275,19 @@ export default function PayrollGroupDetail() {
           </Form.Item>
 
           <Form.Item
-            label={PAYROLL_GROUP_LABEL.STATUTORY_DEDUCTION_SCHEDULE}
+            label={
+              <Space>
+                {PAYROLL_GROUP_LABEL.STATUTORY_DEDUCTION_SCHEDULE}
+                <Tooltip title={STATUTORY_DEDUCTION_SCHEDULE_NOTE}>
+                  <Text type="secondary">(?)</Text>
+                </Tooltip>
+              </Space>
+            }
             validateStatus={errors.statutoryDeductionSchedule ? "error" : ""}
-            help={errors.statutoryDeductionSchedule?.message}
+            help={
+              errors.statutoryDeductionSchedule?.message ??
+              STATUTORY_DEDUCTION_SCHEDULE_NOTE
+            }
           >
             <Controller
               name="statutoryDeductionSchedule"
@@ -284,7 +295,9 @@ export default function PayrollGroupDetail() {
               render={({ field }) => (
                 <Select
                   {...field}
-                  options={STATUTORY_DEDUCTION_SCHEDULE_OPTIONS}
+                  options={getStatutoryDeductionScheduleOptions(
+                    payrollFrequency,
+                  )}
                   placeholder="Select release schedule"
                 />
               )}

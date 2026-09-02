@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Form, Input, Select, Button, Typography, Space, Tag } from "antd";
 import { useNavigate } from "@tanstack/react-router";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { SelectProps } from "antd";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
@@ -57,17 +57,11 @@ export default function ManageDevicesDetail() {
       label: c.name,
     }));
 
-  const areaOptions: SelectProps["options"] = areas
-    .filter((a) => isActiveStatus(a.status))
-    .map((a) => ({
-      value: a.id,
-      label: a.name,
-    }));
-
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceFormSchema),
@@ -81,6 +75,21 @@ export default function ManageDevicesDetail() {
     },
   });
 
+  const selectedBranchId = useWatch({ control, name: "branchId" });
+  const selectedAreaId = useWatch({ control, name: "areaId" });
+
+  const areaOptions: SelectProps["options"] = useMemo(
+    () =>
+      areas
+        .filter((a) => isActiveStatus(a.status))
+        .filter((a) => !selectedBranchId || a.branchId === selectedBranchId)
+        .map((a) => ({
+          value: a.id,
+          label: a.name,
+        })),
+    [areas, selectedBranchId],
+  );
+
   useEffect(() => {
     if (isEdit && selected) {
       reset({
@@ -93,6 +102,17 @@ export default function ManageDevicesDetail() {
       });
     }
   }, [selected, isEdit, reset]);
+
+  // Project Site is restricted to the selected Branch — clear a stale selection left over
+  // from before the Branch changed.
+  useEffect(() => {
+    if (!selectedAreaId || !selectedBranchId) return;
+    const stillValid = areas.some(
+      (a) => a.id === selectedAreaId && a.branchId === selectedBranchId,
+    );
+    if (!stillValid) setValue("areaId", undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranchId]);
 
   const onSubmit = async (values: DeviceFormValues) => {
     const payload = {

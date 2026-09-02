@@ -52,10 +52,12 @@ export default function UploadAttendanceList() {
     label: `${b.code} - ${b.name}`,
   }));
 
-  const areaOptions = areas.map((a) => ({
-    value: a.id,
-    label: `${a.code} - ${a.name}`,
-  }));
+  const areaOptions = areas
+    .filter((a) => !branchId || a.branchId === branchId)
+    .map((a) => ({
+      value: a.id,
+      label: `${a.code} - ${a.name}`,
+    }));
 
   const clientOptions = clients.map((c) => ({
     value: c.id,
@@ -125,7 +127,11 @@ export default function UploadAttendanceList() {
                   options={branchOptions}
                   loading={isBranchesLoading}
                   value={branchId ?? undefined}
-                  onChange={(v: string | undefined) => setBranchId(v ?? null)}
+                  onChange={(v: string | undefined) => {
+                    setBranchId(v ?? null);
+                    // Project Site is restricted to the selected Branch.
+                    setOperationAreaId(null);
+                  }}
                   showSearch={{ filterOption: filterByLabel }}
                   allowClear
                 />

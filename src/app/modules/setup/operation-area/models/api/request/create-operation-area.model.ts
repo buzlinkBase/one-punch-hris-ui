@@ -6,4 +6,5 @@ export interface CreateOperationArea {
   address: string;
   boundary: GeoJsonPolygon | null;
   status: string;
+  branchId: string | null;
 }

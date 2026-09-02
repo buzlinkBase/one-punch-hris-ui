@@ -366,11 +366,12 @@ function GeneralPolicyTab() {
           </div>
         </Card>
 
-        {/* Cross-Month Cutoff Credit Policies */}
+        {/* Cross-Month Cutoff Credit Policies — hidden for now */}
         <Card
           title={COMPANY_POLICY_LABEL.SECTION_STATUTORY}
           loading={isLoading}
           size="small"
+          hidden
         >
           <div className="form-grid-2">
             <Form.Item

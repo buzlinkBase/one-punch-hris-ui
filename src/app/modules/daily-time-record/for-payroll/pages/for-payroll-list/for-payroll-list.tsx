@@ -2,8 +2,8 @@ import { useState } from "react";
 import {
   Button,
   Card,
-  Checkbox,
   DatePicker,
+  Radio,
   Space,
   Statistic,
   Table,
@@ -72,41 +72,36 @@ const withBand = (
 export default function ForPayrollList() {
   const { token } = theme.useToken();
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  // A payroll run is generated from exactly one DTR batch at a time — single-select (radio)
+  // rather than a checkbox Set.
+  const [selected, setSelected] = useState<string | null>(null);
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
   const [previewBatchCode, setPreviewBatchCode] = useState<string | null>(null);
   const [payDate, setPayDate] = useState<string | null>(null);
   const [postModalOpen, setPostModalOpen] = useState(false);
 
   const {
-    data: batches = [],
+    data: allBatches = [],
     isLoading,
     isFetching,
     refetch,
   } = useDtrBatches(dateRange?.[0], dateRange?.[1]);
+  // Already processed — a payroll run (draft or posted) already exists for this batch — so
+  // it has nothing left to do here; keep the list to only what's actually runnable instead
+  // of showing it disabled with a tag.
+  const batches = allBatches.filter((b) => !b.isPayrollGenerated);
   const { mutate: calculate, isPending: calculating } = useCalculatePayroll();
   const { mutate: generate, isPending: generating } = useGeneratePayroll();
 
-  const canRun = selected.size > 0;
+  const canRun = selected !== null;
 
-  const toggleSelect = (code: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(code)) next.delete(code);
-      else next.add(code);
-      return next;
-    });
-  };
+  const selectBatch = (code: string) =>
+    setSelected((prev) => (prev === code ? null : code));
 
-  const selectAll = () =>
-    setSelected(
-      new Set(batches.filter((b) => !b.isPayrollGenerated).map((b) => b.code)),
-    );
-
-  const clearSelection = () => setSelected(new Set());
+  const clearSelection = () => setSelected(null);
 
   const buildPayload = (remarks?: string) => ({
-    batchCodes: [...selected],
+    batchCodes: selected ? [selected] : [],
     payDate,
     remarks,
   });
@@ -143,19 +138,10 @@ export default function ForPayrollList() {
       key: "check",
       width: 40,
       render: (_, r) => (
-        <Tooltip
-          title={
-            r.isPayrollGenerated
-              ? "Payroll has already been generated from this batch."
-              : ""
-          }
-        >
-          <Checkbox
-            checked={selected.has(r.code)}
-            disabled={r.isPayrollGenerated}
-            onChange={() => toggleSelect(r.code)}
-          />
-        </Tooltip>
+        <Radio
+          checked={selected === r.code}
+          onClick={() => selectBatch(r.code)}
+        />
       ),
     },
     {
@@ -163,17 +149,10 @@ export default function ForPayrollList() {
       dataIndex: "code",
       key: "code",
       width: 220,
-      render: (v, r) => (
-        <Space size={4}>
-          <Text code className="whitespace-nowrap">
-            {v}
-          </Text>
-          {r.isPayrollGenerated && (
-            <Tag color="default" className="whitespace-nowrap">
-              Payroll Generated
-            </Tag>
-          )}
-        </Space>
+      render: (v) => (
+        <Text code className="whitespace-nowrap">
+          {v}
+        </Text>
       ),
     },
     {
@@ -477,7 +456,7 @@ export default function ForPayrollList() {
                 loading={calculating}
                 disabled={!canRun}
               >
-                Preview ({selected.size})
+                Preview
               </Button>
             </Tooltip>
             <Tooltip
@@ -494,7 +473,7 @@ export default function ForPayrollList() {
                 loading={generating}
                 disabled={!canRun}
               >
-                Generate Payroll
+                Save Payroll
               </Button>
             </Tooltip>
           </Space>
@@ -520,13 +499,10 @@ export default function ForPayrollList() {
             }
           />
           <Space size="small">
-            <Button size="small" onClick={selectAll}>
-              Select All
-            </Button>
             <Button
               size="small"
               onClick={clearSelection}
-              disabled={selected.size === 0}
+              disabled={selected === null}
             >
               Clear
             </Button>
@@ -541,7 +517,7 @@ export default function ForPayrollList() {
           pagination={false}
           scroll={{ x: "max-content" }}
           rowClassName={(r) =>
-            selected.has(r.code) ? "ant-table-row-selected" : ""
+            selected === r.code ? "ant-table-row-selected" : ""
           }
         />
       </Card>
@@ -665,7 +641,7 @@ export default function ForPayrollList() {
 
       <PayrollRunPostModal
         open={postModalOpen}
-        batchCount={selected.size}
+        batchCount={selected ? 1 : 0}
         isSaving={generating}
         onClose={() => setPostModalOpen(false)}
         onConfirm={handleConfirmGenerate}

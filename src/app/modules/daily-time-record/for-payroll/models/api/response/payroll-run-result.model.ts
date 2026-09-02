@@ -13,6 +13,9 @@ export interface PayrollRunResult {
   // Free-text identity for the whole run, captured once at Generate time — see
   // PayrollRunRequest.remarks.
   remarks?: string | null;
+  // "Regular" (DTR-cutoff-driven, the default) vs "ThirteenthMonth" (a lump-sum annual
+  // payout — see GenerateThirteenthMonthRequest). Only meaningful when id is set.
+  payrollType?: "Regular" | "ThirteenthMonth";
   employeeId: string;
   fullName: string;
   payPeriodStart: string;
@@ -24,7 +27,9 @@ export interface PayrollRunResult {
   dailyRate: number;
   // Earnings
   basicPay: number;
-  overtimeHour: number;
+  // Sum of every pure OT category (excludes the ND-OT combo hours) — see backend
+  // PayrollProcessorService.ComputeHoursBreakdown.
+  overtimeHours: number;
   overtimePay: number;
   otPremiumPay?: number;
   nightDifferentialHour: number;
@@ -42,10 +47,23 @@ export interface PayrollRunResult {
   // Leave-with-pay days for this cutoff — contributes to grossIncome but has no OT/ND/NDOT
   // component of its own, so it isn't folded into any of the categories above.
   paidLeaves?: number;
-  // Subset of paidLeaves funded by Government/Shared/Other (not Company) — for FIXED
-  // employees this is the only slice of paidLeaves that's a real addition to grossIncome,
-  // since Company-funded paid leave is already embedded in their flat monthly rate.
+  // Informational only — the slice of paidLeaves funded by Government/Shared/Other (not
+  // Company), proportioned from DTR LeavesInfo × Leave.PaySource. Does NOT add to
+  // grossIncome: FIXED's Basic Pay already covers every day incl. Company-funded leave, and
+  // VARIABLE's Regular pay already folds in paid-leave hours via DTR's Regular columns — see
+  // backend PayrollProcessorService.ComputeNonCompanyPaidLeaves.
   nonCompanyPaidLeaves?: number;
+  // Human-readable "which leave type(s), how many hours, paid/unpaid" behind paidLeaves —
+  // see backend BuildPaidLeaveBreakdown.
+  paidLeaveBreakdown?: string | null;
+  // One-Time Leave Payout (LeaveApplication.PayoutMode == OneTime) — a leave-balance
+  // cash-out, distinct from day-to-day paidLeaves above. companyFundedLeavePay is taxable
+  // compensation (already folded into grossIncome); governmentFundedLeavePay is a
+  // non-taxable government pass-through added straight to netPay instead — see backend
+  // PayrollProcessorService.ApplyOneTimeLeavePayoutsToGross.
+  governmentFundedLeavePay?: number;
+  companyFundedLeavePay?: number;
+  oneTimePayoutBreakdown?: string | null;
   // Raw per-holiday-category pay (base + OT + ND + NDOT tiers), same fields the payslip's
   // Holiday Breakdown section sums from — see PayslipDocument.cs on the backend. Optional:
   // only populated on rows sourced from a real Payroll/PayrollSummaryLine record.
@@ -105,31 +123,44 @@ export interface PayrollRunResult {
   employerPhilHealthContribution: number;
   employerPagIbigContribution: number;
   employerECContribution: number;
-  // Per-type DTR hours
-  regularNetHours: number;
-  regularOTHours: number;
-  regularNDHours: number;
-  regularNDOTHours: number;
-  restDayHours: number;
-  restDayOTHours: number;
-  restDayNDHours: number;
-  restDayNDOTHours: number;
-  legalHolHours: number;
-  legalHolOTHours: number;
-  legalHolNightDiffHours: number;
-  legalHolNightDiffOTHours: number;
-  specialHolHours: number;
-  specialHolOTHours: number;
-  specialHolNightDiffHours: number;
-  specialHolNightDiffOTHours: number;
-  restLegalDayHours: number;
-  restLegalDayOTHours: number;
-  restLegalDayNDHours: number;
-  restLegalDayNDOTHours: number;
-  restSpecialDayHours: number;
-  restSpecialDayOTHours: number;
-  restSpecialDayNDHours: number;
-  restSpecialDayNDOTHours: number;
+  // Per-type DTR hours — optional: only populated on rows sourced from a real
+  // Payroll/PayrollSummaryLine record (see backend ComputeHoursBreakdown), same convention
+  // as the per-holiday-category pay fields above.
+  regularNetHours?: number;
+  regularOTHours?: number;
+  regularNDHours?: number;
+  regularNDOTHours?: number;
+  restDayHours?: number;
+  restDayOTHours?: number;
+  restDayNDHours?: number;
+  restDayNDOTHours?: number;
+  legalHolHours?: number;
+  legalHolOTHours?: number;
+  legalHolNightDiffHours?: number;
+  legalHolNightDiffOTHours?: number;
+  specialHolHours?: number;
+  specialHolOTHours?: number;
+  specialHolNightDiffHours?: number;
+  specialHolNightDiffOTHours?: number;
+  restLegalDayHours?: number;
+  restLegalDayOTHours?: number;
+  restLegalDayNDHours?: number;
+  restLegalDayNDOTHours?: number;
+  restSpecialDayHours?: number;
+  restSpecialDayOTHours?: number;
+  restSpecialDayNDHours?: number;
+  restSpecialDayNDOTHours?: number;
+  doubleLegalHours?: number;
+  doubleLegalOTHours?: number;
+  doubleLegalNDHours?: number;
+  doubleLegalNDOTHours?: number;
+  restDoubleLegalHours?: number;
+  restDoubleLegalOTHours?: number;
+  restDoubleLegalNDHours?: number;
+  restDoubleLegalNDOTHours?: number;
+  obHours?: number;
+  paidLeaveHours?: number;
+  unpaidLeaveHours?: number;
 }
 
 export interface PayrollRunResponse {

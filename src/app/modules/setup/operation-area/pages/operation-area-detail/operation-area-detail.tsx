@@ -24,6 +24,7 @@ import {
 } from "../../hooks/use-operation-area-queries";
 import { OPERATION_AREA_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 
 const PolygonMapPicker = lazy(() =>
   import("@/shared/components/polygon-map-picker").then((m) => ({
@@ -73,6 +74,10 @@ export default function OperationAreaDetail() {
   const { mutateAsync: add, isPending: isCreating } = useCreateOperationArea();
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateOperationArea();
+  const { data: branches } = useBranches();
+  const branchOptions =
+    branches?.map((b) => ({ value: b.id, label: `${b.code} - ${b.name}` })) ??
+    [];
 
   const {
     control,
@@ -89,6 +94,7 @@ export default function OperationAreaDetail() {
       address: "",
       boundary: null,
       status: "ACTIVE",
+      branchId: "",
     },
   });
 
@@ -100,6 +106,7 @@ export default function OperationAreaDetail() {
         address: selected.address ?? "",
         boundary: selected.boundary ?? null,
         status: selected.status,
+        branchId: selected.branchId ?? "",
       });
     }
   }, [selected, isEdit, reset]);
@@ -173,6 +180,26 @@ export default function OperationAreaDetail() {
                   name="name"
                   control={control}
                   render={({ field }) => <Input {...field} />}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={OPERATION_AREA_LABEL.BRANCH}
+                validateStatus={errors.branchId ? "error" : ""}
+                help={errors.branchId?.message}
+              >
+                <Controller
+                  name="branchId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={branchOptions}
+                      placeholder="Select branch"
+                      showSearch
+                      optionFilterProp="label"
+                    />
+                  )}
                 />
               </Form.Item>
 
