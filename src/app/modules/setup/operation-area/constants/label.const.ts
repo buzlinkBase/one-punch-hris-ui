@@ -4,6 +4,7 @@ export const OPERATION_AREA_LABEL = {
   NAME: "Name",
   ADDRESS: "Address",
   STATUS: "Status",
+  BRANCH: "Branch",
   CREATE_TITLE: "Create Project Site",
   EDIT_TITLE: "Edit Project Site",
 };

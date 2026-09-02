@@ -6,6 +6,7 @@
 /* ─── Design tokens ─────────────────────────────────── */
 :root {
   --primary: #1da081;
+  --primary-strong: #16b98f;
   --primary-soft: rgba(29, 160, 129, 0.1);
 
   /* Light */
@@ -521,6 +522,69 @@ html::-webkit-scrollbar-track {
   flex: 1;
   min-height: 0;
   overflow: auto;
+}
+
+/* ─── Modern component polish ───────────────────────── */
+.ant-table-thead > tr > th {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ant-table-tbody > tr > td {
+  transition: background-color 0.15s ease;
+}
+
+.ant-btn-primary:not(:disabled) {
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary-strong, #16b98f)
+  ) !important;
+  border: none !important;
+}
+
+.ant-btn-primary:not(:disabled):hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.ant-btn {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.ant-tag {
+  border: none !important;
+  padding-inline: 10px;
+  font-weight: 600;
+}
+
+.ant-card.ant-card-hoverable {
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.ant-card.ant-card-hoverable:hover {
+  transform: translateY(-2px);
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  font-weight: 700 !important;
+}
+
+.ant-tabs-ink-bar {
+  border-radius: 999px;
+  height: 3px !important;
+}
+
+.ant-menu-item,
+.ant-menu-submenu-title {
+  border-radius: 10px !important;
 }
 
 /* ─── Browser autofill dark-mode fix ────────────────── */

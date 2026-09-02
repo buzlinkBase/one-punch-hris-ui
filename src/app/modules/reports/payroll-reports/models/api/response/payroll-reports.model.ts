@@ -115,6 +115,17 @@ export interface ThirteenthMonthResponse {
   year: number;
   totalBasicPayForYear: number;
   thirteenthMonthPay: number;
+  // Sum of Special Bonus-classified income paid this year — combined with thirteenthMonthPay
+  // against the exemption ceiling per Payroll Settings' "13th Month Pay & Special Bonuses"
+  // rule.
+  totalSpecialBonusesForYear: number;
+  // Released/unreleased tracker: no payout row yet / generated but not posted / released.
+  status: "NotGenerated" | "Draft" | "Posted";
+  // Only set once a 13th month payout row exists (status !== "NotGenerated").
+  netPay: number | null;
+  // The generated Payroll row's own id — needed to print its payslip. Null when
+  // status === "NotGenerated".
+  payrollId: string | null;
 }
 
 // BIR Form 1601-C's actual return figures for one posting period — company-wide totals,

@@ -213,10 +213,12 @@ export default function AttendanceEntryCreate() {
     value: p.id,
     label: `${p.code} - ${p.name}`,
   }));
-  const areaOptions = areas.map((a) => ({
-    value: a.id,
-    label: `${a.code} - ${a.name}`,
-  }));
+  const areaOptions = areas
+    .filter((a) => !branchId || a.branchId === branchId)
+    .map((a) => ({
+      value: a.id,
+      label: `${a.code} - ${a.name}`,
+    }));
   const timeShiftOptions = timeShifts.map((ts) => ({
     value: ts.id,
     label: `${ts.shiftName} (${formatShiftTime(ts.startTime)} – ${formatShiftTime(ts.endTime)})`,
@@ -465,7 +467,11 @@ export default function AttendanceEntryCreate() {
                 placeholder="All branches"
                 options={branchOptions}
                 value={branchId ?? undefined}
-                onChange={(v: string | undefined) => setBranchId(v ?? null)}
+                onChange={(v: string | undefined) => {
+                  setBranchId(v ?? null);
+                  // Project Site is restricted to the selected Branch — clear a stale pick.
+                  setOperationAreaId(null);
+                }}
                 showSearch={{ filterOption: filterByLabel }}
                 allowClear
               />

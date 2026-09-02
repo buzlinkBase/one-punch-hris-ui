@@ -5,6 +5,7 @@
 
 export const THEME_CONFIG = {
   primaryColor: "#1DA081",
+  primaryStrong: "#16B98F",
   colors: {
     primary: "#1DA081",
     success: "#1DA081",

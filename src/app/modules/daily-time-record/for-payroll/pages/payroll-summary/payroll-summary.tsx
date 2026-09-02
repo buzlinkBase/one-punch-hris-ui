@@ -253,6 +253,8 @@ export default function PayrollSummary() {
     "ND-OT Pay",
     "Rest Day",
     "Paid Leave",
+    "1x Payout (Company)",
+    "1x Payout (Government)",
     "Legal Holiday (Unworked)",
     "Legal Holiday Duty (Worked)",
     "Rest Day + Legal Holiday",
@@ -303,6 +305,8 @@ export default function PayrollSummary() {
       r.salaryType === "FIXED"
         ? fmt(r.nonCompanyPaidLeaves ?? 0)
         : fmt(r.paidLeaves ?? 0),
+      fmt(r.companyFundedLeavePay ?? 0),
+      fmt(r.governmentFundedLeavePay ?? 0),
       fmt(r.legalHolidayUnworkedPay ?? 0),
       fmt(holidayDuty(r)),
       fmt(restLegalTotal(r)),
@@ -377,7 +381,7 @@ export default function PayrollSummary() {
       tax: results.reduce((s, r) => s + r.withholdingTax, 0),
       ot: results.reduce((s, r) => s + r.overtimePay, 0),
       nd: results.reduce((s, r) => s + r.nightDifferentialPay, 0),
-      regHours: results.reduce((s, r) => s + r.regularNetHours, 0),
+      regHours: results.reduce((s, r) => s + (r.regularNetHours ?? 0), 0),
     }),
     [results],
   );
@@ -481,16 +485,50 @@ export default function PayrollSummary() {
       title: "Paid Leave",
       key: "paidLeaves",
       align: "right",
-      // FIXED's Basic Pay already embeds Company-funded paid leave (see
-      // PayrollProcessorService.ComputeAllowances), so only the Government/Shared/Other
-      // slice is still a real addition to Gross for FIXED — the full amount only applies
-      // to VARIABLE, whose Basic Pay never includes leave-day pay.
+      // FIXED's Basic Pay already covers every day incl. Company-funded paid leave (see
+      // PayrollProcessorService.ComputeAllowances), so showing the full amount again would
+      // double it up — FIXED shows only the informational Government/Shared/Other slice
+      // instead (does not add to Gross). VARIABLE's Basic Pay never includes leave-day pay,
+      // so the full amount is shown and does add to Gross.
+      render: (_, r) => {
+        const value =
+          r.salaryType === "FIXED"
+            ? r.nonCompanyPaidLeaves
+              ? fmt(r.nonCompanyPaidLeaves)
+              : "—"
+            : fmt(r.paidLeaves ?? 0);
+        return r.paidLeaveBreakdown ? (
+          <Tooltip title={r.paidLeaveBreakdown}>{value}</Tooltip>
+        ) : (
+          value
+        );
+      },
+    },
+    {
+      title: "1x Payout (Co)",
+      key: "oneTimeCompany",
+      align: "right",
       render: (_, r) =>
-        r.salaryType === "FIXED"
-          ? r.nonCompanyPaidLeaves
-            ? fmt(r.nonCompanyPaidLeaves)
-            : "—"
-          : fmt(r.paidLeaves ?? 0),
+        r.companyFundedLeavePay ? (
+          <Tooltip title={r.oneTimePayoutBreakdown}>
+            {fmt(r.companyFundedLeavePay)}
+          </Tooltip>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      title: "1x Payout (Gov)",
+      key: "oneTimeGov",
+      align: "right",
+      render: (_, r) =>
+        r.governmentFundedLeavePay ? (
+          <Tooltip title={r.oneTimePayoutBreakdown}>
+            {fmt(r.governmentFundedLeavePay)}
+          </Tooltip>
+        ) : (
+          "—"
+        ),
     },
     {
       title: "Holiday Total",
@@ -695,6 +733,21 @@ export default function PayrollSummary() {
     },
   ];
 
+  // Full Hrs/OT/ND/ND-OT breakdown per pay category, mirroring the DTR Detail table's
+  // grouping exactly (dtr-detail-table.tsx) so Payroll Summary has the same granularity
+  // once DTR rows are rolled up into a run — see backend ComputeHoursBreakdown.
+  const hourCol = (
+    title: string,
+    dataIndex: keyof PayrollRunResult,
+    key: string,
+  ): ColumnsType<PayrollRunResult>[number] => ({
+    title,
+    dataIndex,
+    key,
+    align: "right",
+    render: fmtH,
+  });
+
   const hoursColumns: ColumnsType<PayrollRunResult> = [
     {
       title: "Employee",
@@ -703,121 +756,44 @@ export default function PayrollSummary() {
       width: 160,
       fixed: "left",
     },
-    {
-      title: "Regular",
-      dataIndex: "regularNetHours",
-      key: "reg",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Reg OT",
-      dataIndex: "regularOTHours",
-      key: "regot",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Reg ND",
-      dataIndex: "regularNDHours",
-      key: "regnd",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Reg ND-OT",
-      dataIndex: "regularNDOTHours",
-      key: "regndot",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Rest Day",
-      dataIndex: "restDayHours",
-      key: "rd",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "RD OT",
-      dataIndex: "restDayOTHours",
-      key: "rdot",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "RD ND",
-      dataIndex: "restDayNDHours",
-      key: "rdnd",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Legal Hol",
-      dataIndex: "legalHolHours",
-      key: "lh",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Legal OT",
-      dataIndex: "legalHolOTHours",
-      key: "lhot",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Legal ND",
-      dataIndex: "legalHolNightDiffHours",
-      key: "lhnd",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Special Hol",
-      dataIndex: "specialHolHours",
-      key: "sh",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "Special OT",
-      dataIndex: "specialHolOTHours",
-      key: "shot",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "RD+Legal",
-      dataIndex: "restLegalDayHours",
-      key: "rdlh",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "RD+Legal OT",
-      dataIndex: "restLegalDayOTHours",
-      key: "rdlhot",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "RD+Special",
-      dataIndex: "restSpecialDayHours",
-      key: "rdsh",
-      align: "right",
-      render: fmtH,
-    },
-    {
-      title: "RD+Special OT",
-      dataIndex: "restSpecialDayOTHours",
-      key: "rdshot",
-      align: "right",
-      render: fmtH,
-    },
+    hourCol("Regular", "regularNetHours", "reg"),
+    hourCol("Reg OT", "regularOTHours", "regot"),
+    hourCol("Reg ND", "regularNDHours", "regnd"),
+    hourCol("Reg ND-OT", "regularNDOTHours", "regndot"),
+    hourCol("Rest Day", "restDayHours", "rd"),
+    hourCol("RD OT", "restDayOTHours", "rdot"),
+    hourCol("RD ND", "restDayNDHours", "rdnd"),
+    hourCol("RD ND-OT", "restDayNDOTHours", "rdndot"),
+    hourCol("Legal Hol", "legalHolHours", "lh"),
+    hourCol("Legal OT", "legalHolOTHours", "lhot"),
+    hourCol("Legal ND", "legalHolNightDiffHours", "lhnd"),
+    hourCol("Legal ND-OT", "legalHolNightDiffOTHours", "lhndot"),
+    hourCol("Special Hol", "specialHolHours", "sh"),
+    hourCol("Special OT", "specialHolOTHours", "shot"),
+    hourCol("Special ND", "specialHolNightDiffHours", "shnd"),
+    hourCol("Special ND-OT", "specialHolNightDiffOTHours", "shndot"),
+    hourCol("RD+Legal", "restLegalDayHours", "rdlh"),
+    hourCol("RD+Legal OT", "restLegalDayOTHours", "rdlhot"),
+    hourCol("RD+Legal ND", "restLegalDayNDHours", "rdlhnd"),
+    hourCol("RD+Legal ND-OT", "restLegalDayNDOTHours", "rdlhndot"),
+    hourCol("RD+Special", "restSpecialDayHours", "rdsh"),
+    hourCol("RD+Special OT", "restSpecialDayOTHours", "rdshot"),
+    hourCol("RD+Special ND", "restSpecialDayNDHours", "rdshnd"),
+    hourCol("RD+Special ND-OT", "restSpecialDayNDOTHours", "rdshndot"),
+    hourCol("Double Legal", "doubleLegalHours", "dl"),
+    hourCol("Double Legal OT", "doubleLegalOTHours", "dlot"),
+    hourCol("Double Legal ND", "doubleLegalNDHours", "dlnd"),
+    hourCol("Double Legal ND-OT", "doubleLegalNDOTHours", "dlndot"),
+    hourCol("RD+Double Legal", "restDoubleLegalHours", "rdl"),
+    hourCol("RD+Double Legal OT", "restDoubleLegalOTHours", "rdlot"),
+    hourCol("RD+Double Legal ND", "restDoubleLegalNDHours", "rdlnd"),
+    hourCol("RD+Double Legal ND-OT", "restDoubleLegalNDOTHours", "rdlndot"),
+    hourCol("OB Hrs", "obHours", "ob"),
+    hourCol("Paid Leave Hrs", "paidLeaveHours", "pl"),
+    hourCol("Unpaid Leave Hrs", "unpaidLeaveHours", "upl"),
     {
       title: "OT Total Hr",
-      dataIndex: "overtimeHour",
+      dataIndex: "overtimeHours",
       key: "ottotal",
       align: "right",
       fixed: "right",

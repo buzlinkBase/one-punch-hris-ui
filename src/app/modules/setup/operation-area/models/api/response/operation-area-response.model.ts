@@ -7,4 +7,7 @@ export interface OperationAreaResponse {
   address: string;
   boundary: GeoJsonPolygon | null;
   status: string;
+  branchId: string | null;
+  branchName?: string | null;
+  branchCode?: string | null;
 }

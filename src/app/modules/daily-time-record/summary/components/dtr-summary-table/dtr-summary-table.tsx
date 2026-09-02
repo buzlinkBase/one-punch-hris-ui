@@ -4,7 +4,6 @@ import type { ColumnsType } from "antd/es/table";
 import type { DtrSummaryResponse } from "../../models/api/response/dtr-summary-response.model";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
-import { useThemeStore } from "@/core/stores/theme.store";
 
 interface Props {
   data: DtrSummaryResponse[];
@@ -13,43 +12,12 @@ interface Props {
 
 const R = "right" as const;
 
-function makeGC(isDark: boolean) {
-  const g = isDark ? 0.45 : 0.22;
-  const s = isDark ? 0.18 : 0.07;
-  return {
-    attendance: {
-      group: `rgba(100,116,139,${g})`,
-      sub: `rgba(100,116,139,${s})`,
-    }, // slate  — penalties/minutes
-    regular: { group: `rgba(37,99,235,${g})`, sub: `rgba(37,99,235,${s})` }, // blue   — regular work
-    restDay: { group: `rgba(234,88,12,${g})`, sub: `rgba(234,88,12,${s})` }, // orange — rest day work
-    legalHol: { group: `rgba(220,38,38,${g})`, sub: `rgba(220,38,38,${s})` }, // red    — legal holiday
-    specialHol: {
-      group: `rgba(147,51,234,${g})`,
-      sub: `rgba(147,51,234,${s})`,
-    }, // violet — special holiday
-    restLegal: { group: `rgba(5,150,105,${g})`, sub: `rgba(5,150,105,${s})` }, // emerald — rest+legal
-    restSpecial: {
-      group: `rgba(101,163,13,${g})`,
-      sub: `rgba(101,163,13,${s})`,
-    }, // lime   — rest+special
-    doubleLegal: { group: `rgba(190,18,60,${g})`, sub: `rgba(190,18,60,${s})` }, // rose   — double legal
-    restDoubleLegal: {
-      group: `rgba(109,40,217,${g})`,
-      sub: `rgba(109,40,217,${s})`,
-    }, // purple — rest+double
-    ob: { group: `rgba(8,145,178,${g})`, sub: `rgba(8,145,178,${s})` }, // cyan   — official business
-  };
-}
-
-const groupHeader = (bg: string) => (): object => ({
-  style: { backgroundColor: bg, fontWeight: 600 },
+const groupHeader = (): object => ({
+  style: { fontWeight: 600 },
 });
 
 export default function DtrSummaryTable({ data, loading }: Props) {
   const { token } = theme.useToken();
-  const isDark = useThemeStore((s) => s.mode) === "dark";
-  const GC = makeGC(isDark);
   const { widths, handleResize } = useResizableColumns({
     fullName: 260,
     lateHours: 70,
@@ -158,7 +126,6 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     title: string,
     dataIndex: keyof DtrSummaryResponse,
     width = 75,
-    subBg?: string,
   ) => ({
     title,
     dataIndex,
@@ -169,7 +136,6 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       ({
         width: widths[dataIndex as string] ?? width,
         onResize: (w: number) => handleResize(dataIndex as string, w),
-        style: subBg ? { backgroundColor: subBg } : undefined,
       }) as object,
     render: (v: number | null | undefined) => {
       const n = v ?? 0;
@@ -198,16 +164,16 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     // ── ATTENDANCE ────────────────────────────────────────────────────────────────
     {
       title: "Attendance",
-      onHeaderCell: groupHeader(GC.attendance.group),
+      onHeaderCell: groupHeader,
       children: [
         {
           title: "Late / Over Break",
-          onHeaderCell: groupHeader(GC.attendance.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Late", "lateHours", 70, GC.attendance.sub),
-            col("UT", "utHours", 70, GC.attendance.sub),
-            col("Over", "overHours", 70, GC.attendance.sub),
-            col("Absent", "absentCount", 60, GC.attendance.sub),
+            col("Late", "lateHours", 70),
+            col("UT", "utHours", 70),
+            col("Over", "overHours", 70),
+            col("Absent", "absentCount", 60),
           ],
         },
       ],
@@ -215,104 +181,99 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     // ── HOURS ─────────────────────────────────────────────────────────────────────
     {
       title: "Hours",
-      onHeaderCell: groupHeader(GC.attendance.group),
+      onHeaderCell: groupHeader,
       children: [
         {
           title: "Regular",
-          onHeaderCell: groupHeader(GC.regular.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "regularNetHours", 80, GC.regular.sub),
-            col("OT", "regularOTHours", 75, GC.regular.sub),
-            col("ND", "regularNDHours", 75, GC.regular.sub),
-            col("ND-OT", "regularNDOTHours", 75, GC.regular.sub),
+            col("Hrs", "regularNetHours", 80),
+            col("OT", "regularOTHours", 75),
+            col("ND", "regularNDHours", 75),
+            col("ND-OT", "regularNDOTHours", 75),
           ],
         },
         {
           title: "Rest Day",
-          onHeaderCell: groupHeader(GC.restDay.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "restDayHours", 80, GC.restDay.sub),
-            col("OT", "restDayOTHours", 75, GC.restDay.sub),
-            col("ND", "restDayNDHours", 75, GC.restDay.sub),
-            col("ND-OT", "restDayNDOTHours", 90, GC.restDay.sub),
+            col("Hrs", "restDayHours", 80),
+            col("OT", "restDayOTHours", 75),
+            col("ND", "restDayNDHours", 75),
+            col("ND-OT", "restDayNDOTHours", 90),
           ],
         },
         {
           title: "Legal Holiday",
-          onHeaderCell: groupHeader(GC.legalHol.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "legalHolHours", 75, GC.legalHol.sub),
-            col("OT", "legalHolOTHours", 75, GC.legalHol.sub),
-            col("ND", "legalHolNightDiffHours", 75, GC.legalHol.sub),
-            col("ND-OT", "legalHolNightDiffOTHours", 90, GC.legalHol.sub),
+            col("Hrs", "legalHolHours", 75),
+            col("OT", "legalHolOTHours", 75),
+            col("ND", "legalHolNightDiffHours", 75),
+            col("ND-OT", "legalHolNightDiffOTHours", 90),
           ],
         },
         {
           title: "Special Holiday",
-          onHeaderCell: groupHeader(GC.specialHol.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "specialHolHours", 75, GC.specialHol.sub),
-            col("OT", "specialHolOTHours", 75, GC.specialHol.sub),
-            col("ND", "specialHolNightDiffHours", 80, GC.specialHol.sub),
-            col("ND-OT", "specialHolNightDiffOTHours", 95, GC.specialHol.sub),
+            col("Hrs", "specialHolHours", 75),
+            col("OT", "specialHolOTHours", 75),
+            col("ND", "specialHolNightDiffHours", 80),
+            col("ND-OT", "specialHolNightDiffOTHours", 95),
           ],
         },
         {
           title: "Rest + Legal Day",
-          onHeaderCell: groupHeader(GC.restLegal.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "restLegalDayHours", 75, GC.restLegal.sub),
-            col("OT", "restLegalDayOTHours", 75, GC.restLegal.sub),
-            col("ND", "restLegalDayNDHours", 75, GC.restLegal.sub),
-            col("ND-OT", "restLegalDayNDOTHours", 80, GC.restLegal.sub),
+            col("Hrs", "restLegalDayHours", 75),
+            col("OT", "restLegalDayOTHours", 75),
+            col("ND", "restLegalDayNDHours", 75),
+            col("ND-OT", "restLegalDayNDOTHours", 80),
           ],
         },
         {
           title: "Rest + Special Day",
-          onHeaderCell: groupHeader(GC.restSpecial.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "restSpecialDayHours", 75, GC.restSpecial.sub),
-            col("OT", "restSpecialDayOTHours", 75, GC.restSpecial.sub),
-            col("ND", "restSpecialDayNDHours", 75, GC.restSpecial.sub),
-            col("ND-OT", "restSpecialDayNDOTHours", 80, GC.restSpecial.sub),
+            col("Hrs", "restSpecialDayHours", 75),
+            col("OT", "restSpecialDayOTHours", 75),
+            col("ND", "restSpecialDayNDHours", 75),
+            col("ND-OT", "restSpecialDayNDOTHours", 80),
           ],
         },
         {
           title: "Double Legal Holiday",
-          onHeaderCell: groupHeader(GC.doubleLegal.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "doubleLegalHours", 75, GC.doubleLegal.sub),
-            col("OT", "doubleLegalOTHours", 75, GC.doubleLegal.sub),
-            col("ND", "doubleLegalNDHours", 75, GC.doubleLegal.sub),
-            col("ND-OT", "doubleLegalNDOTHours", 90, GC.doubleLegal.sub),
+            col("Hrs", "doubleLegalHours", 75),
+            col("OT", "doubleLegalOTHours", 75),
+            col("ND", "doubleLegalNDHours", 75),
+            col("ND-OT", "doubleLegalNDOTHours", 90),
           ],
         },
         {
           title: "Rest + Double Legal",
-          onHeaderCell: groupHeader(GC.restDoubleLegal.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Hrs", "restDoubleLegalHours", 75, GC.restDoubleLegal.sub),
-            col("OT", "restDoubleLegalOTHours", 75, GC.restDoubleLegal.sub),
-            col("ND", "restDoubleLegalNDHours", 75, GC.restDoubleLegal.sub),
-            col(
-              "ND-OT",
-              "restDoubleLegalNDOTHours",
-              90,
-              GC.restDoubleLegal.sub,
-            ),
+            col("Hrs", "restDoubleLegalHours", 75),
+            col("OT", "restDoubleLegalOTHours", 75),
+            col("ND", "restDoubleLegalNDHours", 75),
+            col("ND-OT", "restDoubleLegalNDOTHours", 90),
           ],
         },
         {
           title: "Official Business",
-          onHeaderCell: groupHeader(GC.ob.group),
-          children: [col("OB Hrs", "obHours", 75, GC.ob.sub)],
+          onHeaderCell: groupHeader,
+          children: [col("OB Hrs", "obHours", 75)],
         },
         {
           title: "Leave",
-          onHeaderCell: groupHeader(GC.ob.group),
+          onHeaderCell: groupHeader,
           children: [
-            col("Paid Leave Hours", "leaveHours", 100, GC.ob.sub),
-            col("Unpaid Leave Hours", "unpaidLeaveHours", 105, GC.ob.sub),
+            col("Paid Leave Hours", "leaveHours", 100),
+            col("Unpaid Leave Hours", "unpaidLeaveHours", 105),
           ],
         },
       ],

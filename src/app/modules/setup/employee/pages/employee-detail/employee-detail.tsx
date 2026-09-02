@@ -227,6 +227,9 @@ export default function EmployeeDetail() {
     defaultValues: employeeMapper.toDefaultValues(),
   });
 
+  const selectedBranchId = useWatch({ control, name: "branchId" });
+  const selectedAreaId = useWatch({ control, name: "areaId" });
+
   const [deptModalOpen, setDeptModalOpen] = useState(false);
   const [areaModalOpen, setAreaModalOpen] = useState(false);
   const [pgModalOpen, setPgModalOpen] = useState(false);
@@ -489,6 +492,7 @@ export default function EmployeeDetail() {
     }));
   const areaOptions = operationAreas
     .filter((a) => isActiveStatus(a.status))
+    .filter((a) => !selectedBranchId || a.branchId === selectedBranchId)
     .map((a) => ({
       value: a.id,
       label: `${a.code} - ${a.name}`,
@@ -553,6 +557,17 @@ export default function EmployeeDetail() {
       value: b.id,
       label: `${b.code} - ${b.name}`,
     }));
+
+  // Project Site is restricted to the selected Branch — clear a stale selection left over
+  // from before the Branch changed (or from a Project Site with no Branch assigned yet).
+  useEffect(() => {
+    if (!selectedAreaId || !selectedBranchId) return;
+    const stillValid = operationAreas.some(
+      (a) => a.id === selectedAreaId && a.branchId === selectedBranchId,
+    );
+    if (!stillValid) setValue("areaId", null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranchId]);
   const positionOptions = positions
     .filter((p) => isActiveStatus(p.status))
     .map((p) => ({

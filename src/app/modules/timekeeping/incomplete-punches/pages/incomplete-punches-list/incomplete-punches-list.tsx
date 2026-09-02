@@ -158,11 +158,13 @@ export default function IncompletePunchesList() {
     label: p.code || p.name,
     fullLabel: p.code ? p.name : undefined,
   }));
-  const areaOptions = areas.map((a) => ({
-    value: a.id,
-    label: a.code || a.name,
-    fullLabel: a.code ? a.name : undefined,
-  }));
+  const areaOptions = areas
+    .filter((a) => !pending.branchId || a.branchId === pending.branchId)
+    .map((a) => ({
+      value: a.id,
+      label: a.code || a.name,
+      fullLabel: a.code ? a.name : undefined,
+    }));
   const employeeOptions = employees.map((e) => ({
     value: e.id,
     label: e.name ?? e.id,
@@ -421,7 +423,14 @@ export default function IncompletePunchesList() {
                       : String(opt.data.label ?? "")
                   }
                   value={pending.branchId}
-                  onChange={(v) => setPending((c) => ({ ...c, branchId: v }))}
+                  onChange={(v) =>
+                    // Project Site is restricted to the selected Branch.
+                    setPending((c) => ({
+                      ...c,
+                      branchId: v,
+                      operationAreaId: undefined,
+                    }))
+                  }
                 />
               </Form.Item>
               <Form.Item

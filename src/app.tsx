@@ -43,6 +43,12 @@ export default function App() {
             borderRadius: 10,
             fontFamily:
               "Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
+            boxShadow: isDark
+              ? "0 12px 32px rgba(0, 0, 0, 0.45)"
+              : "0 12px 32px rgba(29, 160, 129, 0.14)",
+            boxShadowSecondary: isDark
+              ? "0 8px 20px rgba(0, 0, 0, 0.35)"
+              : "0 8px 20px rgba(29, 160, 129, 0.10)",
           },
           components: {
             Layout: {
@@ -64,6 +70,51 @@ export default function App() {
             },
             Button: {
               borderRadius: 10,
+              controlHeight: 38,
+              fontWeight: 600,
+              primaryShadow: isDark
+                ? "0 8px 20px rgba(29, 160, 129, 0.30)"
+                : "0 8px 20px rgba(29, 160, 129, 0.22)",
+            },
+            Input: {
+              borderRadius: 10,
+              controlHeight: 38,
+              activeShadow: `0 0 0 3px ${isDark ? "rgba(29, 160, 129, 0.25)" : "rgba(29, 160, 129, 0.14)"}`,
+            },
+            InputNumber: {
+              borderRadius: 10,
+              controlHeight: 38,
+            },
+            Select: {
+              borderRadius: 10,
+              controlHeight: 38,
+            },
+            DatePicker: {
+              borderRadius: 10,
+              controlHeight: 38,
+            },
+            Table: {
+              borderRadius: 12,
+              headerBg: isDark ? "#16302a" : "#f2faf7",
+              headerColor: isDark ? "#c8e6df" : "#2f665b",
+              headerSplitColor: "transparent",
+              rowHoverBg: isDark ? "#1a3229" : "#f5fcfa",
+              borderColor: isDark ? "#1e3830" : "#e3f3ef",
+              cellPaddingBlock: 12,
+            },
+            Tabs: {
+              itemSelectedColor: THEME_CONFIG.primaryColor,
+              itemHoverColor: THEME_CONFIG.primaryColor,
+              inkBarColor: THEME_CONFIG.primaryColor,
+            },
+            Tag: {
+              borderRadiusSM: 999,
+            },
+            Modal: {
+              borderRadiusLG: 16,
+            },
+            Dropdown: {
+              borderRadiusLG: 12,
             },
           },
         }}

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { forPayrollApi } from "../services/for-payroll.api";
 import type { PayrollRunRequest } from "../models/api/request/payroll-run-request.model";
+import type { GenerateThirteenthMonthRequest } from "../models/api/request/generate-thirteenth-month-request.model";
 
 const BATCH_KEY = ["dtr-batches"];
 
@@ -37,6 +38,13 @@ export function useCalculatePayroll() {
 export function useGeneratePayroll() {
   return useMutation({
     mutationFn: (payload: PayrollRunRequest) => forPayrollApi.generate(payload),
+  });
+}
+
+export function useGenerateThirteenthMonth() {
+  return useMutation({
+    mutationFn: (payload: GenerateThirteenthMonthRequest) =>
+      forPayrollApi.generateThirteenthMonth(payload),
   });
 }
 
