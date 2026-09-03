@@ -287,6 +287,22 @@ export default function EmployeeDetail() {
     const selectedDays = values.restDays ?? [];
     const payload = {
       ...values,
+      // Regular/Special Holiday, Night Differential, and Leave Credits eligibility are no
+      // longer admin-editable per employee — hidden from the Eligibility tab below, always
+      // on regardless of whatever value was previously loaded/stored.
+      settings: {
+        ...values.settings,
+        // Explicitly re-listed (not just spread) so TS keeps them non-optional — spreading
+        // values.settings (typed T | undefined, since the whole settings object is
+        // .optional() in the Zod schema) otherwise widens every un-overridden prop to
+        // optional in the inferred literal type, which CreateEmployee/UpdateEmployee reject.
+        isEligibleForOvertime: values.settings?.isEligibleForOvertime ?? true,
+        isEligibleFor13thMonth: values.settings?.isEligibleFor13thMonth ?? true,
+        isEligibleForRegularHolidayPay: true,
+        isEligibleForSpecialHolidayPay: true,
+        isEligibleForNightDifferential: true,
+        isEligibleForLeaveCredits: true,
+      },
       restDays: selectedDays.map((dayName) => ({
         dayName: dayName as DayName,
       })),
@@ -2129,45 +2145,9 @@ export default function EmployeeDetail() {
                           )}
                         />
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span>Eligible for Holiday Pay</span>
-                        <Controller
-                          name="settings.isEligibleForHolidayPay"
-                          control={control}
-                          render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false}
-                              onChange={field.onChange}
-                            />
-                          )}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Eligible for Night Differential Pay</span>
-                        <Controller
-                          name="settings.isEligibleForNightDifferential"
-                          control={control}
-                          render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false}
-                              onChange={field.onChange}
-                            />
-                          )}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Eligible for Leave Credits Pay</span>
-                        <Controller
-                          name="settings.isEligibleForLeaveCredits"
-                          control={control}
-                          render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false}
-                              onChange={field.onChange}
-                            />
-                          )}
-                        />
-                      </div>
+                      {/* Regular/Special Holiday, Night Differential, and Leave Credits
+                          eligibility are no longer admin-editable per employee — always on
+                          (forced in onSubmit's payload below), no UI control. */}
                       <div className="flex items-center justify-between">
                         <span>Eligible for 13th Month Pay</span>
                         <Controller

@@ -1,6 +1,7 @@
 import type { AxiosInstance, AxiosError } from "axios";
 import { getNotify } from "@/shared/utils/notify";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
+import { useConnectionStore } from "@/core/stores/connection.store";
 
 declare module "axios" {
   interface AxiosRequestConfig {
@@ -8,10 +9,27 @@ declare module "axios" {
   }
 }
 
+// A request that got no response at all (server unreachable, DNS/CORS failure, dropped
+// connection, timeout) vs. one the server actually answered with a 4xx/5xx — the former is
+// what the connection banner is for; the latter is a normal API error, handled by the toast
+// below as before. ERR_CANCELED (React Query's own abort-on-unmount/refetch) is excluded —
+// that's not a connectivity problem.
+function isConnectivityFailure(error: AxiosError): boolean {
+  return !error.response && error.code !== "ERR_CANCELED";
+}
+
 export function applyErrorInterceptor(instance: AxiosInstance): void {
   instance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      useConnectionStore.getState().setServerUnreachable(false);
+      return response;
+    },
     (error: AxiosError<ErrorResponse>) => {
+      if (isConnectivityFailure(error)) {
+        useConnectionStore.getState().setServerUnreachable(true);
+        return Promise.reject(error);
+      }
+
       if (error.config?._skipErrorNotification) {
         return Promise.reject(error);
       }

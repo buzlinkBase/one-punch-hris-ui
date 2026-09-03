@@ -129,7 +129,8 @@ export const employeeFormSchema = z.object({
     .object({
       id: z.string().optional(),
       isEligibleForOvertime: z.boolean(),
-      isEligibleForHolidayPay: z.boolean(),
+      isEligibleForRegularHolidayPay: z.boolean(),
+      isEligibleForSpecialHolidayPay: z.boolean(),
       isEligibleForNightDifferential: z.boolean(),
       isEligibleForLeaveCredits: z.boolean(),
       isEligibleFor13thMonth: z.boolean(),

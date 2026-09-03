@@ -100,6 +100,10 @@ const GenerateThirteenthMonth = lazy(
   () =>
     import("@/app/modules/daily-time-record/for-payroll/pages/generate-thirteenth-month"),
 );
+const GenerateLastPay = lazy(
+  () =>
+    import("@/app/modules/daily-time-record/for-payroll/pages/generate-last-pay"),
+);
 const SssRemittance = lazy(
   () => import("@/app/modules/reports/payroll-reports/pages/sss-remittance"),
 );
@@ -698,6 +702,18 @@ const generateThirteenthMonthIndexRoute = createRoute({
   getParentRoute: () => generateThirteenthMonthRoute,
   path: "/",
   component: withSuspense(GenerateThirteenthMonth),
+});
+
+const generateLastPayRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "daily-time-record/for-last-pay",
+  component: MainLayout,
+});
+
+const generateLastPayIndexRoute = createRoute({
+  getParentRoute: () => generateLastPayRoute,
+  path: "/",
+  component: withSuspense(GenerateLastPay),
 });
 
 const payrollSummaryRoute = createRoute({
@@ -1391,6 +1407,7 @@ const routeTree = rootRoute.addChildren([
   dtrSummaryRoute.addChildren([dtrSummaryIndexRoute]),
   forPayrollRoute.addChildren([forPayrollIndexRoute]),
   generateThirteenthMonthRoute.addChildren([generateThirteenthMonthIndexRoute]),
+  generateLastPayRoute.addChildren([generateLastPayIndexRoute]),
   payrollSummaryRoute.addChildren([payrollSummaryIndexRoute]),
   sssRemittanceRoute.addChildren([sssRemittanceIndexRoute]),
   philHealthRemittanceRoute.addChildren([philHealthRemittanceIndexRoute]),

@@ -53,7 +53,11 @@ export interface EmployeeFixedScheduleDayModel {
 export interface EmployeeSettingModel {
   id?: string;
   isEligibleForOvertime: boolean;
-  isEligibleForHolidayPay: boolean;
+  // Split from a single isEligibleForHolidayPay flag — Regular Holiday pay is legally
+  // mandatory regardless of any CBA; Special Non-Working Holiday is "no work, no pay" by
+  // default unless a CBA says otherwise, so the two need independent toggles.
+  isEligibleForRegularHolidayPay: boolean;
+  isEligibleForSpecialHolidayPay: boolean;
   isEligibleForNightDifferential: boolean;
   isEligibleForLeaveCredits: boolean;
   isEligibleFor13thMonth: boolean;
