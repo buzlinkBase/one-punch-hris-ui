@@ -10,6 +10,7 @@ import { queryClient } from "@/core/query-client";
 import { THEME_CONFIG } from "@/core/theme.config";
 import { useThemeStore } from "@/core/stores/theme.store";
 import { NotificationProvider } from "@/shared/components/notification-provider";
+import { ConnectionStatusBanner } from "@/shared/components/connection-status-banner/connection-status-banner";
 
 function ThemeApplier() {
   const mode = useThemeStore((s) => s.mode);
@@ -120,6 +121,7 @@ export default function App() {
         }}
       >
         <QueryClientProvider client={queryClient}>
+          <ConnectionStatusBanner />
           <NotificationProvider />
           <RouterProvider router={router} />
           <ReactQueryDevtools initialIsOpen={false} />

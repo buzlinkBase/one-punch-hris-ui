@@ -3,6 +3,7 @@ import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DtrBatchModel } from "../models/api/response/dtr-batch-response.model";
 import type { PayrollRunRequest } from "../models/api/request/payroll-run-request.model";
 import type { GenerateThirteenthMonthRequest } from "../models/api/request/generate-thirteenth-month-request.model";
+import type { GenerateLastPayRequest } from "../models/api/request/generate-last-pay-request.model";
 import type { PayrollRunResponse } from "../models/api/response/payroll-run-result.model";
 
 const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
@@ -50,6 +51,17 @@ export const forPayrollApi = {
   ): Promise<PayrollRunResponse> {
     return httpClient.postUnwrapped<PayrollRunResponse>(
       `${PAYROLL_ENDPOINT}/generate-13th-month`,
+      payload,
+    );
+  },
+
+  // Separated employees' final settlement — prorated 13th month + leave conversion, netted
+  // against outstanding loans. Same Post/Delete/print draft lifecycle as generateThirteenthMonth.
+  generateLastPay(
+    payload: GenerateLastPayRequest,
+  ): Promise<PayrollRunResponse> {
+    return httpClient.postUnwrapped<PayrollRunResponse>(
+      `${PAYROLL_ENDPOINT}/generate-last-pay`,
       payload,
     );
   },

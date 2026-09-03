@@ -103,6 +103,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Generate 13th Month Pay",
         path: "/daily-time-record/for-13th-month",
       },
+      {
+        key: "payroll-run-last-pay",
+        label: "Generate Last Pay",
+        path: "/daily-time-record/for-last-pay",
+      },
     ],
   },
   {

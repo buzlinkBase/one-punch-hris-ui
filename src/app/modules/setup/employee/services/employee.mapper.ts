@@ -94,8 +94,10 @@ export const employeeMapper = {
         id: response.settings?.id,
         isEligibleForOvertime:
           response.settings?.isEligibleForOvertime ?? false,
-        isEligibleForHolidayPay:
-          response.settings?.isEligibleForHolidayPay ?? false,
+        isEligibleForRegularHolidayPay:
+          response.settings?.isEligibleForRegularHolidayPay ?? false,
+        isEligibleForSpecialHolidayPay:
+          response.settings?.isEligibleForSpecialHolidayPay ?? false,
         isEligibleForNightDifferential:
           response.settings?.isEligibleForNightDifferential ?? false,
         isEligibleForLeaveCredits:
@@ -131,7 +133,8 @@ export const employeeMapper = {
       taxRate: { computationType: "Table", eE: 0, addOns: 0 },
       settings: {
         isEligibleForOvertime: true,
-        isEligibleForHolidayPay: true,
+        isEligibleForRegularHolidayPay: true,
+        isEligibleForSpecialHolidayPay: true,
         isEligibleForNightDifferential: true,
         isEligibleForLeaveCredits: true,
         isEligibleFor13thMonth: true,
