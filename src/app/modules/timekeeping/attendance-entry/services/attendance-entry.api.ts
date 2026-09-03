@@ -40,17 +40,29 @@ function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
 }
 
 export const attendanceEntryApi = {
-  async getDtrViewLogs(
-    filter: AttendanceEntryFilter = {},
-  ): Promise<AttendanceEntryResponse[]> {
-    const params: Record<string, string> = {};
-    if (filter.fromDate) params.fromDate = filter.fromDate;
-    if (filter.toDate) params.toDate = filter.toDate;
-    if (filter.employeeId) params.employeeId = filter.employeeId;
+  // Resolves attendance for one employee's shift on one date, bracketed by the row's own
+  // already-computed first-in/last-out (DTRDetailModel.StartTime/EndTime) — optional, since
+  // either or both can legitimately be missing (no attendance at all that day, or an
+  // incomplete pair with only a clock-in or clock-out). The backend falls back to the whole
+  // work date in that case — see AttendanceController.GetShiftAttendance.
+  async getShiftAttendanceLogs(filter: {
+    employeeId: string;
+    workDate: string;
+    timeShiftId?: string | null;
+    actualStart?: string | null;
+    actualEnd?: string | null;
+  }): Promise<AttendanceEntryResponse[]> {
+    const params: Record<string, string> = {
+      employeeId: filter.employeeId,
+      workDate: filter.workDate,
+    };
+    if (filter.timeShiftId) params.timeShiftId = filter.timeShiftId;
+    if (filter.actualStart) params.actualStart = filter.actualStart;
+    if (filter.actualEnd) params.actualEnd = filter.actualEnd;
 
     try {
       const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
-        `${ENDPOINT}/dtr-view-att`,
+        `${ENDPOINT}/dtr-view-att-by-shift`,
         { params },
       );
       return raw.map(mapRecord);

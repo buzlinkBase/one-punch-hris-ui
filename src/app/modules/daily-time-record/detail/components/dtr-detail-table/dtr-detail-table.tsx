@@ -502,6 +502,7 @@ export default function DtrDetailTable({
           workDate={selectedRow.workDate}
           startTime={selectedRow.startTime}
           endTime={selectedRow.endTime}
+          timeShiftId={selectedRow.shiftId}
         />
       )}
 

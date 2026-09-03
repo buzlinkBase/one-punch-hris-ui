@@ -19,7 +19,7 @@ import dayjs, { type Dayjs } from "dayjs";
 import type { ColumnsType } from "antd/es/table";
 import {
   useDeleteAttendanceEntryLog,
-  useDtrViewAttendanceLogs,
+  useShiftAttendanceLogs,
   useUpdateAttendanceEntry,
 } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { getNotify } from "@/shared/utils/notify";
@@ -33,6 +33,7 @@ interface Props {
   workDate: string;
   startTime?: string | null;
   endTime?: string | null;
+  timeShiftId?: string | null;
 }
 
 export default function DtrAttendanceLogsModal({
@@ -43,6 +44,7 @@ export default function DtrAttendanceLogsModal({
   workDate,
   startTime,
   endTime,
+  timeShiftId,
 }: Props) {
   const { token } = theme.useToken();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,13 +65,23 @@ export default function DtrAttendanceLogsModal({
 
   const dateLabel = fromDate !== toDate ? `${fromDate} – ${toDate}` : fromDate;
 
+  // startTime/endTime (this row's own already-computed actual first-in/last-out) are passed
+  // as the actualStart/actualEnd bracket when known. Either or both can legitimately be
+  // missing — no attendance at all that day, or an incomplete pair (only a clock-in or
+  // clock-out) — in which case the backend falls back to the whole work date instead.
   const {
     data: records = [],
     isFetching,
     refetch,
-  } = useDtrViewAttendanceLogs(
-    { fromDate, toDate, employeeId },
-    { enabled: open && !!employeeId && !!fromDate, searchKey: fetchKey },
+  } = useShiftAttendanceLogs(
+    {
+      employeeId,
+      workDate,
+      timeShiftId,
+      actualStart: startTime,
+      actualEnd: endTime,
+    },
+    { enabled: open && !!employeeId && !!workDate, searchKey: fetchKey },
   );
 
   const { mutateAsync: updateEntry, isPending: isSaving } =
