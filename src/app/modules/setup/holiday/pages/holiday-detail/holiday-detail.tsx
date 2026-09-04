@@ -85,9 +85,12 @@ export default function HolidayDetail() {
   useEffect(() => {
     if (isLegal) {
       setValue("workType", "NonWorking");
-      setValue("isPaid", true);
       setValue("areaId", null);
     }
+  }, [isLegal, setValue]);
+
+  useEffect(() => {
+    setValue("isPaid", isLegal);
   }, [isLegal, setValue]);
 
   useEffect(() => {
@@ -260,28 +263,16 @@ export default function HolidayDetail() {
               />
             </Form.Item>
 
-            <Form.Item label={HOLIDAY_LABEL.IS_PAID} className="col-span-2">
-              <div className="flex gap-8">
-                <div className="flex items-center gap-2">
-                  <Controller
-                    name="isPaid"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch checked={field.value} onChange={field.onChange} />
-                    )}
-                  />
-                  <span>Paid Holiday</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Controller
-                    name="isRecuring"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch checked={field.value} onChange={field.onChange} />
-                    )}
-                  />
-                  <span>Recurring Annually</span>
-                </div>
+            <Form.Item label={HOLIDAY_LABEL.IS_RECURING} className="col-span-2">
+              <div className="flex items-center gap-2">
+                <Controller
+                  name="isRecuring"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch checked={field.value} onChange={field.onChange} />
+                  )}
+                />
+                <span>Recurring Annually</span>
               </div>
             </Form.Item>
           </div>

@@ -30,6 +30,8 @@ import {
 } from "../../constants/label.const";
 import FixedSalaryDefaultsTab from "./fixed-salary-defaults-tab";
 import CompanyInfoTab from "./company-info-tab";
+import RateMultipliersTab from "./rate-multipliers-tab";
+import PayrollSettingsTab from "./payroll-settings-tab";
 
 const { Title } = Typography;
 
@@ -61,7 +63,6 @@ function GeneralPolicyTab() {
       waivePriorDayRequirement: false,
       crossMonthStatutoryCreditPolicy: "CutoffStartMonth",
       wTaxCrossMonthCreditPolicy: "CutoffEndMonth",
-      treatNdotAsNdOnly: false,
     },
   });
 
@@ -89,7 +90,6 @@ function GeneralPolicyTab() {
           policy.crossMonthStatutoryCreditPolicy ?? "CutoffStartMonth",
         wTaxCrossMonthCreditPolicy:
           policy.wTaxCrossMonthCreditPolicy ?? "CutoffEndMonth",
-        treatNdotAsNdOnly: policy.treatNdotAsNdOnly,
       });
     }
   }, [policy, reset]);
@@ -256,16 +256,6 @@ function GeneralPolicyTab() {
                     style={{ width: "100%" }}
                     addonAfter="min"
                   />
-                )}
-              />
-            </Form.Item>
-
-            <Form.Item label={COMPANY_POLICY_LABEL.TREAT_NDOT_AS_ND}>
-              <Controller
-                name="treatNdotAsNdOnly"
-                control={control}
-                render={({ field }) => (
-                  <Switch checked={field.value} onChange={field.onChange} />
                 )}
               />
             </Form.Item>
@@ -456,6 +446,18 @@ export default function CompanyPolicy() {
             label: COMPANY_POLICY_LABEL.TAB_GENERAL,
             forceRender: true,
             children: <GeneralPolicyTab />,
+          },
+          {
+            key: "payroll-settings",
+            label: COMPANY_POLICY_LABEL.TAB_PAYROLL_SETTINGS,
+            forceRender: true,
+            children: <PayrollSettingsTab />,
+          },
+          {
+            key: "rate-multipliers",
+            label: COMPANY_POLICY_LABEL.TAB_RATE_MULTIPLIERS,
+            forceRender: true,
+            children: <RateMultipliersTab />,
           },
           {
             key: "fixed-salary-defaults",

@@ -17,7 +17,6 @@ export const companyPolicyFormSchema = z.object({
   waivePriorDayRequirement: z.boolean(),
   crossMonthStatutoryCreditPolicy: z.string().min(1, "Required"),
   wTaxCrossMonthCreditPolicy: z.string().min(1, "Required"),
-  treatNdotAsNdOnly: z.boolean(),
 });
 
 export type CompanyPolicyFormValues = z.infer<typeof companyPolicyFormSchema>;

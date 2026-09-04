@@ -18,6 +18,30 @@ interface Props {
   onDelete?: (id: string) => void;
 }
 
+const MONTH_INDEX: Record<string, number> = {
+  Jan: 0,
+  Feb: 1,
+  Mar: 2,
+  Apr: 3,
+  May: 4,
+  Jun: 5,
+  Jul: 6,
+  Aug: 7,
+  Sep: 8,
+  Oct: 9,
+  Nov: 10,
+  Dec: 11,
+};
+
+// holDate is a display string like "Jan 01, 2026"; sort by month/day since
+// recurring holidays don't carry a meaningful year.
+const getHolDateSortKey = (val: string): number => {
+  const match = val?.match(/^([A-Za-z]{3})\s+(\d{1,2})/);
+  if (!match) return 0;
+  const month = MONTH_INDEX[match[1]] ?? 0;
+  return month * 100 + Number(match[2]);
+};
+
 export default function HolidayTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -28,7 +52,6 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
     holidayType: 120,
     workType: 120,
     areaName: 140,
-    isPaid: 100,
     isRecuring: 100,
     status: 120,
   });
@@ -70,7 +93,9 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
           width: widths.holDate,
           onResize: (w: number) => handleResize("holDate", w),
         }) as object,
-      sorter: (a, b) => a.holDate.localeCompare(b.holDate),
+      sorter: (a, b) =>
+        getHolDateSortKey(a.holDate) - getHolDateSortKey(b.holDate),
+      defaultSortOrder: "ascend",
       render: (val: string) => {
         if (!val) return null;
         // API returns "MMM DD, 0" for recurring holidays (year=0); strip the year in that case
@@ -125,20 +150,6 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
           width: widths.areaName,
           onResize: (w: number) => handleResize("areaName", w),
         }) as object,
-    },
-    {
-      title: HOLIDAY_LABEL.IS_PAID,
-      dataIndex: "isPaid",
-      key: "isPaid",
-      width: widths.isPaid,
-      onHeaderCell: () =>
-        ({
-          width: widths.isPaid,
-          onResize: (w: number) => handleResize("isPaid", w),
-        }) as object,
-      render: (v: boolean) => (
-        <Tag color={v ? "green" : "default"}>{v ? "Paid" : "Unpaid"}</Tag>
-      ),
     },
     {
       title: HOLIDAY_LABEL.IS_RECURING,
