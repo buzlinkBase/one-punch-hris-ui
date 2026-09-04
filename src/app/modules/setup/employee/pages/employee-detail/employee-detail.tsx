@@ -246,9 +246,6 @@ export default function EmployeeDetail() {
   const { data: existingFixedSchedule, isFetching: isFetchingFixedSchedule } =
     useEmployeeFixedSchedule(id);
   const fixedScheduleLoaded = useRef(false);
-  // Guards the one-time Factor-Days seeding for brand-new employees turning the
-  // override on for the first time — see the "useEmployeeOverride" Switch below.
-  const initialInclusionSeeded = useRef(false);
 
   useEffect(() => {
     // With refetchOnMount: "always", `data` can be populated synchronously from a
@@ -366,10 +363,6 @@ export default function EmployeeDetail() {
     name: "employmentStatus",
   });
   const watchedSalaryType = useWatch({ control, name: "salaryType" });
-  const watchedUseEmployeeOverride = useWatch({
-    control,
-    name: "useEmployeeOverride",
-  });
   const watchedDailyRateMode = useWatch({ control, name: "dailyRateMode" });
   const watchedFactorDays = useWatch({ control, name: "factorDays" });
   const watchedUseActualMonthDays = useWatch({
@@ -388,10 +381,8 @@ export default function EmployeeDetail() {
   });
 
   // Applies the Rest Day/Regular Holiday/Special Non-Working conventions baked into a
-  // Factor Days denominator to the employee's own 3 inclusion toggles (Night Diff has no
-  // Factor-Days convention, so it's left untouched). Reused by the Factor Days selects and,
-  // once, by a brand-new employee's first "Use Employee-Specific Fixed Salary Inclusions"
-  // toggle-on (see initialInclusionSeeded) — existing employees keep their stored values.
+  // Factor Days denominator to the employee's own 3 inclusion toggles. Reused by the
+  // Factor Days selects.
   const applyFactorDaysBooleanDefaults = (days: number | null | undefined) => {
     const defaults =
       days != null
@@ -408,10 +399,6 @@ export default function EmployeeDetail() {
     );
   };
 
-  // The company-wide Fixed Salary Defaults (Company Policy), shown read-only in place of
-  // the 4 inclusion toggles whenever the override is off. This is display-only and never
-  // written back into the form — the employee's own stored values stay intact underneath
-  // so they reappear unchanged the next time the override is switched back on.
   const tenantInclusionDefaults = {
     isRestDayPaid: payrollInclusionDefaults?.defaultRestDayPaid ?? false,
     isRegularHolidayIncluded:
@@ -419,6 +406,33 @@ export default function EmployeeDetail() {
     isSpecialNonWorkingIncluded:
       payrollInclusionDefaults?.defaultSpecialNonWorkingIncluded ?? false,
   };
+
+  // One-time migration for employees saved back when a company-wide override toggle
+  // still existed in the UI: if theirs was off, they were actually running on the
+  // tenant-wide defaults, not their own stored toggle values — carry those defaults
+  // over as their own values now that per-employee is the only mode.
+  const overrideMigrated = useRef(false);
+  useEffect(() => {
+    if (
+      overrideMigrated.current ||
+      !isEdit ||
+      !selected ||
+      selected.useEmployeeOverride !== false
+    ) {
+      return;
+    }
+    overrideMigrated.current = true;
+    setValue("isRestDayPaid", tenantInclusionDefaults.isRestDayPaid);
+    setValue(
+      "isRegularHolidayIncluded",
+      tenantInclusionDefaults.isRegularHolidayIncluded,
+    );
+    setValue(
+      "isSpecialNonWorkingIncluded",
+      tenantInclusionDefaults.isSpecialNonWorkingIncluded,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, selected, payrollInclusionDefaults, setValue]);
 
   const sssComputationType = useWatch({
     control,
@@ -452,11 +466,9 @@ export default function EmployeeDetail() {
     watchedDailyRateMode === "MonthlyTotalDays";
   const isDailyRateComputed = isCalculatedEDR || isMonthlyTotalDays;
 
-  // Warns (without blocking) when the employee's own inclusion toggles diverge from what
-  // the selected Factor Days conventionally implies — e.g. a "251 Days" factor (rest days,
-  // regular holidays, and special days all excluded) with Rest Day Pay manually left on.
-  // Purely advisory: the admin may have a genuine reason to override, so nothing here
-  // disables the toggles or blocks Save.
+  // Non-blocking mismatch warning: flag toggle combinations that don't match what the
+  // selected Factor Days convention normally implies — surfaced, never enforced, so an
+  // intentional deviation is still allowed.
   const factorDaysExpectedFlags =
     isCalculatedEDR && watchedFactorDays != null
       ? FACTOR_DAYS_DEFAULT_FLAGS[
@@ -466,36 +478,26 @@ export default function EmployeeDetail() {
   const factorDaysLabel = FACTOR_DAYS_OPTIONS.find(
     (o) => o.value === watchedFactorDays,
   )?.label;
-  const inclusionMismatches =
-    watchedUseEmployeeOverride && factorDaysExpectedFlags
-      ? (
-          [
-            [
-              "isRestDayPaid",
-              "Rest Day Pay",
-              watchedIsRestDayPaid,
-              factorDaysExpectedFlags.isRestDayPaid,
-            ],
-            [
-              "isRegularHolidayIncluded",
-              "Regular Holiday Pay",
-              watchedIsRegularHolidayIncluded,
-              factorDaysExpectedFlags.isRegularHolidayIncluded,
-            ],
-            [
-              "isSpecialNonWorkingIncluded",
-              "Special Non-Working Holiday Pay",
-              watchedIsSpecialNonWorkingIncluded,
-              factorDaysExpectedFlags.isSpecialNonWorkingIncluded,
-            ],
-          ] as const
-        )
-          .filter(([, , actual, expected]) => Boolean(actual) !== expected)
-          .map(
-            ([, label, , expected]) =>
-              `${label} is ${expected ? "off" : "on"}, but the ${factorDaysLabel ?? watchedFactorDays} factor conventionally ${expected ? "includes" : "excludes"} it.`,
-          )
-      : [];
+  const inclusionMismatches: string[] = [];
+  if (factorDaysExpectedFlags) {
+    if (
+      (watchedIsRestDayPaid ?? false) !== factorDaysExpectedFlags.isRestDayPaid
+    ) {
+      inclusionMismatches.push("Rest Day Pay");
+    }
+    if (
+      (watchedIsRegularHolidayIncluded ?? false) !==
+      factorDaysExpectedFlags.isRegularHolidayIncluded
+    ) {
+      inclusionMismatches.push("Regular Holiday Pay");
+    }
+    if (
+      (watchedIsSpecialNonWorkingIncluded ?? false) !==
+      factorDaysExpectedFlags.isSpecialNonWorkingIncluded
+    ) {
+      inclusionMismatches.push("Special Non-Working Holiday Pay");
+    }
+  }
 
   // Keep Daily Rate in sync with the selected formula:
   // Calculated EDR:     (Monthly Rate * 12) / Factor Days — annual factor
@@ -1528,9 +1530,7 @@ export default function EmployeeDetail() {
                                   );
                                   if (!isValid) {
                                     setValue("factorDays", 251);
-                                    if (watchedUseEmployeeOverride) {
-                                      applyFactorDaysBooleanDefaults(251);
-                                    }
+                                    applyFactorDaysBooleanDefaults(251);
                                   }
                                 } else if (newMode === "MonthlyTotalDays") {
                                   const isValid =
@@ -1539,9 +1539,7 @@ export default function EmployeeDetail() {
                                     );
                                   if (!isValid) {
                                     setValue("factorDays", 26);
-                                    if (watchedUseEmployeeOverride) {
-                                      applyFactorDaysBooleanDefaults(26);
-                                    }
+                                    applyFactorDaysBooleanDefaults(26);
                                   }
                                 }
                               }}
@@ -1578,9 +1576,7 @@ export default function EmployeeDetail() {
                               value={field.value ?? undefined}
                               onChange={(v) => {
                                 field.onChange(v);
-                                if (watchedUseEmployeeOverride) {
-                                  applyFactorDaysBooleanDefaults(v);
-                                }
+                                applyFactorDaysBooleanDefaults(v);
                               }}
                               options={FACTOR_DAYS_GROUPS.map((g) => ({
                                 label: g.group,
@@ -1646,9 +1642,7 @@ export default function EmployeeDetail() {
                               value={field.value ?? undefined}
                               onChange={(v) => {
                                 field.onChange(v);
-                                if (watchedUseEmployeeOverride) {
-                                  applyFactorDaysBooleanDefaults(v);
-                                }
+                                applyFactorDaysBooleanDefaults(v);
                               }}
                               options={MONTHLY_TOTAL_DAYS_OPTIONS.map((o) => ({
                                 value: o.value,
@@ -1727,54 +1721,13 @@ export default function EmployeeDetail() {
                           Toggling on pays only the differential premium above
                           the base rate; off pays the full rate multiplier.
                         </Text>
-                        <div className="flex items-center justify-between max-w-120">
-                          <span>{EMPLOYEE_LABEL.USE_EMPLOYEE_OVERRIDE}</span>
-                          <Controller
-                            name="useEmployeeOverride"
-                            control={control}
-                            render={({ field }) => (
-                              <Switch
-                                checked={field.value ?? true}
-                                onChange={(checked) => {
-                                  field.onChange(checked);
-                                  // Seed sensible defaults only the first time a brand-new
-                                  // employee turns the override on — existing employees
-                                  // (and later toggles in the same session) keep whatever
-                                  // is already stored, so turning it off and back on never
-                                  // discards the employee-specific settings.
-                                  if (
-                                    checked &&
-                                    !isEdit &&
-                                    !initialInclusionSeeded.current
-                                  ) {
-                                    initialInclusionSeeded.current = true;
-                                    applyFactorDaysBooleanDefaults(
-                                      watchedFactorDays,
-                                    );
-                                  }
-                                }}
-                              />
-                            )}
-                          />
-                        </div>
-                        <Text type="secondary" className="text-xs -mt-1">
-                          When off, payroll uses the company-wide Fixed Salary
-                          Defaults from Company Policy instead of the toggles
-                          below.
-                        </Text>
                         {inclusionMismatches.length > 0 && (
                           <Alert
                             type="warning"
                             showIcon
                             className="max-w-120"
-                            message="Doesn't match the selected Factor Days"
-                            description={
-                              <ul className="list-disc pl-4 m-0">
-                                {inclusionMismatches.map((msg) => (
-                                  <li key={msg}>{msg}</li>
-                                ))}
-                              </ul>
-                            }
+                            message={`Doesn't match the ${factorDaysLabel ?? watchedFactorDays}-day convention`}
+                            description={`${inclusionMismatches.join(", ")} ${inclusionMismatches.length === 1 ? "differs" : "differ"} from what this Factor Days setting normally implies. This is allowed — just confirm it's intentional.`}
                           />
                         )}
                         <div className="flex items-center justify-between max-w-120">
@@ -1784,13 +1737,8 @@ export default function EmployeeDetail() {
                             control={control}
                             render={({ field }) => (
                               <Switch
-                                checked={
-                                  watchedUseEmployeeOverride
-                                    ? (field.value ?? false)
-                                    : tenantInclusionDefaults.isRestDayPaid
-                                }
+                                checked={field.value ?? false}
                                 onChange={field.onChange}
-                                disabled={!watchedUseEmployeeOverride}
                               />
                             )}
                           />
@@ -1802,13 +1750,8 @@ export default function EmployeeDetail() {
                             control={control}
                             render={({ field }) => (
                               <Switch
-                                checked={
-                                  watchedUseEmployeeOverride
-                                    ? (field.value ?? false)
-                                    : tenantInclusionDefaults.isRegularHolidayIncluded
-                                }
+                                checked={field.value ?? false}
                                 onChange={field.onChange}
-                                disabled={!watchedUseEmployeeOverride}
                               />
                             )}
                           />
@@ -1823,13 +1766,8 @@ export default function EmployeeDetail() {
                             control={control}
                             render={({ field }) => (
                               <Switch
-                                checked={
-                                  watchedUseEmployeeOverride
-                                    ? (field.value ?? false)
-                                    : tenantInclusionDefaults.isSpecialNonWorkingIncluded
-                                }
+                                checked={field.value ?? false}
                                 onChange={field.onChange}
-                                disabled={!watchedUseEmployeeOverride}
                               />
                             )}
                           />

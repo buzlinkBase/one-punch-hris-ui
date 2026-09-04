@@ -28,7 +28,6 @@ import {
   HOLIDAY_TIME_BASIS_OPTIONS,
   CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
-import FixedSalaryDefaultsTab from "./fixed-salary-defaults-tab";
 import CompanyInfoTab from "./company-info-tab";
 import RateMultipliersTab from "./rate-multipliers-tab";
 import PayrollSettingsTab from "./payroll-settings-tab";
@@ -458,12 +457,6 @@ export default function CompanyPolicy() {
             label: COMPANY_POLICY_LABEL.TAB_RATE_MULTIPLIERS,
             forceRender: true,
             children: <RateMultipliersTab />,
-          },
-          {
-            key: "fixed-salary-defaults",
-            label: COMPANY_POLICY_LABEL.TAB_FIXED_SALARY_DEFAULTS,
-            forceRender: true,
-            children: <FixedSalaryDefaultsTab />,
           },
         ]}
       />
