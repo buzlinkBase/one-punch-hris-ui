@@ -123,7 +123,7 @@ export const employeeMapper = {
       isRestDayPaid: false,
       isRegularHolidayIncluded: false,
       isSpecialNonWorkingIncluded: false,
-      useEmployeeOverride: false,
+      useEmployeeOverride: true,
       restDays: [],
       sssRate: { computationType: "Table", eE: 0, eR: 0, eC: 0, addOns: 0 },
       phicRate: { computationType: "Table", eE: 0, eR: 0, addOns: 0 },

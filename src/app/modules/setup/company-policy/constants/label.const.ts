@@ -48,15 +48,7 @@ export const COMPANY_POLICY_LABEL = {
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
   TAB_RATE_MULTIPLIERS: "Rate Multipliers",
-  TAB_FIXED_SALARY_DEFAULTS: "Fixed Salary Defaults",
   TAB_PAYROLL_SETTINGS: "Payroll Settings",
-  SECTION_FIXED_SALARY_DEFAULTS: "Fixed Salary Inclusion Defaults",
-  FIXED_SALARY_DEFAULTS_SUBTITLE:
-    "Company-wide defaults used for Fixed-salary employees who don't set their own inclusion toggles (Employee > Use Employee-Specific Fixed Salary Inclusions = off).",
-  DEFAULT_REST_DAY_PAID: "Monthly Rate Includes Rest Day Pay",
-  DEFAULT_REGULAR_HOLIDAY_INCLUDED: "Monthly Rate Includes Regular Holiday Pay",
-  DEFAULT_SPECIAL_NON_WORKING_INCLUDED:
-    "Monthly Rate Includes Special Non-Working Holiday Pay",
 };
 
 export const OT_INCLUSION_OPTIONS = [
