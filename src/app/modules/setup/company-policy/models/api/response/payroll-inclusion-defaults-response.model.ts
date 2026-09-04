@@ -3,5 +3,4 @@ export interface PayrollInclusionDefaultsResponse {
   defaultRestDayPaid: boolean;
   defaultRegularHolidayIncluded: boolean;
   defaultSpecialNonWorkingIncluded: boolean;
-  defaultNightDiffIncluded: boolean;
 }

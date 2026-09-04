@@ -38,7 +38,10 @@ export const employeeApi = {
   },
 
   update(data: UpdateEmployee): Promise<EmployeeResponse> {
-    return httpClient.put<EmployeeResponse>(`${BASE_URL}/${data.id}`, data);
+    return httpClient.putUnwrapped<EmployeeResponse>(
+      `${BASE_URL}/${data.id}`,
+      data,
+    );
   },
 
   remove(id: string): Promise<void> {

@@ -15,5 +15,4 @@ export interface UpdateCompanyPolicy {
   waivePriorDayRequirement: boolean;
   crossMonthStatutoryCreditPolicy: string;
   wTaxCrossMonthCreditPolicy: string;
-  treatNdotAsNdOnly: boolean;
 }

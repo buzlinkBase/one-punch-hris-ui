@@ -34,7 +34,6 @@ export default function FixedSalaryDefaultsTab() {
         defaultRestDayPaid: false,
         defaultRegularHolidayIncluded: false,
         defaultSpecialNonWorkingIncluded: false,
-        defaultNightDiffIncluded: false,
       },
     });
 
@@ -45,7 +44,6 @@ export default function FixedSalaryDefaultsTab() {
         defaultRegularHolidayIncluded: defaults.defaultRegularHolidayIncluded,
         defaultSpecialNonWorkingIncluded:
           defaults.defaultSpecialNonWorkingIncluded,
-        defaultNightDiffIncluded: defaults.defaultNightDiffIncluded,
       });
     }
   }, [defaults, reset]);
@@ -109,16 +107,6 @@ export default function FixedSalaryDefaultsTab() {
             </span>
             <Controller
               name="defaultSpecialNonWorkingIncluded"
-              control={control}
-              render={({ field }) => (
-                <Switch checked={field.value} onChange={field.onChange} />
-              )}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <span>{COMPANY_POLICY_LABEL.DEFAULT_NIGHT_DIFF_INCLUDED}</span>
-            <Controller
-              name="defaultNightDiffIncluded"
               control={control}
               render={({ field }) => (
                 <Switch checked={field.value} onChange={field.onChange} />

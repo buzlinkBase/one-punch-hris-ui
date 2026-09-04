@@ -44,12 +44,12 @@ export const COMPANY_POLICY_LABEL = {
     "Waive prior-day attendance requirement for holiday eligibility",
   CROSS_MONTH_STATUTORY_CREDIT_POLICY: "Credit SSS/PhilHealth/Pag-IBIG To",
   WTAX_CROSS_MONTH_CREDIT_POLICY: "Credit Withholding Tax To",
-  TREAT_NDOT_AS_ND:
-    "Treat Night Diff + OT as Night Diff only (no OT premium stacked)",
 
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
+  TAB_RATE_MULTIPLIERS: "Rate Multipliers",
   TAB_FIXED_SALARY_DEFAULTS: "Fixed Salary Defaults",
+  TAB_PAYROLL_SETTINGS: "Payroll Settings",
   SECTION_FIXED_SALARY_DEFAULTS: "Fixed Salary Inclusion Defaults",
   FIXED_SALARY_DEFAULTS_SUBTITLE:
     "Company-wide defaults used for Fixed-salary employees who don't set their own inclusion toggles (Employee > Use Employee-Specific Fixed Salary Inclusions = off).",
@@ -57,7 +57,6 @@ export const COMPANY_POLICY_LABEL = {
   DEFAULT_REGULAR_HOLIDAY_INCLUDED: "Monthly Rate Includes Regular Holiday Pay",
   DEFAULT_SPECIAL_NON_WORKING_INCLUDED:
     "Monthly Rate Includes Special Non-Working Holiday Pay",
-  DEFAULT_NIGHT_DIFF_INCLUDED: "Monthly Rate Includes Night Differential",
 };
 
 export const OT_INCLUSION_OPTIONS = [

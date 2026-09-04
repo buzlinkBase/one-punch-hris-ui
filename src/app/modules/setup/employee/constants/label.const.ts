@@ -75,7 +75,11 @@ export interface FactorDaysFlags {
 }
 
 export const FACTOR_DAYS_DEFAULT_FLAGS: Record<number, FactorDaysFlags> = {
-  // Standard (PH DOLE) — holiday premium adjustments embedded in the divisor itself
+  // Standard (PH DOLE) — holiday premium adjustments embedded in the divisor itself.
+  // 365 = every day paid. 313/261 = 6-day/5-day week, rest days unpaid, regular
+  // holidays AND special non-working days both paid. 305/253 = the 313/261 variant
+  // with special non-working days excluded (unpaid if unworked) — regular holidays
+  // stay paid either way. 251 = ordinary working days only, nothing else paid.
   365: {
     isRestDayPaid: true,
     isRegularHolidayIncluded: true,
@@ -84,26 +88,34 @@ export const FACTOR_DAYS_DEFAULT_FLAGS: Record<number, FactorDaysFlags> = {
   313: {
     isRestDayPaid: false,
     isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: true,
+  },
+  305: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: true,
     isSpecialNonWorkingIncluded: false,
   },
   261: {
     isRestDayPaid: false,
-    isRegularHolidayIncluded: false,
+    isRegularHolidayIncluded: true,
+    isSpecialNonWorkingIncluded: true,
+  },
+  253: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: true,
     isSpecialNonWorkingIncluded: false,
   },
-  252: {
+  251: {
     isRestDayPaid: false,
     isRegularHolidayIncluded: false,
     isSpecialNonWorkingIncluded: false,
   },
 
-  // International / Enterprise — straight calendar math, no holiday premium embedded
+  // Flat calendar — a plain 52-week × N-day divisor with no DOLE paid-day adjustment
+  // baked in. Rest day/holiday premiums are NOT assumed pre-funded here (all flags
+  // false), so the DTR engine still pays them in full via the Fixed Salary Inclusion
+  // toggles — this only changes how the base daily rate itself is derived.
   312: {
-    isRestDayPaid: false,
-    isRegularHolidayIncluded: false,
-    isSpecialNonWorkingIncluded: false,
-  },
-  305: {
     isRestDayPaid: false,
     isRegularHolidayIncluded: false,
     isSpecialNonWorkingIncluded: false,
@@ -113,32 +125,14 @@ export const FACTOR_DAYS_DEFAULT_FLAGS: Record<number, FactorDaysFlags> = {
     isRegularHolidayIncluded: false,
     isSpecialNonWorkingIncluded: false,
   },
-  253: {
-    isRestDayPaid: false,
-    isRegularHolidayIncluded: false,
-    isSpecialNonWorkingIncluded: false,
-  },
 
-  // Continuous operations (24/7/365) — premium factors already baked into the divisor
-  394.4: {
+  // Continuous operations (24/7/365) — DOLE Advisory No. 001-10: 297 ordinary days +
+  // 67.60 (52 rest days x 130%) + 24.00 (12 regular holidays x 200%) + 5.20 (4 special
+  // days x 130%) = 393.80. All three premium categories are baked into the divisor.
+  393.8: {
     isRestDayPaid: true,
     isRegularHolidayIncluded: true,
     isSpecialNonWorkingIncluded: true,
-  },
-  393.9: {
-    isRestDayPaid: true,
-    isRegularHolidayIncluded: true,
-    isSpecialNonWorkingIncluded: true,
-  },
-  393.5: {
-    isRestDayPaid: true,
-    isRegularHolidayIncluded: true,
-    isSpecialNonWorkingIncluded: true,
-  },
-  337.8: {
-    isRestDayPaid: false,
-    isRegularHolidayIncluded: true,
-    isSpecialNonWorkingIncluded: false,
   },
 
   // Custom / averaging — flat monthly denominators, no premium semantics
@@ -191,52 +185,54 @@ export const FACTOR_DAYS_GROUPS: {
         value: 365,
         label: "365 Days",
         description:
-          "All calendar days pre-funded in base pay — rest days and holidays are fully paid.",
+          "All calendar days pre-funded in base pay — rest days, regular holidays, and special non-working days are all fully paid.",
       },
       {
         value: 313,
         label: "313 Days",
-        description: "Working days + regular holidays pre-funded in base pay.",
-      },
-      {
-        value: 261,
-        label: "261 Days",
-        description: "Working days only pre-funded in base pay.",
-      },
-      {
-        value: 252,
-        label: "252 Days",
         description:
-          "Working days only (5-day work week) pre-funded in base pay.",
-      },
-    ],
-  },
-  {
-    group: "International / Enterprise",
-    options: [
-      {
-        value: 312,
-        label: "312 Days",
-        description:
-          "Alternate 6-day work week (52 × 6). Rest days unpaid; holidays treated as normal workdays — no holiday premium embedded.",
+          "6-day work week (365 − 52 Sundays). Regular holidays and special non-working days are pre-funded in base pay; rest days are not.",
       },
       {
         value: 305,
         label: "305 Days",
         description:
-          "6-day work week variant — the 8 regular holidays are deducted from the 313 schedule (unpaid if unworked).",
+          "6-day work week — the 313 schedule with the 8 special non-working days excluded (unpaid if unworked). Regular holidays stay pre-funded; rest days are not.",
       },
       {
-        value: 260,
-        label: "260 Days",
+        value: 261,
+        label: "261 Days",
         description:
-          "Corporate global baseline for a 5-day work week (52 × 5). No holiday premium embedded.",
+          "5-day work week (365 − 104 weekend days). Regular holidays and special non-working days are pre-funded in base pay; rest days are not.",
       },
       {
         value: 253,
         label: "253 Days",
         description:
-          "5-day work week variant — the 8 regular holidays are deducted from the 261 schedule (unpaid if unworked).",
+          "5-day work week — the 261 schedule with the 8 special non-working days excluded (unpaid if unworked). Regular holidays stay pre-funded; rest days are not.",
+      },
+      {
+        value: 251,
+        label: "251 Days",
+        description:
+          "5-day work week, ordinary working days only — rest days, regular holidays, and special non-working days are all excluded from base pay.",
+      },
+    ],
+  },
+  {
+    group: "Flat Calendar (No Statutory Holiday Premium)",
+    options: [
+      {
+        value: 312,
+        label: "312 Days",
+        description:
+          "Flat 52-week × 6-day calendar. Rest days, regular holidays, and special days are excluded from the divisor itself — actual holiday/rest-day premiums are still paid separately by the payroll engine when the matching Fixed Salary Inclusion toggles are off.",
+      },
+      {
+        value: 260,
+        label: "260 Days",
+        description:
+          "Flat 52-week × 5-day calendar. Rest days, regular holidays, and special days are excluded from the divisor itself — actual holiday/rest-day premiums are still paid separately by the payroll engine when the matching Fixed Salary Inclusion toggles are off.",
       },
     ],
   },
@@ -244,28 +240,10 @@ export const FACTOR_DAYS_GROUPS: {
     group: "Continuous Operations (24/7/365)",
     options: [
       {
-        value: 394.4,
-        label: "394.40 Days",
+        value: 393.8,
+        label: "393.80 Days",
         description:
-          "For employees required to work every day, including Sundays/rest days and holidays — factors in premium rates for those worked days.",
-      },
-      {
-        value: 393.9,
-        label: "393.90 Days",
-        description:
-          "DOLE Advisory No. 001-10 variation — precise mathematical weight for worked holidays in continuous operations.",
-      },
-      {
-        value: 393.5,
-        label: "393.50 Days",
-        description:
-          "Alternate DOLE Advisory No. 001-10 weighting for worked holidays in continuous operations.",
-      },
-      {
-        value: 337.8,
-        label: "337.80 Days",
-        description:
-          "6-day work week where employees are contractually required to work all regular holidays falling on normal workdays.",
+          "DOLE Advisory No. 001-10 — for employees required to work every day of the year: 297 ordinary days + 67.60 (52 rest days × 130%) + 24.00 (12 regular holidays × 200%) + 5.20 (4 special days × 130%). Rest-day and holiday premiums are baked into the divisor.",
       },
     ],
   },

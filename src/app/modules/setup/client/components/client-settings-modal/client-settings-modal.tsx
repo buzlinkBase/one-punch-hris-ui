@@ -9,6 +9,7 @@ import {
   Typography,
   Button,
   Space,
+  Alert,
 } from "antd";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { useForm, Controller } from "react-hook-form";
@@ -44,11 +45,6 @@ const OVERRIDABLE_TYPES = BASE_RATE_KEYS.filter(
   (type) => type !== "REGULAR" && type !== "SPECIAL_WORKING",
 );
 
-const TREAT_NDOT_OPTIONS = [
-  { value: true, label: "Yes — ND rate only" },
-  { value: false, label: "No — compound OT + ND" },
-];
-
 interface Props {
   clientId: string | null;
   clientName?: string;
@@ -71,7 +67,6 @@ export default function ClientSettingsModal({
     defaultValues: {
       otEligibility: null,
       otInclusionPolicy: null,
-      treatNdotAsNdOnly: null,
     },
   });
 
@@ -80,7 +75,6 @@ export default function ClientSettingsModal({
       reset({
         otEligibility: policyData.otEligibility ?? null,
         otInclusionPolicy: policyData.otInclusionPolicy ?? null,
-        treatNdotAsNdOnly: policyData.treatNdotAsNdOnly ?? null,
       });
     }
   }, [policyData, reset]);
@@ -131,7 +125,6 @@ export default function ClientSettingsModal({
       updatePolicy({
         otEligibility: policyValues.otEligibility ?? null,
         otInclusionPolicy: policyValues.otInclusionPolicy ?? null,
-        treatNdotAsNdOnly: policyValues.treatNdotAsNdOnly ?? null,
       }),
       bulkReplaceRates(rateEntries),
     ]);
@@ -192,24 +185,12 @@ export default function ClientSettingsModal({
                       )}
                     />
                   </Form.Item>
-                  <Form.Item label={COMPANY_POLICY_LABEL.TREAT_NDOT_AS_ND}>
-                    <Controller
-                      name="treatNdotAsNdOnly"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          allowClear
-                          placeholder="Select to override..."
-                          options={TREAT_NDOT_OPTIONS}
-                          onChange={(v) => field.onChange(v ?? null)}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Leave a field empty to inherit the company-level setting.
-                  </p>
+                  <Alert
+                    type="info"
+                    showIcon
+                    className="mt-2"
+                    message="Leave a field empty to inherit the company-level setting."
+                  />
                 </Form>
               ),
             },
@@ -247,9 +228,12 @@ export default function ClientSettingsModal({
                       </Space>
                     </div>
                   ))}
-                  <Text type="secondary" className="text-xs mt-2">
-                    Leave a field empty to inherit the company-wide rate.
-                  </Text>
+                  <Alert
+                    type="info"
+                    showIcon
+                    className="mt-2"
+                    message="Leave a field empty to inherit the company-wide rate."
+                  />
                 </div>
               ),
             },

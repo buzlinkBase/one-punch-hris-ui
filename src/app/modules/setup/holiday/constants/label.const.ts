@@ -5,7 +5,6 @@ export const HOLIDAY_LABEL = {
   WORK_TYPE: "Work Type",
   HOL_DATE: "Holiday Date",
   IS_RECURING: "Recurring",
-  IS_PAID: "Paid Holiday",
   AREA: "Site (Localized)",
   STATUS: "Status",
   CREATE_TITLE: "Create Holiday",

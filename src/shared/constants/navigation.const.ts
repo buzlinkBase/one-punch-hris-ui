@@ -323,23 +323,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           },
         ],
       },
-      {
-        key: "setup-group-policy",
-        label: "Policy",
-        type: "group",
-        children: [
-          {
-            key: "setup-payroll-rate",
-            label: "Rate Multipliers",
-            path: "/setup/payroll-rate",
-          },
-          {
-            key: "setup-payroll-settings",
-            label: "Payroll Settings",
-            path: "/setup/payroll-settings",
-          },
-        ],
-      },
     ],
   },
   {
