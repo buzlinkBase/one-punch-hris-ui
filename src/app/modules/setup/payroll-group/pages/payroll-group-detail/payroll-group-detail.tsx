@@ -32,7 +32,7 @@ import {
 } from "../../hooks/use-payroll-group-queries";
 import {
   PAYROLL_GROUP_LABEL,
-  PAYROLL_FREQUENCY_OPTIONS,
+  PAYROLL_FREQUENCY_SELECT_OPTIONS,
   getStatutoryDeductionScheduleOptions,
   STATUTORY_DEDUCTION_SCHEDULE_NOTE,
   CUTOFF_DAY_PRESETS,
@@ -173,7 +173,7 @@ export default function PayrollGroupDetail() {
               render={({ field }) => (
                 <Select
                   {...field}
-                  options={PAYROLL_FREQUENCY_OPTIONS}
+                  options={PAYROLL_FREQUENCY_SELECT_OPTIONS}
                   placeholder="Select frequency"
                 />
               )}
