@@ -17,6 +17,11 @@ export const PAYROLL_FREQUENCY_OPTIONS = [
   { value: "MONTHLY", label: "Monthly" },
 ];
 
+// Daily hidden from selection for now — kept in PAYROLL_FREQUENCY_OPTIONS above so existing
+// Daily payroll groups still resolve a label everywhere else (e.g. the list table).
+export const PAYROLL_FREQUENCY_SELECT_OPTIONS =
+  PAYROLL_FREQUENCY_OPTIONS.filter((option) => option.value !== "DAILY");
+
 export const STATUTORY_DEDUCTION_SCHEDULE_OPTIONS = [
   { value: "PerPayroll", label: "Every cutoff (prorated)" },
   {
@@ -49,8 +54,8 @@ export function getStatutoryDeductionScheduleOptions(
   );
 }
 
-export const STATUTORY_DEDUCTION_SCHEDULE_NOTE =
-  "Applies to Fixed-salary employees. Variable-salary employees always deduct against their actual gross earned per cutoff, never a projected or averaged monthly income, regardless of this setting.";
+export const STATUTORY_DEDUCTION_SCHEDULE_NOTE = "";
+// "Applies to Fixed-salary employees. Variable-salary employees always deduct against their actual gross earned per cutoff, never a projected or averaged monthly income, regardless of this setting.";
 
 // Recommended cutoff-day starting points per frequency — the most common conventions
 // among PH companies. All fully editable afterward: add/remove rows, change the day,

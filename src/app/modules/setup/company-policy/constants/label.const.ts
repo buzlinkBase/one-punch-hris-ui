@@ -95,10 +95,10 @@ export const HOLIDAY_TIME_BASIS_OPTIONS = [
     value: "BasedOnTimeInDayType",
     label: "Full shift treated as holiday based on shift start day",
   },
-  {
-    value: "BasedOnActualWorkHours",
-    label: "Count only hours that actually fall within the holiday",
-  },
+  // {
+  //   value: "BasedOnActualWorkHours",
+  //   label: "Count only hours that actually fall within the holiday",
+  // },
 ];
 
 export const CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS = [
