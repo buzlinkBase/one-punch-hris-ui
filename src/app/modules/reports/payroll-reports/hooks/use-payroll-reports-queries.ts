@@ -51,6 +51,13 @@ export function useLeaveLedger(year: number) {
   });
 }
 
+export function useReimbursementList(from: string, to: string) {
+  return useQuery({
+    queryKey: ["payroll-reports", "reimbursement-list", from, to],
+    queryFn: () => payrollReportsApi.reimbursementList(from, to),
+  });
+}
+
 export function useAdjustLeaveCredits() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -87,10 +94,15 @@ export function useThirteenthMonth(year: number) {
   });
 }
 
-export function useMonthlyRemittanceReturn(from: string, to: string) {
+export function useMonthlyRemittanceReturn(
+  from: string,
+  to: string,
+  amendedReturn: boolean,
+) {
   return useQuery({
-    queryKey: ["payroll-reports", "1601c", from, to],
-    queryFn: () => payrollReportsApi.monthlyRemittanceReturn(from, to),
+    queryKey: ["payroll-reports", "1601c", from, to, amendedReturn],
+    queryFn: () =>
+      payrollReportsApi.monthlyRemittanceReturn(from, to, amendedReturn),
   });
 }
 

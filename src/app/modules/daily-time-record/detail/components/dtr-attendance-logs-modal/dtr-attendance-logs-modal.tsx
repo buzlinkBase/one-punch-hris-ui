@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   Button,
   DatePicker,
+  Input,
   Modal,
   Popconfirm,
   Space,
   Table,
   Tag,
+  Tooltip,
   theme,
 } from "antd";
 import {
@@ -49,6 +51,7 @@ export default function DtrAttendanceLogsModal({
   const { token } = theme.useToken();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<Dayjs | null>(null);
+  const [editingRemarks, setEditingRemarks] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
   const prevOpen = useRef(false);
@@ -91,15 +94,17 @@ export default function DtrAttendanceLogsModal({
   const startEdit = (record: AttendanceEntryResponse) => {
     setEditingId(record.id);
     setEditingValue(record.timeLog ? dayjs(record.timeLog) : null);
+    setEditingRemarks(record.remarks ?? "");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditingValue(null);
+    setEditingRemarks("");
   };
 
   const saveEdit = async (id: string) => {
-    if (!editingValue) return;
+    if (!editingValue || !editingRemarks.trim()) return;
     try {
       await updateEntry({
         id,
@@ -107,6 +112,7 @@ export default function DtrAttendanceLogsModal({
           .second(0)
           .millisecond(0)
           .format("YYYY-MM-DDTHH:mm:ss"),
+        remarks: editingRemarks.trim(),
       });
       getNotify().success({ message: "Attendance log updated." });
       refetch();
@@ -115,6 +121,7 @@ export default function DtrAttendanceLogsModal({
     } finally {
       setEditingId(null);
       setEditingValue(null);
+      setEditingRemarks("");
     }
   };
 
@@ -180,6 +187,42 @@ export default function DtrAttendanceLogsModal({
       render: (v: string | null) => v ?? "—",
     },
     {
+      title: "Remarks",
+      dataIndex: "remarks",
+      key: "remarks",
+      width: 200,
+      render: (v: string | null, record) => {
+        if (editingId === record.id) {
+          return (
+            <Input
+              size="small"
+              placeholder="Why is this being edited? (required)"
+              value={editingRemarks}
+              onChange={(e) => setEditingRemarks(e.target.value)}
+            />
+          );
+        }
+        return v ? (
+          <Tooltip title={v}>
+            <span style={{ display: "inline-block", maxWidth: 180 }}>
+              <span
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                }}
+              >
+                {v}
+              </span>
+            </span>
+          </Tooltip>
+        ) : (
+          "—"
+        );
+      },
+    },
+    {
       title: "",
       key: "actions",
       width: 110,
@@ -196,6 +239,7 @@ export default function DtrAttendanceLogsModal({
                 icon={<CheckOutlined />}
                 style={{ color: token.colorSuccess }}
                 loading={isSaving}
+                disabled={!editingValue || !editingRemarks.trim()}
                 onClick={() => saveEdit(record.id)}
               />
               <Button

@@ -18,6 +18,9 @@ export const leaveApplicationFormSchema = z
     governmentAmount: z.number().optional(),
     companyAmount: z.number().optional(),
     releasePayrollDate: z.string().optional(),
+    // "" = inherit the leave type's default disbursement method — see
+    // LeaveApplication.EmployerAdvancesPayment.
+    disbursementMethod: z.enum(["", "employer", "direct"]).optional(),
     applicationRemarks: z.string().optional(),
     supportingDocumentUrl: z.string().optional(),
     approvalStatus: z.string(),

@@ -162,6 +162,74 @@ export interface PayrollRunResult {
   obHours?: number;
   paidLeaveHours?: number;
   unpaidLeaveHours?: number;
+  // Per-day pay breakdown behind this row's earnings/attendance totals above (backend
+  // PayrollSummaryLine.TimeHourPayResults, one DTRPayModel per DTR day). Only populated on
+  // a fresh Calculate/Generate preview response — Payroll (the persisted entity read back
+  // via GET /payrolls) never stores this, so it's absent once a run has been saved and
+  // re-fetched.
+  timeHourPayResults?: DtrPayResult[];
+}
+
+// One day's contribution to a payroll line — mirrors backend DTRPayModel, using the same
+// per-category grouping the DTR Detail table's Hours Breakdown uses (Regular / Rest Day /
+// Legal Holiday / Special Holiday / Rest+Legal Day / Rest+Special Day / Double Legal Holiday
+// / Rest+Double Legal, each split into base/OT/ND/ND-OT), just amounts instead of hours — see
+// TimeHourPayResultsModal, which renders these with the identical column layout as
+// dtr-detail-table.tsx. No Official Business amount exists (OB is hours/informational only,
+// with no separate pay component in DTRPayModel), so that group has no amount equivalent here.
+export interface DtrPayResult {
+  date: string;
+  // PascalCase enum name as serialized by the backend's global StringEnumConverter (e.g.
+  // "RegularWorkDay", "LegalHolidayDuty") — space it out for display, same convention as
+  // dtr-detail-table.tsx's own WorkType column.
+  workType: string;
+  // Regular
+  regularDayPay: number;
+  regularOTPay: number;
+  regularNDPay: number;
+  regularNDOTPay: number;
+  // Rest Day
+  restDayPay: number;
+  restDayOTPay: number;
+  restDayNDPay: number;
+  restDayNDOTPay: number;
+  // Legal Holiday
+  legalPay: number;
+  legalOTPay: number;
+  legalNDPay: number;
+  legalNDOTPay: number;
+  // Special Holiday
+  specialPay: number;
+  specialOTPay: number;
+  specialNDPay: number;
+  specialNDOTPay: number;
+  // Rest + Legal Day
+  restLegalPay: number;
+  restLegalOTPay: number;
+  restLegalNDPay: number;
+  restLegalNDOTPay: number;
+  // Rest + Special Day
+  restSpecialPay: number;
+  restSpecialOTPay: number;
+  restSpecialNDPay: number;
+  restSpecialNDOTPay: number;
+  // Double Legal Holiday
+  doubleLegalPay: number;
+  doubleLegalOTPay: number;
+  doubleLegalNDPay: number;
+  doubleLegalNDOTPay: number;
+  // Rest + Double Legal
+  restDoubleLegalPay: number;
+  restDoubleLegalOTPay: number;
+  restDoubleLegalNDPay: number;
+  restDoubleLegalNDOTPay: number;
+  // Minutes-band amount analogs (Late / Under Time / Absent)
+  lateAmount: number;
+  utAmount: number;
+  absentAmount: number;
+  // Leave
+  paidLeave: number;
+  unpaidLeave: number;
 }
 
 export interface PayrollRunResponse {

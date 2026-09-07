@@ -259,7 +259,10 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
       --dp-scheduler-font-family: ${FONT_FAMILY};
       --dp-scheduler-font-size: 13px;
       --dp-scheduler-event-border-radius: 8px;
-      --dp-scheduler-event-border: none;
+      /* A visible border (matching the cell background, not "none") is what actually
+         separates two same-color shift bars sitting in adjacent day columns — without it
+         they read as one continuous merged block instead of distinct daily events. */
+      --dp-scheduler-event-border: 2px solid ${isDark ? "#162820" : "#ffffff"};
       --dp-scheduler-event-box-shadow: ${
         isDark ? "0 1px 3px rgba(0,0,0,0.5)" : "0 1px 2px rgba(16,24,40,0.08)"
       };
@@ -314,6 +317,11 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
           rowHeaderWidth={isMobile ? 130 : 200}
           cellWidth={isMobile ? 96 : 150}
           eventHeight={48}
+          // Breathing room between employee rows, and between the two stacked lanes a
+          // cross-midnight shift (e.g. a night shift) needs within one employee's row —
+          // without this the bars sit edge-to-edge with nothing to visually separate them.
+          rowMarginTop={4}
+          rowMarginBottom={4}
           heightSpec="Auto"
           resources={resources}
           events={events}

@@ -32,6 +32,7 @@ import type { PayrollRunResult } from "../../models/api/response/payroll-run-res
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
 import PayrollRunPostModal from "../../components/payroll-run-post-modal";
+import TimeHourPayResultsModal from "../../components/time-hour-pay-results-modal";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
@@ -79,6 +80,8 @@ export default function ForPayrollList() {
   const [previewBatchCode, setPreviewBatchCode] = useState<string | null>(null);
   const [payDate, setPayDate] = useState<string | null>(null);
   const [postModalOpen, setPostModalOpen] = useState(false);
+  const [dailyBreakdownRow, setDailyBreakdownRow] =
+    useState<PayrollRunResult | null>(null);
 
   const {
     data: allBatches = [],
@@ -195,11 +198,26 @@ export default function ForPayrollList() {
 
   const resultColumns: ColumnsType<PayrollRunResult> = [
     {
+      title: "",
+      key: "viewDaily",
+      width: 40,
+      render: (_, r) =>
+        r.timeHourPayResults?.length ? (
+          <Tooltip title="View daily pay breakdown">
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => setDailyBreakdownRow(r)}
+            />
+          </Tooltip>
+        ) : null,
+    },
+    {
       title: "Employee",
       dataIndex: "fullName",
       key: "fullName",
       width: 180,
-      fixed: "left",
     },
     {
       title: "Salary Type",
@@ -637,6 +655,13 @@ export default function ForPayrollList() {
         open={!!previewBatchCode}
         batchCode={previewBatchCode}
         onClose={() => setPreviewBatchCode(null)}
+      />
+
+      <TimeHourPayResultsModal
+        open={!!dailyBreakdownRow}
+        onClose={() => setDailyBreakdownRow(null)}
+        employeeName={dailyBreakdownRow?.fullName}
+        results={dailyBreakdownRow?.timeHourPayResults ?? []}
       />
 
       <PayrollRunPostModal

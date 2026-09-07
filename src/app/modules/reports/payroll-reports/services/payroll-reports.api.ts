@@ -6,6 +6,7 @@ import type {
   BankDisbursementResponse,
   LoanLedgerResponse,
   LeaveCreditsBalanceResponse,
+  ReimbursementListResponse,
   AdjustLeaveCreditsRequest,
   AdjustLeaveCreditsResponse,
   CostSummaryResponse,
@@ -13,6 +14,7 @@ import type {
   YtdPayrollSummaryResponse,
   ThirteenthMonthResponse,
   MonthlyRemittanceReturnResponse,
+  MonthlyRemittanceReturnEmployeeResponse,
   AlphalistEntryResponse,
   Bir2316Response,
 } from "../models/api/response/payroll-reports.model";
@@ -47,6 +49,8 @@ export const payrollReportsApi = {
     get<LoanLedgerResponse>("loan-ledger", { asOf }),
   leaveLedger: (year: number) =>
     get<LeaveCreditsBalanceResponse>("leave-ledger", { year }),
+  reimbursementList: (from: string, to: string) =>
+    get<ReimbursementListResponse>("reimbursement-list", { from, to }),
   adjustLeaveCredits: (payload: AdjustLeaveCreditsRequest) =>
     httpClient.postUnwrapped<AdjustLeaveCreditsResponse>(
       `${LEAVES_ENDPOINT}/credits/adjust`,
@@ -58,8 +62,22 @@ export const payrollReportsApi = {
     get<YtdPayrollSummaryResponse>("ytd-summary", { year }),
   thirteenthMonth: (year: number) =>
     get<ThirteenthMonthResponse>("13th-month-pay", { year }),
-  monthlyRemittanceReturn: (from: string, to: string) =>
-    get<MonthlyRemittanceReturnResponse>("1601c", { from, to }),
+  // Distinct from the generic get<T>() helper — this endpoint's envelope carries a `summary`
+  // object alongside `data` (the per-employee drill-down rows), not just a flat array.
+  async monthlyRemittanceReturn(
+    from: string,
+    to: string,
+    amendedReturn: boolean,
+  ): Promise<{
+    employees: MonthlyRemittanceReturnEmployeeResponse[];
+    summary: MonthlyRemittanceReturnResponse;
+  }> {
+    const res = await httpClient.getUnwrapped<{
+      data: MonthlyRemittanceReturnEmployeeResponse[];
+      summary: MonthlyRemittanceReturnResponse;
+    }>(`${ENDPOINT}/1601c`, { params: { from, to, amendedReturn } });
+    return { employees: res?.data ?? [], summary: res.summary };
+  },
   alphalist: (year: number) =>
     get<AlphalistEntryResponse>("alphalist", { year }),
   bir2316: (employeeId: string, year: number) =>

@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import {
+  Alert,
   Button,
   Card,
+  Checkbox,
   Col,
   DatePicker,
   Form,
@@ -31,9 +33,16 @@ import {
   usePayrolls,
   usePostPayrollBatch,
   useDeletePayrollBatch,
+  useAvailableSalaryAdjustments,
+  useAvailableOtherIncome,
+  useLastPayAttendanceWarnings,
 } from "../../hooks/use-for-payroll-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import type {
+  AvailableSalaryAdjustment,
+  AvailableOtherIncome,
+} from "../../models/api/response/last-pay-review.model";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
@@ -85,6 +94,57 @@ export default function GenerateLastPay() {
     [rawEmployees],
   );
 
+  const employeeNameById = useMemo(
+    () =>
+      Object.fromEntries(
+        rawEmployees.map((e) => [e.id, `${e.firstName} ${e.lastName}`]),
+      ) as Record<string, string>,
+    [rawEmployees],
+  );
+
+  // Review step — which optional components to fold into this run. 13th month and leave
+  // conversion default to included (matching the backend's original always-include
+  // behavior); Salary Adjustments/Other Income default to every currently-available item
+  // once fetched, and HR can uncheck specific rows before generating.
+  const [includeThirteenthMonth, setIncludeThirteenthMonth] = useState(true);
+  const [includeLeaveConversion, setIncludeLeaveConversion] = useState(true);
+  const [selectedAdjustmentIds, setSelectedAdjustmentIds] = useState<string[]>(
+    [],
+  );
+  const [selectedOtherIncomeIds, setSelectedOtherIncomeIds] = useState<
+    string[]
+  >([]);
+
+  const { data: adjustmentsData, isFetching: isLoadingAdjustments } =
+    useAvailableSalaryAdjustments(employeeIds);
+  const { data: otherIncomeData, isFetching: isLoadingOtherIncome } =
+    useAvailableOtherIncome(employeeIds);
+  const { data: attendanceWarningsData } =
+    useLastPayAttendanceWarnings(employeeIds);
+
+  const availableAdjustments = adjustmentsData?.data ?? [];
+  const availableOtherIncome = otherIncomeData?.data ?? [];
+  const attendanceWarnings = attendanceWarningsData?.data ?? [];
+
+  // Re-defaults to "everything available" whenever the fetched set changes (a different
+  // employee selection, or a row that got consumed elsewhere) — HR's unchecks only need to
+  // survive within one review session, not across a re-fetch. Adjusting state during render
+  // (React's documented pattern for this) instead of in an effect, which would cause an
+  // extra render pass on every fetch.
+  const adjustmentIdsKey = availableAdjustments.map((a) => a.id).join(",");
+  const [prevAdjustmentIdsKey, setPrevAdjustmentIdsKey] = useState("");
+  if (adjustmentIdsKey !== prevAdjustmentIdsKey) {
+    setPrevAdjustmentIdsKey(adjustmentIdsKey);
+    setSelectedAdjustmentIds(availableAdjustments.map((a) => a.id));
+  }
+
+  const otherIncomeIdsKey = availableOtherIncome.map((a) => a.id).join(",");
+  const [prevOtherIncomeIdsKey, setPrevOtherIncomeIdsKey] = useState("");
+  if (otherIncomeIdsKey !== prevOtherIncomeIdsKey) {
+    setPrevOtherIncomeIdsKey(otherIncomeIdsKey);
+    setSelectedOtherIncomeIds(availableOtherIncome.map((a) => a.id));
+  }
+
   const { mutateAsync: generate, isPending: isGenerating } =
     useGenerateLastPay();
 
@@ -98,6 +158,10 @@ export default function GenerateLastPay() {
         employeeIds,
         payDate: payDate ?? undefined,
         remarks: remarks || undefined,
+        includeThirteenthMonth,
+        includeLeaveConversion,
+        salaryAdjustmentIds: selectedAdjustmentIds,
+        otherIncomeScheduleIds: selectedOtherIncomeIds,
       });
       setResults(response.data);
       message.success(
@@ -382,6 +446,154 @@ export default function GenerateLastPay() {
           </Button>
         </Form>
       </Card>
+
+      {employeeIds.length > 0 && (
+        <Card className="mb-4" title="Review Components to Include">
+          {attendanceWarnings.length > 0 && (
+            <Alert
+              className="mb-4"
+              type="warning"
+              showIcon
+              message="Posted attendance found after the last regular payroll"
+              description={
+                <ul className="mb-0 pl-4">
+                  {attendanceWarnings.map((w) => (
+                    <li key={w.employeeId}>
+                      {w.fullName} — {w.unpaidAttendanceDayCount} posted DTR day
+                      {w.unpaidAttendanceDayCount !== 1 ? "s" : ""} between{" "}
+                      {w.lastRegularPayPeriodEnd
+                        ? dayjs(w.lastRegularPayPeriodEnd).format(
+                            "MMM DD, YYYY",
+                          )
+                        : "hire date"}{" "}
+                      and separation (
+                      {dayjs(w.separationDate).format("MMM DD, YYYY")}) . Run a
+                      regular payroll for that final cutoff first, or these days
+                      go unpaid.
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
+          )}
+
+          <Space size="large" className="mb-4">
+            <Checkbox
+              checked={includeThirteenthMonth}
+              onChange={(e) => setIncludeThirteenthMonth(e.target.checked)}
+            >
+              Include prorated 13th month pay
+            </Checkbox>
+            <Checkbox
+              checked={includeLeaveConversion}
+              onChange={(e) => setIncludeLeaveConversion(e.target.checked)}
+            >
+              Include leave credit cash conversion
+            </Checkbox>
+          </Space>
+
+          <Text strong className="mb-2 block">
+            Pending Salary Adjustments
+          </Text>
+          <Table<AvailableSalaryAdjustment>
+            className="mb-4"
+            rowKey="id"
+            size="small"
+            loading={isLoadingAdjustments}
+            dataSource={availableAdjustments}
+            pagination={false}
+            locale={{ emptyText: "No pending salary adjustments." }}
+            rowSelection={{
+              selectedRowKeys: selectedAdjustmentIds,
+              onChange: (keys) => setSelectedAdjustmentIds(keys as string[]),
+            }}
+            columns={[
+              {
+                title: "Employee",
+                key: "employee",
+                render: (_, r) => employeeNameById[r.employeeId] ?? "—",
+              },
+              { title: "Type", dataIndex: "adjustmentType", key: "type" },
+              {
+                title: "Date",
+                dataIndex: "payrollDate",
+                key: "date",
+                render: (v: string) => dayjs(v).format("MMM DD, YYYY"),
+              },
+              {
+                title: "Amount",
+                dataIndex: "amount",
+                key: "amount",
+                align: "right",
+                render: fmt,
+              },
+              {
+                title: "Remarks",
+                dataIndex: "remarks",
+                key: "remarks",
+                render: (v?: string) => v || "—",
+              },
+            ]}
+          />
+
+          <Text strong className="mb-2 block">
+            Pending Other Income
+          </Text>
+          <Table<AvailableOtherIncome>
+            rowKey="id"
+            size="small"
+            loading={isLoadingOtherIncome}
+            dataSource={availableOtherIncome}
+            pagination={false}
+            locale={{ emptyText: "No pending other income." }}
+            rowSelection={{
+              selectedRowKeys: selectedOtherIncomeIds,
+              onChange: (keys) => setSelectedOtherIncomeIds(keys as string[]),
+            }}
+            columns={[
+              {
+                title: "Employee",
+                key: "employee",
+                render: (_, r) => employeeNameById[r.employeeId] ?? "—",
+              },
+              {
+                title: "Income",
+                key: "income",
+                render: (_, r) => r.income?.name ?? "—",
+              },
+              {
+                title: "Date",
+                dataIndex: "date",
+                key: "date",
+                render: (v: string) => dayjs(v).format("MMM DD, YYYY"),
+              },
+              {
+                title: "Amount",
+                dataIndex: "amount",
+                key: "amount",
+                align: "right",
+                render: fmt,
+              },
+              {
+                title: "Taxable",
+                dataIndex: "isTaxable",
+                key: "isTaxable",
+                render: (v: boolean) => (
+                  <Tag color={v ? "orange" : "default"}>
+                    {v ? "Taxable" : "Non-Taxable"}
+                  </Tag>
+                ),
+              },
+              {
+                title: "Notes",
+                dataIndex: "notes",
+                key: "notes",
+                render: (v?: string) => v || "—",
+              },
+            ]}
+          />
+        </Card>
+      )}
 
       {results.length > 0 && (
         <>

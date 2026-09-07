@@ -29,11 +29,11 @@ export default function PayrollRunPostModal({
 
   return (
     <Modal
-      title="Generate Payroll"
+      title="Save Payroll"
       open={open}
       onCancel={handleClose}
       onOk={handleOk}
-      okText="Generate"
+      okText="Save"
       confirmLoading={isSaving}
       destroyOnClose
     >

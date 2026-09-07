@@ -24,6 +24,7 @@ import {
 } from "../../hooks/use-branch-queries";
 import { BRANCH_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
 
 // Lazy-load the map to avoid SSR/leaflet issues
 const PolygonMapPicker = lazy(() =>
@@ -62,6 +63,7 @@ export default function BranchDetail() {
       address: null,
       boundary: null,
       status: "ACTIVE",
+      regionCode: null,
     },
   });
 
@@ -73,6 +75,7 @@ export default function BranchDetail() {
         address: selected.address ?? null,
         boundary: selected.boundary ?? null,
         status: selected.status,
+        regionCode: selected.regionCode ?? null,
       });
     }
   }, [selected, isEdit, reset]);
@@ -163,6 +166,32 @@ export default function BranchDetail() {
                       onChange={(e) => field.onChange(e.target.value || null)}
                       rows={3}
                       placeholder="Enter full address"
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Region"
+                help="DOLE wage region — used to auto-classify Minimum Wage Earners for BIR 1601-C"
+              >
+                <Controller
+                  name="regionCode"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value ?? undefined}
+                      onChange={(v) => field.onChange(v ?? null)}
+                      options={[...PH_REGION_OPTIONS]}
+                      placeholder="Select region"
+                      allowClear
+                      showSearch
+                      filterOption={(input, option) =>
+                        String(option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
                     />
                   )}
                 />

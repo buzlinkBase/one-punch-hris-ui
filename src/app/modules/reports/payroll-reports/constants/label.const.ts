@@ -18,6 +18,9 @@ export const PAYROLL_REPORTS_LABEL = {
   LEAVE_TITLE: "Leave Ledger",
   LEAVE_SUBTITLE:
     "Leave credits granted, used, and remaining balance per employee for the selected year.",
+  REIMBURSEMENT_TITLE: "Reimbursement List",
+  REIMBURSEMENT_SUBTITLE:
+    "Employer-advanced government leave payouts (e.g. SSS Maternity) and the status of their reimbursement claim.",
   COST_TITLE: "Cost Summary",
   COST_SUBTITLE:
     "Payroll cost aggregated by Department, Client, or Branch for the selected period.",

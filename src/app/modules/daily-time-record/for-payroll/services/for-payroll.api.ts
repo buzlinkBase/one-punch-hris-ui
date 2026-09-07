@@ -5,6 +5,11 @@ import type { PayrollRunRequest } from "../models/api/request/payroll-run-reques
 import type { GenerateThirteenthMonthRequest } from "../models/api/request/generate-thirteenth-month-request.model";
 import type { GenerateLastPayRequest } from "../models/api/request/generate-last-pay-request.model";
 import type { PayrollRunResponse } from "../models/api/response/payroll-run-result.model";
+import type {
+  AvailableSalaryAdjustment,
+  AvailableOtherIncome,
+  LastPayAttendanceWarning,
+} from "../models/api/response/last-pay-review.model";
 
 const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
 const PAYROLL_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrolls");
@@ -64,6 +69,44 @@ export const forPayrollApi = {
       `${PAYROLL_ENDPOINT}/generate-last-pay`,
       payload,
     );
+  },
+
+  // Review-step data for the Last Pay generation screen — see LastPayRunPayload.
+  // SalaryAdjustmentIds/OtherIncomeScheduleIds and PayrollsController's last-pay/* GETs.
+  getAvailableSalaryAdjustments(
+    employeeIds: string[],
+  ): Promise<{ data: AvailableSalaryAdjustment[]; total: number }> {
+    return httpClient.getUnwrapped<{
+      data: AvailableSalaryAdjustment[];
+      total: number;
+    }>(`${PAYROLL_ENDPOINT}/last-pay/available-salary-adjustments`, {
+      params: { employeeIds },
+      paramsSerializer: { indexes: null },
+    });
+  },
+
+  getAvailableOtherIncome(
+    employeeIds: string[],
+  ): Promise<{ data: AvailableOtherIncome[]; total: number }> {
+    return httpClient.getUnwrapped<{
+      data: AvailableOtherIncome[];
+      total: number;
+    }>(`${PAYROLL_ENDPOINT}/last-pay/available-other-income`, {
+      params: { employeeIds },
+      paramsSerializer: { indexes: null },
+    });
+  },
+
+  getLastPayAttendanceWarnings(
+    employeeIds: string[],
+  ): Promise<{ data: LastPayAttendanceWarning[]; total: number }> {
+    return httpClient.getUnwrapped<{
+      data: LastPayAttendanceWarning[];
+      total: number;
+    }>(`${PAYROLL_ENDPOINT}/last-pay/attendance-warnings`, {
+      params: { employeeIds },
+      paramsSerializer: { indexes: null },
+    });
   },
 
   getPayrolls(params: {

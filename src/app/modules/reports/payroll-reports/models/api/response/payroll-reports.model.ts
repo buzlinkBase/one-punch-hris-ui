@@ -45,6 +45,26 @@ export interface LoanLedgerResponse {
   currentBalance: number;
 }
 
+// OneTime, employer-advanced government leave payouts awaiting/undergoing SSS-style
+// reimbursement — see hrms-api's ReimbursementListModel/GetReimbursementListAsync. Direct
+// Deposit payouts (government pays the employee, not this employer) never appear here — there
+// is nothing for the employer to be reimbursed for.
+export interface ReimbursementListResponse {
+  leaveApplicationId: string;
+  employeeId: string;
+  employeeNo: string;
+  fullName: string;
+  leaveDescription: string;
+  leaveDateFrom: string;
+  leaveDateTo: string;
+  releasePayrollDate: string | null;
+  governmentAmount: number;
+  status: "NotFiled" | "Filed" | "Reimbursed";
+  filedDate: string | null;
+  receivedDate: string | null;
+  referenceNo: string | null;
+}
+
 export type CostSummaryGroupBy = "department" | "client" | "branch";
 
 export interface CostSummaryResponse {
@@ -128,15 +148,44 @@ export interface ThirteenthMonthResponse {
   payrollId: string | null;
 }
 
-// BIR Form 1601-C's actual return figures for one posting period — company-wide totals,
-// not filed as a raw file upload (BIR requires eBIRForms/eFPS); this exists so the
-// preparer has the exact numbers to transcribe.
+// BIR Form 1601-C's actual return figures for one posting period, matching the physical
+// form's own Line 15/16A/16B/16C/17/18/19 layout — company-wide totals, summed from
+// MonthlyRemittanceReturnEmployeeResponse rows. Not filed as a raw file upload (BIR requires
+// eBIRForms/eFPS); this exists so the preparer has the exact numbers to transcribe.
 export interface MonthlyRemittanceReturnResponse {
   periodFrom: string;
   periodTo: string;
+  amendedReturn: boolean;
   employeeCount: number;
-  totalTaxableCompensation: number;
-  totalTaxWithheld: number;
+  line15_TotalCompensation: number;
+  line16A_StatutoryMinimumWage: number;
+  line16B_MWEPremiumPay: number;
+  line16C_OtherNonTaxable: number;
+  line17_TotalNonTaxable: number;
+  line18_TaxableCompensation: number;
+  line19_TaxWithheld: number;
+  hasUnwithheldTaxWarning: boolean;
+  // Employees whose Minimum-Wage-Earner status couldn't be determined this period (no Branch,
+  // no Branch Region, or no Minimum Wage Rate for that region) — defaulted to non-MWE (KR010)
+  // rather than failing the report. Review their Setup > Branch/Minimum Wage Rate data.
+  unclassifiedEmployeeCount: number;
+}
+
+// One row per employee for the period — backs the report's drill-down (click a line, see the
+// employee rows behind it).
+export interface MonthlyRemittanceReturnEmployeeResponse {
+  employeeId: string;
+  employeeNo: string;
+  fullName: string;
+  isMinimumWageEarner: boolean;
+  atcCode: string;
+  grossCompensation: number;
+  statutoryMinimumWage: number;
+  mwePremiumPay: number;
+  otherNonTaxable: number;
+  taxableCompensation: number;
+  taxWithheld: number;
+  isUnclassified: boolean;
 }
 
 // One row per employee per year — BIR Alphalist entry / also the source for a 2316.

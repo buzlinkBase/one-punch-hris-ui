@@ -127,6 +127,10 @@ const LoanLedger = lazy(
 const LeaveLedger = lazy(
   () => import("@/app/modules/reports/payroll-reports/pages/leave-ledger"),
 );
+const ReimbursementList = lazy(
+  () =>
+    import("@/app/modules/reports/payroll-reports/pages/reimbursement-list"),
+);
 const CostSummary = lazy(
   () => import("@/app/modules/reports/payroll-reports/pages/cost-summary"),
 );
@@ -805,6 +809,17 @@ const leaveLedgerIndexRoute = createRoute({
   component: withSuspense(LeaveLedger),
 });
 
+const reimbursementListRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/reimbursement-list",
+  component: MainLayout,
+});
+const reimbursementListIndexRoute = createRoute({
+  getParentRoute: () => reimbursementListRoute,
+  path: "/",
+  component: withSuspense(ReimbursementList),
+});
+
 const costSummaryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/cost-summary",
@@ -1416,6 +1431,7 @@ const routeTree = rootRoute.addChildren([
   bankDisbursementRoute.addChildren([bankDisbursementIndexRoute]),
   loanLedgerRoute.addChildren([loanLedgerIndexRoute]),
   leaveLedgerRoute.addChildren([leaveLedgerIndexRoute]),
+  reimbursementListRoute.addChildren([reimbursementListIndexRoute]),
   costSummaryRoute.addChildren([costSummaryIndexRoute]),
   ytdSummaryRoute.addChildren([ytdSummaryIndexRoute]),
   thirteenthMonthPayRoute.addChildren([thirteenthMonthPayIndexRoute]),

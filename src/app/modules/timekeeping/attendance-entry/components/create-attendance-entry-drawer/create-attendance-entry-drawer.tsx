@@ -4,6 +4,7 @@ import {
   Checkbox,
   Drawer,
   Form,
+  Input,
   Select,
   Table,
   TimePicker,
@@ -88,6 +89,7 @@ export default function CreateAttendanceEntryDrawer({
   const [includeOut, setIncludeOut] = useState(true);
   const [outTime, setOutTime] = useState<Dayjs | null>(null);
   const [outDayOffset, setOutDayOffset] = useState(0);
+  const [remarks, setRemarks] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
 
   const { data: employees = [], isLoading: isEmployeesLoading } =
@@ -274,6 +276,7 @@ export default function CreateAttendanceEntryDrawer({
     setIncludeOut(true);
     setOutTime(null);
     setOutDayOffset(0);
+    setRemarks("");
     onClose();
   };
 
@@ -296,6 +299,12 @@ export default function CreateAttendanceEntryDrawer({
     }
     if (includeOut && !outTime) {
       messageApi.warning("Please set the Out Time.");
+      return;
+    }
+    if (!remarks.trim()) {
+      messageApi.warning(
+        "Please state why this attendance is manually entered.",
+      );
       return;
     }
 
@@ -332,6 +341,7 @@ export default function CreateAttendanceEntryDrawer({
           entries.push({
             workTime: dt.format("YYYY-MM-DDTHH:mm:ss"),
             employeeId,
+            remarks: remarks.trim(),
           });
         }
       }
@@ -354,6 +364,7 @@ export default function CreateAttendanceEntryDrawer({
     (!includeIn && !includeOut) ||
     (includeIn && !inTime) ||
     (includeOut && !outTime) ||
+    !remarks.trim() ||
     isSubmitting;
 
   return (
@@ -569,6 +580,15 @@ export default function CreateAttendanceEntryDrawer({
             </div>
           </Form.Item>
         </div>
+
+        <Form.Item label="Remarks" required className="mb-0">
+          <Input.TextArea
+            rows={2}
+            placeholder="Why is this attendance being manually entered? (e.g. device offline, employee forgot to punch)"
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+          />
+        </Form.Item>
       </Form>
     </Drawer>
   );

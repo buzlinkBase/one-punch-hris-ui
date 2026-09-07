@@ -226,6 +226,12 @@ export default function AttendanceEntryList() {
       render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A"),
     },
     {
+      title: "Remarks",
+      dataIndex: "remarks",
+      key: "remarks",
+      render: (v: string | null) => v ?? "—",
+    },
+    {
       title: "",
       key: "action",
       width: entryWidths.action,

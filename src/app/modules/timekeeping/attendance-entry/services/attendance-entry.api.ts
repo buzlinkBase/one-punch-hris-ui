@@ -23,6 +23,8 @@ interface ServerAttendanceRecord {
   branch: string | null;
   client: string | null;
   area: string | null;
+  logRemarks: string | null;
+  editRemarks: string | null;
 }
 
 function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
@@ -36,6 +38,7 @@ function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
     branch: r.branch ?? null,
     client: r.client ?? null,
     area: r.area ?? null,
+    remarks: r.editRemarks || r.logRemarks || null,
   };
 }
 

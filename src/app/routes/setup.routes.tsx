@@ -22,6 +22,15 @@ const HolidayDetail = lazy(
   () => import("@/app/modules/setup/holiday/pages/holiday-detail"),
 );
 
+const MinimumWageRateList = lazy(
+  () =>
+    import("@/app/modules/setup/minimum-wage-rate/pages/minimum-wage-rate-list"),
+);
+const MinimumWageRateDetail = lazy(
+  () =>
+    import("@/app/modules/setup/minimum-wage-rate/pages/minimum-wage-rate-detail"),
+);
+
 const OperationAreaList = lazy(
   () => import("@/app/modules/setup/operation-area/pages/operation-area-list"),
 );
@@ -193,6 +202,10 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "holiday", component: HolidayList },
   { path: "holiday/create", component: HolidayDetail },
   { path: "holiday/$id", component: HolidayDetail },
+
+  { path: "minimum-wage-rate", component: MinimumWageRateList },
+  { path: "minimum-wage-rate/create", component: MinimumWageRateDetail },
+  { path: "minimum-wage-rate/$id", component: MinimumWageRateDetail },
 
   { path: "project-site", component: OperationAreaList },
   { path: "project-site/create", component: OperationAreaDetail },

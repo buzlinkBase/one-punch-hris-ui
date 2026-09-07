@@ -263,6 +263,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/setup/holiday",
           },
           {
+            key: "setup-minimum-wage-rate",
+            label: "Minimum Wage Rates",
+            path: "/setup/minimum-wage-rate",
+          },
+          {
             key: "setup-leave-type",
             label: "Leave Types",
             path: "/setup/leave-type",
@@ -374,6 +379,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "payroll-reports-leave",
         label: "Leave Ledger",
         path: "/payroll/reports/leave-ledger",
+      },
+      {
+        key: "payroll-reports-reimbursement",
+        label: "Reimbursement List",
+        path: "/payroll/reports/reimbursement-list",
       },
       {
         key: "payroll-reports-cost",

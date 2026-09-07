@@ -56,6 +56,32 @@ export function useGenerateLastPay() {
   });
 }
 
+// Review-step data for the Last Pay generation screen — only meaningful once at least one
+// separated employee is selected, so all three stay disabled until then.
+export function useAvailableSalaryAdjustments(employeeIds: string[]) {
+  return useQuery({
+    queryKey: ["last-pay-available-salary-adjustments", employeeIds],
+    queryFn: () => forPayrollApi.getAvailableSalaryAdjustments(employeeIds),
+    enabled: employeeIds.length > 0,
+  });
+}
+
+export function useAvailableOtherIncome(employeeIds: string[]) {
+  return useQuery({
+    queryKey: ["last-pay-available-other-income", employeeIds],
+    queryFn: () => forPayrollApi.getAvailableOtherIncome(employeeIds),
+    enabled: employeeIds.length > 0,
+  });
+}
+
+export function useLastPayAttendanceWarnings(employeeIds: string[]) {
+  return useQuery({
+    queryKey: ["last-pay-attendance-warnings", employeeIds],
+    queryFn: () => forPayrollApi.getLastPayAttendanceWarnings(employeeIds),
+    enabled: employeeIds.length > 0,
+  });
+}
+
 export function usePayrolls(params: {
   from?: string;
   to?: string;

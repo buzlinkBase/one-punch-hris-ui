@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
-import { leaveApplicationApi } from "../services/leave-application.api";
+import {
+  leaveApplicationApi,
+  type UpdateReimbursementStatus,
+} from "../services/leave-application.api";
 import type { CreateLeaveApplication } from "../models/api/request/create-leave-application.model";
 import type { UpdateLeaveApplication } from "../models/api/request/update-leave-application.model";
 import type { LeaveApplicationResponse } from "../models/api/response/leave-application-response.model";
@@ -64,6 +67,39 @@ export function useCreateLeaveApplicationBatch() {
       leaveApplicationApi.createBatch(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useUpdateReimbursementStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateReimbursementStatus;
+    }) => leaveApplicationApi.updateReimbursement(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["payroll-reports", "reimbursement-list"],
+      });
+    },
+    onError: (error: AxiosError<ErrorResponse>) => {
+      const pd = error.response?.data?.data;
+      const description =
+        pd?.innerException ??
+        pd?.detail ??
+        error.message ??
+        "An unexpected error occurred.";
+      notification.error({
+        message: "Update Failed",
+        description,
+        placement: "topRight",
+        duration: 6,
+      });
     },
   });
 }
