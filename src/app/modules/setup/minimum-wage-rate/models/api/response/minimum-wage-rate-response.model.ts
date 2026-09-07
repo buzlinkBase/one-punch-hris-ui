@@ -5,4 +5,5 @@ export interface MinimumWageRateResponse {
   dailyRate: number;
   effectiveDate: string;
   wageOrderNo?: string | null;
+  wageOrderClass?: string | null;
 }

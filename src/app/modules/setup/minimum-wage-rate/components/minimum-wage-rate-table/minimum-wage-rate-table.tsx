@@ -35,10 +35,16 @@ export default function MinimumWageRateTable({
     dailyRate: 130,
     effectiveDate: 140,
     wageOrderNo: 160,
+    wageOrderClass: 200,
   });
 
   const filtered = data.filter((item) =>
-    [item.regionCode, item.regionName, item.wageOrderNo].some((val) =>
+    [
+      item.regionCode,
+      item.regionName,
+      item.wageOrderNo,
+      item.wageOrderClass,
+    ].some((val) =>
       String(val ?? "")
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -93,6 +99,18 @@ export default function MinimumWageRateTable({
         ({
           width: widths.wageOrderNo,
           onResize: (w: number) => handleResize("wageOrderNo", w),
+        }) as object,
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      title: MINIMUM_WAGE_RATE_LABEL.WAGE_ORDER_CLASS,
+      dataIndex: "wageOrderClass",
+      key: "wageOrderClass",
+      width: widths.wageOrderClass,
+      onHeaderCell: () =>
+        ({
+          width: widths.wageOrderClass,
+          onResize: (w: number) => handleResize("wageOrderClass", w),
         }) as object,
       render: (v: string | null) => v ?? "—",
     },

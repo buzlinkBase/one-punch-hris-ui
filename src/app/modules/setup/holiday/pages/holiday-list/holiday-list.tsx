@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button, DatePicker, Space, Typography } from "antd";
+import { useMemo, useState } from "react";
+import { Alert, Button, DatePicker, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -18,7 +18,22 @@ export default function HolidayList() {
     refetch,
     isFetching,
   } = useHolidays(year);
+  const { data: previousYearHolidays = [] } = useHolidays(year - 1);
   const { mutate: remove } = useDeleteHoliday();
+
+  // Heuristic reminder, not a guarantee: movable holidays (Chinese New Year, Holy Week,
+  // etc.) have no fixed formula and must be re-entered every year (isRecuring = false).
+  // If this year has fewer of those than last year, HR may not have rolled them over yet.
+  const nonRecurringWarning = useMemo(() => {
+    const currentCount = holidays.filter((h) => !h.isRecuring).length;
+    const previousCount = previousYearHolidays.filter(
+      (h) => !h.isRecuring,
+    ).length;
+    if (previousCount > 0 && currentCount < previousCount) {
+      return { currentCount, previousCount };
+    }
+    return null;
+  }, [holidays, previousYearHolidays]);
 
   return (
     <div className="content-page">
@@ -56,6 +71,15 @@ export default function HolidayList() {
           </Space>
         </div>
       </div>
+      {nonRecurringWarning && (
+        <Alert
+          className="mb-3"
+          type="warning"
+          showIcon
+          message={`Only ${nonRecurringWarning.currentCount} year-specific holiday(s) configured for ${year}, vs. ${nonRecurringWarning.previousCount} for ${year - 1}`}
+          description="Movable holidays (e.g. Chinese New Year, Holy Week) have no fixed date and don't repeat automatically — confirm they've been added for this year."
+        />
+      )}
       <HolidayTable data={holidays} loading={isLoading} onDelete={remove} />
     </div>
   );
