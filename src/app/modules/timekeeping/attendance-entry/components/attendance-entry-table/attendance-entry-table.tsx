@@ -1,5 +1,13 @@
 import React from "react";
-import { Button, Popconfirm, Space, Table, Tag } from "antd";
+import {
+  Button,
+  Popconfirm,
+  Space,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { AttendanceEntryResponse } from "../../models/api/response/attendance-entry-response.model";
@@ -26,6 +34,7 @@ export default function AttendanceEntryTable({
     employeeName: 150,
     timeLog: 180,
     batchCode: 200,
+    remarks: 220,
     actions: 140,
   });
 
@@ -68,6 +77,27 @@ export default function AttendanceEntryTable({
           <Tag color="blue">{code}</Tag>
         ) : (
           <Tag color="default">Manual</Tag>
+        ),
+    },
+    {
+      title: "Remarks",
+      dataIndex: "remarks",
+      key: "remarks",
+      width: widths.remarks,
+      onHeaderCell: () =>
+        ({
+          width: widths.remarks,
+          onResize: (w: number) => handleResize("remarks", w),
+        }) as object,
+      render: (v: string | null) =>
+        v ? (
+          <Tooltip title={v}>
+            <Typography.Text ellipsis style={{ maxWidth: widths.remarks - 16 }}>
+              {v}
+            </Typography.Text>
+          </Tooltip>
+        ) : (
+          "—"
         ),
     },
     {

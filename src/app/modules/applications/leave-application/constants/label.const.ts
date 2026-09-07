@@ -10,6 +10,7 @@ export const LEAVE_APPLICATION_LABEL = {
   GOVERNMENT_AMOUNT: "Government Amount",
   COMPANY_AMOUNT: "Company Amount",
   RELEASE_PAYROLL_DATE: "Release Payroll Date",
+  DISBURSEMENT_METHOD: "Government Portion Disbursed By",
   REMARKS: "Reason / Remarks",
   STATUS: "Status",
   REVIEWED_BY: "Reviewed By",

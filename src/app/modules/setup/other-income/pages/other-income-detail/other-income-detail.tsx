@@ -204,6 +204,7 @@ export default function OtherIncomeDetail() {
       incomeClass: "Regular",
       incomeTypeId: undefined,
       isTaxable: false,
+      isHazardPay: false,
       status: "Active",
     },
   });
@@ -216,6 +217,7 @@ export default function OtherIncomeDetail() {
         incomeClass: selected.incomeClass,
         incomeTypeId: selected.incomeTypeId ?? undefined,
         isTaxable: selected.isTaxable,
+        isHazardPay: selected.isHazardPay,
         status: selected.status ?? "Active",
       });
     }
@@ -357,6 +359,21 @@ export default function OtherIncomeDetail() {
               />
             </Form.Item>
 
+            <Form.Item
+              label="Is Hazard Pay (BIR 1601-C Line 16B)"
+              help="When on, this category's amounts count toward Line 16B for Minimum Wage Earners on the BIR 1601-C report."
+            >
+              <Controller
+                name="isHazardPay"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+          </div>
+
+          <div className="form-grid-2">
             <Form.Item
               label={OTHER_INCOME_LABEL.STATUS}
               validateStatus={errors.status ? "error" : ""}

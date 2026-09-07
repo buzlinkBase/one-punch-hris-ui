@@ -199,12 +199,24 @@ function EditPassSlip({ id }: { id: string }) {
           />
         </Form.Item>
 
-        <Form.Item label="Remarks (optional)">
+        <Form.Item
+          label="Remarks"
+          required
+          validateStatus={errors.remarks ? "error" : ""}
+          help={
+            errors.remarks?.message ??
+            "Why is this pass slip / manual attendance being filed?"
+          }
+        >
           <Controller
             name="remarks"
             control={control}
             render={({ field }) => (
-              <TextArea {...field} rows={2} placeholder="Additional remarks" />
+              <TextArea
+                {...field}
+                rows={2}
+                placeholder="Reason for this pass slip"
+              />
             )}
           />
         </Form.Item>
@@ -440,12 +452,24 @@ function CreatePassSlip() {
         </div>
 
         {/* ── Shared remarks ── */}
-        <Form.Item label="Remarks (optional)">
+        <Form.Item
+          label="Remarks"
+          required
+          validateStatus={errors.remarks ? "error" : ""}
+          help={
+            errors.remarks?.message ??
+            "Why is this manual attendance being filed? Applied to every entry above."
+          }
+        >
           <Controller
             name="remarks"
             control={control}
             render={({ field }) => (
-              <TextArea {...field} rows={2} placeholder="Additional notes" />
+              <TextArea
+                {...field}
+                rows={2}
+                placeholder="Reason for these entries"
+              />
             )}
           />
         </Form.Item>

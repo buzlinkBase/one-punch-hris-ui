@@ -74,4 +74,24 @@ export const leaveApplicationApi = {
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/${id}`);
   },
+
+  updateReimbursement(
+    id: string,
+    data: UpdateReimbursementStatus,
+  ): Promise<void> {
+    return httpClient.putUnwrapped<void>(
+      `${ENDPOINT}/${id}/reimbursement`,
+      data,
+    );
+  },
 };
+
+// Finance-only action on a OneTime, employer-advanced leave payout — see
+// PayrollReportService.GetReimbursementListAsync / the Reimbursement List report page, which is
+// this update's only caller.
+export interface UpdateReimbursementStatus {
+  status: "NotFiled" | "Filed" | "Reimbursed";
+  filedDate?: string | null;
+  receivedDate?: string | null;
+  referenceNo?: string | null;
+}

@@ -10,6 +10,8 @@ export interface CreateLeaveApplication {
   governmentAmount?: number | null;
   companyAmount?: number | null;
   releasePayrollDate?: string | null;
+  // Null = inherit the leave type's EmployerAdvancesPayment default.
+  employerAdvancesPayment?: boolean | null;
   isManualEntry: boolean;
   startTime?: string | null;
   endTime?: string | null;

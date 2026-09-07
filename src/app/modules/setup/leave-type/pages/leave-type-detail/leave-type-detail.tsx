@@ -817,21 +817,8 @@ export default function LeaveTypeDetail() {
                     )}
                   />,
                 )}
-                {switchRow(
-                  TIPS.allowNegativeBalance,
-                  "Allow advance leave (negative balance)",
-                  <Controller
-                    name="allowNegativeBalance"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        checked={field.value}
-                        onChange={field.onChange}
-                        size="small"
-                      />
-                    )}
-                  />,
-                )}
+                {/* Hidden for now — allowNegativeBalance still defaults to false and is
+                    submitted as such; re-enable this switchRow to expose it again. */}
               </div>
             </Card>
 

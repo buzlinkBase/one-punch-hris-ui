@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DatePicker, Form, Modal, Typography } from "antd";
+import { DatePicker, Form, Input, Modal, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import type { AttendanceEntryResponse } from "../../models/api/response/attendance-entry-response.model";
 import { useUpdateAttendanceEntry } from "../../hooks/use-attendance-entry-queries";
@@ -16,13 +16,15 @@ export default function EditAttendanceEntryModal({ record, onClose }: Props) {
   const [value, setValue] = useState<Dayjs | null>(
     record ? dayjs(record.timeLog) : null,
   );
+  const [remarks, setRemarks] = useState(record?.remarks ?? "");
   const { mutateAsync: update, isPending } = useUpdateAttendanceEntry();
 
   const handleOk = async () => {
-    if (!record || !value) return;
+    if (!record || !value || !remarks.trim()) return;
     await update({
       id: record.id,
       workTime: value.format("YYYY-MM-DDTHH:mm:ss"),
+      remarks: remarks.trim(),
     });
     getNotify().success({ message: "Time log updated." });
     onClose();
@@ -36,7 +38,7 @@ export default function EditAttendanceEntryModal({ record, onClose }: Props) {
       onCancel={onClose}
       okText="Save"
       confirmLoading={isPending}
-      okButtonProps={{ disabled: !value }}
+      okButtonProps={{ disabled: !value || !remarks.trim() }}
       destroyOnHidden
     >
       {record && (
@@ -51,6 +53,14 @@ export default function EditAttendanceEntryModal({ record, onClose }: Props) {
               value={value}
               onChange={(d) => setValue(d)}
               style={{ width: "100%" }}
+            />
+          </Form.Item>
+          <Form.Item label="Remarks" required>
+            <Input.TextArea
+              rows={2}
+              placeholder="Why is this time log being manually edited?"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
             />
           </Form.Item>
         </Form>

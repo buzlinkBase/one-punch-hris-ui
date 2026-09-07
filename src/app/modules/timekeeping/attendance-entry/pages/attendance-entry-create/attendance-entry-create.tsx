@@ -5,6 +5,7 @@ import {
   Card,
   Checkbox,
   Form,
+  Input,
   Select,
   Space,
   Table,
@@ -101,6 +102,7 @@ export default function AttendanceEntryCreate() {
   const [includeOut, setIncludeOut] = useState(true);
   const [outTime, setOutTime] = useState<Dayjs | null>(null);
   const [outDayOffset, setOutDayOffset] = useState(0);
+  const [remarks, setRemarks] = useState("");
 
   const { data: employees = [], isLoading: isEmployeesLoading } =
     useEmployeeFilter(
@@ -341,6 +343,12 @@ export default function AttendanceEntryCreate() {
       messageApi.warning("Please set the Out Time.");
       return;
     }
+    if (!remarks.trim()) {
+      messageApi.warning(
+        "Please state why this attendance is manually entered.",
+      );
+      return;
+    }
 
     const [start, end] = dateRange;
     const entries: CreateAttendanceEntry[] = [];
@@ -374,6 +382,7 @@ export default function AttendanceEntryCreate() {
           entries.push({
             workTime: dt.format("YYYY-MM-DDTHH:mm:ss"),
             employeeId,
+            remarks: remarks.trim(),
           });
         }
       }
@@ -395,6 +404,7 @@ export default function AttendanceEntryCreate() {
     (!includeIn && !includeOut) ||
     (includeIn && !inTime) ||
     (includeOut && !outTime) ||
+    !remarks.trim() ||
     isSubmitting;
 
   return (
@@ -659,6 +669,14 @@ export default function AttendanceEntryCreate() {
               </div>
             </Form.Item>
           </div>
+          <Form.Item label="Remarks" required className="mb-0">
+            <Input.TextArea
+              rows={2}
+              placeholder="Why is this attendance being manually entered? (e.g. device offline, employee forgot to punch)"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+            />
+          </Form.Item>
         </Form>
       </Card>
 

@@ -13,6 +13,7 @@ export const branchFormSchema = z.object({
   address: z.string().nullable(),
   boundary: geoJsonPolygon,
   status: z.string().min(1, "Status is required"),
+  regionCode: z.string().nullable().optional(),
 });
 
 export type BranchFormValues = z.infer<typeof branchFormSchema>;

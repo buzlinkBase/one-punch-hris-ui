@@ -4,4 +4,10 @@ export interface GenerateLastPayRequest {
   employeeIds: string[];
   payDate?: string | null;
   remarks?: string | null;
+  // Selectable components — all default true/empty on the backend (LastPayRunPayload) so
+  // omitting them preserves the original "include everything" behavior.
+  includeThirteenthMonth?: boolean;
+  includeLeaveConversion?: boolean;
+  salaryAdjustmentIds?: string[];
+  otherIncomeScheduleIds?: string[];
 }

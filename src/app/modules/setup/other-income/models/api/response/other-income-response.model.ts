@@ -5,5 +5,6 @@ export interface OtherIncomeResponse {
   incomeClass: string;
   incomeTypeId?: string;
   isTaxable: boolean;
+  isHazardPay: boolean;
   status: string;
 }

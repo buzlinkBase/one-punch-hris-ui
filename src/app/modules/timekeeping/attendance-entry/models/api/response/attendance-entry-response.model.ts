@@ -8,4 +8,8 @@ export interface AttendanceEntryResponse {
   branch: string | null;
   client: string | null;
   area: string | null;
+  // Why this log was manually created/edited — editRemarks (user-authored) wins, falling back
+  // to logRemarks (auto-generated context, e.g. Pass Slip's "Pass Slip - {Purpose}") so those
+  // rows show something meaningful too. Null for ordinary biometric punches.
+  remarks: string | null;
 }

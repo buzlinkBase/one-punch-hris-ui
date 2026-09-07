@@ -11,6 +11,9 @@ export interface LeaveApplicationResponse {
   governmentAmount?: number | null;
   companyAmount?: number | null;
   releasePayrollDate?: string | null;
+  // Null = inherit the leave type's EmployerAdvancesPayment default. See
+  // leave-type-response.model.ts's own employerAdvancesPayment for that default.
+  employerAdvancesPayment?: boolean | null;
   isManualEntry?: boolean;
   startTime?: string | null;
   endTime?: string | null;
@@ -21,4 +24,10 @@ export interface LeaveApplicationResponse {
   reviewedBy?: number;
   reviewedOn?: string;
   createdAt?: string;
+  // Read-only — set exclusively via the dedicated PUT /leaveapplications/{id}/reimbursement
+  // endpoint (Reimbursement List report), never through this form.
+  reimbursementStatus?: "NotFiled" | "Filed" | "Reimbursed";
+  reimbursementFiledDate?: string | null;
+  reimbursementReceivedDate?: string | null;
+  reimbursementReferenceNo?: string | null;
 }

@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Form,
+  Input,
   Select,
   Typography,
   Upload,
@@ -37,6 +38,7 @@ export default function UploadAttendanceList() {
   const [operationAreaId, setOperationAreaId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [departmentId, setDepartmentId] = useState<string | null>(null);
+  const [remarks, setRemarks] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
 
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
@@ -89,10 +91,22 @@ export default function UploadAttendanceList() {
       messageApi.warning("Please select a file first.");
       return;
     }
+    if (!remarks.trim()) {
+      messageApi.warning("Please state the reason for this upload.");
+      return;
+    }
 
     try {
-      await upload({ file, branchId, operationAreaId, clientId, departmentId });
+      await upload({
+        file,
+        branchId,
+        operationAreaId,
+        clientId,
+        departmentId,
+        remarks: remarks.trim(),
+      });
       setFileList([]);
+      setRemarks("");
       messageApi.success("Attendance log uploaded successfully.");
     } catch {
       messageApi.error("Upload failed. Please try again.");
@@ -173,6 +187,14 @@ export default function UploadAttendanceList() {
                   allowClear
                 />
               </Form.Item>
+              <Form.Item label="Reason / Remarks for this Upload" required>
+                <Input.TextArea
+                  rows={2}
+                  placeholder="e.g. Branch A device offline sync catch-up for Sept 1-5"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                />
+              </Form.Item>
             </Form>
 
             <Dragger
@@ -224,7 +246,7 @@ export default function UploadAttendanceList() {
             <Button
               type="primary"
               loading={isUploading}
-              disabled={fileList.length === 0}
+              disabled={fileList.length === 0 || !remarks.trim()}
               onClick={handleUpload}
               block
             >

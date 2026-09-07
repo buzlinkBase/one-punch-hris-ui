@@ -13,6 +13,7 @@ export const uploadAttendanceApi = {
       formData.append("operationAreaId", data.operationAreaId);
     if (data.clientId) formData.append("clientId", data.clientId);
     if (data.departmentId) formData.append("departmentId", data.departmentId);
+    formData.append("remarks", data.remarks);
 
     // Setting multipart/form-data signals axios v1.x's XHR adapter to delete the
     // header before sending, so the browser can append the correct boundary value.

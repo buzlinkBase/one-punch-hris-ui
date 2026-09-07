@@ -14,6 +14,7 @@ import {
   Descriptions,
   Radio,
   Alert,
+  Tooltip,
   notification,
 } from "antd";
 import {
@@ -22,6 +23,7 @@ import {
   ExclamationCircleOutlined,
   FileTextOutlined,
   UserOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
@@ -231,6 +233,7 @@ export default function LeaveApplicationDetail() {
       governmentAmount: undefined,
       companyAmount: undefined,
       releasePayrollDate: "",
+      disbursementMethod: "",
       applicationRemarks: "",
       supportingDocumentUrl: "",
       approvalStatus: "ForApproval",
@@ -360,6 +363,12 @@ export default function LeaveApplicationDetail() {
         governmentAmount: selected.governmentAmount ?? undefined,
         companyAmount: selected.companyAmount ?? undefined,
         releasePayrollDate: selected.releasePayrollDate ?? "",
+        disbursementMethod:
+          selected.employerAdvancesPayment == null
+            ? ""
+            : selected.employerAdvancesPayment
+              ? "employer"
+              : "direct",
         applicationRemarks: selected.applicationRemarks ?? "",
         supportingDocumentUrl: selected.supportingDocumentUrl ?? "",
         approvalStatus: selected.approvalStatus,
@@ -456,6 +465,13 @@ export default function LeaveApplicationDetail() {
       companyAmount: isOneTimePayout ? (values.companyAmount ?? null) : null,
       releasePayrollDate: isOneTimePayout
         ? (values.releasePayrollDate ?? null)
+        : null,
+      employerAdvancesPayment: isOneTimePayout
+        ? values.disbursementMethod === "employer"
+          ? true
+          : values.disbursementMethod === "direct"
+            ? false
+            : null
         : null,
       applicationRemarks: values.applicationRemarks,
       supportingDocumentUrl: values.supportingDocumentUrl || undefined,
@@ -1008,6 +1024,47 @@ export default function LeaveApplicationDetail() {
                         onChange={(d) =>
                           field.onChange(d?.format("YYYY-MM-DD") ?? "")
                         }
+                      />
+                    )}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={
+                    <Space size={4}>
+                      {LEAVE_APPLICATION_LABEL.DISBURSEMENT_METHOD}
+                      <Tooltip title="Defaults to this leave type's setting. Override only for this specific filing — e.g. the government will pay the employee directly because they separated from the company before the claim was filed.">
+                        <QuestionCircleOutlined className="text-gray-400" />
+                      </Tooltip>
+                    </Space>
+                  }
+                >
+                  <Controller
+                    name="disbursementMethod"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={[
+                          {
+                            value: "",
+                            label: `Use Leave Type Default (currently: ${
+                              policy?.employerAdvancesPayment
+                                ? "Employer Advances"
+                                : "Direct Deposit"
+                            })`,
+                          },
+                          {
+                            value: "employer",
+                            label:
+                              "Employer Advances (employer pays now, claims reimbursement from SSS)",
+                          },
+                          {
+                            value: "direct",
+                            label:
+                              "Direct Deposit (government pays the employee directly — not included in Net Pay)",
+                          },
+                        ]}
                       />
                     )}
                   />

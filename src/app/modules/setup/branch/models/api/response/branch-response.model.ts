@@ -7,4 +7,5 @@ export interface BranchResponse {
   address: string | null;
   boundary: GeoJsonPolygon | null;
   status: string;
+  regionCode?: string | null;
 }
