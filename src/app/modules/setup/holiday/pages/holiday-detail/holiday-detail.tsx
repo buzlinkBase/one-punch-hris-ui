@@ -6,6 +6,7 @@ import {
   Select,
   DatePicker,
   Switch,
+  Radio,
   Typography,
   Space,
   Tag,
@@ -29,6 +30,9 @@ import {
   HOLIDAY_LABEL,
   HOLIDAY_TYPE_OPTIONS,
   WORK_TYPE_OPTIONS,
+  WEEK_OF_MONTH_OPTIONS,
+  DAY_OF_WEEK_OPTIONS,
+  MONTH_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
@@ -72,6 +76,8 @@ export default function HolidayDetail() {
       workType: "NonWorking",
       holDate: "",
       isRecuring: false,
+      weekOfMonth: null,
+      dayOfWeek: null,
       isPaid: false,
       areaId: null,
       status: "ACTIVE",
@@ -81,6 +87,18 @@ export default function HolidayDetail() {
   const watchedHolType = useWatch({ control, name: "holType" });
   const isLegal = watchedHolType === "LEGAL";
   const isSpecial = watchedHolType === "SPECIAL";
+  const watchedIsRecuring = useWatch({ control, name: "isRecuring" });
+  const watchedHolDate = useWatch({ control, name: "holDate" });
+  const watchedWeekOfMonth = useWatch({ control, name: "weekOfMonth" });
+  const watchedDayOfWeek = useWatch({ control, name: "dayOfWeek" });
+  // "Fixed date" (today's plain recurrence, month+day) vs. "Nth weekday of month" (e.g.
+  // National Heroes Day = "last Monday of August") — a UI-only choice, derived straight
+  // from the form's own weekOfMonth/dayOfWeek fields rather than tracked as separate
+  // state, so it always reflects whatever record is loaded with no extra sync effect.
+  const recurrenceMode: "fixed" | "nthWeekday" =
+    watchedWeekOfMonth != null && watchedDayOfWeek != null
+      ? "nthWeekday"
+      : "fixed";
 
   useEffect(() => {
     if (isLegal) {
@@ -103,6 +121,8 @@ export default function HolidayDetail() {
         workType: selected.workType,
         holDate: selected.holDate,
         isRecuring: selected.isRecuring,
+        weekOfMonth: selected.weekOfMonth ?? null,
+        dayOfWeek: selected.dayOfWeek ?? null,
         isPaid: selected.isPaid,
         areaId: selected.areaId ?? null,
         status: selected.status,
@@ -110,9 +130,32 @@ export default function HolidayDetail() {
     }
   }, [selected, isEdit, reset]);
 
+  const handleRecurrenceModeChange = (mode: "fixed" | "nthWeekday") => {
+    if (mode === "fixed") {
+      setValue("weekOfMonth", null);
+      setValue("dayOfWeek", null);
+    } else {
+      setValue("weekOfMonth", 5);
+      setValue("dayOfWeek", "Monday");
+    }
+  };
+
+  const handleRecurringToggle = (checked: boolean) => {
+    setValue("isRecuring", checked);
+    if (!checked) {
+      setValue("weekOfMonth", null);
+      setValue("dayOfWeek", null);
+    }
+  };
+
   const onSubmit = async (values: HolidayFormValues) => {
-    if (isEdit && id) await update({ id, ...values });
-    else await add(values);
+    const payload = {
+      ...values,
+      weekOfMonth: values.isRecuring ? values.weekOfMonth : null,
+      dayOfWeek: values.isRecuring ? values.dayOfWeek : null,
+    };
+    if (isEdit && id) await update({ id, ...payload });
+    else await add(payload);
     navigate({ to: "/setup/holiday" });
   };
 
@@ -165,7 +208,12 @@ export default function HolidayDetail() {
             <Form.Item
               label={HOLIDAY_LABEL.HOL_DATE}
               validateStatus={errors.holDate ? "error" : ""}
-              help={errors.holDate?.message}
+              help={
+                errors.holDate?.message ??
+                (watchedIsRecuring && recurrenceMode === "nthWeekday"
+                  ? "Day is derived from the recurrence rule below — only the month matters here."
+                  : undefined)
+              }
             >
               <Controller
                 name="holDate"
@@ -174,6 +222,9 @@ export default function HolidayDetail() {
                   <DatePicker
                     className="w-full"
                     value={field.value ? dayjs(field.value) : null}
+                    disabled={
+                      watchedIsRecuring && recurrenceMode === "nthWeekday"
+                    }
                     onChange={(d) =>
                       field.onChange(d ? d.format("YYYY-MM-DD") : "")
                     }
@@ -264,15 +315,102 @@ export default function HolidayDetail() {
             </Form.Item>
 
             <Form.Item label={HOLIDAY_LABEL.IS_RECURING} className="col-span-2">
-              <div className="flex items-center gap-2">
-                <Controller
-                  name="isRecuring"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch checked={field.value} onChange={field.onChange} />
-                  )}
-                />
-                <span>Recurring Annually</span>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Controller
+                    name="isRecuring"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onChange={handleRecurringToggle}
+                      />
+                    )}
+                  />
+                  <span>Recurring Annually</span>
+                </div>
+
+                {watchedIsRecuring && (
+                  <div className="flex flex-col gap-3">
+                    <Radio.Group
+                      value={recurrenceMode}
+                      onChange={(e) =>
+                        handleRecurrenceModeChange(e.target.value)
+                      }
+                      options={[
+                        { value: "fixed", label: "Fixed date" },
+                        {
+                          value: "nthWeekday",
+                          label: "nth weekday of month",
+                        },
+                      ]}
+                    />
+
+                    {recurrenceMode === "nthWeekday" && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <Form.Item label={HOLIDAY_LABEL.MONTH} className="mb-0">
+                          <Select
+                            value={
+                              watchedHolDate
+                                ? dayjs(watchedHolDate).month() + 1
+                                : undefined
+                            }
+                            onChange={(month: number) => {
+                              const year = watchedHolDate
+                                ? dayjs(watchedHolDate).year()
+                                : dayjs().year();
+                              setValue(
+                                "holDate",
+                                dayjs(
+                                  `${year}-${month}-01`,
+                                  "YYYY-M-DD",
+                                ).format("YYYY-MM-DD"),
+                              );
+                            }}
+                            options={MONTH_OPTIONS}
+                            placeholder="Select month"
+                          />
+                        </Form.Item>
+                        <Form.Item
+                          label={HOLIDAY_LABEL.WEEK_OF_MONTH}
+                          className="mb-0"
+                        >
+                          <Controller
+                            name="weekOfMonth"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v)}
+                                options={WEEK_OF_MONTH_OPTIONS}
+                                placeholder="Select week"
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                        <Form.Item
+                          label={HOLIDAY_LABEL.DAY_OF_WEEK}
+                          className="mb-0"
+                        >
+                          <Controller
+                            name="dayOfWeek"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v)}
+                                options={DAY_OF_WEEK_OPTIONS}
+                                placeholder="Select day"
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </Form.Item>
           </div>

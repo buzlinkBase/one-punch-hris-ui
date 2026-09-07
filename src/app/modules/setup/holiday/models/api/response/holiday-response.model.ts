@@ -1,9 +1,10 @@
 import type {
   HolidayType,
   HolidayWorkType,
+  DayOfWeekName,
 } from "../request/create-holiday.model";
 
-export type { HolidayType, HolidayWorkType };
+export type { HolidayType, HolidayWorkType, DayOfWeekName };
 
 export interface HolidayResponse {
   id: string;
@@ -14,6 +15,8 @@ export interface HolidayResponse {
   holDate: string;
   holYear: number;
   isRecuring: boolean;
+  weekOfMonth?: number | null;
+  dayOfWeek?: DayOfWeekName | null;
   isPaid: boolean;
   areaId?: string | null;
   areaName?: string | null;

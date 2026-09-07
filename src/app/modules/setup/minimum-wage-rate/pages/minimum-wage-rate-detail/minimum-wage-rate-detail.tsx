@@ -54,6 +54,7 @@ export default function MinimumWageRateDetail() {
       dailyRate: 0,
       effectiveDate: "",
       wageOrderNo: "",
+      wageOrderClass: "",
     },
   });
 
@@ -65,12 +66,17 @@ export default function MinimumWageRateDetail() {
         dailyRate: selected.dailyRate,
         effectiveDate: selected.effectiveDate,
         wageOrderNo: selected.wageOrderNo ?? "",
+        wageOrderClass: selected.wageOrderClass ?? "",
       });
     }
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: MinimumWageRateFormValues) => {
-    const payload = { ...values, wageOrderNo: values.wageOrderNo || undefined };
+    const payload = {
+      ...values,
+      wageOrderNo: values.wageOrderNo || undefined,
+      wageOrderClass: values.wageOrderClass || undefined,
+    };
     if (isEdit && id) await update({ id, ...payload });
     else await add(payload);
     navigate({ to: "/setup/minimum-wage-rate" });
@@ -189,6 +195,19 @@ export default function MinimumWageRateDetail() {
                 name="wageOrderNo"
                 control={control}
                 render={({ field }) => <Input {...field} />}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={MINIMUM_WAGE_RATE_LABEL.WAGE_ORDER_CLASS}
+              help="Sector/class this rate applies to, e.g. 'Non-Agriculture', 'Retail/Service ≤10 workers'. Leave blank if this region's wage order doesn't split by class."
+            >
+              <Controller
+                name="wageOrderClass"
+                control={control}
+                render={({ field }) => (
+                  <Input {...field} placeholder="e.g. Non-Agriculture" />
+                )}
               />
             </Form.Item>
           </div>

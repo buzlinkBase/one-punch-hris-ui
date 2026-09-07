@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, useMemo, lazy, Suspense } from "react";
 import {
   Form,
   Input,
@@ -11,7 +11,7 @@ import {
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   branchFormSchema,
@@ -25,6 +25,7 @@ import {
 import { BRANCH_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
+import { useMinimumWageRates } from "@/app/modules/setup/minimum-wage-rate/hooks/use-minimum-wage-rate-queries";
 
 // Lazy-load the map to avoid SSR/leaflet issues
 const PolygonMapPicker = lazy(() =>
@@ -64,6 +65,7 @@ export default function BranchDetail() {
       boundary: null,
       status: "ACTIVE",
       regionCode: null,
+      wageOrderClass: null,
     },
   });
 
@@ -76,9 +78,25 @@ export default function BranchDetail() {
         boundary: selected.boundary ?? null,
         status: selected.status,
         regionCode: selected.regionCode ?? null,
+        wageOrderClass: selected.wageOrderClass ?? null,
       });
     }
   }, [selected, isEdit, reset]);
+
+  // Wage Order Class options come from whatever classes have already been entered in
+  // Minimum Wage Rate setup for this branch's region — keeps a branch's class always
+  // matched to a real rate row instead of a freely-typed value that might not exist.
+  // useWatch (not the imperative watch() from useForm) so React Compiler can safely memoize
+  // this component.
+  const selectedRegionCode = useWatch({ control, name: "regionCode" });
+  const { data: minimumWageRates = [] } = useMinimumWageRates();
+  const wageOrderClassOptions = useMemo(() => {
+    if (!selectedRegionCode) return [];
+    const classes = minimumWageRates
+      .filter((r) => r.regionCode === selectedRegionCode && r.wageOrderClass)
+      .map((r) => r.wageOrderClass as string);
+    return Array.from(new Set(classes)).map((c) => ({ value: c, label: c }));
+  }, [minimumWageRates, selectedRegionCode]);
 
   const onSubmit = async (values: BranchFormValues) => {
     if (isEdit && id) await update({ id, ...values });
@@ -192,6 +210,33 @@ export default function BranchDetail() {
                           .toLowerCase()
                           .includes(input.toLowerCase())
                       }
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Wage Order Class"
+                help="Sector/class this branch is registered under — options come from Minimum Wage Rate entries for the selected region. Leave blank if not applicable."
+              >
+                <Controller
+                  name="wageOrderClass"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      value={field.value ?? undefined}
+                      onChange={(v) => field.onChange(v ?? null)}
+                      options={wageOrderClassOptions}
+                      placeholder={
+                        selectedRegionCode
+                          ? "Select wage order class"
+                          : "Select a Region first"
+                      }
+                      allowClear
+                      showSearch
+                      disabled={!selectedRegionCode}
+                      notFoundContent="No classes entered for this region yet — add one in Minimum Wage Rate setup."
                     />
                   )}
                 />

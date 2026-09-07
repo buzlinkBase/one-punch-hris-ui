@@ -8,6 +8,7 @@ export const minimumWageRateFormSchema = z.object({
     .min(0, "Daily rate must be 0 or more"),
   effectiveDate: z.string().min(1, "Effective date is required"),
   wageOrderNo: z.string().optional(),
+  wageOrderClass: z.string().optional(),
 });
 
 export type MinimumWageRateFormValues = z.infer<

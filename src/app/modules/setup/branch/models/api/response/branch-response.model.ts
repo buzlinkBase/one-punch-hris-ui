@@ -8,4 +8,5 @@ export interface BranchResponse {
   boundary: GeoJsonPolygon | null;
   status: string;
   regionCode?: string | null;
+  wageOrderClass?: string | null;
 }

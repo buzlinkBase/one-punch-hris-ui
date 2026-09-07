@@ -11,7 +11,6 @@ import type { MenuProps } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useEmployees,
-  useDeleteEmployee,
   useDownloadEmployeeTemplate,
   useUploadEmployees,
 } from "../../hooks/use-employee-queries";
@@ -34,7 +33,8 @@ export default function EmployeeList() {
     refetch,
     isFetching,
   } = useEmployees(keyword);
-  const { mutate: remove } = useDeleteEmployee();
+  // Delete is temporarily hidden from the Employee list — see onDelete below.
+  // const { mutate: remove } = useDeleteEmployee();
   const { mutate: downloadTemplate, isPending: downloading } =
     useDownloadEmployeeTemplate();
   const { mutate: uploadEmployees, isPending: uploading } =
@@ -143,7 +143,8 @@ export default function EmployeeList() {
       <EmployeeTable
         data={employees}
         loading={isLoading}
-        onDelete={remove}
+        // onDelete hidden for now — omitting it makes EmployeeTable's delete button not
+        // render at all (see its `{onDelete && (...)}` guard).
         onInvite={(record) => setInviteTarget(record)}
       />
 
