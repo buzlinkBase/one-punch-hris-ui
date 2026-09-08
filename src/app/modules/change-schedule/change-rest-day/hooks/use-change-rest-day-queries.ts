@@ -72,3 +72,35 @@ export function useDeleteChangeRestDayBatch() {
     },
   });
 }
+
+export function useApproveChangeRestDay() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      employeeId,
+      batchCode,
+    }: {
+      employeeId: string;
+      batchCode: string;
+    }) => changeRestDayApi.approve(employeeId, batchCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useDeclineChangeRestDay() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      employeeId,
+      batchCode,
+    }: {
+      employeeId: string;
+      batchCode: string;
+    }) => changeRestDayApi.decline(employeeId, batchCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}

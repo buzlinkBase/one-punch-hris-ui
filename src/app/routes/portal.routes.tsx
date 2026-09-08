@@ -49,6 +49,14 @@ const PortalPassSlipList = lazy(
 const PortalPassSlipCreate = lazy(
   () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-create"),
 );
+const PortalChangeRestDayList = lazy(
+  () =>
+    import("@/app/modules/portal/change-rest-day/pages/portal-change-rest-day-list"),
+);
+const PortalChangeRestDayCreate = lazy(
+  () =>
+    import("@/app/modules/portal/change-rest-day/pages/portal-change-rest-day-create"),
+);
 
 export const portalRoutes: SetupRouteConfig[] = [
   { path: "profile", component: PortalProfile },
@@ -68,4 +76,6 @@ export const portalRoutes: SetupRouteConfig[] = [
   { path: "official-business/create", component: PortalOfficialBusinessCreate },
   { path: "pass-slip", component: PortalPassSlipList },
   { path: "pass-slip/create", component: PortalPassSlipCreate },
+  { path: "change-rest-day", component: PortalChangeRestDayList },
+  { path: "change-rest-day/create", component: PortalChangeRestDayCreate },
 ];

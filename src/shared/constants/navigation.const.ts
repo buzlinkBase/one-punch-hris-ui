@@ -86,6 +86,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             label: "Pass Slip",
             path: "/portal/pass-slip",
           },
+          {
+            key: "portal-change-rest-day",
+            label: "Change Rest Day",
+            path: "/portal/change-rest-day",
+          },
         ],
       },
     ],

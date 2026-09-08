@@ -4,6 +4,7 @@ import type { CreateLeaveApplication } from "@/app/modules/applications/leave-ap
 import type { CreateOvertimeApplication } from "@/app/modules/applications/overtime-application/models/api/request/create-overtime-application.model";
 import type { CreateTravelOrderApplication } from "@/app/modules/applications/travel-order-application/models/api/request/create-travel-order-application.model";
 import type { PortalCreatePassSlip } from "../models/api/request/portal-create-pass-slip.model";
+import type { PortalRequestChangeRestDay } from "../models/api/request/portal-request-change-rest-day.model";
 
 const QUERY_KEY = ["me", "employee"];
 
@@ -133,6 +134,24 @@ export function useCreateMyPassSlipApplication() {
       queryClient.invalidateQueries({
         queryKey: ["me", "pass-slip-applications"],
       });
+    },
+  });
+}
+
+export function useMyChangeRestDayRequests() {
+  return useQuery({
+    queryKey: ["me", "change-rest-day"],
+    queryFn: () => meApi.getMyChangeRestDayRequests(),
+  });
+}
+
+export function useCreateMyChangeRestDayRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PortalRequestChangeRestDay) =>
+      meApi.createMyChangeRestDayRequest(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me", "change-rest-day"] });
     },
   });
 }

@@ -4,4 +4,5 @@ export interface ChangeRestDayResponse {
   fullName: string;
   fromDate: string;
   toDate: string;
+  approvalStatus?: string;
 }

@@ -14,6 +14,8 @@ import type { CreateTravelOrderApplication } from "@/app/modules/applications/tr
 import type { TravelOrderApplicationResponse } from "@/app/modules/applications/travel-order-application/models/api/response/travel-order-application-response.model";
 import type { PortalCreatePassSlip } from "../models/api/request/portal-create-pass-slip.model";
 import type { PortalPassSlipResponse } from "../models/api/response/portal-pass-slip-response.model";
+import type { PortalRequestChangeRestDay } from "../models/api/request/portal-request-change-rest-day.model";
+import type { ChangeRestDayResponse } from "@/app/modules/change-schedule/change-rest-day/models/api/response/change-rest-day-response.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
@@ -129,5 +131,17 @@ export const meApi = {
       `${BASE_URL}/pass-slip-applications`,
       data,
     );
+  },
+
+  getMyChangeRestDayRequests(): Promise<ChangeRestDayResponse[]> {
+    return httpClient.getUnwrapped<ChangeRestDayResponse[]>(
+      `${BASE_URL}/change-rest-day`,
+    );
+  },
+
+  createMyChangeRestDayRequest(
+    data: PortalRequestChangeRestDay,
+  ): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${BASE_URL}/change-rest-day`, data);
   },
 };
