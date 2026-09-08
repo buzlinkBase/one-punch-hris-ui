@@ -8,6 +8,12 @@ import type { EmployeeFixedScheduleResponse } from "@/app/modules/change-schedul
 import type { LeaveBalanceResponse } from "@/app/modules/setup/leave-balance/models/api/response/leave-balance-response.model";
 import type { LeaveApplicationResponse } from "@/app/modules/applications/leave-application/models/api/response/leave-application-response.model";
 import type { CreateLeaveApplication } from "@/app/modules/applications/leave-application/models/api/request/create-leave-application.model";
+import type { CreateOvertimeApplication } from "@/app/modules/applications/overtime-application/models/api/request/create-overtime-application.model";
+import type { OvertimeApplicationResponse } from "@/app/modules/applications/overtime-application/models/api/response/overtime-application-response.model";
+import type { CreateTravelOrderApplication } from "@/app/modules/applications/travel-order-application/models/api/request/create-travel-order-application.model";
+import type { TravelOrderApplicationResponse } from "@/app/modules/applications/travel-order-application/models/api/response/travel-order-application-response.model";
+import type { PortalCreatePassSlip } from "../models/api/request/portal-create-pass-slip.model";
+import type { PortalPassSlipResponse } from "../models/api/response/portal-pass-slip-response.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
@@ -80,6 +86,47 @@ export const meApi = {
   createMyLeaveApplication(data: CreateLeaveApplication): Promise<void> {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/leave-applications`,
+      data,
+    );
+  },
+
+  getMyOvertimeApplications(): Promise<OvertimeApplicationResponse[]> {
+    return httpClient.getUnwrapped<OvertimeApplicationResponse[]>(
+      `${BASE_URL}/overtime-applications`,
+    );
+  },
+
+  createMyOvertimeApplication(data: CreateOvertimeApplication): Promise<void> {
+    return httpClient.postUnwrapped<void>(
+      `${BASE_URL}/overtime-applications`,
+      data,
+    );
+  },
+
+  getMyTravelOrderApplications(): Promise<TravelOrderApplicationResponse[]> {
+    return httpClient.getUnwrapped<TravelOrderApplicationResponse[]>(
+      `${BASE_URL}/travel-order-applications`,
+    );
+  },
+
+  createMyTravelOrderApplication(
+    data: CreateTravelOrderApplication,
+  ): Promise<void> {
+    return httpClient.postUnwrapped<void>(
+      `${BASE_URL}/travel-order-applications`,
+      data,
+    );
+  },
+
+  getMyPassSlipApplications(): Promise<PortalPassSlipResponse[]> {
+    return httpClient.getUnwrapped<PortalPassSlipResponse[]>(
+      `${BASE_URL}/pass-slip-applications`,
+    );
+  },
+
+  createMyPassSlipApplication(data: PortalCreatePassSlip): Promise<void> {
+    return httpClient.postUnwrapped<void>(
+      `${BASE_URL}/pass-slip-applications`,
       data,
     );
   },
