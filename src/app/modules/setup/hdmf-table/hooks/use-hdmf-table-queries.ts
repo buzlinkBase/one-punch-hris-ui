@@ -5,18 +5,10 @@ import type { UpdateHdmfTable } from "../models/api/request/update-hdmf-table.mo
 
 const QUERY_KEY = ["hdmf-table"];
 
-export function useHdmfTableRows(effectivity: string | undefined) {
+export function useHdmfTableRows() {
   return useQuery({
-    queryKey: [...QUERY_KEY, effectivity],
-    queryFn: () => hdmfTableApi.getAll(effectivity!),
-    enabled: !!effectivity,
-  });
-}
-
-export function useHdmfTableVersions() {
-  return useQuery({
-    queryKey: [...QUERY_KEY, "versions"],
-    queryFn: () => hdmfTableApi.getVersions(),
+    queryKey: QUERY_KEY,
+    queryFn: () => hdmfTableApi.getAll(),
   });
 }
 

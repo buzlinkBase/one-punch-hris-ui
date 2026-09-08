@@ -5,7 +5,6 @@ import {
   Typography,
   Space,
   Tag,
-  DatePicker,
   InputNumber,
   Input,
   Descriptions,
@@ -14,7 +13,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import dayjs from "dayjs";
 import {
   phicTableFormSchema,
   type PhicTableFormValues,
@@ -28,8 +26,6 @@ import { PHIC_TABLE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
-
-const today = dayjs().format("YYYY-MM-DD");
 
 export default function PhicTableDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -49,7 +45,6 @@ export default function PhicTableDetail() {
   } = useForm<PhicTableFormValues>({
     resolver: zodResolver(phicTableFormSchema) as Resolver<PhicTableFormValues>,
     defaultValues: {
-      effectiveDate: today,
       minSalaryBase: 0,
       maxSalaryBase: 0,
       premiumRate: 0,
@@ -62,7 +57,6 @@ export default function PhicTableDetail() {
   useEffect(() => {
     if (isEdit && selected) {
       reset({
-        effectiveDate: selected.effectiveDate,
         minSalaryBase: selected.minSalaryBase,
         maxSalaryBase: selected.maxSalaryBase,
         premiumRate: selected.premiumRate,
@@ -131,27 +125,6 @@ export default function PhicTableDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item
-            label={PHIC_TABLE_LABEL.EFFECTIVE_DATE}
-            validateStatus={errors.effectiveDate ? "error" : ""}
-            help={errors.effectiveDate?.message}
-          >
-            <Controller
-              name="effectiveDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  value={field.value ? dayjs(field.value) : null}
-                  onChange={(d) =>
-                    field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                  }
-                  format="YYYY-MM-DD"
-                  style={{ width: "100%" }}
-                />
-              )}
-            />
-          </Form.Item>
-
           {numField("minSalaryBase", PHIC_TABLE_LABEL.MIN_SALARY_BASE)}
           {numField("maxSalaryBase", PHIC_TABLE_LABEL.MAX_SALARY_BASE)}
           {numField("premiumRate", PHIC_TABLE_LABEL.PREMIUM_RATE)}

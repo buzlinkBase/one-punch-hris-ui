@@ -1,5 +1,4 @@
 export interface CreateWtaxTable {
-  effectiveDate: string;
   payrollType: string;
   rangeFrom: number;
   rangeTo: number;

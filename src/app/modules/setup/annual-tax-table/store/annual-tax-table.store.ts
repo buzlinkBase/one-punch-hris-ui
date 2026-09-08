@@ -9,7 +9,7 @@ interface AnnualTaxTableStore {
   selected: AnnualTaxTableResponse | null;
   loading: boolean;
   error: string | null;
-  loadAll: (effectivity: string) => Promise<void>;
+  loadAll: () => Promise<void>;
   loadById: (id: string) => Promise<void>;
   add: (data: CreateAnnualTaxTable) => Promise<void>;
   update: (data: UpdateAnnualTaxTable) => Promise<void>;
@@ -24,10 +24,10 @@ export const useAnnualTaxTableStore = create<AnnualTaxTableStore>((set) => ({
   loading: false,
   error: null,
 
-  loadAll: async (effectivity) => {
+  loadAll: async () => {
     set({ loading: true, error: null });
     try {
-      const rows = await annualTaxTableApi.getAll(effectivity);
+      const rows = await annualTaxTableApi.getAll();
       set({ rows, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });

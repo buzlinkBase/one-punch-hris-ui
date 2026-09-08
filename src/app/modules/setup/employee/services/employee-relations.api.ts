@@ -7,6 +7,8 @@ import type {
   DocRecordResponse,
   EmploymentHistoryResponse,
   AssignAssetResponse,
+  PriorEmployerTaxRecordResponse,
+  PayrollOpeningBalanceResponse,
 } from "../models/api/response/employee-relations-response.models";
 
 const url = (resource: string) => buildApiUrl(API_PREFIX.hrms, resource);
@@ -87,6 +89,54 @@ export const employmentHistoryApi = {
   update: (data: EmploymentHistoryResponse) =>
     httpClient.put<EmploymentHistoryResponse>(`${EMP_HIST}/${data.id}`, data),
   remove: (id: string) => httpClient.delete<void>(`${EMP_HIST}/${id}`),
+};
+
+// ── Prior Employer Tax Records (BIR 2316) ────────────────────────────────────
+
+const PRIOR_TAX = url("EmployeePriorEmployerTaxRecords");
+
+export const priorEmployerTaxRecordApi = {
+  getByEmployee: (empId: string) =>
+    httpClient.getUnwrapped<PriorEmployerTaxRecordResponse[]>(
+      `${PRIOR_TAX}/employee?emp_id=${empId}`,
+    ),
+  create: (data: Omit<PriorEmployerTaxRecordResponse, "id">) =>
+    httpClient.postUnwrapped<PriorEmployerTaxRecordResponse>(PRIOR_TAX, data),
+  update: (data: PriorEmployerTaxRecordResponse) =>
+    httpClient.put<PriorEmployerTaxRecordResponse>(
+      `${PRIOR_TAX}/${data.id}`,
+      data,
+    ),
+  remove: (id: string) => httpClient.delete<void>(`${PRIOR_TAX}/${id}`),
+};
+
+// ── Payroll Opening Balances (mid-year cutover) ──────────────────────────────
+
+const OPENING_BALANCE = url("PayrollOpeningBalances");
+
+// grossIncome/totalDeductions/netPay are computed server-side (see
+// PayrollOpeningBalanceResponse's doc comment) — never sent on create/update.
+export type PayrollOpeningBalanceInput = Omit<
+  PayrollOpeningBalanceResponse,
+  "id" | "grossIncome" | "totalDeductions" | "netPay"
+>;
+
+export const payrollOpeningBalanceApi = {
+  getByEmployee: (empId: string) =>
+    httpClient.getUnwrapped<PayrollOpeningBalanceResponse[]>(
+      `${OPENING_BALANCE}/employee?emp_id=${empId}`,
+    ),
+  create: (data: PayrollOpeningBalanceInput) =>
+    httpClient.postUnwrapped<PayrollOpeningBalanceResponse>(
+      OPENING_BALANCE,
+      data,
+    ),
+  update: (data: PayrollOpeningBalanceInput & { id: string }) =>
+    httpClient.put<PayrollOpeningBalanceResponse>(
+      `${OPENING_BALANCE}/${data.id}`,
+      data,
+    ),
+  remove: (id: string) => httpClient.delete<void>(`${OPENING_BALANCE}/${id}`),
 };
 
 // ── Assign Assets ─────────────────────────────────────────────────────────────

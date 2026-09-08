@@ -7,13 +7,8 @@ import type { UpdateHdmfTable } from "../models/api/request/update-hdmf-table.mo
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "HDMFs");
 
 export const hdmfTableApi = {
-  getAll(effectivity: string): Promise<HdmfTableResponse[]> {
-    return httpClient.getUnwrapped<HdmfTableResponse[]>(
-      `${ENDPOINT}?effectivity=${effectivity}`,
-    );
-  },
-  getVersions(): Promise<string[]> {
-    return httpClient.getUnwrapped<string[]>(`${ENDPOINT}/versions`);
+  getAll(): Promise<HdmfTableResponse[]> {
+    return httpClient.getUnwrapped<HdmfTableResponse[]>(ENDPOINT);
   },
   getById(id: string): Promise<HdmfTableResponse> {
     return httpClient.getUnwrapped<HdmfTableResponse>(`${ENDPOINT}/${id}`);

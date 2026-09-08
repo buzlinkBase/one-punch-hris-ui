@@ -42,6 +42,7 @@ const MONTH_OPTIONS = [
 const DEFAULTS: PayrollSettingsFormValues = {
   fiscalYearStartMonth: 1,
   thirteenthMonthExemptionCeiling: 90000,
+  largeTaxCollectionWarningMultiplier: 1,
 };
 
 export default function PayrollSettingsTab() {
@@ -65,6 +66,8 @@ export default function PayrollSettingsTab() {
         id: data.id,
         fiscalYearStartMonth: data.fiscalYearStartMonth,
         thirteenthMonthExemptionCeiling: data.thirteenthMonthExemptionCeiling,
+        largeTaxCollectionWarningMultiplier:
+          data.largeTaxCollectionWarningMultiplier,
       });
     }
   }, [data, reset]);
@@ -195,6 +198,41 @@ export default function PayrollSettingsTab() {
             </div>
           }
         />
+      </Card>
+
+      {/* Year-End Tax Annualization */}
+      <Card size="small" title="Year-End Tax Annualization" className="mb-4">
+        <div className="flex flex-col gap-1 mb-4">
+          <Text type="secondary" className="text-sm">
+            When a Year-End Tax Adjustment run computes an additional tax
+            collection larger than this multiple of an employee&apos;s average
+            monthly net pay for the year, it&apos;s flagged with a warning for
+            HR to review. This never blocks generating the adjustment —
+            it&apos;s informational only.
+          </Text>
+        </div>
+
+        <Form.Item
+          label="Large Collection Warning Multiplier"
+          validateStatus={
+            errors.largeTaxCollectionWarningMultiplier ? "error" : ""
+          }
+          help={errors.largeTaxCollectionWarningMultiplier?.message}
+        >
+          <Controller
+            name="largeTaxCollectionWarningMultiplier"
+            control={control}
+            render={({ field }) => (
+              <InputNumber
+                {...field}
+                className="w-full"
+                min={0}
+                step={0.1}
+                addonAfter="× average monthly net pay"
+              />
+            )}
+          />
+        </Form.Item>
       </Card>
 
       <div className="form-action-footer">

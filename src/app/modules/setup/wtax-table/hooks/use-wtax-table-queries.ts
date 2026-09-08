@@ -5,21 +5,10 @@ import type { UpdateWtaxTable } from "../models/api/request/update-wtax-table.mo
 
 const QUERY_KEY = ["wtax-table"];
 
-export function useWtaxTableRows(
-  effectivity: string | undefined,
-  payrollType: string | undefined,
-) {
+export function useWtaxTableRows(payrollType: string | undefined) {
   return useQuery({
-    queryKey: [...QUERY_KEY, effectivity, payrollType],
-    queryFn: () => wtaxTableApi.getAll(effectivity!, payrollType!),
-    enabled: !!effectivity && !!payrollType,
-  });
-}
-
-export function useWtaxTableVersions(payrollType: string | undefined) {
-  return useQuery({
-    queryKey: [...QUERY_KEY, "versions", payrollType],
-    queryFn: () => wtaxTableApi.getVersions(payrollType!),
+    queryKey: [...QUERY_KEY, payrollType],
+    queryFn: () => wtaxTableApi.getAll(payrollType!),
     enabled: !!payrollType,
   });
 }

@@ -7,13 +7,8 @@ import type { UpdatePhicTable } from "../models/api/request/update-phic-table.mo
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "PHICs");
 
 export const phicTableApi = {
-  getAll(effectivity: string): Promise<PhicTableResponse[]> {
-    return httpClient.getUnwrapped<PhicTableResponse[]>(
-      `${ENDPOINT}?effectivity=${effectivity}`,
-    );
-  },
-  getVersions(): Promise<string[]> {
-    return httpClient.getUnwrapped<string[]>(`${ENDPOINT}/versions`);
+  getAll(): Promise<PhicTableResponse[]> {
+    return httpClient.getUnwrapped<PhicTableResponse[]>(ENDPOINT);
   },
   getById(id: string): Promise<PhicTableResponse> {
     return httpClient.getUnwrapped<PhicTableResponse>(`${ENDPOINT}/${id}`);

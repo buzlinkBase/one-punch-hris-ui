@@ -1,5 +1,4 @@
 export interface CreateSssTable {
-  effectiveDate: string;
   rangeFrom: number;
   rangeTo: number;
   msc: number;

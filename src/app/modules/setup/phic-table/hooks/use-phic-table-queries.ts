@@ -5,18 +5,10 @@ import type { UpdatePhicTable } from "../models/api/request/update-phic-table.mo
 
 const QUERY_KEY = ["phic-table"];
 
-export function usePhicTableRows(effectivity: string | undefined) {
+export function usePhicTableRows() {
   return useQuery({
-    queryKey: [...QUERY_KEY, effectivity],
-    queryFn: () => phicTableApi.getAll(effectivity!),
-    enabled: !!effectivity,
-  });
-}
-
-export function usePhicTableVersions() {
-  return useQuery({
-    queryKey: [...QUERY_KEY, "versions"],
-    queryFn: () => phicTableApi.getVersions(),
+    queryKey: QUERY_KEY,
+    queryFn: () => phicTableApi.getAll(),
   });
 }
 

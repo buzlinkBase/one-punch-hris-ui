@@ -5,18 +5,10 @@ import type { UpdateSssTable } from "../models/api/request/update-sss-table.mode
 
 const QUERY_KEY = ["sss-table"];
 
-export function useSssTableRows(effectivity: string | undefined) {
+export function useSssTableRows() {
   return useQuery({
-    queryKey: [...QUERY_KEY, effectivity],
-    queryFn: () => sssTableApi.getAll(effectivity!),
-    enabled: !!effectivity,
-  });
-}
-
-export function useSssTableVersions() {
-  return useQuery({
-    queryKey: [...QUERY_KEY, "versions"],
-    queryFn: () => sssTableApi.getVersions(),
+    queryKey: QUERY_KEY,
+    queryFn: () => sssTableApi.getAll(),
   });
 }
 

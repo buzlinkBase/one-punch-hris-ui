@@ -5,18 +5,10 @@ import type { UpdateAnnualTaxTable } from "../models/api/request/update-annual-t
 
 const QUERY_KEY = ["annual-tax-table"];
 
-export function useAnnualTaxTableRows(effectivity: string | undefined) {
+export function useAnnualTaxTableRows() {
   return useQuery({
-    queryKey: [...QUERY_KEY, effectivity],
-    queryFn: () => annualTaxTableApi.getAll(effectivity!),
-    enabled: !!effectivity,
-  });
-}
-
-export function useAnnualTaxTableVersions() {
-  return useQuery({
-    queryKey: [...QUERY_KEY, "versions"],
-    queryFn: () => annualTaxTableApi.getVersions(),
+    queryKey: QUERY_KEY,
+    queryFn: () => annualTaxTableApi.getAll(),
   });
 }
 

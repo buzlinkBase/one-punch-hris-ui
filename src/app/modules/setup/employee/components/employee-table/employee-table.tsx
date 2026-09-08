@@ -1,15 +1,21 @@
-import { Table, Button, Space, Popconfirm, Tag, Tooltip, message } from "antd";
+import { Table, Button, Space, Dropdown, Tag, Modal, message } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
   MailOutlined,
   PrinterOutlined,
+  FileProtectOutlined,
+  WalletOutlined,
+  MoreOutlined,
+  ExclamationCircleFilled,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import type { MenuProps } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
+import { formatFullName } from "../../utils/format-full-name";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import httpClient from "@/core/http/http-client";
@@ -20,6 +26,8 @@ interface Props {
   loading?: boolean;
   onDelete?: (id: string) => void;
   onInvite?: (record: EmployeeResponse) => void;
+  onPriorEmployerTax?: (record: EmployeeResponse) => void;
+  onOpeningBalance?: (record: EmployeeResponse) => void;
 }
 
 const JOB_LEVEL_LABELS: Record<string, string> = {
@@ -28,18 +36,13 @@ const JOB_LEVEL_LABELS: Record<string, string> = {
   TechnicalSpecialist: "Technical Specialist",
 };
 
-function formatFullName(record: EmployeeResponse) {
-  if (record.fullName) return record.fullName;
-  return `${record.lastName}, ${record.firstName} ${record.middleName ?? ""} ${record.suffix ?? ""}`
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 export default function EmployeeTable({
   data,
   loading,
   onDelete,
   onInvite,
+  onPriorEmployerTax,
+  onOpeningBalance,
 }: Props) {
   const navigate = useNavigate();
 
@@ -89,42 +92,71 @@ export default function EmployeeTable({
     {
       title: "Actions",
       key: "actions",
-      width: 145,
+      width: 90,
       fixed: "left",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
-          />
-          <Tooltip title="Print 201 File">
+      render: (_, record) => {
+        const menuItems: MenuProps["items"] = [
+          {
+            key: "print201",
+            icon: <PrinterOutlined />,
+            label: "Print 201 File",
+            onClick: () => handlePrint201(record.id),
+          },
+          onInvite && {
+            key: "invite",
+            icon: <MailOutlined />,
+            label: "Invite to Workspace",
+            onClick: () => onInvite(record),
+          },
+          onPriorEmployerTax && {
+            key: "priorEmployerTax",
+            icon: <FileProtectOutlined />,
+            label: "Prior Employer (BIR 2316)",
+            onClick: () => onPriorEmployerTax(record),
+          },
+          onOpeningBalance && {
+            key: "openingBalance",
+            icon: <WalletOutlined />,
+            label: "Opening Balance (Pre-System YTD)",
+            onClick: () => onOpeningBalance(record),
+          },
+          onDelete && { type: "divider" as const },
+          onDelete && {
+            key: "delete",
+            icon: <DeleteOutlined />,
+            label: "Delete",
+            danger: true,
+            onClick: () =>
+              Modal.confirm({
+                title: "Delete this employee?",
+                icon: <ExclamationCircleFilled />,
+                content: `${formatFullName(record)} will be permanently removed.`,
+                okText: "Delete",
+                okType: "danger",
+                cancelText: "Cancel",
+                onOk: () => onDelete(record.id),
+              }),
+          },
+        ].filter(Boolean) as MenuProps["items"];
+
+        return (
+          <Space>
             <Button
               type="text"
-              icon={<PrinterOutlined />}
-              onClick={() => handlePrint201(record.id)}
+              icon={<EditOutlined />}
+              title="Edit"
+              onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
             />
-          </Tooltip>
-          {onInvite && (
-            <Button
-              type="text"
-              icon={<MailOutlined />}
-              title="Invite to workspace"
-              onClick={() => onInvite(record)}
-            />
-          )}
-          {onDelete && (
-            <Popconfirm
-              title="Delete this employee?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          )}
-        </Space>
-      ),
+            <Dropdown trigger={["click"]} menu={{ items: menuItems }}>
+              <Button
+                type="text"
+                icon={<MoreOutlined />}
+                title="More actions"
+              />
+            </Dropdown>
+          </Space>
+        );
+      },
     },
     {
       title: EMPLOYEE_LABEL.EMPLOYEE_NO,

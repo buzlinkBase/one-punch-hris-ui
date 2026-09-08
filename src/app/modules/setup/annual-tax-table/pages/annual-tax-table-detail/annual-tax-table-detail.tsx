@@ -1,18 +1,9 @@
 import { useEffect } from "react";
-import {
-  Form,
-  Button,
-  Typography,
-  Space,
-  Tag,
-  DatePicker,
-  InputNumber,
-} from "antd";
+import { Form, Button, Typography, Space, Tag, InputNumber } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import dayjs from "dayjs";
 import {
   annualTaxTableFormSchema,
   type AnnualTaxTableFormValues,
@@ -26,8 +17,6 @@ import { ANNUAL_TAX_TABLE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
-
-const today = dayjs().format("YYYY-MM-DD");
 
 export default function AnnualTaxTableDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -50,7 +39,6 @@ export default function AnnualTaxTableDetail() {
       annualTaxTableFormSchema,
     ) as Resolver<AnnualTaxTableFormValues>,
     defaultValues: {
-      effectiveDate: today,
       rangeFrom: 0,
       rangeTo: 0,
       baseTaxDue: 0,
@@ -61,7 +49,6 @@ export default function AnnualTaxTableDetail() {
   useEffect(() => {
     if (isEdit && selected) {
       reset({
-        effectiveDate: selected.effectiveDate,
         rangeFrom: selected.rangeFrom,
         rangeTo: selected.rangeTo,
         baseTaxDue: selected.baseTaxDue,
@@ -128,27 +115,6 @@ export default function AnnualTaxTableDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item
-            label={ANNUAL_TAX_TABLE_LABEL.EFFECTIVE_DATE}
-            validateStatus={errors.effectiveDate ? "error" : ""}
-            help={errors.effectiveDate?.message}
-          >
-            <Controller
-              name="effectiveDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  value={field.value ? dayjs(field.value) : null}
-                  onChange={(d) =>
-                    field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                  }
-                  format="YYYY-MM-DD"
-                  style={{ width: "100%" }}
-                />
-              )}
-            />
-          </Form.Item>
-
           {numField("rangeFrom", ANNUAL_TAX_TABLE_LABEL.RANGE_FROM)}
           {numField("rangeTo", ANNUAL_TAX_TABLE_LABEL.RANGE_TO)}
           {numField("baseTaxDue", ANNUAL_TAX_TABLE_LABEL.BASE_TAX_DUE)}

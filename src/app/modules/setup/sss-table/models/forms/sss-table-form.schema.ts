@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const sssTableFormSchema = z.object({
-  effectiveDate: z.string().min(1, "Effectivity date is required"),
   rangeFrom: z.number({ error: "Must be a number" }).min(0, "Must be ≥ 0"),
   rangeTo: z.number({ error: "Must be a number" }).min(0, "Must be ≥ 0"),
   msc: z.number({ error: "Must be a number" }).min(0, "Must be ≥ 0"),

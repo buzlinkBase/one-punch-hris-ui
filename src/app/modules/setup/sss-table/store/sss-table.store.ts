@@ -9,7 +9,7 @@ interface SssTableStore {
   selected: SssTableResponse | null;
   loading: boolean;
   error: string | null;
-  loadAll: (effectivity: string) => Promise<void>;
+  loadAll: () => Promise<void>;
   loadById: (id: string) => Promise<void>;
   add: (data: CreateSssTable) => Promise<void>;
   update: (data: UpdateSssTable) => Promise<void>;
@@ -24,10 +24,10 @@ export const useSssTableStore = create<SssTableStore>((set) => ({
   loading: false,
   error: null,
 
-  loadAll: async (effectivity) => {
+  loadAll: async () => {
     set({ loading: true, error: null });
     try {
-      const rows = await sssTableApi.getAll(effectivity);
+      const rows = await sssTableApi.getAll();
       set({ rows, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });

@@ -6,6 +6,7 @@ import {
   Button,
   Typography,
   Alert,
+  Divider,
   notification,
   Spin,
 } from "antd";
@@ -17,6 +18,7 @@ import {
 } from "@ant-design/icons";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useForm, Controller, useWatch } from "react-hook-form";
+import { useGoogleLogin } from "@react-oauth/google";
 import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -27,11 +29,34 @@ import {
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { authStorage } from "@/core/auth/auth-storage";
 import type { InvitationPreviewResponse } from "@/app/modules/auth/login/models/api/response/invitation-preview-response.model";
+import type { LoginResponse } from "@/app/modules/auth/login/models/api/response/login-response.model";
+import type { AcceptInvitationResponse } from "@/app/modules/auth/login/models/api/response/accept-invitation-response.model";
 import type { ApiResponse } from "@/shared/types/api-response.model";
 
 const { Title, Text } = Typography;
 
 const PENDING_INVITE_KEY = "pending_invite_token";
+
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" className="block">
+    <path
+      fill="#EA4335"
+      d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+    />
+    <path
+      fill="#4285F4"
+      d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+    />
+    <path
+      fill="#34A853"
+      d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+    />
+  </svg>
+);
 
 type LoadState =
   | { status: "loading" }
@@ -111,6 +136,53 @@ export default function AcceptInvitation() {
 
   const password = useWatch({ control, name: "password" });
 
+  // Saves a session (no redirect — the two callers below differ on when it's safe to leave the
+  // page: onSubmit is done after one call, handleGoogleJoin needs the intermediate signup
+  // session saved so the acceptInvitation call after it authenticates as the new user).
+  const saveSession = (result: LoginResponse | AcceptInvitationResponse) => {
+    const claims = authStorage.getTenantClaims(result.accessToken);
+    authStorage.save(result.accessToken, {
+      email: result.email,
+      name: result.name,
+      roles: result.roles,
+      tenants: result.tenants,
+      tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
+      tenantName: claims.tenantName,
+    });
+  };
+
+  const [googleJoining, setGoogleJoining] = useState(false);
+
+  const handleGoogleJoin = useGoogleLogin({
+    flow: "auth-code",
+    onSuccess: async ({ code }) => {
+      setGoogleJoining(true);
+      try {
+        // signup-google-callback creates the account but doesn't know about invitations (see
+        // InvitationService.Accept — it's auth-method-agnostic) — save that session first so
+        // acceptInvitation's [Authorize] call below is made as the newly-created user, then
+        // consume the invitation the same way the auto-accept effect does for an existing user.
+        const signupResult = await authApi.signUpWithGoogle(code);
+        saveSession(signupResult);
+        const acceptResult = await authApi.acceptInvitation({ token });
+        saveSession(acceptResult);
+        window.location.assign("/dashboard");
+      } catch (err) {
+        setGoogleJoining(false);
+        const description = axios.isAxiosError(err)
+          ? ((err.response?.data as ApiResponse<{ errorMessage?: string }>)
+              ?.data?.errorMessage ?? "Google sign-up failed.")
+          : "An unexpected error occurred.";
+        notification.error({ message: "Couldn't join workspace", description });
+      }
+    },
+    onError: () =>
+      notification.error({
+        message: "Couldn't join workspace",
+        description: "Google authentication was unsuccessful.",
+      }),
+  });
+
   const onSubmit = async ({
     confirmPassword: _,
     ...values
@@ -121,15 +193,7 @@ export default function AcceptInvitation() {
         token,
         ...values,
       });
-      const claims = authStorage.getTenantClaims(result.accessToken);
-      authStorage.save(result.accessToken, {
-        email: result.email,
-        name: result.name,
-        roles: result.roles,
-        tenants: result.tenants,
-        tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
-        tenantName: claims.tenantName,
-      });
+      saveSession(result);
       window.location.assign("/dashboard");
     } catch (err) {
       setSubmitting(false);
@@ -356,6 +420,19 @@ export default function AcceptInvitation() {
             Join workspace
           </Button>
         </Form.Item>
+
+        <Divider plain>or</Divider>
+
+        <Button
+          block
+          size="large"
+          icon={<GoogleIcon />}
+          loading={googleJoining}
+          onClick={() => handleGoogleJoin()}
+          className="flex items-center justify-center gap-2"
+        >
+          Continue with Google
+        </Button>
       </Form>
     </Card>
   );
