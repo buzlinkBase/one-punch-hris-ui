@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { meApi } from "../services/me.api";
 import type { CreateLeaveApplication } from "@/app/modules/applications/leave-application/models/api/request/create-leave-application.model";
+import type { CreateOvertimeApplication } from "@/app/modules/applications/overtime-application/models/api/request/create-overtime-application.model";
+import type { CreateTravelOrderApplication } from "@/app/modules/applications/travel-order-application/models/api/request/create-travel-order-application.model";
+import type { PortalCreatePassSlip } from "../models/api/request/portal-create-pass-slip.model";
 
 const QUERY_KEY = ["me", "employee"];
 
@@ -70,6 +73,66 @@ export function useCreateMyLeaveApplication() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me", "leave-applications"] });
       queryClient.invalidateQueries({ queryKey: ["me", "leave-credits"] });
+    },
+  });
+}
+
+export function useMyOvertimeApplications() {
+  return useQuery({
+    queryKey: ["me", "overtime-applications"],
+    queryFn: () => meApi.getMyOvertimeApplications(),
+  });
+}
+
+export function useCreateMyOvertimeApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateOvertimeApplication) =>
+      meApi.createMyOvertimeApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "overtime-applications"],
+      });
+    },
+  });
+}
+
+export function useMyTravelOrderApplications() {
+  return useQuery({
+    queryKey: ["me", "travel-order-applications"],
+    queryFn: () => meApi.getMyTravelOrderApplications(),
+  });
+}
+
+export function useCreateMyTravelOrderApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateTravelOrderApplication) =>
+      meApi.createMyTravelOrderApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "travel-order-applications"],
+      });
+    },
+  });
+}
+
+export function useMyPassSlipApplications() {
+  return useQuery({
+    queryKey: ["me", "pass-slip-applications"],
+    queryFn: () => meApi.getMyPassSlipApplications(),
+  });
+}
+
+export function useCreateMyPassSlipApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PortalCreatePassSlip) =>
+      meApi.createMyPassSlipApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "pass-slip-applications"],
+      });
     },
   });
 }

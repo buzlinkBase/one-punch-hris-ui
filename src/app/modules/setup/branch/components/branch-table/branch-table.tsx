@@ -11,6 +11,11 @@ import type { BranchResponse } from "../../models/api/response/branch-response.m
 import { BRANCH_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
+
+const REGION_LABEL_BY_CODE = new Map<string, string>(
+  PH_REGION_OPTIONS.map((r) => [r.value, r.label]),
+);
 
 interface Props {
   data: BranchResponse[];
@@ -26,6 +31,8 @@ export default function BranchTable({ data, loading, onDelete }: Props) {
     code: 120,
     name: 200,
     address: 200,
+    region: 160,
+    wageOrderClass: 140,
     boundary: 120,
     status: 120,
   });
@@ -71,6 +78,31 @@ export default function BranchTable({ data, loading, onDelete }: Props) {
           width: widths.address,
           onResize: (w: number) => handleResize("address", w),
         }) as object,
+    },
+    {
+      title: BRANCH_LABEL.REGION,
+      dataIndex: "regionCode",
+      key: "region",
+      width: widths.region,
+      onHeaderCell: () =>
+        ({
+          width: widths.region,
+          onResize: (w: number) => handleResize("region", w),
+        }) as object,
+      render: (regionCode?: string | null) =>
+        regionCode ? (REGION_LABEL_BY_CODE.get(regionCode) ?? regionCode) : "—",
+    },
+    {
+      title: BRANCH_LABEL.WAGE_ORDER_CLASS,
+      dataIndex: "wageOrderClass",
+      key: "wageOrderClass",
+      width: widths.wageOrderClass,
+      onHeaderCell: () =>
+        ({
+          width: widths.wageOrderClass,
+          onResize: (w: number) => handleResize("wageOrderClass", w),
+        }) as object,
+      render: (wageOrderClass?: string | null) => wageOrderClass || "—",
     },
     {
       title: "Boundary",

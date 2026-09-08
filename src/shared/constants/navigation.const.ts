@@ -23,34 +23,70 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/portal/profile",
       },
       {
-        key: "portal-payslips",
-        label: "My Pay Slips",
-        path: "/portal/payslips",
+        key: "portal-group-time",
+        label: "My Time",
+        type: "group",
+        children: [
+          {
+            key: "portal-dtr",
+            label: "My Daily Time Record",
+            path: "/portal/dtr",
+          },
+          {
+            key: "portal-incomplete-punches",
+            label: "My Incomplete Logs",
+            path: "/portal/incomplete-punches",
+          },
+          {
+            key: "portal-shift-schedule",
+            label: "My Shift Schedule",
+            path: "/portal/shift-schedule",
+          },
+        ],
       },
       {
-        key: "portal-dtr",
-        label: "My Daily Time Record",
-        path: "/portal/dtr",
+        key: "portal-group-pay",
+        label: "My Pay",
+        type: "group",
+        children: [
+          {
+            key: "portal-payslips",
+            label: "My Pay Slips",
+            path: "/portal/payslips",
+          },
+          {
+            key: "portal-leave-credits",
+            label: "My Leave Credits",
+            path: "/portal/leave-credits",
+          },
+        ],
       },
       {
-        key: "portal-incomplete-punches",
-        label: "My Incomplete Logs",
-        path: "/portal/incomplete-punches",
-      },
-      {
-        key: "portal-shift-schedule",
-        label: "My Shift Schedule",
-        path: "/portal/shift-schedule",
-      },
-      {
-        key: "portal-leave-credits",
-        label: "My Leave Credits",
-        path: "/portal/leave-credits",
-      },
-      {
-        key: "portal-leave-applications",
-        label: "My Leave Applications",
-        path: "/portal/leave-applications",
+        key: "portal-group-applications",
+        label: "My Applications",
+        type: "group",
+        children: [
+          {
+            key: "portal-leave-applications",
+            label: "Leave",
+            path: "/portal/leave-applications",
+          },
+          {
+            key: "portal-overtime",
+            label: "Overtime",
+            path: "/portal/overtime",
+          },
+          {
+            key: "portal-official-business",
+            label: "Official Business",
+            path: "/portal/official-business",
+          },
+          {
+            key: "portal-pass-slip",
+            label: "Pass Slip",
+            path: "/portal/pass-slip",
+          },
+        ],
       },
     ],
   },

@@ -29,6 +29,26 @@ const PortalLeaveApplicationCreate = lazy(
   () =>
     import("@/app/modules/portal/leave-application/pages/portal-leave-application-create"),
 );
+const PortalOvertimeList = lazy(
+  () => import("@/app/modules/portal/overtime/pages/portal-overtime-list"),
+);
+const PortalOvertimeCreate = lazy(
+  () => import("@/app/modules/portal/overtime/pages/portal-overtime-create"),
+);
+const PortalOfficialBusinessList = lazy(
+  () =>
+    import("@/app/modules/portal/official-business/pages/portal-official-business-list"),
+);
+const PortalOfficialBusinessCreate = lazy(
+  () =>
+    import("@/app/modules/portal/official-business/pages/portal-official-business-create"),
+);
+const PortalPassSlipList = lazy(
+  () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-list"),
+);
+const PortalPassSlipCreate = lazy(
+  () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-create"),
+);
 
 export const portalRoutes: SetupRouteConfig[] = [
   { path: "profile", component: PortalProfile },
@@ -42,4 +62,10 @@ export const portalRoutes: SetupRouteConfig[] = [
     path: "leave-applications/create",
     component: PortalLeaveApplicationCreate,
   },
+  { path: "overtime", component: PortalOvertimeList },
+  { path: "overtime/create", component: PortalOvertimeCreate },
+  { path: "official-business", component: PortalOfficialBusinessList },
+  { path: "official-business/create", component: PortalOfficialBusinessCreate },
+  { path: "pass-slip", component: PortalPassSlipList },
+  { path: "pass-slip/create", component: PortalPassSlipCreate },
 ];
