@@ -11,6 +11,7 @@ import {
   Typography,
   Space,
   Tag,
+  Alert,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -164,6 +165,13 @@ export default function OvertimeApplicationBatch() {
               }
             />
           </Form.Item>
+
+          <Alert
+            type="info"
+            showIcon
+            className="mb-3"
+            message="OT applications are capped to the employee's actual overtime rendered — any excess entered here will not be paid out."
+          />
 
           {/* Table */}
           <div className="rounded-lg border border-(--ant-color-border) overflow-hidden">

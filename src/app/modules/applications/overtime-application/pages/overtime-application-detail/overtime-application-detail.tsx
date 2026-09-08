@@ -12,6 +12,7 @@ import {
   Tag,
   Card,
   Descriptions,
+  Alert,
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
@@ -228,6 +229,13 @@ export default function OvertimeApplicationDetail() {
       </div>
 
       <div className="form-page-body">
+        <Alert
+          type="info"
+          showIcon
+          className="mb-4"
+          message="OT applications are capped to the employee's actual overtime rendered — any excess entered here will not be paid out."
+        />
+
         {isEdit && selected && (
           <Card size="small" className="mb-4">
             <Descriptions size="small" column={{ xs: 1, sm: 2 }}>

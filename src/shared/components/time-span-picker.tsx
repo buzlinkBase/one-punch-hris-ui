@@ -22,6 +22,7 @@ interface TimeSpanPickerProps {
    * the value is emitted as next-day. The manual checkbox is hidden.
    */
   referenceTime?: string | null;
+  disabled?: boolean;
 }
 
 /**
@@ -37,6 +38,7 @@ export function TimeSpanPicker({
   className,
   placeholder,
   referenceTime,
+  disabled = false,
 }: TimeSpanPickerProps) {
   const dayOffset = getDayOffset(value);
   const timePart = value != null ? getTimePart(value) : null;
@@ -80,6 +82,7 @@ export function TimeSpanPicker({
         onChange={handleTimeChange}
         format={format}
         placeholder={placeholder}
+        disabled={disabled}
       />
       {autoMode ? (
         isNextDay && (
@@ -97,7 +100,7 @@ export function TimeSpanPicker({
       ) : (
         <Checkbox
           checked={isNextDay}
-          disabled={!hasValue}
+          disabled={disabled || !hasValue}
           onChange={(e) => handleNextDayChange(e.target.checked)}
         >
           <span

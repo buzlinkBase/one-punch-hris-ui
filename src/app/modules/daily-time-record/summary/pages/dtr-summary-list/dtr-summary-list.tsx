@@ -11,9 +11,14 @@ import DtrSummaryTable from "../../components/dtr-summary-table";
 import { DTR_SUMMARY_LABEL } from "../../constants/label.const";
 import {
   buildDtrSummaryCsv,
-  buildDtrSummaryExcel,
+  fmtCell,
+  GROUPED_COLS,
+  LEFT_COLS,
 } from "../../utils/dtr-summary-export.utils";
-import { triggerDownload } from "@/shared/utils/export.utils";
+import {
+  downloadGroupedHeaderExcel,
+  triggerDownload,
+} from "@/shared/utils/export.utils";
 
 const { Title } = Typography;
 
@@ -52,16 +57,14 @@ export default function DtrSummaryList() {
       ? selectedBatchCode.replace(/[^a-zA-Z0-9_-]/g, "_")
       : dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      triggerDownload(
-        buildDtrSummaryCsv(records),
-        `dtr-summary-${suffix}.csv`,
-        "text/plain",
-      );
+      triggerDownload(buildDtrSummaryCsv(records), `dtr-summary-${suffix}.csv`);
     } else {
-      triggerDownload(
-        buildDtrSummaryExcel(records),
-        `dtr-summary-${suffix}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
+      downloadGroupedHeaderExcel(
+        LEFT_COLS,
+        GROUPED_COLS,
+        records,
+        fmtCell,
+        `dtr-summary-${suffix}.xlsx`,
       );
     }
   };

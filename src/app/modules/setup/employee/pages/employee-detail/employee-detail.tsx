@@ -80,7 +80,6 @@ import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries"
 import { useSections } from "@/app/modules/setup/section/hooks/use-section-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
-import { usePayrollInclusionDefaults } from "@/app/modules/setup/company-policy/hooks/use-payroll-inclusion-defaults-queries";
 import QuickAddPayrollGroupModal from "../../components/quick-add-payroll-group-modal";
 import QuickAddDepartmentModal from "../../components/quick-add-department-modal";
 import QuickAddOperationAreaModal from "../../components/quick-add-operation-area-modal";
@@ -215,7 +214,6 @@ export default function EmployeeDetail() {
   const { data: branches = [], isLoading: isBranchesLoading } = useBranches();
   const { data: positions = [], isLoading: isPositionsLoading } =
     usePositions();
-  const { data: payrollInclusionDefaults } = usePayrollInclusionDefaults();
 
   const {
     control,
@@ -398,41 +396,6 @@ export default function EmployeeDetail() {
       defaults.isSpecialNonWorkingIncluded,
     );
   };
-
-  const tenantInclusionDefaults = {
-    isRestDayPaid: payrollInclusionDefaults?.defaultRestDayPaid ?? false,
-    isRegularHolidayIncluded:
-      payrollInclusionDefaults?.defaultRegularHolidayIncluded ?? false,
-    isSpecialNonWorkingIncluded:
-      payrollInclusionDefaults?.defaultSpecialNonWorkingIncluded ?? false,
-  };
-
-  // One-time migration for employees saved back when a company-wide override toggle
-  // still existed in the UI: if theirs was off, they were actually running on the
-  // tenant-wide defaults, not their own stored toggle values — carry those defaults
-  // over as their own values now that per-employee is the only mode.
-  const overrideMigrated = useRef(false);
-  useEffect(() => {
-    if (
-      overrideMigrated.current ||
-      !isEdit ||
-      !selected ||
-      selected.useEmployeeOverride !== false
-    ) {
-      return;
-    }
-    overrideMigrated.current = true;
-    setValue("isRestDayPaid", tenantInclusionDefaults.isRestDayPaid);
-    setValue(
-      "isRegularHolidayIncluded",
-      tenantInclusionDefaults.isRegularHolidayIncluded,
-    );
-    setValue(
-      "isSpecialNonWorkingIncluded",
-      tenantInclusionDefaults.isSpecialNonWorkingIncluded,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEdit, selected, payrollInclusionDefaults, setValue]);
 
   const sssComputationType = useWatch({
     control,

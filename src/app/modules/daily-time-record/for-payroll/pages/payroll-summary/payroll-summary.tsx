@@ -39,9 +39,10 @@ import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import {
   buildFlatCsv,
-  buildFlatExcel,
+  downloadMultiSheetExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
+import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
 
 const { Title, Text } = Typography;
 
@@ -113,9 +114,10 @@ function restDayTotal(r: PayrollRunResult) {
 
 export default function PayrollSummary() {
   const { token } = theme.useToken();
+  const defaultCutoff = getSemiMonthlyCutoff();
   const [dateRange, setDateRange] = useState<[string, string]>([
-    dayjs().startOf("month").format("YYYY-MM-DD"),
-    dayjs().endOf("month").format("YYYY-MM-DD"),
+    defaultCutoff.fromDate,
+    defaultCutoff.toDate,
   ]);
 
   const {
@@ -286,6 +288,43 @@ export default function PayrollSummary() {
     "ER PhilHealth",
     "ER Pag-IBIG",
     "EC",
+    "Total ER Cost",
+    "Regular Hrs",
+    "Reg OT Hrs",
+    "Reg ND Hrs",
+    "Reg ND-OT Hrs",
+    "Rest Day Hrs",
+    "RD OT Hrs",
+    "RD ND Hrs",
+    "RD ND-OT Hrs",
+    "Legal Hol Hrs",
+    "Legal OT Hrs",
+    "Legal ND Hrs",
+    "Legal ND-OT Hrs",
+    "Special Hol Hrs",
+    "Special OT Hrs",
+    "Special ND Hrs",
+    "Special ND-OT Hrs",
+    "RD+Legal Hrs",
+    "RD+Legal OT Hrs",
+    "RD+Legal ND Hrs",
+    "RD+Legal ND-OT Hrs",
+    "RD+Special Hrs",
+    "RD+Special OT Hrs",
+    "RD+Special ND Hrs",
+    "RD+Special ND-OT Hrs",
+    "Double Legal Hrs",
+    "Double Legal OT Hrs",
+    "Double Legal ND Hrs",
+    "Double Legal ND-OT Hrs",
+    "RD+Double Legal Hrs",
+    "RD+Double Legal OT Hrs",
+    "RD+Double Legal ND Hrs",
+    "RD+Double Legal ND-OT Hrs",
+    "OB Hrs",
+    "Paid Leave Hrs",
+    "Unpaid Leave Hrs",
+    "OT Total Hrs",
   ];
 
   const buildExportRows = () =>
@@ -338,6 +377,256 @@ export default function PayrollSummary() {
       fmt(r.employerPhilHealthContribution),
       fmt(r.employerPagIbigContribution),
       fmt(r.employerECContribution),
+      fmt(
+        r.employerSSSContribution +
+          r.employerPhilHealthContribution +
+          r.employerPagIbigContribution +
+          r.employerECContribution,
+      ),
+      fmt(r.regularNetHours ?? 0),
+      fmt(r.regularOTHours ?? 0),
+      fmt(r.regularNDHours ?? 0),
+      fmt(r.regularNDOTHours ?? 0),
+      fmt(r.restDayHours ?? 0),
+      fmt(r.restDayOTHours ?? 0),
+      fmt(r.restDayNDHours ?? 0),
+      fmt(r.restDayNDOTHours ?? 0),
+      fmt(r.legalHolHours ?? 0),
+      fmt(r.legalHolOTHours ?? 0),
+      fmt(r.legalHolNightDiffHours ?? 0),
+      fmt(r.legalHolNightDiffOTHours ?? 0),
+      fmt(r.specialHolHours ?? 0),
+      fmt(r.specialHolOTHours ?? 0),
+      fmt(r.specialHolNightDiffHours ?? 0),
+      fmt(r.specialHolNightDiffOTHours ?? 0),
+      fmt(r.restLegalDayHours ?? 0),
+      fmt(r.restLegalDayOTHours ?? 0),
+      fmt(r.restLegalDayNDHours ?? 0),
+      fmt(r.restLegalDayNDOTHours ?? 0),
+      fmt(r.restSpecialDayHours ?? 0),
+      fmt(r.restSpecialDayOTHours ?? 0),
+      fmt(r.restSpecialDayNDHours ?? 0),
+      fmt(r.restSpecialDayNDOTHours ?? 0),
+      fmt(r.doubleLegalHours ?? 0),
+      fmt(r.doubleLegalOTHours ?? 0),
+      fmt(r.doubleLegalNDHours ?? 0),
+      fmt(r.doubleLegalNDOTHours ?? 0),
+      fmt(r.restDoubleLegalHours ?? 0),
+      fmt(r.restDoubleLegalOTHours ?? 0),
+      fmt(r.restDoubleLegalNDHours ?? 0),
+      fmt(r.restDoubleLegalNDOTHours ?? 0),
+      fmt(r.obHours ?? 0),
+      fmt(r.paidLeaveHours ?? 0),
+      fmt(r.unpaidLeaveHours ?? 0),
+      fmt(r.overtimeHours ?? 0),
+    ]);
+
+  // Per-tab sheet definitions for the Excel export — headers/rows mirror each tab's own
+  // columns exactly (earningsColumns/holidayColumns/deductionsColumns/hoursColumns/
+  // erColumns above), so "1 tab here, 1 sheet in Excel."
+  const EARNINGS_HEADERS = [
+    "Employee",
+    "Status",
+    "Salary Type",
+    "Daily Rate",
+    "Period Start",
+    "Period End",
+    "Basic",
+    "OT Pay",
+    "ND Pay",
+    "Rest Day",
+    "Paid Leave",
+    "1x Payout (Co)",
+    "1x Payout (Gov)",
+    "Holiday Total",
+    "COLA",
+    "Allowances",
+    "Bonuses",
+    "Commissions",
+    "De Minimis",
+    "Other Income",
+    "Reimbursement",
+    "Gross",
+  ];
+  const buildEarningsRows = () =>
+    results.map((r) => [
+      r.fullName,
+      r.id ? (r.isPosted ? "Posted" : "Draft") : "",
+      r.salaryType === "FIXED" ? "Fixed" : "Variable",
+      fmt(r.dailyRate),
+      r.payPeriodStart ? dayjs(r.payPeriodStart).format("YYYY-MM-DD") : "",
+      r.payPeriodEnd ? dayjs(r.payPeriodEnd).format("YYYY-MM-DD") : "",
+      fmt(r.basicPay),
+      fmt(r.overtimePay),
+      fmt(r.nightDifferentialPay),
+      fmt(restDayTotal(r)),
+      r.salaryType === "FIXED"
+        ? fmt(r.nonCompanyPaidLeaves ?? 0)
+        : fmt(r.paidLeaves ?? 0),
+      fmt(r.companyFundedLeavePay ?? 0),
+      fmt(r.governmentFundedLeavePay ?? 0),
+      fmt(r.holidayPay),
+      fmt(r.cola),
+      fmt(r.totalRegularAllowances),
+      fmt(r.totalBonuses),
+      fmt(r.totalCommissions),
+      fmt(r.totalDeminimises),
+      fmt(r.totalOtherIncome),
+      fmt(r.reimbursement),
+      fmt(r.grossIncome),
+    ]);
+
+  const HOLIDAY_HEADERS = [
+    "Employee",
+    "Legal Holiday (Unworked)",
+    "Legal Holiday Duty (Worked)",
+    "Rest Day + Legal Holiday",
+    "Special Holiday",
+    "Rest Day + Special Holiday",
+    "Double Legal Holiday",
+    "Rest Day + Double Legal Holiday",
+    "Holiday Total",
+  ];
+  const buildHolidayRows = () =>
+    results.map((r) => [
+      r.fullName,
+      fmt(r.legalHolidayUnworkedPay ?? 0),
+      fmt(holidayDuty(r)),
+      fmt(restLegalTotal(r)),
+      fmt(specialTotal(r)),
+      fmt(restSpecialTotal(r)),
+      fmt(doubleLegalTotal(r)),
+      fmt(restDoubleLegalTotal(r)),
+      fmt(r.holidayPay),
+    ]);
+
+  const DEDUCTIONS_HEADERS = [
+    "Employee",
+    "SSS",
+    "PhilHealth",
+    "Pag-IBIG",
+    "W-Tax",
+    "Loans",
+    "Other Deductions",
+    "Late/UT",
+    "Absent",
+    "Net Pay",
+  ];
+  const buildDeductionsRows = () =>
+    results.map((r) => [
+      r.fullName,
+      fmt(r.sssContribution),
+      fmt(r.philHealthContribution),
+      fmt(r.pagIbigContribution),
+      fmt(r.withholdingTax),
+      fmt(r.totalLoans),
+      fmt(r.otherDeductions - r.totalLoans),
+      fmt(r.lateAmount + r.underTimeAmount),
+      fmt(r.absences),
+      fmt(r.netPay),
+    ]);
+
+  const ER_HEADERS = [
+    "Employee",
+    "ER SSS",
+    "ER PhilHealth",
+    "ER Pag-IBIG",
+    "EC",
+    "Total ER Cost",
+  ];
+  const buildErRows = () =>
+    results.map((r) => [
+      r.fullName,
+      fmt(r.employerSSSContribution),
+      fmt(r.employerPhilHealthContribution),
+      fmt(r.employerPagIbigContribution),
+      fmt(r.employerECContribution),
+      fmt(
+        r.employerSSSContribution +
+          r.employerPhilHealthContribution +
+          r.employerPagIbigContribution +
+          r.employerECContribution,
+      ),
+    ]);
+
+  const HOURS_HEADERS = [
+    "Employee",
+    "Regular",
+    "Reg OT",
+    "Reg ND",
+    "Reg ND-OT",
+    "Rest Day",
+    "RD OT",
+    "RD ND",
+    "RD ND-OT",
+    "Legal Hol",
+    "Legal OT",
+    "Legal ND",
+    "Legal ND-OT",
+    "Special Hol",
+    "Special OT",
+    "Special ND",
+    "Special ND-OT",
+    "RD+Legal",
+    "RD+Legal OT",
+    "RD+Legal ND",
+    "RD+Legal ND-OT",
+    "RD+Special",
+    "RD+Special OT",
+    "RD+Special ND",
+    "RD+Special ND-OT",
+    "Double Legal",
+    "Double Legal OT",
+    "Double Legal ND",
+    "Double Legal ND-OT",
+    "RD+Double Legal",
+    "RD+Double Legal OT",
+    "RD+Double Legal ND",
+    "RD+Double Legal ND-OT",
+    "OB Hrs",
+    "Paid Leave Hrs",
+    "Unpaid Leave Hrs",
+    "OT Total Hr",
+  ];
+  const buildHoursRows = () =>
+    results.map((r) => [
+      r.fullName,
+      fmt(r.regularNetHours ?? 0),
+      fmt(r.regularOTHours ?? 0),
+      fmt(r.regularNDHours ?? 0),
+      fmt(r.regularNDOTHours ?? 0),
+      fmt(r.restDayHours ?? 0),
+      fmt(r.restDayOTHours ?? 0),
+      fmt(r.restDayNDHours ?? 0),
+      fmt(r.restDayNDOTHours ?? 0),
+      fmt(r.legalHolHours ?? 0),
+      fmt(r.legalHolOTHours ?? 0),
+      fmt(r.legalHolNightDiffHours ?? 0),
+      fmt(r.legalHolNightDiffOTHours ?? 0),
+      fmt(r.specialHolHours ?? 0),
+      fmt(r.specialHolOTHours ?? 0),
+      fmt(r.specialHolNightDiffHours ?? 0),
+      fmt(r.specialHolNightDiffOTHours ?? 0),
+      fmt(r.restLegalDayHours ?? 0),
+      fmt(r.restLegalDayOTHours ?? 0),
+      fmt(r.restLegalDayNDHours ?? 0),
+      fmt(r.restLegalDayNDOTHours ?? 0),
+      fmt(r.restSpecialDayHours ?? 0),
+      fmt(r.restSpecialDayOTHours ?? 0),
+      fmt(r.restSpecialDayNDHours ?? 0),
+      fmt(r.restSpecialDayNDOTHours ?? 0),
+      fmt(r.doubleLegalHours ?? 0),
+      fmt(r.doubleLegalOTHours ?? 0),
+      fmt(r.doubleLegalNDHours ?? 0),
+      fmt(r.doubleLegalNDOTHours ?? 0),
+      fmt(r.restDoubleLegalHours ?? 0),
+      fmt(r.restDoubleLegalOTHours ?? 0),
+      fmt(r.restDoubleLegalNDHours ?? 0),
+      fmt(r.restDoubleLegalNDOTHours ?? 0),
+      fmt(r.obHours ?? 0),
+      fmt(r.paidLeaveHours ?? 0),
+      fmt(r.unpaidLeaveHours ?? 0),
+      fmt(r.overtimeHours ?? 0),
     ]);
 
   const handleExport = (format: "csv" | "excel") => {
@@ -345,19 +634,43 @@ export default function PayrollSummary() {
       message.info("No data to export. Adjust the date range first.");
       return;
     }
-    const rows = buildExportRows();
     const suffix = `${dateRange[0]}_${dateRange[1]}`;
     if (format === "csv") {
       triggerDownload(
-        buildFlatCsv(EXPORT_HEADERS, rows),
+        buildFlatCsv(EXPORT_HEADERS, buildExportRows()),
         `payroll-summary-${suffix}.csv`,
-        "text/plain",
       );
     } else {
-      triggerDownload(
-        buildFlatExcel(EXPORT_HEADERS, rows),
-        `payroll-summary-${suffix}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
+      // One worksheet per tab, matching what's on screen exactly.
+      downloadMultiSheetExcel(
+        [
+          {
+            name: "Earnings",
+            headers: EARNINGS_HEADERS,
+            rows: buildEarningsRows(),
+          },
+          {
+            name: "Holiday Breakdown",
+            headers: HOLIDAY_HEADERS,
+            rows: buildHolidayRows(),
+          },
+          {
+            name: "Deductions & Net",
+            headers: DEDUCTIONS_HEADERS,
+            rows: buildDeductionsRows(),
+          },
+          {
+            name: "Employer Contributions",
+            headers: ER_HEADERS,
+            rows: buildErRows(),
+          },
+          {
+            name: "Hours Breakdown",
+            headers: HOURS_HEADERS,
+            rows: buildHoursRows(),
+          },
+        ],
+        `payroll-summary-${suffix}.xlsx`,
       );
     }
   };
@@ -1001,23 +1314,23 @@ export default function PayrollSummary() {
               ),
             },
             {
-              key: "hours",
-              label: "Hours Breakdown",
-              children: (
-                <Table
-                  dataSource={results}
-                  columns={hoursColumns}
-                  {...tableProps}
-                />
-              ),
-            },
-            {
               key: "er",
               label: "Employer Contributions",
               children: (
                 <Table
                   dataSource={results}
                   columns={erColumns}
+                  {...tableProps}
+                />
+              ),
+            },
+            {
+              key: "hours",
+              label: "Hours Breakdown",
+              children: (
+                <Table
+                  dataSource={results}
+                  columns={hoursColumns}
                   {...tableProps}
                 />
               ),

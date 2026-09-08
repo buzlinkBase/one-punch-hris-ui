@@ -37,27 +37,13 @@ import type { AttendanceEntryFilter } from "../../models/api/request/attendance-
 import type { AttendanceEntryResponse } from "../../models/api/response/attendance-entry-response.model";
 import {
   buildFlatCsv,
-  buildFlatExcel,
+  downloadExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
 
 const { Title, Text } = Typography;
-
-function getSemiMonthlyCutoff(): { fromDate: string; toDate: string } {
-  const today = dayjs();
-  const day = today.date();
-  if (day <= 15) {
-    return {
-      fromDate: today.startOf("month").format("YYYY-MM-DD"),
-      toDate: today.date(15).format("YYYY-MM-DD"),
-    };
-  }
-  return {
-    fromDate: today.date(16).format("YYYY-MM-DD"),
-    toDate: today.endOf("month").format("YYYY-MM-DD"),
-  };
-}
 
 const DEFAULT_CUTOFF = getSemiMonthlyCutoff();
 
@@ -177,17 +163,9 @@ export default function AttendanceEntryList() {
     ]);
     const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      triggerDownload(
-        buildFlatCsv(headers, strRows),
-        `attendance-${date}.csv`,
-        "text/plain",
-      );
+      triggerDownload(buildFlatCsv(headers, strRows), `attendance-${date}.csv`);
     } else {
-      triggerDownload(
-        buildFlatExcel(headers, strRows),
-        `attendance-${date}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
-      );
+      downloadExcel(headers, strRows, `attendance-${date}.xlsx`);
     }
     setIsExporting(false);
   };

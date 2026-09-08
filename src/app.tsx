@@ -117,6 +117,14 @@ export default function App() {
             Dropdown: {
               borderRadiusLG: 12,
             },
+            Tooltip: {
+              // Tooltips stay a deliberately elevated "spotlight" in both themes rather than
+              // antd's flat black default — dark teal bubble on the light theme, inverted to a
+              // light teal bubble on the dark theme so it still pops against an already-dark
+              // page, both tinted to the app's palette instead of plain black/white.
+              colorBgSpotlight: isDark ? "#e8f7f2" : "#16302a",
+              colorTextLightSolid: isDark ? "#0e1c19" : "#c8e6df",
+            },
           },
         }}
       >

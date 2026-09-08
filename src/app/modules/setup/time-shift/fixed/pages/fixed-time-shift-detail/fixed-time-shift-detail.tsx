@@ -21,6 +21,7 @@ import {
   timeSpanToSeconds,
 } from "@/shared/utils/time-span.util";
 import { TimeSpanPicker } from "@/shared/components/time-span-picker";
+import { HoursInput } from "@/shared/components/hours-input";
 import {
   fixedTimeShiftFormSchema,
   type FixedTimeShiftFormValues,
@@ -387,11 +388,10 @@ export default function FixedTimeShiftDetail() {
                 name="maxWorkingMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber
+                  <HoursInput
                     className="w-full"
-                    {...field}
-                    min={0}
-                    suffix="min"
+                    value={field.value}
+                    onChange={field.onChange}
                   />
                 )}
               />
@@ -405,11 +405,10 @@ export default function FixedTimeShiftDetail() {
                 name="minimumWorkMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber
+                  <HoursInput
                     className="w-full"
-                    {...field}
-                    min={0}
-                    suffix="min"
+                    value={field.value}
+                    onChange={field.onChange}
                   />
                 )}
               />
@@ -710,7 +709,9 @@ export default function FixedTimeShiftDetail() {
                     errors.otStart?.message ??
                     (otBeforeEnd
                       ? "OT start must be at or after shift end time"
-                      : undefined)
+                      : !otRequireTimeIn
+                        ? "Not used — enable Require Time-In for OT to set a fixed OT start time"
+                        : undefined)
                   }
                 >
                   <Controller
@@ -721,6 +722,7 @@ export default function FixedTimeShiftDetail() {
                         value={field.value}
                         onChange={field.onChange}
                         referenceTime={startTime}
+                        disabled={!otRequireTimeIn}
                       />
                     )}
                   />
@@ -734,11 +736,10 @@ export default function FixedTimeShiftDetail() {
                     name="overTimeThreshold"
                     control={control}
                     render={({ field }) => (
-                      <InputNumber
+                      <HoursInput
                         className="w-full"
-                        {...field}
-                        min={0}
-                        suffix="min"
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     )}
                   />

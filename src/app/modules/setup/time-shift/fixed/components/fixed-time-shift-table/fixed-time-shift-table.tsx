@@ -11,6 +11,7 @@ import type { FixedTimeShiftResponse } from "../../models/api/response/fixed-tim
 import { FIXED_TIME_SHIFT_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatMinutesAsHours } from "@/shared/utils/hours.util";
 
 interface Props {
   data: FixedTimeShiftResponse[];
@@ -192,7 +193,7 @@ export default function FixedTimeShiftTable({
           width: widths.overTimeThreshold,
           onResize: (w: number) => handleResize("overTimeThreshold", w),
         }) as object,
-      render: (val) => `${val} min`,
+      render: (val) => `${formatMinutesAsHours(val)} hrs`,
       align: "right",
     },
     {
@@ -218,7 +219,7 @@ export default function FixedTimeShiftTable({
           width: widths.minimumWorkMinutes,
           onResize: (w: number) => handleResize("minimumWorkMinutes", w),
         }) as object,
-      render: (val: number) => `${val} min`,
+      render: (val: number) => `${formatMinutesAsHours(val)} hrs`,
       align: "right",
     },
     {

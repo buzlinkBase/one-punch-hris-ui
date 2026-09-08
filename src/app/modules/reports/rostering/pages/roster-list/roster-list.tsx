@@ -33,7 +33,7 @@ import { useDepartments } from "@/app/modules/setup/department/hooks/use-departm
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import {
   buildFlatCsv,
-  buildFlatExcel,
+  downloadExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
@@ -127,17 +127,9 @@ export default function RosterList({ embedded = false }: Props) {
     const rows = toRosterRows(records);
     const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      triggerDownload(
-        buildFlatCsv(ROSTER_HEADERS, rows),
-        `roster-${date}.csv`,
-        "text/plain",
-      );
+      triggerDownload(buildFlatCsv(ROSTER_HEADERS, rows), `roster-${date}.csv`);
     } else {
-      triggerDownload(
-        buildFlatExcel(ROSTER_HEADERS, rows),
-        `roster-${date}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
-      );
+      downloadExcel(ROSTER_HEADERS, rows, `roster-${date}.xlsx`);
     }
   };
 

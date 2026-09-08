@@ -43,7 +43,7 @@ import type { TardinessFilter } from "../../models/api/request/tardiness-filter.
 import type { TardinessResponse } from "../../models/api/response/tardiness-response.model";
 import {
   buildFlatCsv,
-  buildFlatExcel,
+  downloadExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
@@ -122,14 +122,9 @@ export default function TardinessList() {
       triggerDownload(
         buildFlatCsv(TARDINESS_HEADERS, rows),
         `tardiness-${date}.csv`,
-        "text/plain",
       );
     } else {
-      triggerDownload(
-        buildFlatExcel(TARDINESS_HEADERS, rows),
-        `tardiness-${date}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
-      );
+      downloadExcel(TARDINESS_HEADERS, rows, `tardiness-${date}.xlsx`);
     }
   };
 
