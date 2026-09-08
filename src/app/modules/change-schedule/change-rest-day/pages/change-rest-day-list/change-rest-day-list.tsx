@@ -26,9 +26,15 @@ import {
   useChangeRestDays,
   useDeleteChangeRestDay,
   useDeleteChangeRestDayBatch,
+  useApproveChangeRestDay,
+  useDeclineChangeRestDay,
 } from "../../hooks/use-change-rest-day-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { CHANGE_REST_DAY_LABEL } from "../../constants/label.const";
+import {
+  APPROVAL_STATUS_COLOR,
+  APPROVAL_STATUS_LABEL,
+} from "@/app/modules/applications/pass-slip/constants/label.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { ChangeRestDayFilter } from "../../models/api/request/change-rest-day-filter.model";
 import type { ChangeRestDayResponse } from "../../models/api/response/change-rest-day-response.model";
@@ -77,6 +83,10 @@ export default function ChangeRestDayList() {
     useDeleteChangeRestDay();
   const { mutateAsync: removeBatch, isPending: isDeletingBatch } =
     useDeleteChangeRestDayBatch();
+  const { mutateAsync: approveEntry, isPending: isApproving } =
+    useApproveChangeRestDay();
+  const { mutateAsync: declineEntry, isPending: isDeclining } =
+    useDeclineChangeRestDay();
   const { data: employeeData = [] } = useEmployeeFilter();
 
   const employees = employeeData.map((e) => ({
@@ -145,8 +155,23 @@ export default function ChangeRestDayList() {
     });
   };
 
+  const handleApprove = async (employeeId: string, batchCode: string) => {
+    await approveEntry({ employeeId, batchCode });
+    getNotify().success({ message: "Rest day change approved." });
+  };
+
+  const handleDecline = async (employeeId: string, batchCode: string) => {
+    await declineEntry({ employeeId, batchCode });
+    getNotify().success({ message: "Rest day change declined." });
+  };
+
   const isTableLoading =
-    isLoading || isFetching || isDeletingEntry || isDeletingBatch;
+    isLoading ||
+    isFetching ||
+    isDeletingEntry ||
+    isDeletingBatch ||
+    isApproving ||
+    isDeclining;
 
   const entryColumns: TableColumnsType<ChangeRestDayResponse> = [
     {
@@ -203,6 +228,19 @@ export default function ChangeRestDayList() {
       ),
     },
     {
+      title: "Status",
+      dataIndex: "approvalStatus",
+      key: "approvalStatus",
+      render: (val?: string) =>
+        val ? (
+          <Tag color={APPROVAL_STATUS_COLOR[val] ?? "default"}>
+            {APPROVAL_STATUS_LABEL[val] ?? val}
+          </Tag>
+        ) : (
+          "—"
+        ),
+    },
+    {
       title: "",
       key: "actions",
       width: entryWidths.actions,
@@ -212,19 +250,44 @@ export default function ChangeRestDayList() {
           onResize: (w: number) => entryResize("actions", w),
         }) as object,
       render: (_: unknown, record: ChangeRestDayResponse) => (
-        <Popconfirm
-          title="Remove this employee entry?"
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() =>
-            handleDeleteEmployee(record.employeeId, record.batchCode)
-          }
-        >
-          <Button type="link" danger size="small" loading={isDeletingEntry}>
-            Delete
-          </Button>
-        </Popconfirm>
+        <Space size={4}>
+          {record.approvalStatus === "ForApproval" && (
+            <>
+              <Button
+                type="link"
+                size="small"
+                onClick={() =>
+                  handleApprove(record.employeeId, record.batchCode)
+                }
+              >
+                Approve
+              </Button>
+              <Button
+                type="link"
+                danger
+                size="small"
+                onClick={() =>
+                  handleDecline(record.employeeId, record.batchCode)
+                }
+              >
+                Decline
+              </Button>
+            </>
+          )}
+          <Popconfirm
+            title="Remove this employee entry?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() =>
+              handleDeleteEmployee(record.employeeId, record.batchCode)
+            }
+          >
+            <Button type="link" danger size="small" loading={isDeletingEntry}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];

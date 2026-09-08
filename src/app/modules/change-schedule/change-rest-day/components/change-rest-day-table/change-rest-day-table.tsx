@@ -1,13 +1,19 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
 import {
   SearchOutlined,
   DeleteOutlined,
   ArrowRightOutlined,
+  CheckOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { ChangeRestDayResponse } from "../../models/api/response/change-rest-day-response.model";
 import { CHANGE_REST_DAY_LABEL } from "../../constants/label.const";
+import {
+  APPROVAL_STATUS_COLOR,
+  APPROVAL_STATUS_LABEL,
+} from "@/app/modules/applications/pass-slip/constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
@@ -15,9 +21,17 @@ interface Props {
   data: ChangeRestDayResponse[];
   loading?: boolean;
   onDelete?: (employeeId: string, batchCode: string) => void;
+  onApprove?: (employeeId: string, batchCode: string) => void;
+  onDecline?: (employeeId: string, batchCode: string) => void;
 }
 
-export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
+export default function ChangeRestDayTable({
+  data,
+  loading,
+  onDelete,
+  onApprove,
+  onDecline,
+}: Props) {
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
@@ -25,6 +39,7 @@ export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
     batchCode: 130,
     fromDate: 130,
     toDate: 130,
+    status: 120,
   });
 
   const filtered = data.filter((item) =>
@@ -89,21 +104,60 @@ export default function ChangeRestDayTable({ data, loading, onDelete }: Props) {
       ),
     },
     {
+      title: "Status",
+      dataIndex: "approvalStatus",
+      key: "status",
+      width: widths.status,
+      onHeaderCell: () =>
+        ({
+          width: widths.status,
+          onResize: (w: number) => handleResize("status", w),
+        }) as object,
+      render: (val?: string) =>
+        val ? (
+          <Tag color={APPROVAL_STATUS_COLOR[val] ?? "default"}>
+            {APPROVAL_STATUS_LABEL[val] ?? val}
+          </Tag>
+        ) : (
+          "—"
+        ),
+    },
+    {
       title: "",
       key: "actions",
       fixed: "right",
-      width: 80,
-      render: (_, record) =>
-        onDelete ? (
-          <Popconfirm
-            title="Delete this record?"
-            onConfirm={() => onDelete(record.employeeId, record.batchCode)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        ) : null,
+      width: 140,
+      render: (_, record) => (
+        <Space size={4}>
+          {record.approvalStatus === "ForApproval" && onApprove && (
+            <Button
+              type="text"
+              icon={<CheckOutlined style={{ color: "#1DA081" }} />}
+              onClick={() => onApprove(record.employeeId, record.batchCode)}
+              title="Approve"
+            />
+          )}
+          {record.approvalStatus === "ForApproval" && onDecline && (
+            <Button
+              type="text"
+              danger
+              icon={<CloseOutlined />}
+              onClick={() => onDecline(record.employeeId, record.batchCode)}
+              title="Decline"
+            />
+          )}
+          {onDelete && (
+            <Popconfirm
+              title="Delete this record?"
+              onConfirm={() => onDelete(record.employeeId, record.batchCode)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          )}
+        </Space>
+      ),
     },
   ];
 

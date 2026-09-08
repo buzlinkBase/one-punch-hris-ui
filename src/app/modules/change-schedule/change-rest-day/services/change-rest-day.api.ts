@@ -43,4 +43,16 @@ export const changeRestDayApi = {
       params: { batchCode },
     });
   },
+
+  approve(employeeId: string, batchCode: string): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/approve`, undefined, {
+      params: { employeeId, batchCode },
+    });
+  },
+
+  decline(employeeId: string, batchCode: string): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/decline`, undefined, {
+      params: { employeeId, batchCode },
+    });
+  },
 };
