@@ -21,3 +21,28 @@ export function useMyPayrolls(params: { from?: string; to?: string }) {
     enabled: !!params.from && !!params.to,
   });
 }
+
+export function useMyDtrDetail(params: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ["me", "dtr-detail", params],
+    queryFn: () => meApi.getMyDtrDetail({ from: params.from!, to: params.to! }),
+    enabled: !!params.from && !!params.to,
+  });
+}
+
+export function useMyIncompletePunches(params: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ["me", "incomplete-punches", params],
+    queryFn: () =>
+      meApi.getMyIncompletePunches({ from: params.from!, to: params.to! }),
+    enabled: !!params.from && !!params.to,
+  });
+}
+
+export function useMyFixedSchedule() {
+  return useQuery({
+    queryKey: ["me", "fixed-schedule"],
+    queryFn: () => meApi.getMyFixedSchedule(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
