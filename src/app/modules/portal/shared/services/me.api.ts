@@ -5,6 +5,9 @@ import type { PayrollRunResponse } from "@/app/modules/daily-time-record/for-pay
 import type { DtrDetailResponse } from "@/app/modules/daily-time-record/detail/models/api/response/dtr-detail-response.model";
 import type { CleanAttendanceLogColumnar } from "@/app/modules/timekeeping/raw-logs/models/api/response/raw-attendance-log.model";
 import type { EmployeeFixedScheduleResponse } from "@/app/modules/change-schedule/fixed-schedule/models/api/response/employee-fixed-schedule-response.model";
+import type { LeaveBalanceResponse } from "@/app/modules/setup/leave-balance/models/api/response/leave-balance-response.model";
+import type { LeaveApplicationResponse } from "@/app/modules/applications/leave-application/models/api/response/leave-application-response.model";
+import type { CreateLeaveApplication } from "@/app/modules/applications/leave-application/models/api/request/create-leave-application.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
@@ -59,5 +62,25 @@ export const meApi = {
     } catch {
       return [];
     }
+  },
+
+  getMyLeaveCredits(year?: number): Promise<LeaveBalanceResponse[]> {
+    return httpClient.getUnwrapped<LeaveBalanceResponse[]>(
+      `${BASE_URL}/leave-credits`,
+      { params: year ? { year } : undefined },
+    );
+  },
+
+  getMyLeaveApplications(): Promise<LeaveApplicationResponse[]> {
+    return httpClient.getUnwrapped<LeaveApplicationResponse[]>(
+      `${BASE_URL}/leave-applications`,
+    );
+  },
+
+  createMyLeaveApplication(data: CreateLeaveApplication): Promise<void> {
+    return httpClient.postUnwrapped<void>(
+      `${BASE_URL}/leave-applications`,
+      data,
+    );
   },
 };

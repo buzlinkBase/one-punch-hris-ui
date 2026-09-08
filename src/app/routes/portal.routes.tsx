@@ -18,6 +18,17 @@ const PortalShiftSchedule = lazy(
   () =>
     import("@/app/modules/portal/shift-schedule/pages/portal-shift-schedule"),
 );
+const PortalLeaveCredits = lazy(
+  () => import("@/app/modules/portal/leave-credits/pages/portal-leave-credits"),
+);
+const PortalLeaveApplicationList = lazy(
+  () =>
+    import("@/app/modules/portal/leave-application/pages/portal-leave-application-list"),
+);
+const PortalLeaveApplicationCreate = lazy(
+  () =>
+    import("@/app/modules/portal/leave-application/pages/portal-leave-application-create"),
+);
 
 export const portalRoutes: SetupRouteConfig[] = [
   { path: "profile", component: PortalProfile },
@@ -25,4 +36,10 @@ export const portalRoutes: SetupRouteConfig[] = [
   { path: "dtr", component: PortalDtr },
   { path: "incomplete-punches", component: PortalIncompletePunches },
   { path: "shift-schedule", component: PortalShiftSchedule },
+  { path: "leave-credits", component: PortalLeaveCredits },
+  { path: "leave-applications", component: PortalLeaveApplicationList },
+  {
+    path: "leave-applications/create",
+    component: PortalLeaveApplicationCreate,
+  },
 ];

@@ -42,6 +42,16 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "My Shift Schedule",
         path: "/portal/shift-schedule",
       },
+      {
+        key: "portal-leave-credits",
+        label: "My Leave Credits",
+        path: "/portal/leave-credits",
+      },
+      {
+        key: "portal-leave-applications",
+        label: "My Leave Applications",
+        path: "/portal/leave-applications",
+      },
     ],
   },
   {
