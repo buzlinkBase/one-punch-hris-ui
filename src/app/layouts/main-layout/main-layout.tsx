@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Badge,
   Button,
@@ -53,6 +53,7 @@ import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { useTenantHub } from "@/core/signalr/use-tenant-hub";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
+import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import type { MenuProps } from "antd";
@@ -135,6 +136,9 @@ function getSessionUser(): SessionUser {
 
 function getNavIcon(key: string): ReactNode {
   const iconMap: Record<string, ReactNode> = {
+    "nav-portal": <UserOutlined />,
+    "portal-profile": <UserOutlined />,
+    "portal-payslips": <DollarOutlined />,
     "nav-dtr": <ClockCircleOutlined />,
     "nav-payroll": <DollarOutlined />,
     "nav-setup": <SettingOutlined />,
@@ -384,20 +388,32 @@ export default function MainLayout() {
   const hrDbFailed =
     hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
 
-  const menuItems = buildMenuItems(NAVIGATION_ITEMS, hrDb.ready, collapsed);
-  const navEntries = flattenNavigation(NAVIGATION_ITEMS);
+  // "My Portal" only shows once we know the logged-in user has a linked Employee record —
+  // until that resolves (or if there is none), it's filtered out rather than shown disabled,
+  // since most accounts will never have one.
+  const { data: myEmployee } = useMyEmployee();
+  const navItems = useMemo(
+    () =>
+      myEmployee
+        ? NAVIGATION_ITEMS
+        : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal"),
+    [myEmployee],
+  );
+
+  const menuItems = buildMenuItems(navItems, hrDb.ready, collapsed);
+  const navEntries = flattenNavigation(navItems);
   const headerContext = buildHeaderContext(location.pathname, navEntries);
   const activeMenuKey = resolveActiveMenuKey(location.pathname, navEntries);
 
   const [openKeys, setOpenKeys] = useState<string[]>(
-    () => findAncestorKeys(location.pathname, NAVIGATION_ITEMS) ?? [],
+    () => findAncestorKeys(location.pathname, navItems) ?? [],
   );
 
   useEffect(() => {
-    const keys = findAncestorKeys(location.pathname, NAVIGATION_ITEMS);
+    const keys = findAncestorKeys(location.pathname, navItems);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (keys) setOpenKeys((prev) => Array.from(new Set([...prev, ...keys])));
-  }, [location.pathname]);
+  }, [location.pathname, navItems]);
 
   useEffect(() => {
     if (!hrDb.known || hrDb.ready) return;

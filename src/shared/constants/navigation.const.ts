@@ -13,6 +13,23 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     path: "/dashboard",
   },
   {
+    key: "nav-portal",
+    label: "My Portal",
+    type: "group",
+    children: [
+      {
+        key: "portal-profile",
+        label: "My Profile",
+        path: "/portal/profile",
+      },
+      {
+        key: "portal-payslips",
+        label: "My Pay Slips",
+        path: "/portal/payslips",
+      },
+    ],
+  },
+  {
     key: "nav-dtr",
     label: "Time Keeping",
     type: "group",
