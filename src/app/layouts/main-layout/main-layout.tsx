@@ -142,6 +142,8 @@ function getNavIcon(key: string): ReactNode {
     "portal-dtr": <ClockCircleOutlined />,
     "portal-incomplete-punches": <FieldTimeOutlined />,
     "portal-shift-schedule": <CalendarOutlined />,
+    "portal-leave-credits": <FileProtectOutlined />,
+    "portal-leave-applications": <FileProtectOutlined />,
     "nav-dtr": <ClockCircleOutlined />,
     "nav-payroll": <DollarOutlined />,
     "nav-setup": <SettingOutlined />,

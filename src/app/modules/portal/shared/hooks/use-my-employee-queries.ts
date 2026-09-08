@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { meApi } from "../services/me.api";
+import type { CreateLeaveApplication } from "@/app/modules/applications/leave-application/models/api/request/create-leave-application.model";
 
 const QUERY_KEY = ["me", "employee"];
 
@@ -44,5 +45,31 @@ export function useMyFixedSchedule() {
     queryKey: ["me", "fixed-schedule"],
     queryFn: () => meApi.getMyFixedSchedule(),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useMyLeaveCredits(year?: number) {
+  return useQuery({
+    queryKey: ["me", "leave-credits", year],
+    queryFn: () => meApi.getMyLeaveCredits(year),
+  });
+}
+
+export function useMyLeaveApplications() {
+  return useQuery({
+    queryKey: ["me", "leave-applications"],
+    queryFn: () => meApi.getMyLeaveApplications(),
+  });
+}
+
+export function useCreateMyLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateLeaveApplication) =>
+      meApi.createMyLeaveApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me", "leave-applications"] });
+      queryClient.invalidateQueries({ queryKey: ["me", "leave-credits"] });
+    },
   });
 }
