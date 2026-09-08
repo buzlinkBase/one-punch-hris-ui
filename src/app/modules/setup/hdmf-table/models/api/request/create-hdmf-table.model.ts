@@ -1,5 +1,4 @@
 export interface CreateHdmfTable {
-  effectiveDate: string;
   minSalaryBase: number;
   maxSalaryBase: number;
   employeeRate: number;

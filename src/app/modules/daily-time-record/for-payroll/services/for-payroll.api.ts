@@ -4,7 +4,9 @@ import type { DtrBatchModel } from "../models/api/response/dtr-batch-response.mo
 import type { PayrollRunRequest } from "../models/api/request/payroll-run-request.model";
 import type { GenerateThirteenthMonthRequest } from "../models/api/request/generate-thirteenth-month-request.model";
 import type { GenerateLastPayRequest } from "../models/api/request/generate-last-pay-request.model";
+import type { TaxAnnualizationRunRequest } from "../models/api/request/tax-annualization-run-request.model";
 import type { PayrollRunResponse } from "../models/api/response/payroll-run-result.model";
+import type { TaxAnnualizationPreviewResponse } from "../models/api/response/tax-annualization-preview.model";
 import type {
   AvailableSalaryAdjustment,
   AvailableOtherIncome,
@@ -67,6 +69,29 @@ export const forPayrollApi = {
   ): Promise<PayrollRunResponse> {
     return httpClient.postUnwrapped<PayrollRunResponse>(
       `${PAYROLL_ENDPOINT}/generate-last-pay`,
+      payload,
+    );
+  },
+
+  // Year-End Tax Annualization review step — recomputes each in-scope employee's true annual
+  // tax due vs. tax withheld YTD without persisting anything, so HR can review before
+  // generateYearEndAdjustment is called. See TaxAnnualizationRunPayload.
+  previewYearEndAdjustment(
+    payload: TaxAnnualizationRunRequest,
+  ): Promise<TaxAnnualizationPreviewResponse> {
+    return httpClient.postUnwrapped<TaxAnnualizationPreviewResponse>(
+      `${PAYROLL_ENDPOINT}/preview-year-end-adjustment`,
+      payload,
+    );
+  },
+
+  // Persists the refund/collection adjustment as a PayrollType.YearEndAdjustment draft — same
+  // Post/Delete/print draft lifecycle as generateThirteenthMonth/generateLastPay.
+  generateYearEndAdjustment(
+    payload: TaxAnnualizationRunRequest,
+  ): Promise<PayrollRunResponse> {
+    return httpClient.postUnwrapped<PayrollRunResponse>(
+      `${PAYROLL_ENDPOINT}/generate-year-end-adjustment`,
       payload,
     );
   },

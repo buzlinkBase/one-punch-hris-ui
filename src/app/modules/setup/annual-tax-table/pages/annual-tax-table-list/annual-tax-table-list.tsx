@@ -1,10 +1,8 @@
-import { useState } from "react";
-import { Button, Select, Space, Typography } from "antd";
+import { Button, Space, Typography } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
   useAnnualTaxTableRows,
-  useAnnualTaxTableVersions,
   useDeleteAnnualTaxTableRow,
 } from "../../hooks/use-annual-tax-table-queries";
 import AnnualTaxTableTable from "../../components/annual-tax-table-table";
@@ -14,25 +12,14 @@ const { Title } = Typography;
 
 export default function AnnualTaxTableList() {
   const navigate = useNavigate();
-  const [effectivity, setEffectivity] = useState<string | undefined>(undefined);
-
-  const { data: versions = [], isLoading: isLoadingVersions } =
-    useAnnualTaxTableVersions();
-
-  // Default to the most recent effectivity date once versions load. Derived
-  // inline rather than synced via effect: no explicit pick yet just falls
-  // back to the newest version each render.
-  const resolvedEffectivity = effectivity ?? versions[0];
 
   const {
     data: rows = [],
     isLoading,
     refetch,
     isFetching,
-  } = useAnnualTaxTableRows(resolvedEffectivity);
+  } = useAnnualTaxTableRows();
   const { mutate: remove } = useDeleteAnnualTaxTableRow();
-
-  const versionOptions = versions.map((v) => ({ value: v, label: v }));
 
   return (
     <div className="content-page">
@@ -43,7 +30,7 @@ export default function AnnualTaxTableList() {
               {ANNUAL_TAX_TABLE_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Manage annual income tax brackets by effectivity date.
+              Manage annual income tax brackets.
             </p>
           </div>
           <Space>
@@ -59,22 +46,6 @@ export default function AnnualTaxTableList() {
             >
               Add Bracket
             </Button>
-          </Space>
-        </div>
-        <div className="page-toolbar-row">
-          <Space>
-            <span>Effectivity Date:</span>
-            <Select
-              value={resolvedEffectivity}
-              onChange={setEffectivity}
-              options={versionOptions}
-              loading={isLoadingVersions}
-              placeholder="Select effectivity date"
-              style={{ width: 180 }}
-              notFoundContent={
-                isLoadingVersions ? undefined : "No dates on file"
-              }
-            />
           </Space>
         </div>
       </div>

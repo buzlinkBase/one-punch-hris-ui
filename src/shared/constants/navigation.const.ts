@@ -108,6 +108,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Generate Last Pay",
         path: "/daily-time-record/for-last-pay",
       },
+      {
+        key: "payroll-run-year-end-adjustment",
+        label: "Year-End Tax Adjustment",
+        path: "/daily-time-record/for-year-end-adjustment",
+      },
     ],
   },
   {

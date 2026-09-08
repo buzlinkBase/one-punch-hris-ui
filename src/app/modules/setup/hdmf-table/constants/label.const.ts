@@ -2,7 +2,6 @@ export const HDMF_TABLE_LABEL = {
   TITLE: "HDMF Table",
   CREATE_TITLE: "Add HDMF Bracket",
   EDIT_TITLE: "Edit HDMF Bracket",
-  EFFECTIVE_DATE: "Effectivity Date",
   MIN_SALARY_BASE: "Min Salary Base",
   MAX_SALARY_BASE: "Max Salary Base",
   EMPLOYEE_RATE: "Employee Rate",

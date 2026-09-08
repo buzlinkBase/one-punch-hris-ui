@@ -7,13 +7,8 @@ import type { UpdateSssTable } from "../models/api/request/update-sss-table.mode
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "SSS");
 
 export const sssTableApi = {
-  getAll(effectivity: string): Promise<SssTableResponse[]> {
-    return httpClient.getUnwrapped<SssTableResponse[]>(
-      `${ENDPOINT}?effectivity=${effectivity}`,
-    );
-  },
-  getVersions(): Promise<string[]> {
-    return httpClient.getUnwrapped<string[]>(`${ENDPOINT}/versions`);
+  getAll(): Promise<SssTableResponse[]> {
+    return httpClient.getUnwrapped<SssTableResponse[]>(ENDPOINT);
   },
   getById(id: string): Promise<SssTableResponse> {
     return httpClient.getUnwrapped<SssTableResponse>(`${ENDPOINT}/${id}`);

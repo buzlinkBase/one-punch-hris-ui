@@ -9,7 +9,7 @@ interface HdmfTableStore {
   selected: HdmfTableResponse | null;
   loading: boolean;
   error: string | null;
-  loadAll: (effectivity: string) => Promise<void>;
+  loadAll: () => Promise<void>;
   loadById: (id: string) => Promise<void>;
   add: (data: CreateHdmfTable) => Promise<void>;
   update: (data: UpdateHdmfTable) => Promise<void>;
@@ -24,10 +24,10 @@ export const useHdmfTableStore = create<HdmfTableStore>((set) => ({
   loading: false,
   error: null,
 
-  loadAll: async (effectivity) => {
+  loadAll: async () => {
     set({ loading: true, error: null });
     try {
-      const rows = await hdmfTableApi.getAll(effectivity);
+      const rows = await hdmfTableApi.getAll();
       set({ rows, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });

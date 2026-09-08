@@ -5,7 +5,6 @@ import {
   Typography,
   Space,
   Tag,
-  DatePicker,
   InputNumber,
   Descriptions,
 } from "antd";
@@ -13,7 +12,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import dayjs from "dayjs";
 import {
   sssTableFormSchema,
   type SssTableFormValues,
@@ -27,8 +25,6 @@ import { SSS_TABLE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
-
-const today = dayjs().format("YYYY-MM-DD");
 
 export default function SssTableDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -47,7 +43,6 @@ export default function SssTableDetail() {
   } = useForm<SssTableFormValues>({
     resolver: zodResolver(sssTableFormSchema) as Resolver<SssTableFormValues>,
     defaultValues: {
-      effectiveDate: today,
       rangeFrom: 0,
       rangeTo: 0,
       msc: 0,
@@ -60,7 +55,6 @@ export default function SssTableDetail() {
   useEffect(() => {
     if (isEdit && selected) {
       reset({
-        effectiveDate: selected.effectiveDate,
         rangeFrom: selected.rangeFrom,
         rangeTo: selected.rangeTo,
         msc: selected.msc,
@@ -131,27 +125,6 @@ export default function SssTableDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item
-            label={SSS_TABLE_LABEL.EFFECTIVE_DATE}
-            validateStatus={errors.effectiveDate ? "error" : ""}
-            help={errors.effectiveDate?.message}
-          >
-            <Controller
-              name="effectiveDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  value={field.value ? dayjs(field.value) : null}
-                  onChange={(d) =>
-                    field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                  }
-                  format="YYYY-MM-DD"
-                  style={{ width: "100%" }}
-                />
-              )}
-            />
-          </Form.Item>
-
           {numField("rangeFrom", SSS_TABLE_LABEL.RANGE_FROM)}
           {numField("rangeTo", SSS_TABLE_LABEL.RANGE_TO)}
           {numField("msc", SSS_TABLE_LABEL.MSC)}

@@ -5,7 +5,6 @@ import {
   Typography,
   Space,
   Tag,
-  DatePicker,
   InputNumber,
   Select,
 } from "antd";
@@ -13,7 +12,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import dayjs from "dayjs";
 import {
   wtaxTableFormSchema,
   type WtaxTableFormValues,
@@ -30,8 +28,6 @@ import {
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
 const { Title } = Typography;
-
-const today = dayjs().format("YYYY-MM-DD");
 
 export default function WtaxTableDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -51,7 +47,6 @@ export default function WtaxTableDetail() {
   } = useForm<WtaxTableFormValues>({
     resolver: zodResolver(wtaxTableFormSchema) as Resolver<WtaxTableFormValues>,
     defaultValues: {
-      effectiveDate: today,
       payrollType: "SEMI_MONTHLY",
       rangeFrom: 0,
       rangeTo: 0,
@@ -63,7 +58,6 @@ export default function WtaxTableDetail() {
   useEffect(() => {
     if (isEdit && selected) {
       reset({
-        effectiveDate: selected.effectiveDate,
         payrollType: selected.payrollType,
         rangeFrom: selected.rangeFrom,
         rangeTo: selected.rangeTo,
@@ -132,27 +126,6 @@ export default function WtaxTableDetail() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          <Form.Item
-            label={WTAX_TABLE_LABEL.EFFECTIVE_DATE}
-            validateStatus={errors.effectiveDate ? "error" : ""}
-            help={errors.effectiveDate?.message}
-          >
-            <Controller
-              name="effectiveDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  value={field.value ? dayjs(field.value) : null}
-                  onChange={(d) =>
-                    field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                  }
-                  format="YYYY-MM-DD"
-                  style={{ width: "100%" }}
-                />
-              )}
-            />
-          </Form.Item>
-
           <Form.Item
             label={WTAX_TABLE_LABEL.PAYROLL_TYPE}
             validateStatus={errors.payrollType ? "error" : ""}

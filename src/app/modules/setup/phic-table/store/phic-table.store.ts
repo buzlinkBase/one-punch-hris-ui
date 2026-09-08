@@ -9,7 +9,7 @@ interface PhicTableStore {
   selected: PhicTableResponse | null;
   loading: boolean;
   error: string | null;
-  loadAll: (effectivity: string) => Promise<void>;
+  loadAll: () => Promise<void>;
   loadById: (id: string) => Promise<void>;
   add: (data: CreatePhicTable) => Promise<void>;
   update: (data: UpdatePhicTable) => Promise<void>;
@@ -24,10 +24,10 @@ export const usePhicTableStore = create<PhicTableStore>((set) => ({
   loading: false,
   error: null,
 
-  loadAll: async (effectivity) => {
+  loadAll: async () => {
     set({ loading: true, error: null });
     try {
-      const rows = await phicTableApi.getAll(effectivity);
+      const rows = await phicTableApi.getAll();
       set({ rows, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });

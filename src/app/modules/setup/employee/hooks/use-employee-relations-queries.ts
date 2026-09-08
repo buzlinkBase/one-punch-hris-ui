@@ -6,6 +6,9 @@ import {
   docRecordApi,
   employmentHistoryApi,
   assignAssetApi,
+  priorEmployerTaxRecordApi,
+  payrollOpeningBalanceApi,
+  type PayrollOpeningBalanceInput,
 } from "../services/employee-relations.api";
 import type {
   DependentResponse,
@@ -14,6 +17,7 @@ import type {
   DocRecordResponse,
   EmploymentHistoryResponse,
   AssignAssetResponse,
+  PriorEmployerTaxRecordResponse,
 } from "../models/api/response/employee-relations-response.models";
 
 // ── Dependents ────────────────────────────────────────────────────────────────
@@ -198,6 +202,91 @@ export function useDeleteEmploymentHistory(empId: string) {
   return useMutation({
     mutationFn: (id: string) => employmentHistoryApi.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: HIST_KEY(empId) }),
+  });
+}
+
+// ── Prior Employer Tax Records (BIR 2316) ────────────────────────────────────
+
+const PRIOR_TAX_KEY = (empId: string) => [
+  "employee-prior-employer-tax-records",
+  empId,
+];
+
+export function usePriorEmployerTaxRecordsByEmployee(empId: string) {
+  return useQuery({
+    queryKey: PRIOR_TAX_KEY(empId),
+    queryFn: () => priorEmployerTaxRecordApi.getByEmployee(empId),
+    enabled: !!empId,
+  });
+}
+
+export function useCreatePriorEmployerTaxRecord(empId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<PriorEmployerTaxRecordResponse, "id">) =>
+      priorEmployerTaxRecordApi.create(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PRIOR_TAX_KEY(empId) }),
+  });
+}
+
+export function useUpdatePriorEmployerTaxRecord(empId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PriorEmployerTaxRecordResponse) =>
+      priorEmployerTaxRecordApi.update(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PRIOR_TAX_KEY(empId) }),
+  });
+}
+
+export function useDeletePriorEmployerTaxRecord(empId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => priorEmployerTaxRecordApi.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PRIOR_TAX_KEY(empId) }),
+  });
+}
+
+// ── Payroll Opening Balances (mid-year cutover) ──────────────────────────────
+
+const OPENING_BALANCE_KEY = (empId: string) => [
+  "payroll-opening-balances",
+  empId,
+];
+
+export function useOpeningBalancesByEmployee(empId: string) {
+  return useQuery({
+    queryKey: OPENING_BALANCE_KEY(empId),
+    queryFn: () => payrollOpeningBalanceApi.getByEmployee(empId),
+    enabled: !!empId,
+  });
+}
+
+export function useCreateOpeningBalance(empId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PayrollOpeningBalanceInput) =>
+      payrollOpeningBalanceApi.create(data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: OPENING_BALANCE_KEY(empId) }),
+  });
+}
+
+export function useUpdateOpeningBalance(empId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PayrollOpeningBalanceInput & { id: string }) =>
+      payrollOpeningBalanceApi.update(data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: OPENING_BALANCE_KEY(empId) }),
+  });
+}
+
+export function useDeleteOpeningBalance(empId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => payrollOpeningBalanceApi.remove(id),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: OPENING_BALANCE_KEY(empId) }),
   });
 }
 

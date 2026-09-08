@@ -9,7 +9,7 @@ interface WtaxTableStore {
   selected: WtaxTableResponse | null;
   loading: boolean;
   error: string | null;
-  loadAll: (effectivity: string, payrollType: string) => Promise<void>;
+  loadAll: (payrollType: string) => Promise<void>;
   loadById: (id: string) => Promise<void>;
   add: (data: CreateWtaxTable) => Promise<void>;
   update: (data: UpdateWtaxTable) => Promise<void>;
@@ -24,10 +24,10 @@ export const useWtaxTableStore = create<WtaxTableStore>((set) => ({
   loading: false,
   error: null,
 
-  loadAll: async (effectivity, payrollType) => {
+  loadAll: async (payrollType) => {
     set({ loading: true, error: null });
     try {
-      const rows = await wtaxTableApi.getAll(effectivity, payrollType);
+      const rows = await wtaxTableApi.getAll(payrollType);
       set({ rows, loading: false });
     } catch (err) {
       set({ error: String(err), loading: false });

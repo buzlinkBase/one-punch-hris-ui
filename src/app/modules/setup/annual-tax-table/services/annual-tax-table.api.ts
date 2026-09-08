@@ -7,13 +7,8 @@ import type { UpdateAnnualTaxTable } from "../models/api/request/update-annual-t
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "AnnualTaxs");
 
 export const annualTaxTableApi = {
-  getAll(effectivity: string): Promise<AnnualTaxTableResponse[]> {
-    return httpClient.getUnwrapped<AnnualTaxTableResponse[]>(
-      `${ENDPOINT}?effectivity=${effectivity}`,
-    );
-  },
-  getVersions(): Promise<string[]> {
-    return httpClient.getUnwrapped<string[]>(`${ENDPOINT}/versions`);
+  getAll(): Promise<AnnualTaxTableResponse[]> {
+    return httpClient.getUnwrapped<AnnualTaxTableResponse[]>(ENDPOINT);
   },
   getById(id: string): Promise<AnnualTaxTableResponse> {
     return httpClient.getUnwrapped<AnnualTaxTableResponse>(`${ENDPOINT}/${id}`);

@@ -2,7 +2,6 @@ export const WTAX_TABLE_LABEL = {
   TITLE: "WTax Table",
   CREATE_TITLE: "Add WTax Bracket",
   EDIT_TITLE: "Edit WTax Bracket",
-  EFFECTIVE_DATE: "Effectivity Date",
   PAYROLL_TYPE: "Payroll Type",
   RANGE_FROM: "Range From",
   RANGE_TO: "Range To",

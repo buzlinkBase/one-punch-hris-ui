@@ -7,17 +7,9 @@ import type { UpdateWtaxTable } from "../models/api/request/update-wtax-table.mo
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "WTaxs");
 
 export const wtaxTableApi = {
-  getAll(
-    effectivity: string,
-    payrollType: string,
-  ): Promise<WtaxTableResponse[]> {
+  getAll(payrollType: string): Promise<WtaxTableResponse[]> {
     return httpClient.getUnwrapped<WtaxTableResponse[]>(
-      `${ENDPOINT}?effectivity=${effectivity}&payrollType=${payrollType}`,
-    );
-  },
-  getVersions(payrollType: string): Promise<string[]> {
-    return httpClient.getUnwrapped<string[]>(
-      `${ENDPOINT}/versions?payrollType=${payrollType}`,
+      `${ENDPOINT}?payrollType=${payrollType}`,
     );
   },
   getById(id: string): Promise<WtaxTableResponse> {

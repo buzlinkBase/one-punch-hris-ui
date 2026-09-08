@@ -14,9 +14,11 @@ import {
   useDownloadEmployeeTemplate,
   useUploadEmployees,
 } from "../../hooks/use-employee-queries";
-import EmployeeTable from "../../components/employee-table";
+import EmployeeTable, { formatFullName } from "../../components/employee-table";
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
 import InviteUserModal from "@/app/modules/security/users/components/invite-user-modal/invite-user-modal";
+import EmployeePriorEmployerTaxModal from "../../components/employee-prior-employer-tax-modal";
+import EmployeeOpeningBalanceModal from "../../components/employee-opening-balance-modal";
 import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
 
 const { Title } = Typography;
@@ -44,6 +46,10 @@ export default function EmployeeList() {
   const [inviteTarget, setInviteTarget] = useState<EmployeeResponse | null>(
     null,
   );
+  const [priorEmployerTarget, setPriorEmployerTarget] =
+    useState<EmployeeResponse | null>(null);
+  const [openingBalanceTarget, setOpeningBalanceTarget] =
+    useState<EmployeeResponse | null>(null);
 
   const handleDownloadTemplate = () => {
     downloadTemplate(undefined, {
@@ -143,9 +149,11 @@ export default function EmployeeList() {
       <EmployeeTable
         data={employees}
         loading={isLoading}
-        // onDelete hidden for now — omitting it makes EmployeeTable's delete button not
+        // onDelete hidden for now — omitting it makes EmployeeTable's delete menu item not
         // render at all (see its `{onDelete && (...)}` guard).
         onInvite={(record) => setInviteTarget(record)}
+        onPriorEmployerTax={(record) => setPriorEmployerTarget(record)}
+        onOpeningBalance={(record) => setOpeningBalanceTarget(record)}
       />
 
       <InviteUserModal
@@ -158,6 +166,26 @@ export default function EmployeeList() {
             : undefined
         }
         employeeEmail={inviteTarget?.email ?? undefined}
+      />
+
+      <EmployeePriorEmployerTaxModal
+        open={!!priorEmployerTarget}
+        onClose={() => setPriorEmployerTarget(null)}
+        employeeId={priorEmployerTarget?.id}
+        employeeName={
+          priorEmployerTarget ? formatFullName(priorEmployerTarget) : undefined
+        }
+      />
+
+      <EmployeeOpeningBalanceModal
+        open={!!openingBalanceTarget}
+        onClose={() => setOpeningBalanceTarget(null)}
+        employeeId={openingBalanceTarget?.id}
+        employeeName={
+          openingBalanceTarget
+            ? formatFullName(openingBalanceTarget)
+            : undefined
+        }
       />
     </div>
   );

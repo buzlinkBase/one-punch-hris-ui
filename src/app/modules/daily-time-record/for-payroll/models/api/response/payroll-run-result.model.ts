@@ -15,8 +15,9 @@ export interface PayrollRunResult {
   remarks?: string | null;
   // "Regular" (DTR-cutoff-driven, the default) vs "ThirteenthMonth" (a lump-sum annual
   // payout — see GenerateThirteenthMonthRequest) vs "LastPay" (a separated employee's
-  // final settlement — see GenerateLastPayRequest). Only meaningful when id is set.
-  payrollType?: "Regular" | "ThirteenthMonth" | "LastPay";
+  // final settlement — see GenerateLastPayRequest) vs "YearEndAdjustment" (BIR annualization
+  // refund/collection — see TaxAnnualizationRunRequest). Only meaningful when id is set.
+  payrollType?: "Regular" | "ThirteenthMonth" | "LastPay" | "YearEndAdjustment";
   employeeId: string;
   fullName: string;
   payPeriodStart: string;
