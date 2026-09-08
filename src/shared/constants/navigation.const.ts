@@ -27,6 +27,21 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "My Pay Slips",
         path: "/portal/payslips",
       },
+      {
+        key: "portal-dtr",
+        label: "My Daily Time Record",
+        path: "/portal/dtr",
+      },
+      {
+        key: "portal-incomplete-punches",
+        label: "My Incomplete Logs",
+        path: "/portal/incomplete-punches",
+      },
+      {
+        key: "portal-shift-schedule",
+        label: "My Shift Schedule",
+        path: "/portal/shift-schedule",
+      },
     ],
   },
   {
