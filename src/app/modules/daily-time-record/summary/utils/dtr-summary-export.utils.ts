@@ -4,12 +4,12 @@ type SumLeafCol = { key: keyof DtrSummaryResponse; label: string };
 type SumSubGroup = { label: string; cols: SumLeafCol[] };
 type SumTopGroup = { label: string; subGroups: SumSubGroup[] };
 
-const LEFT_COLS: SumLeafCol[] = [
+export const LEFT_COLS: SumLeafCol[] = [
   { key: "batchCode", label: "Batch Code" },
   { key: "fullName", label: "Employee" },
 ];
 
-const GROUPED_COLS: SumTopGroup[] = [
+export const GROUPED_COLS: SumTopGroup[] = [
   {
     label: "Attendance",
     subGroups: [
@@ -119,7 +119,10 @@ const ALL_LEAF_COLS: SumLeafCol[] = GROUPED_COLS.flatMap((g) =>
 );
 const ALL_COLS: SumLeafCol[] = [...LEFT_COLS, ...ALL_LEAF_COLS];
 
-function fmtCell(r: DtrSummaryResponse, key: keyof DtrSummaryResponse): string {
+export function fmtCell(
+  r: DtrSummaryResponse,
+  key: keyof DtrSummaryResponse,
+): string {
   const v = r[key];
   if (typeof v === "number") return v === 0 ? "" : v.toFixed(1);
   return String(v ?? "");
@@ -155,47 +158,4 @@ export function buildDtrSummaryCsv(records: DtrSummaryResponse[]): string {
   );
 
   return [row1, row2, row3, ...dataRows].join("\n");
-}
-
-export function buildDtrSummaryExcel(records: DtrSummaryResponse[]): string {
-  const x = (v: string) =>
-    v
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;");
-  const th = (content: string, attrs = "") =>
-    `<th ${attrs} style="border:1px solid #bbb;background:#f0f0f0;font-weight:bold;text-align:center;white-space:nowrap;padding:3px 6px">${x(content)}</th>`;
-  const td = (content: string) =>
-    `<td style="border:1px solid #ddd;padding:2px 5px;white-space:nowrap">${x(content)}</td>`;
-
-  const headerRow1 = [
-    ...LEFT_COLS.map((c) => th(c.label, 'rowspan="3"')),
-    ...GROUPED_COLS.map((g) => {
-      const span = g.subGroups.reduce((s, sub) => s + sub.cols.length, 0);
-      return th(g.label, `colspan="${span}"`);
-    }),
-  ].join("");
-
-  const headerRow2 = GROUPED_COLS.flatMap((g) =>
-    g.subGroups.map((s) => th(s.label, `colspan="${s.cols.length}"`)),
-  ).join("");
-
-  const headerRow3 = ALL_LEAF_COLS.map((c) => th(c.label)).join("");
-
-  const dataRows = records
-    .map(
-      (r) => `<tr>${ALL_COLS.map((c) => td(fmtCell(r, c.key))).join("")}</tr>`,
-    )
-    .join("");
-
-  return `<html><head><meta charset="utf-8"/></head><body>
-<table border="1" style="border-collapse:collapse;font-size:11px;font-family:Arial,sans-serif">
-<thead>
-<tr>${headerRow1}</tr>
-<tr>${headerRow2}</tr>
-<tr>${headerRow3}</tr>
-</thead>
-<tbody>${dataRows}</tbody>
-</table></body></html>`;
 }

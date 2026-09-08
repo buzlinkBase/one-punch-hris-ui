@@ -29,9 +29,14 @@ import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
 import {
   buildDtrCsv,
-  buildDtrExcel,
-  triggerDownload,
+  fmtCell,
+  GROUPED_COLS,
+  LEFT_COLS,
 } from "../../utils/dtr-export.utils";
+import {
+  downloadGroupedHeaderExcel,
+  triggerDownload,
+} from "@/shared/utils/export.utils";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
@@ -196,16 +201,14 @@ export default function DtrDetailList() {
     }
     const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      triggerDownload(
-        buildDtrCsv(records),
-        `dtr-detail-${date}.csv`,
-        "text/plain",
-      );
+      triggerDownload(buildDtrCsv(records), `dtr-detail-${date}.csv`);
     } else {
-      triggerDownload(
-        buildDtrExcel(records),
-        `dtr-detail-${date}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
+      downloadGroupedHeaderExcel(
+        LEFT_COLS,
+        GROUPED_COLS,
+        records,
+        fmtCell,
+        `dtr-detail-${date}.xlsx`,
       );
     }
   };

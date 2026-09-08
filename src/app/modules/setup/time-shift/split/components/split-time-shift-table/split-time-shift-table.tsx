@@ -11,6 +11,7 @@ import type { SplitTimeShiftResponse } from "../../models/api/response/split-tim
 import { SPLIT_TIME_SHIFT_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatMinutesAsHours } from "@/shared/utils/hours.util";
 
 interface Props {
   data: SplitTimeShiftResponse[];
@@ -103,7 +104,7 @@ export default function SplitTimeShiftTable({
           width: widths.minimumWorkMinutes,
           onResize: (w: number) => handleResize("minimumWorkMinutes", w),
         }) as object,
-      render: (val) => `${val} min`,
+      render: (val) => `${formatMinutesAsHours(val)} hrs`,
       align: "right",
     },
     {
@@ -116,7 +117,7 @@ export default function SplitTimeShiftTable({
           width: widths.maxWorkingMinutes,
           onResize: (w: number) => handleResize("maxWorkingMinutes", w),
         }) as object,
-      render: (val) => `${val} min`,
+      render: (val) => `${formatMinutesAsHours(val)} hrs`,
       align: "right",
     },
     {
@@ -156,7 +157,7 @@ export default function SplitTimeShiftTable({
           width: widths.overTimeThreshold,
           onResize: (w: number) => handleResize("overTimeThreshold", w),
         }) as object,
-      render: (val) => `${val} min`,
+      render: (val) => `${formatMinutesAsHours(val)} hrs`,
       align: "right",
     },
     {

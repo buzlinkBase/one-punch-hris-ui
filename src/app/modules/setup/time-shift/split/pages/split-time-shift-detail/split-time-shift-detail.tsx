@@ -20,6 +20,7 @@ import {
   timeSpanToSeconds,
 } from "@/shared/utils/time-span.util";
 import { TimeSpanPicker } from "@/shared/components/time-span-picker";
+import { HoursInput } from "@/shared/components/hours-input";
 import {
   SplitTimeShiftFormSchema,
   type SplitTimeShiftFormValues,
@@ -294,11 +295,10 @@ export default function SplitTimeShiftDetail() {
                 name="minimumWorkMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber
+                  <HoursInput
                     className="w-full"
-                    {...field}
-                    min={0}
-                    suffix="min"
+                    value={field.value}
+                    onChange={field.onChange}
                   />
                 )}
               />
@@ -312,11 +312,10 @@ export default function SplitTimeShiftDetail() {
                 name="maxWorkingMinutes"
                 control={control}
                 render={({ field }) => (
-                  <InputNumber
+                  <HoursInput
                     className="w-full"
-                    {...field}
-                    min={0}
-                    suffix="min"
+                    value={field.value}
+                    onChange={field.onChange}
                   />
                 )}
               />
@@ -438,11 +437,10 @@ export default function SplitTimeShiftDetail() {
                   name="overTimeThreshold"
                   control={control}
                   render={({ field }) => (
-                    <InputNumber
+                    <HoursInput
                       className="w-full"
-                      {...field}
-                      min={0}
-                      suffix="min"
+                      value={field.value}
+                      onChange={field.onChange}
                     />
                   )}
                 />

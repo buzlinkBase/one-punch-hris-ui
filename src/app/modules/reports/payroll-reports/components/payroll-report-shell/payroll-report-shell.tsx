@@ -16,7 +16,7 @@ import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   buildFlatCsv,
-  buildFlatExcel,
+  downloadExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
 
@@ -81,14 +81,9 @@ export function PayrollReportShell<T extends object>({
       triggerDownload(
         buildFlatCsv(exportHeaders, rows),
         `${exportFileName}-${date}.csv`,
-        "text/plain",
       );
     } else {
-      triggerDownload(
-        buildFlatExcel(exportHeaders, rows),
-        `${exportFileName}-${date}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
-      );
+      downloadExcel(exportHeaders, rows, `${exportFileName}-${date}.xlsx`);
     }
   };
 

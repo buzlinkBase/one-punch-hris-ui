@@ -24,9 +24,14 @@ import {
 import DtrDetailTable from "../../components/dtr-detail-table";
 import {
   buildDtrCsv,
-  buildDtrExcel,
-  triggerDownload,
+  fmtCell,
+  GROUPED_COLS,
+  LEFT_COLS,
 } from "../../utils/dtr-export.utils";
+import {
+  downloadGroupedHeaderExcel,
+  triggerDownload,
+} from "@/shared/utils/export.utils";
 
 export default function DtrBatchTab() {
   const [selectedBatchCode, setSelectedBatchCode] = useState<
@@ -80,16 +85,14 @@ export default function DtrBatchTab() {
       ? selectedBatchCode.replace(/[^a-zA-Z0-9_-]/g, "_")
       : dayjs().format("YYYYMMDD");
     if (format === "csv") {
-      triggerDownload(
-        buildDtrCsv(records),
-        `dtr-detail-${suffix}.csv`,
-        "text/plain",
-      );
+      triggerDownload(buildDtrCsv(records), `dtr-detail-${suffix}.csv`);
     } else {
-      triggerDownload(
-        buildDtrExcel(records),
-        `dtr-detail-${suffix}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
+      downloadGroupedHeaderExcel(
+        LEFT_COLS,
+        GROUPED_COLS,
+        records,
+        fmtCell,
+        `dtr-detail-${suffix}.xlsx`,
       );
     }
   };

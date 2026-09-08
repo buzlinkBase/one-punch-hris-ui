@@ -23,6 +23,7 @@ import type { ColumnsType } from "antd/es/table";
 import {
   CheckCircleOutlined,
   DeleteOutlined,
+  InfoCircleOutlined,
   PrinterOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
@@ -482,7 +483,10 @@ export default function GenerateLastPay() {
               checked={includeThirteenthMonth}
               onChange={(e) => setIncludeThirteenthMonth(e.target.checked)}
             >
-              Include prorated 13th month pay
+              Include prorated 13th month pay{" "}
+              <Tooltip title="Prorated 13th month pay counts any pay period that started on or before the employee's separation date — even if the period's nominal end date falls after it, since the basic pay in it is already capped to their actual last day worked.">
+                <InfoCircleOutlined className="text-(--ant-color-text-tertiary)" />
+              </Tooltip>
             </Checkbox>
             <Checkbox
               checked={includeLeaveConversion}

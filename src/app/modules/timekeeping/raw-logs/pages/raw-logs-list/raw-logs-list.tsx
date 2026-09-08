@@ -38,7 +38,7 @@ import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import {
   buildFlatCsv,
-  buildFlatExcel,
+  downloadExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
@@ -259,17 +259,9 @@ export default function RawLogsList() {
     const strRows = rows.map((r) => headers.map((h) => r[h] ?? ""));
     const date = new Date().toISOString().split("T")[0];
     if (format === "csv") {
-      triggerDownload(
-        buildFlatCsv(headers, strRows),
-        `${name}-${date}.csv`,
-        "text/plain",
-      );
+      triggerDownload(buildFlatCsv(headers, strRows), `${name}-${date}.csv`);
     } else {
-      triggerDownload(
-        buildFlatExcel(headers, strRows),
-        `${name}-${date}.xls`,
-        "application/vnd.ms-excel;charset=utf-8;",
-      );
+      downloadExcel(headers, strRows, `${name}-${date}.xlsx`);
     }
   };
 
