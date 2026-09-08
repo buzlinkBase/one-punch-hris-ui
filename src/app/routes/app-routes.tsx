@@ -15,6 +15,7 @@ import {
 import MainLayout from "@/app/layouts/main-layout";
 import AuthLayout from "@/app/layouts/auth-layout";
 import { setupRoutes } from "./setup.routes";
+import { portalRoutes } from "./portal.routes";
 import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
@@ -30,6 +31,9 @@ const ResetPassword = lazy(
 const Dashboard = lazy(() => import("@/app/modules/dashboard/dashboard"));
 const Profile = lazy(
   () => import("@/app/modules/account/profile/pages/profile/profile"),
+);
+const PortalProfile = lazy(
+  () => import("@/app/modules/portal/profile/pages/portal-profile"),
 );
 const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/department-list"),
@@ -465,6 +469,26 @@ const profileIndexRoute = createRoute({
   path: "/",
   component: withSuspense(Profile),
 });
+
+const portalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "portal",
+  component: MainLayout,
+});
+
+const portalIndexRoute = createRoute({
+  getParentRoute: () => portalRoute,
+  path: "/",
+  component: withSuspense(PortalProfile),
+});
+
+const portalChildRoutes = portalRoutes.map((route) =>
+  createRoute({
+    getParentRoute: () => portalRoute,
+    path: route.path,
+    component: withSuspense(route.component),
+  }),
+);
 
 const setupRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -1406,6 +1430,7 @@ const routeTree = rootRoute.addChildren([
   acceptInviteRoute.addChildren([acceptInviteIndexRoute]),
   dashboardRoute.addChildren([dashboardIndexRoute]),
   profileRoute.addChildren([profileIndexRoute]),
+  portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
