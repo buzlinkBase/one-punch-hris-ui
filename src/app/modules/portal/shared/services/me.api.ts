@@ -16,6 +16,8 @@ import type { PortalCreatePassSlip } from "../models/api/request/portal-create-p
 import type { PortalPassSlipResponse } from "../models/api/response/portal-pass-slip-response.model";
 import type { PortalRequestChangeRestDay } from "../models/api/request/portal-request-change-rest-day.model";
 import type { ChangeRestDayResponse } from "@/app/modules/change-schedule/change-rest-day/models/api/response/change-rest-day-response.model";
+import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
+import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
@@ -143,5 +145,18 @@ export const meApi = {
     data: PortalRequestChangeRestDay,
   ): Promise<void> {
     return httpClient.postUnwrapped<void>(`${BASE_URL}/change-rest-day`, data);
+  },
+
+  getMyLoanApplications(): Promise<DeductionApplicationResponse[]> {
+    return httpClient.getUnwrapped<DeductionApplicationResponse[]>(
+      `${BASE_URL}/loan-applications`,
+    );
+  },
+
+  createMyLoanApplication(data: CreateDeductionApplication): Promise<void> {
+    return httpClient.postUnwrapped<void>(
+      `${BASE_URL}/loan-applications`,
+      data,
+    );
   },
 };

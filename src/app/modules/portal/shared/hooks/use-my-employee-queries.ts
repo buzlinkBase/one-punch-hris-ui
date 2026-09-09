@@ -5,6 +5,7 @@ import type { CreateOvertimeApplication } from "@/app/modules/applications/overt
 import type { CreateTravelOrderApplication } from "@/app/modules/applications/travel-order-application/models/api/request/create-travel-order-application.model";
 import type { PortalCreatePassSlip } from "../models/api/request/portal-create-pass-slip.model";
 import type { PortalRequestChangeRestDay } from "../models/api/request/portal-request-change-rest-day.model";
+import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
 
 const QUERY_KEY = ["me", "employee"];
 
@@ -152,6 +153,24 @@ export function useCreateMyChangeRestDayRequest() {
       meApi.createMyChangeRestDayRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me", "change-rest-day"] });
+    },
+  });
+}
+
+export function useMyLoanApplications() {
+  return useQuery({
+    queryKey: ["me", "loan-applications"],
+    queryFn: () => meApi.getMyLoanApplications(),
+  });
+}
+
+export function useCreateMyLoanApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateDeductionApplication) =>
+      meApi.createMyLoanApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me", "loan-applications"] });
     },
   });
 }

@@ -151,6 +151,7 @@ function getNavIcon(key: string): ReactNode {
     "portal-official-business": <FileProtectOutlined />,
     "portal-pass-slip": <FileProtectOutlined />,
     "portal-change-rest-day": <SwapOutlined />,
+    "portal-loan-applications": <FileProtectOutlined />,
     "nav-dtr": <ClockCircleOutlined />,
     "nav-payroll": <DollarOutlined />,
     "nav-setup": <SettingOutlined />,

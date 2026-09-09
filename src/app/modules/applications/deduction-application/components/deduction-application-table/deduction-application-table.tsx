@@ -1,9 +1,18 @@
 import { Button, Popconfirm, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  DeleteOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { DeductionApplicationResponse } from "../../models/api/response/deduction-application-response.model";
 import { FREQUENCY_LABEL } from "../../constants/label.const";
+import {
+  APPROVAL_STATUS_COLOR,
+  APPROVAL_STATUS_LABEL,
+} from "@/app/modules/applications/pass-slip/constants/label.const";
 
 interface Props {
   data: DeductionApplicationResponse[];
@@ -12,6 +21,8 @@ interface Props {
   deductionMap?: Record<string, string>;
   onEdit: (record: DeductionApplicationResponse) => void;
   onDelete: (id: string) => void;
+  onApprove: (id: string) => void;
+  onDecline: (id: string) => void;
 }
 
 export default function DeductionApplicationTable({
@@ -21,6 +32,8 @@ export default function DeductionApplicationTable({
   deductionMap = {},
   onEdit,
   onDelete,
+  onApprove,
+  onDecline,
 }: Props) {
   const columns: ColumnsType<DeductionApplicationResponse> = [
     {
@@ -78,11 +91,51 @@ export default function DeductionApplicationTable({
         v?.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
     },
     {
+      title: "Status",
+      dataIndex: "approvalStatus",
+      key: "approvalStatus",
+      render: (v?: string) => (
+        <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "success"}>
+          {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "Approved"}
+        </Tag>
+      ),
+    },
+    {
       title: "Actions",
       key: "actions",
-      width: 100,
+      width: 140,
       render: (_, record) => (
         <Space size="small">
+          {record.approvalStatus === "ForApproval" && (
+            <>
+              <Popconfirm
+                title="Approve this loan application?"
+                onConfirm={() => onApprove(record.id)}
+                okText="Approve"
+              >
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<CheckOutlined />}
+                  title="Approve"
+                />
+              </Popconfirm>
+              <Popconfirm
+                title="Decline this loan application?"
+                onConfirm={() => onDecline(record.id)}
+                okText="Decline"
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<CloseOutlined />}
+                  danger
+                  title="Decline"
+                />
+              </Popconfirm>
+            </>
+          )}
           <Button
             size="small"
             type="text"
