@@ -8,7 +8,6 @@ import {
   Select,
   message,
   Popconfirm,
-  Card,
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
@@ -17,11 +16,6 @@ import {
   useReplaceRoles,
   useUpdateMemberStatus,
 } from "../../hooks/use-user-queries";
-import {
-  useUserRoles,
-  useReplaceUserRoles,
-} from "../../hooks/use-user-role-queries";
-import { useRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
 import { USER_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 
@@ -43,24 +37,10 @@ export default function UserDetail() {
     useReplaceRoles();
   const { mutateAsync: updateStatus, isPending: isUpdatingStatus } =
     useUpdateMemberStatus();
-  const { data: allProductRoles = [] } = useRoles();
-  const { data: assignedProductRoles, isSuccess: productRolesLoaded } =
-    useUserRoles(id);
-  const { mutateAsync: replaceProductRoles, isPending: isSavingProductRoles } =
-    useReplaceUserRoles();
 
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [initialized, setInitialized] = useState(false);
-  const [selectedProductRoleIds, setSelectedProductRoleIds] = useState<
-    string[]
-  >([]);
-  const [productRolesInitialized, setProductRolesInitialized] = useState(false);
-
-  if (productRolesLoaded && assignedProductRoles && !productRolesInitialized) {
-    setSelectedProductRoleIds(assignedProductRoles.map((r) => r.id));
-    setProductRolesInitialized(true);
-  }
 
   if (selected && !initialized) {
     setSelectedRoles(selected.roles ?? []);
@@ -94,24 +74,6 @@ export default function UserDetail() {
       message.success("Member updated successfully");
     } catch {
       message.error("Failed to update member");
-    }
-  };
-
-  const productRolesChanged =
-    productRolesInitialized &&
-    JSON.stringify([...selectedProductRoleIds].sort()) !==
-      JSON.stringify((assignedProductRoles ?? []).map((r) => r.id).sort());
-
-  const handleSaveProductRoles = async () => {
-    if (!id) return;
-    try {
-      await replaceProductRoles({
-        userId: id,
-        roleIds: selectedProductRoleIds,
-      });
-      message.success("Product roles updated successfully");
-    } catch {
-      message.error("Failed to update product roles");
     }
   };
 
@@ -220,38 +182,6 @@ export default function UserDetail() {
             </div>
           )}
         </Form>
-
-        <Card
-          title="Product Roles"
-          className="mt-4"
-          extra={
-            <Button
-              type="primary"
-              loading={isSavingProductRoles}
-              disabled={!productRolesChanged}
-              onClick={handleSaveProductRoles}
-            >
-              {NAVIGATION_BUTTON_LABEL.SAVE}
-            </Button>
-          }
-        >
-          <p className="mb-3 text-(--ant-color-text-tertiary)">
-            Feature-level access within the HR product — separate from the
-            tenant membership role above, which only governs org membership and
-            billing.
-          </p>
-          <Select
-            mode="multiple"
-            value={selectedProductRoleIds}
-            onChange={setSelectedProductRoleIds}
-            options={allProductRoles.map((r) => ({
-              value: r.id,
-              label: r.name,
-            }))}
-            style={{ width: "100%" }}
-            placeholder="Select product roles"
-          />
-        </Card>
       </div>
     </div>
   );

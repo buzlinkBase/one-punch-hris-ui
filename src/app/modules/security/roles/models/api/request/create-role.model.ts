@@ -1,4 +1,4 @@
 export interface CreateRole {
-  name: string;
-  description: string;
+  roleName: string;
+  status: string;
 }
