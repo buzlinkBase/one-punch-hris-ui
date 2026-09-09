@@ -3,6 +3,8 @@ import { Button, Select, Space, Typography, message } from "antd";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  useApproveDeductionApplication,
+  useDeclineDeductionApplication,
   useDeductionApplications,
   useDeleteDeductionApplication,
 } from "../../hooks/use-deduction-application-queries";
@@ -24,6 +26,8 @@ export default function DeductionApplicationList() {
     refetch,
   } = useDeductionApplications();
   const { mutate: remove } = useDeleteDeductionApplication();
+  const { mutate: approve } = useApproveDeductionApplication();
+  const { mutate: decline } = useDeclineDeductionApplication();
   const { data: rawEmployees = [] } = useEmployees();
   const { data: rawDeductions = [] } = useDeductions();
 
@@ -115,6 +119,18 @@ export default function DeductionApplicationList() {
           remove(id, {
             onSuccess: () => message.success("Deleted."),
             onError: () => message.error("Failed to delete."),
+          })
+        }
+        onApprove={(id) =>
+          approve(id, {
+            onSuccess: () => message.success("Loan approved."),
+            onError: () => message.error("Failed to approve."),
+          })
+        }
+        onDecline={(id) =>
+          decline(id, {
+            onSuccess: () => message.success("Loan declined."),
+            onError: () => message.error("Failed to decline."),
           })
         }
       />

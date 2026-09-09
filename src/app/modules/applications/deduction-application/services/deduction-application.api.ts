@@ -45,4 +45,12 @@ export const deductionApplicationApi = {
   removeDetail(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/item/${id}`);
   },
+
+  approve(id: string): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/${id}/approve`);
+  },
+
+  decline(id: string): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/${id}/decline`);
+  },
 };

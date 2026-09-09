@@ -57,6 +57,14 @@ const PortalChangeRestDayCreate = lazy(
   () =>
     import("@/app/modules/portal/change-rest-day/pages/portal-change-rest-day-create"),
 );
+const PortalLoanApplicationList = lazy(
+  () =>
+    import("@/app/modules/portal/loan-application/pages/portal-loan-application-list"),
+);
+const PortalLoanApplicationCreate = lazy(
+  () =>
+    import("@/app/modules/portal/loan-application/pages/portal-loan-application-create"),
+);
 
 export const portalRoutes: SetupRouteConfig[] = [
   { path: "profile", component: PortalProfile },
@@ -78,4 +86,6 @@ export const portalRoutes: SetupRouteConfig[] = [
   { path: "pass-slip/create", component: PortalPassSlipCreate },
   { path: "change-rest-day", component: PortalChangeRestDayList },
   { path: "change-rest-day/create", component: PortalChangeRestDayCreate },
+  { path: "loan-applications", component: PortalLoanApplicationList },
+  { path: "loan-applications/create", component: PortalLoanApplicationCreate },
 ];

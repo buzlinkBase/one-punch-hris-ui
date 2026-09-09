@@ -91,6 +91,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             label: "Change Rest Day",
             path: "/portal/change-rest-day",
           },
+          {
+            key: "portal-loan-applications",
+            label: "Loans",
+            path: "/portal/loan-applications",
+          },
         ],
       },
     ],

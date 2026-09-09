@@ -23,4 +23,5 @@ export interface DeductionApplicationResponse {
   note: string;
   remarks: string;
   breakdown: DeductionApplicationDetailResponse[];
+  approvalStatus?: string;
 }

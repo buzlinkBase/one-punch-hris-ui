@@ -52,3 +52,23 @@ export function useDeleteDeductionApplication() {
     },
   });
 }
+
+export function useApproveDeductionApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deductionApplicationApi.approve(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useDeclineDeductionApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deductionApplicationApi.decline(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
