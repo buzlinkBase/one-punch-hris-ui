@@ -1,5 +1,5 @@
-import type { CreateRole } from "./create-role.model";
-
-export interface UpdateRole extends CreateRole {
+export interface UpdateRole {
   id: string;
+  roleName: string;
+  status: string;
 }

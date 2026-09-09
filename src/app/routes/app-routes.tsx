@@ -1058,8 +1058,10 @@ const securityRolesDetailRoute = createRoute({
 const PermissionList = lazy(
   () => import("@/app/modules/security/permissions/pages/permission-list"),
 );
+const PermissionDetail = lazy(
+  () => import("@/app/modules/security/permissions/pages/permission-detail"),
+);
 
-// Read-only catalog — no create/detail routes. Permissions are system-seeded, not admin-created.
 const securityPermissionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/permissions",
@@ -1070,6 +1072,18 @@ const securityPermissionsIndexRoute = createRoute({
   getParentRoute: () => securityPermissionsRoute,
   path: "/",
   component: withSuspense(PermissionList),
+});
+
+const securityPermissionsCreateRoute = createRoute({
+  getParentRoute: () => securityPermissionsRoute,
+  path: "create",
+  component: withSuspense(PermissionDetail),
+});
+
+const securityPermissionsDetailRoute = createRoute({
+  getParentRoute: () => securityPermissionsRoute,
+  path: "$id",
+  component: withSuspense(PermissionDetail),
 });
 
 const LeaveApplicationList = lazy(
@@ -1495,7 +1509,11 @@ const routeTree = rootRoute.addChildren([
     securityRolesCreateRoute,
     securityRolesDetailRoute,
   ]),
-  securityPermissionsRoute.addChildren([securityPermissionsIndexRoute]),
+  securityPermissionsRoute.addChildren([
+    securityPermissionsIndexRoute,
+    securityPermissionsCreateRoute,
+    securityPermissionsDetailRoute,
+  ]),
   securityAuditRoute.addChildren([
     securityAuditIndexRoute,
     securityAuditDetailRoute,

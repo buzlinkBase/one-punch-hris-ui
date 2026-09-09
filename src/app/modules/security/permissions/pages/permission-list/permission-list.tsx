@@ -1,12 +1,19 @@
-import { Typography } from "antd";
-import { usePermissions } from "../../hooks/use-permission-queries";
+import { Button, Typography } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  usePermissions,
+  useDeletePermission,
+} from "../../hooks/use-permission-queries";
 import PermissionTable from "../../components/permission-table";
 import { PERMISSION_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
 
 export default function PermissionList() {
+  const navigate = useNavigate();
   const { data: permissions = [], isLoading } = usePermissions();
+  const { mutate: remove } = useDeletePermission();
 
   return (
     <div className="content-page">
@@ -17,13 +24,24 @@ export default function PermissionList() {
               {PERMISSION_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              The system's feature/action catalog. Permissions are
-              system-defined — assign them to a Role to grant access.
+              Define granular access rights assigned to roles across all system
+              modules.
             </p>
           </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate({ to: "/security/permissions/create" })}
+          >
+            Add Permission
+          </Button>
         </div>
       </div>
-      <PermissionTable data={permissions} loading={isLoading} />
+      <PermissionTable
+        data={permissions}
+        loading={isLoading}
+        onDelete={remove}
+      />
     </div>
   );
 }
