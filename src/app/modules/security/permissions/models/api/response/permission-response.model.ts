@@ -1,12 +1,8 @@
-export type PermissionAction =
-  "CREATE" | "READ" | "UPDATE" | "DELETE" | "EXPORT" | "APPROVE" | "REJECT";
-
 export interface PermissionResponse {
   id: string;
-  code: string;
-  name: string;
   module: string;
-  action: PermissionAction;
+  feature: string;
+  action: string;
+  code: string;
   description: string;
-  status: string;
 }

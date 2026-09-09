@@ -1,8 +1,9 @@
 export const ROLE_LABEL = {
-  TITLE: "Role",
+  TITLE: "Roles",
   ROLE: "Role",
   ROLE_NAME: "Role Name",
-  STATUS: "Status",
+  DESCRIPTION: "Description",
+  PERMISSIONS: "Permissions",
   CREATE_TITLE: "Create Role",
   EDIT_TITLE: "Edit Role",
 };
