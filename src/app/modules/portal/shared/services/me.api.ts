@@ -18,6 +18,7 @@ import type { PortalRequestChangeRestDay } from "../models/api/request/portal-re
 import type { ChangeRestDayResponse } from "@/app/modules/change-schedule/change-rest-day/models/api/response/change-rest-day-response.model";
 import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
 import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
+import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
@@ -157,6 +158,14 @@ export const meApi = {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/loan-applications`,
       data,
+    );
+  },
+
+  /** Returns null when there's no payroll history at all for that year yet. */
+  getMy13thMonth(year: number): Promise<ThirteenthMonthResponse | null> {
+    return httpClient.getUnwrapped<ThirteenthMonthResponse | null>(
+      `${BASE_URL}/13th-month`,
+      { params: { year } },
     );
   },
 };

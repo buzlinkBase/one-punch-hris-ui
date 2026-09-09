@@ -59,6 +59,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             label: "My Leave Credits",
             path: "/portal/leave-credits",
           },
+          {
+            key: "portal-thirteenth-month",
+            label: "My 13th Month Pay",
+            path: "/portal/thirteenth-month",
+          },
         ],
       },
       {

@@ -174,3 +174,10 @@ export function useCreateMyLoanApplication() {
     },
   });
 }
+
+export function useMy13thMonth(year: number) {
+  return useQuery({
+    queryKey: ["me", "13th-month", year],
+    queryFn: () => meApi.getMy13thMonth(year),
+  });
+}

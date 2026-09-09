@@ -146,6 +146,7 @@ function getNavIcon(key: string): ReactNode {
     "portal-group-pay": <DollarOutlined />,
     "portal-group-applications": <FileProtectOutlined />,
     "portal-leave-credits": <FileProtectOutlined />,
+    "portal-thirteenth-month": <DollarOutlined />,
     "portal-leave-applications": <FileProtectOutlined />,
     "portal-overtime": <FileProtectOutlined />,
     "portal-official-business": <FileProtectOutlined />,
