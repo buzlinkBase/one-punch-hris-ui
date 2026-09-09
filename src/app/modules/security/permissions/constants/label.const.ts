@@ -1,51 +1,32 @@
 export const PERMISSION_LABEL = {
   TITLE: "Permissions",
-  CODE: "Code",
-  NAME: "Permission Name",
   MODULE: "Module",
+  FEATURE: "Feature",
   ACTION: "Action",
+  CODE: "Code",
   DESCRIPTION: "Description",
-  STATUS: "Status",
-  CREATE_TITLE: "Create Permission",
-  EDIT_TITLE: "Edit Permission",
 };
 
+// Standard, reusable verb set (Rbac.md §5.2) — every Permission's action comes from this fixed
+// list, never free text.
 export const PERMISSION_ACTION_OPTIONS = [
-  { value: "CREATE", label: "Create" },
-  { value: "READ", label: "Read" },
-  { value: "UPDATE", label: "Update" },
-  { value: "DELETE", label: "Delete" },
-  { value: "EXPORT", label: "Export" },
-  { value: "APPROVE", label: "Approve" },
-  { value: "REJECT", label: "Reject" },
-] as const;
-
-export const PERMISSION_MODULE_OPTIONS = [
-  { value: "Department", label: "Department" },
-  { value: "Employee", label: "Employee" },
-  { value: "Holiday", label: "Holiday" },
-  { value: "Project Site", label: "Project Site" },
-  { value: "Payroll Group", label: "Payroll Group" },
-  { value: "Time Shift", label: "Time Shift" },
-  { value: "Timekeeping", label: "Timekeeping" },
-  { value: "Daily Time Record", label: "Daily Time Record" },
-  { value: "Change Schedule", label: "Change Schedule" },
-  { value: "Reports", label: "Reports" },
-  { value: "User", label: "User" },
-  { value: "Role", label: "Role" },
+  { value: "View", label: "View" },
+  { value: "Create", label: "Create" },
+  { value: "Edit", label: "Edit" },
+  { value: "Delete", label: "Delete" },
+  { value: "Approve", label: "Approve" },
+  { value: "Export", label: "Export" },
+  { value: "Import", label: "Import" },
+  { value: "Manage", label: "Manage" },
 ] as const;
 
 export const PERMISSION_ACTION_COLORS: Record<string, string> = {
-  CREATE: "green",
-  READ: "blue",
-  UPDATE: "orange",
-  DELETE: "red",
-  EXPORT: "purple",
-  APPROVE: "success",
-  REJECT: "error",
+  View: "blue",
+  Create: "green",
+  Edit: "orange",
+  Delete: "red",
+  Approve: "success",
+  Export: "purple",
+  Import: "cyan",
+  Manage: "gold",
 };
-
-export const PERMISSION_STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-];

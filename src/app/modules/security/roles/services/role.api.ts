@@ -26,4 +26,10 @@ export const roleApi = {
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/${id}`);
   },
+
+  setPermissions(roleId: string, permissionIds: string[]): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/${roleId}/permissions`, {
+      permissionIds,
+    });
+  },
 };

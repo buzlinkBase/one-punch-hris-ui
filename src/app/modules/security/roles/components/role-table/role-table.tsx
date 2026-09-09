@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
@@ -23,40 +23,52 @@ export default function RoleTable({ data, loading, onDelete }: Props) {
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
-    roleName: 200,
-    status: 120,
+    name: 200,
+    description: 300,
+    permissions: 120,
   });
 
-  const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
-      String(val ?? "")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-    ),
+  const filtered = data.filter(
+    (item) =>
+      !search ||
+      item.name.toLowerCase().includes(search.toLowerCase()) ||
+      item.description?.toLowerCase().includes(search.toLowerCase()),
   );
 
   const columns: ColumnsType<RoleResponse> = [
     {
-      title: ROLE_LABEL.ROLE,
-      dataIndex: "roleName",
-      key: "roleName",
-      width: widths.roleName,
+      title: ROLE_LABEL.ROLE_NAME,
+      dataIndex: "name",
+      key: "name",
+      width: widths.name,
       onHeaderCell: () =>
         ({
-          width: widths.roleName,
-          onResize: (w: number) => handleResize("roleName", w),
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
         }) as object,
     },
     {
-      title: ROLE_LABEL.STATUS,
-      dataIndex: "status",
-      key: "status",
-      width: widths.status,
+      title: ROLE_LABEL.DESCRIPTION,
+      dataIndex: "description",
+      key: "description",
+      width: widths.description,
       onHeaderCell: () =>
         ({
-          width: widths.status,
-          onResize: (w: number) => handleResize("status", w),
+          width: widths.description,
+          onResize: (w: number) => handleResize("description", w),
         }) as object,
+      ellipsis: true,
+    },
+    {
+      title: ROLE_LABEL.PERMISSIONS,
+      key: "permissions",
+      width: widths.permissions,
+      onHeaderCell: () =>
+        ({
+          width: widths.permissions,
+          onResize: (w: number) => handleResize("permissions", w),
+        }) as object,
+      render: (_, record) => <Tag>{record.permissions.length} granted</Tag>,
     },
     {
       title: "Actions",
