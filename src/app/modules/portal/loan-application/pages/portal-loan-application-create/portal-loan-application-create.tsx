@@ -130,7 +130,10 @@ export default function PortalLoanApplicationCreate() {
     () =>
       rawDeductions
         .filter(
-          (d) => isActiveStatus(d.status) && loanTypeIds.has(d.deductionTypeId),
+          (d) =>
+            isActiveStatus(d.status) &&
+            loanTypeIds.has(d.deductionTypeId) &&
+            d.allowEmployeeFiling,
         )
         .map((d) => ({ value: d.id, label: `${d.code} — ${d.name}` })),
     [rawDeductions, loanTypeIds],

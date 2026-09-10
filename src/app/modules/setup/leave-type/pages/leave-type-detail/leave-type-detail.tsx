@@ -149,6 +149,8 @@ const TIPS = {
     "When on, employees can file leave by specifying exact start and end times rather than full or half days. Suitable for hourly-computed leave types.",
   allowNegativeBalance:
     "When on, employees can file leave even when their balance is zero (advance leave). The balance goes negative and is recovered from future accruals or deducted from final pay.",
+  requiresCredits:
+    "When on, this leave type must have leave credits set up before an employee can file it — filing is blocked if no credits record exists for the employee/year. Defaults to on when Pay Source is Company and off when it's Government or Shared (e.g. SSS-funded leave isn't tracked against the internal credit pool), but you can override it manually.",
 
   carryOverType:
     "What happens to unused credits when the period resets.\n• Forfeit: unused days are lost (common for sick leave).\n• Unlimited: entire balance rolls over to the next period.\n• Capped: up to the specified max days carry over; the rest are forfeited.",
@@ -209,6 +211,7 @@ const DEFAULT_VALUES: LeaveTypeFormValues = {
   allowHalfDay: true,
   allowPartial: false,
   allowNegativeBalance: false,
+  requiresCredits: true,
   maxDaysPerYear: null,
   maxConsecutiveDays: null,
   carryOverType: "Forfeit",
@@ -232,6 +235,7 @@ export default function LeaveTypeDetail() {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<LeaveTypeFormValues>({
     resolver: zodResolver(leaveTypeFormSchema),
@@ -271,6 +275,7 @@ export default function LeaveTypeDetail() {
         allowHalfDay: selected.allowHalfDay ?? true,
         allowPartial: selected.allowPartial ?? false,
         allowNegativeBalance: selected.allowNegativeBalance ?? false,
+        requiresCredits: selected.requiresCredits ?? true,
         maxDaysPerYear: selected.maxDaysPerYear ?? null,
         maxConsecutiveDays: selected.maxConsecutiveDays ?? null,
         carryOverType: selected.carryOverType ?? "Forfeit",
@@ -332,6 +337,7 @@ export default function LeaveTypeDetail() {
       allowHalfDay: "Allow Half-Day Filing",
       allowPartial: "Allow Partial Filing",
       allowNegativeBalance: "Allow Negative Balance",
+      requiresCredits: "Requires Leave Credits",
       maxDaysPerYear: "Max Days per Year",
       maxConsecutiveDays: "Max Consecutive Days",
       carryOverType: "Carry-Over Type",
@@ -531,7 +537,17 @@ export default function LeaveTypeDetail() {
                     name="paySource"
                     control={control}
                     render={({ field }) => (
-                      <Select {...field} options={PAY_SOURCE_OPTIONS} />
+                      <Select
+                        {...field}
+                        options={PAY_SOURCE_OPTIONS}
+                        onChange={(value) => {
+                          field.onChange(value);
+                          setValue(
+                            "requiresCredits",
+                            value !== "Government" && value !== "Shared",
+                          );
+                        }}
+                      />
                     )}
                   />,
                   TIPS.paySource,
@@ -807,6 +823,21 @@ export default function LeaveTypeDetail() {
                   "Allow time-based (partial hours) filing",
                   <Controller
                     name="allowPartial"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onChange={field.onChange}
+                        size="small"
+                      />
+                    )}
+                  />,
+                )}
+                {switchRow(
+                  TIPS.requiresCredits,
+                  "Requires leave credits",
+                  <Controller
+                    name="requiresCredits"
                     control={control}
                     render={({ field }) => (
                       <Switch
