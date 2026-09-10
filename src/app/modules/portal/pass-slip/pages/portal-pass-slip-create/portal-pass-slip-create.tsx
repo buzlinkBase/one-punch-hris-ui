@@ -10,6 +10,7 @@ import {
   TimePicker,
   Typography,
 } from "antd";
+import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -35,6 +36,7 @@ export default function PortalPassSlipCreate() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<PortalPassSlipFormValues>({
     resolver: zodResolver(portalPassSlipFormSchema),
@@ -48,6 +50,13 @@ export default function PortalPassSlipCreate() {
       remarks: "",
     },
   });
+
+  // employeeId isn't a visible field here -- useMyEmployee() resolves after this form's
+  // defaultValues are already fixed at first render, so without this it stays "" forever and
+  // blocks submission with no visible error.
+  useEffect(() => {
+    if (employee) setValue("employeeId", employee.id);
+  }, [employee, setValue]);
 
   const onSubmit = async (values: PortalPassSlipFormValues) => {
     await create({

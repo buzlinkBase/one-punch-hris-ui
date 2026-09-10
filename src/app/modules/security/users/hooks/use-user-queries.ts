@@ -47,11 +47,3 @@ export function useSendInvitation() {
     mutationFn: (data: SendInvitationRequest) => authApi.sendInvitation(data),
   });
 }
-
-export function useAuthRoles() {
-  return useQuery({
-    queryKey: ["auth", "roles"],
-    queryFn: () => authApi.getRoles(),
-    staleTime: Infinity,
-  });
-}

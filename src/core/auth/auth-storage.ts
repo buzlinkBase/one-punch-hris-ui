@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string;
   name: string;
   roles: string[];
+  permissions: string[];
   tenantId?: string | null;
   tenantName?: string | null;
   tenants?: TenantSummary[];
@@ -41,11 +42,40 @@ export const authStorage = {
       parsed.roles = [parsed.role];
     }
     parsed.roles ??= [];
+    parsed.permissions ??= [];
     return parsed;
   },
 
   getTenants(): TenantSummary[] {
     return this.getUser()?.tenants ?? [];
+  },
+
+  getPermissions(): string[] {
+    return this.getUser()?.permissions ?? [];
+  },
+
+  hasPermission(code: string): boolean {
+    return this.getPermissions().includes(code);
+  },
+
+  hasAnyPermission(...codes: string[]): boolean {
+    const granted = this.getPermissions();
+    return codes.some((code) => granted.includes(code));
+  },
+
+  hasRole(role: string): boolean {
+    return (this.getUser()?.roles ?? []).includes(role);
+  },
+
+  hasAnyRole(...roles: string[]): boolean {
+    const granted = this.getUser()?.roles ?? [];
+    return roles.some((role) => granted.includes(role));
+  },
+
+  /** True when the member's only role is Employee (no Admin/Member/Owner/Custom role alongside it). */
+  isEmployeeOnly(): boolean {
+    const roles = this.getUser()?.roles ?? [];
+    return roles.length > 0 && roles.every((role) => role === "Employee");
   },
 
   getTenantId(): string | null {

@@ -8,4 +8,5 @@ export interface LoginResponse {
   email: string;
   name: string;
   roles: string[];
+  permissions: string[];
 }

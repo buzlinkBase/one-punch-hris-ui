@@ -97,6 +97,7 @@ type NavWithTrail = {
 interface SessionUser {
   name: string;
   roles: string[];
+  permissions: string[];
   email: string;
   tenantId: string | null;
   tenantName: string | null;
@@ -115,6 +116,7 @@ function getSessionUser(): SessionUser {
   const fallbackUser: SessionUser = {
     name: "Current User",
     roles: [],
+    permissions: [],
     email: "user@onepunch.local",
     tenantId: null,
     tenantName: null,
@@ -127,6 +129,7 @@ function getSessionUser(): SessionUser {
   return {
     name: stored.name?.trim() || fallbackUser.name,
     roles: stored.roles ?? [],
+    permissions: stored.permissions ?? [],
     email: stored.email?.trim() || fallbackUser.email,
     tenantId: stored.tenantId ?? null,
     tenantName: stored.tenantName ?? null,
@@ -406,13 +409,14 @@ export default function MainLayout() {
   // until that resolves (or if there is none), it's filtered out rather than shown disabled,
   // since most accounts will never have one.
   const { data: myEmployee } = useMyEmployee();
-  const navItems = useMemo(
-    () =>
-      myEmployee
-        ? NAVIGATION_ITEMS
-        : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal"),
-    [myEmployee],
-  );
+  const navItems = useMemo(() => {
+    if (authStorage.isEmployeeOnly()) {
+      return NAVIGATION_ITEMS.filter((item) => item.key === "nav-portal");
+    }
+    return myEmployee
+      ? NAVIGATION_ITEMS
+      : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal");
+  }, [myEmployee]);
 
   const menuItems = buildMenuItems(navItems, hrDb.ready, collapsed);
   const navEntries = flattenNavigation(navItems);
@@ -485,6 +489,8 @@ export default function MainLayout() {
 
       authStorage.save(result.accessToken, {
         ...user!,
+        roles: result.roles,
+        permissions: result.permissions,
         tenantId: claims.tenantId ?? tenantId,
         tenantName: claims.tenantName,
         tenants: mergedTenants,

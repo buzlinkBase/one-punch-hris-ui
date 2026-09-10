@@ -21,7 +21,8 @@ export default function RoleList() {
               {ROLE_LABEL.TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
-              Manage role definitions and activation status for access control.
+              Manage custom roles and their permission grants. System roles are
+              fixed and view-only.
             </p>
           </div>
           <Button

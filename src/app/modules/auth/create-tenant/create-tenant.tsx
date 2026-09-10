@@ -64,6 +64,7 @@ export default function CreateTenant() {
         name: values.tenantName,
         state: "Provisioning",
         roles: currentUser.roles ?? ["Admin"],
+        permissions: currentUser.permissions ?? [],
         hrDbStatus: null,
         hrDbReady: false,
       };
@@ -81,6 +82,8 @@ export default function CreateTenant() {
 
       authStorage.save(result.accessToken, {
         ...currentUser,
+        roles: result.roles,
+        permissions: result.permissions,
         tenants: mergedTenants,
         tenantId,
         tenantName: claims.tenantName ?? values.tenantName,

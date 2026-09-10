@@ -7,7 +7,8 @@ import {
   inviteUserFormSchema,
   type InviteUserFormValues,
 } from "../../models/forms/invite-user-form.schema";
-import { useSendInvitation, useAuthRoles } from "../../hooks/use-user-queries";
+import { useSendInvitation } from "../../hooks/use-user-queries";
+import { useAssignableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
 
 const { Text } = Typography;
 
@@ -28,7 +29,7 @@ export default function InviteUserModal({
   employeeEmail,
 }: Props) {
   const { mutate: sendInvitation, isPending } = useSendInvitation();
-  const { data: roles = [], isLoading: loadingRoles } = useAuthRoles();
+  const { data: roles = [], isLoading: loadingRoles } = useAssignableRoles();
 
   const {
     control,
