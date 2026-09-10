@@ -40,6 +40,7 @@ const APPROVAL_STATUS_OPTIONS = [
   { value: "Approved", label: "Approved" },
   { value: "Cancelled", label: "Cancelled" },
   { value: "Declined", label: "Declined" },
+  { value: "Withdrawn", label: "Withdrawn" },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
@@ -47,6 +48,7 @@ const STATUS_COLOR: Record<string, string> = {
   Approved: "success",
   Cancelled: "default",
   Declined: "error",
+  Withdrawn: "default",
 };
 
 const MODE_OPTIONS = [

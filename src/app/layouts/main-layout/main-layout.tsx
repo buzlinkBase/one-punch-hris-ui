@@ -418,6 +418,11 @@ export default function MainLayout() {
       : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal");
   }, [myEmployee]);
 
+  // Employee Portal pages go edge-to-edge (no outer margin/card border/shadow) instead of the
+  // floating-card look admin pages use — .page-toolbar's -24px bleed margin still relies on the
+  // p-4/md:p-6 padding staying in place, so only the outer m-*/app-content-surface are dropped.
+  const isPortalRoute = location.pathname.startsWith("/portal");
+
   const menuItems = buildMenuItems(navItems, hrDb.ready, collapsed);
   const navEntries = flattenNavigation(navItems);
   const headerContext = buildHeaderContext(location.pathname, navEntries);
@@ -957,21 +962,29 @@ export default function MainLayout() {
                   {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
                 </button>
               </Tooltip>
-              <Tooltip title="Company Policy">
-                <button
-                  type="button"
-                  className="header-collapse-trigger"
-                  aria-label="Company Policy"
-                  onClick={() => navigate({ to: "/setup/company-policy" })}
-                >
-                  <SettingOutlined />
-                </button>
-              </Tooltip>
+              {!authStorage.isEmployeeOnly() && (
+                <Tooltip title="Company Policy">
+                  <button
+                    type="button"
+                    className="header-collapse-trigger"
+                    aria-label="Company Policy"
+                    onClick={() => navigate({ to: "/setup/company-policy" })}
+                  >
+                    <SettingOutlined />
+                  </button>
+                </Tooltip>
+              )}
             </div>
           </div>
         </Header>
 
-        <Content className="app-content-surface app-content-scroll m-2 p-4 md:m-6 md:p-6  min-h-70 relative">
+        <Content
+          className={
+            isPortalRoute
+              ? "app-content-scroll p-4 md:p-6 min-h-70 relative portal-shell"
+              : "app-content-surface app-content-scroll m-2 p-4 md:m-6 md:p-6 min-h-70 relative"
+          }
+        >
           {!hrDb.ready ? (
             <ProvisioningScreen
               tenantName={sessionUser.tenantName}

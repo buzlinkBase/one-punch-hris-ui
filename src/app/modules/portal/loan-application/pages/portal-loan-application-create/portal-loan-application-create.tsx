@@ -62,6 +62,9 @@ export default function PortalLoanApplicationCreate() {
     defaultValues: {
       employeeId: employee?.id ?? "",
       deductionId: "",
+      // Admin exposes Encode Date as editable; portal deliberately keeps it fixed to today with
+      // no field for it -- it's an audit/entry timestamp, not something a self-filing employee
+      // should be able to backdate.
       encodeDate: dayjs().format("YYYY-MM-DD"),
       startDate: "",
       frequencyOfPayment: "Monthly",
@@ -193,7 +196,7 @@ export default function PortalLoanApplicationCreate() {
           <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
             <Card className="mb-4">
               <Row gutter={16}>
-                <Col xs={24} md={12}>
+                <Col xs={24} md={8}>
                   <Form.Item
                     label="Loan Type"
                     validateStatus={errors.deductionId ? "error" : ""}
@@ -241,7 +244,7 @@ export default function PortalLoanApplicationCreate() {
                     />
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={6}>
+                <Col xs={24} md={5}>
                   <Form.Item
                     label="Frequency"
                     validateStatus={errors.frequencyOfPayment ? "error" : ""}
@@ -257,7 +260,7 @@ export default function PortalLoanApplicationCreate() {
                     />
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={6}>
+                <Col xs={24} md={5}>
                   <Form.Item
                     label="Terms (periods)"
                     validateStatus={errors.terms ? "error" : ""}
@@ -331,7 +334,18 @@ export default function PortalLoanApplicationCreate() {
                     Generate Schedule
                   </Button>
                 </Col>
-                <Col xs={24}>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Note">
+                    <Controller
+                      name="note"
+                      control={control}
+                      render={({ field }) => (
+                        <Input.TextArea {...field} rows={2} />
+                      )}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
                   <Form.Item label="Remarks">
                     <Controller
                       name="remarks"

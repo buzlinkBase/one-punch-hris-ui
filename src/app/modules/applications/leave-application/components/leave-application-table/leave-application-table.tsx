@@ -19,6 +19,7 @@ const STATUS_COLOR: Record<string, string> = {
   Approved: "success",
   Cancelled: "default",
   Declined: "error",
+  Withdrawn: "default",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -26,6 +27,7 @@ const STATUS_LABEL: Record<string, string> = {
   Approved: "Approved",
   Cancelled: "Cancelled",
   Declined: "Declined",
+  Withdrawn: "Withdrawn",
 };
 
 interface Props {

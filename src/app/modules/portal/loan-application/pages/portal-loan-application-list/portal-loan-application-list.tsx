@@ -1,10 +1,21 @@
 import { useMemo } from "react";
-import { Button, Card, Table, Tag, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Popconfirm,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PlusOutlined } from "@ant-design/icons";
+import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useMyLoanApplications } from "../../../shared/hooks/use-my-employee-queries";
+import {
+  useMyLoanApplications,
+  useWithdrawMyLoanApplication,
+} from "../../../shared/hooks/use-my-employee-queries";
 import { useDeductions } from "@/app/modules/setup/deduction/hooks/use-deduction-queries";
 import {
   APPROVAL_STATUS_COLOR,
@@ -23,6 +34,17 @@ export default function PortalLoanApplicationList() {
   const navigate = useNavigate();
   const { data: loans = [], isLoading } = useMyLoanApplications();
   const { data: rawDeductions = [] } = useDeductions();
+  const { mutateAsync: withdraw, isPending: isWithdrawing } =
+    useWithdrawMyLoanApplication();
+
+  const handleWithdraw = async (id: string) => {
+    try {
+      await withdraw(id);
+      message.success("Loan application withdrawn.");
+    } catch {
+      message.error("Failed to withdraw loan application.");
+    }
+  };
 
   const deductionMap = useMemo(
     () => Object.fromEntries(rawDeductions.map((d) => [d.id, d.name])),
@@ -75,6 +97,29 @@ export default function PortalLoanApplicationList() {
           {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "Approved"}
         </Tag>
       ),
+    },
+    {
+      title: "",
+      key: "actions",
+      render: (_, r) =>
+        r.approvalStatus === "ForApproval" && (
+          <Popconfirm
+            title="Withdraw this loan application?"
+            description="This cannot be undone. You'll need to file again if you change your mind."
+            onConfirm={() => handleWithdraw(r.id)}
+            okText="Withdraw"
+            okButtonProps={{ danger: true, loading: isWithdrawing }}
+            cancelText="Cancel"
+          >
+            <Button
+              type="text"
+              danger
+              size="small"
+              icon={<CloseOutlined />}
+              title="Withdraw"
+            />
+          </Popconfirm>
+        ),
     },
   ];
 

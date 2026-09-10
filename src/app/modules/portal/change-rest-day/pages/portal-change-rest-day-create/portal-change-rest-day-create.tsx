@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Card,
   DatePicker,
@@ -10,7 +11,7 @@ import {
   message,
 } from "antd";
 import { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -50,6 +51,9 @@ export default function PortalChangeRestDayCreate() {
   useEffect(() => {
     if (employee) setValue("employeeId", employee.id);
   }, [employee, setValue]);
+
+  const fromDate = useWatch({ control, name: "fromDate" });
+  const newDate = useWatch({ control, name: "newDate" });
 
   const onSubmit = async (values: PortalChangeRestDayFormValues) => {
     if (dayjs(values.newDate).isSame(dayjs(values.fromDate), "day")) {
@@ -102,9 +106,22 @@ export default function PortalChangeRestDayCreate() {
                   render={({ field }) => (
                     <DatePicker
                       value={field.value ? dayjs(field.value) : null}
-                      onChange={(d) =>
-                        field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                      }
+                      onChange={(d) => {
+                        const next = d ? d.format("YYYY-MM-DD") : "";
+                        field.onChange(next);
+                        // Mirror admin's CreateBatchForm: clear an already-picked New Rest Day
+                        // if it now collides with the updated Current Rest Day.
+                        if (
+                          next &&
+                          newDate &&
+                          dayjs(next).isSame(newDate, "day")
+                        ) {
+                          setValue("newDate", "");
+                          message.warning(
+                            "New Rest Day was cleared because it matched the Current Rest Day.",
+                          );
+                        }
+                      }}
                     />
                   )}
                 />
@@ -121,6 +138,9 @@ export default function PortalChangeRestDayCreate() {
                   render={({ field }) => (
                     <DatePicker
                       value={field.value ? dayjs(field.value) : null}
+                      disabledDate={(d) =>
+                        fromDate ? d.isSame(dayjs(fromDate), "day") : false
+                      }
                       onChange={(d) =>
                         field.onChange(d ? d.format("YYYY-MM-DD") : "")
                       }
@@ -128,6 +148,15 @@ export default function PortalChangeRestDayCreate() {
                   )}
                 />
               </Form.Item>
+
+              {fromDate && newDate && (
+                <Alert
+                  type="info"
+                  showIcon
+                  className="mb-4"
+                  message={`${dayjs(fromDate).format("dddd")} → ${dayjs(newDate).format("dddd")}, ${dayjs(fromDate).format("MMM DD, YYYY")} → ${dayjs(newDate).format("MMM DD, YYYY")}`}
+                />
+              )}
 
               <Space>
                 <Button type="primary" htmlType="submit" loading={isPending}>

@@ -10,6 +10,7 @@ export const APPROVAL_STATUS_COLOR: Record<string, string> = {
   Approved: "success",
   Cancelled: "default",
   Declined: "error",
+  Withdrawn: "default",
 };
 
 export const APPROVAL_STATUS_LABEL: Record<string, string> = {
@@ -17,4 +18,5 @@ export const APPROVAL_STATUS_LABEL: Record<string, string> = {
   Approved: "Approved",
   Cancelled: "Cancelled",
   Declined: "Declined",
+  Withdrawn: "Withdrawn",
 };

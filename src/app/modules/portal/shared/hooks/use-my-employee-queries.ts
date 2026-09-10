@@ -79,6 +79,17 @@ export function useCreateMyLeaveApplication() {
   });
 }
 
+export function useWithdrawMyLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => meApi.withdrawMyLeaveApplication(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me", "leave-applications"] });
+      queryClient.invalidateQueries({ queryKey: ["me", "leave-credits"] });
+    },
+  });
+}
+
 export function useMyOvertimeApplications() {
   return useQuery({
     queryKey: ["me", "overtime-applications"],
@@ -91,6 +102,18 @@ export function useCreateMyOvertimeApplication() {
   return useMutation({
     mutationFn: (data: CreateOvertimeApplication) =>
       meApi.createMyOvertimeApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "overtime-applications"],
+      });
+    },
+  });
+}
+
+export function useWithdrawMyOvertimeApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => meApi.withdrawMyOvertimeApplication(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["me", "overtime-applications"],
@@ -119,6 +142,18 @@ export function useCreateMyTravelOrderApplication() {
   });
 }
 
+export function useWithdrawMyTravelOrderApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => meApi.withdrawMyTravelOrderApplication(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "travel-order-applications"],
+      });
+    },
+  });
+}
+
 export function useMyPassSlipApplications() {
   return useQuery({
     queryKey: ["me", "pass-slip-applications"],
@@ -131,6 +166,18 @@ export function useCreateMyPassSlipApplication() {
   return useMutation({
     mutationFn: (data: PortalCreatePassSlip) =>
       meApi.createMyPassSlipApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "pass-slip-applications"],
+      });
+    },
+  });
+}
+
+export function useWithdrawMyPassSlipApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => meApi.withdrawMyPassSlipApplication(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["me", "pass-slip-applications"],
@@ -157,6 +204,17 @@ export function useCreateMyChangeRestDayRequest() {
   });
 }
 
+export function useWithdrawMyChangeRestDayRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchCode: string) =>
+      meApi.withdrawMyChangeRestDayRequest(batchCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me", "change-rest-day"] });
+    },
+  });
+}
+
 export function useMyLoanApplications() {
   return useQuery({
     queryKey: ["me", "loan-applications"],
@@ -169,6 +227,16 @@ export function useCreateMyLoanApplication() {
   return useMutation({
     mutationFn: (data: CreateDeductionApplication) =>
       meApi.createMyLoanApplication(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me", "loan-applications"] });
+    },
+  });
+}
+
+export function useWithdrawMyLoanApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => meApi.withdrawMyLoanApplication(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me", "loan-applications"] });
     },

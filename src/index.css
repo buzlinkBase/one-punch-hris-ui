@@ -431,6 +431,13 @@ html::-webkit-scrollbar-track {
   @apply w-full max-w-[980px] mx-auto pb-3.5;
 }
 
+/* Employee Portal goes full-width edge-to-edge -- every page (list or form) still wraps its
+   body in .form-page-body, so its 980px cap has to be lifted specifically inside the portal
+   shell rather than changed globally (admin forms keep the narrower, more readable width). */
+.portal-shell .form-page-body {
+  max-width: none;
+}
+
 .form-section-anchor {
   @apply scroll-mt-[112px];
 }

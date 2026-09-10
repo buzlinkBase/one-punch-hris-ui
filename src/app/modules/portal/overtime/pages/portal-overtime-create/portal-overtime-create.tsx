@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Card,
   DatePicker,
@@ -132,6 +133,12 @@ export default function PortalOvertimeCreate() {
           <Empty description="No employee profile is linked to your account yet. Contact HR if you believe this is a mistake." />
         ) : (
           <Card>
+            <Alert
+              type="info"
+              showIcon
+              className="mb-4"
+              message="OT applications are capped to the employee's actual overtime rendered — any excess entered here will not be paid out."
+            />
             <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
               <Form.Item
                 label="OT Date"
