@@ -11,6 +11,7 @@ import {
   TimePicker,
   Typography,
 } from "antd";
+import { useEffect } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -68,6 +69,13 @@ export default function PortalOfficialBusinessCreate() {
       approvalStatus: "ForApproval",
     },
   });
+
+  // employeeId isn't a visible field here -- useMyEmployee() resolves after this form's
+  // defaultValues are already fixed at first render, so without this it stays "" forever and
+  // blocks submission with no visible error.
+  useEffect(() => {
+    if (employee) setValue("employeeId", employee.id);
+  }, [employee, setValue]);
 
   const mode = useWatch({ control, name: "mode" });
   const startDate = useWatch({ control, name: "startDate" });

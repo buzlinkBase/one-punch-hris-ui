@@ -14,6 +14,7 @@ import {
   TimePicker,
   Typography,
 } from "antd";
+import { useEffect } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -73,6 +74,7 @@ export default function PortalLeaveApplicationCreate() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LeaveApplicationFormValues>({
     resolver: zodResolver(leaveApplicationFormSchema),
@@ -95,6 +97,14 @@ export default function PortalLeaveApplicationCreate() {
       approvalStatus: "ForApproval",
     },
   });
+
+  // employeeId isn't a visible field here (unlike the admin leave-application form that shares
+  // this schema) -- it's only present to satisfy the schema's required-employee validation, and
+  // useMyEmployee() resolves after this form's defaultValues are already fixed at first render.
+  // Without this, employeeId stays "" forever and blocks submission with no visible error.
+  useEffect(() => {
+    if (employee) setValue("employeeId", employee.id);
+  }, [employee, setValue]);
 
   const mode = useWatch({ control, name: "mode" });
   const partialMode = useWatch({ control, name: "partialMode" });

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -55,6 +55,7 @@ export default function PortalLoanApplicationCreate() {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<DeductionApplicationFormValues>({
     resolver: zodResolver(deductionApplicationFormSchema),
@@ -71,6 +72,14 @@ export default function PortalLoanApplicationCreate() {
       remarks: "",
     },
   });
+
+  // employeeId isn't a visible field here -- useMyEmployee() resolves after this form's
+  // defaultValues are already fixed at first render, so without this it stays "" forever and
+  // blocks submission with no visible error (the schema requires it, but this page never renders
+  // an employeeId Form.Item to show that error against).
+  useEffect(() => {
+    if (employee) setValue("employeeId", employee.id);
+  }, [employee, setValue]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const watchedValues = watch([
