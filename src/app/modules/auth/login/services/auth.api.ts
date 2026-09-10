@@ -94,6 +94,7 @@ export const authApi = {
         email: user?.email ?? "",
         name: user?.name ?? "",
         roles: user?.roles ?? [],
+        permissions: user?.permissions ?? [],
       };
     }
   },
@@ -145,11 +146,6 @@ export const authApi = {
     return httpClient.postUnwrapped<void>(
       `${INVITATIONS_URL}/send-invite`,
       data,
-    );
-  },
-  getRoles(): Promise<string[]> {
-    return httpClient.getUnwrapped<string[]>(
-      buildApiUrl(API_PREFIX.auth, "roles"),
     );
   },
 };

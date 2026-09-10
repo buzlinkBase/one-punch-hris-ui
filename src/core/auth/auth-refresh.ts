@@ -23,7 +23,8 @@ export async function refreshAccessToken(): Promise<string> {
   isRefreshing = true;
 
   try {
-    const { accessToken, email, name, roles } = await authApi.refresh();
+    const { accessToken, email, name, roles, permissions } =
+      await authApi.refresh();
     const user = authStorage.getUser();
     authStorage.save(
       accessToken,
@@ -31,6 +32,7 @@ export async function refreshAccessToken(): Promise<string> {
         email,
         name,
         roles,
+        permissions,
       },
     );
 

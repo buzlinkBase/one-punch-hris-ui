@@ -29,6 +29,8 @@ export default function SelectTenant() {
       const user = authStorage.getUser();
       authStorage.save(result.accessToken, {
         ...user!,
+        roles: result.roles,
+        permissions: result.permissions,
         tenantId: claims.tenantId ?? tenantId,
         tenantName: claims.tenantName,
         tenants: result.tenants ?? user?.tenants,

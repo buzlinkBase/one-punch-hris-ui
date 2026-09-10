@@ -308,6 +308,18 @@ const rootRoute = createRootRoute({
 
     const destination = await resolveTenantDestination();
     if (destination) throw redirect({ to: destination });
+
+    // Employee-only members (no Admin/Member/Owner/Custom role alongside it) are restricted to
+    // the Employee Portal and their own account page -- everything else bounces back into the
+    // portal, regardless of how the navigation was triggered (this catches every hardcoded
+    // "/dashboard" default-landing redirect elsewhere too, since this guard runs on every route).
+    if (
+      authStorage.isEmployeeOnly() &&
+      !location.pathname.startsWith("/portal") &&
+      location.pathname !== "/profile"
+    ) {
+      throw redirect({ to: "/portal/profile" });
+    }
   },
   component: () => <Outlet />,
   notFoundComponent: () => <Navigate to="/login" replace />,
@@ -1058,9 +1070,6 @@ const securityRolesDetailRoute = createRoute({
 const PermissionList = lazy(
   () => import("@/app/modules/security/permissions/pages/permission-list"),
 );
-const PermissionDetail = lazy(
-  () => import("@/app/modules/security/permissions/pages/permission-detail"),
-);
 
 const securityPermissionsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -1072,18 +1081,6 @@ const securityPermissionsIndexRoute = createRoute({
   getParentRoute: () => securityPermissionsRoute,
   path: "/",
   component: withSuspense(PermissionList),
-});
-
-const securityPermissionsCreateRoute = createRoute({
-  getParentRoute: () => securityPermissionsRoute,
-  path: "create",
-  component: withSuspense(PermissionDetail),
-});
-
-const securityPermissionsDetailRoute = createRoute({
-  getParentRoute: () => securityPermissionsRoute,
-  path: "$id",
-  component: withSuspense(PermissionDetail),
 });
 
 const LeaveApplicationList = lazy(
@@ -1509,11 +1506,7 @@ const routeTree = rootRoute.addChildren([
     securityRolesCreateRoute,
     securityRolesDetailRoute,
   ]),
-  securityPermissionsRoute.addChildren([
-    securityPermissionsIndexRoute,
-    securityPermissionsCreateRoute,
-    securityPermissionsDetailRoute,
-  ]),
+  securityPermissionsRoute.addChildren([securityPermissionsIndexRoute]),
   securityAuditRoute.addChildren([
     securityAuditIndexRoute,
     securityAuditDetailRoute,

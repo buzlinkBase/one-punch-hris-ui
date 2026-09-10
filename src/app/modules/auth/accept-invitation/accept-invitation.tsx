@@ -107,6 +107,8 @@ export default function AcceptInvitation() {
         );
         authStorage.save(result.accessToken, {
           ...user!,
+          roles: result.roles,
+          permissions: result.permissions,
           tenants: [...result.tenants, ...preserved],
           tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
           tenantName: claims.tenantName,
@@ -145,6 +147,7 @@ export default function AcceptInvitation() {
       email: result.email,
       name: result.name,
       roles: result.roles,
+      permissions: result.permissions,
       tenants: result.tenants,
       tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
       tenantName: claims.tenantName,

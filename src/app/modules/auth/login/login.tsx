@@ -74,6 +74,7 @@ export default function Login() {
         email: values.email,
         name: result.name,
         roles: result.roles,
+        permissions: result.permissions,
         tenants: result.tenants,
         tenantId: claims.tenantId || undefined,
         tenantName: claims.tenantName || undefined,
@@ -95,6 +96,8 @@ export default function Login() {
           );
           authStorage.save(authStorage.getToken()!, {
             ...user!,
+            roles: acceptResult.roles,
+            permissions: acceptResult.permissions,
             tenants: [...acceptResult.tenants, ...preserved],
           });
         } catch {
@@ -126,6 +129,7 @@ export default function Login() {
           email: result.email,
           name: result.name,
           roles: result.roles,
+          permissions: result.permissions,
           tenants: result.tenants,
           tenantId: googleClaims.tenantId || undefined,
           tenantName: googleClaims.tenantName || undefined,
@@ -147,6 +151,8 @@ export default function Login() {
             );
             authStorage.save(authStorage.getToken()!, {
               ...user!,
+              roles: acceptResult.roles,
+              permissions: acceptResult.permissions,
               tenants: [...acceptResult.tenants, ...preserved],
             });
           } catch {

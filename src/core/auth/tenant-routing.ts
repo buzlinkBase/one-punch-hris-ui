@@ -29,6 +29,8 @@ export async function resolveTenantDestination(): Promise<TenantRedirect> {
     );
     authStorage.save(result.accessToken, {
       ...user!,
+      roles: result.roles,
+      permissions: result.permissions,
       tenantId: claims.tenantId ?? tenant.tenantId,
       tenantName: claims.tenantName ?? tenant.name,
       tenants: [...result.tenants, ...preserved],

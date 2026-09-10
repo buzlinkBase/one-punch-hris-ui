@@ -101,6 +101,7 @@ export default function Register() {
           email: result.email,
           name: result.name,
           roles: result.roles,
+          permissions: result.permissions,
           tenants: result.tenants,
           tenantId: claims.tenantId || undefined,
           tenantName: claims.tenantName || undefined,

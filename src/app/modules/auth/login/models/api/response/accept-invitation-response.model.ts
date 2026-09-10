@@ -6,4 +6,5 @@ export interface AcceptInvitationResponse {
   email: string;
   name: string;
   roles: string[];
+  permissions: string[];
 }

@@ -33,7 +33,8 @@ export function useCreateRole() {
 export function useUpdateRole() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateRole) => roleApi.update(data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateRole }) =>
+      roleApi.update(id, data),
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -49,4 +50,36 @@ export function useDeleteRole() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
+}
+
+export function useSetRolePermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      permissionIds,
+    }: {
+      id: string;
+      permissionIds: string[];
+    }) => roleApi.setPermissions(id, permissionIds),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, id] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+/**
+ * Role names a member can be assigned via the invite/role-assignment flow — every non-Owner
+ * System Role plus this tenant's Custom Roles, mirroring tenant-api's own
+ * RoleService.IsAssignableAsync rule (Owner is never grantable this way).
+ */
+export function useAssignableRoles() {
+  const { data: roles = [], ...rest } = useRoles();
+  return {
+    ...rest,
+    data: roles
+      .filter((r) => !(r.isSystemRole && r.name === "Owner"))
+      .map((r) => r.name),
+  };
 }

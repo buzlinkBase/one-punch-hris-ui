@@ -1,19 +1,20 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
-import type { RoleResponse } from "../../models/api/response/role-response.model";
+import type { Role } from "../../models/api/response/role-response.model";
 import { ROLE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 
 interface Props {
-  data: RoleResponse[];
+  data: Role[];
   loading?: boolean;
   onDelete?: (id: string) => void;
 }
@@ -23,54 +24,83 @@ export default function RoleTable({ data, loading, onDelete }: Props) {
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
-    roleName: 200,
-    status: 120,
+    name: 200,
+    scope: 110,
+    permissions: 110,
+    description: 280,
   });
 
   const filtered = data.filter((item) =>
-    Object.values(item).some((val) =>
+    [item.name, item.description].some((val) =>
       String(val ?? "")
         .toLowerCase()
         .includes(search.toLowerCase()),
     ),
   );
 
-  const columns: ColumnsType<RoleResponse> = [
+  const columns: ColumnsType<Role> = [
     {
-      title: ROLE_LABEL.ROLE,
-      dataIndex: "roleName",
-      key: "roleName",
-      width: widths.roleName,
+      title: ROLE_LABEL.ROLE_NAME,
+      dataIndex: "name",
+      key: "name",
+      width: widths.name,
       onHeaderCell: () =>
         ({
-          width: widths.roleName,
-          onResize: (w: number) => handleResize("roleName", w),
+          width: widths.name,
+          onResize: (w: number) => handleResize("name", w),
         }) as object,
     },
     {
-      title: ROLE_LABEL.STATUS,
-      dataIndex: "status",
-      key: "status",
-      width: widths.status,
+      title: ROLE_LABEL.SCOPE,
+      key: "scope",
+      width: widths.scope,
       onHeaderCell: () =>
         ({
-          width: widths.status,
-          onResize: (w: number) => handleResize("status", w),
+          width: widths.scope,
+          onResize: (w: number) => handleResize("scope", w),
         }) as object,
+      render: (_, record) => (
+        <Tag color={record.isSystemRole ? "blue" : "green"}>
+          {record.isSystemRole ? "System" : "Custom"}
+        </Tag>
+      ),
+    },
+    {
+      title: ROLE_LABEL.PERMISSIONS,
+      key: "permissions",
+      width: widths.permissions,
+      onHeaderCell: () =>
+        ({
+          width: widths.permissions,
+          onResize: (w: number) => handleResize("permissions", w),
+        }) as object,
+      render: (_, record) => record.rolePermissions.length,
+    },
+    {
+      title: ROLE_LABEL.DESCRIPTION,
+      dataIndex: "description",
+      key: "description",
+      width: widths.description,
+      onHeaderCell: () =>
+        ({
+          width: widths.description,
+          onResize: (w: number) => handleResize("description", w),
+        }) as object,
+      ellipsis: true,
     },
     {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 100,
       render: (_, record) => (
         <Space>
           <Button
             type="text"
-            icon={<EditOutlined />}
+            icon={record.isSystemRole ? <EyeOutlined /> : <EditOutlined />}
             onClick={() => navigate({ to: `/security/roles/${record.id}` })}
           />
-          {onDelete && (
+          {!record.isSystemRole && onDelete && (
             <Popconfirm
               title="Delete this role?"
               onConfirm={() => onDelete(record.id)}

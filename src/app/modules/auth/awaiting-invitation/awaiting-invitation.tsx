@@ -56,6 +56,8 @@ export default function AwaitingInvitation() {
       );
       authStorage.save(result.accessToken, {
         ...user!,
+        roles: result.roles,
+        permissions: result.permissions,
         tenants: [...result.tenants, ...preserved],
         tenantId: claims.tenantId ?? result.tenants[0]?.tenantId ?? null,
         tenantName: claims.tenantName,

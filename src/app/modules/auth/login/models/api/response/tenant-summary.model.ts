@@ -3,6 +3,7 @@ export interface TenantSummary {
   name: string;
   state: string;
   roles: string[];
+  permissions: string[];
   hrDbStatus: string | null;
   hrDbReady: boolean;
 }
