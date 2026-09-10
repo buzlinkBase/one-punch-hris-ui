@@ -11,10 +11,16 @@ import {
   Select,
   Skeleton,
   Space,
+  Tag,
   TimePicker,
   Typography,
 } from "antd";
-import { useEffect } from "react";
+import {
+  ClockCircleOutlined,
+  ExclamationCircleOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { useEffect, useMemo } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -35,16 +41,32 @@ import {
   isCrossMidnight,
 } from "@/shared/utils/duration.util";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-const MODE_OPTIONS = [
+const PAY_SOURCE_COLOR: Record<string, string> = {
+  Company: "blue",
+  Government: "green",
+  Shared: "cyan",
+  Unpaid: "default",
+  Other: "orange",
+};
+
+const PAY_SOURCE_LABEL: Record<string, string> = {
+  Company: "Company (employer-funded)",
+  Government: "Government (SSS)",
+  Shared: "Shared (employer advances, government reimburses)",
+  Unpaid: "Unpaid (no pay)",
+  Other: "Other",
+};
+
+const ALL_MODE_OPTIONS = [
   { label: "Single Day", value: "singleday" },
   { label: "Multiple Days", value: "multiday" },
   { label: "Partial Day / Hourly", value: "partial" },
 ];
 
-const DAY_FRACTION_OPTIONS = [
+const ALL_DAY_FRACTION_OPTIONS = [
   { label: "Full Day", value: "fullday" },
   { label: "AM Half", value: "am" },
   { label: "PM Half", value: "pm" },
@@ -110,11 +132,79 @@ export default function PortalLeaveApplicationCreate() {
   const partialMode = useWatch({ control, name: "partialMode" });
   const startTime = useWatch({ control, name: "startTime" });
   const endTime = useWatch({ control, name: "endTime" });
+  const leaveId = useWatch({ control, name: "leaveId" });
+  const leaveDate = useWatch({ control, name: "leaveDate" });
+  const leaveDateFrom = useWatch({ control, name: "leaveDateFrom" });
+  const watchedDayFraction = useWatch({ control, name: "dayFraction" });
 
   const crossMidnight =
     mode === "partial" &&
     (partialMode ?? "timerange") === "timerange" &&
     isCrossMidnight(startTime ?? "", endTime ?? "");
+
+  const policy = useMemo(
+    () => leaveTypes.find((l) => l.id === leaveId) ?? null,
+    [leaveTypes, leaveId],
+  );
+
+  // Same restriction checks the admin leave-application form shows HR staff -- an employee
+  // filing for themselves deserves the same upfront visibility instead of only discovering a
+  // restriction via a backend rejection at submit time.
+  const minServiceError = useMemo(() => {
+    if (!policy || !employee) return null;
+    const required = policy.minServiceMonths ?? 0;
+    if (required === 0) return null;
+    if (!employee.hireDate) return null;
+    const effectiveDate = mode === "multiday" ? leaveDateFrom : leaveDate;
+    const checkDate = effectiveDate ? dayjs(effectiveDate) : dayjs();
+    const monthsServed = checkDate.diff(dayjs(employee.hireDate), "month");
+    if (monthsServed < required) {
+      return `You have ${monthsServed} month${monthsServed !== 1 ? "s" : ""} of service. This leave type requires at least ${required} month${required !== 1 ? "s" : ""}.`;
+    }
+    return null;
+  }, [policy, employee, mode, leaveDate, leaveDateFrom]);
+
+  const genderMismatchError = useMemo(() => {
+    if (!policy || !employee) return null;
+    const restriction = policy.genderRestriction;
+    if (!restriction || restriction === "None") return null;
+    const requiredGender = restriction === "MaleOnly" ? "Male" : "Female";
+    if (employee.gender && employee.gender !== requiredGender) {
+      return `"${policy.description}" is restricted to ${requiredGender.toLowerCase()} employees only.`;
+    }
+    return null;
+  }, [policy, employee]);
+
+  const modeOptions = useMemo(() => {
+    if (!policy) return ALL_MODE_OPTIONS;
+    return ALL_MODE_OPTIONS.filter(
+      (o) => o.value !== "partial" || policy.allowPartial,
+    );
+  }, [policy]);
+
+  const dayFractionOptions = useMemo(() => {
+    if (!policy || policy.allowHalfDay) return ALL_DAY_FRACTION_OPTIONS;
+    return ALL_DAY_FRACTION_OPTIONS.map((o) => ({
+      ...o,
+      disabled: o.value === "am" || o.value === "pm",
+    }));
+  }, [policy]);
+
+  // If the selected leave type turns out to disallow the currently-picked mode/day-fraction
+  // (loads after the user already started filling the form), fall back to what it does allow.
+  useEffect(() => {
+    if (policy && mode === "partial" && !policy.allowPartial) {
+      setValue("mode", "singleday");
+    }
+    if (
+      policy &&
+      !policy.allowHalfDay &&
+      (watchedDayFraction === "am" || watchedDayFraction === "pm")
+    ) {
+      setValue("dayFraction", "fullday");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [policy]);
 
   const onSubmit = async (values: LeaveApplicationFormValues) => {
     const isMultiDay = values.mode === "multiday";
@@ -226,6 +316,102 @@ export default function PortalLeaveApplicationCreate() {
                 />
               </Form.Item>
 
+              {policy && (
+                <Card
+                  size="small"
+                  className="mb-4"
+                  style={{
+                    background:
+                      "var(--ant-color-bg-container-disabled, #fafafa)",
+                  }}
+                >
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+                    <span>
+                      <Tag
+                        color={PAY_SOURCE_COLOR[policy.paySource] ?? "default"}
+                        style={{ fontSize: 11 }}
+                      >
+                        {PAY_SOURCE_LABEL[policy.paySource] ?? policy.paySource}
+                      </Tag>
+                      {policy.isStatutory && (
+                        <Tag color="gold" style={{ fontSize: 11 }}>
+                          Statutory
+                        </Tag>
+                      )}
+                    </span>
+                    {policy.maxDaysPerYear != null && (
+                      <span>
+                        <ClockCircleOutlined className="mr-1" />
+                        Max {policy.maxDaysPerYear} day
+                        {policy.maxDaysPerYear !== 1 ? "s" : ""}/year
+                      </span>
+                    )}
+                    {policy.maxConsecutiveDays != null && (
+                      <span>
+                        <ClockCircleOutlined className="mr-1" />
+                        Max {policy.maxConsecutiveDays} consecutive day
+                        {policy.maxConsecutiveDays !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                    {policy.minServiceMonths > 0 && (
+                      <span>
+                        <UserOutlined className="mr-1" />
+                        Requires {policy.minServiceMonths} mo. service
+                      </span>
+                    )}
+                    {policy.genderRestriction !== "None" && (
+                      <span style={{ color: "#d48806" }}>
+                        <ExclamationCircleOutlined className="mr-1" />
+                        {policy.genderRestriction === "MaleOnly"
+                          ? "Male only"
+                          : "Female only"}
+                      </span>
+                    )}
+                    {!policy.allowHalfDay && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Half-day not allowed
+                      </Text>
+                    )}
+                    {!policy.allowPartial && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Partial/hourly not allowed
+                      </Text>
+                    )}
+                  </div>
+
+                  {policy.requiresSupportingDocument && (
+                    <Alert
+                      type="warning"
+                      showIcon
+                      banner
+                      message="Supporting document required for this leave type"
+                      className="mt-2"
+                      style={{ fontSize: 12 }}
+                    />
+                  )}
+                </Card>
+              )}
+
+              {minServiceError && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="Minimum Service Requirement Not Met"
+                  description={minServiceError}
+                  className="mb-4"
+                />
+              )}
+
+              {genderMismatchError && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="Gender Restriction"
+                  description={genderMismatchError}
+                  className="mb-4"
+                />
+              )}
+
               <Form.Item label="Duration">
                 <Controller
                   name="mode"
@@ -233,7 +419,7 @@ export default function PortalLeaveApplicationCreate() {
                   render={({ field }) => (
                     <Radio.Group
                       {...field}
-                      options={MODE_OPTIONS}
+                      options={modeOptions}
                       optionType="button"
                     />
                   )}
@@ -271,7 +457,7 @@ export default function PortalLeaveApplicationCreate() {
                       render={({ field }) => (
                         <Select
                           {...field}
-                          options={DAY_FRACTION_OPTIONS}
+                          options={dayFractionOptions}
                           style={{ width: 160 }}
                         />
                       )}
