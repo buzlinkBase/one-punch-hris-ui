@@ -7,6 +7,7 @@ import {
   Popconfirm,
   Select,
   Space,
+  Switch,
   Table,
   Tag,
   Typography,
@@ -247,6 +248,7 @@ export default function DeductionDetail() {
       name: "",
       deductionTypeId: "",
       status: "ACTIVE",
+      allowEmployeeFiling: true,
     },
   });
 
@@ -257,6 +259,7 @@ export default function DeductionDetail() {
         name: selected.name,
         deductionTypeId: selected.deductionTypeId,
         status: selected.status,
+        allowEmployeeFiling: selected.allowEmployeeFiling ?? true,
       });
     }
   }, [selected, isEdit, reset]);
@@ -370,6 +373,27 @@ export default function DeductionDetail() {
                 />
               )}
             />
+          </Form.Item>
+
+          <Form.Item label={DEDUCTION_LABEL.ALLOW_EMPLOYEE_FILING}>
+            <Space align="center">
+              <Controller
+                name="allowEmployeeFiling"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onChange={field.onChange}
+                    size="small"
+                  />
+                )}
+              />
+              <Text type="secondary" className="text-xs">
+                When on, employees can file this in the Employee Portal (e.g.
+                Request a Loan). When off, it&apos;s hidden from the portal and
+                can only be filed by HR.
+              </Text>
+            </Space>
           </Form.Item>
 
           <div className="form-action-footer">

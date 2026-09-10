@@ -4,4 +4,5 @@ export interface CreateDeduction {
   deductionTypeId: string;
   amount?: number;
   status: string;
+  allowEmployeeFiling: boolean;
 }

@@ -25,6 +25,7 @@ export interface LeaveTypeResponse {
   allowHalfDay: boolean;
   allowPartial: boolean;
   allowNegativeBalance: boolean;
+  requiresCredits: boolean;
   maxDaysPerYear?: number | null;
   maxConsecutiveDays?: number | null;
   // Carry-Over

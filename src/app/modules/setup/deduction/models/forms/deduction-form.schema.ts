@@ -5,6 +5,7 @@ export const deductionFormSchema = z.object({
   name: z.string().min(1, "Deduction name is required"),
   deductionTypeId: z.string().min(1, "Deduction type is required"),
   status: z.string().min(1, "Status is required"),
+  allowEmployeeFiling: z.boolean(),
 });
 
 export type DeductionFormValues = z.infer<typeof deductionFormSchema>;

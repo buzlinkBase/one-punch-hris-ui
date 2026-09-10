@@ -36,6 +36,7 @@ export const leaveTypeFormSchema = z
     allowHalfDay: z.boolean(),
     allowPartial: z.boolean(),
     allowNegativeBalance: z.boolean(),
+    requiresCredits: z.boolean(),
     maxDaysPerYear: z.number().min(0).nullable().optional(),
     maxConsecutiveDays: z
       .number({ error: "Must be a whole number" })
