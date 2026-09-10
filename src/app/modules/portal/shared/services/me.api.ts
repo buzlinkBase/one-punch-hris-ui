@@ -95,6 +95,12 @@ export const meApi = {
     );
   },
 
+  withdrawMyLeaveApplication(id: string): Promise<void> {
+    return httpClient.patchUnwrapped<void>(
+      `${BASE_URL}/leave-applications/${id}/withdraw`,
+    );
+  },
+
   getMyOvertimeApplications(): Promise<OvertimeApplicationResponse[]> {
     return httpClient.getUnwrapped<OvertimeApplicationResponse[]>(
       `${BASE_URL}/overtime-applications`,
@@ -105,6 +111,12 @@ export const meApi = {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/overtime-applications`,
       data,
+    );
+  },
+
+  withdrawMyOvertimeApplication(id: string): Promise<void> {
+    return httpClient.patchUnwrapped<void>(
+      `${BASE_URL}/overtime-applications/${id}/withdraw`,
     );
   },
 
@@ -123,6 +135,12 @@ export const meApi = {
     );
   },
 
+  withdrawMyTravelOrderApplication(id: string): Promise<void> {
+    return httpClient.patchUnwrapped<void>(
+      `${BASE_URL}/travel-order-applications/${id}/withdraw`,
+    );
+  },
+
   getMyPassSlipApplications(): Promise<PortalPassSlipResponse[]> {
     return httpClient.getUnwrapped<PortalPassSlipResponse[]>(
       `${BASE_URL}/pass-slip-applications`,
@@ -133,6 +151,12 @@ export const meApi = {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/pass-slip-applications`,
       data,
+    );
+  },
+
+  withdrawMyPassSlipApplication(id: string): Promise<void> {
+    return httpClient.patchUnwrapped<void>(
+      `${BASE_URL}/pass-slip-applications/${id}/withdraw`,
     );
   },
 
@@ -148,6 +172,12 @@ export const meApi = {
     return httpClient.postUnwrapped<void>(`${BASE_URL}/change-rest-day`, data);
   },
 
+  withdrawMyChangeRestDayRequest(batchCode: string): Promise<void> {
+    return httpClient.patchUnwrapped<void>(
+      `${BASE_URL}/change-rest-day/${batchCode}/withdraw`,
+    );
+  },
+
   getMyLoanApplications(): Promise<DeductionApplicationResponse[]> {
     return httpClient.getUnwrapped<DeductionApplicationResponse[]>(
       `${BASE_URL}/loan-applications`,
@@ -158,6 +188,12 @@ export const meApi = {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/loan-applications`,
       data,
+    );
+  },
+
+  withdrawMyLoanApplication(id: string): Promise<void> {
+    return httpClient.patchUnwrapped<void>(
+      `${BASE_URL}/loan-applications/${id}/withdraw`,
     );
   },
 

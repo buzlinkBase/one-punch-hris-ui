@@ -1,9 +1,20 @@
-import { Button, Card, Table, Tag, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Popconfirm,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PlusOutlined } from "@ant-design/icons";
+import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useMyLeaveApplications } from "../../../shared/hooks/use-my-employee-queries";
+import {
+  useMyLeaveApplications,
+  useWithdrawMyLeaveApplication,
+} from "../../../shared/hooks/use-my-employee-queries";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import type { LeaveApplicationResponse } from "@/app/modules/applications/leave-application/models/api/response/leave-application-response.model";
 
@@ -14,6 +25,7 @@ const STATUS_COLOR: Record<string, string> = {
   Approved: "success",
   Cancelled: "default",
   Declined: "error",
+  Withdrawn: "default",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -21,12 +33,24 @@ const STATUS_LABEL: Record<string, string> = {
   Approved: "Approved",
   Cancelled: "Cancelled",
   Declined: "Declined",
+  Withdrawn: "Withdrawn",
 };
 
 export default function PortalLeaveApplicationList() {
   const navigate = useNavigate();
   const { data: applications, isLoading } = useMyLeaveApplications();
   const { data: leaveTypes } = useLeaveTypes();
+  const { mutateAsync: withdraw, isPending: isWithdrawing } =
+    useWithdrawMyLeaveApplication();
+
+  const handleWithdraw = async (id: string) => {
+    try {
+      await withdraw(id);
+      message.success("Leave application withdrawn.");
+    } catch {
+      message.error("Failed to withdraw leave application.");
+    }
+  };
 
   const leaveTypeMap = new Map((leaveTypes ?? []).map((l) => [l.id, l]));
 
@@ -58,6 +82,30 @@ export default function PortalLeaveApplicationList() {
           {STATUS_LABEL[val] ?? val}
         </Tag>
       ),
+    },
+    {
+      title: "",
+      key: "actions",
+      width: 60,
+      render: (_, r) =>
+        r.approvalStatus === "ForApproval" && (
+          <Popconfirm
+            title="Withdraw this leave application?"
+            description="This cannot be undone. You'll need to file again if you change your mind."
+            onConfirm={() => handleWithdraw(r.id)}
+            okText="Withdraw"
+            okButtonProps={{ danger: true, loading: isWithdrawing }}
+            cancelText="Cancel"
+          >
+            <Button
+              type="text"
+              danger
+              size="small"
+              icon={<CloseOutlined />}
+              title="Withdraw"
+            />
+          </Popconfirm>
+        ),
     },
   ];
 

@@ -1,9 +1,20 @@
-import { Button, Card, Table, Tag, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Popconfirm,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PlusOutlined } from "@ant-design/icons";
+import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useMyTravelOrderApplications } from "../../../shared/hooks/use-my-employee-queries";
+import {
+  useMyTravelOrderApplications,
+  useWithdrawMyTravelOrderApplication,
+} from "../../../shared/hooks/use-my-employee-queries";
 import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
@@ -15,6 +26,17 @@ const { Title } = Typography;
 export default function PortalOfficialBusinessList() {
   const navigate = useNavigate();
   const { data: applications, isLoading } = useMyTravelOrderApplications();
+  const { mutateAsync: withdraw, isPending: isWithdrawing } =
+    useWithdrawMyTravelOrderApplication();
+
+  const handleWithdraw = async (id: string) => {
+    try {
+      await withdraw(id);
+      message.success("Official business application withdrawn.");
+    } catch {
+      message.error("Failed to withdraw official business application.");
+    }
+  };
 
   const columns: ColumnsType<TravelOrderApplicationResponse> = [
     {
@@ -41,6 +63,30 @@ export default function PortalOfficialBusinessList() {
           {APPROVAL_STATUS_LABEL[val] ?? val}
         </Tag>
       ),
+    },
+    {
+      title: "",
+      key: "actions",
+      width: 60,
+      render: (_, r) =>
+        r.approvalStatus === "ForApproval" && (
+          <Popconfirm
+            title="Withdraw this application?"
+            description="This cannot be undone. You'll need to file again if you change your mind."
+            onConfirm={() => handleWithdraw(r.id)}
+            okText="Withdraw"
+            okButtonProps={{ danger: true, loading: isWithdrawing }}
+            cancelText="Cancel"
+          >
+            <Button
+              type="text"
+              danger
+              size="small"
+              icon={<CloseOutlined />}
+              title="Withdraw"
+            />
+          </Popconfirm>
+        ),
     },
   ];
 

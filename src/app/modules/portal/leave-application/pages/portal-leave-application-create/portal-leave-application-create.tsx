@@ -18,6 +18,7 @@ import {
 import {
   ClockCircleOutlined,
   ExclamationCircleOutlined,
+  FileTextOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { useEffect, useMemo } from "react";
@@ -62,7 +63,7 @@ const PAY_SOURCE_LABEL: Record<string, string> = {
 
 const ALL_MODE_OPTIONS = [
   { label: "Single Day", value: "singleday" },
-  { label: "Multiple Days", value: "multiday" },
+  { label: "Multi-Day Range", value: "multiday" },
   { label: "Partial Day / Hourly", value: "partial" },
 ];
 
@@ -412,7 +413,7 @@ export default function PortalLeaveApplicationCreate() {
                 />
               )}
 
-              <Form.Item label="Duration">
+              <Form.Item label="Duration Type">
                 <Controller
                   name="mode"
                   control={control}
@@ -429,7 +430,7 @@ export default function PortalLeaveApplicationCreate() {
               {mode === "singleday" && (
                 <Space size="large" wrap>
                   <Form.Item
-                    label="Date"
+                    label="Leave Date"
                     validateStatus={errors.leaveDate ? "error" : ""}
                     help={errors.leaveDate?.message}
                   >
@@ -455,10 +456,10 @@ export default function PortalLeaveApplicationCreate() {
                       name="dayFraction"
                       control={control}
                       render={({ field }) => (
-                        <Select
+                        <Radio.Group
                           {...field}
                           options={dayFractionOptions}
-                          style={{ width: 160 }}
+                          optionType="button"
                         />
                       )}
                     />
@@ -510,7 +511,7 @@ export default function PortalLeaveApplicationCreate() {
               {mode === "partial" && (
                 <>
                   <Form.Item
-                    label="Date"
+                    label="Leave Date"
                     validateStatus={errors.leaveDate ? "error" : ""}
                     help={errors.leaveDate?.message}
                   >
@@ -630,7 +631,7 @@ export default function PortalLeaveApplicationCreate() {
                 />
               </Form.Item>
 
-              <Form.Item label="Remarks">
+              <Form.Item label="Reason / Remarks">
                 <Controller
                   name="applicationRemarks"
                   control={control}
@@ -638,21 +639,34 @@ export default function PortalLeaveApplicationCreate() {
                     <TextArea
                       {...field}
                       rows={3}
-                      placeholder="Reason for your leave application"
+                      placeholder="State the reason for your leave (e.g. medical, vacation, family)"
                     />
                   )}
                 />
               </Form.Item>
 
-              <Form.Item label="Supporting Document URL (optional)">
-                <Controller
-                  name="supportingDocumentUrl"
-                  control={control}
-                  render={({ field }) => (
-                    <Input {...field} placeholder="https://..." />
-                  )}
-                />
-              </Form.Item>
+              {policy?.requiresSupportingDocument && (
+                <Form.Item
+                  label={
+                    <span className="flex items-center gap-1">
+                      <FileTextOutlined />
+                      Supporting Document URL
+                    </span>
+                  }
+                >
+                  <Controller
+                    name="supportingDocumentUrl"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        placeholder="Paste a link to the uploaded supporting document"
+                        allowClear
+                      />
+                    )}
+                  />
+                </Form.Item>
+              )}
 
               <Space>
                 <Button type="primary" htmlType="submit" loading={isPending}>
