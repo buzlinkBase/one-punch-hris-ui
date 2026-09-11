@@ -51,7 +51,12 @@ export default function InviteUserModal({
 
   const onSubmit = (values: InviteUserFormValues) => {
     sendInvitation(
-      { email: values.email, roles: values.roles, employeeId },
+      {
+        email: values.email,
+        roles: values.roles,
+        employeeId,
+        name: employeeName,
+      },
       {
         onSuccess: () => {
           notification.success({
