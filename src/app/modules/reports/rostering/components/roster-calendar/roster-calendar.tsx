@@ -1,27 +1,16 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { DayPilot, DayPilotScheduler } from "@daypilot/daypilot-lite-react";
-import {
-  Card,
-  Button,
-  Modal,
-  Select,
-  Space,
-  Tag,
-  Tooltip,
-  message,
-} from "antd";
+import { Card, message } from "antd";
 import dayjs from "dayjs";
-import { useQueryClient } from "@tanstack/react-query";
 import type {
   RosterResponse,
   ScheduleSource,
 } from "../../models/api/response/roster-response.model";
-import {
-  useCreateWorkRotation,
-  useDeleteWorkRotation,
-} from "@/app/modules/change-schedule/work-rotation/hooks/use-work-rotation-queries";
-import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
+import { useShiftAssignment } from "../../hooks/use-shift-assignment";
+import AssignShiftModal from "../assign-shift-modal";
 import { SCHEDULE_SOURCE_LABEL } from "../../constants/label.const";
+import { useCreateWorkRotation } from "@/app/modules/change-schedule/work-rotation/hooks/use-work-rotation-queries";
+import { useQueryClient } from "@tanstack/react-query";
 import { useThemeStore } from "@/core/stores/theme.store";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 
@@ -46,15 +35,6 @@ interface EventTags {
   scheduleSource: ScheduleSource;
 }
 
-interface AssignTarget {
-  employeeId: string;
-  employeeName: string;
-  date: string;
-  currentShiftId: string | null;
-  overrideId: string | null;
-  scheduleSource: ScheduleSource | null;
-}
-
 interface Props {
   data: RosterResponse[];
   fromDate: string;
@@ -63,26 +43,14 @@ interface Props {
 
 export default function RosterCalendar({ data, fromDate, toDate }: Props) {
   const schedulerRef = useRef<DayPilot.Scheduler | null>(null);
-  const queryClient = useQueryClient();
   const isDark = useThemeStore((s) => s.mode) === "dark";
   const isMobile = useIsMobile();
-  const { mutateAsync: createWorkRotation, isPending: isAssigning } =
-    useCreateWorkRotation();
-  const { mutateAsync: deleteWorkRotation, isPending: isRemoving } =
-    useDeleteWorkRotation();
   const [messageApi, contextHolder] = message.useMessage();
-  const [assignTarget, setAssignTarget] = useState<AssignTarget | null>(null);
-  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
-
-  const { data: timeShifts = [], isLoading: isLoadingShifts } =
-    useFixedTimeShifts();
-  const timeShiftOptions = timeShifts.map((s) => ({
-    value: s.id,
-    label:
-      s.startTime && s.endTime
-        ? `${s.shiftName} (${s.startTime} – ${s.endTime})`
-        : s.shiftName,
-  }));
+  const queryClient = useQueryClient();
+  // Drag-and-drop reassignment fires immediately on drop rather than through the Assign Shift
+  // modal, so it uses this mutation directly rather than the shared useShiftAssignment hook
+  // (which owns the modal-driven assign/remove flow both Timeline and Month use).
+  const { mutateAsync: createWorkRotation } = useCreateWorkRotation();
 
   // For the same-shift-already-there drop guard: what shift (if any) is
   // currently resolved for a given employee/date, keyed the same way as event ids.
@@ -106,6 +74,21 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
       name,
     }));
   }, [data]);
+
+  const {
+    contextHolder: assignContextHolder,
+    assignTarget,
+    selectedShiftId,
+    setSelectedShiftId,
+    openAssignModal,
+    closeAssignModal,
+    handleAssign,
+    handleRemove,
+    isAssigning,
+    isRemoving,
+    timeShiftOptions,
+    isLoadingShifts,
+  } = useShiftAssignment(resources);
 
   const events = useMemo(() => {
     return data.map((r) => {
@@ -171,7 +154,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         resource: r.employeeId,
         start: dayStart,
         end: dayEnd,
-        text: "Unassigned",
+        text: "Open Shift",
         backColor: isDark ? UNASSIGNED_COLOR_DARK : UNASSIGNED_COLOR_LIGHT,
         fontColor: isDark ? "#7c8f88" : "#8a94a6",
         tags: {
@@ -188,58 +171,6 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
     () => Math.max(1, dayjs(toDate).diff(dayjs(fromDate), "day") + 1),
     [fromDate, toDate],
   );
-
-  const openAssignModal = (
-    employeeId: string,
-    date: string,
-    currentShiftId: string | null,
-    overrideId: string | null,
-    scheduleSource: ScheduleSource | null,
-  ) => {
-    const employeeName =
-      resources.find((r) => r.id === employeeId)?.name ?? employeeId;
-    setAssignTarget({
-      employeeId,
-      employeeName,
-      date,
-      currentShiftId,
-      overrideId,
-      scheduleSource,
-    });
-    setSelectedShiftId(currentShiftId);
-  };
-
-  const handleAssign = async () => {
-    if (!assignTarget || !selectedShiftId) return;
-    try {
-      await createWorkRotation({
-        employeeIds: [assignTarget.employeeId],
-        timeShiftId: selectedShiftId,
-        payrollDates: [assignTarget.date],
-      });
-      messageApi.success("Shift assigned.");
-      setAssignTarget(null);
-    } catch {
-      messageApi.error("Failed to assign the shift.");
-    } finally {
-      queryClient.invalidateQueries({ queryKey: ["roster"] });
-    }
-  };
-
-  const handleRemove = async () => {
-    if (!assignTarget?.overrideId) return;
-    try {
-      await deleteWorkRotation(assignTarget.overrideId);
-      messageApi.success(
-        "Override removed — reverted to Fixed Schedule/Permanent Shift.",
-      );
-      setAssignTarget(null);
-    } catch {
-      messageApi.error("Failed to remove the shift.");
-    } finally {
-      queryClient.invalidateQueries({ queryKey: ["roster"] });
-    }
-  };
 
   // DayPilot's own default theme re-declares every --dp-scheduler-* variable
   // directly on its root element's class (.scheduler_default_main), which beats
@@ -300,6 +231,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
   return (
     <div>
       {contextHolder}
+      {assignContextHolder}
       <style>{schedulerThemeCss}</style>
       <Card
         size="small"
@@ -410,77 +342,18 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         />
       </Card>
 
-      <Modal
-        title={
-          assignTarget
-            ? `Assign Shift — ${assignTarget.employeeName} on ${dayjs(assignTarget.date).format("MMM D, YYYY")}`
-            : "Assign Shift"
-        }
-        open={!!assignTarget}
-        onCancel={() => setAssignTarget(null)}
-        destroyOnClose
-        footer={
-          <div className="flex items-center justify-between">
-            <Tooltip
-              title={
-                assignTarget?.overrideId
-                  ? undefined
-                  : "No Work Rotation Plan override to remove — this shift comes from Fixed Schedule or the employee's Permanent Shift."
-              }
-            >
-              <Button
-                danger
-                disabled={!assignTarget?.overrideId}
-                loading={isRemoving}
-                onClick={handleRemove}
-              >
-                Remove Shift
-              </Button>
-            </Tooltip>
-            <Space>
-              <Button onClick={() => setAssignTarget(null)}>Cancel</Button>
-              <Button
-                type="primary"
-                loading={isAssigning}
-                disabled={!selectedShiftId}
-                onClick={handleAssign}
-              >
-                Assign
-              </Button>
-            </Space>
-          </div>
-        }
-      >
-        {assignTarget?.currentShiftId && assignTarget.scheduleSource && (
-          <div className="mb-3 text-sm text-gray-500">
-            Currently from:{" "}
-            <Tag
-              color={SCHEDULE_SOURCE_LABEL[assignTarget.scheduleSource]?.color}
-            >
-              {SCHEDULE_SOURCE_LABEL[assignTarget.scheduleSource]?.label ??
-                assignTarget.scheduleSource}
-            </Tag>
-          </div>
-        )}
-        <Select
-          className="w-full mt-2"
-          showSearch
-          loading={isLoadingShifts}
-          placeholder="Select a time shift"
-          options={timeShiftOptions}
-          value={selectedShiftId ?? undefined}
-          onChange={(v) => setSelectedShiftId(v)}
-          filterOption={(input, option) =>
-            String(option?.label ?? "")
-              .toLowerCase()
-              .includes(input.toLowerCase())
-          }
-        />
-        <p className="text-xs text-gray-400 mt-2">
-          Assigning here always creates a Work Rotation Plan override for this
-          exact date, regardless of the current source.
-        </p>
-      </Modal>
+      <AssignShiftModal
+        assignTarget={assignTarget}
+        selectedShiftId={selectedShiftId}
+        onSelectShift={setSelectedShiftId}
+        timeShiftOptions={timeShiftOptions}
+        isLoadingShifts={isLoadingShifts}
+        isAssigning={isAssigning}
+        isRemoving={isRemoving}
+        onAssign={handleAssign}
+        onRemove={handleRemove}
+        onCancel={closeAssignModal}
+      />
     </div>
   );
 }

@@ -130,6 +130,7 @@ export default function AcceptInvitation() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<AcceptInvitationFormValues>({
     resolver: zodResolver(acceptInvitationFormSchema),
@@ -137,6 +138,14 @@ export default function AcceptInvitation() {
   });
 
   const password = useWatch({ control, name: "password" });
+
+  // Preview loads after the form is already mounted, so defaultValues can't carry the invitee's
+  // name -- fill it in once the preview arrives, if the inviter supplied one.
+  useEffect(() => {
+    if (state.status === "ready" && state.preview.name) {
+      setValue("name", state.preview.name);
+    }
+  }, [state, setValue]);
 
   // Saves a session (no redirect — the two callers below differ on when it's safe to leave the
   // page: onSubmit is done after one call, handleGoogleJoin needs the intermediate signup
