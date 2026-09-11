@@ -16,6 +16,7 @@ import {
   ClearOutlined,
   DownloadOutlined,
   FilterOutlined,
+  ScheduleOutlined,
   SearchOutlined,
   TableOutlined,
 } from "@ant-design/icons";
@@ -23,6 +24,7 @@ import dayjs from "dayjs";
 import { useRosterRecords } from "../../hooks/use-roster-queries";
 import RosterTable from "../../components/roster-table";
 import RosterCalendar from "../../components/roster-calendar";
+import RosterMonthCalendar from "../../components/roster-month-calendar";
 import {
   ROSTER_LABEL,
   SCHEDULE_SOURCE_LABEL,
@@ -85,9 +87,10 @@ interface Props {
 
 export default function RosterList({ embedded = false }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [view, setView] = useState<"table" | "calendar">("calendar");
+  const [view, setView] = useState<"timeline" | "month" | "table">("timeline");
   const [filter, setFilter] = useState<RosterFilter>(DEFAULT_RANGE);
   const [pending, setPending] = useState<RosterFilter>(DEFAULT_RANGE);
+  const [searchNonce, setSearchNonce] = useState(0);
   const [messageApi, contextHolder] = message.useMessage();
 
   const activeFilterCount = [
@@ -96,7 +99,10 @@ export default function RosterList({ embedded = false }: Props) {
     filter.employeeId,
   ].filter(Boolean).length;
 
-  const { data: records = [], isLoading } = useRosterRecords(filter);
+  const { data: records = [], isLoading } = useRosterRecords(
+    filter,
+    searchNonce,
+  );
   const { data: departments = [] } = useDepartments();
   const { data: employees = [] } = useEmployeeFilter(
     pending.departmentId ? { departmentId: pending.departmentId } : {},
@@ -111,12 +117,16 @@ export default function RosterList({ embedded = false }: Props) {
     label: e.name ?? e.id,
   }));
 
-  const handleSearch = () => setFilter({ ...pending });
+  const handleSearch = () => {
+    setFilter({ ...pending });
+    setSearchNonce((n) => n + 1);
+  };
 
   const handleClear = () => {
     setPending(DEFAULT_RANGE);
     setFilter(DEFAULT_RANGE);
     setFiltersOpen(false);
+    setSearchNonce((n) => n + 1);
   };
 
   const handleExport = (format: "csv" | "excel") => {
@@ -146,10 +156,11 @@ export default function RosterList({ embedded = false }: Props) {
     <div className="flex flex-wrap gap-2">
       <Segmented
         value={view}
-        onChange={(v) => setView(v as "table" | "calendar")}
+        onChange={(v) => setView(v as "timeline" | "month" | "table")}
         options={[
-          { value: "calendar", icon: <CalendarOutlined /> },
-          { value: "table", icon: <TableOutlined /> },
+          { value: "timeline", icon: <ScheduleOutlined />, label: "Timeline" },
+          { value: "month", icon: <CalendarOutlined />, label: "Month" },
+          { value: "table", icon: <TableOutlined />, label: "Table" },
         ]}
       />
       <Dropdown
@@ -246,15 +257,21 @@ export default function RosterList({ embedded = false }: Props) {
         </Card>
       )}
 
-      {view === "calendar" ? (
+      {view === "timeline" && (
         <RosterCalendar
           data={records}
           fromDate={filter.fromDate ?? DEFAULT_RANGE.fromDate}
           toDate={filter.toDate ?? DEFAULT_RANGE.toDate}
         />
-      ) : (
-        <RosterTable data={records} loading={isLoading} />
       )}
+      {view === "month" && (
+        <RosterMonthCalendar
+          data={records}
+          fromDate={filter.fromDate ?? DEFAULT_RANGE.fromDate}
+          toDate={filter.toDate ?? DEFAULT_RANGE.toDate}
+        />
+      )}
+      {view === "table" && <RosterTable data={records} loading={isLoading} />}
     </>
   );
 

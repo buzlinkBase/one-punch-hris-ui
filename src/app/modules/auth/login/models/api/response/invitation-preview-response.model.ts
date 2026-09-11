@@ -4,6 +4,7 @@ export interface InvitationPreviewResponse {
   role: string;
   roles?: string[];
   employeeId?: string;
+  name?: string;
   expiry: string;
   valid: boolean;
   accountExists: boolean;
