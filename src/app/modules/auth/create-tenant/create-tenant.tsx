@@ -18,7 +18,15 @@ const { Title, Text } = Typography;
 
 export default function CreateTenant() {
   const navigate = useNavigate();
-  const hasExistingTenants = (authStorage.getTenants().length ?? 0) > 0;
+  // A tenant stuck in "Provisioning" isn't a dashboard the user can actually go back to yet --
+  // only count tenants that have actually finished setup, so a dormant/in-flight request left
+  // over from an interrupted creation doesn't wrongly make this look like a "New Workspace"
+  // (rather than first-time "Create Your Organization") screen with a Back-to-dashboard link
+  // that leads nowhere useful.
+  const usableTenants = authStorage
+    .getTenants()
+    .filter((t) => t.state !== "Provisioning");
+  const hasExistingTenants = usableTenants.length > 0;
   const [provisioning, setProvisioning] = useState(false);
 
   const {
@@ -30,9 +38,91 @@ export default function CreateTenant() {
     defaultValues: { tenantName: "" },
   });
 
+  // Shared tail of both a fresh submission and resuming an interrupted one: wait for
+  // provisioning to finish, reconcile the stored tenant state, then enter the workspace.
+  const waitAndFinalize = async (tenantId: string, tenantName: string) => {
+    setProvisioning(true);
+    const { ready, timedOut } = await tenantHub.waitForProvisioning(tenantId);
+
+    let finalReady = ready;
+
+    if (!ready && timedOut) {
+      const status = await authApi
+        .getTenantCreationStatus(tenantId)
+        .catch(() => null);
+
+      if (
+        status &&
+        TENANT_FAILED_STATUSES.includes(status.status.toLowerCase())
+      ) {
+        setProvisioning(false);
+        notification.error({
+          message: "Setup failed",
+          description: `We couldn't finish setting up "${tenantName}". Please try again.`,
+          placement: "topRight",
+        });
+        return;
+      }
+
+      finalReady = status?.isReady ?? false;
+
+      if (!finalReady) {
+        notification.info({
+          message: "Still setting up",
+          description:
+            "Your workspace is finishing setup in the background — we'll notify you once it's ready.",
+          placement: "topRight",
+        });
+      }
+    }
+
+    // Update the stored tenant entry's state now that TenantCreated fired.
+    // Do NOT call selectTenant here — membership is not yet "Active" at this
+    // point in provisioning, so that endpoint returns 403. The session token
+    // from createTenant already has tenantId embedded; the menu-lock + polling
+    // in use-tenant-hub will handle unlocking once HrDb is ready.
+    const userAfterProvisioning = authStorage.getUser()!;
+    const updatedTenants = (userAfterProvisioning.tenants ?? []).map((t) =>
+      t.tenantId === tenantId
+        ? { ...t, state: finalReady ? "Created" : "Provisioning" }
+        : t,
+    );
+    authStorage.save(authStorage.getToken()!, {
+      ...userAfterProvisioning,
+      tenants: updatedTenants,
+    });
+
+    setProvisioning(false);
+    window.location.assign("/dashboard");
+  };
+
   useEffect(() => {
     if (!authStorage.getToken()) {
       navigate({ to: "/login", replace: true });
+      return;
+    }
+
+    // A refresh mid-setup used to drop the in-flight request and land back on this blank form
+    // (the browser never left /create-tenant, since that only happens after provisioning
+    // finishes) -- resume waiting on it instead of making the user retype the name and
+    // resubmit. Matched against the session's current tenantId (set by onSubmit's save() right
+    // before the wait) so this doesn't also fire for some unrelated stale Provisioning entry
+    // still sitting in the cached tenant list from a genuinely abandoned attempt.
+    const currentTenantId = authStorage.getTenantId();
+    const stuckProvisioning = authStorage
+      .getTenants()
+      .find(
+        (t) => t.state === "Provisioning" && t.tenantId === currentTenantId,
+      );
+    if (stuckProvisioning) {
+      // Deferred a tick so the setProvisioning(true) inside waitAndFinalize doesn't run
+      // synchronously within the effect body (react-hooks/set-state-in-effect).
+      queueMicrotask(() => {
+        void waitAndFinalize(
+          stuckProvisioning.tenantId,
+          stuckProvisioning.name,
+        );
+      });
     }
   }, [navigate]);
 
@@ -90,62 +180,10 @@ export default function CreateTenant() {
       });
 
       if (tenantId) {
-        setProvisioning(true);
-        const { ready, timedOut } =
-          await tenantHub.waitForProvisioning(tenantId);
-
-        let finalReady = ready;
-
-        if (!ready && timedOut) {
-          const status = await authApi
-            .getTenantCreationStatus(tenantId)
-            .catch(() => null);
-
-          if (
-            status &&
-            TENANT_FAILED_STATUSES.includes(status.status.toLowerCase())
-          ) {
-            setProvisioning(false);
-            notification.error({
-              message: "Setup failed",
-              description: `We couldn't finish setting up "${values.tenantName}". Please try again.`,
-              placement: "topRight",
-            });
-            return;
-          }
-
-          finalReady = status?.isReady ?? false;
-
-          if (!finalReady) {
-            notification.info({
-              message: "Still setting up",
-              description:
-                "Your workspace is finishing setup in the background — we'll notify you once it's ready.",
-              placement: "topRight",
-            });
-          }
-        }
-
-        // Update the stored tenant entry's state now that TenantCreated fired.
-        // Do NOT call selectTenant here — membership is not yet "Active" at this
-        // point in provisioning, so that endpoint returns 403. The session token
-        // from createTenant already has tenantId embedded; the menu-lock + polling
-        // in use-tenant-hub will handle unlocking once HrDb is ready.
-        const userAfterProvisioning = authStorage.getUser()!;
-        const updatedTenants = (userAfterProvisioning.tenants ?? []).map((t) =>
-          t.tenantId === tenantId
-            ? { ...t, state: finalReady ? "Created" : "Provisioning" }
-            : t,
-        );
-        authStorage.save(authStorage.getToken()!, {
-          ...userAfterProvisioning,
-          tenants: updatedTenants,
-        });
-
-        setProvisioning(false);
+        await waitAndFinalize(tenantId, values.tenantName);
+      } else {
+        window.location.assign("/dashboard");
       }
-
-      window.location.assign("/dashboard");
     } catch {
       setProvisioning(false);
       notification.error({
