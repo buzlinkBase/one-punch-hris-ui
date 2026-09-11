@@ -630,15 +630,15 @@ export default function ForPayrollList() {
                 ];
                 return (
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={0} colSpan={3}>
+                    <Table.Summary.Cell index={0} colSpan={4}>
                       <strong>Total</strong>
                     </Table.Summary.Cell>
                     {cells.map((val, i) => (
-                      <Table.Summary.Cell key={i} index={i + 3} align="right">
+                      <Table.Summary.Cell key={i} index={i + 4} align="right">
                         <strong>{fmt(val)}</strong>
                       </Table.Summary.Cell>
                     ))}
-                    <Table.Summary.Cell index={cells.length + 3} align="right">
+                    <Table.Summary.Cell index={cells.length + 4} align="right">
                       <Text strong style={{ color: token.colorPrimary }}>
                         {fmt(totals.net)}
                       </Text>
