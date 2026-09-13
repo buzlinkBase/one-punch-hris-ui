@@ -25,6 +25,7 @@ export const COMPANY_POLICY_LABEL = {
   SECTION_HOLIDAY: "Holiday",
   SECTION_ATTENDANCE_RULES: "Attendance Rules",
   SECTION_STATUTORY: "Cross-Month Cutoff Credit Policies",
+  SECTION_MINIMUM_TAKEHOME: "Minimum Take-Home Pay",
 
   OT_INCLUSION: "OT Inclusion",
   OT_ELIGIBILITY: "OT Eligibility",
@@ -44,6 +45,7 @@ export const COMPANY_POLICY_LABEL = {
     "Waive prior-day attendance requirement for holiday eligibility",
   CROSS_MONTH_STATUTORY_CREDIT_POLICY: "Credit SSS/PhilHealth/Pag-IBIG To",
   WTAX_CROSS_MONTH_CREDIT_POLICY: "Credit Withholding Tax To",
+  REQUIRED_TAKEHOME_PERCENTAGE: "Minimum Take-Home (% of Gross Income)",
 
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",

@@ -15,4 +15,5 @@ export interface CompanyPolicyResponse {
   waivePriorDayRequirement: boolean;
   crossMonthStatutoryCreditPolicy: string;
   wTaxCrossMonthCreditPolicy: string;
+  requiredTakehomePercentage: number;
 }
