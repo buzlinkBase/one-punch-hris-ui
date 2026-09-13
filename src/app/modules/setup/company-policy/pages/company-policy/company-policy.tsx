@@ -62,6 +62,7 @@ function GeneralPolicyTab() {
       waivePriorDayRequirement: false,
       crossMonthStatutoryCreditPolicy: "CutoffStartMonth",
       wTaxCrossMonthCreditPolicy: "CutoffEndMonth",
+      requiredTakehomePercentage: 10,
     },
   });
 
@@ -89,6 +90,7 @@ function GeneralPolicyTab() {
           policy.crossMonthStatutoryCreditPolicy ?? "CutoffStartMonth",
         wTaxCrossMonthCreditPolicy:
           policy.wTaxCrossMonthCreditPolicy ?? "CutoffEndMonth",
+        requiredTakehomePercentage: policy.requiredTakehomePercentage ?? 10,
       });
     }
   }, [policy, reset]);
@@ -349,6 +351,36 @@ function GeneralPolicyTab() {
                 control={control}
                 render={({ field }) => (
                   <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Minimum Take-Home Pay */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_MINIMUM_TAKEHOME}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.REQUIRED_TAKEHOME_PERCENTAGE}
+              validateStatus={errors.requiredTakehomePercentage ? "error" : ""}
+              help={errors.requiredTakehomePercentage?.message}
+              extra="No statutory or scheduled deduction will be applied if it would cut an employee's pay below this percentage of their gross income."
+            >
+              <Controller
+                name="requiredTakehomePercentage"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    min={0}
+                    max={100}
+                    style={{ width: "100%" }}
+                    addonAfter="%"
+                  />
                 )}
               />
             </Form.Item>
