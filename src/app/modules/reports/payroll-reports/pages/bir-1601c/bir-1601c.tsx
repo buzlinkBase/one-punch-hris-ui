@@ -16,7 +16,9 @@ import { FilePdfOutlined, WarningOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useMonthlyRemittanceReturn } from "../../hooks/use-payroll-reports-queries";
+import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import { payrollReportsApi } from "../../services/payroll-reports.api";
 import type {
   MonthlyRemittanceReturnEmployeeResponse,
@@ -269,6 +271,7 @@ export default function Bir1601C() {
 
   const employees = useMemo(() => data?.employees ?? [], [data]);
   const summary = data?.summary;
+  const employeeFilter = useReportNameFilter(employees, (r) => r.fullName);
 
   const drillDownRows = useMemo(() => {
     if (!drillDownLine) return [];
@@ -290,7 +293,7 @@ export default function Bir1601C() {
       <PayrollReportShell
         title={PAYROLL_REPORTS_LABEL.BIR_1601C_TITLE}
         subtitle={PAYROLL_REPORTS_LABEL.BIR_1601C_SUBTITLE}
-        data={employees}
+        data={employeeFilter.filtered}
         loading={isLoading}
         columns={columns}
         onRefresh={() => refetch()}
@@ -351,6 +354,12 @@ export default function Bir1601C() {
               <Form.Item label="Amended Return" className="mb-0">
                 <Switch checked={amendedReturn} onChange={setAmendedReturn} />
               </Form.Item>
+              <ReportNameFilter
+                label="Employee"
+                options={employeeFilter.options}
+                value={employeeFilter.selected}
+                onChange={employeeFilter.setSelected}
+              />
             </div>
           </Form>
         }

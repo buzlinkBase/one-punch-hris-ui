@@ -129,8 +129,11 @@ const WTaxRemittance = lazy(
 const BankDisbursement = lazy(
   () => import("@/app/modules/reports/payroll-reports/pages/bank-disbursement"),
 );
-const LoanLedger = lazy(
-  () => import("@/app/modules/reports/payroll-reports/pages/loan-ledger"),
+const DeductionLedger = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/deduction-ledger"),
+);
+const CashBondReport = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/cash-bond-report"),
 );
 const LeaveLedger = lazy(
   () => import("@/app/modules/reports/payroll-reports/pages/leave-ledger"),
@@ -839,15 +842,26 @@ const bankDisbursementIndexRoute = createRoute({
   component: withSuspense(BankDisbursement),
 });
 
-const loanLedgerRoute = createRoute({
+const deductionLedgerRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "payroll/reports/loan-ledger",
+  path: "payroll/reports/deduction-ledger",
   component: MainLayout,
 });
-const loanLedgerIndexRoute = createRoute({
-  getParentRoute: () => loanLedgerRoute,
+const deductionLedgerIndexRoute = createRoute({
+  getParentRoute: () => deductionLedgerRoute,
   path: "/",
-  component: withSuspense(LoanLedger),
+  component: withSuspense(DeductionLedger),
+});
+
+const cashBondReportRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/cash-bond",
+  component: MainLayout,
+});
+const cashBondReportIndexRoute = createRoute({
+  getParentRoute: () => cashBondReportRoute,
+  path: "/",
+  component: withSuspense(CashBondReport),
 });
 
 const leaveLedgerRoute = createRoute({
@@ -1470,7 +1484,8 @@ const routeTree = rootRoute.addChildren([
   pagIbigRemittanceRoute.addChildren([pagIbigRemittanceIndexRoute]),
   wtaxRemittanceRoute.addChildren([wtaxRemittanceIndexRoute]),
   bankDisbursementRoute.addChildren([bankDisbursementIndexRoute]),
-  loanLedgerRoute.addChildren([loanLedgerIndexRoute]),
+  deductionLedgerRoute.addChildren([deductionLedgerIndexRoute]),
+  cashBondReportRoute.addChildren([cashBondReportIndexRoute]),
   leaveLedgerRoute.addChildren([leaveLedgerIndexRoute]),
   reimbursementListRoute.addChildren([reimbursementListIndexRoute]),
   costSummaryRoute.addChildren([costSummaryIndexRoute]),

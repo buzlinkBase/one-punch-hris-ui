@@ -239,8 +239,8 @@ export const FACTOR_DAYS_GROUPS: {
     group: "Continuous Operations (24/7/365)",
     options: [
       {
-        value: 393.8,
-        label: "393.80 Days",
+        value: 393.5,
+        label: "393.50 Days",
         description:
           "DOLE Advisory No. 001-10 — for employees required to work every day of the year: 297 ordinary days + 67.60 (52 rest days × 130%) + 24.00 (12 regular holidays × 200%) + 5.20 (4 special days × 130%). Rest-day and holiday premiums are baked into the divisor.",
       },

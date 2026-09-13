@@ -164,10 +164,9 @@ export interface PayrollRunResult {
   paidLeaveHours?: number;
   unpaidLeaveHours?: number;
   // Per-day pay breakdown behind this row's earnings/attendance totals above (backend
-  // PayrollSummaryLine.TimeHourPayResults, one DTRPayModel per DTR day). Only populated on
-  // a fresh Calculate/Generate preview response — Payroll (the persisted entity read back
-  // via GET /payrolls) never stores this, so it's absent once a run has been saved and
-  // re-fetched.
+  // PayrollSummaryLine.TimeHourPayResults on a fresh Calculate/Generate preview, or the
+  // persisted Payroll.TimeHourPayResults — a List<PayrollDtrDetail> — once a run has been
+  // saved and re-fetched via GET /payrolls; both round-trip through this same shape now).
   timeHourPayResults?: DtrPayResult[];
 }
 
@@ -179,6 +178,15 @@ export interface PayrollRunResult {
 // dtr-detail-table.tsx. No Official Business amount exists (OB is hours/informational only,
 // with no separate pay component in DTRPayModel), so that group has no amount equivalent here.
 export interface DtrPayResult {
+  // The specific DailyRecord this day's breakdown came from, and that record's own
+  // point-in-time client/department/payroll group (from DTR-generation time, not the
+  // employee's current settings) — lets a multi-client employee's per-day breakdown show
+  // which client each day was actually worked for, for billing generation and other
+  // DTR-to-payroll traceability reporting.
+  dtrId?: string | null;
+  clientId?: string | null;
+  departmentId?: string | null;
+  payrollGroupId?: string | null;
   date: string;
   // PascalCase enum name as serialized by the backend's global StringEnumConverter (e.g.
   // "RegularWorkDay", "LegalHolidayDuty") — space it out for display, same convention as

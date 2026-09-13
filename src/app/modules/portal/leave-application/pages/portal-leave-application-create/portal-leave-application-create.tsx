@@ -89,10 +89,12 @@ export default function PortalLeaveApplicationCreate() {
   const { data: leaveTypes = [] } = useLeaveTypes();
   const { mutateAsync: create, isPending } = useCreateMyLeaveApplication();
 
-  const leaveTypeOptions = leaveTypes.map((l) => ({
-    value: l.id,
-    label: `${l.code} - ${l.description}`,
-  }));
+  const leaveTypeOptions = leaveTypes
+    .filter((l) => l.allowEmployeeFiling)
+    .map((l) => ({
+      value: l.id,
+      label: `${l.code} - ${l.description}`,
+    }));
 
   const {
     control,
@@ -153,6 +155,10 @@ export default function PortalLeaveApplicationCreate() {
   // restriction via a backend rejection at submit time.
   const minServiceError = useMemo(() => {
     if (!policy || !employee) return null;
+    // PresentDays-basis eligibility depends on DTR-derived attendance data this page doesn't
+    // load — the backend's own check (LeaveApplicationService.EnsurePolicyAsync) is
+    // authoritative for that basis; this client-side hint only covers TenureMonths.
+    if (policy.eligibilityBasis === "PresentDays") return null;
     const required = policy.minServiceMonths ?? 0;
     if (required === 0) return null;
     if (!employee.hireDate) return null;

@@ -101,6 +101,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             label: "Loans",
             path: "/portal/loan-applications",
           },
+          {
+            key: "portal-cash-bond",
+            label: "Cash Bond",
+            path: "/portal/cash-bond",
+          },
         ],
       },
     ],
@@ -469,9 +474,14 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/payroll/reports/bank-disbursement",
       },
       {
-        key: "payroll-reports-loans",
-        label: "Loan Ledger",
-        path: "/payroll/reports/loan-ledger",
+        key: "payroll-reports-deductions",
+        label: "Deduction Ledger",
+        path: "/payroll/reports/deduction-ledger",
+      },
+      {
+        key: "payroll-reports-cash-bond",
+        label: "Cash Bond Tracking",
+        path: "/payroll/reports/cash-bond",
       },
       {
         key: "payroll-reports-leave",

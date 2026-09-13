@@ -243,6 +243,13 @@ export function useWithdrawMyLoanApplication() {
   });
 }
 
+export function useMyCashBond() {
+  return useQuery({
+    queryKey: ["me", "cash-bond"],
+    queryFn: () => meApi.getMyCashBond(),
+  });
+}
+
 export function useMy13thMonth(year: number) {
   return useQuery({
     queryKey: ["me", "13th-month", year],

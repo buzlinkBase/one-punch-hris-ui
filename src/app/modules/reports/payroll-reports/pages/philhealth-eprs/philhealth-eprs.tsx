@@ -4,7 +4,9 @@ import { FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { usePhilHealthRemittance } from "../../hooks/use-payroll-reports-queries";
+import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import { payrollReportsApi } from "../../services/payroll-reports.api";
 import type { ContributionRemittanceResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
@@ -85,12 +87,13 @@ export default function PhilHealthEprs() {
     isLoading,
     refetch,
   } = usePhilHealthRemittance(range[0], range[1]);
+  const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
     <PayrollReportShell
       title={PAYROLL_REPORTS_LABEL.PHILHEALTH_EPRS_TITLE}
       subtitle={PAYROLL_REPORTS_LABEL.PHILHEALTH_EPRS_SUBTITLE}
-      data={data}
+      data={employeeFilter.filtered}
       loading={isLoading}
       columns={columns}
       onRefresh={() => refetch()}
@@ -135,23 +138,31 @@ export default function PhilHealthEprs() {
       }
       filters={
         <Form layout="vertical">
-          <Form.Item
-            label="Date Range"
-            className="mb-0"
-            style={{ maxWidth: 360 }}
-          >
-            <MobileRangePicker
-              style={{ width: "100%" }}
-              value={[dayjs(range[0]), dayjs(range[1])]}
-              onChange={(dates) => {
-                if (dates)
-                  setRange([
-                    dates[0]?.format("YYYY-MM-DD") ?? "",
-                    dates[1]?.format("YYYY-MM-DD") ?? "",
-                  ]);
-              }}
+          <div className="flex items-end gap-4 flex-wrap">
+            <Form.Item
+              label="Date Range"
+              className="mb-0"
+              style={{ maxWidth: 360 }}
+            >
+              <MobileRangePicker
+                style={{ width: "100%" }}
+                value={[dayjs(range[0]), dayjs(range[1])]}
+                onChange={(dates) => {
+                  if (dates)
+                    setRange([
+                      dates[0]?.format("YYYY-MM-DD") ?? "",
+                      dates[1]?.format("YYYY-MM-DD") ?? "",
+                    ]);
+                }}
+              />
+            </Form.Item>
+            <ReportNameFilter
+              label="Employee"
+              options={employeeFilter.options}
+              value={employeeFilter.selected}
+              onChange={employeeFilter.setSelected}
             />
-          </Form.Item>
+          </div>
         </Form>
       }
     />

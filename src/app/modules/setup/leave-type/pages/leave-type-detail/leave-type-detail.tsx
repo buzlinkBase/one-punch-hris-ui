@@ -69,6 +69,15 @@ const LEAVE_RESET_OPTIONS = [
   { value: "PerEvent", label: "Per Event — resets on each qualifying event" },
 ];
 
+const ELIGIBILITY_BASIS_OPTIONS = [
+  { value: "TenureMonths", label: "Tenure — months since hire date" },
+  {
+    value: "PresentDays",
+    label:
+      "Present Days — count of present days (holidays and rest days included)",
+  },
+];
+
 const GENDER_RESTRICTION_OPTIONS = [
   { value: "None", label: "None (all genders)" },
   { value: "MaleOnly", label: "Male only (e.g. Paternity Leave)" },
@@ -130,14 +139,20 @@ const TIPS = {
   proRateFirstYear:
     "When on, employees hired mid-year receive a fractional entitlement proportional to their remaining months in the year. Required for SIL compliance when an employee completes 1 year of service mid-period.",
 
+  eligibilityBasis:
+    "How service requirement is measured.\n• Tenure: calendar months since the employee's hire date.\n• Present Days: count of days the employee is on record as present — includes holidays and rest days (worked or not), excludes Absent/Incomplete/Skipped days.",
   minServiceMonths:
     "Months of continuous service required before an employee can use this leave. 0 = eligible from day one. Philippine law requires 12 months of service before SIL can be availed.",
+  minPresentDays:
+    "Number of present days (see Eligibility Basis) required before an employee can use this leave. 0 = eligible from day one.",
   genderRestriction:
     "Restrict this leave to a specific gender. Use Male Only for Paternity Leave (RA 8187), Female Only for Maternity (RA 11210) or Special Leave for Women (RA 9710).",
   requiresApproval:
     "When on, a supervisor must approve the application before it is processed. Turn off for statutory leaves that only require notice, such as VAWC leave (RA 9262) where approval cannot be withheld.",
   requiresSupportingDocument:
     "When on, employees must upload a supporting document with their application. Examples: medical certificate for sick leave, birth certificate for Paternity Leave.",
+  allowEmployeeFiling:
+    "When on, employees can file this leave type themselves in the Employee Portal. When off, it's hidden from the portal and can only be filed by HR.",
 
   maxDaysPerYear:
     "Hard annual cap on this leave regardless of credit balance. Example: VAWC Leave is fixed at 10 days per year by law. Leave blank for unlimited.",
@@ -204,10 +219,13 @@ const DEFAULT_VALUES: LeaveTypeFormValues = {
   maxAccrualBalance: null,
   proRateFirstYear: false,
   leaveReset: "PerPeriod",
+  eligibilityBasis: "TenureMonths",
   minServiceMonths: 0,
+  minPresentDays: 0,
   genderRestriction: "None",
   requiresApproval: true,
   requiresSupportingDocument: false,
+  allowEmployeeFiling: true,
   allowHalfDay: true,
   allowPartial: false,
   allowNegativeBalance: false,
@@ -246,10 +264,12 @@ export default function LeaveTypeDetail() {
   const paySource = useWatch({ control, name: "paySource" });
   const carryOverType = useWatch({ control, name: "carryOverType" });
   const convertToCash = useWatch({ control, name: "convertToCash" });
+  const eligibilityBasis = useWatch({ control, name: "eligibilityBasis" });
 
   const isAccrualBased = accrualBasis !== "None" && accrualBasis !== "PerEvent";
   const isGovernmentPay = paySource === "Government" || paySource === "Shared";
   const isCarryOverCapped = carryOverType === "Capped";
+  const isPresentDaysBasis = eligibilityBasis === "PresentDays";
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -267,11 +287,14 @@ export default function LeaveTypeDetail() {
         maxAccrualBalance: selected.maxAccrualBalance ?? null,
         proRateFirstYear: selected.proRateFirstYear ?? false,
         leaveReset: selected.leaveReset,
+        eligibilityBasis: selected.eligibilityBasis ?? "TenureMonths",
         minServiceMonths: selected.minServiceMonths ?? 0,
+        minPresentDays: selected.minPresentDays ?? 0,
         genderRestriction: selected.genderRestriction ?? "None",
         requiresApproval: selected.requiresApproval ?? true,
         requiresSupportingDocument:
           selected.requiresSupportingDocument ?? false,
+        allowEmployeeFiling: selected.allowEmployeeFiling ?? true,
         allowHalfDay: selected.allowHalfDay ?? true,
         allowPartial: selected.allowPartial ?? false,
         allowNegativeBalance: selected.allowNegativeBalance ?? false,
@@ -291,13 +314,16 @@ export default function LeaveTypeDetail() {
 
   const onSubmit = async (values: LeaveTypeFormValues) => {
     try {
-      // credits/accrualRate: only the one relevant to the selected accrualBasis is
-      // guaranteed by the schema — the hidden one may be undefined, but the API expects
-      // a concrete number for both, so default the inactive one to 0.
+      // credits/accrualRate and minServiceMonths/minPresentDays: only the one relevant to
+      // the selected accrualBasis/eligibilityBasis is guaranteed by the schema — the hidden
+      // one may be undefined, but the API expects a concrete number for both, so default
+      // the inactive one to 0.
       const payload = {
         ...values,
         credits: values.credits ?? 0,
         accrualRate: values.accrualRate ?? 0,
+        minServiceMonths: values.minServiceMonths ?? 0,
+        minPresentDays: values.minPresentDays ?? 0,
       };
       if (isEdit && id) {
         await update({ id, ...payload });
@@ -330,10 +356,13 @@ export default function LeaveTypeDetail() {
       accrualRate: "Accrual Rate",
       maxAccrualBalance: "Max Balance",
       leaveReset: "Reset Policy",
+      eligibilityBasis: "Eligibility Basis",
       minServiceMonths: "Minimum Service (months)",
+      minPresentDays: "Minimum Present Days",
       genderRestriction: "Gender Restriction",
       requiresApproval: "Requires Approval",
       requiresSupportingDocument: "Requires Supporting Document",
+      allowEmployeeFiling: "Employee Can File via Portal",
       allowHalfDay: "Allow Half-Day Filing",
       allowPartial: "Allow Partial Filing",
       allowNegativeBalance: "Allow Negative Balance",
@@ -692,24 +721,56 @@ export default function LeaveTypeDetail() {
             <Card size="small" title={sectionTitle("Eligibility")}>
               <div className="form-grid-3">
                 {fi(
-                  "Minimum Service (months)",
-                  "minServiceMonths",
+                  "Eligibility Basis",
+                  "eligibilityBasis",
                   <Controller
-                    name="minServiceMonths"
+                    name="eligibilityBasis"
                     control={control}
                     render={({ field }) => (
-                      <InputNumber
-                        {...field}
-                        onChange={(v) => field.onChange(v ?? 0)}
-                        min={0}
-                        className="w-full"
-                        placeholder="0 = immediately eligible"
-                        addonAfter="months"
-                      />
+                      <Select {...field} options={ELIGIBILITY_BASIS_OPTIONS} />
                     )}
                   />,
-                  TIPS.minServiceMonths,
+                  TIPS.eligibilityBasis,
                 )}
+                {isPresentDaysBasis
+                  ? fi(
+                      "Minimum Present Days",
+                      "minPresentDays",
+                      <Controller
+                        name="minPresentDays"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            onChange={(v) => field.onChange(v ?? 0)}
+                            min={0}
+                            className="w-full"
+                            placeholder="0 = immediately eligible"
+                            addonAfter="days"
+                          />
+                        )}
+                      />,
+                      TIPS.minPresentDays,
+                    )
+                  : fi(
+                      "Minimum Service (months)",
+                      "minServiceMonths",
+                      <Controller
+                        name="minServiceMonths"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            onChange={(v) => field.onChange(v ?? 0)}
+                            min={0}
+                            className="w-full"
+                            placeholder="0 = immediately eligible"
+                            addonAfter="months"
+                          />
+                        )}
+                      />,
+                      TIPS.minServiceMonths,
+                    )}
                 {fi(
                   "Gender Restriction",
                   "genderRestriction",
@@ -745,6 +806,21 @@ export default function LeaveTypeDetail() {
                   "Requires supporting document",
                   <Controller
                     name="requiresSupportingDocument"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onChange={field.onChange}
+                        size="small"
+                      />
+                    )}
+                  />,
+                )}
+                {switchRow(
+                  TIPS.allowEmployeeFiling,
+                  LEAVE_TYPE_LABEL.ALLOW_EMPLOYEE_FILING,
+                  <Controller
+                    name="allowEmployeeFiling"
                     control={control}
                     render={({ field }) => (
                       <Switch

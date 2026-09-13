@@ -27,10 +27,24 @@ export const leaveTypeFormSchema = z
     leaveReset: z.string().min(1, "Reset policy is required"),
 
     // Eligibility
-    minServiceMonths: z.number({ error: "Must be a number" }).min(0).int(),
+    eligibilityBasis: z.string().min(1, "Eligibility basis is required"),
+    // Only one of these is shown at a time (based on eligibilityBasis) — the hidden one may
+    // be undefined, so requiredness is enforced conditionally below rather than
+    // unconditionally here (same pattern as credits/accrualRate above).
+    minServiceMonths: z
+      .number({ error: "Must be a number" })
+      .min(0)
+      .int()
+      .optional(),
+    minPresentDays: z
+      .number({ error: "Must be a number" })
+      .min(0)
+      .int()
+      .optional(),
     genderRestriction: z.string(),
     requiresApproval: z.boolean(),
     requiresSupportingDocument: z.boolean(),
+    allowEmployeeFiling: z.boolean(),
 
     // Application Rules
     allowHalfDay: z.boolean(),
@@ -71,6 +85,22 @@ export const leaveTypeFormSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["accrualRate"],
+        message: "Must be a number",
+      });
+    }
+
+    const isPresentDaysBasis = data.eligibilityBasis === "PresentDays";
+    if (isPresentDaysBasis && typeof data.minPresentDays !== "number") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["minPresentDays"],
+        message: "Must be a number",
+      });
+    }
+    if (!isPresentDaysBasis && typeof data.minServiceMonths !== "number") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["minServiceMonths"],
         message: "Must be a number",
       });
     }

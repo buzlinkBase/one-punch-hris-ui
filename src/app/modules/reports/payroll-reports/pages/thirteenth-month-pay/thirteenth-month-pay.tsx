@@ -4,7 +4,9 @@ import type { ColumnsType } from "antd/es/table";
 import { PrinterOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useThirteenthMonth } from "../../hooks/use-payroll-reports-queries";
+import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { ThirteenthMonthResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import httpClient from "@/core/http/http-client";
@@ -142,6 +144,7 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
 export default function ThirteenthMonthPay() {
   const [year, setYear] = useState(dayjs().year());
   const { data = [], isLoading, refetch } = useThirteenthMonth(year);
+  const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   const handlePrintList = async () => {
     if (!data.length) {
@@ -168,7 +171,7 @@ export default function ThirteenthMonthPay() {
     <PayrollReportShell
       title={PAYROLL_REPORTS_LABEL.THIRTEENTH_MONTH_TITLE}
       subtitle={PAYROLL_REPORTS_LABEL.THIRTEENTH_MONTH_SUBTITLE}
-      data={data}
+      data={employeeFilter.filtered}
       loading={isLoading}
       columns={columns}
       onRefresh={() => refetch()}
@@ -187,15 +190,23 @@ export default function ThirteenthMonthPay() {
       }
       filters={
         <Form layout="vertical">
-          <Form.Item label="Year" className="mb-0" style={{ maxWidth: 180 }}>
-            <DatePicker
-              picker="year"
-              style={{ width: "100%" }}
-              value={dayjs().year(year)}
-              allowClear={false}
-              onChange={(date) => date && setYear(date.year())}
+          <div className="flex items-end gap-4 flex-wrap">
+            <Form.Item label="Year" className="mb-0" style={{ maxWidth: 180 }}>
+              <DatePicker
+                picker="year"
+                style={{ width: "100%" }}
+                value={dayjs().year(year)}
+                allowClear={false}
+                onChange={(date) => date && setYear(date.year())}
+              />
+            </Form.Item>
+            <ReportNameFilter
+              label="Employee"
+              options={employeeFilter.options}
+              value={employeeFilter.selected}
+              onChange={employeeFilter.setSelected}
             />
-          </Form.Item>
+          </div>
         </Form>
       }
     />

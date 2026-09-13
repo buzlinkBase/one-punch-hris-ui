@@ -202,12 +202,17 @@ export default function LeaveTypeTable({ data, loading, onDelete }: Props) {
           width: widths.minServiceMonths,
           onResize: (w: number) => handleResize("minServiceMonths", w),
         }) as object,
-      render: (val: number) =>
-        val === 0 ? (
+      render: (_: number, record: LeaveTypeResponse) => {
+        const isPresentDaysBasis = record.eligibilityBasis === "PresentDays";
+        const val = isPresentDaysBasis
+          ? record.minPresentDays
+          : record.minServiceMonths;
+        return val === 0 ? (
           <span style={{ color: "#8c8c8c" }}>Immediate</span>
         ) : (
-          `${val} mo.`
-        ),
+          `${val} ${isPresentDaysBasis ? "day" + (val === 1 ? "" : "s") + " present" : "mo."}`
+        );
+      },
     },
     {
       title: "Statutory",

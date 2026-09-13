@@ -11,6 +11,7 @@ import type {
   AvailableSalaryAdjustment,
   AvailableOtherIncome,
   LastPayAttendanceWarning,
+  LastPayCashBondStatus,
 } from "../models/api/response/last-pay-review.model";
 
 const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
@@ -129,6 +130,18 @@ export const forPayrollApi = {
       data: LastPayAttendanceWarning[];
       total: number;
     }>(`${PAYROLL_ENDPOINT}/last-pay/attendance-warnings`, {
+      params: { employeeIds },
+      paramsSerializer: { indexes: null },
+    });
+  },
+
+  getLastPayCashBondStatus(
+    employeeIds: string[],
+  ): Promise<{ data: LastPayCashBondStatus[]; total: number }> {
+    return httpClient.getUnwrapped<{
+      data: LastPayCashBondStatus[];
+      total: number;
+    }>(`${PAYROLL_ENDPOINT}/last-pay/cash-bond-status`, {
       params: { employeeIds },
       paramsSerializer: { indexes: null },
     });

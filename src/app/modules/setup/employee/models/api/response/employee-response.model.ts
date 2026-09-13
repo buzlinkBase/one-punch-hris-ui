@@ -4,7 +4,7 @@ export type DailyRateMode = "Manual" | "CalculatedEDR" | "MonthlyTotalDays";
 /** Annual/monthly divisor used by Calculated EDR mode — see FACTOR_DAYS_OPTIONS for the
  * full curated list (PH DOLE standards, flat-calendar, continuous-ops, and
  * monthly-averaging conventions). Not a closed literal union since several conventions
- * (30.4167, 393.80, ...) are non-integer. */
+ * (30.4167, 393.50, ...) are non-integer. */
 export type FactorDays = number;
 export type EmploymentStatus =
   | "Regular"

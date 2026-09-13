@@ -31,18 +31,36 @@ export interface BankDisbursementResponse {
   netPay: number;
 }
 
-export interface LoanLedgerResponse {
+export interface DeductionLedgerResponse {
   employeeId: string;
   employeeNo: string;
   fullName: string;
   deductionId: string;
-  loanTypeName: string;
-  loanName: string;
+  deductionTypeName: string;
+  deductionName: string;
   totalPrincipal: number;
   interestRate: number;
   startDate: string;
   endDate: string;
   currentBalance: number;
+}
+
+// One row per employee's Cash Bond DeductionApplication (DeductionType.Code == "CASHBOND") —
+// tracks how much has been withheld toward the target (the application's own totalPrincipal;
+// there's no separate employee-profile target field) and how much is still outstanding. See
+// PayrollReportService.GetCashBondReportAsync.
+export interface CashBondReportResponse {
+  employeeId: string;
+  employeeNo: string;
+  fullName: string;
+  deductionId: string;
+  applicationId: string;
+  targetAmount: number;
+  totalCollected: number;
+  remaining: number;
+  startDate: string;
+  endDate: string;
+  approvalStatus: string;
 }
 
 // OneTime, employer-advanced government leave payouts awaiting/undergoing SSS-style

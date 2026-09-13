@@ -31,3 +31,14 @@ export interface LastPayAttendanceWarning {
   separationDate: string;
   unpaidAttendanceDayCount: number;
 }
+
+// Informational only — see PayrollsController's last-pay/cash-bond-status GET. Never applied
+// to Net Pay automatically; HR decides the refund manually as part of clearance.
+export interface LastPayCashBondStatus {
+  employeeId: string;
+  fullName: string;
+  targetAmount: number;
+  totalCollected: number;
+  remaining: number;
+  approvalStatus: string;
+}

@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   DatePicker,
-  Radio,
   Space,
   Statistic,
   Table,
@@ -73,9 +72,7 @@ const withBand = (
 export default function ForPayrollList() {
   const { token } = theme.useToken();
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-  // A payroll run is generated from exactly one DTR batch at a time — single-select (radio)
-  // rather than a checkbox Set.
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
   const [previewBatchCode, setPreviewBatchCode] = useState<string | null>(null);
   const [payDate, setPayDate] = useState<string | null>(null);
@@ -96,15 +93,12 @@ export default function ForPayrollList() {
   const { mutate: calculate, isPending: calculating } = useCalculatePayroll();
   const { mutate: generate, isPending: generating } = useGeneratePayroll();
 
-  const canRun = selected !== null;
+  const canRun = selected.length > 0;
 
-  const selectBatch = (code: string) =>
-    setSelected((prev) => (prev === code ? null : code));
-
-  const clearSelection = () => setSelected(null);
+  const clearSelection = () => setSelected([]);
 
   const buildPayload = (remarks?: string) => ({
-    batchCodes: selected ? [selected] : [],
+    batchCodes: selected,
     payDate,
     remarks,
   });
@@ -136,17 +130,6 @@ export default function ForPayrollList() {
   };
 
   const batchColumns: ColumnsType<DtrBatchModel> = [
-    {
-      title: "",
-      key: "check",
-      width: 40,
-      render: (_, r) => (
-        <Radio
-          checked={selected === r.code}
-          onClick={() => selectBatch(r.code)}
-        />
-      ),
-    },
     {
       title: "Batch Code",
       dataIndex: "code",
@@ -520,7 +503,7 @@ export default function ForPayrollList() {
             <Button
               size="small"
               onClick={clearSelection}
-              disabled={selected === null}
+              disabled={selected.length === 0}
             >
               Clear
             </Button>
@@ -534,9 +517,10 @@ export default function ForPayrollList() {
           size="small"
           pagination={false}
           scroll={{ x: "max-content" }}
-          rowClassName={(r) =>
-            selected === r.code ? "ant-table-row-selected" : ""
-          }
+          rowSelection={{
+            selectedRowKeys: selected,
+            onChange: (keys) => setSelected(keys as string[]),
+          }}
         />
       </Card>
 
@@ -666,7 +650,7 @@ export default function ForPayrollList() {
 
       <PayrollRunPostModal
         open={postModalOpen}
-        batchCount={selected ? 1 : 0}
+        batchCount={selected.length}
         isSaving={generating}
         onClose={() => setPostModalOpen(false)}
         onConfirm={handleConfirmGenerate}
