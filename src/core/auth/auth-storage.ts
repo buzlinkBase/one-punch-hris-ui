@@ -101,6 +101,18 @@ export const authStorage = {
    * whatever "not ready" snapshot was cached at login — without this, a refresh after
    * provisioning finishes still flashes/sticks on the provisioning screen until a fresh
    * REST round-trip corrects it.
+   *
+   * Also promotes `state` to "Created" once ready. The main content area was never actually
+   * stuck — it already gates on hrDbReady, not state — but this same tenant's `state` field
+   * only otherwise gets set once, by create-tenant.tsx's waitAndFinalize, right after the
+   * TenantCreated push/timeout. If that page was left, refreshed, or closed before that ran
+   * (e.g. HR-DB setup outlasted the wait), `state` stays "Provisioning" forever afterwards —
+   * nothing else ever revisits it — even though this poll/push is confirming the workspace is
+   * actually ready. That stale value is what the tenant switcher's status tag
+   * (getTenantStateTag in main-layout.tsx) and create-tenant.tsx's `usableTenants` filter both
+   * read, so without this they'd go on calling a fully working tenant "Provisioning" forever.
+   * One-directional (only upgrades to Created, never the reverse) since DB provisioning
+   * doesn't un-finish — same reasoning as handleSwitchTenant's reconciliation in main-layout.tsx.
    */
   updateTenantHrDbStatus(
     tenantId: string,
@@ -112,7 +124,13 @@ export const authStorage = {
     const idx = user.tenants.findIndex((t) => t.tenantId === tenantId);
     if (idx === -1) return;
     const tenants = [...user.tenants];
-    tenants[idx] = { ...tenants[idx], hrDbStatus, hrDbReady };
+    const current = tenants[idx];
+    tenants[idx] = {
+      ...current,
+      hrDbStatus,
+      hrDbReady,
+      state: hrDbReady ? "Created" : current.state,
+    };
     localStorage.setItem(KEYS.user, JSON.stringify({ ...user, tenants }));
   },
 
