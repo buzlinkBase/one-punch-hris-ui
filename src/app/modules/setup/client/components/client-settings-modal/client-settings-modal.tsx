@@ -218,7 +218,7 @@ export default function ClientSettingsModal({
                           className="w-full"
                           min={0}
                           precision={2}
-                          placeholder="No cap"
+                          placeholder="Amount"
                           onChange={(v) => field.onChange(v ?? null)}
                         />
                       )}
@@ -234,7 +234,7 @@ export default function ClientSettingsModal({
                           className="w-full"
                           min={0}
                           precision={2}
-                          placeholder="No cap"
+                          placeholder="Amount"
                           onChange={(v) => field.onChange(v ?? null)}
                         />
                       )}
@@ -250,7 +250,7 @@ export default function ClientSettingsModal({
                           className="w-full"
                           min={0}
                           precision={2}
-                          placeholder="No cap"
+                          placeholder="Amount"
                           onChange={(v) => field.onChange(v ?? null)}
                         />
                       )}
