@@ -37,6 +37,7 @@ import {
   useAvailableSalaryAdjustments,
   useAvailableOtherIncome,
   useLastPayAttendanceWarnings,
+  useLastPayCashBondStatus,
 } from "../../hooks/use-for-payroll-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
@@ -122,10 +123,12 @@ export default function GenerateLastPay() {
     useAvailableOtherIncome(employeeIds);
   const { data: attendanceWarningsData } =
     useLastPayAttendanceWarnings(employeeIds);
+  const { data: cashBondStatusData } = useLastPayCashBondStatus(employeeIds);
 
   const availableAdjustments = adjustmentsData?.data ?? [];
   const availableOtherIncome = otherIncomeData?.data ?? [];
   const attendanceWarnings = attendanceWarningsData?.data ?? [];
+  const cashBondStatus = cashBondStatusData?.data ?? [];
 
   // Re-defaults to "everything available" whenever the fetched set changes (a different
   // employee selection, or a row that got consumed elsewhere) — HR's unchecks only need to
@@ -474,6 +477,42 @@ export default function GenerateLastPay() {
                     </li>
                   ))}
                 </ul>
+              }
+            />
+          )}
+
+          {cashBondStatus.length > 0 && (
+            <Alert
+              className="mb-4"
+              type="info"
+              showIcon
+              message="Cash bond on file — refund not automatic"
+              description={
+                <>
+                  <ul className="mb-0 pl-4">
+                    {cashBondStatus.map((c) => (
+                      <li key={c.employeeId}>
+                        {c.fullName} — collected{" "}
+                        {c.totalCollected.toLocaleString("en-PH", {
+                          minimumFractionDigits: 2,
+                        })}{" "}
+                        of{" "}
+                        {c.targetAmount.toLocaleString("en-PH", {
+                          minimumFractionDigits: 2,
+                        })}{" "}
+                        target (
+                        {c.remaining.toLocaleString("en-PH", {
+                          minimumFractionDigits: 2,
+                        })}{" "}
+                        still short).
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-2">
+                    For reference only — this is not added to Net Pay. Decide
+                    the refund manually as part of clearance.
+                  </div>
+                </>
               }
             />
           )}

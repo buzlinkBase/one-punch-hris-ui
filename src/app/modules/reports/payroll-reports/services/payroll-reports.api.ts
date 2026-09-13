@@ -4,7 +4,8 @@ import type {
   ReportEnvelope,
   ContributionRemittanceResponse,
   BankDisbursementResponse,
-  LoanLedgerResponse,
+  DeductionLedgerResponse,
+  CashBondReportResponse,
   LeaveCreditsBalanceResponse,
   ReimbursementListResponse,
   AdjustLeaveCreditsRequest,
@@ -45,8 +46,10 @@ export const payrollReportsApi = {
     get<ContributionRemittanceResponse>("wtax-remittance", { from, to }),
   bankDisbursement: (from: string, to: string) =>
     get<BankDisbursementResponse>("bank-disbursement", { from, to }),
-  loanLedger: (asOf: string) =>
-    get<LoanLedgerResponse>("loan-ledger", { asOf }),
+  deductionLedger: (asOf: string) =>
+    get<DeductionLedgerResponse>("deduction-ledger", { asOf }),
+  cashBondReport: (asOf: string) =>
+    get<CashBondReportResponse>("cash-bond", { asOf }),
   leaveLedger: (year: number) =>
     get<LeaveCreditsBalanceResponse>("leave-ledger", { year }),
   reimbursementList: (from: string, to: string) =>

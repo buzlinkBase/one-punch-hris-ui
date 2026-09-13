@@ -7,6 +7,7 @@ export const LEAVE_TYPE_LABEL = {
   PAY_SOURCE: "Pay Source",
   LEAVE_RESET: "Reset Policy",
   REMARKS: "Remarks",
+  ALLOW_EMPLOYEE_FILING: "Employee Can File via Portal",
   CREATE_TITLE: "Create Leave Type",
   EDIT_TITLE: "Edit Leave Type",
 };

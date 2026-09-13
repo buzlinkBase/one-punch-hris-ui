@@ -197,6 +197,14 @@ export const meApi = {
     );
   },
 
+  // Read-only — Cash Bond entries are HR-created (Setup > Deduction), not self-filed, so
+  // there's no create/withdraw counterpart here the way Loans have.
+  getMyCashBond(): Promise<DeductionApplicationResponse[]> {
+    return httpClient.getUnwrapped<DeductionApplicationResponse[]>(
+      `${BASE_URL}/cash-bond`,
+    );
+  },
+
   /** Returns null when there's no payroll history at all for that year yet. */
   getMy13thMonth(year: number): Promise<ThirteenthMonthResponse | null> {
     return httpClient.getUnwrapped<ThirteenthMonthResponse | null>(

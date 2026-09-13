@@ -264,6 +264,10 @@ export default function LeaveApplicationDetail() {
 
   const minServiceError = useMemo(() => {
     if (!policy || !employee) return null;
+    // PresentDays-basis eligibility depends on DTR-derived attendance data this page doesn't
+    // load — the backend's own check (LeaveApplicationService.EnsurePolicyAsync) is
+    // authoritative for that basis; this client-side hint only covers TenureMonths.
+    if (policy.eligibilityBasis === "PresentDays") return null;
     const required = policy.minServiceMonths ?? 0;
     if (required === 0) return null;
     if (!employee.hireDate) return null;

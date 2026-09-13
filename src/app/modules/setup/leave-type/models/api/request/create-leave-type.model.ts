@@ -12,10 +12,13 @@ export interface CreateLeaveType {
   maxAccrualBalance?: number | null;
   proRateFirstYear: boolean;
   leaveReset: string;
+  eligibilityBasis: string;
   minServiceMonths: number;
+  minPresentDays: number;
   genderRestriction: string;
   requiresApproval: boolean;
   requiresSupportingDocument: boolean;
+  allowEmployeeFiling: boolean;
   allowHalfDay: boolean;
   allowPartial: boolean;
   allowNegativeBalance: boolean;

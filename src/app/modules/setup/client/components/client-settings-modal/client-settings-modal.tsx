@@ -67,6 +67,9 @@ export default function ClientSettingsModal({
     defaultValues: {
       otEligibility: null,
       otInclusionPolicy: null,
+      maxSSSCapping: null,
+      maxPhilHealthCapping: null,
+      maxPagIbigCapping: null,
     },
   });
 
@@ -75,6 +78,9 @@ export default function ClientSettingsModal({
       reset({
         otEligibility: policyData.otEligibility ?? null,
         otInclusionPolicy: policyData.otInclusionPolicy ?? null,
+        maxSSSCapping: policyData.maxSSSCapping ?? null,
+        maxPhilHealthCapping: policyData.maxPhilHealthCapping ?? null,
+        maxPagIbigCapping: policyData.maxPagIbigCapping ?? null,
       });
     }
   }, [policyData, reset]);
@@ -125,6 +131,9 @@ export default function ClientSettingsModal({
       updatePolicy({
         otEligibility: policyValues.otEligibility ?? null,
         otInclusionPolicy: policyValues.otInclusionPolicy ?? null,
+        maxSSSCapping: policyValues.maxSSSCapping ?? null,
+        maxPhilHealthCapping: policyValues.maxPhilHealthCapping ?? null,
+        maxPagIbigCapping: policyValues.maxPagIbigCapping ?? null,
       }),
       bulkReplaceRates(rateEntries),
     ]);
@@ -190,6 +199,68 @@ export default function ClientSettingsModal({
                     showIcon
                     className="mt-2"
                     message="Leave a field empty to inherit the company-level setting."
+                  />
+                </Form>
+              ),
+            },
+            {
+              key: "capping",
+              label: "Max Employee Share Deduction",
+              children: (
+                <Form layout="vertical">
+                  <Form.Item label="SSS (per month)">
+                    <Controller
+                      name="maxSSSCapping"
+                      control={control}
+                      render={({ field }) => (
+                        <InputNumber
+                          {...field}
+                          className="w-full"
+                          min={0}
+                          precision={2}
+                          placeholder="No cap"
+                          onChange={(v) => field.onChange(v ?? null)}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                  <Form.Item label="PhilHealth (per month)">
+                    <Controller
+                      name="maxPhilHealthCapping"
+                      control={control}
+                      render={({ field }) => (
+                        <InputNumber
+                          {...field}
+                          className="w-full"
+                          min={0}
+                          precision={2}
+                          placeholder="No cap"
+                          onChange={(v) => field.onChange(v ?? null)}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                  <Form.Item label="Pag-IBIG (per month)">
+                    <Controller
+                      name="maxPagIbigCapping"
+                      control={control}
+                      render={({ field }) => (
+                        <InputNumber
+                          {...field}
+                          className="w-full"
+                          min={0}
+                          precision={2}
+                          placeholder="No cap"
+                          onChange={(v) => field.onChange(v ?? null)}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                  <Alert
+                    type="warning"
+                    showIcon
+                    className="mt-2"
+                    message="Warning: Manually capping a value below the mandatory minimum specified by government contribution tables may violate Philippine statutory guidelines. Ensure your configuration aligns with your corporate legal compliance rules before saving."
                   />
                 </Form>
               ),

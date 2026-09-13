@@ -17,10 +17,13 @@ export interface LeaveTypeResponse {
   proRateFirstYear: boolean;
   leaveReset: string;
   // Eligibility
+  eligibilityBasis: string;
   minServiceMonths: number;
+  minPresentDays: number;
   genderRestriction: string;
   requiresApproval: boolean;
   requiresSupportingDocument: boolean;
+  allowEmployeeFiling: boolean;
   // Application Rules
   allowHalfDay: boolean;
   allowPartial: boolean;

@@ -3,7 +3,9 @@ import { DatePicker, Form } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useYtdSummary } from "../../hooks/use-payroll-reports-queries";
+import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { YtdPayrollSummaryResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 
@@ -153,12 +155,13 @@ const columns: ColumnsType<YtdPayrollSummaryResponse> = [
 export default function YtdSummary() {
   const [year, setYear] = useState(dayjs().year());
   const { data = [], isLoading, refetch } = useYtdSummary(year);
+  const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
     <PayrollReportShell
       title={PAYROLL_REPORTS_LABEL.YTD_TITLE}
       subtitle={PAYROLL_REPORTS_LABEL.YTD_SUBTITLE}
-      data={data}
+      data={employeeFilter.filtered}
       loading={isLoading}
       columns={columns}
       onRefresh={() => refetch()}
@@ -168,15 +171,23 @@ export default function YtdSummary() {
       exportRows={toRows}
       filters={
         <Form layout="vertical">
-          <Form.Item label="Year" className="mb-0" style={{ maxWidth: 180 }}>
-            <DatePicker
-              picker="year"
-              style={{ width: "100%" }}
-              value={dayjs().year(year)}
-              allowClear={false}
-              onChange={(date) => date && setYear(date.year())}
+          <div className="flex items-end gap-4 flex-wrap">
+            <Form.Item label="Year" className="mb-0" style={{ maxWidth: 180 }}>
+              <DatePicker
+                picker="year"
+                style={{ width: "100%" }}
+                value={dayjs().year(year)}
+                allowClear={false}
+                onChange={(date) => date && setYear(date.year())}
+              />
+            </Form.Item>
+            <ReportNameFilter
+              label="Employee"
+              options={employeeFilter.options}
+              value={employeeFilter.selected}
+              onChange={employeeFilter.setSelected}
             />
-          </Form.Item>
+          </div>
         </Form>
       }
     />

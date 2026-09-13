@@ -37,10 +37,17 @@ export function useBankDisbursement(from: string, to: string) {
   });
 }
 
-export function useLoanLedger(asOf: string) {
+export function useDeductionLedger(asOf: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "loan-ledger", asOf],
-    queryFn: () => payrollReportsApi.loanLedger(asOf),
+    queryKey: ["payroll-reports", "deduction-ledger", asOf],
+    queryFn: () => payrollReportsApi.deductionLedger(asOf),
+  });
+}
+
+export function useCashBondReport(asOf: string) {
+  return useQuery({
+    queryKey: ["payroll-reports", "cash-bond", asOf],
+    queryFn: () => payrollReportsApi.cashBondReport(asOf),
   });
 }
 

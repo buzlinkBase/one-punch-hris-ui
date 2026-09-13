@@ -13,8 +13,12 @@ export const PAYROLL_REPORTS_LABEL = {
   BANK_TITLE: "Bank Disbursement",
   BANK_SUBTITLE:
     "Net pay by employee, bank, and account number for the selected payroll period.",
-  LOAN_TITLE: "Loan Ledger",
-  LOAN_SUBTITLE: "Outstanding loan and deduction balances as of a given date.",
+  DEDUCTION_TITLE: "Deduction Ledger",
+  DEDUCTION_SUBTITLE:
+    "Outstanding loan, cash bond, and other deduction balances as of a given date.",
+  CASH_BOND_TITLE: "Cash Bond Tracking",
+  CASH_BOND_SUBTITLE:
+    "Cash bond target vs. amount collected per employee as of a given date.",
   LEAVE_TITLE: "Leave Ledger",
   LEAVE_SUBTITLE:
     "Leave credits granted, used, and remaining balance per employee for the selected year.",

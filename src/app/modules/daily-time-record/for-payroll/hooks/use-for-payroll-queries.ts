@@ -97,6 +97,14 @@ export function useLastPayAttendanceWarnings(employeeIds: string[]) {
   });
 }
 
+export function useLastPayCashBondStatus(employeeIds: string[]) {
+  return useQuery({
+    queryKey: ["last-pay-cash-bond-status", employeeIds],
+    queryFn: () => forPayrollApi.getLastPayCashBondStatus(employeeIds),
+    enabled: employeeIds.length > 0,
+  });
+}
+
 export function usePayrolls(params: {
   from?: string;
   to?: string;
