@@ -478,7 +478,11 @@ export default function MainLayout() {
       // Never let a stale backend snapshot regress a tenant we've already confirmed
       // ready (via live hub push or REST poll) back to "not ready" — DB provisioning
       // doesn't un-finish, so once locally-confirmed ready it stays ready per tenant,
-      // independent of which tenant is active right now.
+      // independent of which tenant is active right now. Also promotes `state` to
+      // "Created" alongside hrDbReady — same reason as authStorage.updateTenantHrDbStatus:
+      // state only otherwise gets set once, by create-tenant.tsx right after the initial
+      // provisioning wait, so a tenant that finished later (background poll/push) would
+      // otherwise show as "Provisioning" in the tenant switcher's status tag forever.
       const reconciled = result.tenants.map((t) => {
         const local = localById.get(t.tenantId);
         return local?.hrDbReady && !t.hrDbReady
@@ -486,6 +490,7 @@ export default function MainLayout() {
               ...t,
               hrDbReady: true,
               hrDbStatus: local.hrDbStatus ?? t.hrDbStatus,
+              state: t.state === "Provisioning" ? "Created" : t.state,
             }
           : t;
       });
