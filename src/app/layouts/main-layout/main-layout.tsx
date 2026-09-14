@@ -48,7 +48,7 @@ import type { AxiosError } from "axios";
 import { NAVIGATION_ITEMS } from "@/shared/constants/navigation.const";
 import type { NavItem } from "@/shared/constants/navigation.const";
 import { useThemeStore } from "@/core/stores/theme.store";
-import { authStorage } from "@/core/auth/auth-storage";
+import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { useTenantHub } from "@/core/signalr/use-tenant-hub";
@@ -468,35 +468,7 @@ export default function MainLayout() {
       const claims = authStorage.getTenantClaims(result.accessToken);
       const user = authStorage.getUser();
 
-      // Merge: use fresh data from backend for tenants it returns, but keep any
-      // locally-tracked tenants it omits (e.g. still-provisioning workspaces that
-      // the backend excludes from the list until membership becomes Active).
-      const localTenants = user?.tenants ?? [];
-      const localById = new Map(localTenants.map((t) => [t.tenantId, t]));
-      const resultIds = new Set(result.tenants.map((t) => t.tenantId));
-
-      // Never let a stale backend snapshot regress a tenant we've already confirmed
-      // ready (via live hub push or REST poll) back to "not ready" — DB provisioning
-      // doesn't un-finish, so once locally-confirmed ready it stays ready per tenant,
-      // independent of which tenant is active right now. Also promotes `state` to
-      // "Created" alongside hrDbReady — same reason as authStorage.updateTenantHrDbStatus:
-      // state only otherwise gets set once, by create-tenant.tsx right after the initial
-      // provisioning wait, so a tenant that finished later (background poll/push) would
-      // otherwise show as "Provisioning" in the tenant switcher's status tag forever.
-      const reconciled = result.tenants.map((t) => {
-        const local = localById.get(t.tenantId);
-        return local?.hrDbReady && !t.hrDbReady
-          ? {
-              ...t,
-              hrDbReady: true,
-              hrDbStatus: local.hrDbStatus ?? t.hrDbStatus,
-              state: t.state === "Provisioning" ? "Created" : t.state,
-            }
-          : t;
-      });
-
-      const preserved = localTenants.filter((t) => !resultIds.has(t.tenantId));
-      const mergedTenants = [...reconciled, ...preserved];
+      const mergedTenants = mergeTenants(user?.tenants ?? [], result.tenants);
 
       authStorage.save(result.accessToken, {
         ...user!,

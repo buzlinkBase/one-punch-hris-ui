@@ -1,5 +1,5 @@
 import axios from "axios";
-import { authStorage } from "./auth-storage";
+import { authStorage, mergeTenants } from "./auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 
 // True only when the server actually rejected the refresh token itself (401) -- a network
@@ -10,17 +10,22 @@ function isAuthRejection(err: unknown): boolean {
 }
 
 async function performRefresh(): Promise<string> {
-  const { accessToken, email, name, roles, permissions } =
+  const { accessToken, email, name, roles, permissions, tenants } =
     await authApi.refresh();
   const user = authStorage.getUser();
+  // The server's refresh response carries this user's full, current cross-tenant membership
+  // list -- e.g. a membership an invite activated, or a workspace that finished provisioning,
+  // since the last time this session read it. Silent refresh is the only thing that runs
+  // automatically and indefinitely once logged in, so if this doesn't apply that fresh list,
+  // a session that never explicitly re-logs-in or switches tenants would never see it, no
+  // matter how many times it silently refreshes. name/roles/permissions are deliberately NOT
+  // overwritten here: they reflect the user's DEFAULT tenant (see ComposeLoginResponse), which
+  // may differ from whichever tenant is actually active in this session.
   authStorage.save(
     accessToken,
-    user ?? {
-      email,
-      name,
-      roles,
-      permissions,
-    },
+    user
+      ? { ...user, tenants: mergeTenants(user.tenants ?? [], tenants) }
+      : { email, name, roles, permissions, tenants },
   );
   return accessToken;
 }
@@ -38,25 +43,32 @@ async function refreshOnce(): Promise<string> {
   return performRefresh();
 }
 
-// Same-tab-only fallback for browsers without the Web Locks API (Safari < 15.4). Kept as a
-// fallback, not the primary mechanism, because it can't coordinate across tabs -- only
-// navigator.locks below can, and that's what actually closes the multi-tab race.
+// Shared by every concurrent caller IN THIS TAB, regardless of whether Web Locks is available
+// below -- without this, N requests whose interceptors all notice the same expired token at
+// once each independently call refreshOnce, and if the network call is failing (a transient
+// backend error, not just an auth rejection), that's N real HTTP attempts instead of one being
+// shared, hammering the server with retries that were never going to succeed any more than the
+// first one did.
 let inFlight: Promise<string> | null = null;
 
 export async function refreshAccessToken(): Promise<string> {
-  try {
-    if (typeof navigator !== "undefined" && navigator.locks) {
-      // Coordinates the actual network refresh across EVERY tab of this origin, not just this
-      // one -- only one tab ever holds "auth-refresh" at a time. Without this, two tabs
-      // refreshing around the same moment would race: the loser sends the cookie the winner
-      // already rotated away, gets a 401, and (since localStorage is shared across tabs)
-      // clearing its own storage on that 401 used to log the WINNING tab out too.
-      return await navigator.locks.request("auth-refresh", refreshOnce);
-    }
+  if (inFlight) return inFlight;
 
-    inFlight ??= refreshOnce().finally(() => {
-      inFlight = null;
-    });
+  inFlight = (async () => {
+    // Coordinates the actual network refresh across EVERY tab of this origin, not just this
+    // one -- only one tab ever holds "auth-refresh" at a time. Without this, two tabs
+    // refreshing around the same moment would race: the loser sends the cookie the winner
+    // already rotated away, gets a 401, and (since localStorage is shared across tabs)
+    // clearing its own storage on that 401 used to log the WINNING tab out too. Falls back to
+    // same-tab-only coalescing (still handled by inFlight above) on browsers without Web Locks
+    // (Safari < 15.4).
+    if (typeof navigator !== "undefined" && navigator.locks) {
+      return navigator.locks.request("auth-refresh", refreshOnce);
+    }
+    return refreshOnce();
+  })();
+
+  try {
     return await inFlight;
   } catch (err) {
     if (isAuthRejection(err)) {
@@ -64,5 +76,7 @@ export async function refreshAccessToken(): Promise<string> {
       window.location.href = "/login";
     }
     throw err;
+  } finally {
+    inFlight = null;
   }
 }
