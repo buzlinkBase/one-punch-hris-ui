@@ -23,6 +23,41 @@ export interface TenantClaims {
   tenantName: string | null;
 }
 
+/**
+ * Combines a locally-known tenant list with a fresher one from the server (login, refresh, or
+ * tenant-switch response) without regressing or dropping anything the fresher one doesn't know
+ * about yet:
+ * - Never lets a fresher-but-stale snapshot un-confirm a tenant we've already locally verified
+ *   ready (via live hub push or REST poll) -- DB provisioning doesn't un-finish. Also promotes
+ *   `state` to "Created" alongside hrDbReady: state otherwise only gets set once, by
+ *   create-tenant.tsx right after the initial provisioning wait, so a tenant that finished
+ *   later (background poll/push) would otherwise show as "Provisioning" in the tenant
+ *   switcher's status tag forever.
+ * - Keeps any locally-tracked tenant the fresher list omits entirely (e.g. a still-provisioning
+ *   workspace the backend excludes until membership becomes Active).
+ */
+export function mergeTenants(
+  local: TenantSummary[],
+  fresh: TenantSummary[],
+): TenantSummary[] {
+  const localById = new Map(local.map((t) => [t.tenantId, t]));
+  const freshIds = new Set(fresh.map((t) => t.tenantId));
+
+  const reconciled = fresh.map((t) => {
+    const existing = localById.get(t.tenantId);
+    return existing?.hrDbReady && !t.hrDbReady
+      ? {
+          ...t,
+          hrDbReady: true,
+          hrDbStatus: existing.hrDbStatus ?? t.hrDbStatus,
+          state: t.state === "Provisioning" ? "Created" : t.state,
+        }
+      : t;
+  });
+  const preserved = local.filter((t) => !freshIds.has(t.tenantId));
+  return [...reconciled, ...preserved];
+}
+
 export const authStorage = {
   save(token: string, user: AuthUser) {
     localStorage.setItem(KEYS.token, token);
