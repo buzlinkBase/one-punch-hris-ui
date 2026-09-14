@@ -10,7 +10,6 @@ import {
   Button,
   Space,
   Alert,
-  Divider,
 } from "antd";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { useForm, Controller } from "react-hook-form";
@@ -307,14 +306,8 @@ export default function ClientSettingsModal({
                       </Space>
                     </div>
                   ))}
-                  <Alert
-                    type="info"
-                    showIcon
-                    className="mt-2"
-                    message="Leave a field empty to inherit the company-wide rate."
-                  />
 
-                  <Divider className="my-1" />
+                  {/* <Divider className="my-1" /> */}
                   <Text strong>Overtime-Only Rates</Text>
                   {OT_OVERRIDE_RATE_KEYS.map((type) => (
                     <div
@@ -349,8 +342,15 @@ export default function ClientSettingsModal({
                     type="info"
                     showIcon
                     className="mt-2"
-                    message="Sets a flat total OT rate for that category only, for this client — it never changes their regular (non-OT) holiday pay. Leave a field empty to use the standard formula (day-type rate × Holiday/Rest Day OT Premium above)."
+                    message="Leave a field empty to inherit the company-wide rate."
                   />
+
+                  {/* <Alert
+                    type="info"
+                    showIcon
+                    className="mt-2"
+                    message="Sets a flat total OT rate for that category only, for this client — it never changes their regular (non-OT) holiday pay. Leave a field empty to use the standard formula (day-type rate × Holiday/Rest Day OT Premium above)."
+                  /> */}
                 </div>
               ),
             },
