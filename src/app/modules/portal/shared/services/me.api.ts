@@ -44,6 +44,15 @@ export const meApi = {
     });
   },
 
+  // Setup > Payslip/13th Month/Last Pay > Received by Employee — informational only. Returns
+  // the acknowledgment timestamp (idempotent server-side: re-acknowledging returns the
+  // original timestamp, not a new one).
+  acknowledgeMyPayroll(id: string): Promise<string | null> {
+    return httpClient.postUnwrapped<string | null>(
+      `${BASE_URL}/payrolls/${id}/acknowledge`,
+    );
+  },
+
   getMyDtrDetail(params: {
     from: string;
     to: string;

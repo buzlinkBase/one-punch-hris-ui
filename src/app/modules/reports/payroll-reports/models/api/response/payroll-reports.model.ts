@@ -164,6 +164,9 @@ export interface ThirteenthMonthResponse {
   // The generated Payroll row's own id — needed to print its payslip. Null when
   // status === "NotGenerated".
   payrollId: string | null;
+  // Setup > Payslip/13th Month/Last Pay > Received by Employee — mirrors the underlying
+  // Payroll row's acknowledgedAt. Null when status === "NotGenerated" or not yet acknowledged.
+  acknowledgedAt: string | null;
 }
 
 // BIR Form 1601-C's actual return figures for one posting period, matching the physical

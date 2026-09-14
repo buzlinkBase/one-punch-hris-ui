@@ -711,6 +711,28 @@ export default function PayrollSummary() {
       ) : null,
   };
 
+  // Setup > Payslip/13th Month/Last Pay > Received by Employee — informational only; HR has
+  // no action to take here, just visibility into whether/when the employee acknowledged.
+  const acknowledgedColumn: ColumnsType<PayrollRunResult>[number] = {
+    title: "Received",
+    key: "acknowledged",
+    width: 110,
+    render: (_, r) =>
+      r.id ? (
+        r.acknowledgedAt ? (
+          <Tooltip
+            title={`Acknowledged ${dayjs(r.acknowledgedAt).format("MMM D, YYYY h:mm A")}`}
+          >
+            <Tag icon={<CheckCircleOutlined />} color="success">
+              Acknowledged
+            </Tag>
+          </Tooltip>
+        ) : (
+          <Tag color="default">Pending</Tag>
+        )
+      ) : null,
+  };
+
   // Print is the only per-row action left — Post/Delete are run-level transactions handled
   // via the "Post / Delete Payroll Run" toolbar button and its batch modal below.
   const actionsColumn: ColumnsType<PayrollRunResult>[number] = {
@@ -742,6 +764,7 @@ export default function PayrollSummary() {
       fixed: "left",
     },
     statusColumn,
+    acknowledgedColumn,
     {
       title: "Salary Type",
       dataIndex: "salaryType",

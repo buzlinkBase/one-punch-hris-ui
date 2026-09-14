@@ -83,12 +83,16 @@ export default function BankDisbursement() {
     refetch,
   } = useBankDisbursement(range[0], range[1]);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
+  const bankFilter = useReportNameFilter(
+    employeeFilter.filtered,
+    (r) => r.bankName,
+  );
 
   return (
     <PayrollReportShell
       title={PAYROLL_REPORTS_LABEL.BANK_TITLE}
       subtitle={PAYROLL_REPORTS_LABEL.BANK_SUBTITLE}
-      data={employeeFilter.filtered}
+      data={bankFilter.filtered}
       loading={isLoading}
       columns={columns}
       onRefresh={() => refetch()}
@@ -121,6 +125,12 @@ export default function BankDisbursement() {
               options={employeeFilter.options}
               value={employeeFilter.selected}
               onChange={employeeFilter.setSelected}
+            />
+            <ReportNameFilter
+              label="Bank"
+              options={bankFilter.options}
+              value={bankFilter.selected}
+              onChange={bankFilter.setSelected}
             />
           </div>
         </Form>

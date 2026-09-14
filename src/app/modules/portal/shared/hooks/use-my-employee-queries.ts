@@ -28,6 +28,20 @@ export function useMyPayrolls(params: { from?: string; to?: string }) {
   });
 }
 
+// Setup > Payslip/13th Month/Last Pay > Received by Employee — covers all three document
+// types uniformly (they're all just Payroll rows), so invalidate every screen that could be
+// showing this same row: the Pay Slips list and the 13th Month Pay card.
+export function useAcknowledgeMyPayroll() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => meApi.acknowledgeMyPayroll(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me", "payrolls"] });
+      queryClient.invalidateQueries({ queryKey: ["me", "13th-month"] });
+    },
+  });
+}
+
 export function useMyDtrDetail(params: { from?: string; to?: string }) {
   return useQuery({
     queryKey: ["me", "dtr-detail", params],

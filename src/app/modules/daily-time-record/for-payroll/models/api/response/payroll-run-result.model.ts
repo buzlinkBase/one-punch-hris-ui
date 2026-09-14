@@ -18,6 +18,11 @@ export interface PayrollRunResult {
   // final settlement — see GenerateLastPayRequest) vs "YearEndAdjustment" (BIR annualization
   // refund/collection — see TaxAnnualizationRunRequest). Only meaningful when id is set.
   payrollType?: "Regular" | "ThirteenthMonth" | "LastPay" | "YearEndAdjustment";
+  // Setup > Payslip/13th Month/Last Pay > Received by Employee — set once the employee
+  // confirms receipt via the Employee Portal (POST /me/payrolls/{id}/acknowledge). Null means
+  // not yet acknowledged. Informational only — see backend Payroll.AcknowledgedAt. Only
+  // meaningful when id is set.
+  acknowledgedAt?: string | null;
   employeeId: string;
   fullName: string;
   payPeriodStart: string;
