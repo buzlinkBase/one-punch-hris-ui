@@ -5,14 +5,23 @@ import {
   DatePicker,
   Descriptions,
   Empty,
+  Popconfirm,
   Skeleton,
   Space,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
-import { PrinterOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  PrinterOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
-import { useMy13thMonth } from "../../../shared/hooks/use-my-employee-queries";
+import {
+  useAcknowledgeMyPayroll,
+  useMy13thMonth,
+} from "../../../shared/hooks/use-my-employee-queries";
 import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
@@ -43,6 +52,8 @@ function formatMoney(value: number) {
 export default function PortalThirteenthMonth() {
   const [year, setYear] = useState(dayjs().year());
   const { data, isLoading, isFetching, refetch } = useMy13thMonth(year);
+  const { mutate: acknowledge, isPending: isAcknowledging } =
+    useAcknowledgeMyPayroll();
 
   return (
     <div className="content-page">
@@ -97,6 +108,27 @@ export default function PortalThirteenthMonth() {
                     Print
                   </Button>
                 )}
+                {data.payrollId &&
+                  (data.acknowledgedAt ? (
+                    <Tooltip
+                      title={`Acknowledged ${dayjs(data.acknowledgedAt).format("MMM D, YYYY h:mm A")}`}
+                    >
+                      <Tag icon={<CheckCircleOutlined />} color="success">
+                        Acknowledged
+                      </Tag>
+                    </Tooltip>
+                  ) : (
+                    <Popconfirm
+                      title="Acknowledge receipt of this document?"
+                      description="Confirms you've received this document. This can't be undone."
+                      onConfirm={() => acknowledge(data.payrollId!)}
+                      okText="Acknowledge"
+                    >
+                      <Button loading={isAcknowledging}>
+                        Acknowledge Receipt
+                      </Button>
+                    </Popconfirm>
+                  ))}
               </Space>
             }
           >

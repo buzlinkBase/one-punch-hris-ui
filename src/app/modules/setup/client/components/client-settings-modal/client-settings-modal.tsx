@@ -10,6 +10,7 @@ import {
   Button,
   Space,
   Alert,
+  Divider,
 } from "antd";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { useForm, Controller } from "react-hook-form";
@@ -30,6 +31,7 @@ import { usePayrollRates } from "@/app/modules/setup/payroll-rate/hooks/use-payr
 import {
   BASE_RATE_DEFAULTS,
   BASE_RATE_KEYS,
+  OT_OVERRIDE_RATE_KEYS,
   RATE_TYPE_LABEL,
 } from "@/app/modules/setup/payroll-rate/constants/label.const";
 import {
@@ -44,6 +46,12 @@ const { Text } = Typography;
 const OVERRIDABLE_TYPES = BASE_RATE_KEYS.filter(
   (type) => type !== "REGULAR" && type !== "SPECIAL_WORKING",
 );
+// Every rate type this modal can set for a client, across both sections — used for loading
+// existing overrides into form state and for building the save payload.
+const ALL_RATE_OVERRIDE_TYPES = [
+  ...OVERRIDABLE_TYPES,
+  ...OT_OVERRIDE_RATE_KEYS,
+];
 
 interface Props {
   clientId: string | null;
@@ -104,7 +112,7 @@ export default function ClientSettingsModal({
   useEffect(() => {
     if (!clientId) return;
     const next: Record<string, number | null> = Object.fromEntries(
-      OVERRIDABLE_TYPES.map((type) => [type, null]),
+      ALL_RATE_OVERRIDE_TYPES.map((type) => [type, null]),
     );
     for (const o of overrides ?? []) {
       if (o.type in next) {
@@ -123,7 +131,7 @@ export default function ClientSettingsModal({
   const isPending = isPolicyPending || isRatesPending;
 
   const onSubmit = async (policyValues: ClientPolicyFormValues) => {
-    const rateEntries = OVERRIDABLE_TYPES.filter(
+    const rateEntries = ALL_RATE_OVERRIDE_TYPES.filter(
       (type) => vals[type] !== null && vals[type] !== undefined,
     ).map((type) => ({ type, rate: vals[type] as number }));
 
@@ -304,6 +312,44 @@ export default function ClientSettingsModal({
                     showIcon
                     className="mt-2"
                     message="Leave a field empty to inherit the company-wide rate."
+                  />
+
+                  <Divider className="my-1" />
+                  <Text strong>Overtime-Only Rates</Text>
+                  {OT_OVERRIDE_RATE_KEYS.map((type) => (
+                    <div
+                      key={type}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <Text>{RATE_TYPE_LABEL[type] ?? type}</Text>
+                      <Space>
+                        <InputNumber
+                          value={vals[type] ?? null}
+                          onChange={(v) => handleRateChange(type, v)}
+                          min={0}
+                          step={0.01}
+                          precision={3}
+                          addonBefore="×"
+                          placeholder="uses standard formula"
+                          style={{ width: 180 }}
+                        />
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<CloseCircleOutlined />}
+                          disabled={
+                            vals[type] === null || vals[type] === undefined
+                          }
+                          onClick={() => handleRateChange(type, null)}
+                        />
+                      </Space>
+                    </div>
+                  ))}
+                  <Alert
+                    type="info"
+                    showIcon
+                    className="mt-2"
+                    message="Sets a flat total OT rate for that category only, for this client — it never changes their regular (non-OT) holiday pay. Leave a field empty to use the standard formula (day-type rate × Holiday/Rest Day OT Premium above)."
                   />
                 </div>
               ),
