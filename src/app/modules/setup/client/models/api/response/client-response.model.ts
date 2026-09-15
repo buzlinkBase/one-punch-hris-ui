@@ -7,4 +7,7 @@ export interface ClientResponse {
   phone: string;
   address: string;
   contactPerson: string;
+  retirementDaysPerYear: number | null;
+  uniformAllowance: number | null;
+  uniformAllowanceBasis: "TenureMonths" | "PresentDays";
 }

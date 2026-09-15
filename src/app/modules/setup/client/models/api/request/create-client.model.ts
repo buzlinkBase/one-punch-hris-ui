@@ -6,4 +6,7 @@ export interface CreateClient {
   phone: string;
   address: string;
   contactPerson: string;
+  retirementDaysPerYear: number | null;
+  uniformAllowance: number | null;
+  uniformAllowanceBasis: "TenureMonths" | "PresentDays";
 }
