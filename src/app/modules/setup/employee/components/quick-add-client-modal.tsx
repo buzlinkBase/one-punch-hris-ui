@@ -37,7 +37,15 @@ export default function QuickAddClientModal({
 
   const onSubmit = async (values: ClientFormValues) => {
     try {
-      const created = await create(values);
+      // Allowances (retirement/uniform) aren't configured here -- new clients start with
+      // neither set, same as the full Client Detail create form; edited later via Client
+      // Settings > Allowances.
+      const created = await create({
+        ...values,
+        retirementDaysPerYear: null,
+        uniformAllowance: null,
+        uniformAllowanceBasis: "TenureMonths",
+      });
       reset();
       onCreated(created.id);
     } catch {

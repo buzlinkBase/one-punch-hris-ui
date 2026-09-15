@@ -113,6 +113,10 @@ export interface PayrollRunResult {
   otherDeductions: number;
   totalDeductions: number;
   totalLoans: number;
+  // Last Pay > Include retirement fund payout -- the employee's Retirement Fund balance cashed
+  // out at separation, non-taxable (added to netPay below, never to grossIncome). See backend
+  // LastPayRunPayload.IncludeRetirementPayout.
+  retirementPayout?: number;
   // Attendance
   absences: number;
   absentCount: number;
@@ -137,6 +141,11 @@ export interface PayrollRunResult {
   regularOTHours?: number;
   regularNDHours?: number;
   regularNDOTHours?: number;
+  // Setup > Client > Settings > Allowances > Retirement (days/year) -- this run's computed
+  // accrual, informational only (excluded from grossIncome/netPay above). Only read back at
+  // Post time to grow the employee's RetirementFund balance -- see backend
+  // PayrollService.AccrueRetirementBalancesAsync.
+  retirementAccrual?: number;
   restDayHours?: number;
   restDayOTHours?: number;
   restDayNDHours?: number;

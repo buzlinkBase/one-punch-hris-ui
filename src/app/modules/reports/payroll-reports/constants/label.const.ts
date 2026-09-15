@@ -22,6 +22,12 @@ export const PAYROLL_REPORTS_LABEL = {
   LEAVE_TITLE: "Leave Ledger",
   LEAVE_SUBTITLE:
     "Leave credits granted, used, and remaining balance per employee for the selected year.",
+  RETIREMENT_TITLE: "Retirement Ledger",
+  RETIREMENT_SUBTITLE:
+    "Every retirement fund accrual and payout entry, per employee, for the selected date range.",
+  UNIFORM_ALLOWANCE_TITLE: "Uniform Allowance Ledger",
+  UNIFORM_ALLOWANCE_SUBTITLE:
+    "Every uniform allowance accrual, adjustment, and release entry, per employee, for the selected date range.",
   REIMBURSEMENT_TITLE: "Reimbursement List",
   REIMBURSEMENT_SUBTITLE:
     "Employer-advanced government leave payouts (e.g. SSS Maternity) and the status of their reimbursement claim.",

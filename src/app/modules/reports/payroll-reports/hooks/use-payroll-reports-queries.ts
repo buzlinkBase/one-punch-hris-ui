@@ -58,6 +58,61 @@ export function useLeaveLedger(year: number) {
   });
 }
 
+export function useRetirementLedger(from: string, to: string) {
+  return useQuery({
+    queryKey: ["payroll-reports", "retirement-ledger", from, to],
+    queryFn: () => payrollReportsApi.retirementLedger(from, to),
+  });
+}
+
+export function useAdjustRetirement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: payrollReportsApi.adjustRetirement,
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["payroll-reports", "retirement-ledger"],
+      }),
+  });
+}
+
+export function useUniformAllowanceLedger(from: string, to: string) {
+  return useQuery({
+    queryKey: ["payroll-reports", "uniform-allowance-ledger", from, to],
+    queryFn: () => payrollReportsApi.uniformAllowanceLedger(from, to),
+  });
+}
+
+export function useAdjustUniformAllowance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: payrollReportsApi.adjustUniformAllowance,
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["payroll-reports", "uniform-allowance-ledger"],
+      }),
+  });
+}
+
+export function useUniformAllowanceBalances(employeeIds: string[]) {
+  return useQuery({
+    queryKey: ["payroll-reports", "uniform-allowance-balances", employeeIds],
+    queryFn: () => payrollReportsApi.uniformAllowanceBalances(employeeIds),
+    enabled: employeeIds.length > 0,
+  });
+}
+
+export function useReleaseUniformAllowance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: payrollReportsApi.releaseUniformAllowance,
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["payroll-reports", "uniform-allowance-ledger"],
+      }),
+  });
+}
+
 export function useReimbursementList(from: string, to: string) {
   return useQuery({
     queryKey: ["payroll-reports", "reimbursement-list", from, to],

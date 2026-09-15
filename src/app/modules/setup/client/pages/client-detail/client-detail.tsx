@@ -77,8 +77,19 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
   }, [selected, isEdit, reset]);
 
   const onSubmit = async (values: ClientFormValues) => {
-    if (isEdit && id) await update({ id, ...values });
-    else await add(values);
+    // Client's PUT/POST endpoint round-trips the full record, not a partial patch -- this tab
+    // never displays retirementDaysPerYear/uniformAllowance/uniformAllowanceBasis (edited
+    // instead in Client Settings > Allowances), so it must carry whatever is already loaded
+    // through unchanged rather than omit them, or saving General Info would silently wipe
+    // Allowances.
+    const allowanceFields = {
+      retirementDaysPerYear: selected?.retirementDaysPerYear ?? null,
+      uniformAllowance: selected?.uniformAllowance ?? null,
+      uniformAllowanceBasis:
+        selected?.uniformAllowanceBasis ?? ("TenureMonths" as const),
+    };
+    if (isEdit && id) await update({ id, ...values, ...allowanceFields });
+    else await add({ ...values, ...allowanceFields });
     navigate({ to: "/setup/client" });
   };
 

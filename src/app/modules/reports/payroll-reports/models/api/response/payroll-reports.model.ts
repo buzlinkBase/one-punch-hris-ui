@@ -126,6 +126,73 @@ export interface LeaveCreditsBalanceResponse {
   availableToFile: number;
 }
 
+// One row per RetirementLedger entry (a true transaction log, unlike
+// LeaveCreditsBalanceResponse above which is a current-balance snapshot) — every accrual (Add)
+// and payout (Less) ever posted against an employee's Retirement Fund.
+export interface RetirementLedgerResponse {
+  employeeId: string;
+  employeeNo: string;
+  fullName: string;
+  entryType: "Accrual" | "Adjustment" | "Payout";
+  // Only Accrual/Payout entries originate from an actual payroll run -- a manual Adjustment
+  // entry (see AdjustRetirementRequest below) has none.
+  payrollId: string | null;
+  entryDate: string;
+  add: number;
+  less: number;
+  balance: number;
+  particulars: string;
+}
+
+export interface AdjustRetirementRequest {
+  employeeId: string;
+  amount: number;
+  isAddition: boolean;
+  particulars: string;
+}
+
+// One row per UniformAllowanceLedger entry -- a true transaction log like RetirementLedgerResponse
+// above, but includes entryType since Uniform Allowance's ledger has three distinct entry kinds
+// (Accrual / Adjustment / Release) the UI needs to tell apart.
+export interface UniformAllowanceLedgerResponse {
+  employeeId: string;
+  employeeNo: string;
+  fullName: string;
+  entryType: "Accrual" | "Adjustment" | "Release";
+  entryDate: string;
+  add: number;
+  less: number;
+  balance: number;
+  particulars: string;
+}
+
+export interface AdjustUniformAllowanceRequest {
+  employeeId: string;
+  amount: number;
+  isAddition: boolean;
+  particulars: string;
+}
+
+export interface UniformAllowanceReleaseItem {
+  employeeId: string;
+  amount: number;
+}
+
+export interface ReleaseUniformAllowanceRequest {
+  releases: UniformAllowanceReleaseItem[];
+  periodDate: string;
+  particulars: string;
+}
+
+export interface ReleaseUniformAllowanceResponse {
+  clampedEmployeeIds: string[];
+}
+
+export interface UniformAllowanceBalanceResponse {
+  employeeId: string;
+  balance: number;
+}
+
 export interface YtdPayrollSummaryResponse {
   employeeId: string;
   employeeNo: string;

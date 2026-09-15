@@ -7,6 +7,13 @@ import type {
   DeductionLedgerResponse,
   CashBondReportResponse,
   LeaveCreditsBalanceResponse,
+  RetirementLedgerResponse,
+  AdjustRetirementRequest,
+  UniformAllowanceLedgerResponse,
+  UniformAllowanceBalanceResponse,
+  AdjustUniformAllowanceRequest,
+  ReleaseUniformAllowanceRequest,
+  ReleaseUniformAllowanceResponse,
   ReimbursementListResponse,
   AdjustLeaveCreditsRequest,
   AdjustLeaveCreditsResponse,
@@ -26,6 +33,11 @@ import type {
 // that exactly, not "payroll-reports".
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrollreports");
 const LEAVES_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "leaves");
+const UNIFORM_ALLOWANCE_ENDPOINT = buildApiUrl(
+  API_PREFIX.hrms,
+  "uniformallowance",
+);
+const RETIREMENT_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "retirement");
 
 async function get<T>(path: string, params: Record<string, string | number>) {
   const res = await httpClient.getUnwrapped<ReportEnvelope<T>>(
@@ -52,6 +64,36 @@ export const payrollReportsApi = {
     get<CashBondReportResponse>("cash-bond", { asOf }),
   leaveLedger: (year: number) =>
     get<LeaveCreditsBalanceResponse>("leave-ledger", { year }),
+  retirementLedger: (from: string, to: string) =>
+    get<RetirementLedgerResponse>("retirement-ledger", { from, to }),
+  adjustRetirement: (payload: AdjustRetirementRequest) =>
+    httpClient.postUnwrapped<void>(`${RETIREMENT_ENDPOINT}/adjust`, payload),
+  uniformAllowanceLedger: (from: string, to: string) =>
+    get<UniformAllowanceLedgerResponse>("uniform-allowance-ledger", {
+      from,
+      to,
+    }),
+  adjustUniformAllowance: (payload: AdjustUniformAllowanceRequest) =>
+    httpClient.postUnwrapped<void>(
+      `${UNIFORM_ALLOWANCE_ENDPOINT}/adjust`,
+      payload,
+    ),
+  releaseUniformAllowance: (payload: ReleaseUniformAllowanceRequest) =>
+    httpClient.postUnwrapped<ReleaseUniformAllowanceResponse>(
+      `${UNIFORM_ALLOWANCE_ENDPOINT}/release`,
+      payload,
+    ),
+  // True current balances (not a date-range-dependent value read off the ledger report) --
+  // used to default each selected employee's Release amount.
+  uniformAllowanceBalances: (
+    employeeIds: string[],
+  ): Promise<UniformAllowanceBalanceResponse[]> =>
+    httpClient
+      .getUnwrapped<UniformAllowanceBalanceResponse[]>(
+        `${UNIFORM_ALLOWANCE_ENDPOINT}/balances`,
+        { params: { employeeIds }, paramsSerializer: { indexes: null } },
+      )
+      .then((res) => res ?? []),
   reimbursementList: (from: string, to: string) =>
     get<ReimbursementListResponse>("reimbursement-list", { from, to }),
   adjustLeaveCredits: (payload: AdjustLeaveCreditsRequest) =>

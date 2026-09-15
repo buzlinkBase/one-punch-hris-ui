@@ -138,6 +138,13 @@ const CashBondReport = lazy(
 const LeaveLedger = lazy(
   () => import("@/app/modules/reports/payroll-reports/pages/leave-ledger"),
 );
+const RetirementLedger = lazy(
+  () => import("@/app/modules/reports/payroll-reports/pages/retirement-ledger"),
+);
+const UniformAllowanceLedger = lazy(
+  () =>
+    import("@/app/modules/reports/payroll-reports/pages/uniform-allowance-ledger"),
+);
 const ReimbursementList = lazy(
   () =>
     import("@/app/modules/reports/payroll-reports/pages/reimbursement-list"),
@@ -875,6 +882,28 @@ const leaveLedgerIndexRoute = createRoute({
   component: withSuspense(LeaveLedger),
 });
 
+const retirementLedgerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/retirement-ledger",
+  component: MainLayout,
+});
+const retirementLedgerIndexRoute = createRoute({
+  getParentRoute: () => retirementLedgerRoute,
+  path: "/",
+  component: withSuspense(RetirementLedger),
+});
+
+const uniformAllowanceLedgerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "payroll/reports/uniform-allowance-ledger",
+  component: MainLayout,
+});
+const uniformAllowanceLedgerIndexRoute = createRoute({
+  getParentRoute: () => uniformAllowanceLedgerRoute,
+  path: "/",
+  component: withSuspense(UniformAllowanceLedger),
+});
+
 const reimbursementListRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/reimbursement-list",
@@ -1487,6 +1516,8 @@ const routeTree = rootRoute.addChildren([
   deductionLedgerRoute.addChildren([deductionLedgerIndexRoute]),
   cashBondReportRoute.addChildren([cashBondReportIndexRoute]),
   leaveLedgerRoute.addChildren([leaveLedgerIndexRoute]),
+  retirementLedgerRoute.addChildren([retirementLedgerIndexRoute]),
+  uniformAllowanceLedgerRoute.addChildren([uniformAllowanceLedgerIndexRoute]),
   reimbursementListRoute.addChildren([reimbursementListIndexRoute]),
   costSummaryRoute.addChildren([costSummaryIndexRoute]),
   ytdSummaryRoute.addChildren([ytdSummaryIndexRoute]),

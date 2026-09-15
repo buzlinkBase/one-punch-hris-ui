@@ -10,7 +10,6 @@ import {
   Button,
   Space,
   Alert,
-  Divider,
 } from "antd";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { useForm, Controller } from "react-hook-form";
@@ -27,6 +26,7 @@ import {
   useClientRates,
   useBulkReplaceClientRates,
 } from "../../hooks/use-client-rate-queries";
+import { useClient, useUpdateClient } from "../../hooks/use-client-queries";
 import { usePayrollRates } from "@/app/modules/setup/payroll-rate/hooks/use-payroll-rate-queries";
 import {
   BASE_RATE_DEFAULTS,
@@ -52,6 +52,131 @@ const ALL_RATE_OVERRIDE_TYPES = [
   ...OVERRIDABLE_TYPES,
   ...OT_OVERRIDE_RATE_KEYS,
 ];
+
+// Setup > Client > Settings > Allowances — Retirement and Uniform Allowance are directly-
+// targetable fields on Client itself (see Client.cs) rather than an open-ended catalog, since
+// there are only ever these two and each has its own fixed, non-generic behavior: Retirement
+// (a days/year rate, not a peso amount) is computed and accumulated every payroll run into a
+// RetirementFund balance; Uniform Allowance accrues as a balance since HireDate in a later
+// phase. Backed by the same full-record useClient/useUpdateClient pipeline the General Info tab
+// in client-detail.tsx uses, so this tab loads and saves the whole Client record rather than a
+// separate child-table resource.
+const UNIFORM_ALLOWANCE_BASIS_OPTIONS: {
+  value: "TenureMonths" | "PresentDays";
+  label: string;
+}[] = [
+  { value: "TenureMonths", label: "Tenure — months since hire date" },
+  {
+    value: "PresentDays",
+    label:
+      "Present Days — count of present days (holidays and rest days included)",
+  },
+];
+
+function AllowancesTab({
+  clientId,
+  onClose,
+}: {
+  clientId: string;
+  onClose: () => void;
+}) {
+  const { data: selected, isLoading } = useClient(clientId);
+  const { mutateAsync: update, isPending } = useUpdateClient();
+
+  const [retirementDaysPerYear, setRetirementDaysPerYear] = useState<
+    number | null
+  >(null);
+  const [uniformAllowance, setUniformAllowance] = useState<number | null>(null);
+  const [uniformAllowanceBasis, setUniformAllowanceBasis] = useState<
+    "TenureMonths" | "PresentDays"
+  >("TenureMonths");
+
+  useEffect(() => {
+    if (selected) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRetirementDaysPerYear(selected.retirementDaysPerYear ?? null);
+      setUniformAllowance(selected.uniformAllowance ?? null);
+      setUniformAllowanceBasis(
+        selected.uniformAllowanceBasis ?? "TenureMonths",
+      );
+    }
+  }, [selected]);
+
+  const isDirty =
+    !!selected &&
+    (retirementDaysPerYear !== (selected.retirementDaysPerYear ?? null) ||
+      uniformAllowance !== (selected.uniformAllowance ?? null) ||
+      uniformAllowanceBasis !==
+        (selected.uniformAllowanceBasis ?? "TenureMonths"));
+
+  const handleSave = async () => {
+    if (!selected) return;
+    // Client's PUT endpoint round-trips the full record, not a partial patch -- spread the
+    // currently-loaded record so identity fields (code/name/email/...) are carried through
+    // unchanged rather than omitted.
+    await update({
+      ...selected,
+      retirementDaysPerYear,
+      uniformAllowance,
+      uniformAllowanceBasis,
+    });
+  };
+
+  return (
+    <Spin spinning={isLoading}>
+      <div className="flex flex-col gap-4 mt-2">
+        <div>
+          <div className="text-sm font-medium mb-1">Retirement (days/year)</div>
+          <InputNumber
+            className="w-full"
+            min={0}
+            precision={2}
+            placeholder="Not given"
+            value={retirementDaysPerYear}
+            onChange={setRetirementDaysPerYear}
+          />
+        </div>
+        <div>
+          <div className="text-sm font-medium mb-1">
+            Uniform Allowance (per month)
+          </div>
+          <Space.Compact className="w-full">
+            <InputNumber
+              className="w-1/2"
+              min={0}
+              precision={2}
+              placeholder="Not given"
+              value={uniformAllowance}
+              onChange={setUniformAllowance}
+            />
+            <Select<"TenureMonths" | "PresentDays">
+              className="w-1/2"
+              options={UNIFORM_ALLOWANCE_BASIS_OPTIONS}
+              value={uniformAllowanceBasis}
+              onChange={setUniformAllowanceBasis}
+            />
+          </Space.Compact>
+        </div>
+        <Alert
+          type="info"
+          showIcon
+          message="Leave an amount blank if this client doesn't give that allowance."
+        />
+        <div className="flex justify-end gap-2">
+          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            type="primary"
+            loading={isPending}
+            disabled={!isDirty}
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </Spin>
+  );
+}
 
 interface Props {
   clientId: string | null;
@@ -130,6 +255,12 @@ export default function ClientSettingsModal({
   const isLoading = isLoadingPolicy || isLoadingOverrides || isLoadingGlobal;
   const isPending = isPolicyPending || isRatesPending;
 
+  // The Allowances tab saves itself independently (see AllowancesTab.handleSave) rather than
+  // through this modal's own onSubmit/Save button — it has no otEligibility/rates form fields
+  // to submit. Showing the outer footer's Save on top of that tab's own Save button is exactly
+  // the "two Save buttons" bug this tracks -- hide the outer footer while that tab is active.
+  const [activeTabKey, setActiveTabKey] = useState("policy");
+
   const onSubmit = async (policyValues: ClientPolicyFormValues) => {
     const rateEntries = ALL_RATE_OVERRIDE_TYPES.filter(
       (type) => vals[type] !== null && vals[type] !== undefined,
@@ -156,8 +287,9 @@ export default function ClientSettingsModal({
       onOk={handleSubmit(onSubmit)}
       okText="Save"
       okButtonProps={{ loading: isPending }}
+      footer={activeTabKey === "benefits" ? null : undefined}
       destroyOnClose
-      width={560}
+      width={640}
     >
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -166,6 +298,8 @@ export default function ClientSettingsModal({
       ) : (
         <Tabs
           className="mt-4"
+          activeKey={activeTabKey}
+          onChange={setActiveTabKey}
           items={[
             {
               key: "policy",
@@ -307,14 +441,8 @@ export default function ClientSettingsModal({
                       </Space>
                     </div>
                   ))}
-                  <Alert
-                    type="info"
-                    showIcon
-                    className="mt-2"
-                    message="Leave a field empty to inherit the company-wide rate."
-                  />
 
-                  <Divider className="my-1" />
+                  {/* <Divider className="my-1" /> */}
                   <Text strong>Overtime-Only Rates</Text>
                   {OT_OVERRIDE_RATE_KEYS.map((type) => (
                     <div
@@ -349,9 +477,23 @@ export default function ClientSettingsModal({
                     type="info"
                     showIcon
                     className="mt-2"
-                    message="Sets a flat total OT rate for that category only, for this client — it never changes their regular (non-OT) holiday pay. Leave a field empty to use the standard formula (day-type rate × Holiday/Rest Day OT Premium above)."
+                    message="Leave a field empty to inherit the company-wide rate."
                   />
+
+                  {/* <Alert
+                    type="info"
+                    showIcon
+                    className="mt-2"
+                    message="Sets a flat total OT rate for that category only, for this client — it never changes their regular (non-OT) holiday pay. Leave a field empty to use the standard formula (day-type rate × Holiday/Rest Day OT Premium above)."
+                  /> */}
                 </div>
+              ),
+            },
+            {
+              key: "benefits",
+              label: "Allowances",
+              children: (
+                <AllowancesTab clientId={clientId ?? ""} onClose={onClose} />
               ),
             },
           ]}
