@@ -11,6 +11,7 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { TableRowSelection } from "antd/es/table/interface";
 import type { MenuProps } from "antd";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -46,6 +47,8 @@ interface PayrollReportShellProps<T> {
    * those themselves — the shell only controls its own built-in actions.
    */
   filterValidationMessage?: string;
+  /** Enables checkbox row selection (e.g. a batch action like Uniform Allowance's Release). */
+  rowSelection?: TableRowSelection<T>;
 }
 
 export function PayrollReportShell<T extends object>({
@@ -63,6 +66,7 @@ export function PayrollReportShell<T extends object>({
   extraActions,
   notice,
   filterValidationMessage,
+  rowSelection,
 }: PayrollReportShellProps<T>) {
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -156,6 +160,7 @@ export function PayrollReportShell<T extends object>({
             size="small"
             scroll={{ x: "max-content" }}
             pagination={{ pageSize: 50, showSizeChanger: false }}
+            rowSelection={rowSelection}
           />
         )}
       </Card>

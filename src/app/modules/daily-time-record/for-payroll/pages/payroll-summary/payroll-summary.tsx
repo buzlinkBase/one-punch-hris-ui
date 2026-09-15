@@ -325,6 +325,7 @@ export default function PayrollSummary() {
     "Paid Leave Hrs",
     "Unpaid Leave Hrs",
     "OT Total Hrs",
+    "Retirement Accrual",
   ];
 
   const buildExportRows = () =>
@@ -447,6 +448,7 @@ export default function PayrollSummary() {
     "Other Income",
     "Reimbursement",
     "Gross",
+    "Retirement Accrual",
   ];
   const buildEarningsRows = () =>
     results.map((r) => [
@@ -474,6 +476,7 @@ export default function PayrollSummary() {
       fmt(r.totalOtherIncome),
       fmt(r.reimbursement),
       fmt(r.grossIncome),
+      fmt(r.retirementAccrual ?? 0),
     ]);
 
   const HOLIDAY_HEADERS = [
@@ -921,6 +924,16 @@ export default function PayrollSummary() {
       key: "reimb",
       align: "right",
       render: fmt,
+    },
+    {
+      // Setup > Client > Settings > Allowances > Retirement (days/year) -- this run's computed
+      // accrual, informational only. Excluded from Gross -- see backend
+      // EmployeePayrollLineService.ComputeRetirementAccrual.
+      title: "Retirement Accrual",
+      dataIndex: "retirementAccrual",
+      key: "retirementAccrual",
+      align: "right",
+      render: (v?: number) => fmt(v ?? 0),
     },
     {
       title: "Gross",

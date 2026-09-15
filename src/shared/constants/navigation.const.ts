@@ -489,6 +489,16 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/payroll/reports/leave-ledger",
       },
       {
+        key: "payroll-reports-retirement",
+        label: "Retirement Ledger",
+        path: "/payroll/reports/retirement-ledger",
+      },
+      {
+        key: "payroll-reports-uniform-allowance",
+        label: "Uniform Allowance Ledger",
+        path: "/payroll/reports/uniform-allowance-ledger",
+      },
+      {
         key: "payroll-reports-reimbursement",
         label: "Reimbursement List",
         path: "/payroll/reports/reimbursement-list",

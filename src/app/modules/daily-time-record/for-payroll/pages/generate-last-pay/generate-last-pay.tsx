@@ -110,6 +110,7 @@ export default function GenerateLastPay() {
   // once fetched, and HR can uncheck specific rows before generating.
   const [includeThirteenthMonth, setIncludeThirteenthMonth] = useState(true);
   const [includeLeaveConversion, setIncludeLeaveConversion] = useState(true);
+  const [includeRetirementPayout, setIncludeRetirementPayout] = useState(true);
   const [selectedAdjustmentIds, setSelectedAdjustmentIds] = useState<string[]>(
     [],
   );
@@ -164,6 +165,7 @@ export default function GenerateLastPay() {
         remarks: remarks || undefined,
         includeThirteenthMonth,
         includeLeaveConversion,
+        includeRetirementPayout,
         salaryAdjustmentIds: selectedAdjustmentIds,
         otherIncomeScheduleIds: selectedOtherIncomeIds,
       });
@@ -307,6 +309,13 @@ export default function GenerateLastPay() {
       render: fmt,
     },
     {
+      title: "Retirement Payout",
+      dataIndex: "retirementPayout",
+      key: "retirementPayout",
+      align: "right",
+      render: (v?: number) => fmt(v ?? 0),
+    },
+    {
       title: "Net Pay",
       dataIndex: "netPay",
       key: "net",
@@ -375,6 +384,13 @@ export default function GenerateLastPay() {
       key: "loans",
       align: "right",
       render: fmt,
+    },
+    {
+      title: "Retirement Payout",
+      dataIndex: "retirementPayout",
+      key: "retirementPayout",
+      align: "right",
+      render: (v?: number) => fmt(v ?? 0),
     },
     {
       title: "Net Pay",
@@ -532,6 +548,15 @@ export default function GenerateLastPay() {
               onChange={(e) => setIncludeLeaveConversion(e.target.checked)}
             >
               Include leave credit cash conversion
+            </Checkbox>
+            <Checkbox
+              checked={includeRetirementPayout}
+              onChange={(e) => setIncludeRetirementPayout(e.target.checked)}
+            >
+              Include retirement fund payout{" "}
+              <Tooltip title="Cashes out the employee's full accrued Retirement Fund balance. Non-taxable — added directly to Net Pay, not Gross. The balance is debited only once this run is posted.">
+                <InfoCircleOutlined className="text-(--ant-color-text-tertiary)" />
+              </Tooltip>
             </Checkbox>
           </Space>
 
