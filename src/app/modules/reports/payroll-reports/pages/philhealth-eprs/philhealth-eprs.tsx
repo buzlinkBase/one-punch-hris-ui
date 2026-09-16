@@ -15,6 +15,7 @@ import {
   openPdfInNewTab,
   downloadBlobFile,
 } from "@/shared/utils/download-file.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -110,31 +111,33 @@ export default function PhilHealthEprs() {
         />
       }
       extraActions={
-        <Space>
-          <Button
-            icon={<FilePdfOutlined />}
-            onClick={() =>
-              openPdfInNewTab(payrollReportsApi.urls.philHealthEprsPrint, {
-                from: range[0],
-                to: range[1],
-              })
-            }
-          >
-            Preview PDF
-          </Button>
-          <Button
-            icon={<FileTextOutlined />}
-            onClick={() =>
-              downloadBlobFile(
-                payrollReportsApi.urls.philHealthEprsExport,
-                { from: range[0], to: range[1] },
-                `philhealth-eprs-${range[0]}-${range[1]}.csv`,
-              )
-            }
-          >
-            Download File
-          </Button>
-        </Space>
+        <PermissionGate permission="BIR Reports:Export">
+          <Space>
+            <Button
+              icon={<FilePdfOutlined />}
+              onClick={() =>
+                openPdfInNewTab(payrollReportsApi.urls.philHealthEprsPrint, {
+                  from: range[0],
+                  to: range[1],
+                })
+              }
+            >
+              Preview PDF
+            </Button>
+            <Button
+              icon={<FileTextOutlined />}
+              onClick={() =>
+                downloadBlobFile(
+                  payrollReportsApi.urls.philHealthEprsExport,
+                  { from: range[0], to: range[1] },
+                  `philhealth-eprs-${range[0]}-${range[1]}.csv`,
+                )
+              }
+            >
+              Download File
+            </Button>
+          </Space>
+        </PermissionGate>
       }
       filters={
         <Form layout="vertical">

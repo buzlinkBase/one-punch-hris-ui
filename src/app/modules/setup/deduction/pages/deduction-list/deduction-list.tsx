@@ -8,6 +8,7 @@ import {
 import { useDeductionTypes } from "@/app/modules/setup/deduction-type/hooks/use-deduction-type-queries";
 import DeductionTable from "../../components/deduction-table";
 import { DEDUCTION_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -40,13 +41,15 @@ export default function DeductionList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/deduction/create" })}
-            >
-              Add Deduction
-            </Button>
+            <PermissionGate permission="Deductions & Income Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/deduction/create" })}
+              >
+                Add Deduction
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-other-income-type-queries";
 import OtherIncomeTypeTable from "../../components/other-income-type-table";
 import { OTHER_INCOME_TYPE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -38,15 +39,17 @@ export default function OtherIncomeTypeList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/setup/other-income-type/create" })
-              }
-            >
-              Add Type
-            </Button>
+            <PermissionGate permission="Deductions & Income Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/setup/other-income-type/create" })
+                }
+              >
+                Add Type
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

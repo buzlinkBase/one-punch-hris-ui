@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Form,
@@ -41,6 +41,7 @@ import {
   STATUS_OPTIONS,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -394,13 +395,21 @@ export default function OtherIncomeDetail() {
               <Button onClick={() => navigate({ to: "/setup/other-income" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isCreating || isUpdating}
+              <PermissionGate
+                permission={
+                  isEdit
+                    ? "Deductions & Income Setup:Edit"
+                    : "Deductions & Income Setup:Create"
+                }
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isCreating || isUpdating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

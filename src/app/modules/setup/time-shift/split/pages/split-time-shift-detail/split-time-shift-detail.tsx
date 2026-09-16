@@ -33,6 +33,7 @@ import {
 import { SPLIT_TIME_SHIFT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import type { CreateSplitTimeShift } from "../../models/api/request/create-split-time-shift.model";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -478,13 +479,19 @@ export default function SplitTimeShiftDetail() {
               >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isUpdating || isCreating}
+              <PermissionGate
+                permission={
+                  isEdit ? "Time Shift Setup:Edit" : "Time Shift Setup:Create"
+                }
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isUpdating || isCreating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

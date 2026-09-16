@@ -24,6 +24,7 @@ import {
   CLIENT_BILLING_LABEL,
   BILLING_CYCLE_OPTIONS,
 } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   clientId: string;
@@ -222,9 +223,11 @@ export default function ClientBillingTab({ clientId }: Props) {
 
       <div className="form-action-footer">
         <Space className="form-action-footer-row">
-          <Button type="primary" htmlType="submit" loading={isPending}>
-            Save Billing Info
-          </Button>
+          <PermissionGate permission="Workforce Setup:Edit">
+            <Button type="primary" htmlType="submit" loading={isPending}>
+              Save Billing Info
+            </Button>
+          </PermissionGate>
         </Space>
       </div>
     </Form>

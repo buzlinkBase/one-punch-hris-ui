@@ -11,6 +11,7 @@ import type { OperationAreaResponse } from "../../models/api/response/operation-
 import { OPERATION_AREA_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: OperationAreaResponse[];
@@ -120,20 +121,26 @@ export default function OperationAreaTable({ data, loading, onDelete }: Props) {
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/project-site/${record.id}` })}
-          />
+          <PermissionGate permission="Organization Setup:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate({ to: `/setup/project-site/${record.id}` })
+              }
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this project site?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Organization Setup:Delete">
+              <Popconfirm
+                title="Delete this project site?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

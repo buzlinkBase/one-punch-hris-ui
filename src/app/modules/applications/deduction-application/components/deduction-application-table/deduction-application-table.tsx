@@ -13,6 +13,7 @@ import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
 } from "@/app/modules/applications/pass-slip/constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: DeductionApplicationResponse[];
@@ -108,48 +109,61 @@ export default function DeductionApplicationTable({
         <Space size="small">
           {record.approvalStatus === "ForApproval" && (
             <>
-              <Popconfirm
-                title="Approve this loan application?"
-                onConfirm={() => onApprove(record.id)}
-                okText="Approve"
-              >
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<CheckOutlined />}
-                  title="Approve"
-                />
-              </Popconfirm>
-              <Popconfirm
-                title="Decline this loan application?"
-                onConfirm={() => onDecline(record.id)}
-                okText="Decline"
-                okButtonProps={{ danger: true }}
-              >
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<CloseOutlined />}
-                  danger
-                  title="Decline"
-                />
-              </Popconfirm>
+              <PermissionGate permission="Loan/Deduction:Approve">
+                <Popconfirm
+                  title="Approve this loan application?"
+                  onConfirm={() => onApprove(record.id)}
+                  okText="Approve"
+                >
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<CheckOutlined />}
+                    title="Approve"
+                  />
+                </Popconfirm>
+              </PermissionGate>
+              <PermissionGate permission="Loan/Deduction:Approve">
+                <Popconfirm
+                  title="Decline this loan application?"
+                  onConfirm={() => onDecline(record.id)}
+                  okText="Decline"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<CloseOutlined />}
+                    danger
+                    title="Decline"
+                  />
+                </Popconfirm>
+              </PermissionGate>
             </>
           )}
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
-          <Popconfirm
-            title="Delete this loan/deduction record?"
-            onConfirm={() => onDelete(record.id)}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-          >
-            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
-          </Popconfirm>
+          <PermissionGate permission="Loan/Deduction:Edit">
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record)}
+            />
+          </PermissionGate>
+          <PermissionGate permission="Loan/Deduction:Delete">
+            <Popconfirm
+              title="Delete this loan/deduction record?"
+              onConfirm={() => onDelete(record.id)}
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                size="small"
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+              />
+            </Popconfirm>
+          </PermissionGate>
         </Space>
       ),
     },

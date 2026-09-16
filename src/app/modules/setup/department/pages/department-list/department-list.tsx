@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-department-queries";
 import DepartmentTable from "../../components/department-table";
 import { DEPARTMENT_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -38,13 +39,15 @@ export default function DepartmentList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/department/create" })}
-            >
-              Add Department
-            </Button>
+            <PermissionGate permission="Organization Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/department/create" })}
+              >
+                Add Department
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

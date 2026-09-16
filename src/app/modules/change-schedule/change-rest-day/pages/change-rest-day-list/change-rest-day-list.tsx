@@ -39,6 +39,7 @@ import { getNotify } from "@/shared/utils/notify";
 import type { ChangeRestDayFilter } from "../../models/api/request/change-rest-day-filter.model";
 import type { ChangeRestDayResponse } from "../../models/api/response/change-rest-day-response.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -252,7 +253,7 @@ export default function ChangeRestDayList() {
       render: (_: unknown, record: ChangeRestDayResponse) => (
         <Space size={4}>
           {record.approvalStatus === "ForApproval" && (
-            <>
+            <PermissionGate permission="Change Rest Day:Approve">
               <Button
                 type="link"
                 size="small"
@@ -272,21 +273,23 @@ export default function ChangeRestDayList() {
               >
                 Decline
               </Button>
-            </>
+            </PermissionGate>
           )}
-          <Popconfirm
-            title="Remove this employee entry?"
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-            cancelText="Cancel"
-            onConfirm={() =>
-              handleDeleteEmployee(record.employeeId, record.batchCode)
-            }
-          >
-            <Button type="link" danger size="small" loading={isDeletingEntry}>
-              Delete
-            </Button>
-          </Popconfirm>
+          <PermissionGate permission="Change Rest Day:Delete">
+            <Popconfirm
+              title="Remove this employee entry?"
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
+              onConfirm={() =>
+                handleDeleteEmployee(record.employeeId, record.batchCode)
+              }
+            >
+              <Button type="link" danger size="small" loading={isDeletingEntry}>
+                Delete
+              </Button>
+            </Popconfirm>
+          </PermissionGate>
         </Space>
       ),
     },
@@ -321,19 +324,21 @@ export default function ChangeRestDayList() {
       key: "action",
       width: 80,
       render: (_: unknown, record: ChangeRestDayResponse) => (
-        <Popconfirm
-          title="Remove this employee from the batch?"
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() =>
-            handleDeleteEmployee(record.employeeId, record.batchCode)
-          }
-        >
-          <Button type="link" danger size="small" loading={isDeletingEntry}>
-            Delete
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Change Rest Day:Delete">
+          <Popconfirm
+            title="Remove this employee from the batch?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() =>
+              handleDeleteEmployee(record.employeeId, record.batchCode)
+            }
+          >
+            <Button type="link" danger size="small" loading={isDeletingEntry}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -394,23 +399,25 @@ export default function ChangeRestDayList() {
           onResize: (w: number) => batchResize("actions", w),
         }) as object,
       render: (_: unknown, row: BatchGroup) => (
-        <Popconfirm
-          title={`Delete batch ${row.batchCode}?`}
-          description={`This will remove all ${row.count} employee record${row.count !== 1 ? "s" : ""} in this batch.`}
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() => handleDeleteBatch(row.batchCode, row.count)}
-        >
-          <Button
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            loading={isDeletingBatch}
+        <PermissionGate permission="Change Rest Day:Delete">
+          <Popconfirm
+            title={`Delete batch ${row.batchCode}?`}
+            description={`This will remove all ${row.count} employee record${row.count !== 1 ? "s" : ""} in this batch.`}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() => handleDeleteBatch(row.batchCode, row.count)}
           >
-            Delete Batch
-          </Button>
-        </Popconfirm>
+            <Button
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              loading={isDeletingBatch}
+            >
+              Delete Batch
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -427,15 +434,17 @@ export default function ChangeRestDayList() {
               Manage employee rest day schedule changes.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              navigate({ to: "/change-schedule/change-rest-day/create" })
-            }
-          >
-            Add Entry
-          </Button>
+          <PermissionGate permission="Change Rest Day:Create">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/change-schedule/change-rest-day/create" })
+              }
+            >
+              Add Entry
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 

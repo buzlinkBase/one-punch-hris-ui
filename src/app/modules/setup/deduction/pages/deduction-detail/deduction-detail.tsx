@@ -37,6 +37,7 @@ import {
 import type { DeductionTypeResponse } from "@/app/modules/setup/deduction-type/models/api/response/deduction-type-response.model";
 import { DEDUCTION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -401,13 +402,21 @@ export default function DeductionDetail() {
               <Button onClick={() => navigate({ to: "/setup/deduction" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isUpdating || isCreating}
+              <PermissionGate
+                permission={
+                  isEdit
+                    ? "Deductions & Income Setup:Edit"
+                    : "Deductions & Income Setup:Create"
+                }
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isUpdating || isCreating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-leave-type-queries";
 import LeaveTypeTable from "../../components/leave-type-table";
 import { LEAVE_TYPE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -38,13 +39,15 @@ export default function LeaveTypeList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/leave-type/create" })}
-            >
-              Add Leave Type
-            </Button>
+            <PermissionGate permission="Leave Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/leave-type/create" })}
+              >
+                Add Leave Type
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

@@ -34,6 +34,7 @@ import { getNotify } from "@/shared/utils/notify";
 import type { WorkRotationFilter } from "../../models/api/request/work-rotation-filter.model";
 import type { WorkRotationResponse } from "../../models/api/response/work-rotation-response.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -214,17 +215,19 @@ export default function WorkRotationList() {
           onResize: (w: number) => entryResize("actions", w),
         }) as object,
       render: (_: unknown, record: WorkRotationResponse) => (
-        <Popconfirm
-          title="Delete this entry?"
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() => handleDeleteEntry(record.id)}
-        >
-          <Button type="link" danger size="small" loading={isDeletingEntry}>
-            Delete
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Work Rotation:Delete">
+          <Popconfirm
+            title="Delete this entry?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() => handleDeleteEntry(record.id)}
+          >
+            <Button type="link" danger size="small" loading={isDeletingEntry}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -245,17 +248,19 @@ export default function WorkRotationList() {
       key: "action",
       width: 80,
       render: (_: unknown, record: WorkRotationResponse) => (
-        <Popconfirm
-          title="Delete this entry?"
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() => handleDeleteEntry(record.id)}
-        >
-          <Button type="link" danger size="small" loading={isDeletingEntry}>
-            Delete
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Work Rotation:Delete">
+          <Popconfirm
+            title="Delete this entry?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() => handleDeleteEntry(record.id)}
+          >
+            <Button type="link" danger size="small" loading={isDeletingEntry}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -327,23 +332,25 @@ export default function WorkRotationList() {
           onResize: (w: number) => batchResize("actions", w),
         }) as object,
       render: (_: unknown, row: BatchGroup) => (
-        <Popconfirm
-          title={`Delete batch ${row.batchCode}?`}
-          description={`This will remove all ${row.count} record${row.count !== 1 ? "s" : ""} in this batch.`}
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() => handleDeleteBatch(row.batchCode, row.count)}
-        >
-          <Button
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            loading={isDeletingBatch}
+        <PermissionGate permission="Work Rotation:Delete">
+          <Popconfirm
+            title={`Delete batch ${row.batchCode}?`}
+            description={`This will remove all ${row.count} record${row.count !== 1 ? "s" : ""} in this batch.`}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() => handleDeleteBatch(row.batchCode, row.count)}
           >
-            Delete Batch
-          </Button>
-        </Popconfirm>
+            <Button
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              loading={isDeletingBatch}
+            >
+              Delete Batch
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];

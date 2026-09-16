@@ -2,6 +2,7 @@ import { Button, Popconfirm, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { OtherIncomeTypeResponse } from "../../models/api/response/other-income-type-response.model";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: OtherIncomeTypeResponse[];
@@ -28,20 +29,29 @@ export default function OtherIncomeTypeTable({
       width: 100,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
-          <Popconfirm
-            title="Delete this income type?"
-            onConfirm={() => onDelete(record.id)}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-          >
-            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
-          </Popconfirm>
+          <PermissionGate permission="Deductions & Income Setup:Edit">
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record)}
+            />
+          </PermissionGate>
+          <PermissionGate permission="Deductions & Income Setup:Delete">
+            <Popconfirm
+              title="Delete this income type?"
+              onConfirm={() => onDelete(record.id)}
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                size="small"
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+              />
+            </Popconfirm>
+          </PermissionGate>
         </Space>
       ),
     },

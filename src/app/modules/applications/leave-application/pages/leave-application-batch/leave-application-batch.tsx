@@ -27,6 +27,7 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -618,9 +619,12 @@ export default function LeaveApplicationBatch() {
               <Button onClick={() => navigate({ to: "/applications/leave" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button type="primary" htmlType="submit" loading={isPending}>
-                Submit{fields.length > 1 ? ` (${fields.length} entries)` : ""}
-              </Button>
+              <PermissionGate permission="Leave:Create">
+                <Button type="primary" htmlType="submit" loading={isPending}>
+                  Submit
+                  {fields.length > 1 ? ` (${fields.length} entries)` : ""}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Form,
   Input,
@@ -98,6 +98,7 @@ import EmployeeSkillsTab from "../../components/employee-skills-tab";
 import EmployeeDocRecordsTab from "../../components/employee-doc-records-tab";
 import EmployeeEmploymentHistoryTab from "../../components/employee-employment-history-tab";
 import EmployeeAssignAssetsTab from "../../components/employee-assign-assets-tab";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -2240,14 +2241,20 @@ export default function EmployeeDetail() {
             <Button onClick={() => navigate({ to: "/setup/employee" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isSubmitting}
-              disabled={isRefLoading}
+            <PermissionGate
+              permission={
+                isEdit ? "Workforce Setup:Edit" : "Workforce Setup:Create"
+              }
             >
-              {NAVIGATION_BUTTON_LABEL.SAVE}
-            </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isSubmitting}
+                disabled={isRefLoading}
+              >
+                {NAVIGATION_BUTTON_LABEL.SAVE}
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </Form>

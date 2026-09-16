@@ -26,6 +26,7 @@ import { BRANCH_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
 import { useMinimumWageRates } from "@/app/modules/setup/minimum-wage-rate/hooks/use-minimum-wage-rate-queries";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 // Lazy-load the map to avoid SSR/leaflet issues
 const PolygonMapPicker = lazy(() =>
@@ -329,13 +330,21 @@ export default function BranchDetail() {
               <Button onClick={() => navigate({ to: "/setup/branch" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isUpdating || isCreating}
+              <PermissionGate
+                permission={
+                  isEdit
+                    ? "Organization Setup:Edit"
+                    : "Organization Setup:Create"
+                }
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isUpdating || isCreating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

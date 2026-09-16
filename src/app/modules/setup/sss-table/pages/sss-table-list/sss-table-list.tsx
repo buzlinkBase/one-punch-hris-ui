@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-sss-table-queries";
 import SssTableTable from "../../components/sss-table-table";
 import { SSS_TABLE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -34,13 +35,15 @@ export default function SssTableList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/sss-table/create" })}
-            >
-              Add Bracket
-            </Button>
+            <PermissionGate permission="Statutory Tables:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/sss-table/create" })}
+              >
+                Add Bracket
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

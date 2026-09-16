@@ -15,6 +15,7 @@ import {
 } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
@@ -179,47 +180,69 @@ export default function TravelOrderTable({
       render: (_, record) => (
         <Space>
           {onApprove && record.approvalStatus === "ForApproval" && (
-            <Popconfirm
-              title="Approve this travel order?"
-              onConfirm={() => onApprove(record)}
-              okText="Approve"
-              cancelText="Cancel"
+            <PermissionGate
+              permission={[
+                "Official Business:Edit",
+                "Official Business:Approve",
+              ]}
             >
-              <Button
-                type="text"
-                icon={<CheckOutlined />}
-                style={{ color: "#52c41a" }}
-              />
-            </Popconfirm>
+              <Popconfirm
+                title="Approve this travel order?"
+                onConfirm={() => onApprove(record)}
+                okText="Approve"
+                cancelText="Cancel"
+              >
+                <Button
+                  type="text"
+                  icon={<CheckOutlined />}
+                  style={{ color: "#52c41a" }}
+                />
+              </Popconfirm>
+            </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
-            <Popconfirm
-              title="Decline this travel order?"
-              onConfirm={() => onDecline(record)}
-              okText="Decline"
-              okButtonProps={{ danger: true }}
-              cancelText="Cancel"
+            <PermissionGate
+              permission={[
+                "Official Business:Edit",
+                "Official Business:Approve",
+              ]}
             >
-              <Button type="text" danger icon={<CloseOutlined />} />
-            </Popconfirm>
+              <Popconfirm
+                title="Decline this travel order?"
+                onConfirm={() => onDecline(record)}
+                okText="Decline"
+                okButtonProps={{ danger: true }}
+                cancelText="Cancel"
+              >
+                <Button type="text" danger icon={<CloseOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate({ to: `/applications/official-business/${record.id}` })
-            }
-          />
+          <PermissionGate
+            permission={["Official Business:Edit", "Official Business:Approve"]}
+          >
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate({
+                  to: `/applications/official-business/${record.id}`,
+                })
+              }
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this travel order application?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              cancelText="Cancel"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Official Business:Delete">
+              <Popconfirm
+                title="Delete this travel order application?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                cancelText="Cancel"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

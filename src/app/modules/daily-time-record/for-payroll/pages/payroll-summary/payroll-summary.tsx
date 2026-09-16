@@ -35,6 +35,7 @@ import {
 } from "../../hooks/use-for-payroll-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import {
@@ -45,6 +46,15 @@ import {
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
 
 const { Title, Text } = Typography;
+
+// Mirrors hrms-api's PayrollsController.RunTypeFeature -- Post/Delete on a mixed-type Payroll
+// Summary batch need the permission for that specific batch's run type, not a fixed code.
+const RUN_TYPE_FEATURE: Record<string, string> = {
+  Regular: "Payroll Run",
+  ThirteenthMonth: "13th Month Run",
+  LastPay: "Last Pay Run",
+  YearEndAdjustment: "Year-End Adjustment Run",
+};
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -165,6 +175,8 @@ export default function PayrollSummary() {
         toDate: g.rows[0].payPeriodEnd,
         payDate: g.rows[0].payDate,
         remarks: g.rows[0].remarks,
+        runTypeFeature:
+          RUN_TYPE_FEATURE[g.rows[0].payrollType ?? "Regular"] ?? "Payroll Run",
       }))
       .sort((a, b) => b.payrollBatchId.localeCompare(a.payrollBatchId));
   }, [results]);
@@ -744,17 +756,19 @@ export default function PayrollSummary() {
     width: 48,
     fixed: "right",
     render: (_, r) => (
-      <Tooltip
-        title={r.id ? "Print payslip" : "Not yet available for this record"}
-      >
-        <Button
-          type="text"
-          size="small"
-          icon={<PrinterOutlined />}
-          disabled={!r.id}
-          onClick={() => handlePrintPayslip(r)}
-        />
-      </Tooltip>
+      <PermissionGate permission="Payroll Summary:Export">
+        <Tooltip
+          title={r.id ? "Print payslip" : "Not yet available for this record"}
+        >
+          <Button
+            type="text"
+            size="small"
+            icon={<PrinterOutlined />}
+            disabled={!r.id}
+            onClick={() => handlePrintPayslip(r)}
+          />
+        </Tooltip>
+      </PermissionGate>
     ),
   };
 
@@ -1240,13 +1254,15 @@ export default function PayrollSummary() {
                 Export
               </Button>
             </Dropdown>
-            <Button
-              icon={<PrinterOutlined />}
-              disabled={!results.length}
-              onClick={handlePrintSummary}
-            >
-              Print
-            </Button>
+            <PermissionGate permission="Payroll Summary:Export">
+              <Button
+                icon={<PrinterOutlined />}
+                disabled={!results.length}
+                onClick={handlePrintSummary}
+              >
+                Print
+              </Button>
+            </PermissionGate>
             <Button
               icon={<CheckCircleOutlined />}
               disabled={!batchGroups.length}
@@ -1454,52 +1470,58 @@ export default function PayrollSummary() {
               key: "actions",
               render: (_, g) => (
                 <Space size={4}>
-                  <Popconfirm
-                    title="Post this entire payroll run?"
-                    description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in this run as final.`}
-                    okText="Post"
-                    cancelText="Cancel"
-                    disabled={g.allPosted}
-                    onConfirm={() => handlePostBatch(g.payrollBatchId, g.count)}
-                  >
-                    <Button
-                      size="small"
-                      icon={<CheckCircleOutlined />}
+                  <PermissionGate permission={`${g.runTypeFeature}:Approve`}>
+                    <Popconfirm
+                      title="Post this entire payroll run?"
+                      description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in this run as final.`}
+                      okText="Post"
+                      cancelText="Cancel"
                       disabled={g.allPosted}
-                      loading={isPostingBatch}
-                    >
-                      Post
-                    </Button>
-                  </Popconfirm>
-                  <Popconfirm
-                    title="Delete this entire payroll run?"
-                    description={`This removes all ${g.count} record${g.count !== 1 ? "s" : ""} in this run.`}
-                    okText="Delete"
-                    okButtonProps={{ danger: true }}
-                    cancelText="Cancel"
-                    disabled={g.hasPosted}
-                    onConfirm={() =>
-                      handleDeleteBatch(g.payrollBatchId, g.count)
-                    }
-                  >
-                    <Tooltip
-                      title={
-                        g.hasPosted
-                          ? "This run has been posted and can no longer be deleted."
-                          : undefined
+                      onConfirm={() =>
+                        handlePostBatch(g.payrollBatchId, g.count)
                       }
                     >
                       <Button
-                        danger
                         size="small"
-                        icon={<DeleteOutlined />}
-                        disabled={g.hasPosted}
-                        loading={isDeletingBatch}
+                        icon={<CheckCircleOutlined />}
+                        disabled={g.allPosted}
+                        loading={isPostingBatch}
                       >
-                        Delete
+                        Post
                       </Button>
-                    </Tooltip>
-                  </Popconfirm>
+                    </Popconfirm>
+                  </PermissionGate>
+                  <PermissionGate permission={`${g.runTypeFeature}:Create`}>
+                    <Popconfirm
+                      title="Delete this entire payroll run?"
+                      description={`This removes all ${g.count} record${g.count !== 1 ? "s" : ""} in this run.`}
+                      okText="Delete"
+                      okButtonProps={{ danger: true }}
+                      cancelText="Cancel"
+                      disabled={g.hasPosted}
+                      onConfirm={() =>
+                        handleDeleteBatch(g.payrollBatchId, g.count)
+                      }
+                    >
+                      <Tooltip
+                        title={
+                          g.hasPosted
+                            ? "This run has been posted and can no longer be deleted."
+                            : undefined
+                        }
+                      >
+                        <Button
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          disabled={g.hasPosted}
+                          loading={isDeletingBatch}
+                        >
+                          Delete
+                        </Button>
+                      </Tooltip>
+                    </Popconfirm>
+                  </PermissionGate>
                 </Space>
               ),
             },

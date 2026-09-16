@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-hdmf-table-queries";
 import HdmfTableTable from "../../components/hdmf-table-table";
 import { HDMF_TABLE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -39,13 +40,15 @@ export default function HdmfTableList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/hdmf-table/create" })}
-            >
-              Add Bracket
-            </Button>
+            <PermissionGate permission="Statutory Tables:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/hdmf-table/create" })}
+              >
+                Add Bracket
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

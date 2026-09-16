@@ -32,6 +32,7 @@ import {
   downloadGroupedHeaderExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 export default function DtrBatchTab() {
   const [selectedBatchCode, setSelectedBatchCode] = useState<
@@ -111,32 +112,34 @@ export default function DtrBatchTab() {
       {contextHolder}
       <div className="flex justify-end">
         <Space>
-          <Tooltip
-            title={
-              isSelectedPosted
-                ? "Payroll has already been generated and saved from this batch — it can no longer be deleted."
-                : ""
-            }
-          >
-            <Popconfirm
-              title="Delete batch"
-              description={`Delete all records in "${selectedBatchCode}"?`}
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              cancelText="Cancel"
-              onConfirm={handleDelete}
-              disabled={!canDelete}
+          <PermissionGate permission="DTR Master:Manage">
+            <Tooltip
+              title={
+                isSelectedPosted
+                  ? "Payroll has already been generated and saved from this batch — it can no longer be deleted."
+                  : ""
+              }
             >
-              <Button
-                danger
-                icon={<DeleteOutlined />}
+              <Popconfirm
+                title="Delete batch"
+                description={`Delete all records in "${selectedBatchCode}"?`}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                cancelText="Cancel"
+                onConfirm={handleDelete}
                 disabled={!canDelete}
-                loading={isDeleting}
               >
-                Delete
-              </Button>
-            </Popconfirm>
-          </Tooltip>
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled={!canDelete}
+                  loading={isDeleting}
+                >
+                  Delete
+                </Button>
+              </Popconfirm>
+            </Tooltip>
+          </PermissionGate>
           <Dropdown
             menu={{ items: exportMenuItems }}
             trigger={["click"]}

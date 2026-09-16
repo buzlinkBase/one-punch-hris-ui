@@ -33,6 +33,7 @@ import { getNotify } from "@/shared/utils/notify";
 import type { ChangeHolidayFilter } from "../../models/api/request/change-holiday-filter.model";
 import type { ChangeHolidayResponse } from "../../models/api/response/change-holiday-response.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -228,19 +229,21 @@ export default function ChangeHolidayList() {
           onResize: (w: number) => entryResize("actions", w),
         }) as object,
       render: (_: unknown, record: ChangeHolidayResponse) => (
-        <Popconfirm
-          title="Remove this employee entry?"
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() =>
-            handleDeleteEmployee(record.employeeId, record.batchCode)
-          }
-        >
-          <Button type="link" danger size="small" loading={isDeletingEntry}>
-            Delete
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Change Holiday:Delete">
+          <Popconfirm
+            title="Remove this employee entry?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() =>
+              handleDeleteEmployee(record.employeeId, record.batchCode)
+            }
+          >
+            <Button type="link" danger size="small" loading={isDeletingEntry}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -274,19 +277,21 @@ export default function ChangeHolidayList() {
       key: "action",
       width: 80,
       render: (_: unknown, record: ChangeHolidayResponse) => (
-        <Popconfirm
-          title="Remove this employee from the batch?"
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() =>
-            handleDeleteEmployee(record.employeeId, record.batchCode)
-          }
-        >
-          <Button type="link" danger size="small" loading={isDeletingEntry}>
-            Delete
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Change Holiday:Delete">
+          <Popconfirm
+            title="Remove this employee from the batch?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() =>
+              handleDeleteEmployee(record.employeeId, record.batchCode)
+            }
+          >
+            <Button type="link" danger size="small" loading={isDeletingEntry}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -358,23 +363,25 @@ export default function ChangeHolidayList() {
           onResize: (w: number) => batchResize("actions", w),
         }) as object,
       render: (_: unknown, row: BatchGroup) => (
-        <Popconfirm
-          title={`Delete batch ${row.batchCode}?`}
-          description={`This will remove all ${row.count} employee record${row.count !== 1 ? "s" : ""} in this batch.`}
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() => handleDeleteBatch(row.batchCode, row.count)}
-        >
-          <Button
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            loading={isDeletingBatch}
+        <PermissionGate permission="Change Holiday:Delete">
+          <Popconfirm
+            title={`Delete batch ${row.batchCode}?`}
+            description={`This will remove all ${row.count} employee record${row.count !== 1 ? "s" : ""} in this batch.`}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() => handleDeleteBatch(row.batchCode, row.count)}
           >
-            Delete Batch
-          </Button>
-        </Popconfirm>
+            <Button
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              loading={isDeletingBatch}
+            >
+              Delete Batch
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -391,15 +398,17 @@ export default function ChangeHolidayList() {
               Configure holiday changes by employee or employee group.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              navigate({ to: "/change-schedule/change-holiday/create" })
-            }
-          >
-            Add Entry
-          </Button>
+          <PermissionGate permission="Change Holiday:Create">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/change-schedule/change-holiday/create" })
+              }
+            >
+              Add Entry
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 

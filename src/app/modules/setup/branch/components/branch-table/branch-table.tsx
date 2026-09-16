@@ -12,6 +12,7 @@ import { BRANCH_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const REGION_LABEL_BY_CODE = new Map<string, string>(
   PH_REGION_OPTIONS.map((r) => [r.value, r.label]),
@@ -138,20 +139,24 @@ export default function BranchTable({ data, loading, onDelete }: Props) {
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/branch/${record.id}` })}
-          />
+          <PermissionGate permission="Organization Setup:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => navigate({ to: `/setup/branch/${record.id}` })}
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this branch?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Organization Setup:Delete">
+              <Popconfirm
+                title="Delete this branch?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

@@ -15,6 +15,7 @@ import {
 } from "../../hooks/use-department-queries";
 import { DEPARTMENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -132,13 +133,21 @@ export default function DepartmentDetail() {
               <Button onClick={() => navigate({ to: "/setup/department" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isUpdating || isCreating}
+              <PermissionGate
+                permission={
+                  isEdit
+                    ? "Organization Setup:Edit"
+                    : "Organization Setup:Create"
+                }
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isUpdating || isCreating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

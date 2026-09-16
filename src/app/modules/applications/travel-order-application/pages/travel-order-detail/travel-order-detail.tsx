@@ -34,6 +34,7 @@ import {
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -523,15 +524,17 @@ export default function TravelOrderDetail() {
             />
           </Form.Item>
 
-          <Form.Item label={TRAVEL_ORDER_LABEL.STATUS}>
-            <Controller
-              name="approvalStatus"
-              control={control}
-              render={({ field }) => (
-                <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
-              )}
-            />
-          </Form.Item>
+          <PermissionGate permission="Official Business:Approve">
+            <Form.Item label={TRAVEL_ORDER_LABEL.STATUS}>
+              <Controller
+                name="approvalStatus"
+                control={control}
+                render={({ field }) => (
+                  <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+                )}
+              />
+            </Form.Item>
+          </PermissionGate>
 
           <Form.Item
             label={TRAVEL_ORDER_LABEL.REMARKS}
@@ -560,13 +563,20 @@ export default function TravelOrderDetail() {
               >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isCreating || isUpdating}
+              <PermissionGate
+                permission={[
+                  "Official Business:Edit",
+                  "Official Business:Approve",
+                ]}
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isCreating || isUpdating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

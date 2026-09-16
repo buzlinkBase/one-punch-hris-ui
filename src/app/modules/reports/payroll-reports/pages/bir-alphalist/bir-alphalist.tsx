@@ -14,6 +14,7 @@ import {
   openPdfInNewTab,
   downloadBlobFile,
 } from "@/shared/utils/download-file.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -121,28 +122,32 @@ export default function BirAlphalist() {
         />
       }
       extraActions={
-        <Space>
-          <Button
-            icon={<FilePdfOutlined />}
-            onClick={() =>
-              openPdfInNewTab(payrollReportsApi.urls.alphalistPrint, { year })
-            }
-          >
-            Preview PDF
-          </Button>
-          <Button
-            icon={<FileTextOutlined />}
-            onClick={() =>
-              downloadBlobFile(
-                payrollReportsApi.urls.alphalistExport,
-                { year },
-                `bir-alphalist-${year}.csv`,
-              )
-            }
-          >
-            Download File
-          </Button>
-        </Space>
+        <PermissionGate permission="BIR Reports:Export">
+          <Space>
+            <Button
+              icon={<FilePdfOutlined />}
+              onClick={() =>
+                openPdfInNewTab(payrollReportsApi.urls.alphalistPrint, {
+                  year,
+                })
+              }
+            >
+              Preview PDF
+            </Button>
+            <Button
+              icon={<FileTextOutlined />}
+              onClick={() =>
+                downloadBlobFile(
+                  payrollReportsApi.urls.alphalistExport,
+                  { year },
+                  `bir-alphalist-${year}.csv`,
+                )
+              }
+            >
+              Download File
+            </Button>
+          </Space>
+        </PermissionGate>
       }
       filters={
         <Form layout="vertical">

@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-split-time-shift-queries";
 import SplitTimeShiftTable from "../../components/split-time-shift-table";
 import { SPLIT_TIME_SHIFT_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -39,13 +40,17 @@ export default function SplitTimeShiftList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/time-shift/split/create" })}
-            >
-              Add Split Shift
-            </Button>
+            <PermissionGate permission="Time Shift Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/setup/time-shift/split/create" })
+                }
+              >
+                Add Split Shift
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

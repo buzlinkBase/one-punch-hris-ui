@@ -12,6 +12,7 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import OvertimeApplicationTable from "../../components/overtime-application-table";
 import { OVERTIME_APPLICATION_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -65,13 +66,17 @@ export default function OvertimeApplicationList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/applications/overtime/create" })}
-            >
-              File OT
-            </Button>
+            <PermissionGate permission="Overtime:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/applications/overtime/create" })
+                }
+              >
+                File OT
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

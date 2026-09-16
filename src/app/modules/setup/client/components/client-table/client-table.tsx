@@ -13,6 +13,7 @@ import { CLIENT_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import ClientSettingsModal from "../client-settings-modal/client-settings-modal";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: ClientResponse[];
@@ -92,20 +93,24 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
               }
             />
           </Tooltip>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/client/${record.id}` })}
-          />
+          <PermissionGate permission="Workforce Setup:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => navigate({ to: `/setup/client/${record.id}` })}
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this client?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Workforce Setup:Delete">
+              <Popconfirm
+                title="Delete this client?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

@@ -25,6 +25,7 @@ import {
 import { CLIENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import ClientBillingTab from "./client-billing-tab";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -194,13 +195,19 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
           <Button onClick={() => navigate({ to: "/setup/client" })}>
             {NAVIGATION_BUTTON_LABEL.BACK}
           </Button>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={isUpdating || isCreating}
+          <PermissionGate
+            permission={
+              isEdit ? "Workforce Setup:Edit" : "Workforce Setup:Create"
+            }
           >
-            {NAVIGATION_BUTTON_LABEL.SAVE}
-          </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isUpdating || isCreating}
+            >
+              {NAVIGATION_BUTTON_LABEL.SAVE}
+            </Button>
+          </PermissionGate>
         </Space>
       </div>
     </Form>

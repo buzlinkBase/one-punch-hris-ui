@@ -29,6 +29,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import axios from "axios";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import {
   useGenerateLastPay,
   usePayrolls,
@@ -336,14 +337,16 @@ export default function GenerateLastPay() {
       key: "print",
       width: 48,
       render: (_, r) => (
-        <Tooltip title="Print payslip">
-          <Button
-            type="text"
-            size="small"
-            icon={<PrinterOutlined />}
-            onClick={() => handlePrintPayslip(r)}
-          />
-        </Tooltip>
+        <PermissionGate permission="Payroll Summary:Export">
+          <Tooltip title="Print payslip">
+            <Button
+              type="text"
+              size="small"
+              icon={<PrinterOutlined />}
+              onClick={() => handlePrintPayslip(r)}
+            />
+          </Tooltip>
+        </PermissionGate>
       ),
     },
   ];
@@ -456,14 +459,16 @@ export default function GenerateLastPay() {
               </Form.Item>
             </Col>
           </Row>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={isGenerating}
-            onClick={handleGenerate}
-          >
-            Generate Last Pay
-          </Button>
+          <PermissionGate permission="Last Pay Run:Create">
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={isGenerating}
+              onClick={handleGenerate}
+            >
+              Generate Last Pay
+            </Button>
+          </PermissionGate>
         </Form>
       </Card>
 
@@ -778,52 +783,58 @@ export default function GenerateLastPay() {
               key: "actions",
               render: (_, g) => (
                 <Space size={4}>
-                  <Popconfirm
-                    title="Post this Last Pay run?"
-                    description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in as final.`}
-                    okText="Post"
-                    cancelText="Cancel"
-                    disabled={g.allPosted}
-                    onConfirm={() => handlePostBatch(g.payrollBatchId, g.count)}
-                  >
-                    <Button
-                      size="small"
-                      icon={<CheckCircleOutlined />}
+                  <PermissionGate permission="Last Pay Run:Approve">
+                    <Popconfirm
+                      title="Post this Last Pay run?"
+                      description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in as final.`}
+                      okText="Post"
+                      cancelText="Cancel"
                       disabled={g.allPosted}
-                      loading={isPostingBatch}
-                    >
-                      Post
-                    </Button>
-                  </Popconfirm>
-                  <Popconfirm
-                    title="Delete this Last Pay draft?"
-                    description={`This removes all ${g.count} record${g.count !== 1 ? "s" : ""} in this run.`}
-                    okText="Delete"
-                    okButtonProps={{ danger: true }}
-                    cancelText="Cancel"
-                    disabled={g.hasPosted}
-                    onConfirm={() =>
-                      handleDeleteBatch(g.payrollBatchId, g.count)
-                    }
-                  >
-                    <Tooltip
-                      title={
-                        g.hasPosted
-                          ? "This run has been posted and can no longer be deleted."
-                          : undefined
+                      onConfirm={() =>
+                        handlePostBatch(g.payrollBatchId, g.count)
                       }
                     >
                       <Button
-                        danger
                         size="small"
-                        icon={<DeleteOutlined />}
-                        disabled={g.hasPosted}
-                        loading={isDeletingBatch}
+                        icon={<CheckCircleOutlined />}
+                        disabled={g.allPosted}
+                        loading={isPostingBatch}
                       >
-                        Delete
+                        Post
                       </Button>
-                    </Tooltip>
-                  </Popconfirm>
+                    </Popconfirm>
+                  </PermissionGate>
+                  <PermissionGate permission="Last Pay Run:Create">
+                    <Popconfirm
+                      title="Delete this Last Pay draft?"
+                      description={`This removes all ${g.count} record${g.count !== 1 ? "s" : ""} in this run.`}
+                      okText="Delete"
+                      okButtonProps={{ danger: true }}
+                      cancelText="Cancel"
+                      disabled={g.hasPosted}
+                      onConfirm={() =>
+                        handleDeleteBatch(g.payrollBatchId, g.count)
+                      }
+                    >
+                      <Tooltip
+                        title={
+                          g.hasPosted
+                            ? "This run has been posted and can no longer be deleted."
+                            : undefined
+                        }
+                      >
+                        <Button
+                          danger
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          disabled={g.hasPosted}
+                          loading={isDeletingBatch}
+                        >
+                          Delete
+                        </Button>
+                      </Tooltip>
+                    </Popconfirm>
+                  </PermissionGate>
                 </Space>
               ),
             },

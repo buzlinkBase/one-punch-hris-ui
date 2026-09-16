@@ -11,6 +11,7 @@ import type { DeductionTypeResponse } from "../../models/api/response/deduction-
 import { DEDUCTION_TYPE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: DeductionTypeResponse[];
@@ -80,22 +81,26 @@ export default function DeductionTypeTable({ data, loading, onDelete }: Props) {
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate({ to: `/setup/deduction-type/${record.id}` })
-            }
-          />
+          <PermissionGate permission="Deductions & Income Setup:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate({ to: `/setup/deduction-type/${record.id}` })
+              }
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this deduction type?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Deductions & Income Setup:Delete">
+              <Popconfirm
+                title="Delete this deduction type?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

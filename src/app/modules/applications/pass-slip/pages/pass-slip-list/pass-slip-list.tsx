@@ -13,6 +13,7 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import PassSlipTable from "../../components/pass-slip-table";
 import { PASS_SLIP_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -60,13 +61,17 @@ export default function PassSlipList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/applications/pass-slip/create" })}
-            >
-              {PASS_SLIP_LABEL.CREATE}
-            </Button>
+            <PermissionGate permission="Pass Slip:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/applications/pass-slip/create" })
+                }
+              >
+                {PASS_SLIP_LABEL.CREATE}
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

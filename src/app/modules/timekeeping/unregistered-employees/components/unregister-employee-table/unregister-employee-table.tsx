@@ -4,6 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { UnregisteredAttendanceLog } from "../../models/api/response/unregister-employee-response.model";
 import { UNREGISTER_EMPLOYEE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Text } = Typography;
 
@@ -98,13 +99,15 @@ export default function UnregisterEmployeeTable({
       fixed: "right",
       render: (_: unknown, row: BioIdGroup) => (
         <Space size="small">
-          <Button
-            size="small"
-            type="primary"
-            onClick={() => onTag?.(row.entries)}
-          >
-            {UNREGISTER_EMPLOYEE_LABEL.TAG}
-          </Button>
+          <PermissionGate permission="Unregistered Employees:Edit">
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => onTag?.(row.entries)}
+            >
+              {UNREGISTER_EMPLOYEE_LABEL.TAG}
+            </Button>
+          </PermissionGate>
         </Space>
       ),
     },

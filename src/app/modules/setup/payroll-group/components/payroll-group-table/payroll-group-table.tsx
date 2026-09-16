@@ -15,6 +15,7 @@ import {
 } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: PayrollGroupResponse[];
@@ -133,22 +134,26 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate({ to: `/setup/payroll-group/${record.id}` })
-            }
-          />
+          <PermissionGate permission="Organization Setup:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate({ to: `/setup/payroll-group/${record.id}` })
+              }
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this payroll group?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Organization Setup:Delete">
+              <Popconfirm
+                title="Delete this payroll group?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

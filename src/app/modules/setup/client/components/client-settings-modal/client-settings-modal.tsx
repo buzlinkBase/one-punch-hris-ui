@@ -39,6 +39,7 @@ import {
   OT_INCLUSION_OPTIONS,
   OT_ELIGIBILITY_OPTIONS,
 } from "@/app/modules/setup/company-policy/constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Text } = Typography;
 
@@ -164,14 +165,16 @@ function AllowancesTab({
         />
         <div className="flex justify-end gap-2">
           <Button onClick={onClose}>Cancel</Button>
-          <Button
-            type="primary"
-            loading={isPending}
-            disabled={!isDirty}
-            onClick={handleSave}
-          >
-            Save
-          </Button>
+          <PermissionGate permission="Workforce Setup:Edit">
+            <Button
+              type="primary"
+              loading={isPending}
+              disabled={!isDirty}
+              onClick={handleSave}
+            >
+              Save
+            </Button>
+          </PermissionGate>
         </div>
       </div>
     </Spin>
@@ -284,12 +287,24 @@ export default function ClientSettingsModal({
       title={`${clientName ?? clientId}`}
       open={!!clientId}
       onCancel={onClose}
-      onOk={handleSubmit(onSubmit)}
-      okText="Save"
-      okButtonProps={{ loading: isPending }}
-      footer={activeTabKey === "benefits" ? null : undefined}
       destroyOnClose
       width={640}
+      footer={
+        activeTabKey === "benefits" ? null : (
+          <Space>
+            <Button onClick={onClose}>Cancel</Button>
+            <PermissionGate permission="Workforce Setup:Edit">
+              <Button
+                type="primary"
+                loading={isPending}
+                onClick={handleSubmit(onSubmit)}
+              >
+                Save
+              </Button>
+            </PermissionGate>
+          </Space>
+        )
+      }
     >
       {isLoading ? (
         <div className="flex justify-center py-8">

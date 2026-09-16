@@ -33,6 +33,8 @@ import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { UniformAllowanceLedgerResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { authStorage } from "@/core/auth/auth-storage";
 
 const { Text } = Typography;
 
@@ -165,20 +167,22 @@ export default function UniformAllowanceLedger() {
       width: 48,
       fixed: "right",
       render: (_, r) => (
-        <Tooltip title="Adjust balance">
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              setAdjustModal({
-                employeeId: r.employeeId,
-                employeeName: r.fullName,
-                balance: r.balance,
-              })
-            }
-          />
-        </Tooltip>
+        <PermissionGate permission="Payroll Reports:Edit">
+          <Tooltip title="Adjust balance">
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                setAdjustModal({
+                  employeeId: r.employeeId,
+                  employeeName: r.fullName,
+                  balance: r.balance,
+                })
+              }
+            />
+          </Tooltip>
+        </PermissionGate>
       ),
     },
   ];
@@ -266,19 +270,23 @@ export default function UniformAllowanceLedger() {
         exportRows={toRows}
         extraActions={
           <Space>
-            <Tooltip title="Add entry">
-              <Button
-                icon={<PlusOutlined />}
-                onClick={() => setAdjustModal("add")}
-              />
-            </Tooltip>
-            <Tooltip title="Release allowance">
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                onClick={openRelease}
-              />
-            </Tooltip>
+            <PermissionGate permission="Payroll Reports:Edit">
+              <Tooltip title="Add entry">
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => setAdjustModal("add")}
+                />
+              </Tooltip>
+            </PermissionGate>
+            <PermissionGate permission="Payroll Reports:Edit">
+              <Tooltip title="Release allowance">
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={openRelease}
+                />
+              </Tooltip>
+            </PermissionGate>
           </Space>
         }
         filters={
@@ -328,6 +336,9 @@ export default function UniformAllowanceLedger() {
         onOk={handleReleaseSubmit}
         okText="Release"
         confirmLoading={isReleasing}
+        okButtonProps={{
+          disabled: !authStorage.hasAnyPermission("Payroll Reports:Edit"),
+        }}
         width={640}
         destroyOnClose
       >

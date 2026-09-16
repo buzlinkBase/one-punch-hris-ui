@@ -24,6 +24,7 @@ import {
   ADJUSTMENT_TYPE_LABEL,
 } from "../../constants/label.const";
 import { useState } from "react";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -109,21 +110,25 @@ export default function SalaryAdjustmentList() {
       width: 80,
       render: (_, r) => (
         <Space size="small">
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate({ to: `/applications/salary-adjustment/${r.id}` })
-            }
-          />
-          <Popconfirm
-            title="Delete this adjustment?"
-            onConfirm={() => handleDelete(r.id)}
-            okButtonProps={{ danger: true }}
-            okText="Delete"
-          >
-            <Button size="small" icon={<DeleteOutlined />} danger />
-          </Popconfirm>
+          <PermissionGate permission="Salary Adjustment:Edit">
+            <Button
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate({ to: `/applications/salary-adjustment/${r.id}` })
+              }
+            />
+          </PermissionGate>
+          <PermissionGate permission="Salary Adjustment:Delete">
+            <Popconfirm
+              title="Delete this adjustment?"
+              onConfirm={() => handleDelete(r.id)}
+              okButtonProps={{ danger: true }}
+              okText="Delete"
+            >
+              <Button size="small" icon={<DeleteOutlined />} danger />
+            </Popconfirm>
+          </PermissionGate>
         </Space>
       ),
     },
@@ -142,15 +147,17 @@ export default function SalaryAdjustmentList() {
               during payroll.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              navigate({ to: "/applications/salary-adjustment/create" })
-            }
-          >
-            Add
-          </Button>
+          <PermissionGate permission="Salary Adjustment:Create">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/applications/salary-adjustment/create" })
+              }
+            >
+              Add
+            </Button>
+          </PermissionGate>
         </div>
         <div className="page-toolbar-filters">
           <Select

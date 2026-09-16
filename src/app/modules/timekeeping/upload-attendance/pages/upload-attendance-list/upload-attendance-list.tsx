@@ -13,6 +13,7 @@ import {
 import type { RcFile, UploadFile } from "antd/es/upload/interface";
 import { DeleteOutlined, FileOutlined, InboxOutlined } from "@ant-design/icons";
 import { UPLOAD_ATTENDANCE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUploadAttendanceLog } from "../../hooks/use-upload-attendance-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
@@ -243,15 +244,17 @@ export default function UploadAttendanceList() {
               </div>
             )}
 
-            <Button
-              type="primary"
-              loading={isUploading}
-              disabled={fileList.length === 0 || !remarks.trim()}
-              onClick={handleUpload}
-              block
-            >
-              Upload
-            </Button>
+            <PermissionGate permission="Upload Attendance:Edit">
+              <Button
+                type="primary"
+                loading={isUploading}
+                disabled={fileList.length === 0 || !remarks.trim()}
+                onClick={handleUpload}
+                block
+              >
+                Upload
+              </Button>
+            </PermissionGate>
           </div>
 
           {/* Right: info panel */}
