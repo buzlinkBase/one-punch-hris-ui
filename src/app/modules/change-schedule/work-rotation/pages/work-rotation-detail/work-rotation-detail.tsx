@@ -30,6 +30,8 @@ import {
   useUpdateWorkRotation,
 } from "../../hooks/use-work-rotation-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { authStorage } from "@/core/auth/auth-storage";
+import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
@@ -300,16 +302,34 @@ function CreateForm() {
   const [timeShiftId, setTimeShiftId] = useState<string | null>(null);
   const [payrollDates, setPayrollDates] = useState<string[]>([]);
 
+  // Work Rotation:Create is unscoped (matches today's behavior for everyone who already has it,
+  // or has neither permission — see WorkSchedulePlansController.ValidateTeamScopeAsync on the
+  // backend, which this mirrors). Only a caller holding ManageOwnTeam WITHOUT Create — e.g. a
+  // Supervisor Custom Role — is locked to their own direct reports, with no filter panel to
+  // configure since there's nothing to choose: it's always "my team."
+  const canManageAllEmployees = authStorage.hasPermission(
+    "Work Rotation:Create",
+  );
+  const isTeamScoped =
+    !canManageAllEmployees &&
+    authStorage.hasPermission("Work Rotation:ManageOwnTeam");
+  const { data: myEmployee } = useMyEmployee();
+
   const { data: employees = [], isLoading: isEmployeesLoading } =
     useEmployeeFilter(
+      isTeamScoped
+        ? { managerId: myEmployee?.id }
+        : {
+            branchId: committedFilter?.branchId ?? undefined,
+            departmentId: committedFilter?.deptId ?? undefined,
+            clientId: committedFilter?.clientId ?? undefined,
+            payrollGroupId: committedFilter?.payrollGroupId ?? undefined,
+            operationAreaId: committedFilter?.operationAreaId ?? undefined,
+          },
       {
-        branchId: committedFilter?.branchId ?? undefined,
-        departmentId: committedFilter?.deptId ?? undefined,
-        clientId: committedFilter?.clientId ?? undefined,
-        payrollGroupId: committedFilter?.payrollGroupId ?? undefined,
-        operationAreaId: committedFilter?.operationAreaId ?? undefined,
+        enabled: isTeamScoped ? !!myEmployee?.id : committedFilter !== null,
+        searchKey,
       },
-      { enabled: committedFilter !== null, searchKey },
     );
 
   const { data: departments = [] } = useDepartments();
@@ -354,7 +374,9 @@ function CreateForm() {
       label: `${a.code} - ${a.name}`,
     }));
 
-  const hasSearched = committedFilter !== null;
+  const hasSearched = isTeamScoped
+    ? !!myEmployee?.id
+    : committedFilter !== null;
   // Guard against a stale/shared React Query cache: other pages fetch the
   // full employee list under an equivalent key, so `employees` can be
   // populated even while this query is disabled. Only show rows once the
@@ -546,89 +568,100 @@ function CreateForm() {
         </div>
       </div>
 
-      {/* Step 1 — Find Employees */}
-      <Card
-        size="small"
-        className="mb-4"
-        title={
-          <Text strong style={{ fontSize: 13 }}>
-            Step 1 — Find Employees
-          </Text>
-        }
-      >
-        <Form layout="vertical">
-          <div className="form-grid-3">
-            <Form.Item label="Branch" className="mb-3">
-              <Select
-                placeholder="All branches"
-                options={branchOptions}
-                value={branchId ?? undefined}
-                onChange={(v: string | undefined) => {
-                  setBranchId(v ?? null);
-                  // Project Site is restricted to the selected Branch.
-                  setOperationAreaId(null);
-                }}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Department" className="mb-3">
-              <Select
-                placeholder="All departments"
-                options={deptOptions}
-                value={deptId ?? undefined}
-                onChange={(v: string | undefined) => setDeptId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Client" className="mb-3">
-              <Select
-                placeholder="All clients"
-                options={clientOptions}
-                value={clientId ?? undefined}
-                onChange={(v: string | undefined) => setClientId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Payroll Group" className="mb-0">
-              <Select
-                placeholder="All payroll groups"
-                options={payrollGroupOptions}
-                value={payrollGroupId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  setPayrollGroupId(v ?? null)
-                }
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Project Site" className="mb-0">
-              <Select
-                placeholder="All project sites"
-                options={areaOptions}
-                value={operationAreaId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  setOperationAreaId(v ?? null)
-                }
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="&nbsp;" className="mb-0">
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-                style={{ width: "100%" }}
-              >
-                Search Employees
-              </Button>
-            </Form.Item>
-          </div>
-        </Form>
-      </Card>
+      {/* Step 1 — Find Employees (skipped entirely when team-scoped: there's nothing to
+          configure, the picker below is always locked to the caller's own direct reports) */}
+      {isTeamScoped ? (
+        <Alert
+          className="mb-4"
+          type="info"
+          showIcon
+          message="Showing your team"
+          description="You can schedule Work Rotation for employees who report directly to you."
+        />
+      ) : (
+        <Card
+          size="small"
+          className="mb-4"
+          title={
+            <Text strong style={{ fontSize: 13 }}>
+              Step 1 — Find Employees
+            </Text>
+          }
+        >
+          <Form layout="vertical">
+            <div className="form-grid-3">
+              <Form.Item label="Branch" className="mb-3">
+                <Select
+                  placeholder="All branches"
+                  options={branchOptions}
+                  value={branchId ?? undefined}
+                  onChange={(v: string | undefined) => {
+                    setBranchId(v ?? null);
+                    // Project Site is restricted to the selected Branch.
+                    setOperationAreaId(null);
+                  }}
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Department" className="mb-3">
+                <Select
+                  placeholder="All departments"
+                  options={deptOptions}
+                  value={deptId ?? undefined}
+                  onChange={(v: string | undefined) => setDeptId(v ?? null)}
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Client" className="mb-3">
+                <Select
+                  placeholder="All clients"
+                  options={clientOptions}
+                  value={clientId ?? undefined}
+                  onChange={(v: string | undefined) => setClientId(v ?? null)}
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Payroll Group" className="mb-0">
+                <Select
+                  placeholder="All payroll groups"
+                  options={payrollGroupOptions}
+                  value={payrollGroupId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setPayrollGroupId(v ?? null)
+                  }
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="Project Site" className="mb-0">
+                <Select
+                  placeholder="All project sites"
+                  options={areaOptions}
+                  value={operationAreaId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setOperationAreaId(v ?? null)
+                  }
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item label="&nbsp;" className="mb-0">
+                <Button
+                  type="primary"
+                  icon={<SearchOutlined />}
+                  onClick={handleSearch}
+                  style={{ width: "100%" }}
+                >
+                  Search Employees
+                </Button>
+              </Form.Item>
+            </div>
+          </Form>
+        </Card>
+      )}
 
       {hasSearched && (
         <div className="flex items-center justify-between mb-2">
