@@ -277,6 +277,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "setup-group-org",
         label: "Organization",
         type: "group",
+        permission: "Organization Setup:View",
         children: [
           {
             key: "setup-payroll-group",
@@ -314,6 +315,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "setup-group-workforce",
         label: "Workforce",
         type: "group",
+        permission: "Workforce Setup:View",
         children: [
           {
             key: "setup-client",
@@ -331,6 +333,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "setup-group-shifts",
         label: "Time Shifts",
         type: "group",
+        permission: "Time Shift Setup:View",
         children: [
           {
             key: "setup-fixed-shift",
@@ -348,6 +351,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "setup-group-deductions-income",
         label: "Deductions & Income",
         type: "group",
+        permission: "Deductions & Income Setup:View",
         children: [
           {
             key: "setup-deduction",
@@ -361,6 +365,9 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           },
         ],
       },
+      // Deliberately untagged (no `permission`) -- Holidays/Minimum Wage Rates have no
+      // matching row in the permission catalog (only Leave Setup covers Leave Types/
+      // Balances here), so there's no correct single code to gate the whole group on.
       {
         key: "setup-others",
         label: "Holidays & Leave Types",
@@ -392,6 +399,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "setup-group-statutory",
         label: "Statutory",
         type: "group",
+        permission: "Statutory Tables:View",
         children: [
           {
             key: "setup-sss-table",
@@ -420,6 +428,10 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           },
         ],
       },
+      // Deliberately untagged -- Biometric Setup's backend (hrms-adms-api's DeviceController)
+      // is a separate microservice with no permission-checking wired yet, so a menu-only
+      // restriction here would say "no" while the API still says "yes." Land the permission
+      // tag alongside that backend work, not before it.
       {
         key: "biometric",
         label: "Biometric",
