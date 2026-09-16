@@ -87,6 +87,31 @@ function flattenNavItems(
 
 const NAV_OPTIONS = flattenNavItems(NAVIGATION_ITEMS);
 
+// Drops any item whose `permission` the caller doesn't hold (any-of match). An item with no
+// `permission` always passes through unchanged — this is what keeps every currently-untagged
+// item (still nearly all of them) exactly as visible as before. A "group" node with children
+// that all get filtered out, and no path of its own, is dropped too rather than rendered empty.
+function filterNavByPermission(items: NavItem[]): NavItem[] {
+  return items.reduce<NavItem[]>((acc, item) => {
+    if (item.permission) {
+      const codes = Array.isArray(item.permission)
+        ? item.permission
+        : [item.permission];
+      if (!authStorage.hasAnyPermission(...codes)) return acc;
+    }
+
+    if (item.children) {
+      const children = filterNavByPermission(item.children);
+      if (children.length === 0 && !item.path) return acc;
+      acc.push({ ...item, children });
+      return acc;
+    }
+
+    acc.push(item);
+    return acc;
+  }, []);
+}
+
 type MenuItem = Required<MenuProps>["items"][number];
 
 type NavWithTrail = {
@@ -408,15 +433,22 @@ export default function MainLayout() {
 
   // "My Portal" only shows once we know the logged-in user has a linked Employee record —
   // until that resolves (or if there is none), it's filtered out rather than shown disabled,
-  // since most accounts will never have one.
+  // since most accounts will never have one. It's also gated on a permission (Employee Self-
+  // Service Portal:View, granted to the Employee role by default — see tenantstore's
+  // PermissionCatalogSeederService), same as any other item that opts into filterNavByPermission
+  // — the linked-record check alone would otherwise leave it visible to someone who holds no
+  // portal-related permission at all.
   const { data: myEmployee } = useMyEmployee();
   const navItems = useMemo(() => {
     if (authStorage.isEmployeeOnly()) {
-      return NAVIGATION_ITEMS.filter((item) => item.key === "nav-portal");
+      return filterNavByPermission(
+        NAVIGATION_ITEMS.filter((item) => item.key === "nav-portal"),
+      );
     }
-    return myEmployee
+    const base = myEmployee
       ? NAVIGATION_ITEMS
       : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal");
+    return filterNavByPermission(base);
   }, [myEmployee]);
 
   // Employee Portal pages go edge-to-edge (no outer margin/card border/shadow) instead of the
