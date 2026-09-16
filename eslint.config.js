@@ -31,4 +31,12 @@ export default defineConfig([
       "react-refresh/only-export-components": "off",
     },
   },
+  {
+    // Test helpers re-export a testing-library wrapper alongside a provider component --
+    // never rendered by the app itself, so Fast Refresh doesn't apply.
+    files: ["src/test/**/*.{ts,tsx}", "**/*.test.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 ]);
