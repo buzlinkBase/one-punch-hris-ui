@@ -56,6 +56,7 @@ export const overtimeApplicationApi = {
   changeStatus(
     record: OvertimeApplicationResponse,
     status: string,
+    note?: string,
   ): Promise<OvertimeApplicationResponse> {
     return httpClient.putUnwrapped<OvertimeApplicationResponse>(
       `${ENDPOINT}/${record.id}`,
@@ -69,6 +70,7 @@ export const overtimeApplicationApi = {
         isManualEntry: record.isManualEntry,
         remarks: record.remarks,
         approvalStatus: status,
+        note,
       },
     );
   },

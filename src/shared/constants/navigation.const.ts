@@ -469,6 +469,19 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           },
         ],
       },
+      {
+        key: "setup-group-approvals",
+        label: "Approvals",
+        type: "group",
+        children: [
+          {
+            key: "setup-approval-workflows",
+            label: "Approval Workflows",
+            path: "/setup/approval-workflows",
+            permission: "Approval Workflows:View",
+          },
+        ],
+      },
     ],
   },
   {

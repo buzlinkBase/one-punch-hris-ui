@@ -185,6 +185,15 @@ const OtherIncomeDetail = lazy(
   () => import("@/app/modules/setup/other-income/pages/other-income-detail"),
 );
 
+const ApprovalWorkflowList = lazy(
+  () =>
+    import("@/app/modules/setup/approval-workflows/pages/approval-workflow-list"),
+);
+const ApprovalWorkflowDetail = lazy(
+  () =>
+    import("@/app/modules/setup/approval-workflows/pages/approval-workflow-detail"),
+);
+
 export interface SetupRouteConfig {
   path: string;
   component: LazyExoticComponent<ComponentType>;
@@ -286,4 +295,8 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "other-income", component: OtherIncomeList },
   { path: "other-income/create", component: OtherIncomeDetail },
   { path: "other-income/$id", component: OtherIncomeDetail },
+
+  { path: "approval-workflows", component: ApprovalWorkflowList },
+  { path: "approval-workflows/create", component: ApprovalWorkflowDetail },
+  { path: "approval-workflows/$id", component: ApprovalWorkflowDetail },
 ];

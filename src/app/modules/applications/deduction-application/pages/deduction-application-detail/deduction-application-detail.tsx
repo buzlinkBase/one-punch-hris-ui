@@ -42,6 +42,7 @@ import {
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import {
   generateLoanBreakdown,
   loanBreakdownColumns,
@@ -280,6 +281,18 @@ export default function DeductionApplicationDetail() {
           </Space>
         </div>
       </div>
+
+      {isEdit && existing && (
+        <Card size="small" title="Approval Progress" className="mb-4">
+          <ApprovalTimeline
+            applicationType="Loan"
+            applicationId={existing.id}
+            resolveEmployeeName={(empId) =>
+              rawEmployees.find((e) => e.id === empId)?.fullName ?? undefined
+            }
+          />
+        </Card>
+      )}
 
       <Form layout="vertical" disabled={loadingExisting}>
         <Card className="mb-4">

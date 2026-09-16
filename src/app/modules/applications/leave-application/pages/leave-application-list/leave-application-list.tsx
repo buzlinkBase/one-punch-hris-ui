@@ -31,7 +31,8 @@ export default function LeaveApplicationList() {
     dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
   );
   const { mutate: remove } = useDeleteLeaveApplication();
-  const { mutate: changeStatus } = useChangeLeaveApplicationStatus();
+  const { mutate: changeStatus, isPending: isChangingStatus } =
+    useChangeLeaveApplicationStatus();
   const { data: leaveTypes = [] } = useLeaveTypes();
   const { data: employees = [] } = useEmployeeFilter();
 
@@ -115,8 +116,13 @@ export default function LeaveApplicationList() {
         leaveTypes={leaveTypes}
         loading={isLoading || isFetching}
         onDelete={remove}
-        onApprove={(record) => changeStatus({ record, status: "Approved" })}
-        onDecline={(record) => changeStatus({ record, status: "Declined" })}
+        actionLoading={isChangingStatus}
+        onApprove={(record, note) =>
+          changeStatus({ record, status: "Approved", note })
+        }
+        onDecline={(record, note) =>
+          changeStatus({ record, status: "Declined", note })
+        }
       />
     </div>
   );

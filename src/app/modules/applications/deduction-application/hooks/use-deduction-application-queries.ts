@@ -56,9 +56,13 @@ export function useDeleteDeductionApplication() {
 export function useApproveDeductionApplication() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => deductionApplicationApi.approve(id),
-    onSuccess: () => {
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      deductionApplicationApi.approve(id, note),
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "Loan", id],
+      });
     },
   });
 }
@@ -66,9 +70,13 @@ export function useApproveDeductionApplication() {
 export function useDeclineDeductionApplication() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => deductionApplicationApi.decline(id),
-    onSuccess: () => {
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      deductionApplicationApi.decline(id, note),
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "Loan", id],
+      });
     },
   });
 }

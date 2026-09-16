@@ -35,6 +35,7 @@ import {
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -103,6 +104,7 @@ export default function TravelOrderDetail() {
     value: e.id,
     label: e.name ?? e.id,
   }));
+  const employeeMap = new Map(employees.map((e) => [e.id, e.name ?? e.id]));
 
   const timeShiftOptions = timeShifts.map((s) => ({
     value: s.id,
@@ -284,6 +286,16 @@ export default function TravelOrderDetail() {
                 </Descriptions.Item>
               )}
             </Descriptions>
+          </Card>
+        )}
+
+        {isEdit && selected && (
+          <Card size="small" title="Approval Progress" className="mb-4">
+            <ApprovalTimeline
+              applicationType="OfficialBusiness"
+              applicationId={selected.id}
+              resolveEmployeeName={(empId) => employeeMap.get(empId)}
+            />
           </Card>
         )}
 

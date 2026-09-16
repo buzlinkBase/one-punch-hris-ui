@@ -56,6 +56,7 @@ export const travelOrderApi = {
   changeStatus(
     record: TravelOrderApplicationResponse,
     status: string,
+    note?: string,
   ): Promise<TravelOrderApplicationResponse> {
     return httpClient.putUnwrapped<TravelOrderApplicationResponse>(
       `${ENDPOINT}/${record.id}`,
@@ -74,6 +75,7 @@ export const travelOrderApi = {
         cost: record.cost,
         applicationRemarks: record.applicationRemarks,
         approvalStatus: status,
+        note,
       },
     );
   },

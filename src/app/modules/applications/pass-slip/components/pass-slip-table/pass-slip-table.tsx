@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button, Popconfirm, Space, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
   EditOutlined,
   RollbackOutlined,
@@ -14,6 +15,8 @@ import {
   APPROVAL_STATUS_LABEL,
 } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 
 interface PassSlipGroup {
   key: string;
@@ -27,9 +30,11 @@ interface Props {
   data: PassSlipResponse[];
   loading?: boolean;
   onEdit: (record: PassSlipResponse) => void;
-  onApprove: (record: PassSlipResponse) => void;
+  onApprove: (record: PassSlipResponse, note?: string) => void;
+  onDecline: (record: PassSlipResponse, note?: string) => void;
   onRevoke: (record: PassSlipResponse) => void;
   onDelete: (id: string) => void;
+  actionLoading?: boolean;
 }
 
 const { Text } = Typography;
@@ -42,13 +47,15 @@ function fmtDateTime(v?: string) {
 function LogActions({
   record,
   onEdit,
-  onApprove,
+  onApproveClick,
+  onDeclineClick,
   onRevoke,
   onDelete,
 }: {
   record: PassSlipResponse;
   onEdit: (r: PassSlipResponse) => void;
-  onApprove: (r: PassSlipResponse) => void;
+  onApproveClick: (r: PassSlipResponse) => void;
+  onDeclineClick: (r: PassSlipResponse) => void;
   onRevoke: (r: PassSlipResponse) => void;
   onDelete: (id: string) => void;
 }) {
@@ -65,18 +72,20 @@ function LogActions({
             />
           </PermissionGate>
           <PermissionGate permission="Pass Slip:Approve">
-            <Popconfirm
-              title="Approve this log?"
-              onConfirm={() => onApprove(record)}
-              okText="Approve"
-            >
-              <Button
-                size="small"
-                type="text"
-                icon={<CheckOutlined />}
-                style={{ color: "#1DA081" }}
-              />
-            </Popconfirm>
+            <Button
+              size="small"
+              type="text"
+              icon={<CheckOutlined />}
+              style={{ color: "#1DA081" }}
+              onClick={() => onApproveClick(record)}
+            />
+            <Button
+              size="small"
+              type="text"
+              danger
+              icon={<CloseOutlined />}
+              onClick={() => onDeclineClick(record)}
+            />
           </PermissionGate>
         </>
       )}
@@ -120,9 +129,20 @@ export default function PassSlipTable({
   loading,
   onEdit,
   onApprove,
+  onDecline,
   onRevoke,
   onDelete,
+  actionLoading,
 }: Props) {
+  const [actionTarget, setActionTarget] = useState<{
+    record: PassSlipResponse;
+    action: "Approved" | "Declined";
+  } | null>(null);
+  const { data: instance } = useApprovalInstance(
+    "PassSlip",
+    actionTarget?.record.id,
+  );
+
   const groups = useMemo<PassSlipGroup[]>(() => {
     const map = new Map<string, PassSlipGroup>();
     for (const item of data) {
@@ -209,7 +229,12 @@ export default function PassSlipTable({
         <LogActions
           record={record}
           onEdit={onEdit}
-          onApprove={onApprove}
+          onApproveClick={(r) =>
+            setActionTarget({ record: r, action: "Approved" })
+          }
+          onDeclineClick={(r) =>
+            setActionTarget({ record: r, action: "Declined" })
+          }
           onRevoke={onRevoke}
           onDelete={onDelete}
         />
@@ -218,27 +243,43 @@ export default function PassSlipTable({
   ];
 
   return (
-    <Table
-      rowKey="key"
-      dataSource={groups}
-      columns={parentColumns}
-      loading={loading}
-      size="small"
-      pagination={{ pageSize: 20, showSizeChanger: false }}
-      expandable={{
-        expandedRowRender: (group) => (
-          <Table
-            rowKey="id"
-            dataSource={group.logs}
-            columns={logColumns}
-            size="small"
-            pagination={false}
-            showHeader={true}
-            style={{ marginBlock: 4 }}
-          />
-        ),
-        rowExpandable: (group) => group.logs.length > 0,
-      }}
-    />
+    <>
+      <Table
+        rowKey="key"
+        dataSource={groups}
+        columns={parentColumns}
+        loading={loading}
+        size="small"
+        pagination={{ pageSize: 20, showSizeChanger: false }}
+        expandable={{
+          expandedRowRender: (group) => (
+            <Table
+              rowKey="id"
+              dataSource={group.logs}
+              columns={logColumns}
+              size="small"
+              pagination={false}
+              showHeader={true}
+              style={{ marginBlock: 4 }}
+            />
+          ),
+          rowExpandable: (group) => group.logs.length > 0,
+        }}
+      />
+      <ApprovalActionModal
+        open={!!actionTarget}
+        action={actionTarget?.action ?? "Approved"}
+        noteRequirement={instance?.currentStepNoteRequirement}
+        loading={actionLoading}
+        onCancel={() => setActionTarget(null)}
+        onConfirm={(note) => {
+          if (!actionTarget) return;
+          if (actionTarget.action === "Approved")
+            onApprove(actionTarget.record, note);
+          else onDecline(actionTarget.record, note);
+          setActionTarget(null);
+        }}
+      />
+    </>
   );
 }

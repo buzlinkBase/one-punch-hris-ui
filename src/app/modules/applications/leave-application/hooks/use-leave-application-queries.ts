@@ -110,13 +110,18 @@ export function useChangeLeaveApplicationStatus() {
     mutationFn: ({
       record,
       status,
+      note,
     }: {
       record: LeaveApplicationResponse;
       status: string;
-    }) => leaveApplicationApi.changeStatus(record, status),
+      note?: string;
+    }) => leaveApplicationApi.changeStatus(record, status, note),
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "Leave", updated.id],
+      });
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       const pd = error.response?.data?.data;

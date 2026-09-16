@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button, Popconfirm, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -14,6 +15,8 @@ import {
   APPROVAL_STATUS_LABEL,
 } from "@/app/modules/applications/pass-slip/constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 
 interface Props {
   data: DeductionApplicationResponse[];
@@ -22,8 +25,9 @@ interface Props {
   deductionMap?: Record<string, string>;
   onEdit: (record: DeductionApplicationResponse) => void;
   onDelete: (id: string) => void;
-  onApprove: (id: string) => void;
-  onDecline: (id: string) => void;
+  onApprove: (id: string, note?: string) => void;
+  onDecline: (id: string, note?: string) => void;
+  actionLoading?: boolean;
 }
 
 export default function DeductionApplicationTable({
@@ -35,7 +39,16 @@ export default function DeductionApplicationTable({
   onDelete,
   onApprove,
   onDecline,
+  actionLoading,
 }: Props) {
+  const [actionTarget, setActionTarget] = useState<{
+    record: DeductionApplicationResponse;
+    action: "Approved" | "Declined";
+  } | null>(null);
+  const { data: instance } = useApprovalInstance(
+    "Loan",
+    actionTarget?.record.id,
+  );
   const columns: ColumnsType<DeductionApplicationResponse> = [
     {
       title: "Employee",
@@ -110,34 +123,27 @@ export default function DeductionApplicationTable({
           {record.approvalStatus === "ForApproval" && (
             <>
               <PermissionGate permission="Loan/Deduction:Approve">
-                <Popconfirm
-                  title="Approve this loan application?"
-                  onConfirm={() => onApprove(record.id)}
-                  okText="Approve"
-                >
-                  <Button
-                    size="small"
-                    type="text"
-                    icon={<CheckOutlined />}
-                    title="Approve"
-                  />
-                </Popconfirm>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<CheckOutlined />}
+                  title="Approve"
+                  onClick={() =>
+                    setActionTarget({ record, action: "Approved" })
+                  }
+                />
               </PermissionGate>
               <PermissionGate permission="Loan/Deduction:Approve">
-                <Popconfirm
-                  title="Decline this loan application?"
-                  onConfirm={() => onDecline(record.id)}
-                  okText="Decline"
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button
-                    size="small"
-                    type="text"
-                    icon={<CloseOutlined />}
-                    danger
-                    title="Decline"
-                  />
-                </Popconfirm>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<CloseOutlined />}
+                  danger
+                  title="Decline"
+                  onClick={() =>
+                    setActionTarget({ record, action: "Declined" })
+                  }
+                />
               </PermissionGate>
             </>
           )}
@@ -170,13 +176,29 @@ export default function DeductionApplicationTable({
   ];
 
   return (
-    <Table
-      rowKey="id"
-      dataSource={data}
-      columns={columns}
-      loading={loading}
-      size="small"
-      pagination={{ pageSize: 20, showSizeChanger: false }}
-    />
+    <>
+      <Table
+        rowKey="id"
+        dataSource={data}
+        columns={columns}
+        loading={loading}
+        size="small"
+        pagination={{ pageSize: 20, showSizeChanger: false }}
+      />
+      <ApprovalActionModal
+        open={!!actionTarget}
+        action={actionTarget?.action ?? "Approved"}
+        noteRequirement={instance?.currentStepNoteRequirement}
+        loading={actionLoading}
+        onCancel={() => setActionTarget(null)}
+        onConfirm={(note) => {
+          if (!actionTarget) return;
+          if (actionTarget.action === "Approved")
+            onApprove(actionTarget.record.id, note);
+          else onDecline(actionTarget.record.id, note);
+          setActionTarget(null);
+        }}
+      />
+    </>
   );
 }

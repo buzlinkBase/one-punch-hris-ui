@@ -30,7 +30,8 @@ export default function TravelOrderList() {
     dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
   );
   const { mutate: remove } = useDeleteTravelOrder();
-  const { mutate: changeStatus } = useChangeTravelOrderStatus();
+  const { mutate: changeStatus, isPending: isChangingStatus } =
+    useChangeTravelOrderStatus();
   const { data: rawEmployees = [] } = useEmployees();
 
   const employees = rawEmployees.map((e) => ({
@@ -118,8 +119,13 @@ export default function TravelOrderList() {
         data={filtered}
         employees={employees}
         loading={isLoading || isFetching}
-        onApprove={(record) => changeStatus({ record, status: "Approved" })}
-        onDecline={(record) => changeStatus({ record, status: "Declined" })}
+        actionLoading={isChangingStatus}
+        onApprove={(record, note) =>
+          changeStatus({ record, status: "Approved", note })
+        }
+        onDecline={(record, note) =>
+          changeStatus({ record, status: "Declined", note })
+        }
         onDelete={remove}
       />
     </div>
