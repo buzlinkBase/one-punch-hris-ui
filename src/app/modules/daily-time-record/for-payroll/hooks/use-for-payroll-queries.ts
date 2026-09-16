@@ -130,7 +130,10 @@ export function usePostPayrollBatch() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (batchId: string) => forPayrollApi.postPayrollBatch(batchId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payrolls"] }),
+    // onSettled (not onSuccess-only): a failed post can still have partially reached the
+    // server (e.g. the response never made it back), so refetch either way to reflect whatever
+    // actually got committed rather than leaving stale Draft/Posted state on screen.
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["payrolls"] }),
   });
 }
 
