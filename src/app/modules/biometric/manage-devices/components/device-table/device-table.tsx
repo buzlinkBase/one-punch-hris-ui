@@ -11,6 +11,7 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { useNavigate } from "@tanstack/react-router";
 import type { BiometricDeviceModel } from "../../models/api/response/device-response.model";
 import { DEVICE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: BiometricDeviceModel[];
@@ -131,22 +132,26 @@ export default function DeviceTable({ data, loading, onDelete }: Props) {
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate({ to: `/biometric/manage-devices/${record.id}` })
-            }
-          />
+          <PermissionGate permission="Biometric Setup:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate({ to: `/biometric/manage-devices/${record.id}` })
+              }
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this device?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Biometric Setup:Delete">
+              <Popconfirm
+                title="Delete this device?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

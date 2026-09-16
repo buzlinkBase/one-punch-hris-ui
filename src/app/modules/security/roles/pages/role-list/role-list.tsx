@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRoles, useDeleteRole } from "../../hooks/use-role-queries";
 import RoleTable from "../../components/role-table";
 import { ROLE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -25,13 +26,15 @@ export default function RoleList() {
               fixed and view-only.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/security/roles/create" })}
-          >
-            Add Role
-          </Button>
+          <PermissionGate permission={["Tenant Roles:Manage", "Roles:Create"]}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/security/roles/create" })}
+            >
+              Add Role
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 

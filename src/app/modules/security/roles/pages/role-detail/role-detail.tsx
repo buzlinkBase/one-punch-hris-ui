@@ -29,6 +29,7 @@ import { usePermissions } from "@/app/modules/security/permissions/hooks/use-per
 import type { Permission } from "../../models/api/response/role-response.model";
 import { ROLE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -172,13 +173,20 @@ export default function RoleDetail() {
                 <Button onClick={() => navigate({ to: "/security/roles" })}>
                   {NAVIGATION_BUTTON_LABEL.BACK}
                 </Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={isUpdating || isCreating}
+                <PermissionGate
+                  permission={[
+                    "Tenant Roles:Manage",
+                    isEdit ? "Roles:Edit" : "Roles:Create",
+                  ]}
                 >
-                  {NAVIGATION_BUTTON_LABEL.SAVE}
-                </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={isUpdating || isCreating}
+                  >
+                    {NAVIGATION_BUTTON_LABEL.SAVE}
+                  </Button>
+                </PermissionGate>
               </Space>
             </div>
           )}
@@ -253,13 +261,17 @@ export default function RoleDetail() {
 
             {!readOnly && (
               <div className="form-action-footer">
-                <Button
-                  type="primary"
-                  loading={isSavingPermissions}
-                  onClick={onSavePermissions}
+                <PermissionGate
+                  permission={["Tenant Roles:Manage", "Roles:Manage"]}
                 >
-                  Save Permissions
-                </Button>
+                  <Button
+                    type="primary"
+                    loading={isSavingPermissions}
+                    onClick={onSavePermissions}
+                  >
+                    Save Permissions
+                  </Button>
+                </PermissionGate>
               </div>
             )}
           </>
