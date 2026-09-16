@@ -36,6 +36,7 @@ import {
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -226,9 +227,11 @@ function EditPassSlip({ id }: { id: string }) {
             <Button onClick={() => navigate({ to: "/applications/pass-slip" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
-            <Button type="primary" htmlType="submit" loading={isUpdating}>
-              {NAVIGATION_BUTTON_LABEL.SAVE}
-            </Button>
+            <PermissionGate permission="Pass Slip:Edit">
+              <Button type="primary" htmlType="submit" loading={isUpdating}>
+                {NAVIGATION_BUTTON_LABEL.SAVE}
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </Form>
@@ -479,9 +482,11 @@ function CreatePassSlip() {
             <Button onClick={() => navigate({ to: "/applications/pass-slip" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
-            <Button type="primary" htmlType="submit" loading={isCreating}>
-              Submit {fields.length > 1 ? `(${fields.length} entries)` : ""}
-            </Button>
+            <PermissionGate permission="Pass Slip:Create">
+              <Button type="primary" htmlType="submit" loading={isCreating}>
+                Submit {fields.length > 1 ? `(${fields.length} entries)` : ""}
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </Form>

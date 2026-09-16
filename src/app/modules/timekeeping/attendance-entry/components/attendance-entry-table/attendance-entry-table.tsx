@@ -14,6 +14,7 @@ import type { AttendanceEntryResponse } from "../../models/api/response/attendan
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: AttendanceEntryResponse[];
@@ -112,21 +113,25 @@ export default function AttendanceEntryTable({
       render: (_, record) => (
         <Space>
           {onEdit && (
-            <Button type="link" size="small" onClick={() => onEdit(record)}>
-              Edit
-            </Button>
+            <PermissionGate permission="Attendance Manual Entry:Edit">
+              <Button type="link" size="small" onClick={() => onEdit(record)}>
+                Edit
+              </Button>
+            </PermissionGate>
           )}
           {onDelete && (
-            <Popconfirm
-              title="Delete this time log?"
-              okText="Yes"
-              cancelText="No"
-              onConfirm={() => onDelete(record.id)}
-            >
-              <Button type="link" danger size="small">
-                Delete
-              </Button>
-            </Popconfirm>
+            <PermissionGate permission="Attendance Manual Entry:Delete">
+              <Popconfirm
+                title="Delete this time log?"
+                okText="Yes"
+                cancelText="No"
+                onConfirm={() => onDelete(record.id)}
+              >
+                <Button type="link" danger size="small">
+                  Delete
+                </Button>
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

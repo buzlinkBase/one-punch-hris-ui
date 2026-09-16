@@ -10,6 +10,7 @@ import type { Bir2316Response } from "../../models/api/response/payroll-reports.
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -110,19 +111,21 @@ export default function Bir2316() {
         />
       }
       extraActions={
-        <Button
-          icon={<FilePdfOutlined />}
-          disabled={!employeeId || !rows.length}
-          onClick={() =>
-            employeeId &&
-            openPdfInNewTab(payrollReportsApi.urls.bir2316Print, {
-              employeeId,
-              year,
-            })
-          }
-        >
-          Preview PDF
-        </Button>
+        <PermissionGate permission="BIR Reports:Export">
+          <Button
+            icon={<FilePdfOutlined />}
+            disabled={!employeeId || !rows.length}
+            onClick={() =>
+              employeeId &&
+              openPdfInNewTab(payrollReportsApi.urls.bir2316Print, {
+                employeeId,
+                year,
+              })
+            }
+          >
+            Preview PDF
+          </Button>
+        </PermissionGate>
       }
       filters={
         <Form layout="vertical">

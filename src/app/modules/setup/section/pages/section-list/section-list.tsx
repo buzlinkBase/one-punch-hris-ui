@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSections, useDeleteSection } from "../../hooks/use-section-queries";
 import SectionTable from "../../components/section-table";
 import { SECTION_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -30,13 +31,15 @@ export default function SectionList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/section/create" })}
-            >
-              Add Section
-            </Button>
+            <PermissionGate permission="Organization Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/section/create" })}
+              >
+                Add Section
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

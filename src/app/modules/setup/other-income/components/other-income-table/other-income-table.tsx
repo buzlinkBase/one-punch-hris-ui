@@ -12,6 +12,7 @@ import {
   INCOME_CLASS_COLOR,
   INCOME_CLASS_LABEL,
 } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: OtherIncomeResponse[];
@@ -87,20 +88,29 @@ export default function OtherIncomeTable({
       width: 100,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
-          <Popconfirm
-            title="Delete this income item?"
-            onConfirm={() => onDelete(record.id)}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-          >
-            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
-          </Popconfirm>
+          <PermissionGate permission="Deductions & Income Setup:Edit">
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record)}
+            />
+          </PermissionGate>
+          <PermissionGate permission="Deductions & Income Setup:Delete">
+            <Popconfirm
+              title="Delete this income item?"
+              onConfirm={() => onDelete(record.id)}
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                size="small"
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+              />
+            </Popconfirm>
+          </PermissionGate>
         </Space>
       ),
     },

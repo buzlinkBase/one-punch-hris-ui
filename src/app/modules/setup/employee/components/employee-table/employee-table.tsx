@@ -20,6 +20,8 @@ import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { authStorage } from "@/core/auth/auth-storage";
 
 interface Props {
   data: EmployeeResponse[];
@@ -120,33 +122,39 @@ export default function EmployeeTable({
             label: "Opening Balance (Pre-System YTD)",
             onClick: () => onOpeningBalance(record),
           },
-          onDelete && { type: "divider" as const },
-          onDelete && {
-            key: "delete",
-            icon: <DeleteOutlined />,
-            label: "Delete",
-            danger: true,
-            onClick: () =>
-              Modal.confirm({
-                title: "Delete this employee?",
-                icon: <ExclamationCircleFilled />,
-                content: `${formatFullName(record)} will be permanently removed.`,
-                okText: "Delete",
-                okType: "danger",
-                cancelText: "Cancel",
-                onOk: () => onDelete(record.id),
-              }),
-          },
+          onDelete &&
+            authStorage.hasAnyPermission("Workforce Setup:Delete") && {
+              type: "divider" as const,
+            },
+          onDelete &&
+            authStorage.hasAnyPermission("Workforce Setup:Delete") && {
+              key: "delete",
+              icon: <DeleteOutlined />,
+              label: "Delete",
+              danger: true,
+              onClick: () =>
+                Modal.confirm({
+                  title: "Delete this employee?",
+                  icon: <ExclamationCircleFilled />,
+                  content: `${formatFullName(record)} will be permanently removed.`,
+                  okText: "Delete",
+                  okType: "danger",
+                  cancelText: "Cancel",
+                  onOk: () => onDelete(record.id),
+                }),
+            },
         ].filter(Boolean) as MenuProps["items"];
 
         return (
           <Space>
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              title="Edit"
-              onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
-            />
+            <PermissionGate permission="Workforce Setup:Edit">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                title="Edit"
+                onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
+              />
+            </PermissionGate>
             <Dropdown trigger={["click"]} menu={{ items: menuItems }}>
               <Button
                 type="text"

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input, Select, Tag } from "antd";
 import {
   SearchOutlined,
@@ -12,6 +12,7 @@ import type { DeductionTypeResponse } from "@/app/modules/setup/deduction-type/m
 import { DEDUCTION_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: DeductionResponse[];
@@ -117,20 +118,24 @@ export default function DeductionTable({
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/deduction/${record.id}` })}
-          />
+          <PermissionGate permission="Deductions & Income Setup:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => navigate({ to: `/setup/deduction/${record.id}` })}
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this deduction?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Deductions & Income Setup:Delete">
+              <Popconfirm
+                title="Delete this deduction?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

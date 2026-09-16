@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-fixed-time-shift-queries";
 import FixedTimeShiftTable from "../../components/fixed-time-shift-table";
 import { FIXED_TIME_SHIFT_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -39,13 +40,17 @@ export default function FixedTimeShiftList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/time-shift/fixed/create" })}
-            >
-              Add Fixed Shift
-            </Button>
+            <PermissionGate permission="Time Shift Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/setup/time-shift/fixed/create" })
+                }
+              >
+                Add Fixed Shift
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

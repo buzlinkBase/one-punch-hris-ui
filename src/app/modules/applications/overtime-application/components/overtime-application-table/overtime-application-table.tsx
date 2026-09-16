@@ -12,6 +12,7 @@ import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendanc
 import { OVERTIME_APPLICATION_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import dayjs from "dayjs";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -160,47 +161,55 @@ export default function OvertimeApplicationTable({
       render: (_, record) => (
         <Space>
           {onApprove && record.approvalStatus === "ForApproval" && (
-            <Popconfirm
-              title="Approve this overtime request?"
-              onConfirm={() => onApprove(record)}
-              okText="Approve"
-              cancelText="Cancel"
-            >
-              <Button
-                type="text"
-                icon={<CheckOutlined />}
-                style={{ color: "#52c41a" }}
-              />
-            </Popconfirm>
+            <PermissionGate permission={["Overtime:Edit", "Overtime:Approve"]}>
+              <Popconfirm
+                title="Approve this overtime request?"
+                onConfirm={() => onApprove(record)}
+                okText="Approve"
+                cancelText="Cancel"
+              >
+                <Button
+                  type="text"
+                  icon={<CheckOutlined />}
+                  style={{ color: "#52c41a" }}
+                />
+              </Popconfirm>
+            </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
-            <Popconfirm
-              title="Decline this overtime request?"
-              onConfirm={() => onDecline(record)}
-              okText="Decline"
-              okButtonProps={{ danger: true }}
-              cancelText="Cancel"
-            >
-              <Button type="text" danger icon={<CloseOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission={["Overtime:Edit", "Overtime:Approve"]}>
+              <Popconfirm
+                title="Decline this overtime request?"
+                onConfirm={() => onDecline(record)}
+                okText="Decline"
+                okButtonProps={{ danger: true }}
+                cancelText="Cancel"
+              >
+                <Button type="text" danger icon={<CloseOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              navigate({ to: `/applications/overtime/${record.id}` })
-            }
-          />
+          <PermissionGate permission={["Overtime:Edit", "Overtime:Approve"]}>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                navigate({ to: `/applications/overtime/${record.id}` })
+              }
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this overtime application?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-              cancelText="Cancel"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Overtime:Delete">
+              <Popconfirm
+                title="Delete this overtime application?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                cancelText="Cancel"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

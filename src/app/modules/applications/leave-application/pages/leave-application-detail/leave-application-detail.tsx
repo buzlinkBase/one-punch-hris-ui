@@ -46,6 +46,7 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -953,15 +954,17 @@ export default function LeaveApplicationDetail() {
               </Form.Item>
             )}
 
-            <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
-              <Controller
-                name="approvalStatus"
-                control={control}
-                render={({ field }) => (
-                  <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
-                )}
-              />
-            </Form.Item>
+            <PermissionGate permission="Leave:Approve">
+              <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
+                <Controller
+                  name="approvalStatus"
+                  control={control}
+                  render={({ field }) => (
+                    <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+                  )}
+                />
+              </Form.Item>
+            </PermissionGate>
           </div>
 
           {payType === "WithPay" && payoutMode === "onetime" && (
@@ -1127,13 +1130,15 @@ export default function LeaveApplicationDetail() {
               <Button onClick={() => navigate({ to: "/applications/leave" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isCreating || isUpdating}
-              >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+              <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isCreating || isUpdating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

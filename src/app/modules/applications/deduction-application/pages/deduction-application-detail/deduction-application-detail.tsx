@@ -41,6 +41,7 @@ import {
 } from "../../constants/label.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { isActiveStatus } from "@/shared/utils/status.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import {
   generateLoanBreakdown,
   loanBreakdownColumns,
@@ -262,14 +263,20 @@ export default function DeductionApplicationDetail() {
             >
               Back
             </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              onClick={handleSubmit(onSubmit)}
-              loading={isSaving}
+            <PermissionGate
+              permission={
+                isEdit ? "Loan/Deduction:Edit" : "Loan/Deduction:Create"
+              }
             >
-              Save
-            </Button>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleSubmit(onSubmit)}
+                loading={isSaving}
+              >
+                Save
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

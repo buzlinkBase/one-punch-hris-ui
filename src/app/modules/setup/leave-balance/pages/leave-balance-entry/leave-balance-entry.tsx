@@ -26,6 +26,7 @@ import {
 } from "../../hooks/use-leave-balance-queries";
 import { LEAVE_BALANCE_LABEL } from "../../constants/label.const";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 
 const { Title, Text } = Typography;
@@ -302,9 +303,11 @@ export default function LeaveBalanceEntry() {
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
-              <Button type="primary" htmlType="submit" loading={isSaving}>
-                Save Leave Balance
-              </Button>
+              <PermissionGate permission="Leave Setup:Edit">
+                <Button type="primary" htmlType="submit" loading={isSaving}>
+                  Save Leave Balance
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

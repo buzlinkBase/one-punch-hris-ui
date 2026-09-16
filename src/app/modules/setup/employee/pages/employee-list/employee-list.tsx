@@ -20,6 +20,7 @@ import InviteUserModal from "@/app/modules/security/users/components/invite-user
 import EmployeePriorEmployerTaxModal from "../../components/employee-prior-employer-tax-modal";
 import EmployeeOpeningBalanceModal from "../../components/employee-opening-balance-modal";
 import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -126,13 +127,15 @@ export default function EmployeeList() {
                 Import
               </Button>
             </Dropdown>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/employee/create" })}
-            >
-              Add Employee
-            </Button>
+            <PermissionGate permission="Workforce Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/employee/create" })}
+              >
+                Add Employee
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

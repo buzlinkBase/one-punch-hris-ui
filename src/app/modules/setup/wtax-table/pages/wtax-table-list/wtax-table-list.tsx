@@ -11,6 +11,7 @@ import {
   WTAX_TABLE_LABEL,
   PAYROLL_TYPE_OPTIONS,
 } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -44,13 +45,15 @@ export default function WtaxTableList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/wtax-table/create" })}
-            >
-              Add Bracket
-            </Button>
+            <PermissionGate permission="Statutory Tables:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/wtax-table/create" })}
+              >
+                Add Bracket
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
         <div className="page-toolbar-row">

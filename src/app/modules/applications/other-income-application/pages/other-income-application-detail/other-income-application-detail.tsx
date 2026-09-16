@@ -45,6 +45,7 @@ import {
 } from "../../constants/label.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { isActiveStatus } from "@/shared/utils/status.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -294,14 +295,18 @@ export default function OtherIncomeApplicationDetail() {
             >
               Back
             </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              onClick={handleSubmit(onSubmit)}
-              loading={isSaving}
+            <PermissionGate
+              permission={isEdit ? "Other Income:Edit" : "Other Income:Create"}
             >
-              Save
-            </Button>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleSubmit(onSubmit)}
+                loading={isSaving}
+              >
+                Save
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

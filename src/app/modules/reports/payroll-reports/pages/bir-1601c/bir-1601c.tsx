@@ -26,6 +26,7 @@ import type {
 } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -317,21 +318,23 @@ export default function Bir1601C() {
           </>
         }
         extraActions={
-          <Button
-            icon={<FilePdfOutlined />}
-            onClick={() =>
-              openPdfInNewTab(
-                payrollReportsApi.urls.monthlyRemittanceReturnPrint,
-                {
-                  from: range[0],
-                  to: range[1],
-                  amendedReturn: amendedReturn ? "true" : "false",
-                },
-              )
-            }
-          >
-            Preview PDF
-          </Button>
+          <PermissionGate permission="BIR Reports:Export">
+            <Button
+              icon={<FilePdfOutlined />}
+              onClick={() =>
+                openPdfInNewTab(
+                  payrollReportsApi.urls.monthlyRemittanceReturnPrint,
+                  {
+                    from: range[0],
+                    to: range[1],
+                    amendedReturn: amendedReturn ? "true" : "false",
+                  },
+                )
+              }
+            >
+              Preview PDF
+            </Button>
+          </PermissionGate>
         }
         filters={
           <Form layout="vertical">

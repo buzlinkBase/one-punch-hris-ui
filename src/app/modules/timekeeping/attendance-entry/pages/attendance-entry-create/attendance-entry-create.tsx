@@ -35,6 +35,7 @@ import {
 } from "../../hooks/use-attendance-entry-queries";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
@@ -687,16 +688,18 @@ export default function AttendanceEntryCreate() {
           >
             {NAVIGATION_BUTTON_LABEL.BACK}
           </Button>
-          <Button
-            type="primary"
-            loading={isSubmitting}
-            disabled={isSubmitDisabled}
-            onClick={handleSubmit}
-          >
-            {totalEntries > 0
-              ? `${NAVIGATION_BUTTON_LABEL.SAVE} (${totalEntries} ${totalEntries === 1 ? "entry" : "entries"})`
-              : NAVIGATION_BUTTON_LABEL.SAVE}
-          </Button>
+          <PermissionGate permission="Attendance Manual Entry:Edit">
+            <Button
+              type="primary"
+              loading={isSubmitting}
+              disabled={isSubmitDisabled}
+              onClick={handleSubmit}
+            >
+              {totalEntries > 0
+                ? `${NAVIGATION_BUTTON_LABEL.SAVE} (${totalEntries} ${totalEntries === 1 ? "entry" : "entries"})`
+                : NAVIGATION_BUTTON_LABEL.SAVE}
+            </Button>
+          </PermissionGate>
         </Space>
       </div>
     </div>

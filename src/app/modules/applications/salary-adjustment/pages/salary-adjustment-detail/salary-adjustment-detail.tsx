@@ -21,6 +21,7 @@ import {
   useUpdateSalaryAdjustment,
 } from "../../hooks/use-salary-adjustment-queries";
 import { ADJUSTMENT_TYPE_OPTIONS } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -117,13 +118,19 @@ export default function SalaryAdjustmentDetail() {
             >
               Cancel
             </Button>
-            <Button
-              type="primary"
-              onClick={() => form.submit()}
-              loading={creating || updating}
+            <PermissionGate
+              permission={
+                isEdit ? "Salary Adjustment:Edit" : "Salary Adjustment:Create"
+              }
             >
-              Save
-            </Button>
+              <Button
+                type="primary"
+                onClick={() => form.submit()}
+                loading={creating || updating}
+              >
+                Save
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

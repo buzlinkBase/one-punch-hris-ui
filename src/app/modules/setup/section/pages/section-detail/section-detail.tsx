@@ -17,6 +17,7 @@ import { useDepartments } from "@/app/modules/setup/department/hooks/use-departm
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { SECTION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -173,13 +174,21 @@ export default function SectionDetail() {
               <Button onClick={() => navigate({ to: "/setup/section" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isUpdating || isCreating}
+              <PermissionGate
+                permission={
+                  isEdit
+                    ? "Organization Setup:Edit"
+                    : "Organization Setup:Create"
+                }
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isUpdating || isCreating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

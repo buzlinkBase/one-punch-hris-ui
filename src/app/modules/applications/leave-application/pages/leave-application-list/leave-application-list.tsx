@@ -13,6 +13,7 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import LeaveApplicationTable from "../../components/leave-application-table";
 import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -62,13 +63,15 @@ export default function LeaveApplicationList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/applications/leave/create" })}
-            >
-              File Leave
-            </Button>
+            <PermissionGate permission="Leave:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/applications/leave/create" })}
+              >
+                File Leave
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

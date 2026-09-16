@@ -4,6 +4,7 @@ import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { OtherIncomeApplicationResponse } from "../../models/api/response/other-income-application-response.model";
 import { FREQUENCY_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: OtherIncomeApplicationResponse[];
@@ -83,20 +84,29 @@ export default function OtherIncomeApplicationTable({
       width: 90,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
-          <Popconfirm
-            title="Delete this income application?"
-            onConfirm={() => onDelete(record.id)}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-          >
-            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
-          </Popconfirm>
+          <PermissionGate permission="Other Income:Edit">
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record)}
+            />
+          </PermissionGate>
+          <PermissionGate permission="Other Income:Delete">
+            <Popconfirm
+              title="Delete this income application?"
+              onConfirm={() => onDelete(record.id)}
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                size="small"
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+              />
+            </Popconfirm>
+          </PermissionGate>
         </Space>
       ),
     },

@@ -13,6 +13,7 @@ import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
 } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface PassSlipGroup {
   key: string;
@@ -55,47 +56,60 @@ function LogActions({
     <Space size="small">
       {record.approvalStatus === "ForApproval" && (
         <>
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          />
+          <PermissionGate permission="Pass Slip:Edit">
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record)}
+            />
+          </PermissionGate>
+          <PermissionGate permission="Pass Slip:Approve">
+            <Popconfirm
+              title="Approve this log?"
+              onConfirm={() => onApprove(record)}
+              okText="Approve"
+            >
+              <Button
+                size="small"
+                type="text"
+                icon={<CheckOutlined />}
+                style={{ color: "#1DA081" }}
+              />
+            </Popconfirm>
+          </PermissionGate>
+        </>
+      )}
+      {record.approvalStatus === "Approved" && (
+        <PermissionGate permission="Pass Slip:Approve">
           <Popconfirm
-            title="Approve this log?"
-            onConfirm={() => onApprove(record)}
-            okText="Approve"
+            title="Revoke approval? Attendance record will be removed."
+            onConfirm={() => onRevoke(record)}
+            okText="Revoke"
+            okButtonProps={{ danger: true }}
           >
             <Button
               size="small"
               type="text"
-              icon={<CheckOutlined />}
-              style={{ color: "#1DA081" }}
+              icon={<RollbackOutlined />}
+              danger
             />
           </Popconfirm>
-        </>
-      )}
-      {record.approvalStatus === "Approved" && (
-        <Popconfirm
-          title="Revoke approval? Attendance record will be removed."
-          onConfirm={() => onRevoke(record)}
-          okText="Revoke"
-          okButtonProps={{ danger: true }}
-        >
-          <Button size="small" type="text" icon={<RollbackOutlined />} danger />
-        </Popconfirm>
+        </PermissionGate>
       )}
       {(record.approvalStatus === "ForApproval" ||
         record.approvalStatus === "Cancelled" ||
         record.approvalStatus === "Declined") && (
-        <Popconfirm
-          title="Delete this log?"
-          onConfirm={() => onDelete(record.id)}
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-        >
-          <Button size="small" type="text" icon={<DeleteOutlined />} danger />
-        </Popconfirm>
+        <PermissionGate permission="Pass Slip:Delete">
+          <Popconfirm
+            title="Delete this log?"
+            onConfirm={() => onDelete(record.id)}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+          >
+            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
+          </Popconfirm>
+        </PermissionGate>
       )}
     </Space>
   );

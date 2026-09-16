@@ -1,4 +1,4 @@
-﻿import { Table, Button, Space, Popconfirm } from "antd";
+import { Table, Button, Space, Popconfirm } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,6 +6,7 @@ import type { HdmfTableResponse } from "../../models/api/response/hdmf-table-res
 import { HDMF_TABLE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: HdmfTableResponse[];
@@ -139,20 +140,24 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/hdmf-table/${record.id}` })}
-          />
+          <PermissionGate permission="Statutory Tables:Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => navigate({ to: `/setup/hdmf-table/${record.id}` })}
+            />
+          </PermissionGate>
           {onDelete && (
-            <Popconfirm
-              title="Delete this bracket?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            <PermissionGate permission="Statutory Tables:Delete">
+              <Popconfirm
+                title="Delete this bracket?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

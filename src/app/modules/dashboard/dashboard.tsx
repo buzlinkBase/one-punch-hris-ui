@@ -216,7 +216,11 @@ export default function Dashboard() {
       {/* Timekeeping + Payroll snapshot */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 items-start mb-4">
         <DtrBatchesCard />
-        <PayrollSnapshotCard />
+        {/* PayrollsController.Get is gated behind Payroll Summary:View — hide the card rather
+            than let it 403 for callers (most non-Admin roles by default) who don't hold it. */}
+        {authStorage.hasAnyPermission("Payroll Summary:View") && (
+          <PayrollSnapshotCard />
+        )}
       </div>
 
       {/* Bottom row: directory, holidays, pending */}

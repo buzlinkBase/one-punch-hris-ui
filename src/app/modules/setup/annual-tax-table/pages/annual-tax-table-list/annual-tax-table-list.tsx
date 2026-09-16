@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-annual-tax-table-queries";
 import AnnualTaxTableTable from "../../components/annual-tax-table-table";
 import { ANNUAL_TAX_TABLE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -39,13 +40,17 @@ export default function AnnualTaxTableList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/annual-tax-table/create" })}
-            >
-              Add Bracket
-            </Button>
+            <PermissionGate permission="Statutory Tables:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/setup/annual-tax-table/create" })
+                }
+              >
+                Add Bracket
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

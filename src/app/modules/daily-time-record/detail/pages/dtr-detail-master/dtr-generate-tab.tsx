@@ -42,6 +42,7 @@ import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 function currentSemiMonthlyRange(): { fromDate: string; toDate: string } {
   const today = dayjs();
@@ -232,15 +233,17 @@ export default function DtrGenerateTab() {
               Export
             </Button>
           </Dropdown>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            disabled={!records.length}
-            loading={isSaving}
-            onClick={handlePostClick}
-          >
-            Post
-          </Button>
+          <PermissionGate permission="DTR Master:Manage">
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              disabled={!records.length}
+              loading={isSaving}
+              onClick={handlePostClick}
+            >
+              Post
+            </Button>
+          </PermissionGate>
           <Badge count={activeFilterCount} size="small">
             <Button
               icon={<FilterOutlined />}

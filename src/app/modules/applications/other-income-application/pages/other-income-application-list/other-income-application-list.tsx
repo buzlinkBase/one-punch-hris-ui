@@ -10,6 +10,7 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import { useOtherIncomes } from "@/app/modules/setup/other-income/hooks/use-other-income-queries";
 import OtherIncomeApplicationTable from "../../components/other-income-application-table";
 import { OTHER_INCOME_APPLICATION_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -71,15 +72,17 @@ export default function OtherIncomeApplicationList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/applications/other-income/create" })
-              }
-            >
-              New Application
-            </Button>
+            <PermissionGate permission="Other Income:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/applications/other-income/create" })
+                }
+              >
+                New Application
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

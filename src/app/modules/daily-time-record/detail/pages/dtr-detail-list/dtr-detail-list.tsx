@@ -44,6 +44,7 @@ import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -247,15 +248,17 @@ export default function DtrDetailList() {
                 Export
               </Button>
             </Dropdown>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              disabled={!records.length}
-              loading={isSaving}
-              onClick={handlePostClick}
-            >
-              Post
-            </Button>
+            <PermissionGate permission="DTR Master:Manage">
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                disabled={!records.length}
+                loading={isSaving}
+                onClick={handlePostClick}
+              >
+                Post
+              </Button>
+            </PermissionGate>
             <Badge count={activeFilterCount} size="small">
               <Button
                 icon={<FilterOutlined />}

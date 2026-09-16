@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useClients, useDeleteClient } from "../../hooks/use-client-queries";
 import ClientTable from "../../components/client-table";
 import { CLIENT_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -30,13 +31,15 @@ export default function ClientList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/client/create" })}
-            >
-              Add Client
-            </Button>
+            <PermissionGate permission="Workforce Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/client/create" })}
+              >
+                Add Client
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

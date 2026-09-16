@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-flexi-time-shift-queries";
 import FlexiTimeShiftTable from "../../components/flexi-time-shift-table";
 import { FLEXI_TIME_SHIFT_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -39,13 +40,17 @@ export default function FlexiTimeShiftList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/time-shift/flexi/create" })}
-            >
-              Add Flexi Shift
-            </Button>
+            <PermissionGate permission="Time Shift Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/setup/time-shift/flexi/create" })
+                }
+              >
+                Add Flexi Shift
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

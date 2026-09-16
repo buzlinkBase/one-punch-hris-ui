@@ -33,6 +33,7 @@ import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
 import PayrollRunPostModal from "../../components/payroll-run-post-modal";
 import TimeHourPayResultsModal from "../../components/time-hour-pay-results-modal";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -450,33 +451,39 @@ export default function ForPayrollList() {
                 }
               />
             </Tooltip>
-            <Tooltip title={!canRun ? "Select at least one posted batch" : ""}>
-              <Button
-                icon={<PlayCircleOutlined />}
-                onClick={runPayroll}
-                loading={calculating}
-                disabled={!canRun}
+            <PermissionGate permission="Payroll Run:Create">
+              <Tooltip
+                title={!canRun ? "Select at least one posted batch" : ""}
               >
-                Preview
-              </Button>
-            </Tooltip>
-            <Tooltip
-              title={
-                !canRun
-                  ? "Select at least one posted batch"
-                  : "Calculate & save to payroll register"
-              }
-            >
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={() => setPostModalOpen(true)}
-                loading={generating}
-                disabled={!canRun}
+                <Button
+                  icon={<PlayCircleOutlined />}
+                  onClick={runPayroll}
+                  loading={calculating}
+                  disabled={!canRun}
+                >
+                  Preview
+                </Button>
+              </Tooltip>
+            </PermissionGate>
+            <PermissionGate permission="Payroll Run:Create">
+              <Tooltip
+                title={
+                  !canRun
+                    ? "Select at least one posted batch"
+                    : "Calculate & save to payroll register"
+                }
               >
-                Save Payroll
-              </Button>
-            </Tooltip>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  onClick={() => setPostModalOpen(true)}
+                  loading={generating}
+                  disabled={!canRun}
+                >
+                  Save Payroll
+                </Button>
+              </Tooltip>
+            </PermissionGate>
           </Space>
         </div>
       </div>

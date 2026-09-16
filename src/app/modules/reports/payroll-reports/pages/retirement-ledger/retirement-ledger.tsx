@@ -17,6 +17,7 @@ import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { RetirementLedgerResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -145,20 +146,22 @@ export default function RetirementLedger() {
       width: 48,
       fixed: "right",
       render: (_, r) => (
-        <Tooltip title="Adjust balance">
-          <Button
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              setAdjustModal({
-                employeeId: r.employeeId,
-                employeeName: r.fullName,
-                balance: r.balance,
-              })
-            }
-          />
-        </Tooltip>
+        <PermissionGate permission="Payroll Reports:Edit">
+          <Tooltip title="Adjust balance">
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() =>
+                setAdjustModal({
+                  employeeId: r.employeeId,
+                  employeeName: r.fullName,
+                  balance: r.balance,
+                })
+              }
+            />
+          </Tooltip>
+        </PermissionGate>
       ),
     },
   ];
@@ -180,12 +183,14 @@ export default function RetirementLedger() {
         exportRows={toRows}
         extraActions={
           <Space>
-            <Tooltip title="Add entry">
-              <Button
-                icon={<PlusOutlined />}
-                onClick={() => setAdjustModal("add")}
-              />
-            </Tooltip>
+            <PermissionGate permission="Payroll Reports:Edit">
+              <Tooltip title="Add entry">
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => setAdjustModal("add")}
+                />
+              </Tooltip>
+            </PermissionGate>
           </Space>
         }
         filters={

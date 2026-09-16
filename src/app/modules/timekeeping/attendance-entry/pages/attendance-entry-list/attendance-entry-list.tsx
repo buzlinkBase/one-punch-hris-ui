@@ -27,6 +27,7 @@ import dayjs from "dayjs";
 import AttendanceEntryTable from "../../components/attendance-entry-table";
 import EditAttendanceEntryModal from "../../components/edit-attendance-entry-modal";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import {
   useEmployeeFilter,
   useAttendanceEntryRecords,
@@ -219,16 +220,18 @@ export default function AttendanceEntryList() {
           onResize: (w: number) => entryResize("action", w),
         }) as object,
       render: (_: unknown, record: AttendanceEntryResponse) => (
-        <Popconfirm
-          title="Delete this time log?"
-          okText="Yes"
-          cancelText="No"
-          onConfirm={() => handleDeleteEntry(record.id)}
-        >
-          <Button type="link" danger size="small">
-            Delete
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Attendance Manual Entry:Delete">
+          <Popconfirm
+            title="Delete this time log?"
+            okText="Yes"
+            cancelText="No"
+            onConfirm={() => handleDeleteEntry(record.id)}
+          >
+            <Button type="link" danger size="small">
+              Delete
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -285,23 +288,25 @@ export default function AttendanceEntryList() {
           onResize: (w: number) => batchResize("actions", w),
         }) as object,
       render: (_: unknown, row: BatchGroup) => (
-        <Popconfirm
-          title={`Delete all ${row.count} entries in this batch?`}
-          description="This will remove all time logs created under this batch."
-          okText="Delete Batch"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() => handleDeleteBatch(row.batchCode)}
-        >
-          <Button
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            loading={isDeletingBatch}
+        <PermissionGate permission="Attendance Manual Entry:Delete">
+          <Popconfirm
+            title={`Delete all ${row.count} entries in this batch?`}
+            description="This will remove all time logs created under this batch."
+            okText="Delete Batch"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() => handleDeleteBatch(row.batchCode)}
           >
-            Delete Batch
-          </Button>
-        </Popconfirm>
+            <Button
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              loading={isDeletingBatch}
+            >
+              Delete Batch
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -348,15 +353,17 @@ export default function AttendanceEntryList() {
                 Export Log
               </Button>
             </Dropdown>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/timekeeping/attendance-entry/create" })
-              }
-            >
-              New Entry
-            </Button>
+            <PermissionGate permission="Attendance Manual Entry:Edit">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/timekeeping/attendance-entry/create" })
+                }
+              >
+                New Entry
+              </Button>
+            </PermissionGate>
           </div>
         </div>
       </div>

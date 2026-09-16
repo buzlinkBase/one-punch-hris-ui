@@ -12,6 +12,7 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import TravelOrderTable from "../../components/travel-order-table";
 import { TRAVEL_ORDER_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -65,15 +66,17 @@ export default function TravelOrderList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/applications/official-business/create" })
-              }
-            >
-              File OB / Travel Order
-            </Button>
+            <PermissionGate permission="Official Business:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/applications/official-business/create" })
+                }
+              >
+                File OB / Travel Order
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

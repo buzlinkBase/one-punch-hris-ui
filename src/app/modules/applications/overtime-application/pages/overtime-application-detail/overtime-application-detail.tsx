@@ -31,6 +31,7 @@ import {
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import { OVERTIME_APPLICATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -385,15 +386,17 @@ export default function OvertimeApplicationDetail() {
             </Form.Item>
           )}
 
-          <Form.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>
-            <Controller
-              name="approvalStatus"
-              control={control}
-              render={({ field }) => (
-                <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
-              )}
-            />
-          </Form.Item>
+          <PermissionGate permission="Overtime:Approve">
+            <Form.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>
+              <Controller
+                name="approvalStatus"
+                control={control}
+                render={({ field }) => (
+                  <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
+                )}
+              />
+            </Form.Item>
+          </PermissionGate>
 
           <Form.Item
             label={OVERTIME_APPLICATION_LABEL.REMARKS}
@@ -420,13 +423,17 @@ export default function OvertimeApplicationDetail() {
               >
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isCreating || isUpdating}
+              <PermissionGate
+                permission={["Overtime:Edit", "Overtime:Approve"]}
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isCreating || isUpdating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

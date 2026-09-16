@@ -12,6 +12,7 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import { useDeductions } from "@/app/modules/setup/deduction/hooks/use-deduction-queries";
 import DeductionApplicationTable from "../../components/deduction-application-table";
 import { DEDUCTION_APPLICATION_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -75,15 +76,19 @@ export default function DeductionApplicationList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/applications/deduction-application/create" })
-              }
-            >
-              New Loan / Deduction
-            </Button>
+            <PermissionGate permission="Loan/Deduction:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({
+                    to: "/applications/deduction-application/create",
+                  })
+                }
+              >
+                New Loan / Deduction
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>
