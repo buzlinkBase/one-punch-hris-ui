@@ -15,6 +15,7 @@ export const EMPLOYEE_LABEL = {
   ADDRESS1: "Address Line 1",
   ADDRESS2: "Address Line 2",
   DEPARTMENT: "Department",
+  MANAGER: "Reports To",
   AREA: "Project Site",
   PAYROLL_GROUP: "Payroll Group",
   CLIENT: "Client",

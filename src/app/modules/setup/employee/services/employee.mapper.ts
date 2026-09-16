@@ -20,6 +20,7 @@ export const employeeMapper = {
       bioId: response.bioId ?? null,
       employeeNo: response.employeeNo,
       departmentId: response.departmentId ?? null,
+      managerId: response.managerId ?? null,
       areaId: response.areaId ?? null,
       payrollGroupId: response.payrollGroupId ?? "",
       clientId: response.clientId ?? null,

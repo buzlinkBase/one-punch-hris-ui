@@ -48,6 +48,7 @@ import {
 import type { DayName } from "../../models/api/response/employee-response.model";
 import {
   useEmployee,
+  useEmployees,
   useCreateEmployee,
   useUpdateEmployee,
 } from "../../hooks/use-employee-queries";
@@ -199,6 +200,8 @@ export default function EmployeeDetail() {
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployee();
   const { data: departments = [], isLoading: isDepartmentsLoading } =
     useDepartments();
+  const { data: allEmployees = [], isLoading: isEmployeesLoading } =
+    useEmployees();
   const { data: operationAreas = [], isLoading: isAreasLoading } =
     useOperationAreas();
   const { data: payrollGroups = [], isLoading: isPayrollGroupsLoading } =
@@ -503,13 +506,22 @@ export default function EmployeeDetail() {
     isClientsLoading ||
     isSectionsLoading ||
     isBranchesLoading ||
-    isPositionsLoading;
+    isPositionsLoading ||
+    isEmployeesLoading;
 
   const departmentOptions = departments
     .filter((d) => isActiveStatus(d.status))
     .map((d) => ({
       value: d.id,
       label: `${d.code} - ${d.name}`,
+    }));
+  // Excludes self -- an employee can't report to themselves (mirrors the backend's own
+  // EmployeeService.CreateValidatorAsync check).
+  const managerOptions = allEmployees
+    .filter((e) => e.id !== id)
+    .map((e) => ({
+      value: e.id,
+      label: `${e.lastName}, ${e.firstName}`,
     }));
   const areaOptions = operationAreas
     .filter((a) => isActiveStatus(a.status))
@@ -1025,6 +1037,26 @@ export default function EmployeeDetail() {
                           title="Add new department"
                         />
                       </div>
+                    </Form.Item>
+
+                    <Form.Item label={EMPLOYEE_LABEL.MANAGER}>
+                      <Controller
+                        name="managerId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            value={field.value ?? undefined}
+                            onChange={(v) => field.onChange(v ?? null)}
+                            options={managerOptions}
+                            loading={isRefLoading}
+                            allowClear
+                            showSearch
+                            filterOption={filterByLabel}
+                            placeholder="Select who this employee reports to"
+                          />
+                        )}
+                      />
                     </Form.Item>
 
                     <Form.Item label={EMPLOYEE_LABEL.SECTION}>
