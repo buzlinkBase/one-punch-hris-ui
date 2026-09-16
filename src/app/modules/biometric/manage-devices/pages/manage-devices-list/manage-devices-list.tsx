@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useDevices, useDeleteDevice } from "../../hooks/use-device-queries";
 import DeviceTable from "../../components/device-table";
 import { DEVICE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -28,15 +29,17 @@ export default function ManageDevicesList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/biometric/manage-devices/create" })
-              }
-            >
-              Add Device
-            </Button>
+            <PermissionGate permission="Biometric Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/biometric/manage-devices/create" })
+                }
+              >
+                Add Device
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

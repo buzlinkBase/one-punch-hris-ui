@@ -12,6 +12,7 @@ import type { Role } from "../../models/api/response/role-response.model";
 import { ROLE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 interface Props {
   data: Role[];
@@ -101,14 +102,18 @@ export default function RoleTable({ data, loading, onDelete }: Props) {
             onClick={() => navigate({ to: `/security/roles/${record.id}` })}
           />
           {!record.isSystemRole && onDelete && (
-            <Popconfirm
-              title="Delete this role?"
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+            <PermissionGate
+              permission={["Tenant Roles:Manage", "Roles:Delete"]}
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+              <Popconfirm
+                title="Delete this role?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </PermissionGate>
           )}
         </Space>
       ),

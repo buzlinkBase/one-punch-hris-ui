@@ -20,6 +20,7 @@ import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { isActiveStatus } from "@/shared/utils/status.util";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -265,13 +266,19 @@ export default function ManageDevicesDetail() {
               <Button onClick={() => navigate({ to: LIST_PATH })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isCreating || isUpdating}
+              <PermissionGate
+                permission={
+                  isEdit ? "Biometric Setup:Edit" : "Biometric Setup:Create"
+                }
               >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isCreating || isUpdating}
+                >
+                  {NAVIGATION_BUTTON_LABEL.SAVE}
+                </Button>
+              </PermissionGate>
             </Space>
           </div>
         </Form>

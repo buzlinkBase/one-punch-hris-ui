@@ -51,6 +51,7 @@ import {
   useDeleteEmployeesBulk,
 } from "../../hooks/use-commands-queries";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -122,16 +123,18 @@ function PendingCommandsSection({ sn }: { sn: string }) {
       key: "actions",
       width: 80,
       render: (_: unknown, record: DeviceCommandRecord) => (
-        <Popconfirm
-          title="Remove this command?"
-          onConfirm={() => removeCmd(record.id)}
-          okText="Remove"
-          cancelText="Cancel"
-        >
-          <Button type="link" danger size="small" loading={removing}>
-            Delete
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Biometric Setup:Delete">
+          <Popconfirm
+            title="Remove this command?"
+            onConfirm={() => removeCmd(record.id)}
+            okText="Remove"
+            cancelText="Cancel"
+          >
+            <Button type="link" danger size="small" loading={removing}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       ),
     },
   ];
@@ -218,9 +221,16 @@ function EnrollSection({ sn }: { sn: string }) {
           >
             <Select options={FINGER_OPTIONS} placeholder="Select finger" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={enrollingFP} block>
-            Queue Enroll Command
-          </Button>
+          <PermissionGate permission="Biometric Setup:Create">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={enrollingFP}
+              block
+            >
+              Queue Enroll Command
+            </Button>
+          </PermissionGate>
         </Form>
       </Card>
     </div>
@@ -347,22 +357,24 @@ function QueryTemplatesSection({ sn }: { sn: string }) {
             ? `${selectedRowKeys.length} employee${selectedRowKeys.length !== 1 ? "s" : ""} selected — ${fingerLabel}`
             : `No selection — use Query All to query every employee on device`}
         </span>
-        <Space>
-          <Button
-            loading={queryingAll}
-            onClick={() => queryAll({ sn, fid: fingerIndex })}
-          >
-            Query All
-          </Button>
-          <Button
-            type="primary"
-            disabled={selectedRowKeys.length === 0}
-            loading={queryingBulk}
-            onClick={handleQuerySelected}
-          >
-            Query Selected ({selectedRowKeys.length})
-          </Button>
-        </Space>
+        <PermissionGate permission="Biometric Setup:View">
+          <Space>
+            <Button
+              loading={queryingAll}
+              onClick={() => queryAll({ sn, fid: fingerIndex })}
+            >
+              Query All
+            </Button>
+            <Button
+              type="primary"
+              disabled={selectedRowKeys.length === 0}
+              loading={queryingBulk}
+              onClick={handleQuerySelected}
+            >
+              Query Selected ({selectedRowKeys.length})
+            </Button>
+          </Space>
+        </PermissionGate>
       </div>
     </div>
   );
@@ -525,14 +537,16 @@ function SyncEmployeesPanel({
           {selectedRowKeys.length} employee
           {selectedRowKeys.length !== 1 ? "s" : ""} selected
         </span>
-        <Button
-          type="primary"
-          disabled={selectedRowKeys.length === 0}
-          loading={syncing}
-          onClick={handleSync}
-        >
-          Sync Selected ({selectedRowKeys.length})
-        </Button>
+        <PermissionGate permission="Biometric Setup:Edit">
+          <Button
+            type="primary"
+            disabled={selectedRowKeys.length === 0}
+            loading={syncing}
+            onClick={handleSync}
+          >
+            Sync Selected ({selectedRowKeys.length})
+          </Button>
+        </PermissionGate>
       </div>
     </div>
   );
@@ -593,19 +607,21 @@ function SyncSection({ sn }: { sn: string }) {
             className="font-mono text-xs"
           />
           <div>
-            <Button
-              type="primary"
-              loading={syncingBio}
-              disabled={!bioJson.trim()}
-              onClick={async () => {
-                const payload = parseBioJson(bioJson);
-                if (!payload) return;
-                await syncBiometric({ sn, payload });
-                setBioJson("");
-              }}
-            >
-              Sync Fingerprints
-            </Button>
+            <PermissionGate permission="Biometric Setup:Edit">
+              <Button
+                type="primary"
+                loading={syncingBio}
+                disabled={!bioJson.trim()}
+                onClick={async () => {
+                  const payload = parseBioJson(bioJson);
+                  if (!payload) return;
+                  await syncBiometric({ sn, payload });
+                  setBioJson("");
+                }}
+              >
+                Sync Fingerprints
+              </Button>
+            </PermissionGate>
           </div>
         </div>
       ),
@@ -629,19 +645,21 @@ function SyncSection({ sn }: { sn: string }) {
             className="font-mono text-xs"
           />
           <div>
-            <Button
-              type="primary"
-              loading={syncingFace}
-              disabled={!faceJson.trim()}
-              onClick={async () => {
-                const payload = parseBioJson(faceJson);
-                if (!payload) return;
-                await syncFace({ sn, payload });
-                setFaceJson("");
-              }}
-            >
-              Sync Face Templates
-            </Button>
+            <PermissionGate permission="Biometric Setup:Edit">
+              <Button
+                type="primary"
+                loading={syncingFace}
+                disabled={!faceJson.trim()}
+                onClick={async () => {
+                  const payload = parseBioJson(faceJson);
+                  if (!payload) return;
+                  await syncFace({ sn, payload });
+                  setFaceJson("");
+                }}
+              >
+                Sync Face Templates
+              </Button>
+            </PermissionGate>
           </div>
         </div>
       ),
@@ -686,72 +704,78 @@ function ControlsSection({ sn }: { sn: string }) {
               {autoServerTime ? "Auto Server Time" : "Current Server Time"}
             </span>
           </Space>
-          <Button
-            type="primary"
-            block
-            loading={settingTime}
-            onClick={() => setTime({ sn, autoServerTime })}
-          >
-            Set Time
-          </Button>
+          <PermissionGate permission="Biometric Setup:Edit">
+            <Button
+              type="primary"
+              block
+              loading={settingTime}
+              onClick={() => setTime({ sn, autoServerTime })}
+            >
+              Set Time
+            </Button>
+          </PermissionGate>
         </Space>
       </Card>
 
       {/* Attendance Status */}
       <Card title="Attendance Recording" size="small">
-        <Space direction="vertical" className="w-full">
-          <Button
-            type="default"
-            block
-            loading={togglingAtt}
-            onClick={() => enableAtt({ sn, enable: 1 })}
-          >
-            Enable Attendance
-          </Button>
-          <Popconfirm
-            title="Disable attendance recording?"
-            description="The device will stop recording punches."
-            onConfirm={() => enableAtt({ sn, enable: 0 })}
-            okText="Disable"
-            cancelText="Cancel"
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger block loading={togglingAtt}>
-              Disable Attendance
+        <PermissionGate permission="Biometric Setup:Edit">
+          <Space direction="vertical" className="w-full">
+            <Button
+              type="default"
+              block
+              loading={togglingAtt}
+              onClick={() => enableAtt({ sn, enable: 1 })}
+            >
+              Enable Attendance
             </Button>
-          </Popconfirm>
-        </Space>
+            <Popconfirm
+              title="Disable attendance recording?"
+              description="The device will stop recording punches."
+              onConfirm={() => enableAtt({ sn, enable: 0 })}
+              okText="Disable"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
+            >
+              <Button danger block loading={togglingAtt}>
+                Disable Attendance
+              </Button>
+            </Popconfirm>
+          </Space>
+        </PermissionGate>
       </Card>
 
       {/* Pull Attendance */}
       <Card title="Pull Attendance Logs" size="small">
-        <Space direction="vertical" className="w-full">
-          <MobileRangePicker
-            className="w-full"
-            showTime={{ format: "HH:mm" }}
-            format="YYYY-MM-DD HH:mm"
-            value={pullDates}
-            onChange={(vals) =>
-              setPullDates(vals as [Dayjs | null, Dayjs | null] | null)
-            }
-          />
-          <Button
-            type="primary"
-            block
-            loading={pullingAtt}
-            disabled={!canPull}
-            onClick={() => {
-              if (!pullDates?.[0] || !pullDates?.[1]) return;
-              void pullAtt({
-                sn,
-                startDate: pullDates[0].format("YYYY-MM-DDTHH:mm:ss"),
-                endDate: pullDates[1].format("YYYY-MM-DDTHH:mm:ss"),
-              });
-            }}
-          >
-            Pull Attendance
-          </Button>
-        </Space>
+        <PermissionGate permission="Biometric Setup:View">
+          <Space direction="vertical" className="w-full">
+            <MobileRangePicker
+              className="w-full"
+              showTime={{ format: "HH:mm" }}
+              format="YYYY-MM-DD HH:mm"
+              value={pullDates}
+              onChange={(vals) =>
+                setPullDates(vals as [Dayjs | null, Dayjs | null] | null)
+              }
+            />
+            <Button
+              type="primary"
+              block
+              loading={pullingAtt}
+              disabled={!canPull}
+              onClick={() => {
+                if (!pullDates?.[0] || !pullDates?.[1]) return;
+                void pullAtt({
+                  sn,
+                  startDate: pullDates[0].format("YYYY-MM-DDTHH:mm:ss"),
+                  endDate: pullDates[1].format("YYYY-MM-DDTHH:mm:ss"),
+                });
+              }}
+            >
+              Pull Attendance
+            </Button>
+          </Space>
+        </PermissionGate>
       </Card>
 
       {/* Reboot */}
@@ -759,17 +783,19 @@ function ControlsSection({ sn }: { sn: string }) {
         <p className="text-xs text-gray-500 mb-3">
           The device will restart and be briefly unavailable.
         </p>
-        <Popconfirm
-          title="Reboot this device?"
-          onConfirm={() => reboot(sn)}
-          okText="Reboot"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true }}
-        >
-          <Button danger block loading={rebooting}>
-            Reboot
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Biometric Setup:Edit">
+          <Popconfirm
+            title="Reboot this device?"
+            onConfirm={() => reboot(sn)}
+            okText="Reboot"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger block loading={rebooting}>
+              Reboot
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       </Card>
 
       {/* Clear Logs */}
@@ -777,18 +803,20 @@ function ControlsSection({ sn }: { sn: string }) {
         <p className="text-xs text-gray-500 mb-3">
           Permanently deletes all attendance records stored on the device.
         </p>
-        <Popconfirm
-          title="Clear all attendance logs?"
-          description="This action cannot be undone."
-          onConfirm={() => clearLogs(sn)}
-          okText="Clear"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true }}
-        >
-          <Button danger block loading={clearingLogs}>
-            Clear Logs
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Biometric Setup:Edit">
+          <Popconfirm
+            title="Clear all attendance logs?"
+            description="This action cannot be undone."
+            onConfirm={() => clearLogs(sn)}
+            okText="Clear"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger block loading={clearingLogs}>
+              Clear Logs
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       </Card>
 
       {/* Clear Admin */}
@@ -796,17 +824,19 @@ function ControlsSection({ sn }: { sn: string }) {
         <p className="text-xs text-gray-500 mb-3">
           Removes admin privileges from all users on this device.
         </p>
-        <Popconfirm
-          title="Remove all admin privileges?"
-          onConfirm={() => clearAdmin(sn)}
-          okText="Clear"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true }}
-        >
-          <Button danger block loading={clearingAdmin}>
-            Clear Admin
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Biometric Setup:Edit">
+          <Popconfirm
+            title="Remove all admin privileges?"
+            onConfirm={() => clearAdmin(sn)}
+            okText="Clear"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger block loading={clearingAdmin}>
+              Clear Admin
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       </Card>
 
       {/* Registry Reset */}
@@ -815,18 +845,20 @@ function ControlsSection({ sn }: { sn: string }) {
           Resets sync timestamps to force a full re-sync from the server on next
           connection.
         </p>
-        <Popconfirm
-          title="Reset device registry?"
-          description="Sync counters will be zeroed. A full re-sync will occur."
-          onConfirm={() => registryReset(sn)}
-          okText="Reset"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true }}
-        >
-          <Button danger block loading={resettingReg}>
-            Registry Reset
-          </Button>
-        </Popconfirm>
+        <PermissionGate permission="Biometric Setup:Edit">
+          <Popconfirm
+            title="Reset device registry?"
+            description="Sync counters will be zeroed. A full re-sync will occur."
+            onConfirm={() => registryReset(sn)}
+            okText="Reset"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger block loading={resettingReg}>
+              Registry Reset
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       </Card>
     </div>
   );
@@ -926,23 +958,25 @@ function BulkDeleteEmployeePanel({ sn }: { sn: string }) {
           {selectedRowKeys.length} employee
           {selectedRowKeys.length !== 1 ? "s" : ""} selected
         </span>
-        <Popconfirm
-          title={`Delete ${selectedRowKeys.length} employee(s) from device?`}
-          description="This will remove their records from the device."
-          onConfirm={handleDelete}
-          okText="Delete"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true }}
-          disabled={selectedRowKeys.length === 0}
-        >
-          <Button
-            danger
+        <PermissionGate permission="Biometric Setup:Delete">
+          <Popconfirm
+            title={`Delete ${selectedRowKeys.length} employee(s) from device?`}
+            description="This will remove their records from the device."
+            onConfirm={handleDelete}
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
             disabled={selectedRowKeys.length === 0}
-            loading={deleting}
           >
-            Delete Selected ({selectedRowKeys.length})
-          </Button>
-        </Popconfirm>
+            <Button
+              danger
+              disabled={selectedRowKeys.length === 0}
+              loading={deleting}
+            >
+              Delete Selected ({selectedRowKeys.length})
+            </Button>
+          </Popconfirm>
+        </PermissionGate>
       </div>
     </div>
   );

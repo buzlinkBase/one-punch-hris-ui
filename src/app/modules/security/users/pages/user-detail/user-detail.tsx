@@ -18,6 +18,7 @@ import {
 } from "../../hooks/use-user-queries";
 import { USER_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -162,22 +163,26 @@ export default function UserDetail() {
                 >
                   Reset
                 </Button>
-                <Popconfirm
-                  title="Update member?"
-                  description="This will save the new role and status settings."
-                  onConfirm={handleSave}
-                  okText="Yes"
-                  cancelText="No"
-                  disabled={!hasChanges}
+                <PermissionGate
+                  permission={["Tenant Members:Manage", "Users:Edit"]}
                 >
-                  <Button
-                    type="primary"
-                    loading={isSaving}
+                  <Popconfirm
+                    title="Update member?"
+                    description="This will save the new role and status settings."
+                    onConfirm={handleSave}
+                    okText="Yes"
+                    cancelText="No"
                     disabled={!hasChanges}
                   >
-                    {NAVIGATION_BUTTON_LABEL.SAVE}
-                  </Button>
-                </Popconfirm>
+                    <Button
+                      type="primary"
+                      loading={isSaving}
+                      disabled={!hasChanges}
+                    >
+                      {NAVIGATION_BUTTON_LABEL.SAVE}
+                    </Button>
+                  </Popconfirm>
+                </PermissionGate>
               </Space>
             </div>
           )}

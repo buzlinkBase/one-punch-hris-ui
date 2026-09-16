@@ -450,10 +450,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           },
         ],
       },
-      // Deliberately untagged -- Biometric Setup's backend (hrms-adms-api's DeviceController)
-      // is a separate microservice with no permission-checking wired yet, so a menu-only
-      // restriction here would say "no" while the API still says "yes." Land the permission
-      // tag alongside that backend work, not before it.
       {
         key: "biometric",
         label: "Biometric",
@@ -463,11 +459,13 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             key: "enroll-biometrics",
             label: "Enroll Biometrics",
             path: "/enroll-biometrics",
+            permission: "Biometric Setup:View",
           },
           {
             key: "biometric-manage-devices",
             label: "Manage Devices",
             path: "/biometric/manage-devices",
+            permission: "Biometric Setup:View",
           },
         ],
       },
