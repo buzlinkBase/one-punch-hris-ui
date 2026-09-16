@@ -4,6 +4,11 @@ export interface NavItem {
   path?: string;
   type?: "group" | "divider";
   children?: NavItem[];
+  // Any-of permission requirement — omit for "always visible" (the default for nearly every
+  // item today). Only tag an item once every role/Custom Role that currently relies on seeing
+  // it is confirmed to already hold one of these codes — otherwise it silently disappears for
+  // whoever doesn't. See main-layout.tsx's filterNavByPermission.
+  permission?: string | string[];
 }
 
 export const NAVIGATION_ITEMS: NavItem[] = [
@@ -16,6 +21,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     key: "nav-portal",
     label: "My Portal",
     type: "group",
+    permission: "Employee Self-Service Portal:View",
     children: [
       {
         key: "portal-profile",
