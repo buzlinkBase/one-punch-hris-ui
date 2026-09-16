@@ -14,6 +14,7 @@ export interface CreateEmployee {
   bioId?: number | null;
   employeeNo?: string;
   departmentId?: string | null;
+  managerId?: string | null;
   payrollGroupId?: string | null;
   clientId?: string | null;
   areaId?: string | null;

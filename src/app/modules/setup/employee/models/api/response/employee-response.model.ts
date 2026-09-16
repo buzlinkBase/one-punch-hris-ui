@@ -119,6 +119,7 @@ export interface EmployeeResponse {
   bioId?: number | null;
   employeeNo: string;
   departmentId?: string | null;
+  managerId?: string | null;
   payrollGroupId?: string | null;
   clientId?: string | null;
   areaId?: string | null;
@@ -192,4 +193,5 @@ export interface EmployeeResponse {
   clientName?: string;
   positionName?: string;
   areaName?: string;
+  managerName?: string;
 }

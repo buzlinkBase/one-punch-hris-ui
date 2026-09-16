@@ -32,7 +32,7 @@ export default function QuickAddDepartmentModal({
     resolver: zodResolver(
       departmentFormSchema,
     ) as Resolver<DepartmentFormValues>,
-    defaultValues: { code: "", name: "", headId: null, status: "ACTIVE" },
+    defaultValues: { code: "", name: "", status: "ACTIVE" },
   });
 
   const { mutateAsync: create, isPending } = useCreateDepartment();

@@ -3,6 +3,5 @@ export interface DepartmentResponse {
   code: string;
   name: string;
   branchId: string;
-  headId?: string | null;
   status: string;
 }
