@@ -33,5 +33,9 @@ export interface ApprovalInstanceResponse {
   totalSteps: number;
   status: ApprovalInstanceStatus;
   currentStepNoteRequirement: NoteRequirement;
+  /** Null once no longer InProgress, or for the implicit fallback step (no workflow configured). */
+  currentStepApproverType?: ApproverType | null;
+  /** Resolved server-side — a name, department, position, or "Your Manager"/"Your Department". */
+  currentStepApproverLabel?: string | null;
   actions: ApprovalActionResponse[];
 }

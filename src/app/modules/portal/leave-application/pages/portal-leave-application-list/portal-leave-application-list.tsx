@@ -1,12 +1,4 @@
-import {
-  Button,
-  Card,
-  Popconfirm,
-  Table,
-  Tag,
-  Typography,
-  message,
-} from "antd";
+import { Button, Card, Popconfirm, Table, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -17,24 +9,9 @@ import {
 } from "../../../shared/hooks/use-my-employee-queries";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import type { LeaveApplicationResponse } from "@/app/modules/applications/leave-application/models/api/response/leave-application-response.model";
+import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 
 const { Title } = Typography;
-
-const STATUS_COLOR: Record<string, string> = {
-  ForApproval: "warning",
-  Approved: "success",
-  Cancelled: "default",
-  Declined: "error",
-  Withdrawn: "default",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  ForApproval: "For Approval",
-  Approved: "Approved",
-  Cancelled: "Cancelled",
-  Declined: "Declined",
-  Withdrawn: "Withdrawn",
-};
 
 export default function PortalLeaveApplicationList() {
   const navigate = useNavigate();
@@ -76,11 +53,13 @@ export default function PortalLeaveApplicationList() {
     },
     {
       title: "Status",
-      dataIndex: "approvalStatus",
-      render: (val: string) => (
-        <Tag color={STATUS_COLOR[val] ?? "default"}>
-          {STATUS_LABEL[val] ?? val}
-        </Tag>
+      key: "status",
+      render: (_, r) => (
+        <ApprovalStatusCell
+          applicationType="Leave"
+          applicationId={r.id}
+          approvalStatus={r.approvalStatus}
+        />
       ),
     },
     {

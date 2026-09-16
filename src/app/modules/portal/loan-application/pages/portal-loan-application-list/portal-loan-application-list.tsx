@@ -17,16 +17,13 @@ import {
   useWithdrawMyLoanApplication,
 } from "../../../shared/hooks/use-my-employee-queries";
 import { useDeductions } from "@/app/modules/setup/deduction/hooks/use-deduction-queries";
-import {
-  APPROVAL_STATUS_COLOR,
-  APPROVAL_STATUS_LABEL,
-} from "@/app/modules/applications/pass-slip/constants/label.const";
 import { FREQUENCY_LABEL } from "@/app/modules/applications/deduction-application/constants/label.const";
 import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
 import {
   loanBreakdownColumns,
   type LoanBreakdownRow,
 } from "@/shared/utils/loan-amortization.util";
+import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 
 const { Title } = Typography;
 
@@ -90,12 +87,13 @@ export default function PortalLoanApplicationList() {
     },
     {
       title: "Status",
-      dataIndex: "approvalStatus",
-      key: "approvalStatus",
-      render: (v?: string) => (
-        <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "success"}>
-          {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "Approved"}
-        </Tag>
+      key: "status",
+      render: (_, r) => (
+        <ApprovalStatusCell
+          applicationType="Loan"
+          applicationId={r.id}
+          approvalStatus={r.approvalStatus ?? "Approved"}
+        />
       ),
     },
     {
