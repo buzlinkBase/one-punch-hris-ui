@@ -44,9 +44,27 @@ export function useUpdatePassSlip() {
 export function useApprovePassSlip() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => passSlipApi.approve(id),
-    onSuccess: () => {
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      passSlipApi.approve(id, note),
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PassSlip", id],
+      });
+    },
+  });
+}
+
+export function useDeclinePassSlip() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      passSlipApi.decline(id, note),
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PassSlip", id],
+      });
     },
   });
 }

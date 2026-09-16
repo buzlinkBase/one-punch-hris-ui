@@ -37,8 +37,16 @@ export const passSlipApi = {
     );
   },
 
-  approve(id: string): Promise<void> {
-    return httpClient.postUnwrapped<void>(`${ENDPOINT}/${id}/approve`, {});
+  approve(id: string, note?: string): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/${id}/approve`, {
+      note,
+    });
+  },
+
+  decline(id: string, note?: string): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/${id}/decline`, {
+      note,
+    });
   },
 
   revoke(id: string): Promise<void> {

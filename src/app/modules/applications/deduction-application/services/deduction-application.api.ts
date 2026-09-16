@@ -46,11 +46,11 @@ export const deductionApplicationApi = {
     return httpClient.delete<void>(`${ENDPOINT}/item/${id}`);
   },
 
-  approve(id: string): Promise<void> {
-    return httpClient.put<void>(`${ENDPOINT}/${id}/approve`);
+  approve(id: string, note?: string): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/${id}/approve`, { note });
   },
 
-  decline(id: string): Promise<void> {
-    return httpClient.put<void>(`${ENDPOINT}/${id}/decline`);
+  decline(id: string, note?: string): Promise<void> {
+    return httpClient.put<void>(`${ENDPOINT}/${id}/decline`, { note });
   },
 };

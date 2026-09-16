@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Tag } from "antd";
 import {
   EditOutlined,
@@ -16,6 +17,8 @@ import {
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
@@ -42,8 +45,9 @@ interface Props {
   employees: EmployeeFilterResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
-  onApprove?: (record: TravelOrderApplicationResponse) => void;
-  onDecline?: (record: TravelOrderApplicationResponse) => void;
+  onApprove?: (record: TravelOrderApplicationResponse, note?: string) => void;
+  onDecline?: (record: TravelOrderApplicationResponse, note?: string) => void;
+  actionLoading?: boolean;
 }
 
 export default function TravelOrderTable({
@@ -53,8 +57,17 @@ export default function TravelOrderTable({
   onDelete,
   onApprove,
   onDecline,
+  actionLoading,
 }: Props) {
   const navigate = useNavigate();
+  const [actionTarget, setActionTarget] = useState<{
+    record: TravelOrderApplicationResponse;
+    action: "Approved" | "Declined";
+  } | null>(null);
+  const { data: instance } = useApprovalInstance(
+    "OfficialBusiness",
+    actionTarget?.record.id,
+  );
 
   const empMap = new Map(employees.map((e) => [e.id, e.name ?? e.id]));
 
@@ -186,18 +199,12 @@ export default function TravelOrderTable({
                 "Official Business:Approve",
               ]}
             >
-              <Popconfirm
-                title="Approve this travel order?"
-                onConfirm={() => onApprove(record)}
-                okText="Approve"
-                cancelText="Cancel"
-              >
-                <Button
-                  type="text"
-                  icon={<CheckOutlined />}
-                  style={{ color: "#52c41a" }}
-                />
-              </Popconfirm>
+              <Button
+                type="text"
+                icon={<CheckOutlined />}
+                style={{ color: "#52c41a" }}
+                onClick={() => setActionTarget({ record, action: "Approved" })}
+              />
             </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
@@ -207,15 +214,12 @@ export default function TravelOrderTable({
                 "Official Business:Approve",
               ]}
             >
-              <Popconfirm
-                title="Decline this travel order?"
-                onConfirm={() => onDecline(record)}
-                okText="Decline"
-                okButtonProps={{ danger: true }}
-                cancelText="Cancel"
-              >
-                <Button type="text" danger icon={<CloseOutlined />} />
-              </Popconfirm>
+              <Button
+                type="text"
+                danger
+                icon={<CloseOutlined />}
+                onClick={() => setActionTarget({ record, action: "Declined" })}
+              />
             </PermissionGate>
           )}
           <PermissionGate
@@ -250,16 +254,32 @@ export default function TravelOrderTable({
   ];
 
   return (
-    <Table
-      rowKey="id"
-      dataSource={data}
-      columns={columns}
-      size="small"
-      loading={loading}
-      pagination={{ pageSize: 15 }}
-      scroll={{ x: "max-content" }}
-      sticky
-      components={{ header: { cell: ResizableTitle } }}
-    />
+    <>
+      <Table
+        rowKey="id"
+        dataSource={data}
+        columns={columns}
+        size="small"
+        loading={loading}
+        pagination={{ pageSize: 15 }}
+        scroll={{ x: "max-content" }}
+        sticky
+        components={{ header: { cell: ResizableTitle } }}
+      />
+      <ApprovalActionModal
+        open={!!actionTarget}
+        action={actionTarget?.action ?? "Approved"}
+        noteRequirement={instance?.currentStepNoteRequirement}
+        loading={actionLoading}
+        onCancel={() => setActionTarget(null)}
+        onConfirm={(note) => {
+          if (!actionTarget) return;
+          if (actionTarget.action === "Approved")
+            onApprove?.(actionTarget.record, note);
+          else onDecline?.(actionTarget.record, note);
+          setActionTarget(null);
+        }}
+      />
+    </>
   );
 }

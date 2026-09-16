@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import {
   usePassSlips,
   useApprovePassSlip,
+  useDeclinePassSlip,
   useRevokePassSlip,
   useDeletePassSlip,
 } from "../../hooks/use-pass-slip-queries";
@@ -30,7 +31,8 @@ export default function PassSlipList() {
   } = usePassSlips(
     dateRange ? { from: dateRange[0], to: dateRange[1] } : undefined,
   );
-  const { mutate: approve } = useApprovePassSlip();
+  const { mutate: approve, isPending: isApproving } = useApprovePassSlip();
+  const { mutate: decline, isPending: isDeclining } = useDeclinePassSlip();
   const { mutate: revoke } = useRevokePassSlip();
   const { mutate: remove } = useDeletePassSlip();
   const { data: rawEmployees = [] } = useEmployees();
@@ -115,11 +117,24 @@ export default function PassSlipList() {
         onEdit={(record) =>
           navigate({ to: `/applications/pass-slip/${record.id}` })
         }
-        onApprove={(record) =>
-          approve(record.id, {
-            onSuccess: () => message.success("Pass slip approved."),
-            onError: () => message.error("Failed to approve."),
-          })
+        actionLoading={isApproving || isDeclining}
+        onApprove={(record, note) =>
+          approve(
+            { id: record.id, note },
+            {
+              onSuccess: () => message.success("Pass slip approved."),
+              onError: () => message.error("Failed to approve."),
+            },
+          )
+        }
+        onDecline={(record, note) =>
+          decline(
+            { id: record.id, note },
+            {
+              onSuccess: () => message.success("Pass slip declined."),
+              onError: () => message.error("Failed to decline."),
+            },
+          )
         }
         onRevoke={(record) =>
           revoke(record.id, {

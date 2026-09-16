@@ -27,8 +27,10 @@ export default function DeductionApplicationList() {
     refetch,
   } = useDeductionApplications();
   const { mutate: remove } = useDeleteDeductionApplication();
-  const { mutate: approve } = useApproveDeductionApplication();
-  const { mutate: decline } = useDeclineDeductionApplication();
+  const { mutate: approve, isPending: isApproving } =
+    useApproveDeductionApplication();
+  const { mutate: decline, isPending: isDeclining } =
+    useDeclineDeductionApplication();
   const { data: rawEmployees = [] } = useEmployees();
   const { data: rawDeductions = [] } = useDeductions();
 
@@ -126,17 +128,24 @@ export default function DeductionApplicationList() {
             onError: () => message.error("Failed to delete."),
           })
         }
-        onApprove={(id) =>
-          approve(id, {
-            onSuccess: () => message.success("Loan approved."),
-            onError: () => message.error("Failed to approve."),
-          })
+        actionLoading={isApproving || isDeclining}
+        onApprove={(id, note) =>
+          approve(
+            { id, note },
+            {
+              onSuccess: () => message.success("Loan approved."),
+              onError: () => message.error("Failed to approve."),
+            },
+          )
         }
-        onDecline={(id) =>
-          decline(id, {
-            onSuccess: () => message.success("Loan declined."),
-            onError: () => message.error("Failed to decline."),
-          })
+        onDecline={(id, note) =>
+          decline(
+            { id, note },
+            {
+              onSuccess: () => message.success("Loan declined."),
+              onError: () => message.error("Failed to decline."),
+            },
+          )
         }
       />
     </div>

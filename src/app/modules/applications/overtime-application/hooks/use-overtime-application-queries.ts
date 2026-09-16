@@ -64,13 +64,18 @@ export function useChangeOvertimeApplicationStatus() {
     mutationFn: ({
       record,
       status,
+      note,
     }: {
       record: OvertimeApplicationResponse;
       status: string;
-    }) => overtimeApplicationApi.changeStatus(record, status),
+      note?: string;
+    }) => overtimeApplicationApi.changeStatus(record, status, note),
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "Overtime", updated.id],
+      });
     },
   });
 }

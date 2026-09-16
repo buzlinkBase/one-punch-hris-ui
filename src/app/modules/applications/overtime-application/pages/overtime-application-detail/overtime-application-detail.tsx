@@ -32,6 +32,7 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import { OVERTIME_APPLICATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -106,6 +107,12 @@ export default function OvertimeApplicationDetail() {
     value: e.id,
     label: e.fullName ?? `${e.firstName} ${e.lastName}`,
   }));
+  const employeeMap = new Map(
+    rawEmployees.map((e) => [
+      e.id,
+      e.fullName ?? `${e.firstName} ${e.lastName}`,
+    ]),
+  );
 
   const {
     control,
@@ -255,6 +262,16 @@ export default function OvertimeApplicationDetail() {
                   : "-"}
               </Descriptions.Item>
             </Descriptions>
+          </Card>
+        )}
+
+        {isEdit && selected && (
+          <Card size="small" title="Approval Progress" className="mb-4">
+            <ApprovalTimeline
+              applicationType="Overtime"
+              applicationId={selected.id}
+              resolveEmployeeName={(empId) => employeeMap.get(empId)}
+            />
           </Card>
         )}
 

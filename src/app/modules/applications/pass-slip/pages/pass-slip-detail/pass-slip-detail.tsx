@@ -1,6 +1,7 @@
 ﻿import { useEffect } from "react";
 import {
   Button,
+  Card,
   DatePicker,
   Form,
   Input,
@@ -37,6 +38,7 @@ import {
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -129,6 +131,17 @@ function EditPassSlip({ id }: { id: string }) {
               selected.approvalStatus}
           </Tag>
         </div>
+      )}
+      {selected && (
+        <Card size="small" title="Approval Progress" className="mb-4">
+          <ApprovalTimeline
+            applicationType="PassSlip"
+            applicationId={selected.id}
+            resolveEmployeeName={(empId) =>
+              rawEmployees.find((e) => e.id === empId)?.fullName ?? undefined
+            }
+          />
+        </Card>
       )}
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <div className="form-grid-2">

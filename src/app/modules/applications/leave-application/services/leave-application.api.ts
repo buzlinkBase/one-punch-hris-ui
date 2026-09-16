@@ -49,6 +49,7 @@ export const leaveApplicationApi = {
   changeStatus(
     record: LeaveApplicationResponse,
     status: string,
+    note?: string,
   ): Promise<LeaveApplicationResponse> {
     return httpClient.putUnwrapped<LeaveApplicationResponse>(
       `${ENDPOINT}/${record.id}`,
@@ -67,6 +68,7 @@ export const leaveApplicationApi = {
         totalMinutes: record.totalMinutes,
         applicationRemarks: record.applicationRemarks,
         approvalStatus: status,
+        note,
       },
     );
   },

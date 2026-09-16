@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Tag, Tooltip } from "antd";
 import {
   EditOutlined,
@@ -14,6 +15,8 @@ import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
@@ -37,8 +40,9 @@ interface Props {
   leaveTypes: LeaveTypeResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
-  onApprove?: (record: LeaveApplicationResponse) => void;
-  onDecline?: (record: LeaveApplicationResponse) => void;
+  onApprove?: (record: LeaveApplicationResponse, note?: string) => void;
+  onDecline?: (record: LeaveApplicationResponse, note?: string) => void;
+  actionLoading?: boolean;
 }
 
 export default function LeaveApplicationTable({
@@ -49,8 +53,17 @@ export default function LeaveApplicationTable({
   onDelete,
   onApprove,
   onDecline,
+  actionLoading,
 }: Props) {
   const navigate = useNavigate();
+  const [actionTarget, setActionTarget] = useState<{
+    record: LeaveApplicationResponse;
+    action: "Approved" | "Declined";
+  } | null>(null);
+  const { data: instance } = useApprovalInstance(
+    "Leave",
+    actionTarget?.record.id,
+  );
 
   const empMap = new Map(employees.map((e) => [e.id, e.name ?? e.id]));
   const leaveMap = new Map(
@@ -197,31 +210,22 @@ export default function LeaveApplicationTable({
         <Space>
           {onApprove && record.approvalStatus === "ForApproval" && (
             <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
-              <Popconfirm
-                title="Approve this leave application?"
-                onConfirm={() => onApprove(record)}
-                okText="Approve"
-                cancelText="Cancel"
-              >
-                <Button
-                  type="text"
-                  icon={<CheckOutlined />}
-                  style={{ color: "#52c41a" }}
-                />
-              </Popconfirm>
+              <Button
+                type="text"
+                icon={<CheckOutlined />}
+                style={{ color: "#52c41a" }}
+                onClick={() => setActionTarget({ record, action: "Approved" })}
+              />
             </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
             <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
-              <Popconfirm
-                title="Decline this leave application?"
-                onConfirm={() => onDecline(record)}
-                okText="Decline"
-                okButtonProps={{ danger: true }}
-                cancelText="Cancel"
-              >
-                <Button type="text" danger icon={<CloseOutlined />} />
-              </Popconfirm>
+              <Button
+                type="text"
+                danger
+                icon={<CloseOutlined />}
+                onClick={() => setActionTarget({ record, action: "Declined" })}
+              />
             </PermissionGate>
           )}
           <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
@@ -252,16 +256,32 @@ export default function LeaveApplicationTable({
   ];
 
   return (
-    <Table
-      rowKey="id"
-      dataSource={data}
-      columns={columns}
-      size="small"
-      loading={loading}
-      pagination={{ pageSize: 15 }}
-      scroll={{ x: "max-content" }}
-      sticky
-      components={{ header: { cell: ResizableTitle } }}
-    />
+    <>
+      <Table
+        rowKey="id"
+        dataSource={data}
+        columns={columns}
+        size="small"
+        loading={loading}
+        pagination={{ pageSize: 15 }}
+        scroll={{ x: "max-content" }}
+        sticky
+        components={{ header: { cell: ResizableTitle } }}
+      />
+      <ApprovalActionModal
+        open={!!actionTarget}
+        action={actionTarget?.action ?? "Approved"}
+        noteRequirement={instance?.currentStepNoteRequirement}
+        loading={actionLoading}
+        onCancel={() => setActionTarget(null)}
+        onConfirm={(note) => {
+          if (!actionTarget) return;
+          if (actionTarget.action === "Approved")
+            onApprove?.(actionTarget.record, note);
+          else onDecline?.(actionTarget.record, note);
+          setActionTarget(null);
+        }}
+      />
+    </>
   );
 }
