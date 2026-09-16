@@ -1,12 +1,4 @@
-import {
-  Button,
-  Card,
-  Popconfirm,
-  Table,
-  Tag,
-  Typography,
-  message,
-} from "antd";
+import { Button, Card, Popconfirm, Table, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -15,11 +7,8 @@ import {
   useMyTravelOrderApplications,
   useWithdrawMyTravelOrderApplication,
 } from "../../../shared/hooks/use-my-employee-queries";
-import {
-  APPROVAL_STATUS_COLOR,
-  APPROVAL_STATUS_LABEL,
-} from "@/app/modules/applications/pass-slip/constants/label.const";
 import type { TravelOrderApplicationResponse } from "@/app/modules/applications/travel-order-application/models/api/response/travel-order-application-response.model";
+import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 
 const { Title } = Typography;
 
@@ -57,11 +46,13 @@ export default function PortalOfficialBusinessList() {
     },
     {
       title: "Status",
-      dataIndex: "approvalStatus",
-      render: (val: string) => (
-        <Tag color={APPROVAL_STATUS_COLOR[val] ?? "default"}>
-          {APPROVAL_STATUS_LABEL[val] ?? val}
-        </Tag>
+      key: "status",
+      render: (_, r) => (
+        <ApprovalStatusCell
+          applicationType="OfficialBusiness"
+          applicationId={r.id}
+          approvalStatus={r.approvalStatus}
+        />
       ),
     },
     {
