@@ -88,6 +88,22 @@ export function ApprovalTimeline({
         </Text>
       ),
     });
+
+    // Upcoming steps, shown muted/outline so they read as "not reached yet" rather than
+    // competing with the solid-colored past actions or the current step's clock icon.
+    instance.steps
+      .filter((step) => step.stepNumber > instance.currentStepNumber)
+      .forEach((step) => {
+        items.push({
+          color: "gray",
+          dot: <ClockCircleOutlined style={{ fontSize: 16, opacity: 0.4 }} />,
+          children: (
+            <Text type="secondary" className="opacity-60">
+              Step {step.stepNumber}: {step.approverLabel ?? "Unassigned"}
+            </Text>
+          ),
+        });
+      });
   }
 
   return (

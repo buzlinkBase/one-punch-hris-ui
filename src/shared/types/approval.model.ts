@@ -25,6 +25,14 @@ export interface ApprovalActionResponse {
   createdAt: string;
 }
 
+export interface ApprovalStepSummary {
+  stepNumber: number;
+  approverType: ApproverType;
+  /** Resolved server-side — a name, department, position, or "Your Manager"/"Your Department". */
+  approverLabel?: string | null;
+  noteRequirement: NoteRequirement;
+}
+
 export interface ApprovalInstanceResponse {
   applicationType: ApprovalApplicationType;
   applicationId: string;
@@ -38,4 +46,6 @@ export interface ApprovalInstanceResponse {
   /** Resolved server-side — a name, department, position, or "Your Manager"/"Your Department". */
   currentStepApproverLabel?: string | null;
   actions: ApprovalActionResponse[];
+  /** Every step of the workflow, in order — lets the timeline show upcoming steps' approvers. */
+  steps: ApprovalStepSummary[];
 }

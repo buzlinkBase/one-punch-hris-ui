@@ -289,16 +289,6 @@ export default function TravelOrderDetail() {
           </Card>
         )}
 
-        {isEdit && selected && (
-          <Card size="small" title="Approval Progress" className="mb-4">
-            <ApprovalTimeline
-              applicationType="OfficialBusiness"
-              applicationId={selected.id}
-              resolveEmployeeName={(empId) => employeeMap.get(empId)}
-            />
-          </Card>
-        )}
-
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           {/* Row 1: Employee | Date Range | Entry Mode — mirrors OT's 3-col top row */}
           <div className="form-grid-3">
@@ -592,6 +582,16 @@ export default function TravelOrderDetail() {
             </Space>
           </div>
         </Form>
+
+        {isEdit && selected && (
+          <Card size="small" title="Approval Progress" className="mt-4">
+            <ApprovalTimeline
+              applicationType="OfficialBusiness"
+              applicationId={selected.id}
+              resolveEmployeeName={(empId) => employeeMap.get(empId)}
+            />
+          </Card>
+        )}
       </div>
     </div>
   );

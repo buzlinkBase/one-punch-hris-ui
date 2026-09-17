@@ -282,18 +282,6 @@ export default function DeductionApplicationDetail() {
         </div>
       </div>
 
-      {isEdit && existing && (
-        <Card size="small" title="Approval Progress" className="mb-4">
-          <ApprovalTimeline
-            applicationType="Loan"
-            applicationId={existing.id}
-            resolveEmployeeName={(empId) =>
-              rawEmployees.find((e) => e.id === empId)?.fullName ?? undefined
-            }
-          />
-        </Card>
-      )}
-
       <Form layout="vertical" disabled={loadingExisting}>
         <Card className="mb-4">
           <Row gutter={16}>
@@ -570,6 +558,18 @@ export default function DeductionApplicationDetail() {
           </Divider>
         )}
       </Form>
+
+      {isEdit && existing && (
+        <Card size="small" title="Approval Progress" className="mt-4">
+          <ApprovalTimeline
+            applicationType="Loan"
+            applicationId={existing.id}
+            resolveEmployeeName={(empId) =>
+              rawEmployees.find((e) => e.id === empId)?.fullName ?? undefined
+            }
+          />
+        </Card>
+      )}
     </div>
   );
 }
