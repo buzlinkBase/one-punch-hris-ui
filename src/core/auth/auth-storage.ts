@@ -8,6 +8,10 @@ const KEYS = {
 
 const EXPIRY_BUFFER_MS = 60_000;
 
+// TEMP-ALLOW-ALL (2026-09-17): flip to false to restore normal permission checks below. Search
+// "TEMP-ALLOW-ALL" for every place this flag gates a check.
+const TEMP_ALLOW_ALL = true;
+
 export interface AuthUser {
   email: string;
   name: string;
@@ -90,10 +94,14 @@ export const authStorage = {
   },
 
   hasPermission(code: string): boolean {
+    if (TEMP_ALLOW_ALL) return true;
+    if (this.hasRole("Owner")) return true;
     return this.getPermissions().includes(code);
   },
 
   hasAnyPermission(...codes: string[]): boolean {
+    if (TEMP_ALLOW_ALL) return true;
+    if (this.hasRole("Owner")) return true;
     const granted = this.getPermissions();
     return codes.some((code) => granted.includes(code));
   },

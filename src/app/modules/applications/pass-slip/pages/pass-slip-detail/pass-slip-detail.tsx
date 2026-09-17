@@ -132,17 +132,6 @@ function EditPassSlip({ id }: { id: string }) {
           </Tag>
         </div>
       )}
-      {selected && (
-        <Card size="small" title="Approval Progress" className="mb-4">
-          <ApprovalTimeline
-            applicationType="PassSlip"
-            applicationId={selected.id}
-            resolveEmployeeName={(empId) =>
-              rawEmployees.find((e) => e.id === empId)?.fullName ?? undefined
-            }
-          />
-        </Card>
-      )}
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <div className="form-grid-2">
           <Form.Item
@@ -248,6 +237,18 @@ function EditPassSlip({ id }: { id: string }) {
           </Space>
         </div>
       </Form>
+
+      {selected && (
+        <Card size="small" title="Approval Progress" className="mt-4">
+          <ApprovalTimeline
+            applicationType="PassSlip"
+            applicationId={selected.id}
+            resolveEmployeeName={(empId) =>
+              rawEmployees.find((e) => e.id === empId)?.fullName ?? undefined
+            }
+          />
+        </Card>
+      )}
     </div>
   );
 }

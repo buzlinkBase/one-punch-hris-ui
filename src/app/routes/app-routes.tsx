@@ -267,6 +267,11 @@ const ComingSoon = ({ title }: { title: string }) => (
   </div>
 );
 
+// Employee-only accounts stay portal-restricted even while TEMP-ALLOW-ALL bypasses every other
+// permission check elsewhere (auth-storage.ts, backend HttpRequestExtensions/UserMembership) --
+// explicitly asked to keep this one gate real.
+const TEMP_ALLOW_ALL = false;
+
 const PUBLIC_PATHS = [
   "/",
   "/login",
@@ -324,6 +329,7 @@ const rootRoute = createRootRoute({
     // portal, regardless of how the navigation was triggered (this catches every hardcoded
     // "/dashboard" default-landing redirect elsewhere too, since this guard runs on every route).
     if (
+      !TEMP_ALLOW_ALL &&
       authStorage.isEmployeeOnly() &&
       !location.pathname.startsWith("/portal") &&
       location.pathname !== "/profile"

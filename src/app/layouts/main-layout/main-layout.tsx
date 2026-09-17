@@ -89,8 +89,11 @@ const NAV_OPTIONS = flattenNavItems(NAVIGATION_ITEMS);
 
 // Drops any item whose `permission` the caller doesn't hold (any-of match). An item with no
 // `permission` always passes through unchanged — this is what keeps every currently-untagged
-// item (still nearly all of them) exactly as visible as before. A "group" node with children
-// that all get filtered out, and no path of its own, is dropped too rather than rendered empty.
+// item (still nearly all of them) exactly as visible as before. A parent node (a "group", or a
+// plain item like "Reports" that also carries its own `path`) is dropped once ALL of its
+// children get filtered out -- even when it has a `path` of its own, since every such path
+// (appSectionRoute) is just a "Coming Soon" section-landing stub with no standalone content, so
+// keeping the parent visible with nothing left under it is a dead menu entry, not a real page.
 function filterNavByPermission(items: NavItem[]): NavItem[] {
   return items.reduce<NavItem[]>((acc, item) => {
     if (item.permission) {
@@ -102,7 +105,7 @@ function filterNavByPermission(items: NavItem[]): NavItem[] {
 
     if (item.children) {
       const children = filterNavByPermission(item.children);
-      if (children.length === 0 && !item.path) return acc;
+      if (children.length === 0) return acc;
       acc.push({ ...item, children });
       return acc;
     }
@@ -247,9 +250,27 @@ function buildMenuItems(
     }
 
     if (item.type === "group") {
+      // Group headers (e.g. "Holidays & Leave Types") aren't clickable, so AntD's own
+      // `disabled` styling never applied to them -- only to their children below. Left alone,
+      // a still-active-looking group label sitting above visibly greyed-out children reads as
+      // the group NOT respecting the provisioning gate, even though the children were already
+      // correctly disabled. Mirror the same muted/tooltip treatment here for consistency.
+      const groupDisabled = !hrDbReady;
+      const label =
+        collapsed || !groupDisabled ? (
+          item.label
+        ) : (
+          <Tooltip
+            title="Available once your workspace resources finish setting up"
+            placement="right"
+          >
+            <span className="opacity-40">{item.label}</span>
+          </Tooltip>
+        );
+
       return {
         key: item.key,
-        label: item.label,
+        label,
         icon: getNavIcon(item.key),
         children: item.children
           ? buildMenuItems(item.children, hrDbReady, collapsed)

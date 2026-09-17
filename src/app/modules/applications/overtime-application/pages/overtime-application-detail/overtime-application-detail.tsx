@@ -265,16 +265,6 @@ export default function OvertimeApplicationDetail() {
           </Card>
         )}
 
-        {isEdit && selected && (
-          <Card size="small" title="Approval Progress" className="mb-4">
-            <ApprovalTimeline
-              applicationType="Overtime"
-              applicationId={selected.id}
-              resolveEmployeeName={(empId) => employeeMap.get(empId)}
-            />
-          </Card>
-        )}
-
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
           <div className="form-grid-3">
             <Form.Item
@@ -454,6 +444,16 @@ export default function OvertimeApplicationDetail() {
             </Space>
           </div>
         </Form>
+
+        {isEdit && selected && (
+          <Card size="small" title="Approval Progress" className="mt-4">
+            <ApprovalTimeline
+              applicationType="Overtime"
+              applicationId={selected.id}
+              resolveEmployeeName={(empId) => employeeMap.get(empId)}
+            />
+          </Card>
+        )}
       </div>
     </div>
   );
