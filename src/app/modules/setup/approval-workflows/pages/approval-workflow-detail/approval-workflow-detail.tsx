@@ -251,7 +251,7 @@ export default function ApprovalWorkflowDetail() {
                   {...field}
                   allowClear
                   showSearch
-                  placeholder="company-wide default"
+                  placeholder="Company-wide default"
                   options={departmentOptions}
                   filterOption={filterOption}
                   value={field.value || undefined}

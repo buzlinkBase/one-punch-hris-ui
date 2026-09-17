@@ -48,7 +48,7 @@ export default function ApprovalWorkflowList() {
       render: (_, r) =>
         r.scopeDepartmentId
           ? `Scoped: ${r.scopeDepartmentName ?? r.scopeDepartmentId}`
-          : "company-wide default",
+          : "Company-wide default",
     },
     {
       title: "Steps",
