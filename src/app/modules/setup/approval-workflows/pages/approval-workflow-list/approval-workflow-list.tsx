@@ -48,7 +48,7 @@ export default function ApprovalWorkflowList() {
       render: (_, r) =>
         r.scopeDepartmentId
           ? `Scoped: ${r.scopeDepartmentName ?? r.scopeDepartmentId}`
-          : "Tenant-wide default",
+          : "company-wide default",
     },
     {
       title: "Steps",
@@ -75,7 +75,7 @@ export default function ApprovalWorkflowList() {
           <PermissionGate permission="Approval Workflows:Edit">
             {r.isActive ? (
               <Popconfirm
-                title="Deactivate this workflow? New applications of this type will fall back to the tenant-wide default (or today's single-step behavior if none)."
+                title="Deactivate this workflow? New applications of this type will fall back to the company-wide default (or today's single-step behavior if none)."
                 onConfirm={() => deactivate(r.id)}
                 okText="Deactivate"
               >

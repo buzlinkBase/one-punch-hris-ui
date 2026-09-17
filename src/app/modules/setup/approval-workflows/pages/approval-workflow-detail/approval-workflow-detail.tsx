@@ -241,7 +241,7 @@ export default function ApprovalWorkflowDetail() {
 
           <Form.Item
             label="Scope"
-            extra="Leave blank for the tenant-wide default. Scoping to a department overrides the default for applicants in that department only."
+            extra="Leave blank for the company-wide default. Scoping to a department overrides the default for applicants in that department only."
           >
             <Controller
               name="scopeDepartmentId"
@@ -251,7 +251,7 @@ export default function ApprovalWorkflowDetail() {
                   {...field}
                   allowClear
                   showSearch
-                  placeholder="Tenant-wide default"
+                  placeholder="company-wide default"
                   options={departmentOptions}
                   filterOption={filterOption}
                   value={field.value || undefined}
