@@ -8,10 +8,6 @@ const KEYS = {
 
 const EXPIRY_BUFFER_MS = 60_000;
 
-// TEMP-ALLOW-ALL (2026-09-17): flip to false to restore normal permission checks below. Search
-// "TEMP-ALLOW-ALL" for every place this flag gates a check.
-const TEMP_ALLOW_ALL = true;
-
 export interface AuthUser {
   email: string;
   name: string;
@@ -93,14 +89,19 @@ export const authStorage = {
     return this.getUser()?.permissions ?? [];
   },
 
+  // Owner always holds every permission in the catalog by design (see tenantstore's
+  // PermissionCatalogSeederService), but the `permissions` array a session is holding can lag
+  // that truth -- most notably right after creating a workspace, where the login response has
+  // to return before the new Owner's real membership/permission rows exist yet (see
+  // WorkspaceService.Create). Short-circuiting here makes Owner unconditionally unrestricted
+  // everywhere this is checked (nav filtering, PermissionGate), immune to that timing gap and
+  // any future one like it, rather than patching each stale-permissions window individually.
   hasPermission(code: string): boolean {
-    if (TEMP_ALLOW_ALL) return true;
     if (this.hasRole("Owner")) return true;
     return this.getPermissions().includes(code);
   },
 
   hasAnyPermission(...codes: string[]): boolean {
-    if (TEMP_ALLOW_ALL) return true;
     if (this.hasRole("Owner")) return true;
     const granted = this.getPermissions();
     return codes.some((code) => granted.includes(code));
