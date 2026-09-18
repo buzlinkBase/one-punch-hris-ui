@@ -1,7 +1,12 @@
 // Mirrors hrms-api's ApprovalApplicationType/ApproverType/NoteRequirement/ApprovalInstanceStatus/
 // ApprovalActionType enums (hrms.Domain/Enums.cs) and ApprovalWorkflowModels.cs response shapes.
 export type ApprovalApplicationType =
-  "Leave" | "Overtime" | "OfficialBusiness" | "PassSlip" | "Loan";
+  | "Leave"
+  | "Overtime"
+  | "OfficialBusiness"
+  | "PassSlip"
+  | "Loan"
+  | "ProfileUpdate";
 
 export type ApproverType =
   | "Person"

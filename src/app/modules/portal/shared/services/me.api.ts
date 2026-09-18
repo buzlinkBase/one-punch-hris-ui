@@ -19,6 +19,8 @@ import type { ChangeRestDayResponse } from "@/app/modules/change-schedule/change
 import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
 import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
 import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
+import type { PortalCreateProfileUpdateRequest } from "../models/api/request/portal-create-profile-update-request.model";
+import type { PortalProfileUpdateRequestResponse } from "../models/api/response/portal-profile-update-request-response.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
@@ -211,6 +213,27 @@ export const meApi = {
   getMyCashBond(): Promise<DeductionApplicationResponse[]> {
     return httpClient.getUnwrapped<DeductionApplicationResponse[]>(
       `${BASE_URL}/cash-bond`,
+    );
+  },
+
+  getMyProfileUpdateRequests(): Promise<PortalProfileUpdateRequestResponse[]> {
+    return httpClient.getUnwrapped<PortalProfileUpdateRequestResponse[]>(
+      `${BASE_URL}/profile-update-requests`,
+    );
+  },
+
+  createMyProfileUpdateRequest(
+    data: PortalCreateProfileUpdateRequest,
+  ): Promise<void> {
+    return httpClient.postUnwrapped<void>(
+      `${BASE_URL}/profile-update-requests`,
+      data,
+    );
+  },
+
+  withdrawMyProfileUpdateRequest(id: string): Promise<void> {
+    return httpClient.patchUnwrapped<void>(
+      `${BASE_URL}/profile-update-requests/${id}/withdraw`,
     );
   },
 

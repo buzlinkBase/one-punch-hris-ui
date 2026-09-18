@@ -1,6 +1,21 @@
-import { Card, Descriptions, Empty, Skeleton, Tabs, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Descriptions,
+  Empty,
+  Skeleton,
+  Space,
+  Tabs,
+  Typography,
+} from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useMyEmployee } from "../../../shared/hooks/use-my-employee-queries";
+import {
+  useMyEmployee,
+  useMyProfileUpdateRequests,
+} from "../../../shared/hooks/use-my-employee-queries";
 import { formatFullName } from "@/app/modules/setup/employee/utils/format-full-name";
 import { EMPLOYEE_LABEL } from "@/app/modules/setup/employee/constants/label.const";
 
@@ -11,7 +26,12 @@ function formatDate(value?: string | null) {
 }
 
 export default function PortalProfile() {
+  const navigate = useNavigate();
   const { data: employee, isLoading } = useMyEmployee();
+  const { data: requests = [] } = useMyProfileUpdateRequests();
+  const pendingRequest = requests.find(
+    (r) => r.approvalStatus === "ForApproval",
+  );
 
   return (
     <div className="content-page">
@@ -25,10 +45,30 @@ export default function PortalProfile() {
               Your personal, employment, and compensation details on file.
             </p>
           </div>
+          {employee && (
+            <Space>
+              <Button
+                icon={<EditOutlined />}
+                disabled={!!pendingRequest}
+                onClick={() => navigate({ to: "/portal/profile/edit" })}
+              >
+                Edit Profile
+              </Button>
+            </Space>
+          )}
         </div>
       </div>
 
       <div className="form-page-body">
+        {pendingRequest && (
+          <Alert
+            type="info"
+            showIcon
+            className="mb-3"
+            message="A profile update request is pending approval."
+            description="Your requested changes will take effect once an approver reviews them."
+          />
+        )}
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 8 }} />
         ) : !employee ? (

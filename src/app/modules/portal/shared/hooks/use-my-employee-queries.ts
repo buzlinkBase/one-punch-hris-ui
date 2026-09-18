@@ -6,6 +6,7 @@ import type { CreateTravelOrderApplication } from "@/app/modules/applications/tr
 import type { PortalCreatePassSlip } from "../models/api/request/portal-create-pass-slip.model";
 import type { PortalRequestChangeRestDay } from "../models/api/request/portal-request-change-rest-day.model";
 import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
+import type { PortalCreateProfileUpdateRequest } from "../models/api/request/portal-create-profile-update-request.model";
 
 const QUERY_KEY = ["me", "employee"];
 
@@ -253,6 +254,38 @@ export function useWithdrawMyLoanApplication() {
     mutationFn: (id: string) => meApi.withdrawMyLoanApplication(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me", "loan-applications"] });
+    },
+  });
+}
+
+export function useMyProfileUpdateRequests() {
+  return useQuery({
+    queryKey: ["me", "profile-update-requests"],
+    queryFn: () => meApi.getMyProfileUpdateRequests(),
+  });
+}
+
+export function useCreateMyProfileUpdateRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PortalCreateProfileUpdateRequest) =>
+      meApi.createMyProfileUpdateRequest(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "profile-update-requests"],
+      });
+    },
+  });
+}
+
+export function useWithdrawMyProfileUpdateRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => meApi.withdrawMyProfileUpdateRequest(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "profile-update-requests"],
+      });
     },
   });
 }

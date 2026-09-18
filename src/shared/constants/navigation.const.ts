@@ -263,6 +263,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         permission: "Pass Slip:View",
       },
       {
+        key: "applications-profile-update",
+        label: "Profile Update Requests",
+        path: "/applications/profile-update-request",
+        permission: "Profile Update:View",
+      },
+      {
         key: "applications-divider-1",
         label: "",
         type: "divider",

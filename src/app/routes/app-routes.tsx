@@ -1164,6 +1164,14 @@ const PassSlipList = lazy(
 const PassSlipDetail = lazy(
   () => import("@/app/modules/applications/pass-slip/pages/pass-slip-detail"),
 );
+const ProfileUpdateRequestList = lazy(
+  () =>
+    import("@/app/modules/applications/profile-update-request/pages/profile-update-request-list"),
+);
+const ProfileUpdateRequestDetail = lazy(
+  () =>
+    import("@/app/modules/applications/profile-update-request/pages/profile-update-request-detail"),
+);
 const DeductionApplicationList = lazy(
   () =>
     import("@/app/modules/applications/deduction-application/pages/deduction-application-list"),
@@ -1250,6 +1258,12 @@ const passSlipRoute = createRoute({
   component: MainLayout,
 });
 
+const profileUpdateRequestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "applications/profile-update-request",
+  component: MainLayout,
+});
+
 const deductionApplicationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/deduction-application",
@@ -1326,6 +1340,18 @@ const passSlipDetailRoute = createRoute({
   getParentRoute: () => passSlipRoute,
   path: "$id",
   component: withSuspense(PassSlipDetail),
+});
+
+const profileUpdateRequestIndexRoute = createRoute({
+  getParentRoute: () => profileUpdateRequestRoute,
+  path: "/",
+  component: withSuspense(ProfileUpdateRequestList),
+});
+
+const profileUpdateRequestDetailRoute = createRoute({
+  getParentRoute: () => profileUpdateRequestRoute,
+  path: "$id",
+  component: withSuspense(ProfileUpdateRequestDetail),
 });
 
 const deductionApplicationIndexRoute = createRoute({
@@ -1576,6 +1602,10 @@ const routeTree = rootRoute.addChildren([
     passSlipIndexRoute,
     passSlipCreateRoute,
     passSlipDetailRoute,
+  ]),
+  profileUpdateRequestRoute.addChildren([
+    profileUpdateRequestIndexRoute,
+    profileUpdateRequestDetailRoute,
   ]),
   deductionApplicationRoute.addChildren([
     deductionApplicationIndexRoute,

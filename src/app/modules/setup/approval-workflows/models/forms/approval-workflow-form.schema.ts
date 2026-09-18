@@ -47,6 +47,7 @@ export const approvalWorkflowFormSchema = z.object({
     "OfficialBusiness",
     "PassSlip",
     "Loan",
+    "ProfileUpdate",
   ]),
   name: z.string().min(1, "Name is required"),
   scopeDepartmentId: z.string().optional(),

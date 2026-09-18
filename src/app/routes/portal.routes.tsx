@@ -4,6 +4,9 @@ import type { SetupRouteConfig } from "./setup.routes";
 const PortalProfile = lazy(
   () => import("@/app/modules/portal/profile/pages/portal-profile"),
 );
+const PortalProfileEdit = lazy(
+  () => import("@/app/modules/portal/profile/pages/portal-profile-edit"),
+);
 const PortalPayslips = lazy(
   () => import("@/app/modules/portal/payslips/pages/portal-payslips"),
 );
@@ -75,6 +78,7 @@ const PortalThirteenthMonth = lazy(
 
 export const portalRoutes: SetupRouteConfig[] = [
   { path: "profile", component: PortalProfile },
+  { path: "profile/edit", component: PortalProfileEdit },
   { path: "payslips", component: PortalPayslips },
   { path: "dtr", component: PortalDtr },
   { path: "incomplete-punches", component: PortalIncompletePunches },

@@ -21,6 +21,7 @@ export const APPLICATION_TYPE_OPTIONS: {
   { value: "OfficialBusiness", label: "Official Business" },
   { value: "PassSlip", label: "Pass Slip" },
   { value: "Loan", label: "Loan/Deduction" },
+  { value: "ProfileUpdate", label: "Profile Update" },
 ];
 
 export const APPLICATION_TYPE_LABEL: Record<ApprovalApplicationType, string> = {
@@ -29,6 +30,7 @@ export const APPLICATION_TYPE_LABEL: Record<ApprovalApplicationType, string> = {
   OfficialBusiness: "Official Business",
   PassSlip: "Pass Slip",
   Loan: "Loan/Deduction",
+  ProfileUpdate: "Profile Update",
 };
 
 export const APPROVER_TYPE_OPTIONS: { value: ApproverType; label: string }[] = [
