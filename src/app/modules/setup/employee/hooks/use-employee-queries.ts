@@ -105,6 +105,18 @@ export function usePreviewEmployeesUpload() {
   });
 }
 
+export function useCommitEmployeesImport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rows: EmployeeImportPreviewRow[]) =>
+      employeeApi.commitEmployeesImport(rows),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateEmployeeFilter(queryClient);
+    },
+  });
+}
+
 export function useExportImportErrors() {
   return useMutation({
     mutationFn: (rows: EmployeeImportPreviewRow[]) =>

@@ -83,6 +83,10 @@ export const employeeApi = {
     );
   },
 
+  async commitEmployeesImport(rows: EmployeeImportPreviewRow[]): Promise<void> {
+    await httpClient.postUnwrapped(`${BASE_URL}/upload-employees-commit`, rows);
+  },
+
   async exportImportErrors(rows: EmployeeImportPreviewRow[]): Promise<void> {
     const response = await axiosInstance.post(
       `${BASE_URL}/upload-employees-errors-export`,

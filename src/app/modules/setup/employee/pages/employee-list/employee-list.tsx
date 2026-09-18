@@ -12,8 +12,8 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   useEmployees,
   useDownloadEmployeeTemplate,
-  useUploadEmployees,
   usePreviewEmployeesUpload,
+  useCommitEmployeesImport,
 } from "../../hooks/use-employee-queries";
 import EmployeeTable, { formatFullName } from "../../components/employee-table";
 import EmployeeImportPreviewModal from "../../components/employee-import-preview-modal/employee-import-preview-modal";
@@ -43,8 +43,8 @@ export default function EmployeeList() {
   // const { mutate: remove } = useDeleteEmployee();
   const { mutate: downloadTemplate, isPending: downloading } =
     useDownloadEmployeeTemplate();
-  const { mutate: uploadEmployees, isPending: uploading } =
-    useUploadEmployees();
+  const { mutate: commitImport, isPending: committing } =
+    useCommitEmployeesImport();
   const { mutate: previewUpload, isPending: previewing } =
     usePreviewEmployeesUpload();
   const [messageApi, contextHolder] = message.useMessage();
@@ -93,9 +93,13 @@ export default function EmployeeList() {
     setPreviewRows([]);
   };
 
+  const handleDeleteRow = (rowNumber: number) => {
+    setPreviewRows((rows) => rows.filter((r) => r.rowNumber !== rowNumber));
+  };
+
   const handleConfirmImport = () => {
-    if (!pendingFile) return;
-    uploadEmployees(pendingFile, {
+    if (previewRows.length === 0) return;
+    commitImport(previewRows, {
       onSuccess: () => {
         messageApi.success("Employees imported successfully.");
         closePreview();
@@ -227,8 +231,9 @@ export default function EmployeeList() {
         open={!!pendingFile}
         onClose={closePreview}
         rows={previewRows}
+        onDeleteRow={handleDeleteRow}
         onConfirm={handleConfirmImport}
-        confirming={uploading}
+        confirming={committing}
       />
     </div>
   );
