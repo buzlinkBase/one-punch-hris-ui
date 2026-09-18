@@ -40,7 +40,7 @@ export function useTenantHub() {
       setTenantState(payload.tenantId, "Created");
       addNotification({
         id: `tenant-created-${payload.tenantId}`,
-        title: "Workspace ready",
+        title: "Company ready",
         message: `"${payload.tenantName}" has been created.`,
         tenantId: payload.tenantId,
         createdAt: new Date().toISOString(),
@@ -61,10 +61,10 @@ export function useTenantHub() {
       if (!failed) stopPolling();
       addNotification({
         id: `hrdb-created-${payload.tenantId}-${payload.status}`,
-        title: failed ? "Workspace setup failed" : "Workspace ready",
+        title: failed ? "Company setup failed" : "Company ready",
         message: failed
-          ? "We couldn't finish setting up your workspace resources."
-          : "Your workspace resources are ready.",
+          ? "We couldn't finish setting up your company resources."
+          : "Your company resources are ready.",
         tenantId: payload.tenantId,
         createdAt: new Date().toISOString(),
         severity: failed ? "error" : "success",

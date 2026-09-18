@@ -84,7 +84,7 @@ function ProfileDetailsCard() {
           <Input value={profile?.email ?? ""} disabled />
         </Form.Item>
 
-        <Form.Item label="Default Workspace">
+        <Form.Item label="Default Company">
           <Input
             value={profile?.defaultTenantName ?? "—"}
             disabled

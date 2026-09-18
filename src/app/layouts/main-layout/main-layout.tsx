@@ -261,7 +261,7 @@ function buildMenuItems(
           item.label
         ) : (
           <Tooltip
-            title="Available once your workspace resources finish setting up"
+            title="Available once your company resources finish setting up"
             placement="right"
           >
             <span className="opacity-40">{item.label}</span>
@@ -287,7 +287,7 @@ function buildMenuItems(
       item.label
     ) : disabled ? (
       <Tooltip
-        title="Available once your workspace resources finish setting up"
+        title="Available once your company resources finish setting up"
         placement="right"
       >
         <span className="block overflow-hidden text-ellipsis">
@@ -554,7 +554,7 @@ export default function MainLayout() {
         message: `Switch failed (${axiosErr.response?.status ?? "network error"})`,
         description:
           detail ??
-          "Could not switch to the selected workspace. Please try again.",
+          "Could not switch to the selected company. Please try again.",
       });
       setSwitchingTenant(null);
     };
@@ -882,7 +882,7 @@ export default function MainLayout() {
                       (t) => t.tenantId === sessionUser.tenantId,
                     )?.name ??
                     sessionUser.tenantName ??
-                    "Workspace"
+                    "Company"
                   }
                 >
                   <Dropdown
@@ -955,7 +955,7 @@ export default function MainLayout() {
                                 fontSize: 13,
                               }}
                             >
-                              New workspace
+                              New company
                             </span>
                           ),
                           onClick: () => navigate({ to: "/create-tenant" }),
@@ -966,7 +966,7 @@ export default function MainLayout() {
                     <button
                       type="button"
                       className="header-collapse-trigger"
-                      aria-label="Switch workspace"
+                      aria-label="Switch company"
                     >
                       {switchingTenant ? (
                         <Spin size="small" />

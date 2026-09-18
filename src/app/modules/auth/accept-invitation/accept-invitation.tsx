@@ -185,12 +185,12 @@ export default function AcceptInvitation() {
           ? ((err.response?.data as ApiResponse<{ errorMessage?: string }>)
               ?.data?.errorMessage ?? "Google sign-up failed.")
           : "An unexpected error occurred.";
-        notification.error({ message: "Couldn't join workspace", description });
+        notification.error({ message: "Couldn't join company", description });
       }
     },
     onError: () =>
       notification.error({
-        message: "Couldn't join workspace",
+        message: "Couldn't join company",
         description: "Google authentication was unsuccessful.",
       }),
   });
@@ -429,7 +429,7 @@ export default function AcceptInvitation() {
             block
             size="large"
           >
-            Join workspace
+            Join company
           </Button>
         </Form.Item>
 

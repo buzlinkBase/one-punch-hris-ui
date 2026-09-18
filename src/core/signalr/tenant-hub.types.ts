@@ -5,7 +5,7 @@
  */
 export const TENANT_HUB_METHODS = {
   /** Fired once the tenant's creation request settles to TenantCreationStatus.Created
-   *  (TenantCreatedWorker) — the authoritative "your workspace is ready" signal. */
+   *  (TenantCreatedWorker) — the authoritative "your company is ready" signal. */
   onTenantCreated: "TenantCreated",
   /** Fired later, once the external HRIS system finishes provisioning the org/database for
    *  that tenant (HrDbCreatedWorker) — informational, does not gate readiness. */

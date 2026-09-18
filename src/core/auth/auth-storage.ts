@@ -34,7 +34,7 @@ export interface TenantClaims {
  *   later (background poll/push) would otherwise show as "Provisioning" in the tenant
  *   switcher's status tag forever.
  * - Keeps any locally-tracked tenant the fresher list omits entirely (e.g. a still-provisioning
- *   workspace the backend excludes until membership becomes Active).
+ *   company the backend excludes until membership becomes Active).
  */
 export function mergeTenants(
   local: TenantSummary[],
@@ -91,7 +91,7 @@ export const authStorage = {
 
   // Owner always holds every permission in the catalog by design (see tenantstore's
   // PermissionCatalogSeederService), but the `permissions` array a session is holding can lag
-  // that truth -- most notably right after creating a workspace, where the login response has
+  // that truth -- most notably right after creating a company, where the login response has
   // to return before the new Owner's real membership/permission rows exist yet (see
   // WorkspaceService.Create). Short-circuiting here makes Owner unconditionally unrestricted
   // everywhere this is checked (nav filtering, PermissionGate), immune to that timing gap and
@@ -151,7 +151,7 @@ export const authStorage = {
    * only otherwise gets set once, by create-tenant.tsx's waitAndFinalize, right after the
    * TenantCreated push/timeout. If that page was left, refreshed, or closed before that ran
    * (e.g. HR-DB setup outlasted the wait), `state` stays "Provisioning" forever afterwards —
-   * nothing else ever revisits it — even though this poll/push is confirming the workspace is
+   * nothing else ever revisits it — even though this poll/push is confirming the company is
    * actually ready. That stale value is what the tenant switcher's status tag
    * (getTenantStateTag in main-layout.tsx) and create-tenant.tsx's `usableTenants` filter both
    * read, so without this they'd go on calling a fully working tenant "Provisioning" forever.

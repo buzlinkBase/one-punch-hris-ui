@@ -107,7 +107,7 @@ export default function EmployeeTable({
           onInvite && {
             key: "invite",
             icon: <MailOutlined />,
-            label: "Invite to Workspace",
+            label: "Invite to Company",
             onClick: () => onInvite(record),
           },
           onPriorEmployerTax && {

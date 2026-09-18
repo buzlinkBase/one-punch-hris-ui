@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function ProvisioningScreen({ tenantName, failed }: Props) {
-  const workspace = tenantName ?? "your workspace";
+  const company = tenantName ?? "your company";
 
   return (
     <div
@@ -80,7 +80,7 @@ export default function ProvisioningScreen({ tenantName, failed }: Props) {
 
       {/* Headline */}
       <Title level={3} style={{ marginBottom: 8, marginTop: 0 }}>
-        {failed ? "Workspace setup failed" : "Setting up your workspace"}
+        {failed ? "Company setup failed" : "Setting up your company"}
       </Title>
 
       {/* Sub-text */}
@@ -95,13 +95,13 @@ export default function ProvisioningScreen({ tenantName, failed }: Props) {
       >
         {failed ? (
           <>
-            We couldn&apos;t finish setting up <strong>{workspace}</strong>.
+            We couldn&apos;t finish setting up <strong>{company}</strong>.
             Please try refreshing the page or contact support if the issue
             persists.
           </>
         ) : (
           <>
-            We&apos;re provisioning resources for <strong>{workspace}</strong>.
+            We&apos;re provisioning resources for <strong>{company}</strong>.
             This usually takes a few minutes. The app will unlock automatically
             once it&apos;s ready — no need to refresh.
           </>
@@ -120,7 +120,7 @@ export default function ProvisioningScreen({ tenantName, failed }: Props) {
           }}
         >
           {[
-            { label: "Workspace created", done: true },
+            { label: "Company created", done: true },
             { label: "Configuring HR database", done: false },
             { label: "Finalizing setup", done: false },
           ].map((step) => (

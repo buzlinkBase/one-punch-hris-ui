@@ -20,7 +20,7 @@ export default function CreateTenant() {
   const navigate = useNavigate();
   // A tenant stuck in "Provisioning" isn't a dashboard the user can actually go back to yet --
   // only count tenants that have actually finished setup, so a dormant/in-flight request left
-  // over from an interrupted creation doesn't wrongly make this look like a "New Workspace"
+  // over from an interrupted creation doesn't wrongly make this look like a "New Company"
   // (rather than first-time "Create Your Organization") screen with a Back-to-dashboard link
   // that leads nowhere useful.
   const usableTenants = authStorage
@@ -39,7 +39,7 @@ export default function CreateTenant() {
   });
 
   // Shared tail of both a fresh submission and resuming an interrupted one: wait for
-  // provisioning to finish, reconcile the stored tenant state, then enter the workspace.
+  // provisioning to finish, reconcile the stored tenant state, then enter the company.
   const waitAndFinalize = async (tenantId: string, tenantName: string) => {
     setProvisioning(true);
     const { ready, timedOut } = await tenantHub.waitForProvisioning(tenantId);
@@ -70,7 +70,7 @@ export default function CreateTenant() {
         notification.info({
           message: "Still setting up",
           description:
-            "Your workspace is finishing setup in the background — we'll notify you once it's ready.",
+            "Your company is finishing setup in the background — we'll notify you once it's ready.",
           placement: "topRight",
         });
       }
@@ -146,7 +146,7 @@ export default function CreateTenant() {
         result.tenants[0]?.tenantId ??
         null;
 
-      // Build a TenantSummary for the new workspace so it always appears in the
+      // Build a TenantSummary for the new company so it always appears in the
       // sidebar dropdown, even if the backend omits still-provisioning tenants
       // from the returned list.
       const newEntry: TenantSummary = newTenantFromResult ?? {
@@ -188,7 +188,7 @@ export default function CreateTenant() {
       setProvisioning(false);
       notification.error({
         message: "Creation failed",
-        description: "Failed to create workspace. Please try again.",
+        description: "Failed to create company. Please try again.",
         placement: "topRight",
       });
     }
@@ -215,20 +215,20 @@ export default function CreateTenant() {
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
         <Title level={3} className="login-title">
-          {hasExistingTenants ? "New Workspace" : "Create Your Organization"}
+          {hasExistingTenants ? "New Company" : "Create Your Organization"}
         </Title>
         <Text className="login-subtitle">
           {provisioning
-            ? "Setting up your workspace — this only takes a moment."
+            ? "Setting up your company — this only takes a moment."
             : hasExistingTenants
-              ? "Set up a new workspace to manage a separate organization."
+              ? "Set up a new company to manage a separate organization."
               : "You don't have an organization yet. Create one to get started."}
         </Text>
       </div>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item
-          label="Workspace Name"
+          label="Company Name"
           validateStatus={errors.tenantName ? "error" : ""}
           help={errors.tenantName?.message}
           className="login-form-item"
@@ -239,7 +239,7 @@ export default function CreateTenant() {
             render={({ field }) => (
               <Input
                 {...field}
-                placeholder="Enter workspace name"
+                placeholder="Enter company name"
                 size="large"
                 disabled={provisioning}
               />
@@ -257,9 +257,9 @@ export default function CreateTenant() {
             size="large"
           >
             {provisioning
-              ? "Setting up workspace…"
+              ? "Setting up company…"
               : hasExistingTenants
-                ? "Create Workspace"
+                ? "Create Company"
                 : "Create Organization"}
           </Button>
         </Form.Item>

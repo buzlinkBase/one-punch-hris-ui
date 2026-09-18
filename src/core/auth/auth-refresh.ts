@@ -15,7 +15,7 @@ async function performRefresh(): Promise<string> {
   const user = authStorage.getUser();
   const claims = authStorage.getTenantClaims(accessToken);
   // The server's refresh response carries this user's full, current cross-tenant membership
-  // list -- e.g. a membership an invite activated, or a workspace that finished provisioning,
+  // list -- e.g. a membership an invite activated, or a company that finished provisioning,
   // since the last time this session read it. Silent refresh is the only thing that runs
   // automatically and indefinitely once logged in, so if this doesn't apply that fresh list,
   // a session that never explicitly re-logs-in or switches tenants would never see it, no
