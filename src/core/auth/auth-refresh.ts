@@ -13,20 +13,33 @@ async function performRefresh(): Promise<string> {
   const { accessToken, email, name, roles, permissions, tenants } =
     await authApi.refresh();
   const user = authStorage.getUser();
+  const claims = authStorage.getTenantClaims(accessToken);
   // The server's refresh response carries this user's full, current cross-tenant membership
   // list -- e.g. a membership an invite activated, or a workspace that finished provisioning,
   // since the last time this session read it. Silent refresh is the only thing that runs
   // automatically and indefinitely once logged in, so if this doesn't apply that fresh list,
   // a session that never explicitly re-logs-in or switches tenants would never see it, no
-  // matter how many times it silently refreshes. name/roles/permissions are deliberately NOT
-  // overwritten here: they reflect the user's DEFAULT tenant (see ComposeLoginResponse), which
-  // may differ from whichever tenant is actually active in this session.
-  authStorage.save(
-    accessToken,
-    user
-      ? { ...user, tenants: mergeTenants(user.tenants ?? [], tenants) }
-      : { email, name, roles, permissions, tenants },
-  );
+  // matter how many times it silently refreshes.
+  //
+  // name/roles/permissions/tenantId/tenantName are replaced wholesale every refresh, matching
+  // the new access token exactly: RefreshLogin (UserService) always re-mints via
+  // JwtService.CreateTokenAsync(user) -- the single-arg overload, which always scopes to the
+  // user's DefaultTenantId. There's no per-refresh-token tenant scoping today, so a session that
+  // switched to a non-default tenant already silently reverts to the default tenant at the real
+  // bearer-token level on the next background refresh, regardless of what this function does.
+  // Keeping the old cached roles/tenant here would just make the UI lie about what the token can
+  // actually authenticate as. (A real fix -- persisting which tenant a refresh token was issued
+  // for, so RefreshLogin can re-mint for that tenant instead of always the default -- is tracked
+  // separately; this function can't paper over that on its own.)
+  authStorage.save(accessToken, {
+    ...(user ?? { email, tenants: [] }),
+    name,
+    roles,
+    permissions,
+    tenantId: claims.tenantId ?? user?.tenantId ?? null,
+    tenantName: claims.tenantName ?? user?.tenantName ?? null,
+    tenants: mergeTenants(user?.tenants ?? [], tenants),
+  });
   return accessToken;
 }
 
