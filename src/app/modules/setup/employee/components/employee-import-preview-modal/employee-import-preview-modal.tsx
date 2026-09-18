@@ -1,6 +1,7 @@
 import { Modal, Table, Tag, Tooltip, Button, Typography } from "antd";
 import { DeleteOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import type { EmployeeImportPreviewRow } from "../../models/api/response/employee-import-preview-response.model";
 import { useExportImportErrors } from "../../hooks/use-employee-queries";
 
@@ -17,6 +18,13 @@ interface Props {
 
 function yesNo(value?: boolean) {
   return value ? "Yes" : "No";
+}
+
+// Calendar dates only (Date of Birth, Hire Date) -- no timezone marker on these values, and none
+// should be applied: parse and display the date components exactly as sent, never shifted
+// through a UTC interpretation the way a real timestamp (e.g. CreatedAt) would be.
+function formatDate(value?: string | null) {
+  return value ? dayjs(value).format("MMM D, YYYY") : "—";
 }
 
 function buildColumns(
@@ -46,21 +54,32 @@ function buildColumns(
     { title: "Last Name", dataIndex: "lastName", width: 120 },
     { title: "Suffix", dataIndex: "suffix", width: 80 },
     { title: "Gender", dataIndex: "gender", width: 90 },
+    { title: "Civil Status", dataIndex: "civilStatus", width: 110 },
+    { title: "Blood Type", dataIndex: "bloodType", width: 100 },
+    {
+      title: "Date of Birth",
+      dataIndex: "dateOfBirth",
+      width: 120,
+      render: formatDate,
+    },
     { title: "Email", dataIndex: "email", width: 180 },
+    { title: "Contact No.", dataIndex: "contactNo", width: 130 },
+    { title: "Address 1", dataIndex: "address1", width: 160 },
+    { title: "Address 2", dataIndex: "address2", width: 160 },
     { title: "Branch", dataIndex: "branchCode", width: 100 },
     { title: "Department", dataIndex: "departmentName", width: 140 },
     { title: "Client", dataIndex: "clientName", width: 140 },
     { title: "Rest Day 1", dataIndex: "restDay1", width: 100 },
     { title: "Rest Day 2", dataIndex: "restDay2", width: 100 },
     { title: "Payroll Group", dataIndex: "payrollGroup", width: 140 },
-    { title: "Cut-Off1", dataIndex: "cutoff1", width: 90 },
-    { title: "EOM1", dataIndex: "eom1", width: 70, render: yesNo },
-    { title: "Cut-Off2", dataIndex: "cutoff2", width: 90 },
-    { title: "EOM2", dataIndex: "eom2", width: 70, render: yesNo },
-    { title: "Cut-Off3", dataIndex: "cutoff3", width: 90 },
-    { title: "EOM3", dataIndex: "eom3", width: 70, render: yesNo },
-    { title: "Cut-Off4", dataIndex: "cutoff4", width: 90 },
-    { title: "EOM4", dataIndex: "eom4", width: 70, render: yesNo },
+    { title: "Cut-Off 1", dataIndex: "cutoff1", width: 90 },
+    { title: "EOM 1", dataIndex: "eom1", width: 70, render: yesNo },
+    { title: "Cut-Off 2", dataIndex: "cutoff2", width: 90 },
+    { title: "EOM 2", dataIndex: "eom2", width: 70, render: yesNo },
+    { title: "Cut-Off 3", dataIndex: "cutoff3", width: 90 },
+    { title: "EOM 3", dataIndex: "eom3", width: 70, render: yesNo },
+    { title: "Cut-Off 4", dataIndex: "cutoff4", width: 90 },
+    { title: "EOM 4", dataIndex: "eom4", width: 70, render: yesNo },
     { title: "Shift", dataIndex: "shiftName", width: 120 },
     { title: "Shift Type", dataIndex: "shiftType", width: 100 },
     { title: "AM In", dataIndex: "amIn", width: 90 },
@@ -81,10 +100,19 @@ function buildColumns(
     },
     { title: "Salary Type", dataIndex: "salaryType", width: 110 },
     { title: "Daily Rate", dataIndex: "dailyRate", width: 100 },
-    { title: "Hire Date", dataIndex: "hireDate", width: 110 },
+    { title: "Monthly Rate", dataIndex: "monthlyRate", width: 110 },
+    {
+      title: "Hire Date",
+      dataIndex: "hireDate",
+      width: 110,
+      render: formatDate,
+    },
     { title: "SSS", dataIndex: "sss", width: 110 },
     { title: "PHIC", dataIndex: "phic", width: 110 },
     { title: "HDMF", dataIndex: "hdmf", width: 110 },
+    { title: "TIN", dataIndex: "tin", width: 110 },
+    { title: "Bank Name", dataIndex: "bankName", width: 130 },
+    { title: "Bank No.", dataIndex: "bankNo", width: 130 },
     {
       title: "Issues",
       key: "issues",

@@ -29,12 +29,18 @@ export interface EmployeeImportPreviewRow {
   breakDuration?: number;
   maxWorkingMinutes?: number;
   salaryType?: string;
+  contactNo?: string;
+  civilStatus?: string;
+  bloodType?: string;
 
   sss?: string;
   phic?: string;
   hdmf?: string;
+  tin?: string;
   dailyRate?: number;
+  monthlyRate?: number;
   hireDate?: string | null;
+  dateOfBirth?: string | null;
 
   cutoff1?: number;
   cutoff2?: number;
@@ -45,4 +51,8 @@ export interface EmployeeImportPreviewRow {
   eom2?: boolean;
   eom3?: boolean;
   eom4?: boolean;
+  address1?: string;
+  address2?: string;
+  bankName?: string;
+  bankNo?: string;
 }

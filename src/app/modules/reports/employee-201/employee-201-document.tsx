@@ -1,4 +1,5 @@
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
+import dayjs from "dayjs";
 import type { EmployeeFullResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 
 const PRIMARY = "#1DA081";
@@ -145,29 +146,21 @@ function SectionCard({
   );
 }
 
+// Calendar dates only (DOB, Hire Date, Contract Start/End, etc.) -- these carry no timezone
+// meaning, so dayjs parses and renders the date components exactly as sent, never shifted
+// through native Date's UTC-vs-local string-parsing quirks (e.g. a date-only string like
+// "2001-10-01" is parsed as UTC midnight by `new Date(...)`, which can roll back a day once
+// converted to the viewer's local time).
 function fmt(dateStr?: string | null) {
   if (!dateStr) return "—";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-PH", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
+  const d = dayjs(dateStr);
+  return d.isValid() ? d.format("MMM DD, YYYY") : dateStr;
 }
 
 function fmtMonthYear(dateStr?: string | null) {
   if (!dateStr) return "—";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-PH", {
-      year: "numeric",
-      month: "short",
-    });
-  } catch {
-    return dateStr;
-  }
+  const d = dayjs(dateStr);
+  return d.isValid() ? d.format("MMM YYYY") : dateStr;
 }
 
 function fmtRate(v?: number | null) {
