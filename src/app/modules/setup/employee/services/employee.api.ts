@@ -8,6 +8,7 @@ import type {
 import type { CreateEmployee } from "../models/api/request/create-employee.model";
 import type { UpdateEmployee } from "../models/api/request/update-employee.model";
 import type { PaginatedResponse } from "@/core/pagination-model";
+import type { EmployeeImportPreviewRow } from "../models/api/response/employee-import-preview-response.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "employees");
 
@@ -64,6 +65,34 @@ export const employeeApi = {
     const a = document.createElement("a");
     a.href = url;
     a.download = "employees.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+
+  async previewEmployeesUpload(
+    file: File,
+  ): Promise<EmployeeImportPreviewRow[]> {
+    const form = new FormData();
+    form.append("excelFile", file);
+    return httpClient.postUnwrapped<EmployeeImportPreviewRow[]>(
+      `${BASE_URL}/upload-employees-preview`,
+      form,
+      { headers: { "Content-Type": undefined } },
+    );
+  },
+
+  async exportImportErrors(rows: EmployeeImportPreviewRow[]): Promise<void> {
+    const response = await axiosInstance.post(
+      `${BASE_URL}/upload-employees-errors-export`,
+      rows,
+      { responseType: "blob" },
+    );
+    const url = URL.createObjectURL(new Blob([response.data as BlobPart]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "employee_import_corrections.xlsx";
     document.body.appendChild(a);
     a.click();
     a.remove();

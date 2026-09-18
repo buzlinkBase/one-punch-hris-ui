@@ -13,13 +13,16 @@ import {
   useEmployees,
   useDownloadEmployeeTemplate,
   useUploadEmployees,
+  usePreviewEmployeesUpload,
 } from "../../hooks/use-employee-queries";
 import EmployeeTable, { formatFullName } from "../../components/employee-table";
+import EmployeeImportPreviewModal from "../../components/employee-import-preview-modal/employee-import-preview-modal";
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
 import InviteUserModal from "@/app/modules/security/users/components/invite-user-modal/invite-user-modal";
 import EmployeePriorEmployerTaxModal from "../../components/employee-prior-employer-tax-modal";
 import EmployeeOpeningBalanceModal from "../../components/employee-opening-balance-modal";
 import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
+import type { EmployeeImportPreviewRow } from "../../models/api/response/employee-import-preview-response.model";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
@@ -42,7 +45,14 @@ export default function EmployeeList() {
     useDownloadEmployeeTemplate();
   const { mutate: uploadEmployees, isPending: uploading } =
     useUploadEmployees();
+  const { mutate: previewUpload, isPending: previewing } =
+    usePreviewEmployeesUpload();
   const [messageApi, contextHolder] = message.useMessage();
+
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewRows, setPreviewRows] = useState<EmployeeImportPreviewRow[]>(
+    [],
+  );
 
   const [inviteTarget, setInviteTarget] = useState<EmployeeResponse | null>(
     null,
@@ -65,12 +75,34 @@ export default function EmployeeList() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    uploadEmployees(file, {
-      onSuccess: () => messageApi.success("Employees imported successfully."),
+    previewUpload(file, {
+      onSuccess: (rows) => {
+        setPendingFile(file);
+        setPreviewRows(rows);
+      },
+      onError: () =>
+        messageApi.error(
+          "Could not read the file. Please check the format and try again.",
+        ),
+    });
+    e.target.value = "";
+  };
+
+  const closePreview = () => {
+    setPendingFile(null);
+    setPreviewRows([]);
+  };
+
+  const handleConfirmImport = () => {
+    if (!pendingFile) return;
+    uploadEmployees(pendingFile, {
+      onSuccess: () => {
+        messageApi.success("Employees imported successfully.");
+        closePreview();
+      },
       onError: () =>
         messageApi.error("Import failed. Please check the file and try again."),
     });
-    e.target.value = "";
   };
 
   return (
@@ -115,14 +147,14 @@ export default function EmployeeList() {
                     icon: <UploadOutlined />,
                     label: "Upload File",
                     onClick: handleImportClick,
-                    disabled: uploading,
+                    disabled: previewing,
                   },
                 ] as MenuProps["items"],
               }}
             >
               <Button
                 icon={<UploadOutlined />}
-                loading={uploading || downloading}
+                loading={previewing || downloading}
               >
                 Import
               </Button>
@@ -189,6 +221,14 @@ export default function EmployeeList() {
             ? formatFullName(openingBalanceTarget)
             : undefined
         }
+      />
+
+      <EmployeeImportPreviewModal
+        open={!!pendingFile}
+        onClose={closePreview}
+        rows={previewRows}
+        onConfirm={handleConfirmImport}
+        confirming={uploading}
       />
     </div>
   );

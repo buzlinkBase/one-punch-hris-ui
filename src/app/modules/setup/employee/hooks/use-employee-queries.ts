@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { employeeApi } from "../services/employee.api";
 import type { CreateEmployee } from "../models/api/request/create-employee.model";
 import type { UpdateEmployee } from "../models/api/request/update-employee.model";
+import type { EmployeeImportPreviewRow } from "../models/api/response/employee-import-preview-response.model";
 import { QUERY_KEY as ATTENDANCE_ENTRY_QUERY_KEY } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 
 const QUERY_KEY = ["employees"];
@@ -94,5 +95,19 @@ export function useUploadEmployees() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       invalidateEmployeeFilter(queryClient);
     },
+  });
+}
+
+// Read-only — no cache invalidation, since nothing is committed to the database yet.
+export function usePreviewEmployeesUpload() {
+  return useMutation({
+    mutationFn: (file: File) => employeeApi.previewEmployeesUpload(file),
+  });
+}
+
+export function useExportImportErrors() {
+  return useMutation({
+    mutationFn: (rows: EmployeeImportPreviewRow[]) =>
+      employeeApi.exportImportErrors(rows),
   });
 }
