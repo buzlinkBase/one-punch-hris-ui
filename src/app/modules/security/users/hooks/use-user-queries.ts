@@ -52,6 +52,17 @@ export function useUpdateMemberStatus() {
   });
 }
 
+export function useRemoveMembership() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ membershipId }: { membershipId: string }) =>
+      userApi.removeMembership(membershipId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
 export function useSendInvitation() {
   return useMutation({
     mutationFn: (data: SendInvitationRequest) => authApi.sendInvitation(data),

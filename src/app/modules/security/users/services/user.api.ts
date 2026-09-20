@@ -41,4 +41,10 @@ export const userApi = {
       },
     );
   },
+
+  removeMembership(membershipId: string): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/${membershipId}`, {
+      _skipErrorNotification: true,
+    });
+  },
 };

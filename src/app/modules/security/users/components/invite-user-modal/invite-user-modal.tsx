@@ -4,10 +4,10 @@ import { UserOutlined } from "@ant-design/icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  inviteUserFormSchema,
+  buildInviteUserFormSchema,
   type InviteUserFormValues,
 } from "../../models/forms/invite-user-form.schema";
-import { useSendInvitation } from "../../hooks/use-user-queries";
+import { useSendInvitation, useUsers } from "../../hooks/use-user-queries";
 import { useAssignableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
 
 const { Text } = Typography;
@@ -30,6 +30,8 @@ export default function InviteUserModal({
 }: Props) {
   const { mutate: sendInvitation, isPending } = useSendInvitation();
   const { data: roles = [], isLoading: loadingRoles } = useAssignableRoles();
+  const { data: members = [] } = useUsers();
+  const schema = buildInviteUserFormSchema(members);
 
   const {
     control,
@@ -37,7 +39,7 @@ export default function InviteUserModal({
     reset,
     formState: { errors },
   } = useForm<InviteUserFormValues>({
-    resolver: zodResolver(inviteUserFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: "", roles: [] },
   });
 

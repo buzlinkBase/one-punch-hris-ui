@@ -122,10 +122,11 @@ export default function UserTable({ data, loading, onDelete }: Props) {
           />
           {onDelete && (
             <Popconfirm
-              title="Delete this user?"
+              title="Remove this member from the company?"
+              description="This will remove their membership and access from this company."
               onConfirm={() => onDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
+              okText="Remove"
+              cancelText="Cancel"
             >
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>

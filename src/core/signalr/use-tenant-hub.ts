@@ -90,10 +90,10 @@ export function useTenantHub() {
     };
 
     const handleSessionRevoked = (notification: SessionRevokedNotification) => {
-      // A user can belong to multiple tenants -- losing access to one shouldn't nuke the whole
-      // session. Only force this session out if the revoked tenant is the one it's actively
-      // using; otherwise just drop it from the cached tenant list so it stops showing up in the
-      // tenant switcher, and leave everything else alone.
+      // A user can belong to multiple companies -- losing access to one shouldn't nuke the whole
+      // session. Only force this session out if the revoked company is the one it's actively
+      // using; otherwise just drop it from the cached company list so it stops showing up in the
+      // company switcher, and leave everything else alone.
       const wasActiveTenant =
         authStorage.getTenantId() === notification.tenantId;
       authStorage.removeTenant(notification.tenantId);

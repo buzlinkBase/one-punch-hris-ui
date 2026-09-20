@@ -62,10 +62,10 @@ export default function SelectTenant() {
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
         <Title level={3} className="login-title">
-          Select a Client
+          Select a Company
         </Title>
         <Text className="login-subtitle">
-          Your account has access to multiple clients. Choose one to continue.
+          Your account has access to multiple company. Choose one to continue.
         </Text>
       </div>
 

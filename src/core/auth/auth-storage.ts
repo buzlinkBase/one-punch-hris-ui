@@ -177,15 +177,15 @@ export const authStorage = {
     if (!user) return;
     const tenants = (user.tenants ?? []).filter((t) => t.tenantId !== tenantId);
     const wasActiveTenant = user.tenantId === tenantId;
-    localStorage.setItem(
-      KEYS.user,
-      JSON.stringify({
-        ...user,
-        tenants,
-        tenantId: wasActiveTenant ? null : user.tenantId,
-        tenantName: wasActiveTenant ? null : user.tenantName,
-      }),
-    );
+    const nextUser = {
+      ...user,
+      tenants,
+      tenantId: wasActiveTenant ? null : user.tenantId,
+      tenantName: wasActiveTenant ? null : user.tenantName,
+      roles: wasActiveTenant ? [] : user.roles,
+      permissions: wasActiveTenant ? [] : user.permissions,
+    };
+    localStorage.setItem(KEYS.user, JSON.stringify(nextUser));
     notify();
   },
 
