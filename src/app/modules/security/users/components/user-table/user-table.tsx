@@ -40,7 +40,9 @@ export default function UserTable({ data, loading, onDelete }: Props) {
   const roleColors: Record<string, string> = {
     Owner: "red",
     Admin: "blue",
-    Member: "green",
+    Employee: "green",
+    Member: "pink",
+    Client: "orange",
   };
 
   const columns: ColumnsType<UserResponse> = [
@@ -116,12 +118,12 @@ export default function UserTable({ data, loading, onDelete }: Props) {
           <Button
             type="text"
             icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/security/users/${record.userId}` })}
+            onClick={() => navigate({ to: `/security/users/${record.id}` })}
           />
           {onDelete && (
             <Popconfirm
               title="Delete this user?"
-              onConfirm={() => onDelete(record.userId)}
+              onConfirm={() => onDelete(record.id)}
               okText="Yes"
               cancelText="No"
             >
@@ -144,7 +146,7 @@ export default function UserTable({ data, loading, onDelete }: Props) {
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey="userId"
+        rowKey="id"
         dataSource={filtered}
         columns={columns}
         size="small"

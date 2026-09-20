@@ -45,10 +45,14 @@ import {
 } from "@ant-design/icons";
 import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
-import { NAVIGATION_ITEMS } from "@/shared/constants/navigation.const";
+import {
+  NAVIGATION_ITEMS,
+  getPermissionForPath,
+} from "@/shared/constants/navigation.const";
 import type { NavItem } from "@/shared/constants/navigation.const";
 import { useThemeStore } from "@/core/stores/theme.store";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
+import { useAuthUser } from "@/core/auth/use-auth-user";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { useTenantHub } from "@/core/signalr/use-tenant-hub";
@@ -460,6 +464,11 @@ export default function MainLayout() {
   // — the linked-record check alone would otherwise leave it visible to someone who holds no
   // portal-related permission at all.
   const { data: myEmployee } = useMyEmployee();
+  // This hook is intentionally called for its re-render side effect: it keeps the nav recomputing
+  // the instant a SignalR roles-changed push refreshes the session, instead of waiting for the
+  // next navigation/remount. The memo itself only depends on the current employee record and the
+  // live authStorage values read inside the function, so authUser is not a dependency here.
+  useAuthUser();
   const navItems = useMemo(() => {
     if (authStorage.isEmployeeOnly()) {
       return filterNavByPermission(
@@ -471,6 +480,18 @@ export default function MainLayout() {
       : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal");
     return filterNavByPermission(base);
   }, [myEmployee]);
+
+  useEffect(() => {
+    const requiredPermission = getPermissionForPath(location.pathname);
+    if (!requiredPermission) return;
+
+    const codes = Array.isArray(requiredPermission)
+      ? requiredPermission
+      : [requiredPermission];
+    if (authStorage.hasAnyPermission(...codes)) return;
+
+    navigate({ to: "/dashboard", replace: true });
+  }, [location.pathname, navigate]);
 
   // Employee Portal pages go edge-to-edge (no outer margin/card border/shadow) instead of the
   // floating-card look admin pages use — .page-toolbar's -24px bleed margin still relies on the

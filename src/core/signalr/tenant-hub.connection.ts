@@ -1,6 +1,7 @@
 import * as signalR from "@microsoft/signalr";
 import { API_PREFIX } from "@/core/http/api-url.util";
 import { authStorage } from "@/core/auth/auth-storage";
+import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import {
   TENANT_HUB_METHODS,
   type TenantCreatedNotification,
@@ -10,10 +11,27 @@ const HUB_URL = `${API_PREFIX.auth}/hubs/tenant`;
 
 let connection: signalR.HubConnection | null = null;
 
+// SignalR calls this fresh before every negotiate attempt (initial connect AND each automatic
+// reconnect), so unlike a plain authStorage.getToken() read, this self-heals an access token
+// that's already expired by the time the hub tries to connect -- a real gap that surfaced as
+// negotiate returning 401 ("Token is missing or invalid.") for any session whose 5-minute
+// access token had already lapsed before this ran. The axios interceptor already does the
+// equivalent check on every HTTP request; this hub connection had never had it.
+async function getHubAccessToken(): Promise<string> {
+  if (authStorage.isAccessTokenExpired()) {
+    try {
+      return await refreshAccessToken();
+    } catch {
+      return authStorage.getToken() ?? "";
+    }
+  }
+  return authStorage.getToken() ?? "";
+}
+
 function createConnection(): signalR.HubConnection {
   return new signalR.HubConnectionBuilder()
     .withUrl(HUB_URL, {
-      accessTokenFactory: () => authStorage.getToken() ?? "",
+      accessTokenFactory: getHubAccessToken,
     })
     .withAutomaticReconnect()
     .configureLogging(signalR.LogLevel.Warning)
@@ -40,13 +58,19 @@ export const tenantHub = {
   },
 
   async stop(): Promise<void> {
-    if (
-      connection &&
-      connection.state !== signalR.HubConnectionState.Disconnected
-    ) {
-      await connection.stop();
-    }
+    // Detach the module-level reference BEFORE awaiting the stop, not after. React 18
+    // StrictMode double-invokes this hook's effect in dev, so a stop() from the first
+    // (thrown-away) mount's cleanup can still be mid-await when the second mount's start()
+    // calls getConnection() -- if `connection` weren't already cleared here, that call would
+    // get back this same half-torn-down instance (stuck in "Connecting"/"Disconnecting",
+    // never "Disconnected") and start() would silently no-op instead of ever really
+    // connecting. Clearing it first guarantees the next getConnection() always builds a fresh
+    // connection instead of reusing one that's mid-teardown.
+    const current = connection;
     connection = null;
+    if (current && current.state !== signalR.HubConnectionState.Disconnected) {
+      await current.stop();
+    }
   },
 
   /**

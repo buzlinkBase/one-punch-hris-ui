@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import {
   Form,
   Typography,
@@ -16,18 +17,18 @@ import {
   useReplaceRoles,
   useUpdateMemberStatus,
 } from "../../hooks/use-user-queries";
+import { useAssignableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
 import { USER_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { getNotify } from "@/shared/utils/notify";
+import type { ErrorResponse } from "@/shared/types/api-response.model";
 
 const { Title } = Typography;
-
-const AVAILABLE_ROLES = ["Owner", "Admin", "Member"];
 
 const STATUS_OPTIONS = [
   { value: "Active", label: "Active" },
   { value: "Revoked", label: "Revoked" },
-  { value: "Inactive", label: "Inactive" },
 ];
 
 export default function UserDetail() {
@@ -38,6 +39,8 @@ export default function UserDetail() {
     useReplaceRoles();
   const { mutateAsync: updateStatus, isPending: isUpdatingStatus } =
     useUpdateMemberStatus();
+  const { data: assignableRoles = [], isLoading: loadingRoles } =
+    useAssignableRoles();
 
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
@@ -61,20 +64,37 @@ export default function UserDetail() {
   const handleSave = async () => {
     if (!id || !hasChanges) return;
     try {
-      const promises: Promise<unknown>[] = [];
+      // Status first, roles second -- when both change in the same save (e.g. revoking someone
+      // while also editing their roles), the backend publishes one MembershipChanged message per
+      // change. Applying status first means the Revoked/Inactive forced-logout push reaches the
+      // affected session before any roles-changed refresh could race it and hand back a fresh
+      // token to a member who's being revoked in the very same action.
+      if (selectedStatus !== selected?.status) {
+        await updateStatus({ membershipId: id, status: selectedStatus });
+      }
 
       if (JSON.stringify(selectedRoles) !== JSON.stringify(selected?.roles)) {
-        promises.push(replaceRoles({ userId: id, roles: selectedRoles }));
+        await replaceRoles({ membershipId: id, roles: selectedRoles });
       }
 
-      if (selectedStatus !== selected?.status) {
-        promises.push(updateStatus({ userId: id, status: selectedStatus }));
-      }
-
-      await Promise.all(promises);
       message.success("Member updated successfully");
-    } catch {
-      message.error("Failed to update member");
+    } catch (error) {
+      const response = axios.isAxiosError<ErrorResponse>(error)
+        ? error.response?.data
+        : undefined;
+      const responseData = response?.data as unknown as
+        { detail?: string } | string | undefined;
+      const description =
+        typeof responseData === "string"
+          ? responseData
+          : (responseData?.detail ??
+            response?.message ??
+            "Failed to update member");
+      getNotify().error({
+        message: "Member update failed",
+        description,
+        placement: "topRight",
+      });
     }
   };
 
@@ -140,11 +160,11 @@ export default function UserDetail() {
                   mode="multiple"
                   value={selectedRoles}
                   onChange={setSelectedRoles}
-                  options={AVAILABLE_ROLES.map((r) => ({
+                  options={assignableRoles.map((r) => ({
                     value: r,
                     label: r,
-                    disabled: r === "Owner",
                   }))}
+                  loading={loadingRoles}
                   style={{ width: "100%" }}
                   placeholder="Select roles"
                 />

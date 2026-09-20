@@ -23,8 +23,13 @@ export function useUser(id: string | undefined) {
 export function useReplaceRoles() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, roles }: { userId: string; roles: string[] }) =>
-      userApi.replaceRoles(userId, roles),
+    mutationFn: ({
+      membershipId,
+      roles,
+    }: {
+      membershipId: string;
+      roles: string[];
+    }) => userApi.replaceRoles(membershipId, roles),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
@@ -34,8 +39,13 @@ export function useReplaceRoles() {
 export function useUpdateMemberStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, status }: { userId: string; status: string }) =>
-      userApi.updateStatus(userId, status),
+    mutationFn: ({
+      membershipId,
+      status,
+    }: {
+      membershipId: string;
+      status: string;
+    }) => userApi.updateStatus(membershipId, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

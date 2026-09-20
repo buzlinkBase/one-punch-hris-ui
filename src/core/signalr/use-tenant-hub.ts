@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
+import { message } from "antd";
 import { authStorage } from "@/core/auth/auth-storage";
+import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import { queryClient } from "@/core/query-client";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { tenantHub } from "./tenant-hub.connection";
 import {
   TENANT_HUB_METHODS,
   type HrDbCreatedNotification,
+  type SessionRevokedNotification,
   type TenantCreatedNotification,
 } from "./tenant-hub.types";
 
@@ -71,10 +75,51 @@ export function useTenantHub() {
       });
     };
 
+    const handleRolesChanged = async () => {
+      try {
+        // force=true -- this fires because roles changed, not because the token expired, so
+        // the existing-token-is-still-valid shortcut inside refreshAccessToken must be
+        // bypassed or this would just hand back the same stale roles it already had.
+        await refreshAccessToken(true);
+      } catch {
+        // A real 401 already hard-redirects to /login inside refreshAccessToken.
+        return;
+      }
+      queryClient.invalidateQueries();
+      message.info("Your permissions were updated.");
+    };
+
+    const handleSessionRevoked = (notification: SessionRevokedNotification) => {
+      // A user can belong to multiple tenants -- losing access to one shouldn't nuke the whole
+      // session. Only force this session out if the revoked tenant is the one it's actively
+      // using; otherwise just drop it from the cached tenant list so it stops showing up in the
+      // tenant switcher, and leave everything else alone.
+      const wasActiveTenant =
+        authStorage.getTenantId() === notification.tenantId;
+      authStorage.removeTenant(notification.tenantId);
+      if (!wasActiveTenant) return;
+
+      message.error("Your access to this company has been revoked.");
+      queryClient.clear();
+      if (authStorage.getTenants().length > 0) {
+        window.location.href = "/select-tenant";
+      } else {
+        authStorage.clear();
+        window.location.href = "/login";
+      }
+    };
+
     connection.on(TENANT_HUB_METHODS.onTenantCreated, handleTenantCreated);
     connection.on(TENANT_HUB_METHODS.onHrDbCreated, handleHrDbCreated);
+    connection.on(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
+    connection.on(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
 
-    void tenantHub.start();
+    // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke (the
+    // first mount's connection gets stopped mid-negotiate by its own cleanup before this ever
+    // settles) -- see the comment on tenantHub.stop(). A genuine connection failure just means
+    // no live push for this session, already tolerated by falling back to the existing
+    // expiry-based refresh, so silently dropping it here isn't hiding anything actionable.
+    void tenantHub.start().catch(() => {});
 
     // Seed HR-DB status on load/refresh from stored tenant list first (no network needed).
     authStorage.getTenants().forEach((tenant) => {
@@ -125,6 +170,8 @@ export function useTenantHub() {
     return () => {
       connection.off(TENANT_HUB_METHODS.onTenantCreated, handleTenantCreated);
       connection.off(TENANT_HUB_METHODS.onHrDbCreated, handleHrDbCreated);
+      connection.off(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
+      connection.off(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
       if (pollTimer.current) clearInterval(pollTimer.current);
       void tenantHub.stop();
       started.current = false;

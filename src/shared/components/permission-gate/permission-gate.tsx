@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { authStorage } from "@/core/auth/auth-storage";
+import { useAuthUser } from "@/core/auth/use-auth-user";
 
 interface PermissionGateProps {
   /** Any-of requirement — renders children if the caller holds at least one of these codes. */
@@ -14,6 +15,8 @@ interface PermissionGateProps {
  * a disabled state, matching how the nav already behaves.
  */
 export function PermissionGate({ permission, children }: PermissionGateProps) {
+  useAuthUser(); // re-renders this on any auth-session change (e.g. a roles-changed refresh)
+
   const codes = Array.isArray(permission) ? permission : [permission];
   if (!authStorage.hasAnyPermission(...codes)) return null;
   return <>{children}</>;

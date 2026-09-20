@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { authStorage } from "./auth-storage";
+import { useAuthUser } from "./use-auth-user";
 
 interface RequirePermissionProps {
   /** Renders children if the user holds at least one of these permission codes. */
@@ -21,6 +22,8 @@ export function RequirePermission({
   fallback = null,
   children,
 }: RequirePermissionProps) {
+  useAuthUser(); // re-renders this on any auth-session change (e.g. a roles-changed refresh)
+
   const permissions = permission
     ? Array.isArray(permission)
       ? permission

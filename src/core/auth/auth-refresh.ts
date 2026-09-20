@@ -43,14 +43,20 @@ async function performRefresh(): Promise<string> {
   return accessToken;
 }
 
-async function refreshOnce(): Promise<string> {
+async function refreshOnce(force: boolean): Promise<string> {
   // Another caller may have already refreshed while we were waiting our turn (this tab's own
   // concurrent callers, or -- once the Web Locks branch below is available -- another tab
   // entirely). Reuse what's already in storage instead of spending the single-use refresh
   // token again: the backend revokes the old one as soon as it's used (see
   // UserService.RefreshLogin), so whoever sends it second gets a 401 for no real reason.
+  //
+  // `force` skips this reuse entirely -- needed when the caller isn't reacting to token
+  // expiry at all (e.g. a SignalR "roles changed" push) and specifically wants this session's
+  // roles/permissions re-pulled from the server right now, even though the current access
+  // token has plenty of life left. Without it, that caller would silently get back the same
+  // stale token/roles it already had, since nothing here would ever look expired yet.
   const existing = authStorage.getToken();
-  if (existing && !authStorage.isAccessTokenExpired()) {
+  if (!force && existing && !authStorage.isAccessTokenExpired()) {
     return existing;
   }
   return performRefresh();
@@ -64,7 +70,7 @@ async function refreshOnce(): Promise<string> {
 // first one did.
 let inFlight: Promise<string> | null = null;
 
-export async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(force = false): Promise<string> {
   if (inFlight) return inFlight;
 
   inFlight = (async () => {
@@ -75,10 +81,14 @@ export async function refreshAccessToken(): Promise<string> {
     // clearing its own storage on that 401 used to log the WINNING tab out too. Falls back to
     // same-tab-only coalescing (still handled by inFlight above) on browsers without Web Locks
     // (Safari < 15.4).
+    //
+    // Wrapped in a closure rather than passed directly -- navigator.locks.request invokes its
+    // callback with a Lock object argument, which would otherwise land in refreshOnce's `force`
+    // parameter instead of the caller's actual value.
     if (typeof navigator !== "undefined" && navigator.locks) {
-      return navigator.locks.request("auth-refresh", refreshOnce);
+      return navigator.locks.request("auth-refresh", () => refreshOnce(force));
     }
-    return refreshOnce();
+    return refreshOnce(force);
   })();
 
   try {

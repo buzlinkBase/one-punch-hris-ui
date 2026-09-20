@@ -58,10 +58,36 @@ export function mergeTenants(
   return [...reconciled, ...preserved];
 }
 
+const listeners = new Set<() => void>();
+// useSyncExternalStore requires getSnapshot to return a stable reference until something
+// actually changes -- getUser() re-parses JSON on every call, so this caches that result and
+// only recomputes it the next time it's read after a notify() invalidates it.
+let userSnapshot: AuthUser | null | undefined;
+
+function notify() {
+  userSnapshot = undefined;
+  listeners.forEach((listener) => listener());
+}
+
 export const authStorage = {
+  /** Notifies on every save/clear/setTenant/updateTenantHrDbStatus — see useAuthUser. */
+  subscribe(listener: () => void): () => void {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  },
+
+  /** Stable-reference snapshot of getUser(), for useSyncExternalStore (see useAuthUser). */
+  getUserSnapshot(): AuthUser | null {
+    if (userSnapshot === undefined) {
+      userSnapshot = this.getUser();
+    }
+    return userSnapshot;
+  },
+
   save(token: string, user: AuthUser) {
     localStorage.setItem(KEYS.token, token);
     localStorage.setItem(KEYS.user, JSON.stringify(user));
+    notify();
   },
 
   getToken(): string | null {
@@ -137,6 +163,30 @@ export const authStorage = {
       KEYS.user,
       JSON.stringify({ ...user, tenantId, tenantName: tenantName ?? null }),
     );
+    notify();
+  },
+
+  /**
+   * Drops a tenant the session has lost access to (e.g. a SignalR "session revoked" push) out
+   * of the cached membership list, so it stops showing in the tenant switcher. Only clears the
+   * active tenantId/tenantName if that tenant WAS the active one -- losing access to a tenant
+   * the session isn't currently using shouldn't disturb what it's actively working in.
+   */
+  removeTenant(tenantId: string) {
+    const user = this.getUser();
+    if (!user) return;
+    const tenants = (user.tenants ?? []).filter((t) => t.tenantId !== tenantId);
+    const wasActiveTenant = user.tenantId === tenantId;
+    localStorage.setItem(
+      KEYS.user,
+      JSON.stringify({
+        ...user,
+        tenants,
+        tenantId: wasActiveTenant ? null : user.tenantId,
+        tenantName: wasActiveTenant ? null : user.tenantName,
+      }),
+    );
+    notify();
   },
 
   /**
@@ -176,6 +226,7 @@ export const authStorage = {
       state: hrDbReady ? "Created" : current.state,
     };
     localStorage.setItem(KEYS.user, JSON.stringify({ ...user, tenants }));
+    notify();
   },
 
   /** Decodes the `tenantId`/`tenantName` claims off any access token (e.g. a fresh one from an API response, not yet saved). */
@@ -203,5 +254,6 @@ export const authStorage = {
 
   clear() {
     Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
+    notify();
   },
 };

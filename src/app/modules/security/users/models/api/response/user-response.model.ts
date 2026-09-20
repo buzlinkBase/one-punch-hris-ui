@@ -1,4 +1,5 @@
 export interface UserResponse {
+  id: string;
   userId: string;
   email: string;
   fullName: string;
@@ -6,4 +7,4 @@ export interface UserResponse {
   status: string;
 }
 
-export type UserType = "Owner | Admin" | "Member" | "Employee";
+export type UserType = "Owner | Admin" | "Member" | "Employee" | "Client";

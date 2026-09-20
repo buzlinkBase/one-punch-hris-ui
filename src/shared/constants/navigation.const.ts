@@ -11,6 +11,35 @@ export interface NavItem {
   permission?: string | string[];
 }
 
+/** Returns the most specific permission attached to a navigation path. */
+export function getPermissionForPath(
+  path: string,
+  items: NavItem[] = NAVIGATION_ITEMS,
+): string | string[] | undefined {
+  let match: { path: string; permission?: string | string[] } | undefined;
+
+  const visit = (
+    entries: NavItem[],
+    inheritedPermission?: string | string[],
+  ) => {
+    for (const item of entries) {
+      const permission = item.permission ?? inheritedPermission;
+      if (
+        item.path &&
+        (path === item.path || path.startsWith(`${item.path}/`))
+      ) {
+        if (!match || item.path.length > match.path.length) {
+          match = { path: item.path, permission };
+        }
+      }
+      if (item.children) visit(item.children, permission);
+    }
+  };
+
+  visit(items);
+  return match?.permission;
+}
+
 export const NAVIGATION_ITEMS: NavItem[] = [
   {
     key: "dashboard",

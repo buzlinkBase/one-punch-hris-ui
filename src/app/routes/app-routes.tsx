@@ -18,6 +18,7 @@ import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
 import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
+import { getPermissionForPath } from "@/shared/constants/navigation.const";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 
 const Login = lazy(() => import("@/app/modules/auth/login/login"));
@@ -318,6 +319,18 @@ const rootRoute = createRootRoute({
 
     const destination = await resolveTenantDestination();
     if (destination) throw redirect({ to: destination });
+
+    const requiredPermission = getPermissionForPath(location.pathname);
+    if (
+      requiredPermission &&
+      !authStorage.hasAnyPermission(
+        ...(Array.isArray(requiredPermission)
+          ? requiredPermission
+          : [requiredPermission]),
+      )
+    ) {
+      throw redirect({ to: "/dashboard" });
+    }
 
     // Employee-only members (no Admin/Member/Owner/Custom role alongside it) are restricted to
     // the Employee Portal and their own account page -- everything else bounces back into the

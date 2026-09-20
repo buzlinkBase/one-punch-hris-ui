@@ -84,6 +84,7 @@ export default function EmployeeTable({
     status: 100,
     gender: 90,
     contact: 160,
+    email: 160,
     sssNo: 130,
     phicNo: 140,
     hdmfNo: 130,
@@ -400,7 +401,18 @@ export default function EmployeeTable({
           width: widths.contact,
           onResize: (w: number) => handleResize("contact", w),
         }) as object,
-      render: (_, record) => record.email || record.contact || null,
+      render: (_, record) => record.contact || null,
+    },
+    {
+      title: "Email",
+      key: "email",
+      width: widths.email,
+      onHeaderCell: () =>
+        ({
+          width: widths.email,
+          onResize: (w: number) => handleResize("email", w),
+        }) as object,
+      render: (_, record) => record.email || null,
     },
     {
       title: EMPLOYEE_LABEL.SSS_NO,

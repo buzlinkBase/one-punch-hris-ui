@@ -10,6 +10,14 @@ export const TENANT_HUB_METHODS = {
   /** Fired later, once the external HRIS system finishes provisioning the org/database for
    *  that tenant (HrDbCreatedWorker) — informational, does not gate readiness. */
   onHrDbCreated: "HrDbCreated",
+  /** Fired whenever this user's tenant roles change (MembershipChangedWorker) — the signal to
+   *  silently refresh the auth session and invalidate cached data instead of waiting for the
+   *  access token to expire. */
+  onRolesChanged: "RolesChanged",
+  /** Fired when this user's membership status changes to Revoked (MembershipChangedWorker) —
+   *  the existing access token is still valid for its remaining lifetime, so this forces an
+   *  immediate logout instead of waiting for it to expire. */
+  onSessionRevoked: "SessionRevoked",
 } as const;
 
 export interface TenantCreatedNotification {
@@ -22,6 +30,14 @@ export interface HrDbCreatedNotification {
   tenantId: string;
   databaseName: string;
   status: string;
+}
+
+export interface RolesChangedNotification {
+  tenantId: string;
+}
+
+export interface SessionRevokedNotification {
+  tenantId: string;
 }
 
 /** TenantCreationStatus string values (Onepunch.Auth.Domain/Entities/TenantCreationRequest.cs). */

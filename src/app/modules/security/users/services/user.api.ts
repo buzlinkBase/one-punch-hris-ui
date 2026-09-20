@@ -19,18 +19,26 @@ export const userApi = {
 
   async getById(id: string): Promise<UserResponse> {
     const all = await this.getAll();
-    const match = all.find((item) => item.userId === id);
+    const match = all.find((item) => item.id === id);
     if (!match) throw new Error(`User ${id} not found`);
     return match;
   },
 
-  replaceRoles(userId: string, roles: string[]): Promise<void> {
+  replaceRoles(membershipId: string, roles: string[]): Promise<void> {
     const payload: ReplaceRolesPayload = { roles };
-    return httpClient.put<void>(`${ENDPOINT}/${userId}/roles`, payload);
+    return httpClient.put<void>(`${ENDPOINT}/${membershipId}/roles`, payload, {
+      _skipErrorNotification: true,
+    });
   },
 
-  updateStatus(userId: string, status: string): Promise<void> {
+  updateStatus(membershipId: string, status: string): Promise<void> {
     const payload: UpdateStatusPayload = { status };
-    return httpClient.patch<void>(`${ENDPOINT}/${userId}/status`, payload);
+    return httpClient.patch<void>(
+      `${ENDPOINT}/${membershipId}/status`,
+      payload,
+      {
+        _skipErrorNotification: true,
+      },
+    );
   },
 };

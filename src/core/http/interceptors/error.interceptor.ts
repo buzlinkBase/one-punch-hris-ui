@@ -1,6 +1,9 @@
 import type { AxiosInstance, AxiosError } from "axios";
 import { getNotify } from "@/shared/utils/notify";
-import type { ErrorResponse } from "@/shared/types/api-response.model";
+import type {
+  ErrorResponse,
+  ProblemDetails,
+} from "@/shared/types/api-response.model";
 import { useConnectionStore } from "@/core/stores/connection.store";
 
 declare module "axios" {
@@ -34,15 +37,20 @@ export function applyErrorInterceptor(instance: AxiosInstance): void {
         return Promise.reject(error);
       }
 
-      const problemDetails = error.response?.data?.data;
+      const problemDetails = error.response?.data?.data as
+        ProblemDetails | string | undefined;
       const description =
-        problemDetails?.innerException ??
-        problemDetails?.detail ??
-        error.response?.data?.message ??
-        error.message ??
-        "An unexpected error occurred.";
+        typeof problemDetails === "string"
+          ? problemDetails
+          : (problemDetails?.innerException ??
+            problemDetails?.detail ??
+            error.response?.data?.message ??
+            error.message ??
+            "An unexpected error occurred.");
       const message =
-        problemDetails?.title ?? getStatusTitle(error.response?.status);
+        typeof problemDetails === "string"
+          ? getStatusTitle(error.response?.status)
+          : (problemDetails?.title ?? getStatusTitle(error.response?.status));
 
       try {
         getNotify().error({ message, description, placement: "topRight" });

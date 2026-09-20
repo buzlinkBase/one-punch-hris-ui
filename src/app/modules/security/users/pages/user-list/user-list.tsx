@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Space, Typography } from "antd";
-import { MailOutlined, ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 import { useUsers } from "../../hooks/use-user-queries";
 import UserTable from "../../components/user-table";
 import InviteUserModal from "../../components/invite-user-modal/invite-user-modal";
@@ -30,10 +30,10 @@ export default function UserList() {
               loading={isFetching}
               onClick={() => refetch()}
             ></Button>
-            <Button
+            {/* <Button
               icon={<MailOutlined />}
               onClick={() => setInviteOpen(true)}
-            ></Button>
+            ></Button> */}
           </Space>
         </div>
       </div>
