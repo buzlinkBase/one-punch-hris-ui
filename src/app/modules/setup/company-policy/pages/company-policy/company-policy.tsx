@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import {
+  Alert,
   Button,
   Card,
   Form,
@@ -25,6 +26,7 @@ import {
   COMPANY_POLICY_LABEL,
   OT_INCLUSION_OPTIONS,
   OT_ELIGIBILITY_OPTIONS,
+  OT_ND_CALCULATION_METHOD_OPTIONS,
   HOLIDAY_TIME_BASIS_OPTIONS,
   CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
@@ -63,11 +65,16 @@ function GeneralPolicyTab() {
       crossMonthStatutoryCreditPolicy: "CutoffStartMonth",
       wTaxCrossMonthCreditPolicy: "CutoffEndMonth",
       requiredTakehomePercentage: 10,
+      otNdCalculationMethod: "Compounded",
     },
   });
 
   const isHalfDayLateOn = useWatch({ control, name: "isHalfDayLateOn" });
   const isWholeDayLateOn = useWatch({ control, name: "isWholeDayLateOn" });
+  const otNdCalculationMethod = useWatch({
+    control,
+    name: "otNdCalculationMethod",
+  });
 
   useEffect(() => {
     if (policy) {
@@ -91,6 +98,7 @@ function GeneralPolicyTab() {
         wTaxCrossMonthCreditPolicy:
           policy.wTaxCrossMonthCreditPolicy ?? "CutoffEndMonth",
         requiredTakehomePercentage: policy.requiredTakehomePercentage ?? 10,
+        otNdCalculationMethod: policy.otNdCalculationMethod ?? "Compounded",
       });
     }
   }, [policy, reset]);
@@ -161,6 +169,33 @@ function GeneralPolicyTab() {
                 )}
               />
             </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.OT_ND_CALCULATION_METHOD}
+              validateStatus={errors.otNdCalculationMethod ? "error" : ""}
+              help={errors.otNdCalculationMethod?.message}
+              className="sm:col-span-2"
+            >
+              <Controller
+                name="otNdCalculationMethod"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={OT_ND_CALCULATION_METHOD_OPTIONS}
+                    placeholder="Select OT/ND calculation method"
+                  />
+                )}
+              />
+            </Form.Item>
+            {otNdCalculationMethod === "Additive" && (
+              <Alert
+                type="warning"
+                showIcon
+                className="sm:col-span-2"
+                message="Additive mode computes less than the standard DOLE-compliant formula for hours that are both overtime and night-differential. Confirm this matches your company policy or a specific client's negotiated agreement before saving."
+              />
+            )}
           </div>
         </Card>
 

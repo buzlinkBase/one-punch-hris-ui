@@ -28,6 +28,13 @@ import {
 } from "../../hooks/use-for-payroll-queries";
 import type { DtrBatchModel } from "../../models/api/response/dtr-batch-response.model";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import {
+  otPay,
+  ndPay,
+  ndotDisplayPay,
+  basicPay,
+  holidayPay,
+} from "../../utils/ot-nd-pay.util";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
 import PayrollRunPostModal from "../../components/payroll-run-post-modal";
@@ -230,31 +237,32 @@ export default function ForPayrollList() {
         [
           {
             title: "Basic",
-            dataIndex: "basicPay",
             key: "basicPay",
             align: "right",
-            render: fmt,
+            render: (_, r) => fmt(basicPay(r)),
           },
           {
             title: "OT",
-            dataIndex: "overtimePay",
             key: "overtimePay",
             align: "right",
-            render: fmt,
+            render: (_, r) => fmt(otPay(r)),
           },
           {
             title: "ND",
-            dataIndex: "nightDifferentialPay",
             key: "nd",
             align: "right",
-            render: fmt,
+            render: (_, r) => fmt(ndPay(r)),
           },
           {
             title: "NDOT",
-            dataIndex: "nightDifferentialOTPay",
             key: "ndot",
             align: "right",
-            render: fmt,
+            // "—" under Additive mode: that pay now lives in OT/ND above instead — see
+            // ot-nd-pay.util.ts.
+            render: (_, r) => {
+              const v = ndotDisplayPay(r);
+              return v === null ? "—" : fmt(v);
+            },
           },
           {
             title: "Rest Day",
@@ -265,10 +273,9 @@ export default function ForPayrollList() {
           },
           {
             title: "Holiday",
-            dataIndex: "holidayPay",
             key: "holidayPay",
             align: "right",
-            render: fmt,
+            render: (_, r) => fmt(holidayPay(r)),
           },
           {
             title: "Allowances",
@@ -571,12 +578,12 @@ export default function ForPayrollList() {
                   rows.reduce((s, r) => s + (pick(r) ?? 0), 0);
 
                 const totals = {
-                  basic: sum((r) => r.basicPay),
-                  ot: sum((r) => r.overtimePay),
-                  nd: sum((r) => r.nightDifferentialPay),
-                  ndot: sum((r) => r.nightDifferentialOTPay),
+                  basic: sum(basicPay),
+                  ot: sum(otPay),
+                  nd: sum(ndPay),
+                  ndot: sum((r) => ndotDisplayPay(r) ?? 0),
                   restDay: sum((r) => r.restDayPay),
-                  holiday: sum((r) => r.holidayPay),
+                  holiday: sum(holidayPay),
                   allowances: sum((r) => r.totalRegularAllowances),
                   cola: sum((r) => r.cola),
                   bonuses: sum((r) => r.totalBonuses),

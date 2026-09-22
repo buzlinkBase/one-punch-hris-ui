@@ -4,20 +4,15 @@ import {
   Card,
   Col,
   Dropdown,
-  Modal,
-  Popconfirm,
   Row,
   Space,
   Statistic,
   Table,
   Tabs,
-  Tag,
-  Tooltip,
   Typography,
   message,
   theme,
 } from "antd";
-import type { ColumnsType } from "antd/es/table";
 import type { MenuProps } from "antd";
 import {
   ReloadOutlined,
@@ -25,7 +20,6 @@ import {
   PrinterOutlined,
   DownloadOutlined,
   CheckCircleOutlined,
-  DeleteOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
@@ -34,6 +28,7 @@ import {
   useDeletePayrollBatch,
 } from "../../hooks/use-for-payroll-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import { otPay, ndPay } from "../../utils/ot-nd-pay.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import httpClient from "@/core/http/http-client";
@@ -44,8 +39,28 @@ import {
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import PayrollRunBatchModal from "../../components/payroll-run-batch-modal";
+import { earningsColumns } from "./columns/earnings.columns";
+import { holidayColumns } from "./columns/holiday.columns";
+import { deductionsColumns } from "./columns/deductions.columns";
+import { hoursColumns } from "./columns/hours.columns";
+import { erColumns } from "./columns/employer-contributions.columns";
+import {
+  EXPORT_HEADERS,
+  buildExportRows,
+  EARNINGS_HEADERS,
+  buildEarningsRows,
+  HOLIDAY_HEADERS,
+  buildHolidayRows,
+  DEDUCTIONS_HEADERS,
+  buildDeductionsRows,
+  ER_HEADERS,
+  buildErRows,
+  HOURS_HEADERS,
+  buildHoursRows,
+} from "./utils/payroll-summary-export.util";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 // Mirrors hrms-api's PayrollsController.RunTypeFeature -- Post/Delete on a mixed-type Payroll
 // Summary batch need the permission for that specific batch's run type, not a fixed code.
@@ -55,72 +70,6 @@ const RUN_TYPE_FEATURE: Record<string, string> = {
   LastPay: "Last Pay Run",
   YearEndAdjustment: "Year-End Adjustment Run",
 };
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
-const fmtH = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }) + " h";
-
-// Holiday-category totals, mirroring PayslipDocument.cs's formulas exactly — each folds
-// its own base + OT + ND + NDOT tiers into one figure; "Holiday Duty" excludes the
-// unworked portion of Legal Holiday pay, and "Double Legal" folds in the rest-day variant.
-function holidayDuty(r: PayrollRunResult) {
-  return (
-    (r.legalPay ?? 0) -
-    (r.legalHolidayUnworkedPay ?? 0) +
-    (r.legalOTPay ?? 0) +
-    (r.legalNDPay ?? 0) +
-    (r.legalNDOTPay ?? 0)
-  );
-}
-function restLegalTotal(r: PayrollRunResult) {
-  return (
-    (r.restLegalPay ?? 0) +
-    (r.restLegalOTPay ?? 0) +
-    (r.restLegalNDPay ?? 0) +
-    (r.restLegalNDOTPay ?? 0)
-  );
-}
-function restSpecialTotal(r: PayrollRunResult) {
-  return (
-    (r.restSpecialPay ?? 0) +
-    (r.restSpecialOTPay ?? 0) +
-    (r.restSpecialNDPay ?? 0) +
-    (r.restSpecialNDOTPay ?? 0)
-  );
-}
-function specialTotal(r: PayrollRunResult) {
-  return (
-    (r.specialPay ?? 0) +
-    (r.specialOTPay ?? 0) +
-    (r.specialNDPay ?? 0) +
-    (r.specialNDOTPay ?? 0)
-  );
-}
-function doubleLegalTotal(r: PayrollRunResult) {
-  return (
-    (r.doubleLegalPay ?? 0) +
-    (r.doubleLegalOTPay ?? 0) +
-    (r.doubleLegalNDPay ?? 0) +
-    (r.doubleLegalNDOTPay ?? 0)
-  );
-}
-function restDoubleLegalTotal(r: PayrollRunResult) {
-  return (
-    (r.restDoubleLegalPay ?? 0) +
-    (r.restDoubleLegalOTPay ?? 0) +
-    (r.restDoubleLegalNDPay ?? 0) +
-    (r.restDoubleLegalNDOTPay ?? 0)
-  );
-}
-function restDayTotal(r: PayrollRunResult) {
-  return (
-    (r.restDayPay ?? 0) +
-    (r.restDayOTPay ?? 0) +
-    (r.restDayNDPay ?? 0) +
-    (r.restDayNDOTPay ?? 0)
-  );
-}
 
 export default function PayrollSummary() {
   const { token } = theme.useToken();
@@ -210,6 +159,10 @@ export default function PayrollSummary() {
     }
   };
 
+  // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
+  // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
+  // Standard, Additive -> Hours Breakdown), so the printed itemization always matches how the
+  // employee was actually paid. See PayrollsController.PrintPayslip.
   const handlePrintPayslip = async (record: PayrollRunResult) => {
     if (!record.id) {
       message.error("This payroll record has no printable payslip yet.");
@@ -251,399 +204,6 @@ export default function PayrollSummary() {
     }
   };
 
-  // ── Export ────────────────────────────────────────────────────────────────
-
-  const EXPORT_HEADERS = [
-    "Employee",
-    "Period Start",
-    "Period End",
-    "Salary Type",
-    "Daily Rate",
-    "Basic",
-    "OT Pay",
-    "OT Premium",
-    "ND Pay",
-    "ND Premium",
-    "ND-OT Pay",
-    "Rest Day",
-    "Paid Leave",
-    "1x Payout (Company)",
-    "1x Payout (Government)",
-    "Legal Holiday (Unworked)",
-    "Legal Holiday Duty (Worked)",
-    "Rest Day + Legal Holiday",
-    "Special Holiday",
-    "Rest Day + Special Holiday",
-    "Double Legal Holiday",
-    "Rest Day + Double Legal Holiday",
-    "Holiday Total",
-    "COLA",
-    "Allowances",
-    "Bonuses",
-    "Commissions",
-    "De Minimis",
-    "Other Income",
-    "Reimbursement",
-    "Gross Income",
-    "SSS",
-    "PhilHealth",
-    "Pag-IBIG",
-    "W-Tax",
-    "Loans",
-    "Other Deductions",
-    "Late",
-    "Under Time",
-    "Absent",
-    "Total Deductions",
-    "Net Pay",
-    "ER SSS",
-    "ER PhilHealth",
-    "ER Pag-IBIG",
-    "EC",
-    "Total ER Cost",
-    "Regular Hrs",
-    "Reg OT Hrs",
-    "Reg ND Hrs",
-    "Reg ND-OT Hrs",
-    "Rest Day Hrs",
-    "RD OT Hrs",
-    "RD ND Hrs",
-    "RD ND-OT Hrs",
-    "Legal Hol Hrs",
-    "Legal OT Hrs",
-    "Legal ND Hrs",
-    "Legal ND-OT Hrs",
-    "Special Hol Hrs",
-    "Special OT Hrs",
-    "Special ND Hrs",
-    "Special ND-OT Hrs",
-    "RD+Legal Hrs",
-    "RD+Legal OT Hrs",
-    "RD+Legal ND Hrs",
-    "RD+Legal ND-OT Hrs",
-    "RD+Special Hrs",
-    "RD+Special OT Hrs",
-    "RD+Special ND Hrs",
-    "RD+Special ND-OT Hrs",
-    "Double Legal Hrs",
-    "Double Legal OT Hrs",
-    "Double Legal ND Hrs",
-    "Double Legal ND-OT Hrs",
-    "RD+Double Legal Hrs",
-    "RD+Double Legal OT Hrs",
-    "RD+Double Legal ND Hrs",
-    "RD+Double Legal ND-OT Hrs",
-    "OB Hrs",
-    "Paid Leave Hrs",
-    "Unpaid Leave Hrs",
-    "OT Total Hrs",
-    "Retirement Accrual",
-  ];
-
-  const buildExportRows = () =>
-    results.map((r) => [
-      r.fullName,
-      r.payPeriodStart ? dayjs(r.payPeriodStart).format("YYYY-MM-DD") : "",
-      r.payPeriodEnd ? dayjs(r.payPeriodEnd).format("YYYY-MM-DD") : "",
-      r.salaryType,
-      fmt(r.dailyRate),
-      fmt(r.basicPay),
-      fmt(r.overtimePay),
-      fmt(r.otPremiumPay ?? 0),
-      fmt(r.nightDifferentialPay),
-      fmt(r.ndPremiumPay ?? 0),
-      fmt(r.nightDifferentialOTPay),
-      fmt(restDayTotal(r)),
-      r.salaryType === "FIXED"
-        ? fmt(r.nonCompanyPaidLeaves ?? 0)
-        : fmt(r.paidLeaves ?? 0),
-      fmt(r.companyFundedLeavePay ?? 0),
-      fmt(r.governmentFundedLeavePay ?? 0),
-      fmt(r.legalHolidayUnworkedPay ?? 0),
-      fmt(holidayDuty(r)),
-      fmt(restLegalTotal(r)),
-      fmt(specialTotal(r)),
-      fmt(restSpecialTotal(r)),
-      fmt(doubleLegalTotal(r)),
-      fmt(restDoubleLegalTotal(r)),
-      fmt(r.holidayPay),
-      fmt(r.cola),
-      fmt(r.totalRegularAllowances),
-      fmt(r.totalBonuses),
-      fmt(r.totalCommissions),
-      fmt(r.totalDeminimises),
-      fmt(r.totalOtherIncome),
-      fmt(r.reimbursement),
-      fmt(r.grossIncome),
-      fmt(r.sssContribution),
-      fmt(r.philHealthContribution),
-      fmt(r.pagIbigContribution),
-      fmt(r.withholdingTax),
-      fmt(r.totalLoans),
-      fmt(r.otherDeductions - r.totalLoans),
-      fmt(r.lateAmount),
-      fmt(r.underTimeAmount),
-      fmt(r.absences),
-      fmt(r.totalDeductions),
-      fmt(r.netPay),
-      fmt(r.employerSSSContribution),
-      fmt(r.employerPhilHealthContribution),
-      fmt(r.employerPagIbigContribution),
-      fmt(r.employerECContribution),
-      fmt(
-        r.employerSSSContribution +
-          r.employerPhilHealthContribution +
-          r.employerPagIbigContribution +
-          r.employerECContribution,
-      ),
-      fmt(r.regularNetHours ?? 0),
-      fmt(r.regularOTHours ?? 0),
-      fmt(r.regularNDHours ?? 0),
-      fmt(r.regularNDOTHours ?? 0),
-      fmt(r.restDayHours ?? 0),
-      fmt(r.restDayOTHours ?? 0),
-      fmt(r.restDayNDHours ?? 0),
-      fmt(r.restDayNDOTHours ?? 0),
-      fmt(r.legalHolHours ?? 0),
-      fmt(r.legalHolOTHours ?? 0),
-      fmt(r.legalHolNightDiffHours ?? 0),
-      fmt(r.legalHolNightDiffOTHours ?? 0),
-      fmt(r.specialHolHours ?? 0),
-      fmt(r.specialHolOTHours ?? 0),
-      fmt(r.specialHolNightDiffHours ?? 0),
-      fmt(r.specialHolNightDiffOTHours ?? 0),
-      fmt(r.restLegalDayHours ?? 0),
-      fmt(r.restLegalDayOTHours ?? 0),
-      fmt(r.restLegalDayNDHours ?? 0),
-      fmt(r.restLegalDayNDOTHours ?? 0),
-      fmt(r.restSpecialDayHours ?? 0),
-      fmt(r.restSpecialDayOTHours ?? 0),
-      fmt(r.restSpecialDayNDHours ?? 0),
-      fmt(r.restSpecialDayNDOTHours ?? 0),
-      fmt(r.doubleLegalHours ?? 0),
-      fmt(r.doubleLegalOTHours ?? 0),
-      fmt(r.doubleLegalNDHours ?? 0),
-      fmt(r.doubleLegalNDOTHours ?? 0),
-      fmt(r.restDoubleLegalHours ?? 0),
-      fmt(r.restDoubleLegalOTHours ?? 0),
-      fmt(r.restDoubleLegalNDHours ?? 0),
-      fmt(r.restDoubleLegalNDOTHours ?? 0),
-      fmt(r.obHours ?? 0),
-      fmt(r.paidLeaveHours ?? 0),
-      fmt(r.unpaidLeaveHours ?? 0),
-      fmt(r.overtimeHours ?? 0),
-    ]);
-
-  // Per-tab sheet definitions for the Excel export — headers/rows mirror each tab's own
-  // columns exactly (earningsColumns/holidayColumns/deductionsColumns/hoursColumns/
-  // erColumns above), so "1 tab here, 1 sheet in Excel."
-  const EARNINGS_HEADERS = [
-    "Employee",
-    "Status",
-    "Salary Type",
-    "Daily Rate",
-    "Period Start",
-    "Period End",
-    "Basic",
-    "OT Pay",
-    "ND Pay",
-    "Rest Day",
-    "Paid Leave",
-    "1x Payout (Co)",
-    "1x Payout (Gov)",
-    "Holiday Total",
-    "COLA",
-    "Allowances",
-    "Bonuses",
-    "Commissions",
-    "De Minimis",
-    "Other Income",
-    "Reimbursement",
-    "Gross",
-    "Retirement Accrual",
-  ];
-  const buildEarningsRows = () =>
-    results.map((r) => [
-      r.fullName,
-      r.id ? (r.isPosted ? "Posted" : "Draft") : "",
-      r.salaryType === "FIXED" ? "Fixed" : "Variable",
-      fmt(r.dailyRate),
-      r.payPeriodStart ? dayjs(r.payPeriodStart).format("YYYY-MM-DD") : "",
-      r.payPeriodEnd ? dayjs(r.payPeriodEnd).format("YYYY-MM-DD") : "",
-      fmt(r.basicPay),
-      fmt(r.overtimePay),
-      fmt(r.nightDifferentialPay),
-      fmt(restDayTotal(r)),
-      r.salaryType === "FIXED"
-        ? fmt(r.nonCompanyPaidLeaves ?? 0)
-        : fmt(r.paidLeaves ?? 0),
-      fmt(r.companyFundedLeavePay ?? 0),
-      fmt(r.governmentFundedLeavePay ?? 0),
-      fmt(r.holidayPay),
-      fmt(r.cola),
-      fmt(r.totalRegularAllowances),
-      fmt(r.totalBonuses),
-      fmt(r.totalCommissions),
-      fmt(r.totalDeminimises),
-      fmt(r.totalOtherIncome),
-      fmt(r.reimbursement),
-      fmt(r.grossIncome),
-      fmt(r.retirementAccrual ?? 0),
-    ]);
-
-  const HOLIDAY_HEADERS = [
-    "Employee",
-    "Legal Holiday (Unworked)",
-    "Legal Holiday Duty (Worked)",
-    "Rest Day + Legal Holiday",
-    "Special Holiday",
-    "Rest Day + Special Holiday",
-    "Double Legal Holiday",
-    "Rest Day + Double Legal Holiday",
-    "Holiday Total",
-  ];
-  const buildHolidayRows = () =>
-    results.map((r) => [
-      r.fullName,
-      fmt(r.legalHolidayUnworkedPay ?? 0),
-      fmt(holidayDuty(r)),
-      fmt(restLegalTotal(r)),
-      fmt(specialTotal(r)),
-      fmt(restSpecialTotal(r)),
-      fmt(doubleLegalTotal(r)),
-      fmt(restDoubleLegalTotal(r)),
-      fmt(r.holidayPay),
-    ]);
-
-  const DEDUCTIONS_HEADERS = [
-    "Employee",
-    "SSS",
-    "PhilHealth",
-    "Pag-IBIG",
-    "W-Tax",
-    "Loans",
-    "Other Deductions",
-    "Late/UT",
-    "Absent",
-    "Net Pay",
-  ];
-  const buildDeductionsRows = () =>
-    results.map((r) => [
-      r.fullName,
-      fmt(r.sssContribution),
-      fmt(r.philHealthContribution),
-      fmt(r.pagIbigContribution),
-      fmt(r.withholdingTax),
-      fmt(r.totalLoans),
-      fmt(r.otherDeductions - r.totalLoans),
-      fmt(r.lateAmount + r.underTimeAmount),
-      fmt(r.absences),
-      fmt(r.netPay),
-    ]);
-
-  const ER_HEADERS = [
-    "Employee",
-    "ER SSS",
-    "ER PhilHealth",
-    "ER Pag-IBIG",
-    "EC",
-    "Total ER Cost",
-  ];
-  const buildErRows = () =>
-    results.map((r) => [
-      r.fullName,
-      fmt(r.employerSSSContribution),
-      fmt(r.employerPhilHealthContribution),
-      fmt(r.employerPagIbigContribution),
-      fmt(r.employerECContribution),
-      fmt(
-        r.employerSSSContribution +
-          r.employerPhilHealthContribution +
-          r.employerPagIbigContribution +
-          r.employerECContribution,
-      ),
-    ]);
-
-  const HOURS_HEADERS = [
-    "Employee",
-    "Regular",
-    "Reg OT",
-    "Reg ND",
-    "Reg ND-OT",
-    "Rest Day",
-    "RD OT",
-    "RD ND",
-    "RD ND-OT",
-    "Legal Hol",
-    "Legal OT",
-    "Legal ND",
-    "Legal ND-OT",
-    "Special Hol",
-    "Special OT",
-    "Special ND",
-    "Special ND-OT",
-    "RD+Legal",
-    "RD+Legal OT",
-    "RD+Legal ND",
-    "RD+Legal ND-OT",
-    "RD+Special",
-    "RD+Special OT",
-    "RD+Special ND",
-    "RD+Special ND-OT",
-    "Double Legal",
-    "Double Legal OT",
-    "Double Legal ND",
-    "Double Legal ND-OT",
-    "RD+Double Legal",
-    "RD+Double Legal OT",
-    "RD+Double Legal ND",
-    "RD+Double Legal ND-OT",
-    "OB Hrs",
-    "Paid Leave Hrs",
-    "Unpaid Leave Hrs",
-    "OT Total Hr",
-  ];
-  const buildHoursRows = () =>
-    results.map((r) => [
-      r.fullName,
-      fmt(r.regularNetHours ?? 0),
-      fmt(r.regularOTHours ?? 0),
-      fmt(r.regularNDHours ?? 0),
-      fmt(r.regularNDOTHours ?? 0),
-      fmt(r.restDayHours ?? 0),
-      fmt(r.restDayOTHours ?? 0),
-      fmt(r.restDayNDHours ?? 0),
-      fmt(r.restDayNDOTHours ?? 0),
-      fmt(r.legalHolHours ?? 0),
-      fmt(r.legalHolOTHours ?? 0),
-      fmt(r.legalHolNightDiffHours ?? 0),
-      fmt(r.legalHolNightDiffOTHours ?? 0),
-      fmt(r.specialHolHours ?? 0),
-      fmt(r.specialHolOTHours ?? 0),
-      fmt(r.specialHolNightDiffHours ?? 0),
-      fmt(r.specialHolNightDiffOTHours ?? 0),
-      fmt(r.restLegalDayHours ?? 0),
-      fmt(r.restLegalDayOTHours ?? 0),
-      fmt(r.restLegalDayNDHours ?? 0),
-      fmt(r.restLegalDayNDOTHours ?? 0),
-      fmt(r.restSpecialDayHours ?? 0),
-      fmt(r.restSpecialDayOTHours ?? 0),
-      fmt(r.restSpecialDayNDHours ?? 0),
-      fmt(r.restSpecialDayNDOTHours ?? 0),
-      fmt(r.doubleLegalHours ?? 0),
-      fmt(r.doubleLegalOTHours ?? 0),
-      fmt(r.doubleLegalNDHours ?? 0),
-      fmt(r.doubleLegalNDOTHours ?? 0),
-      fmt(r.restDoubleLegalHours ?? 0),
-      fmt(r.restDoubleLegalOTHours ?? 0),
-      fmt(r.restDoubleLegalNDHours ?? 0),
-      fmt(r.restDoubleLegalNDOTHours ?? 0),
-      fmt(r.obHours ?? 0),
-      fmt(r.paidLeaveHours ?? 0),
-      fmt(r.unpaidLeaveHours ?? 0),
-      fmt(r.overtimeHours ?? 0),
-    ]);
-
   const handleExport = (format: "csv" | "excel") => {
     if (!results.length) {
       message.info("No data to export. Adjust the date range first.");
@@ -652,7 +212,7 @@ export default function PayrollSummary() {
     const suffix = `${dateRange[0]}_${dateRange[1]}`;
     if (format === "csv") {
       triggerDownload(
-        buildFlatCsv(EXPORT_HEADERS, buildExportRows()),
+        buildFlatCsv(EXPORT_HEADERS, buildExportRows(results)),
         `payroll-summary-${suffix}.csv`,
       );
     } else {
@@ -662,27 +222,27 @@ export default function PayrollSummary() {
           {
             name: "Earnings",
             headers: EARNINGS_HEADERS,
-            rows: buildEarningsRows(),
+            rows: buildEarningsRows(results),
           },
           {
             name: "Holiday Breakdown",
             headers: HOLIDAY_HEADERS,
-            rows: buildHolidayRows(),
+            rows: buildHolidayRows(results),
           },
           {
             name: "Deductions & Net",
             headers: DEDUCTIONS_HEADERS,
-            rows: buildDeductionsRows(),
+            rows: buildDeductionsRows(results),
           },
           {
             name: "Employer Contributions",
             headers: ER_HEADERS,
-            rows: buildErRows(),
+            rows: buildErRows(results),
           },
           {
             name: "Hours Breakdown",
             headers: HOURS_HEADERS,
-            rows: buildHoursRows(),
+            rows: buildHoursRows(results),
           },
         ],
         `payroll-summary-${suffix}.xlsx`,
@@ -707,506 +267,12 @@ export default function PayrollSummary() {
       phic: results.reduce((s, r) => s + r.philHealthContribution, 0),
       hdmf: results.reduce((s, r) => s + r.pagIbigContribution, 0),
       tax: results.reduce((s, r) => s + r.withholdingTax, 0),
-      ot: results.reduce((s, r) => s + r.overtimePay, 0),
-      nd: results.reduce((s, r) => s + r.nightDifferentialPay, 0),
+      ot: results.reduce((s, r) => s + otPay(r), 0),
+      nd: results.reduce((s, r) => s + ndPay(r), 0),
       regHours: results.reduce((s, r) => s + (r.regularNetHours ?? 0), 0),
     }),
     [results],
   );
-
-  const statusColumn: ColumnsType<PayrollRunResult>[number] = {
-    title: "Status",
-    key: "status",
-    width: 90,
-    render: (_, r) =>
-      r.id ? (
-        <Tag color={r.isPosted ? "success" : "default"}>
-          {r.isPosted ? "Posted" : "Draft"}
-        </Tag>
-      ) : null,
-  };
-
-  // Setup > Payslip/13th Month/Last Pay > Received by Employee — informational only; HR has
-  // no action to take here, just visibility into whether/when the employee acknowledged.
-  const acknowledgedColumn: ColumnsType<PayrollRunResult>[number] = {
-    title: "Received",
-    key: "acknowledged",
-    width: 110,
-    render: (_, r) =>
-      r.id ? (
-        r.acknowledgedAt ? (
-          <Tooltip
-            title={`Acknowledged ${dayjs(r.acknowledgedAt).format("MMM D, YYYY h:mm A")}`}
-          >
-            <Tag icon={<CheckCircleOutlined />} color="success">
-              Acknowledged
-            </Tag>
-          </Tooltip>
-        ) : (
-          <Tag color="default">Pending</Tag>
-        )
-      ) : null,
-  };
-
-  // Print is the only per-row action left — Post/Delete are run-level transactions handled
-  // via the "Post / Delete Payroll Run" toolbar button and its batch modal below.
-  const actionsColumn: ColumnsType<PayrollRunResult>[number] = {
-    title: "",
-    key: "actions",
-    width: 48,
-    fixed: "right",
-    render: (_, r) => (
-      <PermissionGate permission="Payroll Summary:Export">
-        <Tooltip
-          title={r.id ? "Print payslip" : "Not yet available for this record"}
-        >
-          <Button
-            type="text"
-            size="small"
-            icon={<PrinterOutlined />}
-            disabled={!r.id}
-            onClick={() => handlePrintPayslip(r)}
-          />
-        </Tooltip>
-      </PermissionGate>
-    ),
-  };
-
-  const earningsColumns: ColumnsType<PayrollRunResult> = [
-    {
-      title: "Employee",
-      dataIndex: "fullName",
-      key: "name",
-      width: 160,
-      fixed: "left",
-    },
-    statusColumn,
-    acknowledgedColumn,
-    {
-      title: "Salary Type",
-      dataIndex: "salaryType",
-      key: "salaryType",
-      render: (v: string) => (v === "FIXED" ? "Fixed" : "Variable"),
-    },
-    {
-      title: "Daily Rate",
-      dataIndex: "dailyRate",
-      key: "dailyRate",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Period Start",
-      dataIndex: "payPeriodStart",
-      key: "from",
-      render: (v: string) => (v ? dayjs(v).format("MMM DD") : "—"),
-    },
-    {
-      title: "Period End",
-      dataIndex: "payPeriodEnd",
-      key: "to",
-      render: (v: string) => (v ? dayjs(v).format("MMM DD, YYYY") : "—"),
-    },
-    {
-      title: "Basic",
-      dataIndex: "basicPay",
-      key: "basic",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "OT Pay",
-      dataIndex: "overtimePay",
-      key: "ot",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "ND Pay",
-      dataIndex: "nightDifferentialPay",
-      key: "nd",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Rest Day",
-      key: "restDay",
-      align: "right",
-      render: (_, r) => fmt(restDayTotal(r)),
-    },
-    {
-      title: "Paid Leave",
-      key: "paidLeaves",
-      align: "right",
-      // FIXED's Basic Pay already covers every day incl. Company-funded paid leave (see
-      // PayrollProcessorService.ComputeAllowances), so showing the full amount again would
-      // double it up — FIXED shows only the informational Government/Shared/Other slice
-      // instead (does not add to Gross). VARIABLE's Basic Pay never includes leave-day pay,
-      // so the full amount is shown and does add to Gross.
-      render: (_, r) => {
-        const value =
-          r.salaryType === "FIXED"
-            ? r.nonCompanyPaidLeaves
-              ? fmt(r.nonCompanyPaidLeaves)
-              : "—"
-            : fmt(r.paidLeaves ?? 0);
-        return r.paidLeaveBreakdown ? (
-          <Tooltip title={r.paidLeaveBreakdown}>{value}</Tooltip>
-        ) : (
-          value
-        );
-      },
-    },
-    {
-      title: "1x Payout (Co)",
-      key: "oneTimeCompany",
-      align: "right",
-      render: (_, r) =>
-        r.companyFundedLeavePay ? (
-          <Tooltip title={r.oneTimePayoutBreakdown}>
-            {fmt(r.companyFundedLeavePay)}
-          </Tooltip>
-        ) : (
-          "—"
-        ),
-    },
-    {
-      title: "1x Payout (Gov)",
-      key: "oneTimeGov",
-      align: "right",
-      render: (_, r) =>
-        r.governmentFundedLeavePay ? (
-          <Tooltip title={r.oneTimePayoutBreakdown}>
-            {fmt(r.governmentFundedLeavePay)}
-          </Tooltip>
-        ) : (
-          "—"
-        ),
-    },
-    {
-      title: "Holiday Total",
-      dataIndex: "holidayPay",
-      key: "hol",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "COLA",
-      dataIndex: "cola",
-      key: "cola",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Allowances",
-      dataIndex: "totalRegularAllowances",
-      key: "allow",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Bonuses",
-      dataIndex: "totalBonuses",
-      key: "bonuses",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Commissions",
-      dataIndex: "totalCommissions",
-      key: "commissions",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "De Minimis",
-      dataIndex: "totalDeminimises",
-      key: "deminimis",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Other Income",
-      dataIndex: "totalOtherIncome",
-      key: "other",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Reimbursement",
-      dataIndex: "reimbursement",
-      key: "reimb",
-      align: "right",
-      render: fmt,
-    },
-    {
-      // Setup > Client > Settings > Allowances > Retirement (days/year) -- this run's computed
-      // accrual, informational only. Excluded from Gross -- see backend
-      // EmployeePayrollLineService.ComputeRetirementAccrual.
-      title: "Retirement Accrual",
-      dataIndex: "retirementAccrual",
-      key: "retirementAccrual",
-      align: "right",
-      render: (v?: number) => fmt(v ?? 0),
-    },
-    {
-      title: "Gross",
-      dataIndex: "grossIncome",
-      key: "gross",
-      align: "right",
-      fixed: "right",
-      render: (v: number) => <Text strong>{fmt(v)}</Text>,
-    },
-    actionsColumn,
-  ];
-
-  const holidayColumns: ColumnsType<PayrollRunResult> = [
-    {
-      title: "Employee",
-      dataIndex: "fullName",
-      key: "name",
-      width: 160,
-      fixed: "left",
-    },
-    {
-      title: "Legal Holiday (Unworked)",
-      key: "legalUnworked",
-      align: "right",
-      render: (_, r) => fmt(r.legalHolidayUnworkedPay ?? 0),
-    },
-    {
-      title: "Legal Holiday Duty (Worked)",
-      key: "holidayDuty",
-      align: "right",
-      render: (_, r) => fmt(holidayDuty(r)),
-    },
-    {
-      title: "Rest Day + Legal Holiday",
-      key: "restLegal",
-      align: "right",
-      render: (_, r) => fmt(restLegalTotal(r)),
-    },
-    {
-      title: "Special Holiday",
-      key: "special",
-      align: "right",
-      render: (_, r) => fmt(specialTotal(r)),
-    },
-    {
-      title: "Rest Day + Special Holiday",
-      key: "restSpecial",
-      align: "right",
-      render: (_, r) => fmt(restSpecialTotal(r)),
-    },
-    {
-      title: "Double Legal Holiday",
-      key: "doubleLegal",
-      align: "right",
-      render: (_, r) => fmt(doubleLegalTotal(r)),
-    },
-    {
-      title: "Rest Day + Double Legal Holiday",
-      key: "restDoubleLegal",
-      align: "right",
-      render: (_, r) => fmt(restDoubleLegalTotal(r)),
-    },
-    {
-      title: "Holiday Total",
-      dataIndex: "holidayPay",
-      key: "hol",
-      align: "right",
-      fixed: "right",
-      render: (v: number) => <Text strong>{fmt(v)}</Text>,
-    },
-  ];
-
-  const deductionsColumns: ColumnsType<PayrollRunResult> = [
-    {
-      title: "Employee",
-      dataIndex: "fullName",
-      key: "name",
-      width: 160,
-      fixed: "left",
-    },
-    {
-      title: "SSS",
-      dataIndex: "sssContribution",
-      key: "sss",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "PhilHealth",
-      dataIndex: "philHealthContribution",
-      key: "phic",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Pag-IBIG",
-      dataIndex: "pagIbigContribution",
-      key: "hdmf",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "W-Tax",
-      dataIndex: "withholdingTax",
-      key: "tax",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Loans",
-      dataIndex: "totalLoans",
-      key: "loans",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Other Deductions",
-      key: "otherDed",
-      align: "right",
-      render: (_, r) => fmt(r.otherDeductions - r.totalLoans),
-    },
-    {
-      title: "Late/UT",
-      key: "late",
-      align: "right",
-      render: (_, r) => fmt(r.lateAmount + r.underTimeAmount),
-    },
-    {
-      title: "Absent",
-      dataIndex: "absences",
-      key: "abs",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Net Pay",
-      dataIndex: "netPay",
-      key: "net",
-      align: "right",
-      fixed: "right",
-      render: (v: number) => (
-        <Text strong style={{ color: token.colorPrimary }}>
-          {fmt(v)}
-        </Text>
-      ),
-    },
-  ];
-
-  // Full Hrs/OT/ND/ND-OT breakdown per pay category, mirroring the DTR Detail table's
-  // grouping exactly (dtr-detail-table.tsx) so Payroll Summary has the same granularity
-  // once DTR rows are rolled up into a run — see backend ComputeHoursBreakdown.
-  const hourCol = (
-    title: string,
-    dataIndex: keyof PayrollRunResult,
-    key: string,
-  ): ColumnsType<PayrollRunResult>[number] => ({
-    title,
-    dataIndex,
-    key,
-    align: "right",
-    render: fmtH,
-  });
-
-  const hoursColumns: ColumnsType<PayrollRunResult> = [
-    {
-      title: "Employee",
-      dataIndex: "fullName",
-      key: "name",
-      width: 160,
-      fixed: "left",
-    },
-    hourCol("Regular", "regularNetHours", "reg"),
-    hourCol("Reg OT", "regularOTHours", "regot"),
-    hourCol("Reg ND", "regularNDHours", "regnd"),
-    hourCol("Reg ND-OT", "regularNDOTHours", "regndot"),
-    hourCol("Rest Day", "restDayHours", "rd"),
-    hourCol("RD OT", "restDayOTHours", "rdot"),
-    hourCol("RD ND", "restDayNDHours", "rdnd"),
-    hourCol("RD ND-OT", "restDayNDOTHours", "rdndot"),
-    hourCol("Legal Hol", "legalHolHours", "lh"),
-    hourCol("Legal OT", "legalHolOTHours", "lhot"),
-    hourCol("Legal ND", "legalHolNightDiffHours", "lhnd"),
-    hourCol("Legal ND-OT", "legalHolNightDiffOTHours", "lhndot"),
-    hourCol("Special Hol", "specialHolHours", "sh"),
-    hourCol("Special OT", "specialHolOTHours", "shot"),
-    hourCol("Special ND", "specialHolNightDiffHours", "shnd"),
-    hourCol("Special ND-OT", "specialHolNightDiffOTHours", "shndot"),
-    hourCol("RD+Legal", "restLegalDayHours", "rdlh"),
-    hourCol("RD+Legal OT", "restLegalDayOTHours", "rdlhot"),
-    hourCol("RD+Legal ND", "restLegalDayNDHours", "rdlhnd"),
-    hourCol("RD+Legal ND-OT", "restLegalDayNDOTHours", "rdlhndot"),
-    hourCol("RD+Special", "restSpecialDayHours", "rdsh"),
-    hourCol("RD+Special OT", "restSpecialDayOTHours", "rdshot"),
-    hourCol("RD+Special ND", "restSpecialDayNDHours", "rdshnd"),
-    hourCol("RD+Special ND-OT", "restSpecialDayNDOTHours", "rdshndot"),
-    hourCol("Double Legal", "doubleLegalHours", "dl"),
-    hourCol("Double Legal OT", "doubleLegalOTHours", "dlot"),
-    hourCol("Double Legal ND", "doubleLegalNDHours", "dlnd"),
-    hourCol("Double Legal ND-OT", "doubleLegalNDOTHours", "dlndot"),
-    hourCol("RD+Double Legal", "restDoubleLegalHours", "rdl"),
-    hourCol("RD+Double Legal OT", "restDoubleLegalOTHours", "rdlot"),
-    hourCol("RD+Double Legal ND", "restDoubleLegalNDHours", "rdlnd"),
-    hourCol("RD+Double Legal ND-OT", "restDoubleLegalNDOTHours", "rdlndot"),
-    hourCol("OB Hrs", "obHours", "ob"),
-    hourCol("Paid Leave Hrs", "paidLeaveHours", "pl"),
-    hourCol("Unpaid Leave Hrs", "unpaidLeaveHours", "upl"),
-    {
-      title: "OT Total Hr",
-      dataIndex: "overtimeHours",
-      key: "ottotal",
-      align: "right",
-      fixed: "right",
-      render: fmtH,
-    },
-  ];
-
-  const erColumns: ColumnsType<PayrollRunResult> = [
-    { title: "Employee", dataIndex: "fullName", key: "name", width: 160 },
-    {
-      title: "ER SSS",
-      dataIndex: "employerSSSContribution",
-      key: "ersss",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "ER PhilHealth",
-      dataIndex: "employerPhilHealthContribution",
-      key: "erphic",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "ER Pag-IBIG",
-      dataIndex: "employerPagIbigContribution",
-      key: "erhdmf",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "EC",
-      dataIndex: "employerECContribution",
-      key: "ec",
-      align: "right",
-      render: fmt,
-    },
-    {
-      title: "Total ER Cost",
-      key: "ertotal",
-      align: "right",
-      render: (_, r) =>
-        fmt(
-          r.employerSSSContribution +
-            r.employerPhilHealthContribution +
-            r.employerPagIbigContribution +
-            r.employerECContribution,
-        ),
-    },
-  ];
 
   const tableProps = {
     rowKey: "employeeId",
@@ -1338,7 +404,7 @@ export default function PayrollSummary() {
               children: (
                 <Table
                   dataSource={results}
-                  columns={earningsColumns}
+                  columns={earningsColumns(handlePrintPayslip)}
                   {...tableProps}
                 />
               ),
@@ -1360,7 +426,7 @@ export default function PayrollSummary() {
               children: (
                 <Table
                   dataSource={results}
-                  columns={deductionsColumns}
+                  columns={deductionsColumns(token.colorPrimary)}
                   {...tableProps}
                 />
               ),
@@ -1391,143 +457,15 @@ export default function PayrollSummary() {
         />
       </Card>
 
-      <Modal
-        title="Payroll Run"
+      <PayrollRunBatchModal
         open={batchModalOpen}
-        onCancel={() => setBatchModalOpen(false)}
-        footer={null}
-        width={800}
-      >
-        <p className="mb-4">
-          Each row below is one Generate run for the selected date range. Post
-          locks a run in as final; Delete removes every employee&apos;s payroll
-          in it along with its SSS/PhilHealth/Pag-IBIG/W-Tax contribution
-          records, so you can regenerate it from the same DTR batch(es). Both
-          act on the whole run, not one employee at a time.
-        </p>
-        <Table
-          rowKey="payrollBatchId"
-          size="small"
-          dataSource={batchGroups}
-          pagination={false}
-          scroll={{ x: "max-content" }}
-          columns={[
-            {
-              title: "Period",
-              key: "period",
-              render: (_, g) =>
-                `${dayjs(g.fromDate).format("MMM DD")} – ${dayjs(g.toDate).format("MMM DD, YYYY")}`,
-            },
-            {
-              title: "Payout Date",
-              key: "payDate",
-              render: (_, g) =>
-                g.payDate ? dayjs(g.payDate).format("MMM DD, YYYY") : "—",
-            },
-            {
-              title: "Employees",
-              dataIndex: "count",
-              key: "count",
-              align: "right",
-            },
-            {
-              title: "Remarks",
-              key: "remarks",
-              width: 200,
-              ellipsis: { showTitle: false },
-              render: (_, g) =>
-                g.remarks ? (
-                  <Tooltip title={g.remarks}>
-                    <Text type="secondary">{g.remarks}</Text>
-                  </Tooltip>
-                ) : (
-                  <Text type="secondary">—</Text>
-                ),
-            },
-            {
-              title: "Status",
-              key: "status",
-              render: (_, g) => (
-                <Tag
-                  color={
-                    g.allPosted
-                      ? "success"
-                      : g.hasPosted
-                        ? "warning"
-                        : "default"
-                  }
-                >
-                  {g.allPosted
-                    ? "Posted"
-                    : g.hasPosted
-                      ? "Partially Posted"
-                      : "Draft"}
-                </Tag>
-              ),
-            },
-            {
-              title: "",
-              key: "actions",
-              render: (_, g) => (
-                <Space size={4}>
-                  <PermissionGate permission={`${g.runTypeFeature}:Approve`}>
-                    <Popconfirm
-                      title="Post this entire payroll run?"
-                      description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in this run as final.`}
-                      okText="Post"
-                      cancelText="Cancel"
-                      disabled={g.allPosted}
-                      onConfirm={() =>
-                        handlePostBatch(g.payrollBatchId, g.count)
-                      }
-                    >
-                      <Button
-                        size="small"
-                        icon={<CheckCircleOutlined />}
-                        disabled={g.allPosted}
-                        loading={isPostingBatch}
-                      >
-                        Post
-                      </Button>
-                    </Popconfirm>
-                  </PermissionGate>
-                  <PermissionGate permission={`${g.runTypeFeature}:Create`}>
-                    <Popconfirm
-                      title="Delete this entire payroll run?"
-                      description={`This removes all ${g.count} record${g.count !== 1 ? "s" : ""} in this run.`}
-                      okText="Delete"
-                      okButtonProps={{ danger: true }}
-                      cancelText="Cancel"
-                      disabled={g.hasPosted}
-                      onConfirm={() =>
-                        handleDeleteBatch(g.payrollBatchId, g.count)
-                      }
-                    >
-                      <Tooltip
-                        title={
-                          g.hasPosted
-                            ? "This run has been posted and can no longer be deleted."
-                            : undefined
-                        }
-                      >
-                        <Button
-                          danger
-                          size="small"
-                          icon={<DeleteOutlined />}
-                          disabled={g.hasPosted}
-                          loading={isDeletingBatch}
-                        >
-                          Delete
-                        </Button>
-                      </Tooltip>
-                    </Popconfirm>
-                  </PermissionGate>
-                </Space>
-              ),
-            },
-          ]}
-        />
-      </Modal>
+        batchGroups={batchGroups}
+        onClose={() => setBatchModalOpen(false)}
+        onPost={handlePostBatch}
+        onDelete={handleDeleteBatch}
+        isPosting={isPostingBatch}
+        isDeleting={isDeletingBatch}
+      />
     </div>
   );
 }

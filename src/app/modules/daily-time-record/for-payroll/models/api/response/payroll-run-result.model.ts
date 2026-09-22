@@ -32,6 +32,12 @@ export interface PayrollRunResult {
   payDate?: string | null;
   salaryType: "VARIABLE" | "FIXED";
   dailyRate: number;
+  // Setup > Company Policy > OT/ND Calculation Method, recorded per-row at Calculate/Generate
+  // time (not read live), so a saved run always reflects what it was actually priced with even
+  // if the company setting changes later. Optional only for older payrolls generated before this
+  // field existed — treat a missing value as Compounded (the pre-existing default behavior); see
+  // ot-nd-pay.util.ts's isAdditiveMode.
+  otNdCalculationMethod?: "Compounded" | "Additive";
   // Earnings
   basicPay: number;
   // Sum of every pure OT category (excludes the ND-OT combo hours) — see backend
@@ -51,6 +57,16 @@ export interface PayrollRunResult {
   restDayOTPay?: number;
   restDayNDPay?: number;
   restDayNDOTPay?: number;
+  // Segregated recording -- see backend Payroll's matching fields' doc comment. Each figure is
+  // priced against ONE rate alone, never compounded with another tier: OTBasePay/NDOTBasePay
+  // both use the raw OT rate alone (ignoring day-type and, for NDOT, the night premium);
+  // NDBasePay uses the day-type rate alone; NDPremiumPay/NDOTPremiumPay use just the
+  // (nightDiffRate - 1) fraction. These do NOT sum back to the blended pay fields above.
+  restDayNDBasePay?: number;
+  restDayNDPremiumPay?: number;
+  restDayNDOTBasePay?: number;
+  restDayOTBasePay?: number;
+  restDayNDOTPremiumPay?: number;
   // Leave-with-pay days for this cutoff — contributes to grossIncome but has no OT/ND/NDOT
   // component of its own, so it isn't folded into any of the categories above.
   paidLeaves?: number;
@@ -78,26 +94,56 @@ export interface PayrollRunResult {
   legalOTPay?: number;
   legalNDPay?: number;
   legalNDOTPay?: number;
+  legalNDBasePay?: number;
+  legalNDPremiumPay?: number;
+  legalNDOTBasePay?: number;
+  legalOTBasePay?: number;
+  legalNDOTPremiumPay?: number;
   specialPay?: number;
   specialOTPay?: number;
   specialNDPay?: number;
   specialNDOTPay?: number;
+  specialNDBasePay?: number;
+  specialNDPremiumPay?: number;
+  specialNDOTBasePay?: number;
+  specialOTBasePay?: number;
+  specialNDOTPremiumPay?: number;
   restLegalPay?: number;
   restLegalOTPay?: number;
   restLegalNDPay?: number;
   restLegalNDOTPay?: number;
+  restLegalNDBasePay?: number;
+  restLegalNDPremiumPay?: number;
+  restLegalNDOTBasePay?: number;
+  restLegalOTBasePay?: number;
+  restLegalNDOTPremiumPay?: number;
   restSpecialPay?: number;
   restSpecialOTPay?: number;
   restSpecialNDPay?: number;
   restSpecialNDOTPay?: number;
+  restSpecialNDBasePay?: number;
+  restSpecialNDPremiumPay?: number;
+  restSpecialNDOTBasePay?: number;
+  restSpecialOTBasePay?: number;
+  restSpecialNDOTPremiumPay?: number;
   doubleLegalPay?: number;
   doubleLegalOTPay?: number;
   doubleLegalNDPay?: number;
   doubleLegalNDOTPay?: number;
+  doubleLegalNDBasePay?: number;
+  doubleLegalNDPremiumPay?: number;
+  doubleLegalNDOTBasePay?: number;
+  doubleLegalOTBasePay?: number;
+  doubleLegalNDOTPremiumPay?: number;
   restDoubleLegalPay?: number;
   restDoubleLegalOTPay?: number;
   restDoubleLegalNDPay?: number;
   restDoubleLegalNDOTPay?: number;
+  restDoubleLegalNDBasePay?: number;
+  restDoubleLegalNDPremiumPay?: number;
+  restDoubleLegalNDOTBasePay?: number;
+  restDoubleLegalOTBasePay?: number;
+  restDoubleLegalNDOTPremiumPay?: number;
   cola: number;
   totalRegularAllowances: number;
   totalBonuses: number;
@@ -141,6 +187,15 @@ export interface PayrollRunResult {
   regularOTHours?: number;
   regularNDHours?: number;
   regularNDOTHours?: number;
+  // Missing until now alongside every other category's matching pair (restDayNDOTBasePay etc.
+  // above) — needed for ot-nd-pay.util.ts's Additive-mode NDOT fold.
+  regularNDOTBasePay?: number;
+  regularNDOTPremiumPay?: number;
+  // Same gap as above, for Regular's plain ND (non-OT) bucket — needed for ot-nd-pay.util.ts's
+  // Additive-mode Basic/ND decomposition (folding the day-rate portion into Basic, leaving ND
+  // premium-only).
+  regularNDBasePay?: number;
+  regularNDPremiumPay?: number;
   // Setup > Client > Settings > Allowances > Retirement (days/year) -- this run's computed
   // accrual, informational only (excluded from grossIncome/netPay above). Only read back at
   // Post time to grow the employee's RetirementFund balance -- see backend

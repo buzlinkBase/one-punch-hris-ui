@@ -26,6 +26,7 @@ export const COMPANY_POLICY_LABEL = {
   SECTION_ATTENDANCE_RULES: "Attendance Rules",
   SECTION_STATUTORY: "Cross-Month Cutoff Credit Policies",
   SECTION_MINIMUM_TAKEHOME: "Minimum Take-Home Pay",
+  SECTION_OT_ND_CALCULATION: "OT/ND Calculation Method",
 
   OT_INCLUSION: "OT Inclusion",
   OT_ELIGIBILITY: "OT Eligibility",
@@ -46,6 +47,7 @@ export const COMPANY_POLICY_LABEL = {
   CROSS_MONTH_STATUTORY_CREDIT_POLICY: "Credit SSS/PhilHealth/Pag-IBIG To",
   WTAX_CROSS_MONTH_CREDIT_POLICY: "Credit Withholding Tax To",
   REQUIRED_TAKEHOME_PERCENTAGE: "Minimum Take-Home (% of Gross Income)",
+  OT_ND_CALCULATION_METHOD: "OT/ND Calculation Method",
 
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
@@ -100,6 +102,21 @@ export const HOLIDAY_TIME_BASIS_OPTIONS = [
   {
     value: "BasedOnActualWorkHours",
     label: "Count only hours that actually fall within the holiday",
+  },
+];
+
+// How hours that are overtime and/or night-differential compound their rates. Compounded
+// (default) is the DOLE-standard formula (dayRate x otRate x ndRate) — see
+// OtNdCalculationMethod/CompoundedOtRateStrategy (backend). Additive computes LESS than
+// Compounded for any such hour — the modal shows a compliance warning when it's selected.
+export const OT_ND_CALCULATION_METHOD_OPTIONS = [
+  {
+    value: "Compounded",
+    label: "Compounded (recommended, DOLE-standard)",
+  },
+  {
+    value: "Additive",
+    label: "Additive",
   },
 ];
 
