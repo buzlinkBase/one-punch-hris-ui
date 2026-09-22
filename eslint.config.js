@@ -6,7 +6,10 @@ import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  // .claude/worktrees holds full nested checkouts (each with its own tsconfig.json) that
+  // Claude Code agents work in in isolation -- without this, typescript-eslint's parser finds
+  // multiple candidate tsconfig roots under the repo and refuses to lint anything at all.
+  globalIgnores(["dist", ".claude"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
