@@ -29,13 +29,13 @@ export const RATE_TYPE_LABEL: Record<string, string> = {
   SPECIAL_NON_WORKING: "Special Non-Working Holiday",
   RESTDAY_SPECIAL: "Rest Day + Special Holiday",
   HOLIDAY_OT: "Holiday / Rest Day OT Premium",
-  LEGAL_HOLIDAY_OT: "Legal Holiday OT",
-  SPECIAL_HOLIDAY_OT: "Special Holiday OT",
-  REST_DAY_OT: "Rest Day OT",
-  REST_LEGAL_HOLIDAY_OT: "Rest Day + Legal Holiday OT",
-  REST_SPECIAL_HOLIDAY_OT: "Rest Day + Special Holiday OT",
-  DOUBLE_LEGAL_HOLIDAY_OT: "Double Legal Holiday OT",
-  REST_DOUBLE_LEGAL_HOLIDAY_OT: "Rest Day + Double Legal Holiday OT",
+  RESTDAY_OT_PREMIUM: "Rest Day OT Premium",
+  LEGAL_HOLIDAY_OT_PREMIUM: "Legal Holiday OT Premium",
+  SPECIAL_HOLIDAY_OT_PREMIUM: "Special Holiday OT Premium",
+  RESTLEGAL_OT_PREMIUM: "Rest Day + Legal Holiday OT Premium",
+  RESTSPECIAL_OT_PREMIUM: "Rest Day + Special Holiday OT Premium",
+  DOUBLELEGAL_OT_PREMIUM: "Double Legal Holiday OT Premium",
+  RESTDOUBLELEGAL_OT_PREMIUM: "Rest Day + Double Legal Holiday OT Premium",
 };
 
 export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
@@ -53,35 +53,38 @@ export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
     "Applied when an employee works on both a rest day and special holiday.",
   HOLIDAY_OT:
     "OT premium multiplied on top of the day's rate for overtime on rest days and holidays. DOLE default: ×1.30.",
-  LEGAL_HOLIDAY_OT:
-    "Flat total rate for Legal Holiday overtime hours only — replaces the standard formula for this client. Does not change their regular (non-OT) Legal Holiday pay.",
-  SPECIAL_HOLIDAY_OT:
-    "Flat total rate for Special Holiday overtime hours only — replaces the standard formula for this client. Does not change their regular (non-OT) Special Holiday pay.",
-  REST_DAY_OT:
-    "Flat total rate for Rest Day overtime hours only — replaces the standard formula for this client.",
-  REST_LEGAL_HOLIDAY_OT:
-    "Flat total rate for Rest Day + Legal Holiday overtime hours only — replaces the standard formula for this client.",
-  REST_SPECIAL_HOLIDAY_OT:
-    "Flat total rate for Rest Day + Special Holiday overtime hours only — replaces the standard formula for this client.",
-  DOUBLE_LEGAL_HOLIDAY_OT:
-    "Flat total rate for Double Legal Holiday overtime hours only — replaces the standard formula for this client.",
-  REST_DOUBLE_LEGAL_HOLIDAY_OT:
-    "Flat total rate for Rest Day + Double Legal Holiday overtime hours only — replaces the standard formula for this client.",
+  RESTDAY_OT_PREMIUM:
+    "This client's own OT premium for Rest Day overtime hours, multiplied on top of the Rest Day rate above — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+  LEGAL_HOLIDAY_OT_PREMIUM:
+    "This client's own OT premium for Legal Holiday overtime hours, multiplied on top of the Legal Holiday (Worked) rate above — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+  SPECIAL_HOLIDAY_OT_PREMIUM:
+    "This client's own OT premium for Special Holiday overtime hours, multiplied on top of the Special Non-Working Holiday rate above — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+  RESTLEGAL_OT_PREMIUM:
+    "This client's own OT premium for Rest Day + Legal Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+  RESTSPECIAL_OT_PREMIUM:
+    "This client's own OT premium for Rest Day + Special Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+  DOUBLELEGAL_OT_PREMIUM:
+    "This client's own OT premium for Double Legal Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+  RESTDOUBLELEGAL_OT_PREMIUM:
+    "This client's own OT premium for Rest Day + Double Legal Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
 };
 
-// Client-only overtime rate overrides (Setup > Client > Settings > Rate Multipliers). Each
-// replaces the TOTAL OT multiplier for that one category — never company-wide (there's
-// deliberately no BASE_RATE_DEFAULTS/BASE_RATE_KEYS entry for these), and never affecting that
-// same category's regular/non-OT holiday pay, which keeps using LEGAL_HOLIDAY_DUTY/
-// SPECIAL_NON_WORKING/etc. unchanged. See ClientOverrideOtRateStrategy (backend).
+// Client-only OT PREMIUM overrides (Setup > Client > Settings > Rate Multipliers). Each
+// compounds with that same category's day-type rate exactly the way the shared HOLIDAY_OT rate
+// does elsewhere — just per-category instead of shared. Client-only by design (there's
+// deliberately no BASE_RATE_DEFAULTS/BASE_RATE_KEYS entry for these — never company-wide), and
+// never affecting that same category's regular/non-OT holiday pay, which keeps using
+// LEGAL_HOLIDAY_DUTY/SPECIAL_NON_WORKING/etc. unchanged. Left blank, a category falls back to
+// the company-wide Holiday / Rest Day OT Premium (HOLIDAY_OT). See CompoundedOtRateStrategy
+// (backend).
 export const OT_OVERRIDE_RATE_KEYS = [
-  "LEGAL_HOLIDAY_OT",
-  "SPECIAL_HOLIDAY_OT",
-  "REST_DAY_OT",
-  "REST_LEGAL_HOLIDAY_OT",
-  "REST_SPECIAL_HOLIDAY_OT",
-  "DOUBLE_LEGAL_HOLIDAY_OT",
-  "REST_DOUBLE_LEGAL_HOLIDAY_OT",
+  "RESTDAY_OT_PREMIUM",
+  "LEGAL_HOLIDAY_OT_PREMIUM",
+  "SPECIAL_HOLIDAY_OT_PREMIUM",
+  "RESTLEGAL_OT_PREMIUM",
+  "RESTSPECIAL_OT_PREMIUM",
+  "DOUBLELEGAL_OT_PREMIUM",
+  "RESTDOUBLELEGAL_OT_PREMIUM",
 ] as const;
 
 export const BASE_RATE_DEFAULTS: Record<string, number> = {

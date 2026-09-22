@@ -44,8 +44,13 @@ import { PermissionGate } from "@/shared/components/permission-gate/permission-g
 const { Text } = Typography;
 
 // REGULAR and SPECIAL_WORKING are locked at ×1.00 company-wide — not meaningful to override.
+// HOLIDAY_OT is excluded here too: now that every day type has its own OT Premium Override
+// below, letting a client also override the shared fallback directly would be redundant and
+// confusing — HOLIDAY_OT stays company-wide-only (still what each day type's own premium falls
+// back to when left blank), set on the company-wide Rate Multipliers screen instead.
 const OVERRIDABLE_TYPES = BASE_RATE_KEYS.filter(
-  (type) => type !== "REGULAR" && type !== "SPECIAL_WORKING",
+  (type) =>
+    type !== "REGULAR" && type !== "SPECIAL_WORKING" && type !== "HOLIDAY_OT",
 );
 // Every rate type this modal can set for a client, across both sections — used for loading
 // existing overrides into form state and for building the save payload.
@@ -458,7 +463,7 @@ export default function ClientSettingsModal({
                   ))}
 
                   {/* <Divider className="my-1" /> */}
-                  <Text strong>Overtime-Only Rates</Text>
+                  <Text strong>OT Premium Overrides</Text>
                   {OT_OVERRIDE_RATE_KEYS.map((type) => (
                     <div
                       key={type}
@@ -471,9 +476,9 @@ export default function ClientSettingsModal({
                           onChange={(v) => handleRateChange(type, v)}
                           min={0}
                           step={0.01}
-                          precision={3}
+                          precision={2}
                           addonBefore="×"
-                          placeholder="uses standard formula"
+                          placeholder={`inherits × ${globalByType["HOLIDAY_OT"]?.toFixed(2) ?? "1.30"}`}
                           style={{ width: 180 }}
                         />
                         <Button
@@ -492,15 +497,8 @@ export default function ClientSettingsModal({
                     type="info"
                     showIcon
                     className="mt-2"
-                    message="Leave a field empty to inherit the company-wide rate."
+                    message="Each OT Premium multiplies on top of that category's own day-type rate above — it never changes their regular (non-OT) holiday pay. Leave a field empty to use the company-wide Holiday / Rest Day OT Premium instead."
                   />
-
-                  {/* <Alert
-                    type="info"
-                    showIcon
-                    className="mt-2"
-                    message="Sets a flat total OT rate for that category only, for this client — it never changes their regular (non-OT) holiday pay. Leave a field empty to use the standard formula (day-type rate × Holiday/Rest Day OT Premium above)."
-                  /> */}
                 </div>
               ),
             },

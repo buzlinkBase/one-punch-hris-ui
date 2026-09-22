@@ -21,6 +21,7 @@ export const companyPolicyFormSchema = z.object({
     .number()
     .min(0, "Must be 0 or greater")
     .max(100, "Must be 100 or less"),
+  otNdCalculationMethod: z.string().min(1, "Required"),
 });
 
 export type CompanyPolicyFormValues = z.infer<typeof companyPolicyFormSchema>;
