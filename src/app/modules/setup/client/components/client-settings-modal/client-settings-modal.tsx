@@ -463,7 +463,7 @@ export default function ClientSettingsModal({
                   ))}
 
                   {/* <Divider className="my-1" /> */}
-                  <Text strong>OT Premium Overrides</Text>
+                  <Text strong>OT Overrides</Text>
                   {OT_OVERRIDE_RATE_KEYS.map((type) => (
                     <div
                       key={type}
