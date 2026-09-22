@@ -6,11 +6,18 @@ import {
   Table,
   Tabs,
   Tag,
+  Tooltip,
   Typography,
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { HistoryOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  EyeOutlined,
+  HistoryOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
@@ -99,41 +106,48 @@ export default function ProfileUpdateRequestList() {
     {
       title: "",
       key: "actions",
-      width: 280,
+      width: 140,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            size="small"
-            onClick={() =>
-              navigate({
-                to: `/applications/profile-update-request/${record.id}`,
-              })
-            }
-          >
-            View
-          </Button>
-          <Button
-            size="small"
-            icon={<HistoryOutlined />}
-            onClick={() => setHistoryTargetId(record.id)}
-          >
-            History
-          </Button>
+          <Tooltip title="View">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() =>
+                navigate({
+                  to: `/applications/profile-update-request/${record.id}`,
+                })
+              }
+            />
+          </Tooltip>
+          <Tooltip title="History">
+            <Button
+              size="small"
+              icon={<HistoryOutlined />}
+              onClick={() => setHistoryTargetId(record.id)}
+            />
+          </Tooltip>
           {record.approvalStatus === "ForApproval" && (
             <PermissionGate permission="Profile Update:Approve">
-              <Button
-                size="small"
-                onClick={() => setActionTarget({ record, action: "Approved" })}
-              >
-                Approve
-              </Button>
-              <Button
-                size="small"
-                danger
-                onClick={() => setActionTarget({ record, action: "Declined" })}
-              >
-                Decline
-              </Button>
+              <Tooltip title="Approve">
+                <Button
+                  size="small"
+                  icon={<CheckOutlined />}
+                  onClick={() =>
+                    setActionTarget({ record, action: "Approved" })
+                  }
+                />
+              </Tooltip>
+              <Tooltip title="Decline">
+                <Button
+                  size="small"
+                  danger
+                  icon={<CloseOutlined />}
+                  onClick={() =>
+                    setActionTarget({ record, action: "Declined" })
+                  }
+                />
+              </Tooltip>
             </PermissionGate>
           )}
         </Space>

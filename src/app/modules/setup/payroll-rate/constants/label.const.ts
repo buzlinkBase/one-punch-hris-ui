@@ -29,13 +29,13 @@ export const RATE_TYPE_LABEL: Record<string, string> = {
   SPECIAL_NON_WORKING: "Special Non-Working Holiday",
   RESTDAY_SPECIAL: "Rest Day + Special Holiday",
   HOLIDAY_OT: "Holiday / Rest Day OT Premium",
-  RESTDAY_OT_PREMIUM: "Rest Day OT Premium",
-  LEGAL_HOLIDAY_OT_PREMIUM: "Legal Holiday OT Premium",
-  SPECIAL_HOLIDAY_OT_PREMIUM: "Special Holiday OT Premium",
-  RESTLEGAL_OT_PREMIUM: "Rest Day + Legal Holiday OT Premium",
-  RESTSPECIAL_OT_PREMIUM: "Rest Day + Special Holiday OT Premium",
-  DOUBLELEGAL_OT_PREMIUM: "Double Legal Holiday OT Premium",
-  RESTDOUBLELEGAL_OT_PREMIUM: "Rest Day + Double Legal Holiday OT Premium",
+  RESTDAY_OT_PREMIUM: "Rest Day OT",
+  LEGAL_HOLIDAY_OT_PREMIUM: "Legal Holiday OT",
+  SPECIAL_HOLIDAY_OT_PREMIUM: "Special Holiday OT",
+  RESTLEGAL_OT_PREMIUM: "Rest Day + Legal Holiday OT",
+  RESTSPECIAL_OT_PREMIUM: "Rest Day + Special Holiday OT",
+  DOUBLELEGAL_OT_PREMIUM: "Double Legal Holiday OT",
+  RESTDOUBLELEGAL_OT_PREMIUM: "Rest Day + Double Legal Holiday OT",
 };
 
 export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
