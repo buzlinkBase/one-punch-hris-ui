@@ -550,15 +550,8 @@ export default function GenerateLastPay() {
                         {c.totalCollected.toLocaleString("en-PH", {
                           minimumFractionDigits: 2,
                         })}{" "}
-                        of{" "}
-                        {c.targetAmount.toLocaleString("en-PH", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        target (
-                        {c.remaining.toLocaleString("en-PH", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        still short).
+                        in Cash Bond deductions across {c.payrollRunsCount}{" "}
+                        payroll run{c.payrollRunsCount !== 1 ? "s" : ""}.
                       </li>
                     ))}
                   </ul>

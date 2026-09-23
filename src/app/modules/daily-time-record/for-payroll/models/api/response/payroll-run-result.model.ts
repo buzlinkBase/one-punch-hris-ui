@@ -162,6 +162,7 @@ export interface PayrollRunResult {
   philHealthContribution: number;
   pagIbigContribution: number;
   withholdingTax: number;
+  cashBondDeduction: number;
   otherDeductions: number;
   totalDeductions: number;
   totalLoans: number;

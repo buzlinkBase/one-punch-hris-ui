@@ -33,12 +33,13 @@ export interface LastPayAttendanceWarning {
 }
 
 // Informational only — see PayrollsController's last-pay/cash-bond-status GET. Never applied
-// to Net Pay automatically; HR decides the refund manually as part of clearance.
+// to Net Pay automatically; HR decides the refund manually as part of clearance. Cash Bond is a
+// flat, recurring deduction (see backend CashBondDeductionPolicy) — totalCollected is simply
+// the sum collected across this employee's posted payroll runs, no target/remaining concept.
 export interface LastPayCashBondStatus {
   employeeId: string;
   fullName: string;
-  targetAmount: number;
+  cashBondRate: number;
   totalCollected: number;
-  remaining: number;
-  approvalStatus: string;
+  payrollRunsCount: number;
 }
