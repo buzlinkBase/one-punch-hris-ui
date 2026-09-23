@@ -143,7 +143,7 @@ export default function DtrGenerateTab() {
   const { mutateAsync: saveRecords, isPending: isSaving } = useSaveDtrDetail();
   const [postModalOpen, setPostModalOpen] = useState(false);
 
-  const handlePostClick = () => {
+  const handleSaveDraftClick = () => {
     if (!records.length) {
       messageApi.warning("No data to save. Click Generate first.");
       return;
@@ -151,12 +151,15 @@ export default function DtrGenerateTab() {
     setPostModalOpen(true);
   };
 
-  const handleConfirmPost = async (postingDescription: string) => {
+  // "Save Draft" persists the calculated rows and starts the DTR posting approval flow --
+  // it no longer posts outright. The batch only actually posts (DailyRecord.Posted flips true)
+  // once it's approved from the Saved DTR tab. See DailyRecordService.SaveDraftAsync.
+  const handleConfirmSaveDraft = async (postingDescription: string) => {
     const payload = records.map((r) => ({ ...r, postingDescription }));
     await saveRecords(payload);
     setPostModalOpen(false);
     messageApi.success(
-      `${records.length} record${records.length !== 1 ? "s" : ""} saved.`,
+      `${records.length} record${records.length !== 1 ? "s" : ""} saved as a draft, awaiting approval.`,
     );
   };
 
@@ -239,9 +242,9 @@ export default function DtrGenerateTab() {
               icon={<SaveOutlined />}
               disabled={!records.length}
               loading={isSaving}
-              onClick={handlePostClick}
+              onClick={handleSaveDraftClick}
             >
-              Post
+              Save Draft
             </Button>
           </PermissionGate>
           <Badge count={activeFilterCount} size="small">
@@ -436,7 +439,7 @@ export default function DtrGenerateTab() {
         recordCount={records.length}
         isSaving={isSaving}
         onClose={() => setPostModalOpen(false)}
-        onConfirm={handleConfirmPost}
+        onConfirm={handleConfirmSaveDraft}
       />
     </div>
   );

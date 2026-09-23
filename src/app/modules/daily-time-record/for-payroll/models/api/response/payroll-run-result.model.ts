@@ -18,6 +18,12 @@ export interface PayrollRunResult {
   // final settlement — see GenerateLastPayRequest) vs "YearEndAdjustment" (BIR annualization
   // refund/collection — see TaxAnnualizationRunRequest). Only meaningful when id is set.
   payrollType?: "Regular" | "ThirteenthMonth" | "LastPay" | "YearEndAdjustment";
+  // Denormalized from the PayrollBatch header's shared PayrollPosting approval instance (one
+  // instance covers all 4 run types) — see backend PayrollBatch.ApprovalStatus. Drives the
+  // Payroll Summary report tabs' Status filter (see payroll-summary.tsx) — batch-level
+  // Approve/Decline/Delete actions themselves live in PayrollBatchesTab, driven by
+  // PayrollBatchListModel's own copy of this field instead. Only meaningful when id is set.
+  approvalStatus?: "ForApproval" | "Approved" | "Declined" | "Cancelled";
   // Setup > Payslip/13th Month/Last Pay > Received by Employee — set once the employee
   // confirms receipt via the Employee Portal (POST /me/payrolls/{id}/acknowledge). Null means
   // not yet acknowledged. Informational only — see backend Payroll.AcknowledgedAt. Only

@@ -6,6 +6,7 @@ import type { GenerateLastPayRequest } from "../models/api/request/generate-last
 import type { TaxAnnualizationRunRequest } from "../models/api/request/tax-annualization-run-request.model";
 
 const BATCH_KEY = ["dtr-batches"];
+const PAYROLL_BATCHES_KEY = ["payroll-batches"];
 
 export function useDtrBatches(from?: string, to?: string) {
   return useQuery({
@@ -111,29 +112,45 @@ export function usePayrolls(params: {
   employeeId?: string;
   clientId?: string;
   payrollGroupId?: string;
+  payrollBatchId?: string;
 }) {
   return useQuery({
     queryKey: ["payrolls", params],
-    queryFn: () =>
-      forPayrollApi.getPayrolls({
-        from: params.from!,
-        to: params.to!,
-        employeeId: params.employeeId,
-        clientId: params.clientId,
-        payrollGroupId: params.payrollGroupId,
-      }),
-    enabled: !!params.from && !!params.to,
+    queryFn: () => forPayrollApi.getPayrolls(params),
+    enabled: !!params.payrollBatchId || (!!params.from && !!params.to),
   });
 }
 
-export function usePostPayrollBatch() {
+export function useApproveBatch() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (batchId: string) => forPayrollApi.postPayrollBatch(batchId),
-    // onSettled (not onSuccess-only): a failed post can still have partially reached the
+    mutationFn: ({ batchId, note }: { batchId: string; note?: string }) =>
+      forPayrollApi.approveBatch(batchId, note),
+    // onSettled (not onSuccess-only): a failed approve can still have partially reached the
     // server (e.g. the response never made it back), so refetch either way to reflect whatever
-    // actually got committed rather than leaving stale Draft/Posted state on screen.
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ["payrolls"] }),
+    // actually got committed rather than leaving stale For Approval/Approved state on screen.
+    onSettled: (_data, _error, { batchId }) => {
+      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
+      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PayrollPosting", batchId],
+      });
+    },
+  });
+}
+
+export function useDeclineBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ batchId, note }: { batchId: string; note?: string }) =>
+      forPayrollApi.declineBatch(batchId, note),
+    onSettled: (_data, _error, { batchId }) => {
+      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
+      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PayrollPosting", batchId],
+      });
+    },
   });
 }
 
@@ -141,6 +158,61 @@ export function useDeletePayrollBatch() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (batchId: string) => forPayrollApi.deletePayrollBatch(batchId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payrolls"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
+      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+    },
+  });
+}
+
+// Batch-list projection for the Saved Payroll Runs tab -- independent of usePayrolls' own
+// date-scoped report query.
+export function usePayrollBatches(from?: string, to?: string) {
+  return useQuery({
+    queryKey: [...PAYROLL_BATCHES_KEY, from, to],
+    queryFn: () => forPayrollApi.getPayrollBatches(from, to),
+  });
+}
+
+export function useRequestPayrollBatchDeletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchId: string) =>
+      forPayrollApi.requestBatchDeletion(batchId),
+    onSettled: (_data, _error, batchId) => {
+      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PayrollPostingDeletion", batchId],
+      });
+    },
+  });
+}
+
+export function useApprovePayrollBatchDeletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ batchId, note }: { batchId: string; note?: string }) =>
+      forPayrollApi.approveBatchDeletion(batchId, note),
+    onSettled: (_data, _error, { batchId }) => {
+      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
+      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PayrollPostingDeletion", batchId],
+      });
+    },
+  });
+}
+
+export function useDeclinePayrollBatchDeletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ batchId, note }: { batchId: string; note?: string }) =>
+      forPayrollApi.declineBatchDeletion(batchId, note),
+    onSettled: (_data, _error, { batchId }) => {
+      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PayrollPostingDeletion", batchId],
+      });
+    },
   });
 }

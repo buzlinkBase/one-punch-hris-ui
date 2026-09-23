@@ -220,7 +220,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       {
         key: "daily-time-record-summary",
-        label: "Posted DTR Summary",
+        label: "DTR Summary",
         path: "/daily-time-record/summary",
         permission: "DTR Summary:View",
       },

@@ -14,6 +14,7 @@ const LOAD_DETAIL_ENDPOINT = buildApiUrl(
   API_PREFIX.hrms,
   "dailyrecords/load-detail",
 );
+const BATCH_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/batch");
 
 function buildParams(filter: DtrDetailFilter): Record<string, string> {
   const p: Record<string, string> = {};
@@ -46,8 +47,11 @@ export const dtrDetailApi = {
     );
   },
 
-  getBatchCodes(): Promise<BatchesModel[]> {
-    return httpClient.getUnwrapped<BatchesModel[]>(BATCH_LIST_ENDPOINT);
+  // from/to default server-side to today minus 5 months / plus 1 month when omitted.
+  getBatchCodes(from?: string, to?: string): Promise<BatchesModel[]> {
+    return httpClient.getUnwrapped<BatchesModel[]>(BATCH_LIST_ENDPOINT, {
+      params: { from, to },
+    });
   },
 
   loadDetail(batchCode: string): Promise<DtrDetailResponse[]> {
@@ -61,5 +65,44 @@ export const dtrDetailApi = {
     return httpClient.delete<void>(SAVE_ENDPOINT, {
       params: { batchCode },
     });
+  },
+
+  // Approve/Decline route through the shared Dtr approval engine instance (started at Save
+  // Draft time) rather than posting directly — see DailyRecordService.ApproveBatchAsync /
+  // DeclineBatchAsync. batchId is the DTRBatch header row's own id (BatchesModel.id).
+  approveBatch(batchId: string, note?: string): Promise<void> {
+    return httpClient.post<void>(`${BATCH_ENDPOINT}/${batchId}/approve`, {
+      note,
+    });
+  },
+
+  declineBatch(batchId: string, note?: string): Promise<void> {
+    return httpClient.post<void>(`${BATCH_ENDPOINT}/${batchId}/decline`, {
+      note,
+    });
+  },
+
+  // An already-posted batch can't be deleted outright — this starts a separate DtrDeletion
+  // approval instance instead. See DailyRecordService.RequestDeletionAsync/ApproveDeletionAsync/
+  // DeclineDeletionAsync.
+  requestDeletion(batchId: string): Promise<void> {
+    return httpClient.post<void>(
+      `${BATCH_ENDPOINT}/${batchId}/request-deletion`,
+      null,
+    );
+  },
+
+  approveDeletion(batchId: string, note?: string): Promise<void> {
+    return httpClient.post<void>(
+      `${BATCH_ENDPOINT}/${batchId}/approve-deletion`,
+      { note },
+    );
+  },
+
+  declineDeletion(batchId: string, note?: string): Promise<void> {
+    return httpClient.post<void>(
+      `${BATCH_ENDPOINT}/${batchId}/decline-deletion`,
+      { note },
+    );
   },
 };
