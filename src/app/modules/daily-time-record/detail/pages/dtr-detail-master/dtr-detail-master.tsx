@@ -12,7 +12,7 @@ const TAB_ITEMS = [
   },
   {
     key: "batch",
-    label: "Posted DTR",
+    label: "Saved DTR",
     children: <DtrBatchTab />,
   },
 ];

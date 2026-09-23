@@ -8,6 +8,7 @@ import {
   DatePicker,
   Form,
   Input,
+  Modal,
   Popconfirm,
   Row,
   Select,
@@ -21,8 +22,10 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  CheckCircleOutlined,
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
+  HistoryOutlined,
   InfoCircleOutlined,
   PrinterOutlined,
   SaveOutlined,
@@ -30,10 +33,14 @@ import {
 import dayjs from "dayjs";
 import axios from "axios";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import {
   useGenerateLastPay,
   usePayrolls,
-  usePostPayrollBatch,
+  useApproveBatch,
+  useDeclineBatch,
   useDeletePayrollBatch,
   useAvailableSalaryAdjustments,
   useAvailableOtherIncome,
@@ -41,6 +48,10 @@ import {
   useLastPayCashBondStatus,
 } from "../../hooks/use-for-payroll-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
+import {
+  APPROVAL_STATUS_COLOR,
+  APPROVAL_STATUS_LABEL,
+} from "../../constants/label.const";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import type {
   AvailableSalaryAdjustment,
@@ -212,8 +223,8 @@ export default function GenerateLastPay() {
       .map((g) => ({
         payrollBatchId: g.payrollBatchId,
         count: g.rows.length,
-        allPosted: g.rows.every((r) => r.isPosted),
         hasPosted: g.rows.some((r) => r.isPosted),
+        approvalStatus: g.rows[0].approvalStatus,
         payDate: g.rows[0].payDate,
         remarks: g.rows[0].remarks,
         totalGross: g.rows.reduce((s, r) => s + r.grossIncome, 0),
@@ -222,20 +233,42 @@ export default function GenerateLastPay() {
       .sort((a, b) => b.payrollBatchId.localeCompare(a.payrollBatchId));
   }, [lastPayRows]);
 
-  const { mutateAsync: postPayrollBatch, isPending: isPostingBatch } =
-    usePostPayrollBatch();
+  const [actionTarget, setActionTarget] = useState<{
+    payrollBatchId: string;
+    action: "Approved" | "Declined";
+  } | null>(null);
+  const { data: instance } = useApprovalInstance(
+    "PayrollPosting",
+    actionTarget?.payrollBatchId,
+  );
+  const [historyTargetId, setHistoryTargetId] = useState<string | null>(null);
+
+  const { mutateAsync: approveBatch, isPending: isApprovingBatch } =
+    useApproveBatch();
+  const { mutateAsync: declineBatch, isPending: isDecliningBatch } =
+    useDeclineBatch();
   const { mutateAsync: deletePayrollBatch, isPending: isDeletingBatch } =
     useDeletePayrollBatch();
 
-  const handlePostBatch = async (payrollBatchId: string, count: number) => {
+  const handleApproveBatch = async (payrollBatchId: string, note?: string) => {
     try {
-      await postPayrollBatch(payrollBatchId);
+      await approveBatch({ batchId: payrollBatchId, note });
       message.success(
-        `Posted Last Pay — ${count} record${count !== 1 ? "s" : ""} locked in as final.`,
+        "Approval recorded. This run is posted as final once fully approved.",
       );
       refetchRunsPayrolls();
     } catch {
-      message.error("Failed to post this run. Please try again.");
+      message.error("Failed to approve this run. Please try again.");
+    }
+  };
+
+  const handleDeclineBatch = async (payrollBatchId: string, note?: string) => {
+    try {
+      await declineBatch({ batchId: payrollBatchId, note });
+      message.success("Last Pay run declined.");
+      refetchRunsPayrolls();
+    } catch {
+      message.error("Failed to decline this run. Please try again.");
     }
   };
 
@@ -517,15 +550,8 @@ export default function GenerateLastPay() {
                         {c.totalCollected.toLocaleString("en-PH", {
                           minimumFractionDigits: 2,
                         })}{" "}
-                        of{" "}
-                        {c.targetAmount.toLocaleString("en-PH", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        target (
-                        {c.remaining.toLocaleString("en-PH", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        still short).
+                        in Cash Bond deductions across {c.payrollRunsCount}{" "}
+                        payroll run{c.payrollRunsCount !== 1 ? "s" : ""}.
                       </li>
                     ))}
                   </ul>
@@ -773,8 +799,12 @@ export default function GenerateLastPay() {
               title: "Status",
               key: "status",
               render: (_, g) => (
-                <Tag color={g.allPosted ? "success" : "default"}>
-                  {g.allPosted ? "Posted" : "Draft"}
+                <Tag
+                  color={
+                    APPROVAL_STATUS_COLOR[g.approvalStatus ?? ""] ?? "default"
+                  }
+                >
+                  {APPROVAL_STATUS_LABEL[g.approvalStatus ?? ""] ?? "Draft"}
                 </Tag>
               ),
             },
@@ -783,27 +813,42 @@ export default function GenerateLastPay() {
               key: "actions",
               render: (_, g) => (
                 <Space size={4}>
-                  <PermissionGate permission="Last Pay Run:Approve">
-                    <Popconfirm
-                      title="Post this Last Pay run?"
-                      description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in as final.`}
-                      okText="Post"
-                      cancelText="Cancel"
-                      disabled={g.allPosted}
-                      onConfirm={() =>
-                        handlePostBatch(g.payrollBatchId, g.count)
-                      }
-                    >
-                      <Button
-                        size="small"
-                        icon={<CheckCircleOutlined />}
-                        disabled={g.allPosted}
-                        loading={isPostingBatch}
-                      >
-                        Post
-                      </Button>
-                    </Popconfirm>
-                  </PermissionGate>
+                  <Tooltip title="History">
+                    <Button
+                      size="small"
+                      icon={<HistoryOutlined />}
+                      onClick={() => setHistoryTargetId(g.payrollBatchId)}
+                    />
+                  </Tooltip>
+                  {g.approvalStatus === "ForApproval" && (
+                    <PermissionGate permission="Last Pay Run:Approve">
+                      <Tooltip title="Approve">
+                        <Button
+                          size="small"
+                          icon={<CheckOutlined />}
+                          onClick={() =>
+                            setActionTarget({
+                              payrollBatchId: g.payrollBatchId,
+                              action: "Approved",
+                            })
+                          }
+                        />
+                      </Tooltip>
+                      <Tooltip title="Decline">
+                        <Button
+                          danger
+                          size="small"
+                          icon={<CloseOutlined />}
+                          onClick={() =>
+                            setActionTarget({
+                              payrollBatchId: g.payrollBatchId,
+                              action: "Declined",
+                            })
+                          }
+                        />
+                      </Tooltip>
+                    </PermissionGate>
+                  )}
                   <PermissionGate permission="Last Pay Run:Create">
                     <Popconfirm
                       title="Delete this Last Pay draft?"
@@ -820,7 +865,7 @@ export default function GenerateLastPay() {
                         title={
                           g.hasPosted
                             ? "This run has been posted and can no longer be deleted."
-                            : undefined
+                            : "Delete"
                         }
                       >
                         <Button
@@ -829,9 +874,7 @@ export default function GenerateLastPay() {
                           icon={<DeleteOutlined />}
                           disabled={g.hasPosted}
                           loading={isDeletingBatch}
-                        >
-                          Delete
-                        </Button>
+                        />
                       </Tooltip>
                     </Popconfirm>
                   </PermissionGate>
@@ -841,6 +884,36 @@ export default function GenerateLastPay() {
           ]}
         />
       </Card>
+
+      <Modal
+        open={!!historyTargetId}
+        onCancel={() => setHistoryTargetId(null)}
+        footer={null}
+        title="Approval History"
+      >
+        <ApprovalTimeline
+          applicationType="PayrollPosting"
+          applicationId={historyTargetId ?? undefined}
+        />
+      </Modal>
+
+      <ApprovalActionModal
+        open={!!actionTarget}
+        action={actionTarget?.action ?? "Approved"}
+        noteRequirement={instance?.currentStepNoteRequirement}
+        loading={isApprovingBatch || isDecliningBatch}
+        onCancel={() => setActionTarget(null)}
+        onConfirm={(note) => {
+          if (!actionTarget) return;
+          const { payrollBatchId, action } = actionTarget;
+          if (action === "Approved") {
+            handleApproveBatch(payrollBatchId, note);
+          } else {
+            handleDeclineBatch(payrollBatchId, note);
+          }
+          setActionTarget(null);
+        }}
+      />
     </div>
   );
 }

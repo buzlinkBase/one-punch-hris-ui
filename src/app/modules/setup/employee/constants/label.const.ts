@@ -39,6 +39,7 @@ export const EMPLOYEE_LABEL = {
   DAILY_RATE_MODE: "Daily Rate Mode",
   FACTOR_DAYS: "Factor Days",
   COLA: "COLA (Per Payroll)",
+  CASH_BOND: "Cash Bond",
   BANK_NAME: "Bank Name",
   BANK_NO: "Bank Account No.",
   SSS_NO: "SSS No.",

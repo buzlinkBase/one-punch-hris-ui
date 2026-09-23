@@ -1708,6 +1708,24 @@ export default function EmployeeDetail() {
                       />
                     </Form.Item>
 
+                    <Form.Item label={EMPLOYEE_LABEL.CASH_BOND}>
+                      <Controller
+                        name="cashBond"
+                        control={control}
+                        render={({ field }) => (
+                          <InputNumber
+                            {...field}
+                            className="w-full"
+                            min={0}
+                            precision={2}
+                            formatter={(v) =>
+                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                            }
+                          />
+                        )}
+                      />
+                    </Form.Item>
+
                     {watchedSalaryType === "FIXED" && (
                       <div className="col-span-2 flex flex-col gap-2 mb-2">
                         <Divider className="my-1!" />

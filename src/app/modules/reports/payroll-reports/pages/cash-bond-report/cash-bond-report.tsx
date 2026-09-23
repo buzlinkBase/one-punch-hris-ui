@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DatePicker, Form, Progress, Tag } from "antd";
+import { DatePicker, Form } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
@@ -8,10 +8,6 @@ import { useCashBondReport } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { CashBondReportResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
-import {
-  APPROVAL_STATUS_COLOR,
-  APPROVAL_STATUS_LABEL,
-} from "@/app/modules/applications/pass-slip/constants/label.const";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -19,24 +15,18 @@ const fmt = (n: number) =>
 const EXPORT_HEADERS = [
   "Employee No",
   "Full Name",
-  "Target Amount",
+  "Cash Bond Rate",
   "Total Collected",
-  "Remaining",
-  "Start Date",
-  "End Date",
-  "Status",
+  "Payroll Runs",
 ];
 
 const toRows = (records: CashBondReportResponse[]) =>
   records.map((r) => [
     r.employeeNo,
     r.fullName,
-    fmt(r.targetAmount),
+    fmt(r.cashBondRate),
     fmt(r.totalCollected),
-    fmt(r.remaining),
-    r.startDate,
-    r.endDate,
-    APPROVAL_STATUS_LABEL[r.approvalStatus] ?? r.approvalStatus,
+    String(r.payrollRunsCount),
   ]);
 
 const columns: ColumnsType<CashBondReportResponse> = [
@@ -49,66 +39,25 @@ const columns: ColumnsType<CashBondReportResponse> = [
   },
   { title: "Full Name", dataIndex: "fullName", key: "name", width: 180 },
   {
-    title: "Target",
-    dataIndex: "targetAmount",
-    key: "target",
+    title: "Cash Bond Rate",
+    dataIndex: "cashBondRate",
+    key: "rate",
     align: "right",
     render: fmt,
   },
   {
-    title: "Collected",
+    title: "Total Collected",
     dataIndex: "totalCollected",
     key: "collected",
-    align: "right",
-    render: fmt,
-  },
-  {
-    title: "Progress",
-    key: "progress",
-    width: 160,
-    render: (_, r) => (
-      <Progress
-        percent={
-          r.targetAmount > 0
-            ? Math.min(
-                100,
-                Math.round((r.totalCollected / r.targetAmount) * 100),
-              )
-            : 0
-        }
-        size="small"
-      />
-    ),
-  },
-  {
-    title: "Remaining",
-    dataIndex: "remaining",
-    key: "remaining",
     align: "right",
     fixed: "right",
     render: (v: number) => <strong>{fmt(v)}</strong>,
   },
   {
-    title: "Start Date",
-    dataIndex: "startDate",
-    key: "start",
-    render: (v: string) => (v ? dayjs(v).format("MMM DD, YYYY") : "—"),
-  },
-  {
-    title: "End Date",
-    dataIndex: "endDate",
-    key: "end",
-    render: (v: string) => (v ? dayjs(v).format("MMM DD, YYYY") : "—"),
-  },
-  {
-    title: "Status",
-    dataIndex: "approvalStatus",
-    key: "status",
-    render: (v: string) => (
-      <Tag color={APPROVAL_STATUS_COLOR[v] ?? "success"}>
-        {APPROVAL_STATUS_LABEL[v] ?? v}
-      </Tag>
-    ),
+    title: "Payroll Runs",
+    dataIndex: "payrollRunsCount",
+    key: "runs",
+    align: "right",
   },
 ];
 
@@ -125,7 +74,7 @@ export default function CashBondReport() {
       loading={isLoading}
       columns={columns}
       onRefresh={() => refetch()}
-      rowKey={(r) => `${r.employeeId}-${r.applicationId}`}
+      rowKey={(r) => r.employeeId}
       exportFileName="cash-bond-tracking"
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}

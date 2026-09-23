@@ -144,6 +144,7 @@ export interface EmployeeResponse {
   monthlyRate?: number;
   dailyRate?: number;
   cola?: number;
+  cashBond?: number;
   /** FIXED salary type only — Manual entry vs. computed (MonthlyRate * 12) / FactorDays. */
   dailyRateMode?: DailyRateMode;
   /** FIXED + CalculatedEDR mode only — the annual factor days divisor (365/313/305/261/253/251). */

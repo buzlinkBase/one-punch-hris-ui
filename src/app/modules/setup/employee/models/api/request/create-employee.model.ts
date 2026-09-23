@@ -39,6 +39,7 @@ export interface CreateEmployee {
   monthlyRate?: number;
   dailyRate?: number;
   cola?: number;
+  cashBond?: number;
   dailyRateMode?: DailyRateMode;
   factorDays?: FactorDays | null;
   useActualMonthDays?: boolean;

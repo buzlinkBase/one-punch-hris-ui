@@ -68,6 +68,7 @@ function buildColumns(
     { title: "Address 2", dataIndex: "address2", width: 160 },
     { title: "Branch", dataIndex: "branchCode", width: 100 },
     { title: "Department", dataIndex: "departmentName", width: 140 },
+    { title: "Project Site", dataIndex: "projectSiteName", width: 140 },
     { title: "Client", dataIndex: "clientName", width: 140 },
     { title: "Rest Day 1", dataIndex: "restDay1", width: 100 },
     { title: "Rest Day 2", dataIndex: "restDay2", width: 100 },
@@ -101,6 +102,7 @@ function buildColumns(
     { title: "Salary Type", dataIndex: "salaryType", width: 110 },
     { title: "Daily Rate", dataIndex: "dailyRate", width: 100 },
     { title: "Monthly Rate", dataIndex: "monthlyRate", width: 110 },
+    { title: "Cash Bond", dataIndex: "cashBond", width: 110 },
     {
       title: "Hire Date",
       dataIndex: "hireDate",

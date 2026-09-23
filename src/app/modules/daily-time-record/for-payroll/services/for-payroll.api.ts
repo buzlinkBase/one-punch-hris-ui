@@ -13,6 +13,7 @@ import type {
   LastPayAttendanceWarning,
   LastPayCashBondStatus,
 } from "../models/api/response/last-pay-review.model";
+import type { PayrollBatchListModel } from "../models/api/response/payroll-batch-list.model";
 
 const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
 const PAYROLL_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrolls");
@@ -147,30 +148,79 @@ export const forPayrollApi = {
     });
   },
 
+  // Either from/to or payrollBatchId is required -- payrollBatchId, when given, replaces the
+  // date range entirely and returns exactly one run's rows (see PayrollsController.Get).
   getPayrolls(params: {
-    from: string;
-    to: string;
+    from?: string;
+    to?: string;
     employeeId?: string;
     clientId?: string;
     payrollGroupId?: string;
+    payrollBatchId?: string;
   }): Promise<PayrollRunResponse> {
     return httpClient.getUnwrapped<PayrollRunResponse>(`${PAYROLL_ENDPOINT}`, {
       params,
     });
   },
 
-  // Post and Delete are run-level transactions, not per-employee ones — an employee's
-  // payroll is never generated on its own, so it's never posted or deleted on its own
-  // either. batchId is the PayrollBatch header row's id (PayrollRunResult.payrollBatchId).
-  // See PayrollProcessorService.PostBatchAsync / DeleteBatchAsync.
-  postPayrollBatch(batchId: string): Promise<void> {
+  // Approve/Decline/Delete are run-level transactions, not per-employee ones — an employee's
+  // payroll is never generated on its own, so it's never approved, declined, or deleted on its
+  // own either. batchId is the PayrollBatch header row's id (PayrollRunResult.payrollBatchId).
+  // Approve/Decline route through the shared PayrollPosting approval engine instance (started
+  // automatically at Generate/Save time) rather than posting directly — see
+  // PayrollBatchLifecycleService.ApproveBatchAsync / DeclineBatchAsync.
+  approveBatch(batchId: string, note?: string): Promise<void> {
     return httpClient.post<void>(
-      `${PAYROLL_ENDPOINT}/batch/${batchId}/post`,
-      null,
+      `${PAYROLL_ENDPOINT}/batch/${batchId}/approve`,
+      { note },
+    );
+  },
+
+  declineBatch(batchId: string, note?: string): Promise<void> {
+    return httpClient.post<void>(
+      `${PAYROLL_ENDPOINT}/batch/${batchId}/decline`,
+      { note },
     );
   },
 
   deletePayrollBatch(batchId: string): Promise<void> {
     return httpClient.delete<void>(`${PAYROLL_ENDPOINT}/batch/${batchId}`);
+  },
+
+  // Batch-list projection for the Saved Payroll Runs tab -- independent of getPayrolls' own
+  // date-scoped report query. Defaults server-side to today minus 5 months / plus 1 month when
+  // from/to are omitted, same as DTR's batch-codes endpoint.
+  getPayrollBatches(
+    from?: string,
+    to?: string,
+  ): Promise<PayrollBatchListModel[]> {
+    return httpClient.getUnwrapped<PayrollBatchListModel[]>(
+      `${PAYROLL_ENDPOINT}/batches`,
+      { params: { from, to } },
+    );
+  },
+
+  // An already-posted batch can't be deleted outright — this starts a separate
+  // PayrollPostingDeletion approval instance instead. See PayrollBatchLifecycleService.
+  // RequestDeletionAsync/ApproveDeletionAsync/DeclineDeletionAsync.
+  requestBatchDeletion(batchId: string): Promise<void> {
+    return httpClient.post<void>(
+      `${PAYROLL_ENDPOINT}/batch/${batchId}/request-deletion`,
+      null,
+    );
+  },
+
+  approveBatchDeletion(batchId: string, note?: string): Promise<void> {
+    return httpClient.post<void>(
+      `${PAYROLL_ENDPOINT}/batch/${batchId}/approve-deletion`,
+      { note },
+    );
+  },
+
+  declineBatchDeletion(batchId: string, note?: string): Promise<void> {
+    return httpClient.post<void>(
+      `${PAYROLL_ENDPOINT}/batch/${batchId}/decline-deletion`,
+      { note },
+    );
   },
 };

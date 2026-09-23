@@ -25,7 +25,7 @@ function AllProviders({ children }: { children: ReactNode }) {
 
 // Drop-in replacement for @testing-library/react's render — wraps every component under test
 // with the same QueryClientProvider the real app provides, since hooks like usePayrolls/
-// usePostPayrollBatch throw without one. Add a Router wrapper here too if/when a test needs
+// useApproveBatch throw without one. Add a Router wrapper here too if/when a test needs
 // TanStack Router context (useNavigate, route params).
 export function renderWithProviders(
   ui: ReactElement,

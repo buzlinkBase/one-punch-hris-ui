@@ -44,6 +44,13 @@ export const deductionsColumns = (
     render: fmt,
   },
   {
+    title: "Cash Bond",
+    dataIndex: "cashBondDeduction",
+    key: "cashBond",
+    align: "right",
+    render: fmt,
+  },
+  {
     title: "Loans",
     dataIndex: "totalLoans",
     key: "loans",

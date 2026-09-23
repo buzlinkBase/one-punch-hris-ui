@@ -18,6 +18,7 @@ import type { PortalRequestChangeRestDay } from "../models/api/request/portal-re
 import type { ChangeRestDayResponse } from "@/app/modules/change-schedule/change-rest-day/models/api/response/change-rest-day-response.model";
 import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
 import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
+import type { MyCashBondModel } from "@/app/modules/portal/cash-bond/models/api/response/portal-cash-bond-response.model";
 import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
 import type { PortalCreateProfileUpdateRequest } from "../models/api/request/portal-create-profile-update-request.model";
 import type { PortalProfileUpdateRequestResponse } from "../models/api/response/portal-profile-update-request-response.model";
@@ -208,12 +209,10 @@ export const meApi = {
     );
   },
 
-  // Read-only — Cash Bond entries are HR-created (Setup > Deduction), not self-filed, so
-  // there's no create/withdraw counterpart here the way Loans have.
-  getMyCashBond(): Promise<DeductionApplicationResponse[]> {
-    return httpClient.getUnwrapped<DeductionApplicationResponse[]>(
-      `${BASE_URL}/cash-bond`,
-    );
+  // Read-only — Cash Bond is a flat, recurring deduction driven by Employee.CashBond, not
+  // self-filed, so there's no create/withdraw counterpart here the way Loans have.
+  getMyCashBond(): Promise<MyCashBondModel> {
+    return httpClient.getUnwrapped<MyCashBondModel>(`${BASE_URL}/cash-bond`);
   },
 
   getMyProfileUpdateRequests(): Promise<PortalProfileUpdateRequestResponse[]> {
