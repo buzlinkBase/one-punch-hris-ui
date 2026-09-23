@@ -45,22 +45,17 @@ export interface DeductionLedgerResponse {
   currentBalance: number;
 }
 
-// One row per employee's Cash Bond DeductionApplication (DeductionType.Code == "CASHBOND") —
-// tracks how much has been withheld toward the target (the application's own totalPrincipal;
-// there's no separate employee-profile target field) and how much is still outstanding. See
-// PayrollReportService.GetCashBondReportAsync.
+// One row per employee — Cash Bond is a flat, recurring deduction sourced straight from
+// Employee.CashBond (see backend CashBondDeductionPolicy), not an amortized loan, so there's no
+// target/remaining/approval concept — just the current per-run rate and how much has actually
+// been collected across posted payroll runs. See PayrollReportService.GetCashBondReportAsync.
 export interface CashBondReportResponse {
   employeeId: string;
   employeeNo: string;
   fullName: string;
-  deductionId: string;
-  applicationId: string;
-  targetAmount: number;
+  cashBondRate: number;
   totalCollected: number;
-  remaining: number;
-  startDate: string;
-  endDate: string;
-  approvalStatus: string;
+  payrollRunsCount: number;
 }
 
 // OneTime, employer-advanced government leave payouts awaiting/undergoing SSS-style

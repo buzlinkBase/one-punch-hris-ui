@@ -68,6 +68,7 @@ export const employeeFormSchema = z.object({
   monthlyRate: z.coerce.number().optional(),
   dailyRate: z.coerce.number().optional(),
   cola: z.coerce.number().optional(),
+  cashBond: z.coerce.number().optional(),
   dailyRateMode: z
     .enum(["Manual", "CalculatedEDR", "MonthlyTotalDays"])
     .optional(),

@@ -1,3 +1,19 @@
+// DTRBatch.ApprovalStatus, surfaced on the Saved DTR tab -- same colors/labels as every
+// other module's own approval status constants (e.g. for-payroll's).
+export const APPROVAL_STATUS_COLOR: Record<string, string> = {
+  ForApproval: "warning",
+  Approved: "success",
+  Cancelled: "default",
+  Declined: "error",
+};
+
+export const APPROVAL_STATUS_LABEL: Record<string, string> = {
+  ForApproval: "For Approval",
+  Approved: "Approved",
+  Cancelled: "Cancelled",
+  Declined: "Declined",
+};
+
 export const DTR_DETAIL_LABEL = {
   TITLE: "DTR Detail",
   EMPLOYEE: "Employee",

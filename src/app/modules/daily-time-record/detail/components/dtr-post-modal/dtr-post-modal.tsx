@@ -29,16 +29,16 @@ export default function DtrPostModal({
 
   return (
     <Modal
-      title="Post DTR"
+      title="Save DTR Draft"
       open={open}
       onCancel={handleClose}
       onOk={handleOk}
-      okText="Post"
+      okText="Save Draft"
       confirmLoading={isSaving}
       destroyOnClose
     >
       <p className="mb-3 text-gray-500">
-        {`Posting will save ${recordCount} record${recordCount !== 1 ? "s" : ""} to the daily time record.`}
+        {`Saves ${recordCount} record${recordCount !== 1 ? "s" : ""} as a draft awaiting approval. It's posted as final once approved from the Saved DTR tab.`}
       </p>
       <Form layout="vertical">
         <Form.Item label="Posting Description">
@@ -46,7 +46,7 @@ export default function DtrPostModal({
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional note about this posting (e.g. reason, cutoff, remarks)"
+            placeholder="Optional note about this batch (e.g. reason, cutoff, remarks)"
           />
         </Form.Item>
       </Form>

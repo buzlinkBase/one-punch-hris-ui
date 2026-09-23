@@ -6,7 +6,11 @@ export type ApprovalApplicationType =
   | "OfficialBusiness"
   | "PassSlip"
   | "Loan"
-  | "ProfileUpdate";
+  | "ProfileUpdate"
+  | "PayrollPosting"
+  | "Dtr"
+  | "DtrDeletion"
+  | "PayrollPostingDeletion";
 
 export type ApproverType =
   | "Person"

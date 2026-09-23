@@ -39,8 +39,8 @@ export const acknowledgedColumn: ColumnsType<PayrollRunResult>[number] = {
     ) : null,
 };
 
-// Print is the only per-row action left — Post/Delete are run-level transactions handled
-// via the "Post / Delete Payroll Run" toolbar button and PayrollRunBatchModal.
+// Print is the only per-row action left — Approve/Decline/Delete are run-level transactions
+// handled from the Saved Payroll Runs tab (see PayrollBatchesTab).
 export const actionsColumn = (
   onPrint: (r: PayrollRunResult) => void,
 ): ColumnsType<PayrollRunResult>[number] => ({

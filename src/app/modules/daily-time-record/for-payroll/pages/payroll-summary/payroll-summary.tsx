@@ -5,6 +5,7 @@ import {
   Col,
   Dropdown,
   Row,
+  Select,
   Space,
   Statistic,
   Table,
@@ -19,13 +20,12 @@ import {
   FileTextOutlined,
   PrinterOutlined,
   DownloadOutlined,
-  CheckCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useSearch } from "@tanstack/react-router";
 import {
   usePayrolls,
-  usePostPayrollBatch,
-  useDeletePayrollBatch,
+  usePayrollBatches,
 } from "../../hooks/use-for-payroll-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import { otPay, ndPay } from "../../utils/ot-nd-pay.util";
@@ -39,7 +39,10 @@ import {
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
-import PayrollRunBatchModal from "../../components/payroll-run-batch-modal";
+import {
+  APPROVAL_STATUS_LABEL,
+  PAYROLL_TYPE_LABEL,
+} from "../../constants/label.const";
 import { earningsColumns } from "./columns/earnings.columns";
 import { holidayColumns } from "./columns/holiday.columns";
 import { deductionsColumns } from "./columns/deductions.columns";
@@ -62,102 +65,74 @@ import {
 
 const { Title } = Typography;
 
-// Mirrors hrms-api's PayrollsController.RunTypeFeature -- Post/Delete on a mixed-type Payroll
-// Summary batch need the permission for that specific batch's run type, not a fixed code.
-const RUN_TYPE_FEATURE: Record<string, string> = {
-  Regular: "Payroll Run",
-  ThirteenthMonth: "13th Month Run",
-  LastPay: "Last Pay Run",
-  YearEndAdjustment: "Year-End Adjustment Run",
-};
+type StatusFilter =
+  "All" | "ForApproval" | "Approved" | "Declined" | "Cancelled";
+
+const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "All", label: "All" },
+  ...(
+    Object.entries(APPROVAL_STATUS_LABEL) as [
+      Exclude<StatusFilter, "All">,
+      string,
+    ][]
+  ).map(([value, label]) => ({ value, label })),
+];
 
 export default function PayrollSummary() {
   const { token } = theme.useToken();
-  const defaultCutoff = getSemiMonthlyCutoff();
-  const [dateRange, setDateRange] = useState<[string, string]>([
-    defaultCutoff.fromDate,
-    defaultCutoff.toDate,
-  ]);
+  // Arriving from the Saved Payroll Runs tab's "View" action pre-selects that exact run —
+  // see PayrollBatchesTab's navigate({ to: "/payroll/summary", search: { batchId } }).
+  const searchParams = useSearch({ from: "/payroll/summary" }) as Record<
+    string,
+    string
+  >;
+  const [selectedBatchId, setSelectedBatchId] = useState<string | undefined>(
+    searchParams.batchId,
+  );
+  // Defaults to Approved so the report reads clean day-to-day — switch to All/For Approval/
+  // Declined to inspect a pending or declined run's figures from this page.
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("Approved");
+
+  // Narrows the batch selector below -- defaults to the current semi-monthly cutoff, same as
+  // the Saved Payroll Runs tab, so the dropdown isn't a long scroll through every run ever made.
+  // Arriving pre-selected via ?batchId= instead falls back to no filter (the backend's own wide
+  // default) so that specific batch is guaranteed to be in the dropdown's option list.
+  const [batchDateRange, setBatchDateRange] = useState<[string, string] | null>(
+    () => {
+      if (searchParams.batchId) return null;
+      const { fromDate, toDate } = getSemiMonthlyCutoff();
+      return [fromDate, toDate];
+    },
+  );
+  const { data: batches = [] } = usePayrollBatches(
+    batchDateRange?.[0],
+    batchDateRange?.[1],
+  );
+
+  const selectedBatch = useMemo(
+    () => batches.find((b) => b.id === selectedBatchId),
+    [batches, selectedBatchId],
+  );
 
   const {
     data: response,
     isLoading,
     refetch,
     isFetching,
-  } = usePayrolls({
-    from: dateRange[0],
-    to: dateRange[1],
-  });
+  } = usePayrolls({ payrollBatchId: selectedBatchId });
 
-  const results = useMemo<PayrollRunResult[]>(
+  const allResults = useMemo<PayrollRunResult[]>(
     () => response?.data ?? [],
     [response],
   );
 
-  // Every row from one Generate run shares a PayrollBatchId (the id of its PayrollBatch
-  // header row) — grouped here so Post/Delete act on the whole run in one action instead of
-  // one employee at a time. This is a run-level transaction, not a per-employee one: an
-  // employee's payroll was never generated on its own, so it isn't posted or deleted on its
-  // own either (and deleting per-row wouldn't even unblock regenerating — GenerateAsync
-  // blocks re-running a DTR batch while ANY row from it still exists).
-  const batchGroups = useMemo(() => {
-    const map = new Map<
-      string,
-      { payrollBatchId: string; rows: PayrollRunResult[] }
-    >();
-    for (const r of results) {
-      if (!r.id || !r.payrollBatchId) continue;
-      if (!map.has(r.payrollBatchId))
-        map.set(r.payrollBatchId, {
-          payrollBatchId: r.payrollBatchId,
-          rows: [],
-        });
-      map.get(r.payrollBatchId)!.rows.push(r);
-    }
-    return Array.from(map.values())
-      .map((g) => ({
-        payrollBatchId: g.payrollBatchId,
-        count: g.rows.length,
-        allPosted: g.rows.every((r) => r.isPosted),
-        hasPosted: g.rows.some((r) => r.isPosted),
-        fromDate: g.rows[0].payPeriodStart,
-        toDate: g.rows[0].payPeriodEnd,
-        payDate: g.rows[0].payDate,
-        remarks: g.rows[0].remarks,
-        runTypeFeature:
-          RUN_TYPE_FEATURE[g.rows[0].payrollType ?? "Regular"] ?? "Payroll Run",
-      }))
-      .sort((a, b) => b.payrollBatchId.localeCompare(a.payrollBatchId));
-  }, [results]);
-
-  const [batchModalOpen, setBatchModalOpen] = useState(false);
-
-  const { mutateAsync: postPayrollBatch, isPending: isPostingBatch } =
-    usePostPayrollBatch();
-  const { mutateAsync: deletePayrollBatch, isPending: isDeletingBatch } =
-    useDeletePayrollBatch();
-
-  const handlePostBatch = async (payrollBatchId: string, count: number) => {
-    try {
-      await postPayrollBatch(payrollBatchId);
-      message.success(
-        `Posted the full payroll run — ${count} record${count !== 1 ? "s" : ""} locked in as final.`,
-      );
-    } catch {
-      message.error("Failed to post this payroll run. Please try again.");
-    }
-  };
-
-  const handleDeleteBatch = async (payrollBatchId: string, count: number) => {
-    try {
-      await deletePayrollBatch(payrollBatchId);
-      message.success(
-        `Deleted the full payroll run — ${count} record${count !== 1 ? "s" : ""} removed. You can regenerate it now.`,
-      );
-    } catch {
-      message.error("Failed to delete this payroll run. Please try again.");
-    }
-  };
+  const results = useMemo(
+    () =>
+      statusFilter === "All"
+        ? allResults
+        : allResults.filter((r) => r.approvalStatus === statusFilter),
+    [allResults, statusFilter],
+  );
 
   // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
   // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
@@ -183,8 +158,8 @@ export default function PayrollSummary() {
   };
 
   const handlePrintSummary = async () => {
-    if (!results.length) {
-      message.info("No data to print. Adjust the date range first.");
+    if (!results.length || !selectedBatch) {
+      message.info("No data to print. Select a payroll batch first.");
       return;
     }
     const printTab = window.open("about:blank", "_blank");
@@ -192,7 +167,10 @@ export default function PayrollSummary() {
       const blob = await httpClient.get<Blob>(
         `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/print-summary`,
         {
-          params: { from: dateRange[0], to: dateRange[1] },
+          params: {
+            from: selectedBatch.payPeriodStart,
+            to: selectedBatch.payPeriodEnd,
+          },
           responseType: "blob",
         },
       );
@@ -205,11 +183,11 @@ export default function PayrollSummary() {
   };
 
   const handleExport = (format: "csv" | "excel") => {
-    if (!results.length) {
-      message.info("No data to export. Adjust the date range first.");
+    if (!results.length || !selectedBatch) {
+      message.info("No data to export. Select a payroll batch first.");
       return;
     }
-    const suffix = `${dateRange[0]}_${dateRange[1]}`;
+    const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}`;
     if (format === "csv") {
       triggerDownload(
         buildFlatCsv(EXPORT_HEADERS, buildExportRows(results)),
@@ -297,14 +275,36 @@ export default function PayrollSummary() {
           </div>
           <Space wrap>
             <MobileRangePicker
-              value={[dayjs(dateRange[0]), dayjs(dateRange[1])]}
+              value={
+                batchDateRange
+                  ? [dayjs(batchDateRange[0]), dayjs(batchDateRange[1])]
+                  : null
+              }
               onChange={(dates) => {
                 if (dates)
-                  setDateRange([
+                  setBatchDateRange([
                     dates[0]?.format("YYYY-MM-DD") ?? "",
                     dates[1]?.format("YYYY-MM-DD") ?? "",
                   ]);
               }}
+            />
+            <Select
+              value={selectedBatchId}
+              onChange={setSelectedBatchId}
+              placeholder="Select a payroll batch"
+              showSearch
+              optionFilterProp="label"
+              style={{ width: 260 }}
+              options={batches.map((b) => ({
+                value: b.id,
+                label: `${dayjs(b.payPeriodStart).format("MMM D")} – ${dayjs(b.payPeriodEnd).format("MMM D, YYYY")} · ${PAYROLL_TYPE_LABEL[b.payrollType] ?? b.payrollType}`,
+              }))}
+            />
+            <Select<StatusFilter>
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={STATUS_FILTER_OPTIONS}
+              style={{ width: 150 }}
             />
             <Button
               icon={<ReloadOutlined spin={isFetching} />}
@@ -329,13 +329,6 @@ export default function PayrollSummary() {
                 Print
               </Button>
             </PermissionGate>
-            <Button
-              icon={<CheckCircleOutlined />}
-              disabled={!batchGroups.length}
-              onClick={() => setBatchModalOpen(true)}
-            >
-              Post / Delete Payroll Run
-            </Button>
           </Space>
         </div>
       </div>
@@ -456,16 +449,6 @@ export default function PayrollSummary() {
           ]}
         />
       </Card>
-
-      <PayrollRunBatchModal
-        open={batchModalOpen}
-        batchGroups={batchGroups}
-        onClose={() => setBatchModalOpen(false)}
-        onPost={handlePostBatch}
-        onDelete={handleDeleteBatch}
-        isPosting={isPostingBatch}
-        isDeleting={isDeletingBatch}
-      />
     </div>
   );
 }

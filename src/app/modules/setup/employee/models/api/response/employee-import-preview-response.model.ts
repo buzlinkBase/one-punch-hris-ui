@@ -16,6 +16,7 @@ export interface EmployeeImportPreviewRow {
   restDay2?: string;
 
   departmentName?: string;
+  projectSiteName?: string | null;
   clientName?: string;
   payrollGroup?: string;
   shiftName?: string;
@@ -39,6 +40,7 @@ export interface EmployeeImportPreviewRow {
   tin?: string;
   dailyRate?: number;
   monthlyRate?: number;
+  cashBond?: number;
   hireDate?: string | null;
   dateOfBirth?: string | null;
 

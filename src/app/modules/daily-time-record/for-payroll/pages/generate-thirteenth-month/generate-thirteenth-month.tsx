@@ -6,6 +6,7 @@ import {
   DatePicker,
   Form,
   Input,
+  Modal,
   Popconfirm,
   Row,
   Select,
@@ -19,18 +20,24 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  CheckCircleOutlined,
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
+  HistoryOutlined,
   PrinterOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import axios from "axios";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import {
   useGenerateThirteenthMonth,
   usePayrolls,
-  usePostPayrollBatch,
+  useApproveBatch,
+  useDeclineBatch,
   useDeletePayrollBatch,
 } from "../../hooks/use-for-payroll-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
@@ -38,6 +45,10 @@ import type { PayrollRunResult } from "../../models/api/response/payroll-run-res
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import {
+  APPROVAL_STATUS_COLOR,
+  APPROVAL_STATUS_LABEL,
+} from "../../constants/label.const";
 
 const { Title, Text } = Typography;
 
@@ -128,8 +139,8 @@ export default function GenerateThirteenthMonth() {
       .map((g) => ({
         payrollBatchId: g.payrollBatchId,
         count: g.rows.length,
-        allPosted: g.rows.every((r) => r.isPosted),
         hasPosted: g.rows.some((r) => r.isPosted),
+        approvalStatus: g.rows[0].approvalStatus,
         payDate: g.rows[0].payDate,
         remarks: g.rows[0].remarks,
         totalGross: g.rows.reduce((s, r) => s + r.grossIncome, 0),
@@ -138,20 +149,42 @@ export default function GenerateThirteenthMonth() {
       .sort((a, b) => b.payrollBatchId.localeCompare(a.payrollBatchId));
   }, [thirteenthMonthRows]);
 
-  const { mutateAsync: postPayrollBatch, isPending: isPostingBatch } =
-    usePostPayrollBatch();
+  const [actionTarget, setActionTarget] = useState<{
+    payrollBatchId: string;
+    action: "Approved" | "Declined";
+  } | null>(null);
+  const { data: instance } = useApprovalInstance(
+    "PayrollPosting",
+    actionTarget?.payrollBatchId,
+  );
+  const [historyTargetId, setHistoryTargetId] = useState<string | null>(null);
+
+  const { mutateAsync: approveBatch, isPending: isApprovingBatch } =
+    useApproveBatch();
+  const { mutateAsync: declineBatch, isPending: isDecliningBatch } =
+    useDeclineBatch();
   const { mutateAsync: deletePayrollBatch, isPending: isDeletingBatch } =
     useDeletePayrollBatch();
 
-  const handlePostBatch = async (payrollBatchId: string, count: number) => {
+  const handleApproveBatch = async (payrollBatchId: string, note?: string) => {
     try {
-      await postPayrollBatch(payrollBatchId);
+      await approveBatch({ batchId: payrollBatchId, note });
       message.success(
-        `Posted 13th Month Pay — ${count} record${count !== 1 ? "s" : ""} locked in as final.`,
+        "Approval recorded. This run is posted as final once fully approved.",
       );
       refetchYearPayrolls();
     } catch {
-      message.error("Failed to post this run. Please try again.");
+      message.error("Failed to approve this run. Please try again.");
+    }
+  };
+
+  const handleDeclineBatch = async (payrollBatchId: string, note?: string) => {
+    try {
+      await declineBatch({ batchId: payrollBatchId, note });
+      message.success("13th Month Pay run declined.");
+      refetchYearPayrolls();
+    } catch {
+      message.error("Failed to decline this run. Please try again.");
     }
   };
 
@@ -475,8 +508,12 @@ export default function GenerateThirteenthMonth() {
               title: "Status",
               key: "status",
               render: (_, g) => (
-                <Tag color={g.allPosted ? "success" : "default"}>
-                  {g.allPosted ? "Posted" : "Draft"}
+                <Tag
+                  color={
+                    APPROVAL_STATUS_COLOR[g.approvalStatus ?? ""] ?? "default"
+                  }
+                >
+                  {APPROVAL_STATUS_LABEL[g.approvalStatus ?? ""] ?? "Draft"}
                 </Tag>
               ),
             },
@@ -485,27 +522,42 @@ export default function GenerateThirteenthMonth() {
               key: "actions",
               render: (_, g) => (
                 <Space size={4}>
-                  <PermissionGate permission="13th Month Run:Approve">
-                    <Popconfirm
-                      title="Post this 13th Month Pay run?"
-                      description={`Locks all ${g.count} record${g.count !== 1 ? "s" : ""} in as final.`}
-                      okText="Post"
-                      cancelText="Cancel"
-                      disabled={g.allPosted}
-                      onConfirm={() =>
-                        handlePostBatch(g.payrollBatchId, g.count)
-                      }
-                    >
-                      <Button
-                        size="small"
-                        icon={<CheckCircleOutlined />}
-                        disabled={g.allPosted}
-                        loading={isPostingBatch}
-                      >
-                        Post
-                      </Button>
-                    </Popconfirm>
-                  </PermissionGate>
+                  <Tooltip title="History">
+                    <Button
+                      size="small"
+                      icon={<HistoryOutlined />}
+                      onClick={() => setHistoryTargetId(g.payrollBatchId)}
+                    />
+                  </Tooltip>
+                  {g.approvalStatus === "ForApproval" && (
+                    <PermissionGate permission="13th Month Run:Approve">
+                      <Tooltip title="Approve">
+                        <Button
+                          size="small"
+                          icon={<CheckOutlined />}
+                          onClick={() =>
+                            setActionTarget({
+                              payrollBatchId: g.payrollBatchId,
+                              action: "Approved",
+                            })
+                          }
+                        />
+                      </Tooltip>
+                      <Tooltip title="Decline">
+                        <Button
+                          danger
+                          size="small"
+                          icon={<CloseOutlined />}
+                          onClick={() =>
+                            setActionTarget({
+                              payrollBatchId: g.payrollBatchId,
+                              action: "Declined",
+                            })
+                          }
+                        />
+                      </Tooltip>
+                    </PermissionGate>
+                  )}
                   <PermissionGate permission="13th Month Run:Create">
                     <Popconfirm
                       title="Delete this 13th Month Pay draft?"
@@ -522,7 +574,7 @@ export default function GenerateThirteenthMonth() {
                         title={
                           g.hasPosted
                             ? "This run has been posted and can no longer be deleted."
-                            : undefined
+                            : "Delete"
                         }
                       >
                         <Button
@@ -531,9 +583,7 @@ export default function GenerateThirteenthMonth() {
                           icon={<DeleteOutlined />}
                           disabled={g.hasPosted}
                           loading={isDeletingBatch}
-                        >
-                          Delete
-                        </Button>
+                        />
                       </Tooltip>
                     </Popconfirm>
                   </PermissionGate>
@@ -543,6 +593,36 @@ export default function GenerateThirteenthMonth() {
           ]}
         />
       </Card>
+
+      <Modal
+        open={!!historyTargetId}
+        onCancel={() => setHistoryTargetId(null)}
+        footer={null}
+        title="Approval History"
+      >
+        <ApprovalTimeline
+          applicationType="PayrollPosting"
+          applicationId={historyTargetId ?? undefined}
+        />
+      </Modal>
+
+      <ApprovalActionModal
+        open={!!actionTarget}
+        action={actionTarget?.action ?? "Approved"}
+        noteRequirement={instance?.currentStepNoteRequirement}
+        loading={isApprovingBatch || isDecliningBatch}
+        onCancel={() => setActionTarget(null)}
+        onConfirm={(note) => {
+          if (!actionTarget) return;
+          const { payrollBatchId, action } = actionTarget;
+          if (action === "Approved") {
+            handleApproveBatch(payrollBatchId, note);
+          } else {
+            handleDeclineBatch(payrollBatchId, note);
+          }
+          setActionTarget(null);
+        }}
+      />
     </div>
   );
 }
