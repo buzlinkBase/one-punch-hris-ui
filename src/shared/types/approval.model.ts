@@ -24,7 +24,7 @@ export type NoteRequirement = "None" | "Optional" | "Required";
 export type ApprovalInstanceStatus =
   "InProgress" | "Approved" | "Declined" | "Cancelled";
 
-export type ApprovalActionType = "Approved" | "Declined";
+export type ApprovalActionType = "Approved" | "Declined" | "Reassigned";
 
 export interface ApprovalActionResponse {
   stepNumber: number;
