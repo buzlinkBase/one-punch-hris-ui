@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
-import { Card, Form, Input, Button, Typography, Tag, notification } from "antd";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Typography,
+  Tag,
+  Switch,
+  Table,
+  notification,
+} from "antd";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +20,12 @@ import {
   useChangePasswordMutation,
   useSetPasswordMutation,
 } from "../../hooks/use-profile-queries";
+import {
+  useNotificationPreferencesQuery,
+  useUpdateNotificationPreferenceMutation,
+} from "../../hooks/use-notification-preference-queries";
+import { APPLICATION_TYPE_OPTIONS } from "@/app/modules/setup/approval-workflows/constants/label.const";
+import type { ApprovalApplicationType } from "@/shared/types/approval.model";
 import {
   updateProfileFormSchema,
   type UpdateProfileFormValues,
@@ -320,6 +336,98 @@ function PasswordCard() {
   );
 }
 
+interface NotificationPreferenceRow {
+  applicationType: ApprovalApplicationType;
+  label: string;
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+}
+
+function NotificationPreferencesCard() {
+  const { data: preferences, isLoading } = useNotificationPreferencesQuery();
+  const { mutate: updatePreference } =
+    useUpdateNotificationPreferenceMutation();
+
+  // A category with no row from the API is implicitly both-channels-on (see
+  // NotificationPreferenceResponse's doc comment) -- merged here so every row always renders
+  // with a definite on/off state instead of needing its own "unset" affordance.
+  const rows: NotificationPreferenceRow[] = APPLICATION_TYPE_OPTIONS.map(
+    (opt) => {
+      const existing = preferences?.find(
+        (p) => p.applicationType === opt.value,
+      );
+      return {
+        applicationType: opt.value,
+        label: opt.label,
+        emailEnabled: existing?.emailEnabled ?? true,
+        pushEnabled: existing?.pushEnabled ?? true,
+      };
+    },
+  );
+
+  const handleToggle = (
+    row: NotificationPreferenceRow,
+    channel: "emailEnabled" | "pushEnabled",
+    checked: boolean,
+  ) => {
+    updatePreference({
+      applicationType: row.applicationType,
+      emailEnabled: channel === "emailEnabled" ? checked : row.emailEnabled,
+      pushEnabled: channel === "pushEnabled" ? checked : row.pushEnabled,
+    });
+  };
+
+  return (
+    <Card
+      title="Notification Preferences"
+      loading={isLoading}
+      className="lg:col-span-2"
+    >
+      <p className="page-toolbar-subtitle mb-4">
+        Choose how you're notified when an application needs your approval, or
+        when your own application is approved or declined.
+      </p>
+      <Table<NotificationPreferenceRow>
+        dataSource={rows}
+        rowKey="applicationType"
+        pagination={false}
+        size="small"
+        columns={[
+          { title: "Application Type", dataIndex: "label" },
+          {
+            title: "Email",
+            dataIndex: "emailEnabled",
+            width: 100,
+            align: "center",
+            render: (_, row) => (
+              <Switch
+                checked={row.emailEnabled}
+                onChange={(checked) =>
+                  handleToggle(row, "emailEnabled", checked)
+                }
+              />
+            ),
+          },
+          {
+            title: "Push",
+            dataIndex: "pushEnabled",
+            width: 100,
+            align: "center",
+            render: (_, row) => (
+              <Switch
+                checked={row.pushEnabled}
+                onChange={(checked) =>
+                  handleToggle(row, "pushEnabled", checked)
+                }
+              />
+            ),
+          },
+        ]}
+      />
+    </Card>
+  );
+}
+
 export default function Profile() {
   return (
     <div className="content-page">
@@ -339,6 +447,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProfileDetailsCard />
         <PasswordCard />
+        <NotificationPreferencesCard />
       </div>
     </div>
   );

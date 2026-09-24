@@ -57,6 +57,8 @@ import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { useTenantHub } from "@/core/signalr/use-tenant-hub";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
+import { useApprovalHub } from "@/core/signalr/use-approval-hub";
+import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
 import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
@@ -449,10 +451,38 @@ export default function MainLayout() {
 
   useTenantHub();
   const liveTenantStates = useTenantHubStore((s) => s.liveTenantStates);
-  const notifications = useTenantHubStore((s) => s.notifications);
-  const unreadCount = useTenantHubStore((s) => s.unreadCount);
-  const markAllRead = useTenantHubStore((s) => s.markAllRead);
+  const tenantNotifications = useTenantHubStore((s) => s.notifications);
+  const tenantUnreadCount = useTenantHubStore((s) => s.unreadCount);
+  const markTenantNotificationsRead = useTenantHubStore((s) => s.markAllRead);
   const hrDb = useTenantHubStore((s) => s.getHrDbStatus(sessionUser.tenantId));
+
+  // Same bell shows both tenant/account events and approval-workflow events -- two separate
+  // stores (different concerns, see approval-notification.store.ts's doc comment), merged here
+  // purely for display by timestamp.
+  useApprovalHub();
+  const approvalNotifications = useApprovalNotificationStore(
+    (s) => s.notifications,
+  );
+  const approvalUnreadCount = useApprovalNotificationStore(
+    (s) => s.unreadCount,
+  );
+  const markApprovalNotificationsRead = useApprovalNotificationStore(
+    (s) => s.markAllRead,
+  );
+
+  const notifications = useMemo(
+    () =>
+      [...tenantNotifications, ...approvalNotifications].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+    [tenantNotifications, approvalNotifications],
+  );
+  const unreadCount = tenantUnreadCount + approvalUnreadCount;
+  const markAllRead = () => {
+    markTenantNotificationsRead();
+    markApprovalNotificationsRead();
+  };
   const hrDbFailed =
     hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
 
