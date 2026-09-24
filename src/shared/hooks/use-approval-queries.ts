@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { approvalApi } from "../services/approval.api";
 import type { ApprovalApplicationType } from "../types/approval.model";
 
@@ -26,5 +26,21 @@ export function useApprovalEligibility(
     queryFn: () => approvalApi.getEligibility(applicationType, applicationId!),
     enabled: !!applicationId,
     retry: false,
+  });
+}
+
+export function useReassignApprover(
+  applicationType: ApprovalApplicationType,
+  applicationId: string | undefined,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { newApproverEmployeeId: string; note?: string }) =>
+      approvalApi.reassignApprover(applicationType, applicationId!, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", applicationType, applicationId],
+      });
+    },
   });
 }
