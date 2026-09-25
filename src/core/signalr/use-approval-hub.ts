@@ -3,18 +3,25 @@ import { authStorage } from "@/core/auth/auth-storage";
 import { queryClient } from "@/core/query-client";
 import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
 import { approvalHub } from "./approval-hub.connection";
+import { APPROVAL_LIST_QUERY_KEYS } from "./approval-query-keys";
 import {
   APPROVAL_HUB_METHODS,
   type ApprovalPushNotification,
 } from "./approval-hub.types";
 
 function buildMessage(payload: ApprovalPushNotification): string {
+  const step =
+    payload.stepNumber && payload.totalSteps
+      ? `step ${payload.stepNumber} of ${payload.totalSteps}`
+      : null;
   if (payload.statusLabel === "Pending Your Approval") {
     return `${payload.applicantName}'s ${payload.applicationTypeLabel} application is waiting on you${
-      payload.stepNumber && payload.totalSteps
-        ? ` (step ${payload.stepNumber} of ${payload.totalSteps})`
-        : ""
+      step ? ` (${step})` : ""
     }.`;
+  }
+  // Intermediate step cleared on a multi-step chain -- the applicant's "it moved forward" notice.
+  if (payload.statusLabel === "Step Approved") {
+    return `Your ${payload.applicationTypeLabel} application passed ${step ?? "a step"} and moved to the next approver.`;
   }
   return `Your ${payload.applicationTypeLabel} application was ${payload.statusLabel.toLowerCase()}.`;
 }
@@ -25,9 +32,10 @@ function buildMessage(payload: ApprovalPushNotification): string {
  * app-shell level (MainLayout), alongside useTenantHub — it stays alive for as long as that
  * layout is mounted.
  *
- * On every push, also invalidates the exact two query keys ApprovalStatusCell/ApprovalTimeline
- * read (src/shared/hooks/use-approval-queries.ts) so any currently-open detail/portal page
- * refreshes live instead of waiting on the 5-minute staleTime.
+ * On every push, also invalidates the two query keys ApprovalStatusCell/ApprovalTimeline read
+ * (src/shared/hooks/use-approval-queries.ts) plus every list showing that application type
+ * (APPROVAL_LIST_QUERY_KEYS), so any currently-open page refreshes live instead of waiting on
+ * the 5-minute staleTime.
  */
 export function useApprovalHub() {
   const addNotification = useApprovalNotificationStore(
@@ -67,6 +75,13 @@ export function useApprovalHub() {
           payload.applicationId,
         ],
       });
+      // The lists showing this application's status (portal "My …" and admin lists) too --
+      // without this the status column stayed stale until a reload.
+      for (const queryKey of APPROVAL_LIST_QUERY_KEYS[
+        payload.applicationType
+      ] ?? []) {
+        queryClient.invalidateQueries({ queryKey });
+      }
     };
 
     connection.on(
