@@ -9,15 +9,32 @@ import {
   MoreOutlined,
   ExclamationCircleFilled,
 } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import type { ColumnsType, ColumnType, TableProps } from "antd/es/table";
 import type { MenuProps } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
-import { EMPLOYEE_LABEL } from "../../constants/label.const";
+import type { EmployeeListQuery } from "../../models/api/request/employee-list-query.model";
+import {
+  EMPLOYEE_LABEL,
+  EMPLOYMENT_STATUS_OPTIONS,
+  GENDER_OPTIONS,
+  JOB_LEVEL_OPTIONS,
+  SALARY_TYPE_OPTIONS,
+} from "../../constants/label.const";
 import { formatFullName } from "../../utils/format-full-name";
+import { useEmployeeFilterOptions } from "../../hooks/use-employee-queries";
+import {
+  applyTableFiltersAndSort,
+  LIST_FILTER_COLUMNS,
+  TEXT_FILTER_COLUMNS,
+} from "./employee-list-query.mapper";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import {
+  dateRangeColumnFilter,
+  textColumnFilter,
+} from "@/shared/components/table-column-filters";
 import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -26,6 +43,11 @@ import { authStorage } from "@/core/auth/auth-storage";
 interface Props {
   data: EmployeeResponse[];
   loading?: boolean;
+  /** Current server query -- drives the controlled page, sort and column filter state. */
+  query: EmployeeListQuery;
+  /** Total rows matching the current filters (server-side count). */
+  total: number;
+  onQueryChange: (query: EmployeeListQuery) => void;
   onDelete?: (id: string) => void;
   onInvite?: (record: EmployeeResponse) => void;
   onPriorEmployerTax?: (record: EmployeeResponse) => void;
@@ -38,15 +60,27 @@ const JOB_LEVEL_LABELS: Record<string, string> = {
   TechnicalSpecialist: "Technical Specialist",
 };
 
+const STATUS_OPTIONS = [
+  { text: "Active", value: "Active" },
+  { text: "Inactive", value: "Inactive" },
+];
+
+const toFilterOptions = (options: { value: string; label: string }[]) =>
+  options.map((o) => ({ text: o.label, value: o.value }));
+
 export default function EmployeeTable({
   data,
   loading,
+  query,
+  total,
+  onQueryChange,
   onDelete,
   onInvite,
   onPriorEmployerTax,
   onOpeningBalance,
 }: Props) {
   const navigate = useNavigate();
+  const filterOptions = useEmployeeFilterOptions();
 
   const handlePrint201 = async (id: string) => {
     // Open the tab synchronously (before the await) so popup blockers treat it as a
@@ -90,6 +124,36 @@ export default function EmployeeTable({
     hdmfNo: 130,
     tin: 120,
   });
+
+  // Shared column plumbing: resizable header, server-driven sorting, and the column's filter
+  // (lookup/enum list, free text, or date range) -- all controlled from `query`.
+  type Width = keyof typeof widths;
+  const resizable = (key: Width): ColumnType<EmployeeResponse> => ({
+    key,
+    width: widths[key],
+    onHeaderCell: () =>
+      ({
+        width: widths[key],
+        onResize: (w: number) => handleResize(key, w),
+      }) as object,
+  });
+  const sortable = (key: string): ColumnType<EmployeeResponse> => ({
+    sorter: true,
+    sortOrder: query.sortField === key ? (query.sortOrder ?? null) : null,
+  });
+  const listFilter = (
+    key: string,
+    options: { text: string; value: string }[],
+  ): ColumnType<EmployeeResponse> => ({
+    filters: options,
+    filterSearch: options.length > 8,
+    filteredValue: query[LIST_FILTER_COLUMNS[key]] ?? null,
+  });
+  const textFilter = (key: string, placeholder: string) =>
+    textColumnFilter<EmployeeResponse>(
+      query[TEXT_FILTER_COLUMNS[key]],
+      placeholder,
+    );
 
   const columns: ColumnsType<EmployeeResponse> = [
     {
@@ -170,139 +234,89 @@ export default function EmployeeTable({
     {
       title: EMPLOYEE_LABEL.EMPLOYEE_NO,
       dataIndex: "employeeNo",
-      key: "employeeNo",
-      width: widths.employeeNo,
-      onHeaderCell: () =>
-        ({
-          width: widths.employeeNo,
-          onResize: (w: number) => handleResize("employeeNo", w),
-        }) as object,
+      ...resizable("employeeNo"),
+      ...sortable("employeeNo"),
+      ...textFilter("employeeNo", "Search employee no."),
     },
     {
       title: EMPLOYEE_LABEL.BIO_ID,
       dataIndex: "bioId",
-      key: "bioId",
-      width: widths.bioId,
-      onHeaderCell: () =>
-        ({
-          width: widths.bioId,
-          onResize: (w: number) => handleResize("bioId", w),
-        }) as object,
+      ...resizable("bioId"),
+      ...sortable("bioId"),
+      ...textFilter("bioId", "Search Bio ID"),
     },
     {
       title: "Full Name",
-      key: "fullName",
-      width: widths.fullName,
-      onHeaderCell: () =>
-        ({
-          width: widths.fullName,
-          onResize: (w: number) => handleResize("fullName", w),
-        }) as object,
+      ...resizable("fullName"),
+      ...sortable("fullName"),
+      ...textFilter("fullName", "Search name"),
       render: (_, record) => formatFullName(record),
     },
     {
       title: EMPLOYEE_LABEL.POSITION,
       dataIndex: "positionName",
-      key: "positionName",
-      width: widths.positionName,
-      onHeaderCell: () =>
-        ({
-          width: widths.positionName,
-          onResize: (w: number) => handleResize("positionName", w),
-        }) as object,
+      ...resizable("positionName"),
+      ...sortable("positionName"),
+      ...listFilter("positionName", filterOptions.positions),
     },
     {
       title: EMPLOYEE_LABEL.DEPARTMENT,
       dataIndex: "departmentName",
-      key: "departmentName",
-      width: widths.departmentName,
-      onHeaderCell: () =>
-        ({
-          width: widths.departmentName,
-          onResize: (w: number) => handleResize("departmentName", w),
-        }) as object,
+      ...resizable("departmentName"),
+      ...sortable("departmentName"),
+      ...listFilter("departmentName", filterOptions.departments),
     },
     {
       title: EMPLOYEE_LABEL.CLIENT,
       dataIndex: "clientName",
-      key: "clientName",
-      width: widths.clientName,
-      onHeaderCell: () =>
-        ({
-          width: widths.clientName,
-          onResize: (w: number) => handleResize("clientName", w),
-        }) as object,
+      ...resizable("clientName"),
+      ...sortable("clientName"),
+      ...listFilter("clientName", filterOptions.clients),
     },
     {
       title: EMPLOYEE_LABEL.AREA,
       dataIndex: "areaName",
-      key: "areaName",
-      width: widths.areaName,
-      onHeaderCell: () =>
-        ({
-          width: widths.areaName,
-          onResize: (w: number) => handleResize("areaName", w),
-        }) as object,
+      ...resizable("areaName"),
+      ...sortable("areaName"),
+      ...listFilter("areaName", filterOptions.areas),
     },
     {
       title: EMPLOYEE_LABEL.BRANCH,
       dataIndex: "branchName",
-      key: "branchName",
-      width: widths.branchName,
-      onHeaderCell: () =>
-        ({
-          width: widths.branchName,
-          onResize: (w: number) => handleResize("branchName", w),
-        }) as object,
+      ...resizable("branchName"),
+      ...sortable("branchName"),
+      ...listFilter("branchName", filterOptions.branches),
     },
     {
       title: EMPLOYEE_LABEL.PAYROLL_GROUP,
       dataIndex: "payrollGroupName",
-      key: "payrollGroupName",
-      width: widths.payrollGroupName,
-      onHeaderCell: () =>
-        ({
-          width: widths.payrollGroupName,
-          onResize: (w: number) => handleResize("payrollGroupName", w),
-        }) as object,
+      ...resizable("payrollGroupName"),
+      ...sortable("payrollGroupName"),
+      ...listFilter("payrollGroupName", filterOptions.payrollGroups),
     },
     {
       title: EMPLOYEE_LABEL.JOB_LEVEL,
       dataIndex: "jobLevel",
-      key: "jobLevel",
-      width: widths.jobLevel,
-      onHeaderCell: () =>
-        ({
-          width: widths.jobLevel,
-          onResize: (w: number) => handleResize("jobLevel", w),
-        }) as object,
+      ...resizable("jobLevel"),
+      ...sortable("jobLevel"),
+      ...listFilter("jobLevel", toFilterOptions(JOB_LEVEL_OPTIONS)),
       render: (v?: string) => (v ? (JOB_LEVEL_LABELS[v] ?? v) : null),
     },
     {
       title: EMPLOYEE_LABEL.TIME_SHIFT,
       dataIndex: "timeShiftName",
-      key: "timeShiftName",
-      width: widths.timeShiftName,
-      onHeaderCell: () =>
-        ({
-          width: widths.timeShiftName,
-          onResize: (w: number) => handleResize("timeShiftName", w),
-        }) as object,
+      ...resizable("timeShiftName"),
+      ...sortable("timeShiftName"),
+      ...listFilter("timeShiftName", filterOptions.timeShifts),
     },
     {
       title: EMPLOYEE_LABEL.REST_DAYS,
       dataIndex: "restDays",
-      key: "restDays",
-      width: widths.restDays,
-      onHeaderCell: () =>
-        ({
-          width: widths.restDays,
-          onResize: (w: number) => handleResize("restDays", w),
-        }) as object,
+      ...resizable("restDays"),
       render: (restDays?: EmployeeResponse["restDays"]) =>
         restDays?.length
           ? restDays.map((r) => (
-              <Tag key={r.dayName} style={{ marginBottom: 2 }}>
+              <Tag key={r.dayName} className="mb-0.5">
                 {r.dayName.slice(0, 3)}
               </Tag>
             ))
@@ -311,38 +325,32 @@ export default function EmployeeTable({
     {
       title: EMPLOYEE_LABEL.SALARY_TYPE,
       dataIndex: "salaryType",
-      key: "salaryType",
-      width: widths.salaryType,
-      onHeaderCell: () =>
-        ({
-          width: widths.salaryType,
-          onResize: (w: number) => handleResize("salaryType", w),
-        }) as object,
+      ...resizable("salaryType"),
+      ...sortable("salaryType"),
+      ...listFilter("salaryType", toFilterOptions(SALARY_TYPE_OPTIONS)),
       render: (v?: string) =>
         v ? <Tag>{v === "FIXED" ? "Fixed" : "Variable"}</Tag> : null,
     },
     {
       title: EMPLOYEE_LABEL.HIRE_DATE,
       dataIndex: "hireDate",
-      key: "hireDate",
-      width: widths.hireDate,
-      onHeaderCell: () =>
-        ({
-          width: widths.hireDate,
-          onResize: (w: number) => handleResize("hireDate", w),
-        }) as object,
+      ...resizable("hireDate"),
+      ...sortable("hireDate"),
+      ...dateRangeColumnFilter<EmployeeResponse>(
+        query.hireDateFrom,
+        query.hireDateTo,
+      ),
       render: (v?: string) => (v ? dayjs(v).format("MMM DD, YYYY") : null),
     },
     {
       title: EMPLOYEE_LABEL.EMPLOYMENT_STATUS,
       dataIndex: "employmentStatus",
-      key: "employmentStatus",
-      width: widths.employmentStatus,
-      onHeaderCell: () =>
-        ({
-          width: widths.employmentStatus,
-          onResize: (w: number) => handleResize("employmentStatus", w),
-        }) as object,
+      ...resizable("employmentStatus"),
+      ...sortable("employmentStatus"),
+      ...listFilter(
+        "employmentStatus",
+        toFilterOptions(EMPLOYMENT_STATUS_OPTIONS),
+      ),
       render: (v?: string) => {
         if (!v) return null;
         const colors: Record<string, string> = {
@@ -370,13 +378,9 @@ export default function EmployeeTable({
     {
       title: EMPLOYEE_LABEL.STATUS,
       dataIndex: "status",
-      key: "status",
-      width: widths.status,
-      onHeaderCell: () =>
-        ({
-          width: widths.status,
-          onResize: (w: number) => handleResize("status", w),
-        }) as object,
+      ...resizable("status"),
+      ...sortable("status"),
+      ...listFilter("status", STATUS_OPTIONS),
       render: (v?: string) => (
         <Tag color={v === "Active" ? "success" : "default"}>{v ?? "—"}</Tag>
       ),
@@ -384,81 +388,72 @@ export default function EmployeeTable({
     {
       title: EMPLOYEE_LABEL.GENDER,
       dataIndex: "gender",
-      key: "gender",
-      width: widths.gender,
-      onHeaderCell: () =>
-        ({
-          width: widths.gender,
-          onResize: (w: number) => handleResize("gender", w),
-        }) as object,
+      ...resizable("gender"),
+      ...sortable("gender"),
+      ...listFilter("gender", toFilterOptions(GENDER_OPTIONS)),
     },
     {
       title: "Contact",
-      key: "contact",
-      width: widths.contact,
-      onHeaderCell: () =>
-        ({
-          width: widths.contact,
-          onResize: (w: number) => handleResize("contact", w),
-        }) as object,
+      ...resizable("contact"),
+      ...sortable("contact"),
+      ...textFilter("contact", "Search contact"),
       render: (_, record) => record.contact || null,
     },
     {
       title: "Email",
-      key: "email",
-      width: widths.email,
-      onHeaderCell: () =>
-        ({
-          width: widths.email,
-          onResize: (w: number) => handleResize("email", w),
-        }) as object,
+      ...resizable("email"),
+      ...sortable("email"),
+      ...textFilter("email", "Search email"),
       render: (_, record) => record.email || null,
     },
     {
       title: EMPLOYEE_LABEL.SSS_NO,
       dataIndex: "sssNo",
-      key: "sssNo",
-      width: widths.sssNo,
-      onHeaderCell: () =>
-        ({
-          width: widths.sssNo,
-          onResize: (w: number) => handleResize("sssNo", w),
-        }) as object,
+      ...resizable("sssNo"),
+      ...sortable("sssNo"),
+      ...textFilter("sssNo", "Search SSS no."),
     },
     {
       title: EMPLOYEE_LABEL.PHIC_NO,
       dataIndex: "phicNo",
-      key: "phicNo",
-      width: widths.phicNo,
-      onHeaderCell: () =>
-        ({
-          width: widths.phicNo,
-          onResize: (w: number) => handleResize("phicNo", w),
-        }) as object,
+      ...resizable("phicNo"),
+      ...sortable("phicNo"),
+      ...textFilter("phicNo", "Search PhilHealth no."),
     },
     {
       title: EMPLOYEE_LABEL.HDMF_NO,
       dataIndex: "hdmfNo",
-      key: "hdmfNo",
-      width: widths.hdmfNo,
-      onHeaderCell: () =>
-        ({
-          width: widths.hdmfNo,
-          onResize: (w: number) => handleResize("hdmfNo", w),
-        }) as object,
+      ...resizable("hdmfNo"),
+      ...sortable("hdmfNo"),
+      ...textFilter("hdmfNo", "Search Pag-IBIG no."),
     },
     {
       title: EMPLOYEE_LABEL.TIN,
       dataIndex: "tin",
-      key: "tin",
-      width: widths.tin,
-      onHeaderCell: () =>
-        ({
-          width: widths.tin,
-          onResize: (w: number) => handleResize("tin", w),
-        }) as object,
+      ...resizable("tin"),
+      ...sortable("tin"),
+      ...textFilter("tin", "Search TIN"),
     },
   ];
+
+  const handleChange: TableProps<EmployeeResponse>["onChange"] = (
+    pagination,
+    filters,
+    sorter,
+    { action },
+  ) => {
+    if (action === "paginate") {
+      const limit = pagination.pageSize ?? query.limit;
+      onQueryChange({
+        ...query,
+        limit,
+        // A page-size change re-slices everything -- start over at page 1.
+        page: limit !== query.limit ? 1 : (pagination.current ?? 1),
+      });
+      return;
+    }
+    onQueryChange(applyTableFiltersAndSort(query, filters, sorter));
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -468,7 +463,15 @@ export default function EmployeeTable({
         columns={columns}
         size="small"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        onChange={handleChange}
+        pagination={{
+          current: query.page,
+          pageSize: query.limit,
+          total,
+          showSizeChanger: true,
+          pageSizeOptions: [10, 20, 50, 100],
+          showTotal: (count, [from, to]) => `${from}–${to} of ${count}`,
+        }}
         scroll={{ x: "max-content" }}
         sticky
         components={{ header: { cell: ResizableTitle } }}

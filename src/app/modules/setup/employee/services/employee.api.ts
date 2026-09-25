@@ -9,6 +9,7 @@ import type { CreateEmployee } from "../models/api/request/create-employee.model
 import type { UpdateEmployee } from "../models/api/request/update-employee.model";
 import type { PaginatedResponse } from "@/core/pagination-model";
 import type { EmployeeImportPreviewRow } from "../models/api/response/employee-import-preview-response.model";
+import type { EmployeeListQuery } from "../models/api/request/employee-list-query.model";
 
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "employees");
 
@@ -22,6 +23,17 @@ export const employeeApi = {
     } catch {
       return [];
     }
+  },
+
+  // Setup → Employee table only -- paging, sorting and filtering all happen on the server.
+  // Unlike getAll above, failures propagate so the table can show them instead of looking empty.
+  search(
+    query: EmployeeListQuery,
+  ): Promise<PaginatedResponse<EmployeeResponse[]>> {
+    return httpClient.getUnwrapped<PaginatedResponse<EmployeeResponse[]>>(
+      `${BASE_URL}/list`,
+      { params: query, paramsSerializer: { indexes: null } },
+    );
   },
 
   async getById(id: string): Promise<EmployeeResponse> {

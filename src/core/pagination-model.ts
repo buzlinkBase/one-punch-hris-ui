@@ -6,7 +6,9 @@ export interface PageMetaData {
   hasNext: boolean;
 }
 
+// Backend PaginatedResult<T> serialized with Newtonsoft's camelCase resolver -- its
+// `MetaData` property arrives as `metaData`.
 export interface PaginatedResponse<T> {
-  metadata: PageMetaData;
+  metaData: PageMetaData;
   data: T;
 }
