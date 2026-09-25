@@ -12,12 +12,16 @@ import {
   createRouter,
   redirect,
 } from "@tanstack/react-router";
+import { Spin } from "antd";
 import MainLayout from "@/app/layouts/main-layout";
 import AuthLayout from "@/app/layouts/auth-layout";
 import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
 import { authStorage } from "@/core/auth/auth-storage";
-import { resolveTenantDestination } from "@/core/auth/tenant-routing";
+import {
+  resolveFallbackLanding,
+  resolveTenantDestination,
+} from "@/core/auth/tenant-routing";
 import { getPermissionForPath } from "@/shared/constants/navigation.const";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 
@@ -237,6 +241,16 @@ const ClientDetail = lazy(
 
 const RouteFallback = () => null;
 
+// Shown while a route's beforeLoad is in flight (e.g. resolveTenantDestination's network
+// calls) -- without this, TanStack Router renders nothing at all during that window, which
+// reads as a blank/frozen page rather than a loading app, especially now that a slow backend
+// can hold beforeLoad open for up to the axios instance's 30s timeout.
+const RouterPendingFallback = () => (
+  <div className="flex items-center justify-center h-screen">
+    <Spin size="large" />
+  </div>
+);
+
 const withSuspense = (Component: LazyExoticComponent<ComponentType>) => {
   const Wrapped = () => (
     <Suspense fallback={<RouteFallback />}>
@@ -320,16 +334,22 @@ const rootRoute = createRootRoute({
     const destination = await resolveTenantDestination();
     if (destination) throw redirect({ to: destination });
 
+    // Both redirects below target resolveFallbackLanding(), never a fixed path, and only fire
+    // when it differs from where the user already is -- otherwise an Employee-only member
+    // without the portal permission ping-pongs between /dashboard and /portal/profile forever
+    // (see resolveFallbackLanding's doc comment).
+    const fallback = resolveFallbackLanding();
     const requiredPermission = getPermissionForPath(location.pathname);
     if (
       requiredPermission &&
+      location.pathname !== fallback &&
       !authStorage.hasAnyPermission(
         ...(Array.isArray(requiredPermission)
           ? requiredPermission
           : [requiredPermission]),
       )
     ) {
-      throw redirect({ to: "/dashboard" });
+      throw redirect({ to: fallback });
     }
 
     // Employee-only members (no Admin/Member/Owner/Custom role alongside it) are restricted to
@@ -341,7 +361,7 @@ const rootRoute = createRootRoute({
       !location.pathname.startsWith("/portal") &&
       location.pathname !== "/profile"
     ) {
-      throw redirect({ to: "/portal/profile" });
+      throw redirect({ to: fallback });
     }
   },
   component: () => <Outlet />,
@@ -1645,6 +1665,7 @@ const routeTree = rootRoute.addChildren([
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
+  defaultPendingComponent: RouterPendingFallback,
 });
 
 export default router;

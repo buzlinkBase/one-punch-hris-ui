@@ -52,6 +52,8 @@ import {
 import type { NavItem } from "@/shared/constants/navigation.const";
 import { useThemeStore } from "@/core/stores/theme.store";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
+import { resolveFallbackLanding } from "@/core/auth/tenant-routing";
+import { filterNavByPermission } from "./filter-nav-by-permission";
 import { useAuthUser } from "@/core/auth/use-auth-user";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
@@ -92,34 +94,6 @@ function flattenNavItems(
 }
 
 const NAV_OPTIONS = flattenNavItems(NAVIGATION_ITEMS);
-
-// Drops any item whose `permission` the caller doesn't hold (any-of match). An item with no
-// `permission` always passes through unchanged — this is what keeps every currently-untagged
-// item (still nearly all of them) exactly as visible as before. A parent node (a "group", or a
-// plain item like "Reports" that also carries its own `path`) is dropped once ALL of its
-// children get filtered out -- even when it has a `path` of its own, since every such path
-// (appSectionRoute) is just a "Coming Soon" section-landing stub with no standalone content, so
-// keeping the parent visible with nothing left under it is a dead menu entry, not a real page.
-function filterNavByPermission(items: NavItem[]): NavItem[] {
-  return items.reduce<NavItem[]>((acc, item) => {
-    if (item.permission) {
-      const codes = Array.isArray(item.permission)
-        ? item.permission
-        : [item.permission];
-      if (!authStorage.hasAnyPermission(...codes)) return acc;
-    }
-
-    if (item.children) {
-      const children = filterNavByPermission(item.children);
-      if (children.length === 0) return acc;
-      acc.push({ ...item, children });
-      return acc;
-    }
-
-    acc.push(item);
-    return acc;
-  }, []);
-}
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -494,12 +468,14 @@ export default function MainLayout() {
   // — the linked-record check alone would otherwise leave it visible to someone who holds no
   // portal-related permission at all.
   const { data: myEmployee } = useMyEmployee();
-  // This hook is intentionally called for its re-render side effect: it keeps the nav recomputing
-  // the instant a SignalR roles-changed push refreshes the session, instead of waiting for the
-  // next navigation/remount. The memo itself only depends on the current employee record and the
-  // live authStorage values read inside the function, so authUser is not a dependency here.
-  useAuthUser();
+  // The live session snapshot -- a new reference every time authStorage saves, e.g. the silent
+  // refresh a SignalR roles-changed push triggers (use-tenant-hub.ts). It MUST be a dependency of
+  // the memo below: re-rendering alone isn't enough, since a memo keyed only on myEmployee kept
+  // returning the pre-change nav until the next reload, even though filterNavByPermission reads
+  // the new roles/permissions from authStorage.
+  const authUser = useAuthUser();
   const navItems = useMemo(() => {
+    if (!authUser) return [];
     if (authStorage.isEmployeeOnly()) {
       return filterNavByPermission(
         NAVIGATION_ITEMS.filter((item) => item.key === "nav-portal"),
@@ -509,7 +485,7 @@ export default function MainLayout() {
       ? NAVIGATION_ITEMS
       : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal");
     return filterNavByPermission(base);
-  }, [myEmployee]);
+  }, [authUser, myEmployee]);
 
   useEffect(() => {
     const requiredPermission = getPermissionForPath(location.pathname);
@@ -520,8 +496,14 @@ export default function MainLayout() {
       : [requiredPermission];
     if (authStorage.hasAnyPermission(...codes)) return;
 
-    navigate({ to: "/dashboard", replace: true });
-  }, [location.pathname, navigate]);
+    // Same target as the root route guard -- see resolveFallbackLanding for why a fixed
+    // "/dashboard" here could loop.
+    const fallback = resolveFallbackLanding();
+    if (location.pathname === fallback) return;
+    navigate({ to: fallback, replace: true });
+    // authUser: re-check when roles change mid-session, not just on navigation -- a user whose
+    // role was just downgraded shouldn't stay parked on a page they can no longer access.
+  }, [location.pathname, navigate, authUser]);
 
   // Employee Portal pages go edge-to-edge (no outer margin/card border/shadow) instead of the
   // floating-card look admin pages use — .page-toolbar's -24px bleed margin still relies on the
@@ -560,6 +542,12 @@ export default function MainLayout() {
   };
 
   const handleLogout = () => {
+    // Fire-and-forget: revokes the refresh-token cookie server-side (authApi.logout), but a
+    // failed/slow revoke call must never delay or block the client-side logout the user is
+    // actually waiting on -- local state is cleared and the redirect fires immediately either
+    // way, matching how every other forced-logout path in this app (auth-refresh.ts,
+    // use-tenant-hub.ts) already behaves.
+    void authApi.logout().catch(() => {});
     authStorage.clear();
     window.location.assign("/login");
   };
