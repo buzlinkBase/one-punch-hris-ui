@@ -123,6 +123,11 @@ export default function Register() {
         message: "Sign up failed",
         description: "Google authentication was unsuccessful.",
       }),
+    // Fires when the user closes/blocks the Google popup before completing sign-up --
+    // setGoogleSigningUp only ever gets set to true inside onSuccess, so there's no spinner
+    // to clear here; this just acknowledges the interaction happened instead of being a
+    // silent no-op.
+    onNonOAuthError: () => setGoogleSigningUp(false),
   });
 
   if (submittedEmail) {

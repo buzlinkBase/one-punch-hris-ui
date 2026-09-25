@@ -19,7 +19,6 @@ import type { TenantStatusResponse } from "../models/api/response/tenant-status-
 import type { InvitationPreviewResponse } from "../models/api/response/invitation-preview-response.model";
 import type { AcceptInvitationByTokenRequest } from "../models/api/request/accept-invitation-by-token-request.model";
 import type { SendInvitationRequest } from "@/app/modules/security/users/models/api/request/send-invitation-request.model";
-import { authStorage } from "@/core/auth/auth-storage";
 
 const USERS_URL = buildApiUrl(API_PREFIX.auth, "users");
 const TENANTS_URL = buildApiUrl(API_PREFIX.auth, "workspace");
@@ -27,14 +26,32 @@ const INVITATIONS_URL = buildApiUrl(API_PREFIX.auth, "invitation");
 const TENANT_REQUEST_URL = buildApiUrl(API_PREFIX.auth, "tenantrequest");
 
 export const authApi = {
+  // Bare axios on purpose (the shared instance's request interceptor would recurse into
+  // refreshing again), so it doesn't inherit that instance's timeout -- set one explicitly.
+  // Without it, an unresponsive refresh holds auth-refresh.ts's cross-tab Web Lock forever,
+  // stalling every request queued behind it (e.g. accept-invite's "Joining…" spinner).
   refresh(): Promise<RefreshResponse> {
     return axios
       .post<{
         data: RefreshResponse;
       }>(`${import.meta.env.VITE_API_URL}${USERS_URL}/refresh`, undefined, {
         withCredentials: true,
+        timeout: 30_000,
       })
       .then((r) => r.data.data);
+  },
+  // Revokes the refresh-token cookie server-side (see UsersController.Logout, which reads it
+  // straight from the httpOnly cookie -- the frontend never has access to the raw value to
+  // send one explicitly). Best-effort by design: callers should never let a failure here block
+  // the client-side logout/redirect that already clears local session state.
+  async logout(): Promise<void> {
+    await httpClient.post<void>(
+      `${USERS_URL}/logout`,
+      {},
+      {
+        _skipErrorNotification: true,
+      },
+    );
   },
   login(data: LoginRequest): Promise<LoginResponse> {
     return httpClient.postUnwrapped<LoginResponse>(`${USERS_URL}/login`, data, {
@@ -80,23 +97,11 @@ export const authApi = {
       data,
     );
   },
-  async createTenant(data: CreateTenantRequest): Promise<CreateTenantResponse> {
-    try {
-      return await httpClient.postUnwrapped<CreateTenantResponse>(
-        TENANTS_URL,
-        data,
-      );
-    } catch {
-      const user = authStorage.getUser();
-      return {
-        accessToken: authStorage.getToken() ?? "",
-        tenants: [],
-        email: user?.email ?? "",
-        name: user?.name ?? "",
-        roles: user?.roles ?? [],
-        permissions: user?.permissions ?? [],
-      };
-    }
+  // Deliberately no try/catch here -- a failure (network error, 5xx, or a timeout) must reach
+  // create-tenant.tsx's own catch block so the user sees a real error instead of the app
+  // silently pretending their company was created and dumping them on /dashboard with none.
+  createTenant(data: CreateTenantRequest): Promise<CreateTenantResponse> {
+    return httpClient.postUnwrapped<CreateTenantResponse>(TENANTS_URL, data);
   },
   async getPendingInvitation(): Promise<InvitationResponse | null> {
     try {
@@ -120,6 +125,7 @@ export const authApi = {
     return httpClient.postUnwrapped<AcceptInvitationResponse>(
       `${INVITATIONS_URL}/accept`,
       data,
+      { _skipErrorNotification: true },
     );
   },
   getTenantCreationStatus(tenantId: string): Promise<TenantStatusResponse> {
@@ -146,6 +152,7 @@ export const authApi = {
     return httpClient.postUnwrapped<void>(
       `${INVITATIONS_URL}/send-invite`,
       data,
+      { _skipErrorNotification: true },
     );
   },
 };

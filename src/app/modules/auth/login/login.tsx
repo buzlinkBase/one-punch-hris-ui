@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Form,
@@ -19,11 +19,14 @@ import { getNotify } from "@/shared/utils/notify";
 import type { ApiResponse } from "@/shared/types/api-response.model";
 import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
+import { guardCode } from "@/core/auth/guard-error";
+import {
+  PENDING_INVITE_KEY,
+  saveInvitationSession,
+} from "@/core/auth/invitation-session";
 import { useGoogleLogin } from "@react-oauth/google";
 
 const { Title, Text } = Typography;
-
-const PENDING_INVITE_KEY = "pending_invite_token";
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 48 48" className="block">
@@ -48,6 +51,7 @@ const GoogleIcon = () => (
 
 export default function Login() {
   const navigate = useNavigate();
+  const [googleLoggingIn, setGoogleLoggingIn] = useState(false);
 
   // Safely grab the query parameters from the active route using TanStack Router
   const searchParams = useSearch({ from: "/login" }) as Record<string, string>;
@@ -60,6 +64,30 @@ export default function Login() {
     resolver: zodResolver(loginFormSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  // Picks up an invitation parked by accept-invitation.tsx ("Sign in to accept"). The accept
+  // response's token is already scoped to the newly-joined tenant, so it replaces the login
+  // token just saved. A failure never blocks the sign-in itself -- the user is authenticated
+  // either way -- but they're told, instead of silently landing without the company.
+  const acceptPendingInvitation = async () => {
+    const pendingToken = sessionStorage.getItem(PENDING_INVITE_KEY);
+    if (!pendingToken) return;
+    sessionStorage.removeItem(PENDING_INVITE_KEY);
+    try {
+      saveInvitationSession(
+        await authApi.acceptInvitation({ token: pendingToken }),
+      );
+    } catch (err) {
+      notification.warning({
+        message: "Couldn't join company",
+        description:
+          guardCode(err) === "INVITATION_EMAIL_MISMATCH"
+            ? "This invitation was sent to a different email address than the one you just signed in with."
+            : "You're signed in, but we couldn't automatically accept your pending invitation. You can try again from your invitations.",
+        placement: "topRight",
+      });
+    }
+  };
 
   const proceedAfterLogin = async () => {
     const destination = await resolveTenantDestination();
@@ -80,31 +108,7 @@ export default function Login() {
         tenantName: claims.tenantName || undefined,
       });
 
-      const pendingToken = sessionStorage.getItem(PENDING_INVITE_KEY);
-      if (pendingToken) {
-        sessionStorage.removeItem(PENDING_INVITE_KEY);
-        try {
-          const acceptResult = await authApi.acceptInvitation({
-            token: pendingToken,
-          });
-          const user = authStorage.getUser();
-          const resultIds = new Set(
-            acceptResult.tenants.map((t) => t.tenantId),
-          );
-          const preserved = (user?.tenants ?? []).filter(
-            (t) => !resultIds.has(t.tenantId),
-          );
-          authStorage.save(authStorage.getToken()!, {
-            ...user!,
-            roles: acceptResult.roles,
-            permissions: acceptResult.permissions,
-            tenants: [...acceptResult.tenants, ...preserved],
-          });
-        } catch {
-          // Don't block login if invite acceptance fails silently
-        }
-      }
-
+      await acceptPendingInvitation();
       await proceedAfterLogin();
     } catch (err) {
       const description = axios.isAxiosError(err)
@@ -122,6 +126,7 @@ export default function Login() {
   const handleGoogleLogin = useGoogleLogin({
     flow: "auth-code",
     onSuccess: async ({ code }) => {
+      setGoogleLoggingIn(true);
       try {
         const result = await authApi.loginWithGoogle(code);
         const googleClaims = authStorage.getTenantClaims(result.accessToken);
@@ -135,31 +140,7 @@ export default function Login() {
           tenantName: googleClaims.tenantName || undefined,
         });
 
-        const pendingToken = sessionStorage.getItem(PENDING_INVITE_KEY);
-        if (pendingToken) {
-          sessionStorage.removeItem(PENDING_INVITE_KEY);
-          try {
-            const acceptResult = await authApi.acceptInvitation({
-              token: pendingToken,
-            });
-            const user = authStorage.getUser();
-            const resultIds = new Set(
-              acceptResult.tenants.map((t) => t.tenantId),
-            );
-            const preserved = (user?.tenants ?? []).filter(
-              (t) => !resultIds.has(t.tenantId),
-            );
-            authStorage.save(authStorage.getToken()!, {
-              ...user!,
-              roles: acceptResult.roles,
-              permissions: acceptResult.permissions,
-              tenants: [...acceptResult.tenants, ...preserved],
-            });
-          } catch {
-            // Don't block login if invite acceptance fails silently
-          }
-        }
-
+        await acceptPendingInvitation();
         await proceedAfterLogin();
       } catch (err) {
         const description = axios.isAxiosError(err)
@@ -167,13 +148,23 @@ export default function Login() {
               ?.errorMessage ?? "Google login failed.")
           : "An unexpected error occurred.";
         notification.error({ message: "Login failed", description });
+      } finally {
+        setGoogleLoggingIn(false);
       }
     },
-    onError: () =>
+    onError: () => {
+      setGoogleLoggingIn(false);
       notification.error({
         message: "Login failed",
         description: "Google authentication was unsuccessful.",
-      }),
+      });
+    },
+    onNonOAuthError: () => {
+      // Fires when the user closes/blocks the Google popup before completing sign-in --
+      // without this, that interaction was a silent no-op (no spinner was ever shown, so
+      // nothing to clear, but the user gets zero acknowledgment that anything happened).
+      setGoogleLoggingIn(false);
+    },
   });
 
   // Watch for the 'provider=google' query parameter to auto-click the Google sign-in
@@ -268,6 +259,8 @@ export default function Login() {
           size="large"
           icon={<GoogleIcon />}
           onClick={handleGoogleLogin}
+          loading={googleLoggingIn}
+          disabled={googleLoggingIn}
           className="flex items-center justify-center gap-2"
         >
           Continue with Google
