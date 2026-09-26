@@ -23,7 +23,10 @@ import {
 } from "@/shared/hooks/use-approval-queries";
 import { ApprovalReassignModal } from "@/shared/components/approval-reassign-modal/approval-reassign-modal";
 import { authStorage } from "@/core/auth/auth-storage";
-import type { ApprovalApplicationType } from "@/shared/types/approval.model";
+import type {
+  ApprovalActionResponse,
+  ApprovalApplicationType,
+} from "@/shared/types/approval.model";
 
 const { Text } = Typography;
 
@@ -74,8 +77,12 @@ export function ApprovalTimeline({
     );
   }
 
-  const nameOf = (employeeId: string) =>
-    resolveEmployeeName?.(employeeId) ?? `${employeeId.slice(0, 8)}…`;
+  // Server-resolved name first -- portal pages pass no resolver (employees can't load the
+  // employee list), which is what used to leave "Approved by 08df1607…" on the timeline.
+  const nameOf = (action: ApprovalActionResponse) =>
+    action.actorName ??
+    resolveEmployeeName?.(action.actorEmployeeId) ??
+    `${action.actorEmployeeId.slice(0, 8)}…`;
 
   const items = instance.actions.map((action) => ({
     color:
@@ -97,8 +104,8 @@ export function ApprovalTimeline({
         <Text strong>
           Step {action.stepNumber} —{" "}
           {action.action === "Reassigned"
-            ? `Reassigned by ${nameOf(action.actorEmployeeId)}`
-            : `${action.action} by ${nameOf(action.actorEmployeeId)}`}
+            ? `Reassigned by ${nameOf(action)}`
+            : `${action.action} by ${nameOf(action)}`}
         </Text>
         <div>
           <Text type="secondary">

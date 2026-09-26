@@ -1,5 +1,5 @@
 import * as signalR from "@microsoft/signalr";
-import { API_PREFIX } from "@/core/http/api-url.util";
+import { API_PREFIX, buildHubUrl } from "@/core/http/api-url.util";
 import { authStorage } from "@/core/auth/auth-storage";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import {
@@ -7,7 +7,8 @@ import {
   type TenantCreatedNotification,
 } from "./tenant-hub.types";
 
-const HUB_URL = `${API_PREFIX.auth}/hubs/tenant`;
+// Absolute via buildHubUrl -- a relative prefix would resolve against the current page path.
+const HUB_URL = buildHubUrl(API_PREFIX.auth, "hubs/tenant");
 
 let connection: signalR.HubConnection | null = null;
 

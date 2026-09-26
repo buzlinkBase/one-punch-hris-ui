@@ -1,12 +1,13 @@
 import * as signalR from "@microsoft/signalr";
-import { API_PREFIX } from "@/core/http/api-url.util";
+import { API_PREFIX, buildHubUrl } from "@/core/http/api-url.util";
 import { authStorage } from "@/core/auth/auth-storage";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 
 // hrms-api's own NotificationHub, NOT API_PREFIX.notifications (that's the separate,
 // unrelated tenantstore NotificationApi service, email-only, no hub) -- see
 // Hrms.Core/Hubs/NotificationHub.cs, mapped at "/hubs/notifications" on the HRMS host.
-const HUB_URL = `${API_PREFIX.hrms}/hubs/notifications`;
+// Absolute via buildHubUrl -- a relative prefix would resolve against the current page path.
+const HUB_URL = buildHubUrl(API_PREFIX.hrms, "hubs/notifications");
 
 let connection: signalR.HubConnection | null = null;
 

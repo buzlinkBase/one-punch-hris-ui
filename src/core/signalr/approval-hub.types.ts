@@ -16,7 +16,8 @@ export interface ApprovalPushNotification {
   approvalInstanceId: string;
   applicationTypeLabel: string;
   applicantName: string;
-  /** "Pending Your Approval" | "Approved" | "Declined" */
+  /** "Pending Your Approval" | "Step Approved" | "Approved" | "Declined" — "Step Approved"
+   * tells the applicant an intermediate step cleared (stepNumber = the step just approved). */
   statusLabel: string;
   stepNumber?: number | null;
   totalSteps?: number | null;
