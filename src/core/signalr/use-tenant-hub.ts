@@ -6,6 +6,7 @@ import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { queryClient } from "@/core/query-client";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { tenantHub } from "./tenant-hub.connection";
+import { approvalHub } from "./approval-hub.connection";
 import {
   TENANT_HUB_METHODS,
   type HrDbCreatedNotification,
@@ -86,6 +87,8 @@ export function useTenantHub() {
         return;
       }
       queryClient.invalidateQueries();
+      // Approver-group membership is derived from the token on connect -- see restart().
+      void approvalHub.restart().catch(() => {});
       message.info("Your permissions were updated.");
     };
 
