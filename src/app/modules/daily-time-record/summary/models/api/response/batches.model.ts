@@ -16,11 +16,17 @@ export interface BatchesModel {
   isPayrollGenerated?: boolean;
   approvalStatus?: "ForApproval" | "Approved" | "Declined" | "Cancelled";
   generatedByEmployeeId?: string | null;
+  // Resolved server-side (see backend DailyRecordService.GetBatches) -- no need to load the whole
+  // employee list just to show who generated/requested deletion of a batch.
+  generatedByName?: string | null;
   payrollGroupId?: string | null;
+  // Null when unknown: a legacy batch with no header row, or one saved before the backend
+  // stamped CreatedAt on it.
   generatedAt?: string | null;
   // True while a deletion request on this already-posted batch awaits its own DtrDeletion
   // approval. approvalStatus stays "Approved" throughout -- this is a separate, orthogonal
   // concern. See backend DailyRecordService.RequestDeletionAsync.
   pendingDeletion?: boolean;
   requestedDeletionByEmployeeId?: string | null;
+  requestedDeletionByName?: string | null;
 }

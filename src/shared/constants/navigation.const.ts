@@ -4,11 +4,25 @@ export interface NavItem {
   path?: string;
   type?: "group" | "divider";
   children?: NavItem[];
-  // Any-of permission requirement — omit for "always visible" (the default for nearly every
-  // item today). Only tag an item once every role/Custom Role that currently relies on seeing
-  // it is confirmed to already hold one of these codes — otherwise it silently disappears for
-  // whoever doesn't. See main-layout.tsx's filterNavByPermission.
+  // Any-of permission requirement, inherited by children. Every page must resolve to one
+  // (on itself or an ancestor group) -- an untagged item is visible to every member, even one
+  // holding no permissions at all. No exceptions, Dashboard included;
+  // navigation.const.test.ts enforces this. See main-layout.tsx's filterNavByPermission.
   permission?: string | string[];
+}
+
+/**
+ * Every path in the menu, in menu order (parents before their children). `leavesOnly` skips
+ * group headers that carry a path (e.g. Reports' "/reports"), which have no page of their own.
+ */
+export function flattenNavPaths(
+  items: NavItem[] = NAVIGATION_ITEMS,
+  { leavesOnly = false }: { leavesOnly?: boolean } = {},
+): string[] {
+  return items.flatMap((item) => [
+    ...(item.path && !(leavesOnly && item.children) ? [item.path] : []),
+    ...(item.children ? flattenNavPaths(item.children, { leavesOnly }) : []),
+  ]);
 }
 
 /** Returns the most specific permission attached to a navigation path. */
@@ -45,6 +59,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     key: "dashboard",
     label: "Dashboard",
     path: "/dashboard",
+    permission: "Dashboard:View",
   },
   {
     key: "nav-portal",
@@ -422,9 +437,8 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           },
         ],
       },
-      // Deliberately untagged (no `permission`) -- Holidays/Minimum Wage Rates have no
-      // matching row in the permission catalog (only Leave Setup covers Leave Types/
-      // Balances here), so there's no correct single code to gate the whole group on.
+      // Tagged per item rather than on the group -- each screen here belongs to a
+      // different catalog feature (Holiday Setup, Minimum Wage Setup, Leave Setup).
       {
         key: "setup-others",
         label: "Holidays & Leave Types",
@@ -434,21 +448,25 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             key: "setup-holiday",
             label: "Holidays",
             path: "/setup/holiday",
+            permission: "Holiday Setup:View",
           },
           {
             key: "setup-minimum-wage-rate",
             label: "Minimum Wage Rates",
             path: "/setup/minimum-wage-rate",
+            permission: "Minimum Wage Setup:View",
           },
           {
             key: "setup-leave-type",
             label: "Leave Types",
             path: "/setup/leave-type",
+            permission: "Leave Setup:View",
           },
           {
             key: "setup-leave-balance",
             label: "Leave Balances",
             path: "/setup/leave-balance",
+            permission: "Leave Setup:View",
           },
         ],
       },
@@ -523,6 +541,14 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     key: "reports",
     label: "Reports",
     path: "/reports",
+    // The group has its own /reports path, so it needs a gate of its own -- any report
+    // permission. Each child still narrows this to its specific code.
+    permission: [
+      "Attendance Reports:View",
+      "Government Statutory Reports:View",
+      "Payroll Reports:View",
+      "BIR Reports:View",
+    ],
     children: [
       {
         key: "reports-tardiness",
@@ -666,21 +692,25 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "security-users",
         label: "Users",
         path: "/security/users",
+        permission: ["Users:View", "Tenant Members:Manage"],
       },
       {
         key: "security-roles",
         label: "Roles",
         path: "/security/roles",
+        permission: ["Roles:View", "Tenant Roles:Manage"],
       },
       {
         key: "security-permissions",
         label: "Permissions",
         path: "/security/permissions",
+        permission: ["Permissions:View", "Tenant Roles:Manage"],
       },
       {
         key: "security-audit",
         label: "Audit",
         path: "/security/audit",
+        permission: "Audit Trail:View",
       },
     ],
   },

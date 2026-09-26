@@ -25,4 +25,18 @@ export const approvalApi = {
       `${ENDPOINT}/${applicationType}/${applicationId}/eligibility`,
     );
   },
+
+  // Owner/Admin-only escape hatch for a step whose configured/resolved approver can't
+  // actually act -- reassigns the CURRENT step to a specific employee. See
+  // ApprovalsController.Reassign / ApprovalEngineService.ReassignApproverAsync.
+  reassignApprover(
+    applicationType: ApprovalApplicationType,
+    applicationId: string,
+    payload: { newApproverEmployeeId: string; note?: string },
+  ): Promise<void> {
+    return httpClient.post<void>(
+      `${ENDPOINT}/${applicationType}/${applicationId}/reassign`,
+      payload,
+    );
+  },
 };

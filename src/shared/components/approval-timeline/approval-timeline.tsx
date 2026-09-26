@@ -1,12 +1,32 @@
-import { Timeline, Tag, Typography, Spin, Empty } from "antd";
+import { useState } from "react";
+import {
+  Timeline,
+  Tag,
+  Typography,
+  Spin,
+  Empty,
+  Button,
+  Space,
+  message,
+} from "antd";
 import {
   CheckCircleFilled,
   CloseCircleFilled,
   ClockCircleOutlined,
+  SwapOutlined,
+  UserSwitchOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
-import type { ApprovalApplicationType } from "@/shared/types/approval.model";
+import {
+  useApprovalInstance,
+  useReassignApprover,
+} from "@/shared/hooks/use-approval-queries";
+import { ApprovalReassignModal } from "@/shared/components/approval-reassign-modal/approval-reassign-modal";
+import { authStorage } from "@/core/auth/auth-storage";
+import type {
+  ApprovalActionResponse,
+  ApprovalApplicationType,
+} from "@/shared/types/approval.model";
 
 const { Text } = Typography;
 
@@ -35,11 +55,17 @@ export function ApprovalTimeline({
   applicationId,
   resolveEmployeeName,
 }: ApprovalTimelineProps) {
+  const [reassignOpen, setReassignOpen] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
   const {
     data: instance,
     isLoading,
     isError,
   } = useApprovalInstance(applicationType, applicationId);
+  const { mutate: reassign, isPending: isReassigning } = useReassignApprover(
+    applicationType,
+    applicationId,
+  );
 
   if (isLoading) return <Spin size="small" />;
   if (isError || !instance) {
@@ -51,22 +77,35 @@ export function ApprovalTimeline({
     );
   }
 
-  const nameOf = (employeeId: string) =>
-    resolveEmployeeName?.(employeeId) ?? `${employeeId.slice(0, 8)}…`;
+  // Server-resolved name first -- portal pages pass no resolver (employees can't load the
+  // employee list), which is what used to leave "Approved by 08df1607…" on the timeline.
+  const nameOf = (action: ApprovalActionResponse) =>
+    action.actorName ??
+    resolveEmployeeName?.(action.actorEmployeeId) ??
+    `${action.actorEmployeeId.slice(0, 8)}…`;
 
   const items = instance.actions.map((action) => ({
-    color: action.action === "Approved" ? "green" : "red",
+    color:
+      action.action === "Approved"
+        ? "green"
+        : action.action === "Declined"
+          ? "red"
+          : "blue",
     dot:
       action.action === "Approved" ? (
         <CheckCircleFilled style={{ fontSize: 16 }} />
-      ) : (
+      ) : action.action === "Declined" ? (
         <CloseCircleFilled style={{ fontSize: 16 }} />
+      ) : (
+        <SwapOutlined style={{ fontSize: 16 }} />
       ),
     children: (
       <div>
         <Text strong>
-          Step {action.stepNumber} — {action.action} by{" "}
-          {nameOf(action.actorEmployeeId)}
+          Step {action.stepNumber} —{" "}
+          {action.action === "Reassigned"
+            ? `Reassigned by ${nameOf(action)}`
+            : `${action.action} by ${nameOf(action)}`}
         </Text>
         <div>
           <Text type="secondary">
@@ -85,6 +124,9 @@ export function ApprovalTimeline({
       children: (
         <Text type="secondary">
           Pending — Step {instance.currentStepNumber} of {instance.totalSteps}
+          {instance.currentStepApproverLabel
+            ? ` · Awaiting: ${instance.currentStepApproverLabel}`
+            : ""}
         </Text>
       ),
     });
@@ -106,18 +148,52 @@ export function ApprovalTimeline({
       });
   }
 
+  const canReassign =
+    instance.status === "InProgress" &&
+    authStorage.hasAnyRole("Owner", "Admin");
+
   return (
     <div className="flex flex-col gap-2">
-      <Tag color={STATUS_COLOR[instance.status]}>
-        {instance.status === "InProgress"
-          ? `Step ${instance.currentStepNumber} of ${instance.totalSteps}`
-          : instance.status}
-      </Tag>
+      {contextHolder}
+      <Space wrap>
+        <Tag color={STATUS_COLOR[instance.status]}>
+          {instance.status === "InProgress"
+            ? `Step ${instance.currentStepNumber} of ${instance.totalSteps}`
+            : instance.status}
+        </Tag>
+        {canReassign && (
+          <Button
+            size="small"
+            icon={<UserSwitchOutlined />}
+            onClick={() => setReassignOpen(true)}
+          >
+            Reassign
+          </Button>
+        )}
+      </Space>
       {items.length > 0 ? (
         <Timeline items={items} />
       ) : (
         <Text type="secondary">Awaiting the first approval action.</Text>
       )}
+      <ApprovalReassignModal
+        open={reassignOpen}
+        loading={isReassigning}
+        onCancel={() => setReassignOpen(false)}
+        onConfirm={(newApproverEmployeeId, note) =>
+          reassign(
+            { newApproverEmployeeId, note },
+            {
+              onSuccess: () => {
+                setReassignOpen(false);
+                messageApi.success("Step reassigned.");
+              },
+              onError: () =>
+                messageApi.error("Failed to reassign. Please try again."),
+            },
+          )
+        }
+      />
     </div>
   );
 }

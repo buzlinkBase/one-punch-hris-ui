@@ -14,6 +14,8 @@ export interface ProblemDetails {
   stackTrace?: string;
   traceId?: string;
   innerException?: string;
+  /** Machine-readable discriminator for GuardException failures (e.g. "INVITATION_EMAIL_MISMATCH"). */
+  code?: string;
 }
 
 /** ResponseModel<ProblemDetails> — the envelope returned by the global exception handler */

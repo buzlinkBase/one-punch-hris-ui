@@ -3,14 +3,30 @@ import { Form, Input, Modal, Select, notification, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 import {
   buildInviteUserFormSchema,
   type InviteUserFormValues,
 } from "../../models/forms/invite-user-form.schema";
 import { useSendInvitation, useUsers } from "../../hooks/use-user-queries";
 import { useAssignableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
+import type { ProblemDetails } from "@/shared/types/api-response.model";
 
 const { Text } = Typography;
+
+// Surfaces the backend's actual GuardException message (e.g. "already a member, change their
+// role instead") instead of a generic toast. Same ResponseModel<ProblemDetails> envelope
+// error.interceptor.ts reads (AuthApi's GlobalExceptionHandler) -- this request sets
+// _skipErrorNotification so that global toast doesn't ALSO fire alongside this one.
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const problemDetails = err.response?.data?.data as
+      ProblemDetails | string | undefined;
+    if (typeof problemDetails === "string") return problemDetails;
+    if (problemDetails?.detail) return problemDetails.detail;
+  }
+  return fallback;
+}
 
 interface Props {
   open: boolean;
@@ -68,10 +84,13 @@ export default function InviteUserModal({
           });
           onClose();
         },
-        onError: () => {
+        onError: (err) => {
           notification.error({
             message: "Failed to send invitation",
-            description: "Could not send the invitation. Please try again.",
+            description: extractErrorMessage(
+              err,
+              "Could not send the invitation. Please try again.",
+            ),
             placement: "topRight",
           });
         },

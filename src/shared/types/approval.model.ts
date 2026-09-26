@@ -24,11 +24,14 @@ export type NoteRequirement = "None" | "Optional" | "Required";
 export type ApprovalInstanceStatus =
   "InProgress" | "Approved" | "Declined" | "Cancelled";
 
-export type ApprovalActionType = "Approved" | "Declined";
+export type ApprovalActionType = "Approved" | "Declined" | "Reassigned";
 
 export interface ApprovalActionResponse {
   stepNumber: number;
   actorEmployeeId: string;
+  /** Resolved server-side, so the Employee Portal (which can't load the employee list) still
+   * shows "Approved by Jane Doe" instead of a raw id. */
+  actorName?: string | null;
   action: ApprovalActionType;
   note?: string | null;
   createdAt: string;

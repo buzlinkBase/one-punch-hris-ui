@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Button, Dropdown, Input, Space, Typography, message } from "antd";
 import {
+  ClearOutlined,
   DownloadOutlined,
   PlusOutlined,
   ReloadOutlined,
@@ -10,12 +11,17 @@ import {
 import type { MenuProps } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  useEmployees,
+  useEmployeeSearch,
   useDownloadEmployeeTemplate,
   usePreviewEmployeesUpload,
   useCommitEmployeesImport,
 } from "../../hooks/use-employee-queries";
 import EmployeeTable, { formatFullName } from "../../components/employee-table";
+import {
+  clearedQuery,
+  hasActiveFilters,
+} from "../../components/employee-table/employee-list-query.mapper";
+import type { EmployeeListQuery } from "../../models/api/request/employee-list-query.model";
 import EmployeeImportPreviewModal from "../../components/employee-import-preview-modal/employee-import-preview-modal";
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
 import InviteUserModal from "@/app/modules/security/users/components/invite-user-modal/invite-user-modal";
@@ -29,16 +35,24 @@ const { Title } = Typography;
 
 const { Search } = Input;
 
+const EMPLOYEE_PAGE_SIZE = 20;
+
+const INITIAL_QUERY: EmployeeListQuery = {
+  page: 1,
+  limit: EMPLOYEE_PAGE_SIZE,
+};
+
 export default function EmployeeList() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [keyword, setKeyword] = useState("");
-  const {
-    data: employees = [],
-    isLoading,
-    refetch,
-    isFetching,
-  } = useEmployees(keyword);
+  // Single source of truth for the table: page, size, sort, keyword and every column filter.
+  // Paging/sorting/filtering all run on the server (GET employees/list).
+  const [query, setQuery] = useState<EmployeeListQuery>(INITIAL_QUERY);
+  const [searchText, setSearchText] = useState("");
+  const { data, isLoading, refetch, isFetching } = useEmployeeSearch(query);
+  const employees = data?.data ?? [];
+  const total = data?.metaData?.totalCount ?? 0;
+  const filtersActive = hasActiveFilters(query);
   // Delete is temporarily hidden from the Employee list — see onDelete below.
   // const { mutate: remove } = useDeleteEmployee();
   const { mutate: downloadTemplate, isPending: downloading } =
@@ -176,18 +190,42 @@ export default function EmployeeList() {
         </div>
       </div>
 
-      <Search
-        placeholder="Search employees..."
-        allowClear
-        enterButton={<SearchOutlined />}
-        loading={isFetching}
-        onSearch={(value) => setKeyword(value.trim())}
-        className="mb-3 w-full sm:max-w-xs"
-      />
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Search
+          placeholder="Search name, Bio ID, client, SSS/TIN…"
+          allowClear
+          enterButton={<SearchOutlined />}
+          loading={isFetching}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          onSearch={(value) =>
+            setQuery((q) => ({
+              ...q,
+              keyword: value.trim() || undefined,
+              page: 1,
+            }))
+          }
+          className="w-full sm:max-w-sm"
+        />
+        {filtersActive && (
+          <Button
+            icon={<ClearOutlined />}
+            onClick={() => {
+              setSearchText("");
+              setQuery((q) => clearedQuery(q));
+            }}
+          >
+            Clear filters
+          </Button>
+        )}
+      </div>
 
       <EmployeeTable
         data={employees}
-        loading={isLoading}
+        loading={isFetching}
+        query={query}
+        total={total}
+        onQueryChange={setQuery}
         // onDelete hidden for now — omitting it makes EmployeeTable's delete menu item not
         // render at all (see its `{onDelete && (...)}` guard).
         onInvite={(record) => setInviteTarget(record)}
