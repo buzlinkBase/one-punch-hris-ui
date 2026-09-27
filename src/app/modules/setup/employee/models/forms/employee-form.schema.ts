@@ -28,16 +28,7 @@ export const employeeFormSchema = z.object({
   branchId: z.string().nullable().optional(),
   sectionId: z.string().nullable().optional(),
   positionId: z.string().nullable().optional(),
-  jobLevel: z.enum([
-    "Managerial",
-    "Supervisory",
-    "Executive",
-    "RankandFile",
-    "EntryLevel",
-    "TechnicalSpecialist",
-    "Contractual",
-    "FieldStaff",
-  ]),
+  jobLevel: z.string().trim().min(1, "Job level is required"),
   timeShiftId: z.string().nullable().optional(),
   employmentStatus: z.enum([
     "Regular",

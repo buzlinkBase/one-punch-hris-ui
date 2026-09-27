@@ -20,15 +20,8 @@ export type EmploymentStatus =
   | "Resigned"
   | "Retired"
   | "Deceased";
-export type JobLevel =
-  | "Managerial"
-  | "Supervisory"
-  | "Executive"
-  | "RankandFile"
-  | "EntryLevel"
-  | "TechnicalSpecialist"
-  | "Contractual"
-  | "FieldStaff";
+/** Free text -- see JOB_LEVEL_OPTIONS for the suggested values. */
+export type JobLevel = string;
 
 export type DayName =
   | "Monday"
