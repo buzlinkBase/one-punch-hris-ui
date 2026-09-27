@@ -34,6 +34,8 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
+import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -88,6 +90,10 @@ export default function OvertimeApplicationDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  // Without the save permission the page is a read-only view of the record.
+  const readOnly = !useHasPermission(
+    isEdit ? "Overtime:Edit" : "Overtime:Create",
+  );
 
   const { data: selected } = useOvertimeApplication(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } =
@@ -200,15 +206,18 @@ export default function OvertimeApplicationDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit
-                ? OVERTIME_APPLICATION_LABEL.EDIT_TITLE
-                : OVERTIME_APPLICATION_LABEL.CREATE_TITLE}
+              {readOnly && isEdit
+                ? "View Overtime Application"
+                : isEdit
+                  ? OVERTIME_APPLICATION_LABEL.EDIT_TITLE
+                  : OVERTIME_APPLICATION_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               File an overtime request for pre-approval.
             </p>
           </div>
           <Space>
+            {readOnly && <Tag>View only</Tag>}
             {isEdit && selected ? (
               <Tag color={STATUS_COLOR[selected.approvalStatus] ?? "default"}>
                 {selected.approvalStatus === "ForApproval"
@@ -252,7 +261,15 @@ export default function OvertimeApplicationDetail() {
           </Card>
         )}
 
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        {isEdit && !readOnly && (
+          <ApprovalRestartNotice status={selected?.approvalStatus} />
+        )}
+
+        <Form
+          layout="vertical"
+          disabled={readOnly}
+          onFinish={handleSubmit(onSubmit)}
+        >
           <div className="form-grid-3">
             <Form.Item
               label={OVERTIME_APPLICATION_LABEL.EMPLOYEE}

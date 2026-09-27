@@ -49,6 +49,8 @@ import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
+import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -186,6 +188,8 @@ export default function LeaveApplicationDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  // Without the save permission the page is a read-only view of the record.
+  const readOnly = !useHasPermission(isEdit ? "Leave:Edit" : "Leave:Create");
 
   const { data: selected } = useLeaveApplication(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } =
@@ -502,15 +506,18 @@ export default function LeaveApplicationDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit
-                ? LEAVE_APPLICATION_LABEL.EDIT_TITLE
-                : LEAVE_APPLICATION_LABEL.CREATE_TITLE}
+              {readOnly && isEdit
+                ? "View Leave Application"
+                : isEdit
+                  ? LEAVE_APPLICATION_LABEL.EDIT_TITLE
+                  : LEAVE_APPLICATION_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               File a leave request against an approved leave type.
             </p>
           </div>
           <Space>
+            {readOnly && <Tag>View only</Tag>}
             {isEdit && selected ? (
               <Tag color={STATUS_COLOR[selected.approvalStatus] ?? "default"}>
                 {selected.approvalStatus === "ForApproval"
@@ -547,7 +554,15 @@ export default function LeaveApplicationDetail() {
           </Card>
         )}
 
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        {isEdit && !readOnly && (
+          <ApprovalRestartNotice status={selected?.approvalStatus} />
+        )}
+
+        <Form
+          layout="vertical"
+          disabled={readOnly}
+          onFinish={handleSubmit(onSubmit)}
+        >
           <div className="form-grid-2">
             <Form.Item
               label={LEAVE_APPLICATION_LABEL.EMPLOYEE}

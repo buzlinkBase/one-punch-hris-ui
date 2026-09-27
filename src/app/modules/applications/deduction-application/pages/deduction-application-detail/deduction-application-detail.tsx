@@ -12,6 +12,7 @@ import {
   Select,
   Space,
   Table,
+  Tag,
   Typography,
   message,
 } from "antd";
@@ -44,6 +45,8 @@ import { isActiveStatus } from "@/shared/utils/status.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
+import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import {
   generateLoanBreakdown,
   loanBreakdownColumns,
@@ -60,6 +63,10 @@ export default function DeductionApplicationDetail() {
   const navigate = useNavigate();
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = !!id;
+  // Without the save permission the page is a read-only view of the record.
+  const readOnly = !useHasPermission(
+    isEdit ? "Loan/Deduction:Edit" : "Loan/Deduction:Create",
+  );
 
   const { data: existing, isLoading: loadingExisting } =
     useDeductionApplication(id);
@@ -248,15 +255,18 @@ export default function DeductionApplicationDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit
-                ? DEDUCTION_APPLICATION_LABEL.EDIT_TITLE
-                : DEDUCTION_APPLICATION_LABEL.CREATE_TITLE}
+              {readOnly && isEdit
+                ? "View Loan / Deduction"
+                : isEdit
+                  ? DEDUCTION_APPLICATION_LABEL.EDIT_TITLE
+                  : DEDUCTION_APPLICATION_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               {DEDUCTION_APPLICATION_LABEL.SUBTITLE}
             </p>
           </div>
           <Space>
+            {readOnly && <Tag>View only</Tag>}
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() =>
@@ -283,7 +293,11 @@ export default function DeductionApplicationDetail() {
         </div>
       </div>
 
-      <Form layout="vertical" disabled={loadingExisting}>
+      {isEdit && !readOnly && (
+        <ApprovalRestartNotice status={existing?.approvalStatus} />
+      )}
+
+      <Form layout="vertical" disabled={loadingExisting || readOnly}>
         <Card className="mb-4">
           <Row gutter={16}>
             <Col xs={24} md={12}>

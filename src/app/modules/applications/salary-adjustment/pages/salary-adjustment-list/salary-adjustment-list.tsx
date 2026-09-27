@@ -10,7 +10,7 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
@@ -25,11 +25,14 @@ import {
 } from "../../constants/label.const";
 import { useState } from "react";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 
 const { Title } = Typography;
 
 export default function SalaryAdjustmentList() {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Salary Adjustment:Edit");
   const [empFilter, setEmpFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<number | null>(null);
 
@@ -110,15 +113,14 @@ export default function SalaryAdjustmentList() {
       width: 80,
       render: (_, r) => (
         <Space size="small">
-          <PermissionGate permission="Salary Adjustment:Edit">
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() =>
-                navigate({ to: `/applications/salary-adjustment/${r.id}` })
-              }
-            />
-          </PermissionGate>
+          <RecordOpenAction
+            size="small"
+            type="default"
+            canEdit={canEdit}
+            onOpen={() =>
+              navigate({ to: `/applications/salary-adjustment/${r.id}` })
+            }
+          />
           <PermissionGate permission="Salary Adjustment:Delete">
             <Popconfirm
               title="Delete this adjustment?"

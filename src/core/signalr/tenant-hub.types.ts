@@ -18,6 +18,10 @@ export const TENANT_HUB_METHODS = {
    *  the existing access token is still valid for its remaining lifetime, so this forces an
    *  immediate logout instead of waiting for it to expire. */
   onSessionRevoked: "SessionRevoked",
+  /** Fired to every member when a company they belong to is renamed (TenantRenamedWorker, after
+   *  HRIS Company Info's "Company Name" is saved) — refresh the session so the token's
+   *  tenantName and the company switcher pick up the new name. */
+  onTenantRenamed: "TenantRenamed",
 } as const;
 
 export interface TenantCreatedNotification {
@@ -38,6 +42,11 @@ export interface RolesChangedNotification {
 
 export interface SessionRevokedNotification {
   tenantId: string;
+}
+
+export interface TenantRenamedNotification {
+  tenantId: string;
+  tenantName: string;
 }
 
 /** TenantCreationStatus string values (Onepunch.Auth.Domain/Entities/TenantCreationRequest.cs). */

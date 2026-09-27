@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Tag } from "antd";
 import {
-  EditOutlined,
   DeleteOutlined,
   CheckOutlined,
   CloseOutlined,
@@ -16,6 +15,8 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 import dayjs from "dayjs";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -54,6 +55,7 @@ export default function OvertimeApplicationTable({
   actionLoading,
 }: Props) {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Overtime:Edit");
   const [actionTarget, setActionTarget] = useState<{
     record: OvertimeApplicationResponse;
     action: "Approved" | "Declined";
@@ -174,7 +176,7 @@ export default function OvertimeApplicationTable({
       render: (_, record) => (
         <Space>
           {onApprove && record.approvalStatus === "ForApproval" && (
-            <PermissionGate permission={["Overtime:Edit", "Overtime:Approve"]}>
+            <PermissionGate permission="Overtime:Approve">
               <Button
                 type="text"
                 icon={<CheckOutlined />}
@@ -184,7 +186,7 @@ export default function OvertimeApplicationTable({
             </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
-            <PermissionGate permission={["Overtime:Edit", "Overtime:Approve"]}>
+            <PermissionGate permission="Overtime:Approve">
               <Button
                 type="text"
                 danger
@@ -193,15 +195,12 @@ export default function OvertimeApplicationTable({
               />
             </PermissionGate>
           )}
-          <PermissionGate permission={["Overtime:Edit", "Overtime:Approve"]}>
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() =>
-                navigate({ to: `/applications/overtime/${record.id}` })
-              }
-            />
-          </PermissionGate>
+          <RecordOpenAction
+            canEdit={canEdit}
+            onOpen={() =>
+              navigate({ to: `/applications/overtime/${record.id}` })
+            }
+          />
           {onDelete && (
             <PermissionGate permission="Overtime:Delete">
               <Popconfirm

@@ -18,6 +18,7 @@ import type { PortalRequestChangeRestDay } from "../models/api/request/portal-re
 import type { ChangeRestDayResponse } from "@/app/modules/change-schedule/change-rest-day/models/api/response/change-rest-day-response.model";
 import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
 import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
+import type { UpdateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/update-deduction-application.model";
 import type { MyCashBondModel } from "@/app/modules/portal/cash-bond/models/api/response/portal-cash-bond-response.model";
 import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
 import type { PortalCreateProfileUpdateRequest } from "../models/api/request/portal-create-profile-update-request.model";
@@ -107,6 +108,18 @@ export const meApi = {
     );
   },
 
+  // Own, still-pending applications only (server-enforced). If anyone already approved it, the
+  // server sends it back to the first approver -- see MeController.UpdateMy*Application.
+  updateMyLeaveApplication(
+    id: string,
+    data: CreateLeaveApplication,
+  ): Promise<void> {
+    return httpClient.putUnwrapped<void>(
+      `${BASE_URL}/leave-applications/${id}`,
+      { ...data, id },
+    );
+  },
+
   withdrawMyLeaveApplication(id: string): Promise<void> {
     return httpClient.patchUnwrapped<void>(
       `${BASE_URL}/leave-applications/${id}/withdraw`,
@@ -123,6 +136,16 @@ export const meApi = {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/overtime-applications`,
       data,
+    );
+  },
+
+  updateMyOvertimeApplication(
+    id: string,
+    data: CreateOvertimeApplication,
+  ): Promise<void> {
+    return httpClient.putUnwrapped<void>(
+      `${BASE_URL}/overtime-applications/${id}`,
+      { ...data, id },
     );
   },
 
@@ -147,6 +170,16 @@ export const meApi = {
     );
   },
 
+  updateMyTravelOrderApplication(
+    id: string,
+    data: CreateTravelOrderApplication,
+  ): Promise<void> {
+    return httpClient.putUnwrapped<void>(
+      `${BASE_URL}/travel-order-applications/${id}`,
+      { ...data, id },
+    );
+  },
+
   withdrawMyTravelOrderApplication(id: string): Promise<void> {
     return httpClient.patchUnwrapped<void>(
       `${BASE_URL}/travel-order-applications/${id}/withdraw`,
@@ -163,6 +196,16 @@ export const meApi = {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/pass-slip-applications`,
       data,
+    );
+  },
+
+  updateMyPassSlipApplication(
+    id: string,
+    data: PortalCreatePassSlip,
+  ): Promise<void> {
+    return httpClient.putUnwrapped<void>(
+      `${BASE_URL}/pass-slip-applications/${id}`,
+      { ...data, id },
     );
   },
 
@@ -199,6 +242,15 @@ export const meApi = {
   createMyLoanApplication(data: CreateDeductionApplication): Promise<void> {
     return httpClient.postUnwrapped<void>(
       `${BASE_URL}/loan-applications`,
+      data,
+    );
+  },
+
+  // Same shape the admin Loans form sends on edit -- `details` carries the existing installment
+  // ids so the server updates rows in place instead of recreating the whole schedule.
+  updateMyLoanApplication(data: UpdateDeductionApplication): Promise<void> {
+    return httpClient.putUnwrapped<void>(
+      `${BASE_URL}/loan-applications/${data.id}`,
       data,
     );
   },

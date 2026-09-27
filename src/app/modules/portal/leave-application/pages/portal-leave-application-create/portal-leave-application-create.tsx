@@ -3,13 +3,11 @@ import {
   Button,
   Card,
   DatePicker,
-  Empty,
   Form,
   Input,
   InputNumber,
   Radio,
   Select,
-  Skeleton,
   Space,
   Tag,
   TimePicker,
@@ -28,8 +26,12 @@ import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   useMyEmployee,
+  useMyLeaveApplications,
   useCreateMyLeaveApplication,
+  useUpdateMyLeaveApplication,
 } from "../../../shared/hooks/use-my-employee-queries";
+import { usePortalFormMode } from "../../../shared/hooks/use-portal-form-mode";
+import { PortalApplicationShell } from "../../../shared/components/portal-application-shell";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import {
   leaveApplicationFormSchema,
@@ -42,7 +44,9 @@ import {
   isCrossMidnight,
 } from "@/shared/utils/duration.util";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
+
+const BACK_TO = "/portal/leave-applications";
 const { TextArea } = Input;
 
 const PAY_SOURCE_COLOR: Record<string, string> = {
@@ -83,11 +87,24 @@ const PAY_TYPE_OPTIONS = [
   { value: "WithoutPay", label: "Without Pay" },
 ];
 
+/** File (create), edit (own pending) or view (read-only) a leave application. */
 export default function PortalLeaveApplicationCreate() {
   const navigate = useNavigate();
+  const { id, mode: pageMode } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
   const { data: leaveTypes = [] } = useLeaveTypes();
-  const { mutateAsync: create, isPending } = useCreateMyLeaveApplication();
+  const { data: applications = [], isLoading: applicationsLoading } =
+    useMyLeaveApplications();
+  const { mutateAsync: create, isPending: isCreating } =
+    useCreateMyLeaveApplication();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateMyLeaveApplication();
+
+  const record = id ? applications.find((a) => a.id === id) : undefined;
+  // Only a still-pending application is editable; anything else opens as a view.
+  const readOnly =
+    pageMode === "view" ||
+    (!!record && record.approvalStatus !== "ForApproval");
 
   const leaveTypeOptions = leaveTypes
     .filter((l) => l.allowEmployeeFiling)
@@ -99,6 +116,7 @@ export default function PortalLeaveApplicationCreate() {
   const {
     control,
     handleSubmit,
+    reset,
     setValue,
     formState: { errors },
   } = useForm<LeaveApplicationFormValues>({
@@ -119,9 +137,45 @@ export default function PortalLeaveApplicationCreate() {
       payoutMode: "perday",
       applicationRemarks: "",
       supportingDocumentUrl: "",
-      approvalStatus: "ForApproval",
     },
   });
+
+  useEffect(() => {
+    if (!record) return;
+    const isMultiDay = record.durationType === "MultiDay";
+    const isPartial = record.durationType === "Partial";
+    reset({
+      employeeId: record.employeeId,
+      leaveId: record.leaveId,
+      mode: isMultiDay ? "multiday" : isPartial ? "partial" : "singleday",
+      leaveDate: isMultiDay ? "" : record.leaveDateFrom,
+      dayFraction:
+        record.dayFraction === "AM"
+          ? "am"
+          : record.dayFraction === "PM"
+            ? "pm"
+            : "fullday",
+      leaveDateFrom: isMultiDay ? record.leaveDateFrom : "",
+      leaveDateTo: isMultiDay ? record.leaveDateTo : "",
+      partialMode: record.isManualEntry ? "hours" : "timerange",
+      startTime:
+        isPartial && record.startTime
+          ? dayjs(record.startTime).format("HH:mm")
+          : "",
+      endTime:
+        isPartial && record.endTime
+          ? dayjs(record.endTime).format("HH:mm")
+          : "",
+      totalHours:
+        isPartial && record.totalMinutes != null
+          ? record.totalMinutes / 60
+          : undefined,
+      payType: record.payType,
+      payoutMode: "perday",
+      applicationRemarks: record.applicationRemarks ?? "",
+      supportingDocumentUrl: record.supportingDocumentUrl ?? "",
+    });
+  }, [record, reset]);
 
   // employeeId isn't a visible field here (unlike the admin leave-application form that shares
   // this schema) -- it's only present to satisfy the schema's required-employee validation, and
@@ -263,7 +317,7 @@ export default function PortalLeaveApplicationCreate() {
       };
     }
 
-    await create({
+    const payload: CreateLeaveApplication = {
       employeeId: employee!.id,
       leaveId: values.leaveId,
       durationType,
@@ -274,420 +328,413 @@ export default function PortalLeaveApplicationCreate() {
       payoutMode: "PerDay",
       applicationRemarks: values.applicationRemarks,
       supportingDocumentUrl: values.supportingDocumentUrl || undefined,
-      approvalStatus: "ForApproval",
       ...timePayload,
-    });
-    navigate({ to: "/portal/leave-applications" });
+    };
+    if (id) await update({ id, data: payload });
+    else await create(payload);
+    navigate({ to: BACK_TO });
   };
 
   return (
-    <div className="content-page">
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              File Leave Application
-            </Title>
-            <p className="page-toolbar-subtitle">
-              Submit a leave request for approval.
-            </p>
-          </div>
-        </div>
-      </div>
+    <PortalApplicationShell
+      mode={pageMode}
+      titles={{
+        create: "File Leave Application",
+        edit: "Edit Leave Application",
+        view: "View Leave Application",
+      }}
+      subtitle="Submit a leave request for approval."
+      backTo={BACK_TO}
+      applicationType="Leave"
+      record={record}
+      loading={employeeLoading || (!!id && applicationsLoading)}
+      noEmployee={!employee}
+      readOnly={readOnly}
+    >
+      <Form
+        layout="vertical"
+        disabled={readOnly}
+        onFinish={handleSubmit(onSubmit)}
+      >
+        <Form.Item
+          label="Leave Type"
+          validateStatus={errors.leaveId ? "error" : ""}
+          help={errors.leaveId?.message}
+        >
+          <Controller
+            name="leaveId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                options={leaveTypeOptions}
+                showSearch
+                optionFilterProp="label"
+                placeholder="Select a leave type"
+              />
+            )}
+          />
+        </Form.Item>
 
-      <div className="form-page-body">
-        {employeeLoading ? (
-          <Skeleton active paragraph={{ rows: 8 }} />
-        ) : !employee ? (
-          <Empty description="No employee profile is linked to your account yet. Contact HR if you believe this is a mistake." />
-        ) : (
-          <Card>
-            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-              <Form.Item
-                label="Leave Type"
-                validateStatus={errors.leaveId ? "error" : ""}
-                help={errors.leaveId?.message}
-              >
-                <Controller
-                  name="leaveId"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={leaveTypeOptions}
-                      showSearch
-                      optionFilterProp="label"
-                      placeholder="Select a leave type"
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              {policy && (
-                <Card
-                  size="small"
-                  className="mb-4"
-                  style={{
-                    background:
-                      "var(--ant-color-bg-container-disabled, #fafafa)",
-                  }}
+        {policy && (
+          <Card
+            size="small"
+            className="mb-4"
+            style={{
+              background: "var(--ant-color-bg-container-disabled, #fafafa)",
+            }}
+          >
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+              <span>
+                <Tag
+                  color={PAY_SOURCE_COLOR[policy.paySource] ?? "default"}
+                  style={{ fontSize: 11 }}
                 >
-                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
-                    <span>
-                      <Tag
-                        color={PAY_SOURCE_COLOR[policy.paySource] ?? "default"}
-                        style={{ fontSize: 11 }}
-                      >
-                        {PAY_SOURCE_LABEL[policy.paySource] ?? policy.paySource}
-                      </Tag>
-                      {policy.isStatutory && (
-                        <Tag color="gold" style={{ fontSize: 11 }}>
-                          Statutory
-                        </Tag>
-                      )}
-                    </span>
-                    {policy.maxDaysPerYear != null && (
-                      <span>
-                        <ClockCircleOutlined className="mr-1" />
-                        Max {policy.maxDaysPerYear} day
-                        {policy.maxDaysPerYear !== 1 ? "s" : ""}/year
-                      </span>
-                    )}
-                    {policy.maxConsecutiveDays != null && (
-                      <span>
-                        <ClockCircleOutlined className="mr-1" />
-                        Max {policy.maxConsecutiveDays} consecutive day
-                        {policy.maxConsecutiveDays !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                    {policy.minServiceMonths > 0 && (
-                      <span>
-                        <UserOutlined className="mr-1" />
-                        Requires {policy.minServiceMonths} mo. service
-                      </span>
-                    )}
-                    {policy.genderRestriction !== "None" && (
-                      <span style={{ color: "#d48806" }}>
-                        <ExclamationCircleOutlined className="mr-1" />
-                        {policy.genderRestriction === "MaleOnly"
-                          ? "Male only"
-                          : "Female only"}
-                      </span>
-                    )}
-                    {!policy.allowHalfDay && (
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        Half-day not allowed
-                      </Text>
-                    )}
-                    {!policy.allowPartial && (
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        Partial/hourly not allowed
-                      </Text>
-                    )}
-                  </div>
-
-                  {policy.requiresSupportingDocument && (
-                    <Alert
-                      type="warning"
-                      showIcon
-                      banner
-                      message="Supporting document required for this leave type"
-                      className="mt-2"
-                      style={{ fontSize: 12 }}
-                    />
-                  )}
-                </Card>
+                  {PAY_SOURCE_LABEL[policy.paySource] ?? policy.paySource}
+                </Tag>
+                {policy.isStatutory && (
+                  <Tag color="gold" style={{ fontSize: 11 }}>
+                    Statutory
+                  </Tag>
+                )}
+              </span>
+              {policy.maxDaysPerYear != null && (
+                <span>
+                  <ClockCircleOutlined className="mr-1" />
+                  Max {policy.maxDaysPerYear} day
+                  {policy.maxDaysPerYear !== 1 ? "s" : ""}/year
+                </span>
               )}
-
-              {minServiceError && (
-                <Alert
-                  type="error"
-                  showIcon
-                  message="Minimum Service Requirement Not Met"
-                  description={minServiceError}
-                  className="mb-4"
-                />
+              {policy.maxConsecutiveDays != null && (
+                <span>
+                  <ClockCircleOutlined className="mr-1" />
+                  Max {policy.maxConsecutiveDays} consecutive day
+                  {policy.maxConsecutiveDays !== 1 ? "s" : ""}
+                </span>
               )}
-
-              {genderMismatchError && (
-                <Alert
-                  type="error"
-                  showIcon
-                  message="Gender Restriction"
-                  description={genderMismatchError}
-                  className="mb-4"
-                />
+              {policy.minServiceMonths > 0 && (
+                <span>
+                  <UserOutlined className="mr-1" />
+                  Requires {policy.minServiceMonths} mo. service
+                </span>
               )}
-
-              <Form.Item label="Duration Type">
-                <Controller
-                  name="mode"
-                  control={control}
-                  render={({ field }) => (
-                    <Radio.Group
-                      {...field}
-                      options={modeOptions}
-                      optionType="button"
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              {mode === "singleday" && (
-                <Space size="large" wrap>
-                  <Form.Item
-                    label="Leave Date"
-                    validateStatus={errors.leaveDate ? "error" : ""}
-                    help={errors.leaveDate?.message}
-                  >
-                    <Controller
-                      name="leaveDate"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          value={field.value ? dayjs(field.value) : null}
-                          onChange={(d) =>
-                            field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                          }
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label="Day Fraction"
-                    validateStatus={errors.dayFraction ? "error" : ""}
-                    help={errors.dayFraction?.message}
-                  >
-                    <Controller
-                      name="dayFraction"
-                      control={control}
-                      render={({ field }) => (
-                        <Radio.Group
-                          {...field}
-                          options={dayFractionOptions}
-                          optionType="button"
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Space>
+              {policy.genderRestriction !== "None" && (
+                <span style={{ color: "#d48806" }}>
+                  <ExclamationCircleOutlined className="mr-1" />
+                  {policy.genderRestriction === "MaleOnly"
+                    ? "Male only"
+                    : "Female only"}
+                </span>
               )}
-
-              {mode === "multiday" && (
-                <Space size="large" wrap>
-                  <Form.Item
-                    label="From"
-                    validateStatus={errors.leaveDateFrom ? "error" : ""}
-                    help={errors.leaveDateFrom?.message}
-                  >
-                    <Controller
-                      name="leaveDateFrom"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          value={field.value ? dayjs(field.value) : null}
-                          onChange={(d) =>
-                            field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                          }
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label="To"
-                    validateStatus={errors.leaveDateTo ? "error" : ""}
-                    help={errors.leaveDateTo?.message}
-                  >
-                    <Controller
-                      name="leaveDateTo"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          value={field.value ? dayjs(field.value) : null}
-                          onChange={(d) =>
-                            field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                          }
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Space>
+              {!policy.allowHalfDay && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Half-day not allowed
+                </Text>
               )}
-
-              {mode === "partial" && (
-                <>
-                  <Form.Item
-                    label="Leave Date"
-                    validateStatus={errors.leaveDate ? "error" : ""}
-                    help={errors.leaveDate?.message}
-                  >
-                    <Controller
-                      name="leaveDate"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          value={field.value ? dayjs(field.value) : null}
-                          onChange={(d) =>
-                            field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                          }
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  <Form.Item label="Partial Filing Mode">
-                    <Controller
-                      name="partialMode"
-                      control={control}
-                      render={({ field }) => (
-                        <Radio.Group
-                          {...field}
-                          options={PARTIAL_MODE_OPTIONS}
-                          optionType="button"
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  {(partialMode ?? "timerange") === "timerange" ? (
-                    <Space size="large" wrap align="start">
-                      <Form.Item
-                        label="Start Time"
-                        validateStatus={errors.startTime ? "error" : ""}
-                        help={errors.startTime?.message}
-                      >
-                        <Controller
-                          name="startTime"
-                          control={control}
-                          render={({ field }) => (
-                            <TimePicker
-                              value={
-                                field.value ? dayjs(field.value, "HH:mm") : null
-                              }
-                              format="HH:mm"
-                              onChange={(t) =>
-                                field.onChange(t ? t.format("HH:mm") : "")
-                              }
-                            />
-                          )}
-                        />
-                      </Form.Item>
-                      <Form.Item
-                        label="End Time"
-                        validateStatus={errors.endTime ? "error" : ""}
-                        help={errors.endTime?.message}
-                      >
-                        <Controller
-                          name="endTime"
-                          control={control}
-                          render={({ field }) => (
-                            <TimePicker
-                              value={
-                                field.value ? dayjs(field.value, "HH:mm") : null
-                              }
-                              format="HH:mm"
-                              onChange={(t) =>
-                                field.onChange(t ? t.format("HH:mm") : "")
-                              }
-                            />
-                          )}
-                        />
-                      </Form.Item>
-                      {crossMidnight && (
-                        <Alert
-                          type="info"
-                          showIcon
-                          message="Ends the next day"
-                          className="self-center"
-                        />
-                      )}
-                    </Space>
-                  ) : (
-                    <Form.Item
-                      label="Total Hours"
-                      validateStatus={errors.totalHours ? "error" : ""}
-                      help={errors.totalHours?.message}
-                    >
-                      <Controller
-                        name="totalHours"
-                        control={control}
-                        render={({ field }) => (
-                          <InputNumber
-                            {...field}
-                            min={0}
-                            step={0.5}
-                            onChange={(v) => field.onChange(v ?? undefined)}
-                          />
-                        )}
-                      />
-                    </Form.Item>
-                  )}
-                </>
+              {!policy.allowPartial && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Partial/hourly not allowed
+                </Text>
               )}
+            </div>
 
-              <Form.Item label="Pay Type">
-                <Controller
-                  name="payType"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={PAY_TYPE_OPTIONS}
-                      style={{ width: 200 }}
-                    />
-                  )}
-                />
-              </Form.Item>
+            {policy.requiresSupportingDocument && (
+              <Alert
+                type="warning"
+                showIcon
+                banner
+                message="Supporting document required for this leave type"
+                className="mt-2"
+                style={{ fontSize: 12 }}
+              />
+            )}
+          </Card>
+        )}
 
-              <Form.Item label="Reason / Remarks">
-                <Controller
-                  name="applicationRemarks"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      {...field}
-                      rows={3}
-                      placeholder="State the reason for your leave (e.g. medical, vacation, family)"
-                    />
-                  )}
-                />
-              </Form.Item>
+        {minServiceError && (
+          <Alert
+            type="error"
+            showIcon
+            message="Minimum Service Requirement Not Met"
+            description={minServiceError}
+            className="mb-4"
+          />
+        )}
 
-              {policy?.requiresSupportingDocument && (
+        {genderMismatchError && (
+          <Alert
+            type="error"
+            showIcon
+            message="Gender Restriction"
+            description={genderMismatchError}
+            className="mb-4"
+          />
+        )}
+
+        <Form.Item label="Duration Type">
+          <Controller
+            name="mode"
+            control={control}
+            render={({ field }) => (
+              <Radio.Group
+                {...field}
+                options={modeOptions}
+                optionType="button"
+              />
+            )}
+          />
+        </Form.Item>
+
+        {mode === "singleday" && (
+          <Space size="large" wrap>
+            <Form.Item
+              label="Leave Date"
+              validateStatus={errors.leaveDate ? "error" : ""}
+              help={errors.leaveDate?.message}
+            >
+              <Controller
+                name="leaveDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(d) =>
+                      field.onChange(d ? d.format("YYYY-MM-DD") : "")
+                    }
+                  />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Day Fraction"
+              validateStatus={errors.dayFraction ? "error" : ""}
+              help={errors.dayFraction?.message}
+            >
+              <Controller
+                name="dayFraction"
+                control={control}
+                render={({ field }) => (
+                  <Radio.Group
+                    {...field}
+                    options={dayFractionOptions}
+                    optionType="button"
+                  />
+                )}
+              />
+            </Form.Item>
+          </Space>
+        )}
+
+        {mode === "multiday" && (
+          <Space size="large" wrap>
+            <Form.Item
+              label="From"
+              validateStatus={errors.leaveDateFrom ? "error" : ""}
+              help={errors.leaveDateFrom?.message}
+            >
+              <Controller
+                name="leaveDateFrom"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(d) =>
+                      field.onChange(d ? d.format("YYYY-MM-DD") : "")
+                    }
+                  />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label="To"
+              validateStatus={errors.leaveDateTo ? "error" : ""}
+              help={errors.leaveDateTo?.message}
+            >
+              <Controller
+                name="leaveDateTo"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(d) =>
+                      field.onChange(d ? d.format("YYYY-MM-DD") : "")
+                    }
+                  />
+                )}
+              />
+            </Form.Item>
+          </Space>
+        )}
+
+        {mode === "partial" && (
+          <>
+            <Form.Item
+              label="Leave Date"
+              validateStatus={errors.leaveDate ? "error" : ""}
+              help={errors.leaveDate?.message}
+            >
+              <Controller
+                name="leaveDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(d) =>
+                      field.onChange(d ? d.format("YYYY-MM-DD") : "")
+                    }
+                  />
+                )}
+              />
+            </Form.Item>
+            <Form.Item label="Partial Filing Mode">
+              <Controller
+                name="partialMode"
+                control={control}
+                render={({ field }) => (
+                  <Radio.Group
+                    {...field}
+                    options={PARTIAL_MODE_OPTIONS}
+                    optionType="button"
+                  />
+                )}
+              />
+            </Form.Item>
+            {(partialMode ?? "timerange") === "timerange" ? (
+              <Space size="large" wrap align="start">
                 <Form.Item
-                  label={
-                    <span className="flex items-center gap-1">
-                      <FileTextOutlined />
-                      Supporting Document URL
-                    </span>
-                  }
+                  label="Start Time"
+                  validateStatus={errors.startTime ? "error" : ""}
+                  help={errors.startTime?.message}
                 >
                   <Controller
-                    name="supportingDocumentUrl"
+                    name="startTime"
                     control={control}
                     render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder="Paste a link to the uploaded supporting document"
-                        allowClear
+                      <TimePicker
+                        value={field.value ? dayjs(field.value, "HH:mm") : null}
+                        format="HH:mm"
+                        onChange={(t) =>
+                          field.onChange(t ? t.format("HH:mm") : "")
+                        }
                       />
                     )}
                   />
                 </Form.Item>
-              )}
-
-              <Space>
-                <Button type="primary" htmlType="submit" loading={isPending}>
-                  Submit Application
-                </Button>
-                <Button
-                  onClick={() => navigate({ to: "/portal/leave-applications" })}
+                <Form.Item
+                  label="End Time"
+                  validateStatus={errors.endTime ? "error" : ""}
+                  help={errors.endTime?.message}
                 >
-                  Cancel
-                </Button>
+                  <Controller
+                    name="endTime"
+                    control={control}
+                    render={({ field }) => (
+                      <TimePicker
+                        value={field.value ? dayjs(field.value, "HH:mm") : null}
+                        format="HH:mm"
+                        onChange={(t) =>
+                          field.onChange(t ? t.format("HH:mm") : "")
+                        }
+                      />
+                    )}
+                  />
+                </Form.Item>
+                {crossMidnight && (
+                  <Alert
+                    type="info"
+                    showIcon
+                    message="Ends the next day"
+                    className="self-center"
+                  />
+                )}
               </Space>
-            </Form>
-          </Card>
+            ) : (
+              <Form.Item
+                label="Total Hours"
+                validateStatus={errors.totalHours ? "error" : ""}
+                help={errors.totalHours?.message}
+              >
+                <Controller
+                  name="totalHours"
+                  control={control}
+                  render={({ field }) => (
+                    <InputNumber
+                      {...field}
+                      min={0}
+                      step={0.5}
+                      onChange={(v) => field.onChange(v ?? undefined)}
+                    />
+                  )}
+                />
+              </Form.Item>
+            )}
+          </>
         )}
-      </div>
-    </div>
+
+        <Form.Item label="Pay Type">
+          <Controller
+            name="payType"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                options={PAY_TYPE_OPTIONS}
+                style={{ width: 200 }}
+              />
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item label="Reason / Remarks">
+          <Controller
+            name="applicationRemarks"
+            control={control}
+            render={({ field }) => (
+              <TextArea
+                {...field}
+                rows={3}
+                placeholder="State the reason for your leave (e.g. medical, vacation, family)"
+              />
+            )}
+          />
+        </Form.Item>
+
+        {policy?.requiresSupportingDocument && (
+          <Form.Item
+            label={
+              <span className="flex items-center gap-1">
+                <FileTextOutlined />
+                Supporting Document URL
+              </span>
+            }
+          >
+            <Controller
+              name="supportingDocumentUrl"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  placeholder="Paste a link to the uploaded supporting document"
+                  allowClear
+                />
+              )}
+            />
+          </Form.Item>
+        )}
+
+        {!readOnly && (
+          <Space>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isCreating || isUpdating}
+            >
+              {id ? "Save Changes" : "Submit Application"}
+            </Button>
+            <Button onClick={() => navigate({ to: BACK_TO })}>Cancel</Button>
+          </Space>
+        )}
+      </Form>
+    </PortalApplicationShell>
   );
 }

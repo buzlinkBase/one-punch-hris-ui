@@ -167,6 +167,25 @@ export const authStorage = {
   },
 
   /**
+   * A company this session belongs to was renamed (SignalR "TenantRenamed" push) -- updates the
+   * cached company list entry and, if it's the active company, the active name, so the header and
+   * company switcher show it immediately instead of after the next token refresh.
+   */
+  renameTenant(tenantId: string, name: string) {
+    const user = this.getUser();
+    if (!user) return;
+    const nextUser = {
+      ...user,
+      tenants: (user.tenants ?? []).map((t) =>
+        t.tenantId === tenantId ? { ...t, name } : t,
+      ),
+      tenantName: user.tenantId === tenantId ? name : user.tenantName,
+    };
+    localStorage.setItem(KEYS.user, JSON.stringify(nextUser));
+    notify();
+  },
+
+  /**
    * Drops a tenant the session has lost access to (e.g. a SignalR "session revoked" push) out
    * of the cached membership list, so it stops showing in the tenant switcher. Only clears the
    * active tenantId/tenantName if that tenant WAS the active one -- losing access to a tenant

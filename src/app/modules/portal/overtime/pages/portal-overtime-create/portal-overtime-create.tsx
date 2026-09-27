@@ -1,17 +1,13 @@
 import {
   Alert,
   Button,
-  Card,
   DatePicker,
-  Empty,
   Form,
   Input,
   InputNumber,
   Radio,
-  Skeleton,
   Space,
   TimePicker,
-  Typography,
 } from "antd";
 import { useEffect } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
@@ -20,8 +16,12 @@ import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   useMyEmployee,
+  useMyOvertimeApplications,
   useCreateMyOvertimeApplication,
+  useUpdateMyOvertimeApplication,
 } from "../../../shared/hooks/use-my-employee-queries";
+import { usePortalFormMode } from "../../../shared/hooks/use-portal-form-mode";
+import { PortalApplicationShell } from "../../../shared/components/portal-application-shell";
 import {
   overtimeApplicationFormSchema,
   type OvertimeApplicationFormValues,
@@ -32,7 +32,6 @@ import {
   isCrossMidnight,
 } from "@/shared/utils/duration.util";
 
-const { Title } = Typography;
 const { TextArea } = Input;
 
 const MODE_OPTIONS = [
@@ -40,14 +39,29 @@ const MODE_OPTIONS = [
   { label: "Manual Minutes", value: "hours" },
 ];
 
+const BACK_TO = "/portal/overtime";
+
+/** File (create), edit (own pending) or view (read-only) an overtime application. */
 export default function PortalOvertimeCreate() {
   const navigate = useNavigate();
+  const { id, mode } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
-  const { mutateAsync: create, isPending } = useCreateMyOvertimeApplication();
+  const { data: applications = [], isLoading: applicationsLoading } =
+    useMyOvertimeApplications();
+  const { mutateAsync: create, isPending: isCreating } =
+    useCreateMyOvertimeApplication();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateMyOvertimeApplication();
+
+  const record = id ? applications.find((a) => a.id === id) : undefined;
+  // Only a still-pending application is editable; anything else opens as a view.
+  const readOnly =
+    mode === "view" || (!!record && record.approvalStatus !== "ForApproval");
 
   const {
     control,
     handleSubmit,
+    reset,
     setValue,
     formState: { errors },
   } = useForm<OvertimeApplicationFormValues>({
@@ -60,7 +74,6 @@ export default function PortalOvertimeCreate() {
       endTime: "",
       manualOTMinutes: undefined,
       remarks: "",
-      approvalStatus: "ForApproval",
     },
   });
 
@@ -71,12 +84,33 @@ export default function PortalOvertimeCreate() {
     if (employee) setValue("employeeId", employee.id);
   }, [employee, setValue]);
 
-  const mode = useWatch({ control, name: "mode" });
+  useEffect(() => {
+    if (!record) return;
+    const isHours = record.isManualEntry;
+    reset({
+      mode: isHours ? "hours" : "datetime",
+      employeeId: record.employeeId,
+      otDate: dayjs(record.otDate).format("YYYY-MM-DD"),
+      startTime:
+        !isHours && record.startTime
+          ? dayjs(record.startTime).format("HH:mm")
+          : "",
+      endTime:
+        !isHours && record.endTime ? dayjs(record.endTime).format("HH:mm") : "",
+      manualOTMinutes:
+        isHours && record.manualOTMinutes
+          ? record.manualOTMinutes / 60
+          : undefined,
+      remarks: record.remarks ?? "",
+    });
+  }, [record, reset]);
+
+  const formMode = useWatch({ control, name: "mode" });
   const startTime = useWatch({ control, name: "startTime" });
   const endTime = useWatch({ control, name: "endTime" });
 
   const crossMidnight =
-    mode === "datetime" && isCrossMidnight(startTime ?? "", endTime ?? "");
+    formMode === "datetime" && isCrossMidnight(startTime ?? "", endTime ?? "");
 
   const onSubmit = async (values: OvertimeApplicationFormValues) => {
     const payload =
@@ -107,171 +141,163 @@ export default function PortalOvertimeCreate() {
             remarks: values.remarks,
           };
 
-    await create(payload);
-    navigate({ to: "/portal/overtime" });
+    if (id) await update({ id, data: payload });
+    else await create(payload);
+    navigate({ to: BACK_TO });
   };
 
   return (
-    <div className="content-page">
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              File Overtime Application
-            </Title>
-            <p className="page-toolbar-subtitle">
-              Submit an overtime request for approval.
-            </p>
-          </div>
-        </div>
-      </div>
+    <PortalApplicationShell
+      mode={mode}
+      titles={{
+        create: "File Overtime Application",
+        edit: "Edit Overtime Application",
+        view: "View Overtime Application",
+      }}
+      subtitle="Submit an overtime request for approval."
+      backTo={BACK_TO}
+      applicationType="Overtime"
+      record={record}
+      loading={employeeLoading || (!!id && applicationsLoading)}
+      noEmployee={!employee}
+      readOnly={readOnly}
+    >
+      <Alert
+        type="info"
+        showIcon
+        className="mb-4"
+        message="OT applications are capped to the employee's actual overtime rendered — any excess entered here will not be paid out."
+      />
+      <Form
+        layout="vertical"
+        disabled={readOnly}
+        onFinish={handleSubmit(onSubmit)}
+      >
+        <Form.Item
+          label="OT Date"
+          validateStatus={errors.otDate ? "error" : ""}
+          help={errors.otDate?.message}
+        >
+          <Controller
+            name="otDate"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                value={field.value ? dayjs(field.value) : null}
+                onChange={(d) =>
+                  field.onChange(d ? d.format("YYYY-MM-DD") : "")
+                }
+              />
+            )}
+          />
+        </Form.Item>
 
-      <div className="form-page-body">
-        {employeeLoading ? (
-          <Skeleton active paragraph={{ rows: 6 }} />
-        ) : !employee ? (
-          <Empty description="No employee profile is linked to your account yet. Contact HR if you believe this is a mistake." />
-        ) : (
-          <Card>
-            <Alert
-              type="info"
-              showIcon
-              className="mb-4"
-              message="OT applications are capped to the employee's actual overtime rendered — any excess entered here will not be paid out."
-            />
-            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-              <Form.Item
-                label="OT Date"
-                validateStatus={errors.otDate ? "error" : ""}
-                help={errors.otDate?.message}
-              >
-                <Controller
-                  name="otDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      value={field.value ? dayjs(field.value) : null}
-                      onChange={(d) =>
-                        field.onChange(d ? d.format("YYYY-MM-DD") : "")
-                      }
-                    />
-                  )}
-                />
-              </Form.Item>
+        <Form.Item label="How will this OT be recorded?">
+          <Controller
+            name="mode"
+            control={control}
+            render={({ field }) => (
+              <Radio.Group
+                {...field}
+                options={MODE_OPTIONS}
+                optionType="button"
+              />
+            )}
+          />
+        </Form.Item>
 
-              <Form.Item label="How will this OT be recorded?">
-                <Controller
-                  name="mode"
-                  control={control}
-                  render={({ field }) => (
-                    <Radio.Group
-                      {...field}
-                      options={MODE_OPTIONS}
-                      optionType="button"
-                    />
-                  )}
-                />
-              </Form.Item>
-
-              {mode === "datetime" ? (
-                <Space size="large" wrap align="start">
-                  <Form.Item
-                    label="Start Time"
-                    validateStatus={errors.startTime ? "error" : ""}
-                    help={errors.startTime?.message}
-                  >
-                    <Controller
-                      name="startTime"
-                      control={control}
-                      render={({ field }) => (
-                        <TimePicker
-                          value={
-                            field.value ? dayjs(field.value, "HH:mm") : null
-                          }
-                          format="HH:mm"
-                          onChange={(t) =>
-                            field.onChange(t ? t.format("HH:mm") : "")
-                          }
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label="End Time"
-                    validateStatus={errors.endTime ? "error" : ""}
-                    help={errors.endTime?.message}
-                  >
-                    <Controller
-                      name="endTime"
-                      control={control}
-                      render={({ field }) => (
-                        <TimePicker
-                          value={
-                            field.value ? dayjs(field.value, "HH:mm") : null
-                          }
-                          format="HH:mm"
-                          onChange={(t) =>
-                            field.onChange(t ? t.format("HH:mm") : "")
-                          }
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                  {crossMidnight && (
-                    <Form.Item label=" ">
-                      <span className="text-(--ant-color-text-tertiary)">
-                        Ends the next day
-                      </span>
-                    </Form.Item>
-                  )}
-                </Space>
-              ) : (
-                <Form.Item
-                  label="OT Minutes (in hours)"
-                  validateStatus={errors.manualOTMinutes ? "error" : ""}
-                  help={errors.manualOTMinutes?.message}
-                >
-                  <Controller
-                    name="manualOTMinutes"
-                    control={control}
-                    render={({ field }) => (
-                      <InputNumber
-                        {...field}
-                        min={0.25}
-                        step={0.25}
-                        onChange={(v) => field.onChange(v ?? undefined)}
-                      />
-                    )}
+        {formMode === "datetime" ? (
+          <Space size="large" wrap align="start">
+            <Form.Item
+              label="Start Time"
+              validateStatus={errors.startTime ? "error" : ""}
+              help={errors.startTime?.message}
+            >
+              <Controller
+                name="startTime"
+                control={control}
+                render={({ field }) => (
+                  <TimePicker
+                    value={field.value ? dayjs(field.value, "HH:mm") : null}
+                    format="HH:mm"
+                    onChange={(t) => field.onChange(t ? t.format("HH:mm") : "")}
                   />
-                </Form.Item>
-              )}
-
-              <Form.Item label="Remarks">
-                <Controller
-                  name="remarks"
-                  control={control}
-                  render={({ field }) => (
-                    <TextArea
-                      {...field}
-                      rows={3}
-                      placeholder="Reason for this overtime"
-                    />
-                  )}
-                />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label="End Time"
+              validateStatus={errors.endTime ? "error" : ""}
+              help={errors.endTime?.message}
+            >
+              <Controller
+                name="endTime"
+                control={control}
+                render={({ field }) => (
+                  <TimePicker
+                    value={field.value ? dayjs(field.value, "HH:mm") : null}
+                    format="HH:mm"
+                    onChange={(t) => field.onChange(t ? t.format("HH:mm") : "")}
+                  />
+                )}
+              />
+            </Form.Item>
+            {crossMidnight && (
+              <Form.Item label=" ">
+                <span className="text-(--ant-color-text-tertiary)">
+                  Ends the next day
+                </span>
               </Form.Item>
-
-              <Space>
-                <Button type="primary" htmlType="submit" loading={isPending}>
-                  Submit Application
-                </Button>
-                <Button onClick={() => navigate({ to: "/portal/overtime" })}>
-                  Cancel
-                </Button>
-              </Space>
-            </Form>
-          </Card>
+            )}
+          </Space>
+        ) : (
+          <Form.Item
+            label="OT Minutes (in hours)"
+            validateStatus={errors.manualOTMinutes ? "error" : ""}
+            help={errors.manualOTMinutes?.message}
+          >
+            <Controller
+              name="manualOTMinutes"
+              control={control}
+              render={({ field }) => (
+                <InputNumber
+                  {...field}
+                  min={0.25}
+                  step={0.25}
+                  onChange={(v) => field.onChange(v ?? undefined)}
+                />
+              )}
+            />
+          </Form.Item>
         )}
-      </div>
-    </div>
+
+        <Form.Item label="Remarks">
+          <Controller
+            name="remarks"
+            control={control}
+            render={({ field }) => (
+              <TextArea
+                {...field}
+                rows={3}
+                placeholder="Reason for this overtime"
+              />
+            )}
+          />
+        </Form.Item>
+
+        {!readOnly && (
+          <Space>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isCreating || isUpdating}
+            >
+              {id ? "Save Changes" : "Submit Application"}
+            </Button>
+            <Button onClick={() => navigate({ to: BACK_TO })}>Cancel</Button>
+          </Space>
+        )}
+      </Form>
+    </PortalApplicationShell>
   );
 }

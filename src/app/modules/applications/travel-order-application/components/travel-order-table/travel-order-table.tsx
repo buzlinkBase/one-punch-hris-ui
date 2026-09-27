@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Tag } from "antd";
 import {
-  EditOutlined,
   DeleteOutlined,
   CheckOutlined,
   CloseOutlined,
@@ -19,6 +18,8 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
@@ -60,6 +61,7 @@ export default function TravelOrderTable({
   actionLoading,
 }: Props) {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Official Business:Edit");
   const [actionTarget, setActionTarget] = useState<{
     record: TravelOrderApplicationResponse;
     action: "Approved" | "Declined";
@@ -193,12 +195,7 @@ export default function TravelOrderTable({
       render: (_, record) => (
         <Space>
           {onApprove && record.approvalStatus === "ForApproval" && (
-            <PermissionGate
-              permission={[
-                "Official Business:Edit",
-                "Official Business:Approve",
-              ]}
-            >
+            <PermissionGate permission="Official Business:Approve">
               <Button
                 type="text"
                 icon={<CheckOutlined />}
@@ -208,12 +205,7 @@ export default function TravelOrderTable({
             </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
-            <PermissionGate
-              permission={[
-                "Official Business:Edit",
-                "Official Business:Approve",
-              ]}
-            >
+            <PermissionGate permission="Official Business:Approve">
               <Button
                 type="text"
                 danger
@@ -222,19 +214,14 @@ export default function TravelOrderTable({
               />
             </PermissionGate>
           )}
-          <PermissionGate
-            permission={["Official Business:Edit", "Official Business:Approve"]}
-          >
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() =>
-                navigate({
-                  to: `/applications/official-business/${record.id}`,
-                })
-              }
-            />
-          </PermissionGate>
+          <RecordOpenAction
+            canEdit={canEdit}
+            onOpen={() =>
+              navigate({
+                to: `/applications/official-business/${record.id}`,
+              })
+            }
+          />
           {onDelete && (
             <PermissionGate permission="Official Business:Delete">
               <Popconfirm

@@ -1,16 +1,12 @@
 import {
   Button,
-  Card,
-  Empty,
   Form,
   Input,
   InputNumber,
   Select,
-  Skeleton,
   Space,
   Tag,
   TimePicker,
-  Typography,
 } from "antd";
 import { useEffect } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
@@ -19,8 +15,12 @@ import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   useMyEmployee,
+  useMyTravelOrderApplications,
   useCreateMyTravelOrderApplication,
+  useUpdateMyTravelOrderApplication,
 } from "../../../shared/hooks/use-my-employee-queries";
+import { usePortalFormMode } from "../../../shared/hooks/use-portal-form-mode";
+import { PortalApplicationShell } from "../../../shared/components/portal-application-shell";
 import {
   travelOrderFormSchema,
   type TravelOrderFormValues,
@@ -37,7 +37,6 @@ import {
 } from "@/shared/utils/duration.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
-const { Title } = Typography;
 const { TextArea } = Input;
 
 const MODE_OPTIONS = [
@@ -45,12 +44,26 @@ const MODE_OPTIONS = [
   { label: "Hours", value: "hours" },
 ];
 
+const BACK_TO = "/portal/official-business";
+
+/** File (create), edit (own pending) or view (read-only) an official business application. */
 export default function PortalOfficialBusinessCreate() {
   const navigate = useNavigate();
+  const { id, mode: pageMode } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
-  const { mutateAsync: create, isPending } =
+  const { data: applications = [], isLoading: applicationsLoading } =
+    useMyTravelOrderApplications();
+  const { mutateAsync: create, isPending: isCreating } =
     useCreateMyTravelOrderApplication();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateMyTravelOrderApplication();
   const { data: timeShifts = [] } = useFixedTimeShifts();
+
+  const record = id ? applications.find((a) => a.id === id) : undefined;
+  // Only a still-pending application is editable; anything else opens as a view.
+  const readOnly =
+    pageMode === "view" ||
+    (!!record && record.approvalStatus !== "ForApproval");
 
   const timeShiftOptions = timeShifts.map((s) => ({
     value: s.id,
@@ -62,6 +75,7 @@ export default function PortalOfficialBusinessCreate() {
   const {
     control,
     handleSubmit,
+    reset,
     setValue,
     formState: { errors },
   } = useForm<TravelOrderFormValues>({
@@ -80,7 +94,6 @@ export default function PortalOfficialBusinessCreate() {
       purpose: "",
       cost: 0,
       applicationRemarks: "",
-      approvalStatus: "ForApproval",
     },
   });
 
@@ -90,6 +103,33 @@ export default function PortalOfficialBusinessCreate() {
   useEffect(() => {
     if (employee) setValue("employeeId", employee.id);
   }, [employee, setValue]);
+
+  useEffect(() => {
+    if (!record) return;
+    const isHours = !!record.isManualEntry;
+    reset({
+      employeeId: record.employeeId,
+      startDate: record.startDate,
+      endDate: record.endDate,
+      mode: isHours ? "hours" : "timerange",
+      timeShiftId: undefined,
+      startTime:
+        !isHours && record.startTime
+          ? dayjs(record.startTime).format("HH:mm")
+          : "",
+      endTime:
+        !isHours && record.endTime ? dayjs(record.endTime).format("HH:mm") : "",
+      totalHours:
+        isHours && record.totalMinutes != null
+          ? record.totalMinutes / 60
+          : undefined,
+      destination: record.destination,
+      classification: record.classification,
+      purpose: record.purpose,
+      cost: 0,
+      applicationRemarks: record.applicationRemarks ?? "",
+    });
+  }, [record, reset]);
 
   const mode = useWatch({ control, name: "mode" });
   const startDate = useWatch({ control, name: "startDate" });
@@ -123,7 +163,7 @@ export default function PortalOfficialBusinessCreate() {
             totalMinutes: Math.round((values.totalHours ?? 0) * 60),
           };
 
-    await create({
+    const payload = {
       employeeId: employee!.id,
       startDate: values.startDate,
       endDate: values.endDate,
@@ -132,305 +172,283 @@ export default function PortalOfficialBusinessCreate() {
       purpose: values.purpose,
       cost: 0,
       applicationRemarks: values.applicationRemarks,
-      approvalStatus: "ForApproval",
       ...timePayload,
-    });
-    navigate({ to: "/portal/official-business" });
+    };
+    if (id) await update({ id, data: payload });
+    else await create(payload);
+    navigate({ to: BACK_TO });
   };
 
   return (
-    <div className="content-page">
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              File Official Business
-            </Title>
-            <p className="page-toolbar-subtitle">
-              Submit an official business / travel application for approval.
-            </p>
-          </div>
+    <PortalApplicationShell
+      mode={pageMode}
+      titles={{
+        create: "File Official Business",
+        edit: "Edit Official Business",
+        view: "View Official Business",
+      }}
+      subtitle="Submit an official business / travel application for approval."
+      backTo={BACK_TO}
+      applicationType="OfficialBusiness"
+      record={record}
+      loading={employeeLoading || (!!id && applicationsLoading)}
+      noEmployee={!employee}
+      readOnly={readOnly}
+    >
+      <Form
+        layout="vertical"
+        disabled={readOnly}
+        onFinish={handleSubmit(onSubmit)}
+      >
+        {/* Date Range | Entry Mode -- mirrors admin's top row (minus Employee, auto-scoped) */}
+        <div className="form-grid-2">
+          <Form.Item
+            label="Travel Date Range"
+            validateStatus={errors.startDate || errors.endDate ? "error" : ""}
+            help={errors.startDate?.message || errors.endDate?.message}
+          >
+            <MobileRangePicker
+              style={{ width: "100%" }}
+              value={[
+                startDate ? dayjs(startDate) : null,
+                endDate ? dayjs(endDate) : null,
+              ]}
+              onChange={(dates) => {
+                setValue("startDate", dates?.[0]?.format("YYYY-MM-DD") ?? "");
+                setValue("endDate", dates?.[1]?.format("YYYY-MM-DD") ?? "");
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item label="Entry Mode">
+            <Controller
+              name="mode"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={MODE_OPTIONS}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    setValue("startTime", "");
+                    setValue("endTime", "");
+                    setValue("totalHours", undefined);
+                    setValue("timeShiftId", undefined);
+                  }}
+                />
+              )}
+            />
+          </Form.Item>
         </div>
-      </div>
 
-      <div className="form-page-body">
-        {employeeLoading ? (
-          <Skeleton active paragraph={{ rows: 8 }} />
-        ) : !employee ? (
-          <Empty description="No employee profile is linked to your account yet. Contact HR if you believe this is a mistake." />
-        ) : (
-          <Card>
-            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-              {/* Date Range | Entry Mode -- mirrors admin's top row (minus Employee, auto-scoped) */}
-              <div className="form-grid-2">
-                <Form.Item
-                  label="Travel Date Range"
-                  validateStatus={
-                    errors.startDate || errors.endDate ? "error" : ""
-                  }
-                  help={errors.startDate?.message || errors.endDate?.message}
-                >
-                  <MobileRangePicker
-                    style={{ width: "100%" }}
-                    value={[
-                      startDate ? dayjs(startDate) : null,
-                      endDate ? dayjs(endDate) : null,
-                    ]}
-                    onChange={(dates) => {
-                      setValue(
-                        "startDate",
-                        dates?.[0]?.format("YYYY-MM-DD") ?? "",
-                      );
-                      setValue(
-                        "endDate",
-                        dates?.[1]?.format("YYYY-MM-DD") ?? "",
-                      );
-                    }}
-                  />
-                </Form.Item>
-
-                <Form.Item label="Entry Mode">
-                  <Controller
-                    name="mode"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={MODE_OPTIONS}
-                        onChange={(val) => {
-                          field.onChange(val);
-                          setValue("startTime", "");
-                          setValue("endTime", "");
-                          setValue("totalHours", undefined);
-                          setValue("timeShiftId", undefined);
-                        }}
-                      />
-                    )}
-                  />
-                </Form.Item>
-              </div>
-
-              {/* Time entry group */}
-              <div className="rounded-lg border border-(--ant-color-border) bg-(--ant-color-fill-quaternary) px-4 pt-4 pb-1 mb-6">
-                {mode === "timerange" ? (
-                  <>
-                    <Form.Item
-                      label={TRAVEL_ORDER_LABEL.TIME_SHIFT}
-                      style={{ maxWidth: 400 }}
-                    >
-                      <Controller
-                        name="timeShiftId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            allowClear
-                            showSearch
-                            placeholder="Select shift to pre-fill times (optional)"
-                            options={timeShiftOptions}
-                            filterOption={(input, option) =>
-                              String(option?.label ?? "")
-                                .toLowerCase()
-                                .includes(input.toLowerCase())
-                            }
-                            value={field.value || undefined}
-                            onChange={(val) => {
-                              field.onChange(val);
-                              const shift = timeShiftOptions.find(
-                                (s) => s.value === val,
-                              );
-                              if (shift) {
-                                const fmt = (t: string) =>
-                                  dayjs(t, ["HH:mm:ss", "HH:mm"]).format(
-                                    "HH:mm",
-                                  );
-                                setValue("startTime", fmt(shift.startTime));
-                                setValue("endTime", fmt(shift.endTime));
-                              } else {
-                                setValue("startTime", "");
-                                setValue("endTime", "");
-                              }
-                            }}
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <div className="form-grid-2">
-                      <Form.Item
-                        label={TRAVEL_ORDER_LABEL.START_TIME}
-                        validateStatus={errors.startTime ? "error" : ""}
-                        help={errors.startTime?.message}
-                      >
-                        <Controller
-                          name="startTime"
-                          control={control}
-                          render={({ field }) => (
-                            <TimePicker
-                              style={{ width: "100%" }}
-                              use12Hours
-                              format="hh:mm A"
-                              value={
-                                field.value ? dayjs(field.value, "HH:mm") : null
-                              }
-                              onChange={(t) =>
-                                field.onChange(t ? t.format("HH:mm") : "")
-                              }
-                            />
-                          )}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={
-                          <span className="flex items-center gap-2">
-                            {TRAVEL_ORDER_LABEL.END_TIME}
-                            {crossMidnight && (
-                              <Tag
-                                color="blue"
-                                className="text-[11px] leading-none"
-                              >
-                                +1 day
-                              </Tag>
-                            )}
-                          </span>
-                        }
-                        validateStatus={errors.endTime ? "error" : ""}
-                        help={errors.endTime?.message}
-                      >
-                        <Controller
-                          name="endTime"
-                          control={control}
-                          render={({ field }) => (
-                            <TimePicker
-                              style={{ width: "100%" }}
-                              use12Hours
-                              format="hh:mm A"
-                              value={
-                                field.value ? dayjs(field.value, "HH:mm") : null
-                              }
-                              onChange={(t) =>
-                                field.onChange(t ? t.format("HH:mm") : "")
-                              }
-                            />
-                          )}
-                        />
-                      </Form.Item>
-                    </div>
-                  </>
-                ) : (
-                  <Form.Item
-                    label={TRAVEL_ORDER_LABEL.TOTAL_HOURS}
-                    validateStatus={errors.totalHours ? "error" : ""}
-                    help={
-                      errors.totalHours?.message ??
-                      "Enter the total hours for this travel (e.g. 4, 1.5 for 1 hr 30 min)."
-                    }
-                  >
-                    <Controller
-                      name="totalHours"
-                      control={control}
-                      render={({ field }) => (
-                        <InputNumber
-                          {...field}
-                          style={{ width: 200 }}
-                          min={0.25}
-                          max={999}
-                          step={0.25}
-                          precision={2}
-                          addonAfter="hrs"
-                          placeholder="e.g. 8"
-                          onChange={(v) => field.onChange(v ?? undefined)}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                )}
-              </div>
-
-              {/* Destination | Classification */}
-              <div className="form-grid-2">
-                <Form.Item
-                  label="Destination"
-                  validateStatus={errors.destination ? "error" : ""}
-                  help={errors.destination?.message}
-                >
-                  <Controller
-                    name="destination"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        placeholder="City, Province or Address"
-                      />
-                    )}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label="Classification"
-                  validateStatus={errors.classification ? "error" : ""}
-                  help={errors.classification?.message}
-                >
-                  <Controller
-                    name="classification"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        placeholder="Select classification"
-                        options={TRAVEL_CLASSIFICATION_OPTIONS}
-                        value={field.value || undefined}
-                      />
-                    )}
-                  />
-                </Form.Item>
-              </div>
-
+        {/* Time entry group */}
+        <div className="rounded-lg border border-(--ant-color-border) bg-(--ant-color-fill-quaternary) px-4 pt-4 pb-1 mb-6">
+          {mode === "timerange" ? (
+            <>
               <Form.Item
-                label="Purpose"
-                validateStatus={errors.purpose ? "error" : ""}
-                help={errors.purpose?.message}
+                label={TRAVEL_ORDER_LABEL.TIME_SHIFT}
+                style={{ maxWidth: 400 }}
               >
                 <Controller
-                  name="purpose"
+                  name="timeShiftId"
                   control={control}
                   render={({ field }) => (
-                    <TextArea
+                    <Select
                       {...field}
-                      rows={3}
-                      placeholder="Describe the purpose of this official business"
+                      allowClear
+                      showSearch
+                      placeholder="Select shift to pre-fill times (optional)"
+                      options={timeShiftOptions}
+                      filterOption={(input, option) =>
+                        String(option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      value={field.value || undefined}
+                      onChange={(val) => {
+                        field.onChange(val);
+                        const shift = timeShiftOptions.find(
+                          (s) => s.value === val,
+                        );
+                        if (shift) {
+                          const fmt = (t: string) =>
+                            dayjs(t, ["HH:mm:ss", "HH:mm"]).format("HH:mm");
+                          setValue("startTime", fmt(shift.startTime));
+                          setValue("endTime", fmt(shift.endTime));
+                        } else {
+                          setValue("startTime", "");
+                          setValue("endTime", "");
+                        }
+                      }}
                     />
                   )}
                 />
               </Form.Item>
 
-              <Form.Item
-                label="Remarks"
-                validateStatus={errors.applicationRemarks ? "error" : ""}
-                help={errors.applicationRemarks?.message}
-              >
-                <Controller
-                  name="applicationRemarks"
-                  control={control}
-                  render={({ field }) => <TextArea {...field} rows={2} />}
-                />
-              </Form.Item>
-
-              <Space>
-                <Button type="primary" htmlType="submit" loading={isPending}>
-                  Submit Application
-                </Button>
-                <Button
-                  onClick={() => navigate({ to: "/portal/official-business" })}
+              <div className="form-grid-2">
+                <Form.Item
+                  label={TRAVEL_ORDER_LABEL.START_TIME}
+                  validateStatus={errors.startTime ? "error" : ""}
+                  help={errors.startTime?.message}
                 >
-                  Cancel
-                </Button>
-              </Space>
-            </Form>
-          </Card>
+                  <Controller
+                    name="startTime"
+                    control={control}
+                    render={({ field }) => (
+                      <TimePicker
+                        style={{ width: "100%" }}
+                        use12Hours
+                        format="hh:mm A"
+                        value={field.value ? dayjs(field.value, "HH:mm") : null}
+                        onChange={(t) =>
+                          field.onChange(t ? t.format("HH:mm") : "")
+                        }
+                      />
+                    )}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={
+                    <span className="flex items-center gap-2">
+                      {TRAVEL_ORDER_LABEL.END_TIME}
+                      {crossMidnight && (
+                        <Tag color="blue" className="text-[11px] leading-none">
+                          +1 day
+                        </Tag>
+                      )}
+                    </span>
+                  }
+                  validateStatus={errors.endTime ? "error" : ""}
+                  help={errors.endTime?.message}
+                >
+                  <Controller
+                    name="endTime"
+                    control={control}
+                    render={({ field }) => (
+                      <TimePicker
+                        style={{ width: "100%" }}
+                        use12Hours
+                        format="hh:mm A"
+                        value={field.value ? dayjs(field.value, "HH:mm") : null}
+                        onChange={(t) =>
+                          field.onChange(t ? t.format("HH:mm") : "")
+                        }
+                      />
+                    )}
+                  />
+                </Form.Item>
+              </div>
+            </>
+          ) : (
+            <Form.Item
+              label={TRAVEL_ORDER_LABEL.TOTAL_HOURS}
+              validateStatus={errors.totalHours ? "error" : ""}
+              help={
+                errors.totalHours?.message ??
+                "Enter the total hours for this travel (e.g. 4, 1.5 for 1 hr 30 min)."
+              }
+            >
+              <Controller
+                name="totalHours"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    style={{ width: 200 }}
+                    min={0.25}
+                    max={999}
+                    step={0.25}
+                    precision={2}
+                    addonAfter="hrs"
+                    placeholder="e.g. 8"
+                    onChange={(v) => field.onChange(v ?? undefined)}
+                  />
+                )}
+              />
+            </Form.Item>
+          )}
+        </div>
+
+        {/* Destination | Classification */}
+        <div className="form-grid-2">
+          <Form.Item
+            label="Destination"
+            validateStatus={errors.destination ? "error" : ""}
+            help={errors.destination?.message}
+          >
+            <Controller
+              name="destination"
+              control={control}
+              render={({ field }) => (
+                <Input {...field} placeholder="City, Province or Address" />
+              )}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Classification"
+            validateStatus={errors.classification ? "error" : ""}
+            help={errors.classification?.message}
+          >
+            <Controller
+              name="classification"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  placeholder="Select classification"
+                  options={TRAVEL_CLASSIFICATION_OPTIONS}
+                  value={field.value || undefined}
+                />
+              )}
+            />
+          </Form.Item>
+        </div>
+
+        <Form.Item
+          label="Purpose"
+          validateStatus={errors.purpose ? "error" : ""}
+          help={errors.purpose?.message}
+        >
+          <Controller
+            name="purpose"
+            control={control}
+            render={({ field }) => (
+              <TextArea
+                {...field}
+                rows={3}
+                placeholder="Describe the purpose of this official business"
+              />
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Remarks"
+          validateStatus={errors.applicationRemarks ? "error" : ""}
+          help={errors.applicationRemarks?.message}
+        >
+          <Controller
+            name="applicationRemarks"
+            control={control}
+            render={({ field }) => <TextArea {...field} rows={2} />}
+          />
+        </Form.Item>
+
+        {!readOnly && (
+          <Space>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isCreating || isUpdating}
+            >
+              {id ? "Save Changes" : "Submit Application"}
+            </Button>
+            <Button onClick={() => navigate({ to: BACK_TO })}>Cancel</Button>
+          </Space>
         )}
-      </div>
-    </div>
+      </Form>
+    </PortalApplicationShell>
   );
 }

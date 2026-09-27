@@ -5,16 +5,13 @@ import {
   Col,
   DatePicker,
   Divider,
-  Empty,
   Form,
   Input,
   InputNumber,
   Row,
   Select,
-  Skeleton,
   Space,
   Table,
-  Typography,
   message,
 } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
@@ -24,8 +21,12 @@ import { Controller, useForm } from "react-hook-form";
 import dayjs from "dayjs";
 import {
   useMyEmployee,
+  useMyLoanApplications,
   useCreateMyLoanApplication,
+  useUpdateMyLoanApplication,
 } from "../../../shared/hooks/use-my-employee-queries";
+import { usePortalFormMode } from "../../../shared/hooks/use-portal-form-mode";
+import { PortalApplicationShell } from "../../../shared/components/portal-application-shell";
 import { useDeductions } from "@/app/modules/setup/deduction/hooks/use-deduction-queries";
 import { useDeductionTypes } from "@/app/modules/setup/deduction-type/hooks/use-deduction-type-queries";
 import {
@@ -40,20 +41,32 @@ import {
   type LoanBreakdownRow,
 } from "@/shared/utils/loan-amortization.util";
 
-const { Title } = Typography;
+const BACK_TO = "/portal/loan-applications";
 
+/** File (create), edit (own pending) or view (read-only) a loan application. */
 export default function PortalLoanApplicationCreate() {
   const navigate = useNavigate();
+  const { id, mode } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
   const { data: rawDeductions = [] } = useDeductions();
   const { data: rawDeductionTypes = [] } = useDeductionTypes();
-  const { mutateAsync: create, isPending } = useCreateMyLoanApplication();
+  const { data: loans = [], isLoading: loansLoading } = useMyLoanApplications();
+  const { mutateAsync: create, isPending: isCreating } =
+    useCreateMyLoanApplication();
+  const { mutateAsync: update, isPending: isUpdating } =
+    useUpdateMyLoanApplication();
+
+  const record = id ? loans.find((l) => l.id === id) : undefined;
+  // Only a still-pending loan is editable; anything else opens as a view.
+  const readOnly =
+    mode === "view" || (!!record && record.approvalStatus !== "ForApproval");
 
   const [breakdown, setBreakdown] = useState<LoanBreakdownRow[]>([]);
 
   const {
     control,
     handleSubmit,
+    reset,
     watch,
     setValue,
     formState: { errors },
@@ -83,6 +96,33 @@ export default function PortalLoanApplicationCreate() {
   useEffect(() => {
     if (employee) setValue("employeeId", employee.id);
   }, [employee, setValue]);
+
+  // Same mapping as the admin Loans detail page's edit load.
+  useEffect(() => {
+    if (!record) return;
+    reset({
+      employeeId: record.employeeId,
+      deductionId: record.deductionId,
+      encodeDate: record.encodeDate?.replace(/Z$/, "").split("T")[0] ?? "",
+      startDate: record.startDate?.replace(/Z$/, "").split("T")[0] ?? "",
+      frequencyOfPayment: record.frequencyOfPayment,
+      terms: record.terms,
+      totalPrincipal: record.totalPrincipal,
+      interestRate: record.interestRate,
+      note: record.note ?? "",
+      remarks: record.remarks ?? "",
+    });
+    setBreakdown(
+      (record.breakdown ?? []).map((r, i) => ({
+        period: i + 1,
+        date: r.date?.replace(/Z$/, "").split("T")[0] ?? "",
+        principal: r.principal,
+        interest: r.interest,
+        amount: r.amount,
+        balance: r.balance,
+      })),
+    );
+  }, [record, reset]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const watchedValues = watch([
@@ -148,7 +188,7 @@ export default function PortalLoanApplicationCreate() {
       return;
     }
 
-    await create({
+    const common = {
       employeeId: employee!.id,
       deductionId: values.deductionId,
       encodeDate: values.encodeDate,
@@ -161,259 +201,275 @@ export default function PortalLoanApplicationCreate() {
       totalAmount: +totalAmount.toFixed(4),
       note: values.note ?? "",
       remarks: values.remarks ?? "",
-      breakdown: breakdown.map((r) => ({
-        date: r.date,
-        principal: r.principal,
-        interest: r.interest,
-        amount: r.amount,
-      })),
-    });
-    navigate({ to: "/portal/loan-applications" });
+    };
+
+    if (record) {
+      // Existing installment ids by period, like the admin edit -- rows update in place.
+      await update({
+        ...common,
+        id: record.id,
+        details: breakdown.map((r) => ({
+          id: record.breakdown?.[r.period - 1]?.id ?? "",
+          date: r.date,
+          principal: r.principal,
+          interest: r.interest,
+          amount: r.amount,
+        })),
+      });
+    } else {
+      await create({
+        ...common,
+        breakdown: breakdown.map((r) => ({
+          date: r.date,
+          principal: r.principal,
+          interest: r.interest,
+          amount: r.amount,
+        })),
+      });
+    }
+    navigate({ to: BACK_TO });
   };
 
   return (
-    <div className="content-page">
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              Request a Loan
-            </Title>
-            <p className="page-toolbar-subtitle">
-              Submit a loan application for HR approval. It only affects your
-              pay once approved.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="form-page-body">
-        {employeeLoading ? (
-          <Skeleton active paragraph={{ rows: 6 }} />
-        ) : !employee ? (
-          <Empty description="No employee profile is linked to your account yet. Contact HR if you believe this is a mistake." />
-        ) : (
-          <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-            <Card className="mb-4">
-              <Row gutter={16}>
-                <Col xs={24} md={8}>
-                  <Form.Item
-                    label="Loan Type"
-                    validateStatus={errors.deductionId ? "error" : ""}
-                    help={errors.deductionId?.message}
-                    required
-                  >
-                    <Controller
-                      name="deductionId"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          showSearch
-                          options={loanOptions}
-                          filterOption={(input, opt) =>
-                            String(opt?.label ?? "")
-                              .toLowerCase()
-                              .includes(input.toLowerCase())
-                          }
-                          placeholder="Select loan type"
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={6}>
-                  <Form.Item
-                    label="Start Date"
-                    validateStatus={errors.startDate ? "error" : ""}
-                    help={errors.startDate?.message}
-                    required
-                  >
-                    <Controller
-                      name="startDate"
-                      control={control}
-                      render={({ field }) => (
-                        <DatePicker
-                          style={{ width: "100%" }}
-                          value={field.value ? dayjs(field.value) : null}
-                          onChange={(d) =>
-                            field.onChange(d?.format("YYYY-MM-DD") ?? "")
-                          }
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={5}>
-                  <Form.Item
-                    label="Frequency"
-                    validateStatus={errors.frequencyOfPayment ? "error" : ""}
-                    help={errors.frequencyOfPayment?.message}
-                    required
-                  >
-                    <Controller
-                      name="frequencyOfPayment"
-                      control={control}
-                      render={({ field }) => (
-                        <Select {...field} options={FREQUENCY_OPTIONS} />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={5}>
-                  <Form.Item
-                    label="Terms (periods)"
-                    validateStatus={errors.terms ? "error" : ""}
-                    help={errors.terms?.message}
-                    required
-                  >
-                    <Controller
-                      name="terms"
-                      control={control}
-                      render={({ field }) => (
-                        <InputNumber
-                          {...field}
-                          min={1}
-                          style={{ width: "100%" }}
-                          precision={0}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item
-                    label="Principal Amount"
-                    validateStatus={errors.totalPrincipal ? "error" : ""}
-                    help={errors.totalPrincipal?.message}
-                    required
-                  >
-                    <Controller
-                      name="totalPrincipal"
-                      control={control}
-                      render={({ field }) => (
-                        <InputNumber
-                          {...field}
-                          min={0}
-                          precision={2}
-                          style={{ width: "100%" }}
-                          addonBefore="₱"
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item
-                    label="Annual Interest Rate (%)"
-                    validateStatus={errors.interestRate ? "error" : ""}
-                    help={errors.interestRate?.message}
-                    required
-                  >
-                    <Controller
-                      name="interestRate"
-                      control={control}
-                      render={({ field }) => (
-                        <InputNumber
-                          {...field}
-                          min={0}
-                          precision={4}
-                          style={{ width: "100%" }}
-                          addonAfter="%"
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8} className="flex items-end pb-6">
-                  <Button
-                    icon={<SyncOutlined />}
-                    onClick={regenerateBreakdown}
-                    style={{ width: "100%" }}
-                  >
-                    Generate Schedule
-                  </Button>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Note">
-                    <Controller
-                      name="note"
-                      control={control}
-                      render={({ field }) => (
-                        <Input.TextArea {...field} rows={2} />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item label="Remarks">
-                    <Controller
-                      name="remarks"
-                      control={control}
-                      render={({ field }) => (
-                        <Input.TextArea
-                          {...field}
-                          rows={2}
-                          placeholder="Reason for this loan"
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Card>
-
-            {breakdown.length > 0 && (
-              <Card
-                title={
-                  <span>
-                    Amortization Schedule
-                    <span className="ml-4 text-sm font-normal text-gray-500">
-                      {breakdown.length} periods · Total:{" "}
-                      <strong>
-                        ₱
-                        {(totalAmount ?? 0).toLocaleString("en-PH", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </strong>
-                      {endDate && ` · Ends ${endDate}`}
-                    </span>
-                  </span>
-                }
-                className="mb-4"
+    <PortalApplicationShell
+      mode={mode}
+      titles={{
+        create: "Request a Loan",
+        edit: "Edit Loan Request",
+        view: "View Loan Request",
+      }}
+      subtitle="Submit a loan application for HR approval. It only affects your pay once approved."
+      backTo={BACK_TO}
+      applicationType="Loan"
+      record={record}
+      loading={employeeLoading || (!!id && loansLoading)}
+      noEmployee={!employee}
+      readOnly={readOnly}
+      bare
+    >
+      <Form
+        layout="vertical"
+        disabled={readOnly}
+        onFinish={handleSubmit(onSubmit)}
+      >
+        <Card className="mb-4">
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <Form.Item
+                label="Loan Type"
+                validateStatus={errors.deductionId ? "error" : ""}
+                help={errors.deductionId?.message}
+                required
               >
-                <div style={{ overflowX: "auto" }}>
-                  <Table
-                    rowKey="period"
-                    dataSource={breakdown}
-                    columns={loanBreakdownColumns}
-                    size="small"
-                    pagination={false}
-                  />
-                </div>
-              </Card>
-            )}
-
-            {breakdown.length === 0 && (
-              <Divider plain>
-                Fill in Principal, Terms, Interest Rate and Start Date, then
-                click "Generate Schedule"
-              </Divider>
-            )}
-
-            <Space>
-              <Button type="primary" htmlType="submit" loading={isPending}>
-                Submit Request
-              </Button>
+                <Controller
+                  name="deductionId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      showSearch
+                      options={loanOptions}
+                      filterOption={(input, opt) =>
+                        String(opt?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      placeholder="Select loan type"
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item
+                label="Start Date"
+                validateStatus={errors.startDate ? "error" : ""}
+                help={errors.startDate?.message}
+                required
+              >
+                <Controller
+                  name="startDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      value={field.value ? dayjs(field.value) : null}
+                      onChange={(d) =>
+                        field.onChange(d?.format("YYYY-MM-DD") ?? "")
+                      }
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={5}>
+              <Form.Item
+                label="Frequency"
+                validateStatus={errors.frequencyOfPayment ? "error" : ""}
+                help={errors.frequencyOfPayment?.message}
+                required
+              >
+                <Controller
+                  name="frequencyOfPayment"
+                  control={control}
+                  render={({ field }) => (
+                    <Select {...field} options={FREQUENCY_OPTIONS} />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={5}>
+              <Form.Item
+                label="Terms (periods)"
+                validateStatus={errors.terms ? "error" : ""}
+                help={errors.terms?.message}
+                required
+              >
+                <Controller
+                  name="terms"
+                  control={control}
+                  render={({ field }) => (
+                    <InputNumber
+                      {...field}
+                      min={1}
+                      style={{ width: "100%" }}
+                      precision={0}
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                label="Principal Amount"
+                validateStatus={errors.totalPrincipal ? "error" : ""}
+                help={errors.totalPrincipal?.message}
+                required
+              >
+                <Controller
+                  name="totalPrincipal"
+                  control={control}
+                  render={({ field }) => (
+                    <InputNumber
+                      {...field}
+                      min={0}
+                      precision={2}
+                      style={{ width: "100%" }}
+                      addonBefore="₱"
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                label="Annual Interest Rate (%)"
+                validateStatus={errors.interestRate ? "error" : ""}
+                help={errors.interestRate?.message}
+                required
+              >
+                <Controller
+                  name="interestRate"
+                  control={control}
+                  render={({ field }) => (
+                    <InputNumber
+                      {...field}
+                      min={0}
+                      precision={4}
+                      style={{ width: "100%" }}
+                      addonAfter="%"
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8} className="flex items-end pb-6">
               <Button
-                onClick={() => navigate({ to: "/portal/loan-applications" })}
+                icon={<SyncOutlined />}
+                onClick={regenerateBreakdown}
+                style={{ width: "100%" }}
               >
-                Cancel
+                Generate Schedule
               </Button>
-            </Space>
-          </Form>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="Note">
+                <Controller
+                  name="note"
+                  control={control}
+                  render={({ field }) => <Input.TextArea {...field} rows={2} />}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="Remarks">
+                <Controller
+                  name="remarks"
+                  control={control}
+                  render={({ field }) => (
+                    <Input.TextArea
+                      {...field}
+                      rows={2}
+                      placeholder="Reason for this loan"
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
+
+        {breakdown.length > 0 && (
+          <Card
+            title={
+              <span>
+                Amortization Schedule
+                <span className="ml-4 text-sm font-normal text-gray-500">
+                  {breakdown.length} periods · Total:{" "}
+                  <strong>
+                    ₱
+                    {(totalAmount ?? 0).toLocaleString("en-PH", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </strong>
+                  {endDate && ` · Ends ${endDate}`}
+                </span>
+              </span>
+            }
+            className="mb-4"
+          >
+            <div style={{ overflowX: "auto" }}>
+              <Table
+                rowKey="period"
+                dataSource={breakdown}
+                columns={loanBreakdownColumns}
+                size="small"
+                pagination={false}
+              />
+            </div>
+          </Card>
         )}
-      </div>
-    </div>
+
+        {breakdown.length === 0 && (
+          <Divider plain>
+            Fill in Principal, Terms, Interest Rate and Start Date, then click
+            "Generate Schedule"
+          </Divider>
+        )}
+
+        {!readOnly && (
+          <Space>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isCreating || isUpdating}
+            >
+              {record ? "Save Changes" : "Submit Request"}
+            </Button>
+            <Button onClick={() => navigate({ to: BACK_TO })}>Cancel</Button>
+          </Space>
+        )}
+      </Form>
+    </PortalApplicationShell>
   );
 }
