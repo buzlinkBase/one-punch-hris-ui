@@ -53,26 +53,17 @@ export const overtimeApplicationApi = {
     );
   },
 
-  changeStatus(
-    record: OvertimeApplicationResponse,
-    status: string,
-    note?: string,
-  ): Promise<OvertimeApplicationResponse> {
-    return httpClient.putUnwrapped<OvertimeApplicationResponse>(
-      `${ENDPOINT}/${record.id}`,
-      {
-        id: record.id,
-        employeeId: record.employeeId,
-        otDate: record.otDate,
-        startTime: record.startTime,
-        endTime: record.endTime,
-        manualOTMinutes: record.manualOTMinutes,
-        isManualEntry: record.isManualEntry,
-        remarks: record.remarks,
-        approvalStatus: status,
-        note,
-      },
-    );
+  // Status only changes through these (the approval engine) -- update() never touches it.
+  approve(id: string, note?: string): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/${id}/approve`, {
+      note,
+    });
+  },
+
+  decline(id: string, note?: string): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/${id}/decline`, {
+      note,
+    });
   },
 
   remove(id: string): Promise<void> {

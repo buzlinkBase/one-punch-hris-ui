@@ -12,7 +12,6 @@ export const overtimeApplicationFormSchema = z
       .min(0.25, { error: "Minimum 15 minutes" })
       .optional(),
     remarks: z.string(),
-    approvalStatus: z.string(),
   })
   .superRefine((val, ctx) => {
     if (val.mode === "datetime") {

@@ -109,8 +109,8 @@ export default function DeductionApplicationTable({
       dataIndex: "approvalStatus",
       key: "approvalStatus",
       render: (v?: string) => (
-        <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "success"}>
-          {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "Approved"}
+        <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "default"}>
+          {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "—"}
         </Tag>
       ),
     },

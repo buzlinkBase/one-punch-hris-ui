@@ -43,6 +43,7 @@ import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 import {
   generateLoanBreakdown,
   loanBreakdownColumns,
@@ -284,6 +285,11 @@ export default function DeductionApplicationDetail() {
 
       <Form layout="vertical" disabled={loadingExisting}>
         <Card className="mb-4">
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <ApprovalStatusField status={existing?.approvalStatus} />
+            </Col>
+          </Row>
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item

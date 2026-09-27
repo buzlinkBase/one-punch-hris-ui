@@ -113,14 +113,16 @@ export function useChangeLeaveApplicationStatus() {
       note,
     }: {
       record: LeaveApplicationResponse;
-      status: string;
+      status: "Approved" | "Declined";
       note?: string;
-    }) => leaveApplicationApi.changeStatus(record, status, note),
-    onSuccess: (updated) => {
-      queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
+    }) =>
+      status === "Approved"
+        ? leaveApplicationApi.approve(record.id, note)
+        : leaveApplicationApi.decline(record.id, note),
+    onSuccess: (_, { record }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.invalidateQueries({
-        queryKey: ["approval-instance", "Leave", updated.id],
+        queryKey: ["approval-instance", "Leave", record.id],
       });
     },
     onError: (error: AxiosError<ErrorResponse>) => {

@@ -33,17 +33,10 @@ import { OVERTIME_APPLICATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
-
-const APPROVAL_STATUS_OPTIONS = [
-  { value: "ForApproval", label: "For Approval" },
-  { value: "Approved", label: "Approved" },
-  { value: "Cancelled", label: "Cancelled" },
-  { value: "Declined", label: "Declined" },
-  { value: "Withdrawn", label: "Withdrawn" },
-];
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
@@ -131,7 +124,6 @@ export default function OvertimeApplicationDetail() {
       endTime: "",
       manualOTMinutes: undefined,
       remarks: "",
-      approvalStatus: "Approved",
     },
   });
 
@@ -161,7 +153,6 @@ export default function OvertimeApplicationDetail() {
             ? selected.manualOTMinutes / 60
             : undefined,
         remarks: selected.remarks ?? "",
-        approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
@@ -196,13 +187,9 @@ export default function OvertimeApplicationDetail() {
           };
 
     if (isEdit && id) {
-      await update({
-        id,
-        approvalStatus: values.approvalStatus,
-        ...payload,
-      });
+      await update({ id, ...payload });
     } else {
-      await add({ ...payload, approvalStatus: values.approvalStatus });
+      await add(payload);
     }
     navigate({ to: "/applications/overtime" });
   };
@@ -393,17 +380,10 @@ export default function OvertimeApplicationDetail() {
             </Form.Item>
           )}
 
-          <PermissionGate permission="Overtime:Approve">
-            <Form.Item label={OVERTIME_APPLICATION_LABEL.STATUS}>
-              <Controller
-                name="approvalStatus"
-                control={control}
-                render={({ field }) => (
-                  <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
-                )}
-              />
-            </Form.Item>
-          </PermissionGate>
+          <ApprovalStatusField
+            label={OVERTIME_APPLICATION_LABEL.STATUS}
+            status={selected?.approvalStatus}
+          />
 
           <Form.Item
             label={OVERTIME_APPLICATION_LABEL.REMARKS}
@@ -431,7 +411,7 @@ export default function OvertimeApplicationDetail() {
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <PermissionGate
-                permission={["Overtime:Edit", "Overtime:Approve"]}
+                permission={isEdit ? "Overtime:Edit" : "Overtime:Create"}
               >
                 <Button
                   type="primary"

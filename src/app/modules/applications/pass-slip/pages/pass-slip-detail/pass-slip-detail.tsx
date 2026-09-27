@@ -30,15 +30,12 @@ import {
   useUpdatePassSlip,
 } from "../../hooks/use-pass-slip-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import {
-  APPROVAL_STATUS_COLOR,
-  APPROVAL_STATUS_LABEL,
-  PASS_SLIP_LABEL,
-} from "../../constants/label.const";
+import { PASS_SLIP_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -105,7 +102,6 @@ function EditPassSlip({ id }: { id: string }) {
     try {
       await update({
         id,
-        approvalStatus: selected!.approvalStatus,
         employeeId: values.employeeId,
         applicationDate: values.applicationDate,
         departureTime: values.departureTime,
@@ -122,17 +118,10 @@ function EditPassSlip({ id }: { id: string }) {
 
   return (
     <div className="form-page-body">
-      {selected && (
-        <div style={{ marginBottom: 12 }}>
-          <Tag
-            color={APPROVAL_STATUS_COLOR[selected.approvalStatus] ?? "default"}
-          >
-            {APPROVAL_STATUS_LABEL[selected.approvalStatus] ??
-              selected.approvalStatus}
-          </Tag>
-        </div>
-      )}
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        <div className="w-50">
+          <ApprovalStatusField status={selected?.approvalStatus} />
+        </div>
         <div className="form-grid-2">
           <Form.Item
             label="Employee"
@@ -317,6 +306,10 @@ function CreatePassSlip() {
   return (
     <div className="form-page-body">
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        <div className="w-50">
+          <ApprovalStatusField />
+        </div>
+
         {/* ── Shared header ── */}
         <div className="form-grid-2">
           <Form.Item

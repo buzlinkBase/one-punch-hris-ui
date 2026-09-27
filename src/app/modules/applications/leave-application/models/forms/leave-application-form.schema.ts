@@ -23,7 +23,6 @@ export const leaveApplicationFormSchema = z
     disbursementMethod: z.enum(["", "employer", "direct"]).optional(),
     applicationRemarks: z.string().optional(),
     supportingDocumentUrl: z.string().optional(),
-    approvalStatus: z.string(),
   })
   .superRefine((data, ctx) => {
     if (data.mode === "multiday") {

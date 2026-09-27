@@ -48,6 +48,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -77,14 +78,6 @@ const PAY_TYPE_OPTIONS = [
 const PAYOUT_MODE_OPTIONS = [
   { value: "perday", label: "Per Day" },
   { value: "onetime", label: "One Time" },
-];
-
-const APPROVAL_STATUS_OPTIONS = [
-  { value: "ForApproval", label: "For Approval" },
-  { value: "Approved", label: "Approved" },
-  { value: "Cancelled", label: "Cancelled" },
-  { value: "Declined", label: "Declined" },
-  { value: "Withdrawn", label: "Withdrawn" },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
@@ -241,7 +234,6 @@ export default function LeaveApplicationDetail() {
       disbursementMethod: "",
       applicationRemarks: "",
       supportingDocumentUrl: "",
-      approvalStatus: "ForApproval",
     },
   });
 
@@ -380,7 +372,6 @@ export default function LeaveApplicationDetail() {
               : "direct",
         applicationRemarks: selected.applicationRemarks ?? "",
         supportingDocumentUrl: selected.supportingDocumentUrl ?? "",
-        approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
@@ -484,7 +475,6 @@ export default function LeaveApplicationDetail() {
         : null,
       applicationRemarks: values.applicationRemarks,
       supportingDocumentUrl: values.supportingDocumentUrl || undefined,
-      approvalStatus: values.approvalStatus,
       ...timePayload,
     };
 
@@ -956,17 +946,10 @@ export default function LeaveApplicationDetail() {
               </Form.Item>
             )}
 
-            <PermissionGate permission="Leave:Approve">
-              <Form.Item label={LEAVE_APPLICATION_LABEL.STATUS}>
-                <Controller
-                  name="approvalStatus"
-                  control={control}
-                  render={({ field }) => (
-                    <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
-                  )}
-                />
-              </Form.Item>
-            </PermissionGate>
+            <ApprovalStatusField
+              label={LEAVE_APPLICATION_LABEL.STATUS}
+              status={selected?.approvalStatus}
+            />
           </div>
 
           {payType === "WithPay" && payoutMode === "onetime" && (
@@ -1132,7 +1115,9 @@ export default function LeaveApplicationDetail() {
               <Button onClick={() => navigate({ to: "/applications/leave" })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
+              <PermissionGate
+                permission={isEdit ? "Leave:Edit" : "Leave:Create"}
+              >
                 <Button
                   type="primary"
                   htmlType="submit"

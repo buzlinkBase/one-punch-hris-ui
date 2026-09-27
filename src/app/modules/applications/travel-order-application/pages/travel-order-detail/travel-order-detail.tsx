@@ -36,6 +36,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -43,14 +44,6 @@ const { TextArea } = Input;
 const MODE_OPTIONS = [
   { label: "Time Range", value: "timerange" },
   { label: "Hours", value: "hours" },
-];
-
-const APPROVAL_STATUS_OPTIONS = [
-  { value: "ForApproval", label: "For Approval" },
-  { value: "Approved", label: "Approved" },
-  { value: "Cancelled", label: "Cancelled" },
-  { value: "Declined", label: "Declined" },
-  { value: "Withdrawn", label: "Withdrawn" },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
@@ -136,7 +129,6 @@ export default function TravelOrderDetail() {
       purpose: "",
       cost: 0,
       applicationRemarks: "",
-      approvalStatus: "Approved",
     },
   });
 
@@ -173,7 +165,6 @@ export default function TravelOrderDetail() {
         purpose: selected.purpose,
         cost: selected.cost ?? 0,
         applicationRemarks: selected.applicationRemarks ?? "",
-        approvalStatus: selected.approvalStatus,
       });
     }
   }, [selected, isEdit, reset]);
@@ -215,13 +206,9 @@ export default function TravelOrderDetail() {
     };
 
     if (isEdit && id) {
-      await update({
-        id,
-        approvalStatus: values.approvalStatus,
-        ...payload,
-      });
+      await update({ id, ...payload });
     } else {
-      await add({ ...payload, approvalStatus: values.approvalStatus });
+      await add(payload);
     }
     navigate({ to: "/applications/official-business" });
   };
@@ -526,17 +513,10 @@ export default function TravelOrderDetail() {
             />
           </Form.Item>
 
-          <PermissionGate permission="Official Business:Approve">
-            <Form.Item label={TRAVEL_ORDER_LABEL.STATUS}>
-              <Controller
-                name="approvalStatus"
-                control={control}
-                render={({ field }) => (
-                  <Select {...field} options={APPROVAL_STATUS_OPTIONS} />
-                )}
-              />
-            </Form.Item>
-          </PermissionGate>
+          <ApprovalStatusField
+            label={TRAVEL_ORDER_LABEL.STATUS}
+            status={selected?.approvalStatus}
+          />
 
           <Form.Item
             label={TRAVEL_ORDER_LABEL.REMARKS}
@@ -566,10 +546,9 @@ export default function TravelOrderDetail() {
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
               <PermissionGate
-                permission={[
-                  "Official Business:Edit",
-                  "Official Business:Approve",
-                ]}
+                permission={
+                  isEdit ? "Official Business:Edit" : "Official Business:Create"
+                }
               >
                 <Button
                   type="primary"

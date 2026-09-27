@@ -18,5 +18,4 @@ export interface CreateLeaveApplication {
   totalMinutes?: number | null;
   applicationRemarks?: string;
   supportingDocumentUrl?: string;
-  approvalStatus?: string;
 }
