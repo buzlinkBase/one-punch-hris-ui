@@ -15,7 +15,6 @@ export const travelOrderFormSchema = z
     purpose: z.string().min(1, "Purpose is required"),
     cost: z.number({ error: "Cost must be a number" }).min(0),
     applicationRemarks: z.string().optional(),
-    approvalStatus: z.string(),
   })
   .superRefine((data, ctx) => {
     if (data.mode === "timerange") {

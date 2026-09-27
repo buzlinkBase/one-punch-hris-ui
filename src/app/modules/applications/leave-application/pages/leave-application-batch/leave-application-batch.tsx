@@ -28,6 +28,7 @@ import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-ty
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -254,7 +255,7 @@ export default function LeaveApplicationBatch() {
             </Title>
             <p className="page-toolbar-subtitle">
               File leave for one or more employees with the same duration and
-              date.
+              date. Every entry is filed For Approval.
             </p>
           </div>
           <Space>
@@ -267,6 +268,10 @@ export default function LeaveApplicationBatch() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+          <div className="w-50">
+            <ApprovalStatusField />
+          </div>
+
           {/* Shared duration settings */}
           <Form.Item label="Duration Type">
             <Controller

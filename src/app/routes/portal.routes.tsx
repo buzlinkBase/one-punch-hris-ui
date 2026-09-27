@@ -89,16 +89,40 @@ export const portalRoutes: SetupRouteConfig[] = [
     path: "leave-applications/create",
     component: PortalLeaveApplicationCreate,
   },
+  // The create page doubles as edit ($id) and read-only view ($id/view) -- see
+  // usePortalFormMode.
+  {
+    path: "leave-applications/$id",
+    component: PortalLeaveApplicationCreate,
+  },
+  {
+    path: "leave-applications/$id/view",
+    component: PortalLeaveApplicationCreate,
+  },
   { path: "overtime", component: PortalOvertimeList },
   { path: "overtime/create", component: PortalOvertimeCreate },
+  { path: "overtime/$id", component: PortalOvertimeCreate },
+  { path: "overtime/$id/view", component: PortalOvertimeCreate },
   { path: "official-business", component: PortalOfficialBusinessList },
   { path: "official-business/create", component: PortalOfficialBusinessCreate },
+  { path: "official-business/$id", component: PortalOfficialBusinessCreate },
+  {
+    path: "official-business/$id/view",
+    component: PortalOfficialBusinessCreate,
+  },
   { path: "pass-slip", component: PortalPassSlipList },
   { path: "pass-slip/create", component: PortalPassSlipCreate },
+  { path: "pass-slip/$id", component: PortalPassSlipCreate },
+  { path: "pass-slip/$id/view", component: PortalPassSlipCreate },
   { path: "change-rest-day", component: PortalChangeRestDayList },
   { path: "change-rest-day/create", component: PortalChangeRestDayCreate },
   { path: "loan-applications", component: PortalLoanApplicationList },
   { path: "loan-applications/create", component: PortalLoanApplicationCreate },
+  { path: "loan-applications/$id", component: PortalLoanApplicationCreate },
+  {
+    path: "loan-applications/$id/view",
+    component: PortalLoanApplicationCreate,
+  },
   { path: "cash-bond", component: PortalCashBond },
   { path: "thirteenth-month", component: PortalThirteenthMonth },
 ];

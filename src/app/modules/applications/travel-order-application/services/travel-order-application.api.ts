@@ -53,31 +53,17 @@ export const travelOrderApi = {
     );
   },
 
-  changeStatus(
-    record: TravelOrderApplicationResponse,
-    status: string,
-    note?: string,
-  ): Promise<TravelOrderApplicationResponse> {
-    return httpClient.putUnwrapped<TravelOrderApplicationResponse>(
-      `${ENDPOINT}/${record.id}`,
-      {
-        id: record.id,
-        employeeId: record.employeeId,
-        startDate: record.startDate,
-        endDate: record.endDate,
-        isManualEntry: record.isManualEntry ?? false,
-        startTime: record.startTime,
-        endTime: record.endTime,
-        totalMinutes: record.totalMinutes,
-        destination: record.destination,
-        classification: record.classification,
-        purpose: record.purpose,
-        cost: record.cost,
-        applicationRemarks: record.applicationRemarks,
-        approvalStatus: status,
-        note,
-      },
-    );
+  // Status only changes through these (the approval engine) -- update() never touches it.
+  approve(id: string, note?: string): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/${id}/approve`, {
+      note,
+    });
+  },
+
+  decline(id: string, note?: string): Promise<void> {
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/${id}/decline`, {
+      note,
+    });
   },
 
   remove(id: string): Promise<void> {

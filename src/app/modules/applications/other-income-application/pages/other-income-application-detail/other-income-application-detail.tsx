@@ -13,6 +13,7 @@ import {
   Select,
   Space,
   Table,
+  Tag,
   Tooltip,
   Typography,
   message,
@@ -46,6 +47,7 @@ import {
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 
@@ -119,6 +121,10 @@ export default function OtherIncomeApplicationDetail() {
   const navigate = useNavigate();
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = !!id;
+  // Without the save permission the page is a read-only view of the record.
+  const readOnly = !useHasPermission(
+    isEdit ? "Other Income:Edit" : "Other Income:Create",
+  );
 
   const { data: existing, isLoading: loadingExisting } =
     useOtherIncomeApplication(id);
@@ -280,15 +286,18 @@ export default function OtherIncomeApplicationDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit
-                ? OTHER_INCOME_APPLICATION_LABEL.EDIT_TITLE
-                : OTHER_INCOME_APPLICATION_LABEL.CREATE_TITLE}
+              {readOnly && isEdit
+                ? "View Other Income"
+                : isEdit
+                  ? OTHER_INCOME_APPLICATION_LABEL.EDIT_TITLE
+                  : OTHER_INCOME_APPLICATION_LABEL.CREATE_TITLE}
             </Title>
             <p className="page-toolbar-subtitle">
               {OTHER_INCOME_APPLICATION_LABEL.SUBTITLE}
             </p>
           </div>
           <Space>
+            {readOnly && <Tag>View only</Tag>}
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate({ to: "/applications/other-income" })}
@@ -311,7 +320,7 @@ export default function OtherIncomeApplicationDetail() {
         </div>
       </div>
 
-      <Form layout="vertical" disabled={loadingExisting}>
+      <Form layout="vertical" disabled={loadingExisting || readOnly}>
         <Card className="mb-4">
           <Row gutter={16}>
             <Col xs={24} md={12}>

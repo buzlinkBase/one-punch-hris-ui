@@ -6,6 +6,7 @@ import type { CreateTravelOrderApplication } from "@/app/modules/applications/tr
 import type { PortalCreatePassSlip } from "../models/api/request/portal-create-pass-slip.model";
 import type { PortalRequestChangeRestDay } from "../models/api/request/portal-request-change-rest-day.model";
 import type { CreateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/create-deduction-application.model";
+import type { UpdateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/update-deduction-application.model";
 import type { PortalCreateProfileUpdateRequest } from "../models/api/request/portal-create-profile-update-request.model";
 
 const QUERY_KEY = ["me", "employee"];
@@ -94,6 +95,20 @@ export function useCreateMyLeaveApplication() {
   });
 }
 
+export function useUpdateMyLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreateLeaveApplication }) =>
+      meApi.updateMyLeaveApplication(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["me", "leave-applications"] });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "Leave", id],
+      });
+    },
+  });
+}
+
 export function useWithdrawMyLeaveApplication() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -120,6 +135,27 @@ export function useCreateMyOvertimeApplication() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["me", "overtime-applications"],
+      });
+    },
+  });
+}
+
+export function useUpdateMyOvertimeApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: CreateOvertimeApplication;
+    }) => meApi.updateMyOvertimeApplication(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "overtime-applications"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "Overtime", id],
       });
     },
   });
@@ -157,6 +193,27 @@ export function useCreateMyTravelOrderApplication() {
   });
 }
 
+export function useUpdateMyTravelOrderApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: CreateTravelOrderApplication;
+    }) => meApi.updateMyTravelOrderApplication(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "travel-order-applications"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "OfficialBusiness", id],
+      });
+    },
+  });
+}
+
 export function useWithdrawMyTravelOrderApplication() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -184,6 +241,22 @@ export function useCreateMyPassSlipApplication() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["me", "pass-slip-applications"],
+      });
+    },
+  });
+}
+
+export function useUpdateMyPassSlipApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PortalCreatePassSlip }) =>
+      meApi.updateMyPassSlipApplication(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["me", "pass-slip-applications"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "PassSlip", id],
       });
     },
   });
@@ -244,6 +317,20 @@ export function useCreateMyLoanApplication() {
       meApi.createMyLoanApplication(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me", "loan-applications"] });
+    },
+  });
+}
+
+export function useUpdateMyLoanApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateDeductionApplication) =>
+      meApi.updateMyLoanApplication(data),
+    onSuccess: (_, data) => {
+      queryClient.invalidateQueries({ queryKey: ["me", "loan-applications"] });
+      queryClient.invalidateQueries({
+        queryKey: ["approval-instance", "Loan", data.id],
+      });
     },
   });
 }

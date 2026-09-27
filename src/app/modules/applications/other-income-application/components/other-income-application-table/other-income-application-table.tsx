@@ -1,10 +1,12 @@
 import { Button, Popconfirm, Space, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { OtherIncomeApplicationResponse } from "../../models/api/response/other-income-application-response.model";
 import { FREQUENCY_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 
 interface Props {
   data: OtherIncomeApplicationResponse[];
@@ -23,6 +25,7 @@ export default function OtherIncomeApplicationTable({
   onEdit,
   onDelete,
 }: Props) {
+  const canEdit = useHasPermission("Other Income:Edit");
   const columns: ColumnsType<OtherIncomeApplicationResponse> = [
     {
       title: "Employee",
@@ -84,14 +87,11 @@ export default function OtherIncomeApplicationTable({
       width: 90,
       render: (_, record) => (
         <Space size="small">
-          <PermissionGate permission="Other Income:Edit">
-            <Button
-              size="small"
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => onEdit(record)}
-            />
-          </PermissionGate>
+          <RecordOpenAction
+            size="small"
+            canEdit={canEdit}
+            onOpen={() => onEdit(record)}
+          />
           <PermissionGate permission="Other Income:Delete">
             <Popconfirm
               title="Delete this income application?"

@@ -74,14 +74,16 @@ export function useChangeTravelOrderStatus() {
       note,
     }: {
       record: TravelOrderApplicationResponse;
-      status: string;
+      status: "Approved" | "Declined";
       note?: string;
-    }) => travelOrderApi.changeStatus(record, status, note),
-    onSuccess: (updated) => {
-      queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
+    }) =>
+      status === "Approved"
+        ? travelOrderApi.approve(record.id, note)
+        : travelOrderApi.decline(record.id, note),
+    onSuccess: (_, { record }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       queryClient.invalidateQueries({
-        queryKey: ["approval-instance", "OfficialBusiness", updated.id],
+        queryKey: ["approval-instance", "OfficialBusiness", record.id],
       });
     },
   });

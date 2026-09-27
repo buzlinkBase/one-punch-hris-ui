@@ -29,6 +29,7 @@ import {
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -178,7 +179,8 @@ export default function TravelOrderBatch() {
               File OB / Travel Order
             </Title>
             <p className="page-toolbar-subtitle">
-              File a travel order for multiple employees on the same trip.
+              File a travel order for multiple employees on the same trip. Every
+              entry is filed For Approval.
             </p>
           </div>
           <Space>
@@ -195,6 +197,10 @@ export default function TravelOrderBatch() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+          <div className="w-50">
+            <ApprovalStatusField />
+          </div>
+
           {/* Row 1: Travel Period | Entry Mode — mirrors OT / single-entry layout */}
           <div className="form-grid-3">
             <Form.Item

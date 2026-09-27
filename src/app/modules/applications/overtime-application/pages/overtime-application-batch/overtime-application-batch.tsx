@@ -25,6 +25,7 @@ import { useCreateOvertimeApplicationBatch } from "../../hooks/use-overtime-appl
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -138,7 +139,7 @@ export default function OvertimeApplicationBatch() {
             </Title>
             <p className="page-toolbar-subtitle">
               File overtime for multiple employees. Each row can use a different
-              entry mode.
+              entry mode. Every entry is filed For Approval.
             </p>
           </div>
           <Space>
@@ -151,21 +152,27 @@ export default function OvertimeApplicationBatch() {
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-          {/* Shared OT Date */}
-          <Form.Item
-            label="OT Date"
-            validateStatus={errors.otDate ? "error" : ""}
-            help={errors.otDate?.message}
-            style={{ width: 200 }}
-          >
-            <DatePicker
-              style={{ width: "100%" }}
-              value={otDate ? dayjs(otDate) : null}
-              onChange={(date) =>
-                setValue("otDate", date?.format("YYYY-MM-DD") ?? "")
-              }
-            />
-          </Form.Item>
+          <div className="flex flex-wrap gap-x-4">
+            {/* Shared OT Date */}
+            <Form.Item
+              label="OT Date"
+              validateStatus={errors.otDate ? "error" : ""}
+              help={errors.otDate?.message}
+              style={{ width: 200 }}
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+                value={otDate ? dayjs(otDate) : null}
+                onChange={(date) =>
+                  setValue("otDate", date?.format("YYYY-MM-DD") ?? "")
+                }
+              />
+            </Form.Item>
+
+            <div className="w-50">
+              <ApprovalStatusField />
+            </div>
+          </div>
 
           <Alert
             type="info"
