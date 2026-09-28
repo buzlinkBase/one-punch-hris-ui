@@ -14,7 +14,7 @@ import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
   useMyEmployee,
@@ -29,6 +29,7 @@ import {
   type PortalPassSlipFormValues,
 } from "../../models/forms/portal-pass-slip-form.schema";
 import { buildStartDateTime } from "@/shared/utils/duration.util";
+import { toPassSlipPrefill } from "../../utils/pass-slip-prefill";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -43,6 +44,10 @@ export default function PortalPassSlipCreate() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const { id, mode } = usePortalFormMode();
+  // A new filing opened from My Incomplete Logs arrives with the day's date and missing
+  // punches in the search params.
+  const search = useSearch({ strict: false }) as Record<string, unknown>;
+  const prefill = id ? null : toPassSlipPrefill(search);
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
   const { data: slips = [], isLoading: slipsLoading } =
     useMyPassSlipApplications();
@@ -67,11 +72,11 @@ export default function PortalPassSlipCreate() {
     resolver: zodResolver(portalPassSlipFormSchema),
     defaultValues: {
       employeeId: employee?.id ?? "",
-      applicationDate: "",
+      applicationDate: prefill?.applicationDate ?? "",
       destination: "",
       purpose: "",
-      remarks: "",
-      entries: [{ punchTime: "", notes: "" }],
+      remarks: prefill?.remarks ?? "",
+      entries: prefill?.entries ?? [{ punchTime: "", notes: "" }],
     },
   });
 

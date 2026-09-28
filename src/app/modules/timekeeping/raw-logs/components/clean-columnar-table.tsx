@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Input, Table, Tooltip } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
@@ -10,7 +10,11 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 interface Props {
   data: CleanAttendanceLogColumnar[];
   loading?: boolean;
+  /** Optional per-row action, rendered in a column pinned to the right. */
+  renderAction?: (record: CleanAttendanceLogColumnar) => ReactNode;
 }
+
+const ACTION_COLUMN_WIDTH = 140;
 
 const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 const LOG_KEYS = Array.from(
@@ -39,7 +43,11 @@ function renderTime(v: string | null | undefined, workDate: string) {
   );
 }
 
-export default function CleanColumnarTable({ data, loading }: Props) {
+export default function CleanColumnarTable({
+  data,
+  loading,
+  renderAction,
+}: Props) {
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
@@ -202,9 +210,23 @@ export default function CleanColumnarTable({ data, loading }: Props) {
     }),
   );
 
+  const actionColumns: ColumnsType<CleanAttendanceLogColumnar> = renderAction
+    ? [
+        {
+          title: "Action",
+          key: "action",
+          width: ACTION_COLUMN_WIDTH,
+          fixed: "right",
+          render: (_: unknown, record: CleanAttendanceLogColumnar) =>
+            renderAction(record),
+        },
+      ]
+    : [];
+
   const scrollX =
     fixedColumns.reduce((sum, c) => sum + (Number(c.width) || 100), 0) +
-    activeLogKeys.length * 80;
+    activeLogKeys.length * 80 +
+    (renderAction ? ACTION_COLUMN_WIDTH : 0);
 
   return (
     <div className="flex flex-col gap-3">
@@ -219,7 +241,7 @@ export default function CleanColumnarTable({ data, loading }: Props) {
       <Table
         rowKey={(r) => `${r.employeeId}-${r.workDate}`}
         dataSource={filtered}
-        columns={[...fixedColumns, ...logColumns]}
+        columns={[...fixedColumns, ...logColumns, ...actionColumns]}
         size="small"
         loading={loading}
         pagination={{ pageSize: 15 }}

@@ -61,6 +61,15 @@ export function useMyIncompletePunches(params: { from?: string; to?: string }) {
   });
 }
 
+export function useMyRawAttendance(params: { from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ["me", "raw-attendance", params],
+    queryFn: () =>
+      meApi.getMyRawAttendance({ from: params.from!, to: params.to! }),
+    enabled: !!params.from && !!params.to,
+  });
+}
+
 export function useMyFixedSchedule() {
   return useQuery({
     queryKey: ["me", "fixed-schedule"],

@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button, Card, Space, Typography } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { FileAddOutlined, ReloadOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useMyIncompletePunches } from "../../../shared/hooks/use-my-employee-queries";
 import CleanColumnarTable from "@/app/modules/timekeeping/raw-logs/components/clean-columnar-table";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import { filterIncompletePunches } from "@/app/modules/timekeeping/incomplete-punches/utils/incomplete-punch.util";
+import { buildPassSlipPrefill } from "../../utils/pass-slip-prefill.util";
 
 const { Title } = Typography;
 
 export default function PortalIncompletePunches() {
+  const navigate = useNavigate();
   const defaultCutoff = getSemiMonthlyCutoff();
   const [dateRange, setDateRange] = useState<[string, string]>([
     defaultCutoff.fromDate,
@@ -21,6 +25,9 @@ export default function PortalIncompletePunches() {
     to: dateRange[1],
   });
 
+  // Same rule as the admin Incomplete Punches screen -- only days missing a punch.
+  const incomplete = useMemo(() => filterIncompletePunches(data ?? []), [data]);
+
   return (
     <div className="content-page">
       <div className="page-toolbar">
@@ -30,8 +37,8 @@ export default function PortalIncompletePunches() {
               My Incomplete / Missing Logs
             </Title>
             <p className="page-toolbar-subtitle">
-              Days in the selected period with raw punches on file — check for
-              missing time-in/time-out pairs.
+              Days in the selected period with no punches or a missing
+              time-in/time-out pair.
             </p>
           </div>
           <Space wrap>
@@ -56,7 +63,24 @@ export default function PortalIncompletePunches() {
 
       <div className="form-page-body">
         <Card>
-          <CleanColumnarTable data={data ?? []} loading={isLoading} />
+          <CleanColumnarTable
+            data={incomplete}
+            loading={isLoading}
+            renderAction={(record) => (
+              <Button
+                size="small"
+                icon={<FileAddOutlined />}
+                onClick={() =>
+                  navigate({
+                    to: "/portal/pass-slip/create",
+                    search: buildPassSlipPrefill(record),
+                  })
+                }
+              >
+                File Pass Slip
+              </Button>
+            )}
+          />
         </Card>
       </div>
     </div>
