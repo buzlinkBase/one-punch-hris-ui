@@ -51,6 +51,20 @@ export function useCashBondReport(asOf: string) {
   });
 }
 
+// Ledger details queries (the "View ledger" drawer) live under their report's key prefix, so each
+// adjust mutation's prefix invalidation refreshes the open drawer too. Disabled until a row is
+// picked.
+export function useCashBondEntries(
+  employeeId: string | undefined,
+  asOf: string,
+) {
+  return useQuery({
+    queryKey: ["payroll-reports", "cash-bond", "entries", employeeId, asOf],
+    queryFn: () => payrollReportsApi.cashBondEntries(employeeId!, asOf),
+    enabled: !!employeeId,
+  });
+}
+
 // Refreshes every screen showing a cash bond total: this report (any "as of"), the employee's
 // My Cash Bond, and Last Pay's cash bond status.
 export function useAdjustCashBond() {
@@ -76,10 +90,46 @@ export function useLeaveLedger(year: number) {
   });
 }
 
-export function useRetirementLedger(from: string, to: string) {
+export function useLeaveEntries(
+  employeeId: string | undefined,
+  leaveId: string | undefined,
+  year: number,
+) {
   return useQuery({
-    queryKey: ["payroll-reports", "retirement-ledger", from, to],
-    queryFn: () => payrollReportsApi.retirementLedger(from, to),
+    queryKey: [
+      "payroll-reports",
+      "leave-ledger",
+      "entries",
+      employeeId,
+      leaveId,
+      year,
+    ],
+    queryFn: () => payrollReportsApi.leaveEntries(employeeId!, leaveId!, year),
+    enabled: !!employeeId && !!leaveId,
+  });
+}
+
+export function useRetirementLedger(asOf: string) {
+  return useQuery({
+    queryKey: ["payroll-reports", "retirement-ledger", asOf],
+    queryFn: () => payrollReportsApi.retirementLedger(asOf),
+  });
+}
+
+export function useRetirementEntries(
+  employeeId: string | undefined,
+  asOf: string,
+) {
+  return useQuery({
+    queryKey: [
+      "payroll-reports",
+      "retirement-ledger",
+      "entries",
+      employeeId,
+      asOf,
+    ],
+    queryFn: () => payrollReportsApi.retirementEntries(employeeId!, asOf),
+    enabled: !!employeeId,
   });
 }
 
@@ -94,10 +144,27 @@ export function useAdjustRetirement() {
   });
 }
 
-export function useUniformAllowanceLedger(from: string, to: string) {
+export function useUniformAllowanceLedger(asOf: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "uniform-allowance-ledger", from, to],
-    queryFn: () => payrollReportsApi.uniformAllowanceLedger(from, to),
+    queryKey: ["payroll-reports", "uniform-allowance-ledger", asOf],
+    queryFn: () => payrollReportsApi.uniformAllowanceLedger(asOf),
+  });
+}
+
+export function useUniformAllowanceEntries(
+  employeeId: string | undefined,
+  asOf: string,
+) {
+  return useQuery({
+    queryKey: [
+      "payroll-reports",
+      "uniform-allowance-ledger",
+      "entries",
+      employeeId,
+      asOf,
+    ],
+    queryFn: () => payrollReportsApi.uniformAllowanceEntries(employeeId!, asOf),
+    enabled: !!employeeId,
   });
 }
 

@@ -40,7 +40,7 @@ interface FormValues {
 interface Props {
   open: boolean;
   onClose: () => void;
-  // Row-triggered "Edit": the employee is fixed and shown read-only. Toolbar-triggered "Add":
+  // "Adjust" from a ledger's details: the employee is fixed and shown read-only. Toolbar "Add":
   // null, and an employee picker is shown instead — this is what lets HR seed an opening entry
   // for an employee who has no ledger rows yet (e.g. adopting this system mid-year).
   target: BalanceAdjustTarget | null;
@@ -49,6 +49,10 @@ interface Props {
   // For balances reported "as of" a date (Cash Bond): lets HR date the entry, e.g. an opening
   // balance dated before any payroll in this system. Defaults to today.
   showEntryDate?: boolean;
+  // What the amount is counted in, e.g. "Days" for leave credits. Defaults to "Amount" (pesos).
+  amountLabel?: string;
+  // Spinner increment; any value down to 0.0001 can still be typed (e.g. 0.25 or 0.125 days).
+  amountStep?: number;
 }
 
 // Shared by the Retirement and Uniform Allowance Ledger reports -- both need the exact same
@@ -61,6 +65,8 @@ export function BalanceAdjustModal({
   onSubmit,
   isSubmitting,
   showEntryDate = false,
+  amountLabel = "Amount",
+  amountStep = 1,
 }: Props) {
   const [form] = Form.useForm<FormValues>();
   const { data: employees = [] } = useEmployeeFilter(
@@ -144,10 +150,19 @@ export function BalanceAdjustModal({
         </Form.Item>
         <Form.Item
           name="amount"
-          label="Amount"
+          label={amountLabel}
           rules={[{ required: true, message: "Required" }]}
         >
-          <InputNumber style={{ width: "100%" }} min={0.01} step={0.5} />
+          <InputNumber
+            className="w-full"
+            min={0.0001}
+            step={amountStep}
+            precision={4}
+            // Drops precision's trailing zeros ("0.2500" → "0.25") without fighting typing.
+            formatter={(v, { userTyping, input }) =>
+              userTyping ? input : v === undefined ? "" : String(Number(v))
+            }
+          />
         </Form.Item>
         {showEntryDate && (
           <Form.Item
