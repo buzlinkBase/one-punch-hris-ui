@@ -5,7 +5,6 @@ import {
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
-  EditOutlined,
   RollbackOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -17,6 +16,8 @@ import {
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 
 interface PassSlipGroup {
   key: string;
@@ -59,18 +60,17 @@ function LogActions({
   onRevoke: (r: PassSlipResponse) => void;
   onDelete: (id: string) => void;
 }) {
+  const hasEditPermission = useHasPermission("Pass Slip:Edit");
   return (
     <Space size="small">
+      {/* Only a still-pending slip is editable; every other status opens read-only. */}
+      <RecordOpenAction
+        size="small"
+        canEdit={hasEditPermission && record.approvalStatus === "ForApproval"}
+        onOpen={() => onEdit(record)}
+      />
       {record.approvalStatus === "ForApproval" && (
         <>
-          <PermissionGate permission="Pass Slip:Edit">
-            <Button
-              size="small"
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => onEdit(record)}
-            />
-          </PermissionGate>
           <PermissionGate permission="Pass Slip:Approve">
             <Button
               size="small"

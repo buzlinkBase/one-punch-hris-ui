@@ -17,6 +17,10 @@ const PortalIncompletePunches = lazy(
   () =>
     import("@/app/modules/portal/incomplete-punches/pages/portal-incomplete-punches"),
 );
+const PortalRawAttendance = lazy(
+  () =>
+    import("@/app/modules/portal/raw-attendance/pages/portal-raw-attendance"),
+);
 const PortalShiftSchedule = lazy(
   () =>
     import("@/app/modules/portal/shift-schedule/pages/portal-shift-schedule"),
@@ -52,14 +56,6 @@ const PortalPassSlipList = lazy(
 const PortalPassSlipCreate = lazy(
   () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-create"),
 );
-const PortalChangeRestDayList = lazy(
-  () =>
-    import("@/app/modules/portal/change-rest-day/pages/portal-change-rest-day-list"),
-);
-const PortalChangeRestDayCreate = lazy(
-  () =>
-    import("@/app/modules/portal/change-rest-day/pages/portal-change-rest-day-create"),
-);
 const PortalLoanApplicationList = lazy(
   () =>
     import("@/app/modules/portal/loan-application/pages/portal-loan-application-list"),
@@ -82,6 +78,7 @@ export const portalRoutes: SetupRouteConfig[] = [
   { path: "payslips", component: PortalPayslips },
   { path: "dtr", component: PortalDtr },
   { path: "incomplete-punches", component: PortalIncompletePunches },
+  { path: "raw-attendance", component: PortalRawAttendance },
   { path: "shift-schedule", component: PortalShiftSchedule },
   { path: "leave-credits", component: PortalLeaveCredits },
   { path: "leave-applications", component: PortalLeaveApplicationList },
@@ -89,16 +86,38 @@ export const portalRoutes: SetupRouteConfig[] = [
     path: "leave-applications/create",
     component: PortalLeaveApplicationCreate,
   },
+  // The create page doubles as edit ($id) and read-only view ($id/view) -- see
+  // usePortalFormMode.
+  {
+    path: "leave-applications/$id",
+    component: PortalLeaveApplicationCreate,
+  },
+  {
+    path: "leave-applications/$id/view",
+    component: PortalLeaveApplicationCreate,
+  },
   { path: "overtime", component: PortalOvertimeList },
   { path: "overtime/create", component: PortalOvertimeCreate },
+  { path: "overtime/$id", component: PortalOvertimeCreate },
+  { path: "overtime/$id/view", component: PortalOvertimeCreate },
   { path: "official-business", component: PortalOfficialBusinessList },
   { path: "official-business/create", component: PortalOfficialBusinessCreate },
+  { path: "official-business/$id", component: PortalOfficialBusinessCreate },
+  {
+    path: "official-business/$id/view",
+    component: PortalOfficialBusinessCreate,
+  },
   { path: "pass-slip", component: PortalPassSlipList },
   { path: "pass-slip/create", component: PortalPassSlipCreate },
-  { path: "change-rest-day", component: PortalChangeRestDayList },
-  { path: "change-rest-day/create", component: PortalChangeRestDayCreate },
+  { path: "pass-slip/$id", component: PortalPassSlipCreate },
+  { path: "pass-slip/$id/view", component: PortalPassSlipCreate },
   { path: "loan-applications", component: PortalLoanApplicationList },
   { path: "loan-applications/create", component: PortalLoanApplicationCreate },
+  { path: "loan-applications/$id", component: PortalLoanApplicationCreate },
+  {
+    path: "loan-applications/$id/view",
+    component: PortalLoanApplicationCreate,
+  },
   { path: "cash-bond", component: PortalCashBond },
   { path: "thirteenth-month", component: PortalThirteenthMonth },
 ];

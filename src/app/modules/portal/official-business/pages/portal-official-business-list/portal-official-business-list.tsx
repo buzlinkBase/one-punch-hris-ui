@@ -1,6 +1,6 @@
-import { Button, Card, Popconfirm, Table, Typography, message } from "antd";
+import { Button, Card, Table, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
@@ -9,6 +9,7 @@ import {
 } from "../../../shared/hooks/use-my-employee-queries";
 import type { TravelOrderApplicationResponse } from "@/app/modules/applications/travel-order-application/models/api/response/travel-order-application-response.model";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
+import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
 
 const { Title } = Typography;
 
@@ -58,26 +59,19 @@ export default function PortalOfficialBusinessList() {
     {
       title: "",
       key: "actions",
-      width: 60,
-      render: (_, r) =>
-        r.approvalStatus === "ForApproval" && (
-          <Popconfirm
-            title="Withdraw this application?"
-            description="This cannot be undone. You'll need to file again if you change your mind."
-            onConfirm={() => handleWithdraw(r.id)}
-            okText="Withdraw"
-            okButtonProps={{ danger: true, loading: isWithdrawing }}
-            cancelText="Cancel"
-          >
-            <Button
-              type="text"
-              danger
-              size="small"
-              icon={<CloseOutlined />}
-              title="Withdraw"
-            />
-          </Popconfirm>
-        ),
+      width: 110,
+      render: (_, r) => (
+        <PortalApplicationRowActions
+          status={r.approvalStatus}
+          onView={() =>
+            navigate({ to: `/portal/official-business/${r.id}/view` })
+          }
+          onEdit={() => navigate({ to: `/portal/official-business/${r.id}` })}
+          withdrawTitle="Withdraw this application?"
+          onWithdraw={() => handleWithdraw(r.id)}
+          withdrawing={isWithdrawing}
+        />
+      ),
     },
   ];
 

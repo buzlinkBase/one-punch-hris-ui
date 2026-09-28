@@ -17,7 +17,10 @@ import {
   useMyProfileUpdateRequests,
 } from "../../../shared/hooks/use-my-employee-queries";
 import { formatFullName } from "@/app/modules/setup/employee/utils/format-full-name";
-import { EMPLOYEE_LABEL } from "@/app/modules/setup/employee/constants/label.const";
+import {
+  EMPLOYEE_LABEL,
+  formatJobLevel,
+} from "@/app/modules/setup/employee/constants/label.const";
 
 const { Title } = Typography;
 
@@ -154,7 +157,7 @@ export default function PortalProfile() {
                         {employee.timeShiftName || "—"}
                       </Descriptions.Item>
                       <Descriptions.Item label={EMPLOYEE_LABEL.JOB_LEVEL}>
-                        {employee.jobLevel}
+                        {formatJobLevel(employee.jobLevel) || "—"}
                       </Descriptions.Item>
                       <Descriptions.Item
                         label={EMPLOYEE_LABEL.EMPLOYMENT_STATUS}

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Tag, Tooltip } from "antd";
 import {
-  EditOutlined,
   DeleteOutlined,
   CheckOutlined,
   CloseOutlined,
@@ -17,6 +16,8 @@ import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
@@ -56,6 +57,7 @@ export default function LeaveApplicationTable({
   actionLoading,
 }: Props) {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Leave:Edit");
   const [actionTarget, setActionTarget] = useState<{
     record: LeaveApplicationResponse;
     action: "Approved" | "Declined";
@@ -209,7 +211,7 @@ export default function LeaveApplicationTable({
       render: (_, record) => (
         <Space>
           {onApprove && record.approvalStatus === "ForApproval" && (
-            <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
+            <PermissionGate permission="Leave:Approve">
               <Button
                 type="text"
                 icon={<CheckOutlined />}
@@ -219,7 +221,7 @@ export default function LeaveApplicationTable({
             </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
-            <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
+            <PermissionGate permission="Leave:Approve">
               <Button
                 type="text"
                 danger
@@ -228,15 +230,10 @@ export default function LeaveApplicationTable({
               />
             </PermissionGate>
           )}
-          <PermissionGate permission={["Leave:Edit", "Leave:Approve"]}>
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() =>
-                navigate({ to: `/applications/leave/${record.id}` })
-              }
-            />
-          </PermissionGate>
+          <RecordOpenAction
+            canEdit={canEdit}
+            onOpen={() => navigate({ to: `/applications/leave/${record.id}` })}
+          />
           {onDelete && (
             <PermissionGate permission="Leave:Delete">
               <Popconfirm

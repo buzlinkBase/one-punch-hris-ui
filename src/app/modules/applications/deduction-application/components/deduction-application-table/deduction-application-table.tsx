@@ -5,7 +5,6 @@ import {
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
-  EditOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { DeductionApplicationResponse } from "../../models/api/response/deduction-application-response.model";
@@ -17,6 +16,8 @@ import {
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 
 interface Props {
   data: DeductionApplicationResponse[];
@@ -41,6 +42,7 @@ export default function DeductionApplicationTable({
   onDecline,
   actionLoading,
 }: Props) {
+  const canEdit = useHasPermission("Loan/Deduction:Edit");
   const [actionTarget, setActionTarget] = useState<{
     record: DeductionApplicationResponse;
     action: "Approved" | "Declined";
@@ -109,8 +111,8 @@ export default function DeductionApplicationTable({
       dataIndex: "approvalStatus",
       key: "approvalStatus",
       render: (v?: string) => (
-        <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "success"}>
-          {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "Approved"}
+        <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "default"}>
+          {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "—"}
         </Tag>
       ),
     },
@@ -147,14 +149,11 @@ export default function DeductionApplicationTable({
               </PermissionGate>
             </>
           )}
-          <PermissionGate permission="Loan/Deduction:Edit">
-            <Button
-              size="small"
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => onEdit(record)}
-            />
-          </PermissionGate>
+          <RecordOpenAction
+            size="small"
+            canEdit={canEdit}
+            onOpen={() => onEdit(record)}
+          />
           <PermissionGate permission="Loan/Deduction:Delete">
             <Popconfirm
               title="Delete this loan/deduction record?"

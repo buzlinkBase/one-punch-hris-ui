@@ -48,6 +48,18 @@ export const approvalHub = {
     }
   },
 
+  // Re-negotiates the SAME connection (handlers stay attached) with a fresh token. The server
+  // joins approver groups from the token's permission claims on connect, so this must run after
+  // a roles-changed token refresh or the old permissions keep deciding who gets pushes.
+  async restart(): Promise<void> {
+    const conn = connection;
+    if (!conn) return;
+    if (conn.state !== signalR.HubConnectionState.Disconnected) {
+      await conn.stop();
+    }
+    await conn.start();
+  },
+
   // See tenant-hub.connection.ts's identical method for why the module-level reference is
   // cleared BEFORE awaiting the stop (React 18 StrictMode's dev-only double-invoke).
   async stop(): Promise<void> {

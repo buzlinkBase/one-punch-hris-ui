@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -25,6 +25,7 @@ import {
   useAdjustLeaveBalance,
 } from "../../hooks/use-leave-balance-queries";
 import { LEAVE_BALANCE_LABEL } from "../../constants/label.const";
+import { DtrReconcileModal } from "../../components/dtr-reconcile-modal/dtr-reconcile-modal";
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
@@ -52,6 +53,7 @@ export default function LeaveBalanceEntry() {
     useLeaveTypes();
   const { mutateAsync: adjust, isPending: isSaving } = useAdjustLeaveBalance();
   const [messageApi, contextHolder] = message.useMessage();
+  const [reconcileOpen, setReconcileOpen] = useState(false);
 
   const employeeOptions = employees.map((e) => ({
     value: e.id,
@@ -133,8 +135,17 @@ export default function LeaveBalanceEntry() {
               the leave ledger, never a silent overwrite.
             </p>
           </div>
+          <PermissionGate permission="Leave Setup:Edit">
+            <Button onClick={() => setReconcileOpen(true)}>
+              Recompute from DTR
+            </Button>
+          </PermissionGate>
         </div>
       </div>
+      <DtrReconcileModal
+        open={reconcileOpen}
+        onClose={() => setReconcileOpen(false)}
+      />
 
       <div className="form-page-body">
         <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>

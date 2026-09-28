@@ -6,11 +6,13 @@ import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { queryClient } from "@/core/query-client";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { tenantHub } from "./tenant-hub.connection";
+import { approvalHub } from "./approval-hub.connection";
 import {
   TENANT_HUB_METHODS,
   type HrDbCreatedNotification,
   type SessionRevokedNotification,
   type TenantCreatedNotification,
+  type TenantRenamedNotification,
 } from "./tenant-hub.types";
 
 const POLL_INTERVAL_MS = 10_000;
@@ -86,7 +88,29 @@ export function useTenantHub() {
         return;
       }
       queryClient.invalidateQueries();
+      // Approver-group membership is derived from the token on connect -- see restart().
+      void approvalHub.restart().catch(() => {});
       message.info("Your permissions were updated.");
+    };
+
+    const handleTenantRenamed = async (
+      notification: TenantRenamedNotification,
+    ) => {
+      // Show the new name right away, then re-mint the token so its tenantName claim (and the
+      // server's fresh company list) catch up too.
+      authStorage.renameTenant(notification.tenantId, notification.tenantName);
+      try {
+        await refreshAccessToken(true);
+      } catch {
+        // A real 401 already hard-redirects to /login inside refreshAccessToken.
+        return;
+      }
+      // The refresh can only re-mint for the default company; keep a renamed active company's
+      // new name even if the session is working in a non-default one.
+      authStorage.renameTenant(notification.tenantId, notification.tenantName);
+      if (authStorage.getTenantId() === notification.tenantId) {
+        message.info(`Company name updated to "${notification.tenantName}".`);
+      }
     };
 
     const handleSessionRevoked = (notification: SessionRevokedNotification) => {
@@ -113,6 +137,7 @@ export function useTenantHub() {
     connection.on(TENANT_HUB_METHODS.onHrDbCreated, handleHrDbCreated);
     connection.on(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
     connection.on(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
+    connection.on(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
 
     // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke (the
     // first mount's connection gets stopped mid-negotiate by its own cleanup before this ever
@@ -172,6 +197,7 @@ export function useTenantHub() {
       connection.off(TENANT_HUB_METHODS.onHrDbCreated, handleHrDbCreated);
       connection.off(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
       connection.off(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
+      connection.off(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
       if (pollTimer.current) clearInterval(pollTimer.current);
       void tenantHub.stop();
       started.current = false;

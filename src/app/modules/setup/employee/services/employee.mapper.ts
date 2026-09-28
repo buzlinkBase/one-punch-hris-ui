@@ -1,6 +1,7 @@
 import type { EmployeeResponse } from "../models/api/response/employee-response.model";
 import type { EmployeeFormValues } from "../models/forms/employee-form.schema";
 import dayjs from "dayjs";
+import { DEFAULT_JOB_LEVEL, formatJobLevel } from "../constants/label.const";
 
 export const employeeMapper = {
   toFormValues(response: EmployeeResponse): EmployeeFormValues {
@@ -27,7 +28,8 @@ export const employeeMapper = {
       branchId: response.branchId ?? null,
       sectionId: response.sectionId ?? null,
       positionId: response.positionId ?? null,
-      jobLevel: response.jobLevel ?? "RankandFile",
+      // A legacy enum name ("RankandFile") loads as readable text, so re-saving normalizes it.
+      jobLevel: formatJobLevel(response.jobLevel) || DEFAULT_JOB_LEVEL,
       timeShiftId: response.timeShiftId ?? null,
       employmentStatus: response.employmentStatus,
       hiringEntity: response.hiringEntity ?? "",

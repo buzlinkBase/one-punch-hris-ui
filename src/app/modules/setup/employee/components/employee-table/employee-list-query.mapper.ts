@@ -9,7 +9,6 @@ type ListField =
   | "branchIds"
   | "positionIds"
   | "timeShiftIds"
-  | "jobLevels"
   | "salaryTypes"
   | "employmentStatuses"
   | "statuses"
@@ -18,6 +17,7 @@ type ListField =
 type TextField =
   | "employeeNo"
   | "bioId"
+  | "jobLevel"
   | "fullName"
   | "email"
   | "contact"
@@ -35,7 +35,6 @@ export const LIST_FILTER_COLUMNS: Record<string, ListField> = {
   branchName: "branchIds",
   positionName: "positionIds",
   timeShiftName: "timeShiftIds",
-  jobLevel: "jobLevels",
   salaryType: "salaryTypes",
   employmentStatus: "employmentStatuses",
   status: "statuses",
@@ -45,6 +44,7 @@ export const LIST_FILTER_COLUMNS: Record<string, ListField> = {
 export const TEXT_FILTER_COLUMNS: Record<string, TextField> = {
   employeeNo: "employeeNo",
   bioId: "bioId",
+  jobLevel: "jobLevel",
   fullName: "fullName",
   email: "email",
   contact: "contact",

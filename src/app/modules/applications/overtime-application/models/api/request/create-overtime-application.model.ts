@@ -6,5 +6,4 @@ export interface CreateOvertimeApplication {
   manualOtMinutes: number;
   isManualEntry: boolean;
   remarks: string;
-  approvalStatus?: string;
 }

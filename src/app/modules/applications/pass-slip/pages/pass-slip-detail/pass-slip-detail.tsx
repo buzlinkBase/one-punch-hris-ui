@@ -1,5 +1,6 @@
 ﻿import { useEffect } from "react";
 import {
+  Alert,
   Button,
   Card,
   DatePicker,
@@ -30,15 +31,14 @@ import {
   useUpdatePassSlip,
 } from "../../hooks/use-pass-slip-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import {
-  APPROVAL_STATUS_COLOR,
-  APPROVAL_STATUS_LABEL,
-  PASS_SLIP_LABEL,
-} from "../../constants/label.const";
+import { PASS_SLIP_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
+import { ApprovalStatusField } from "@/shared/components/approval-status-field";
+import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -59,6 +59,7 @@ function stripZ(v?: string) {
 
 function EditPassSlip({ id }: { id: string }) {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Pass Slip:Edit");
   const { data: selected } = usePassSlip(id);
   const { mutateAsync: update, isPending: isUpdating } = useUpdatePassSlip();
   const { data: rawEmployees = [] } = useEmployees();
@@ -105,7 +106,6 @@ function EditPassSlip({ id }: { id: string }) {
     try {
       await update({
         id,
-        approvalStatus: selected!.approvalStatus,
         employeeId: values.employeeId,
         applicationDate: values.applicationDate,
         departureTime: values.departureTime,
@@ -120,19 +120,30 @@ function EditPassSlip({ id }: { id: string }) {
     }
   };
 
+  // Read-only without Edit rights, and once the slip is no longer pending (approved/declined/
+  // withdrawn slips open here as a view from the list).
+  const isPending = selected?.approvalStatus === "ForApproval";
+  const readOnly = !canEdit || (!!selected && !isPending);
+
   return (
     <div className="form-page-body">
-      {selected && (
-        <div style={{ marginBottom: 12 }}>
-          <Tag
-            color={APPROVAL_STATUS_COLOR[selected.approvalStatus] ?? "default"}
-          >
-            {APPROVAL_STATUS_LABEL[selected.approvalStatus] ??
-              selected.approvalStatus}
-          </Tag>
-        </div>
+      {selected && !isPending && (
+        <Alert
+          type="info"
+          showIcon
+          className="mb-4"
+          message="Only pending pass slips can be edited."
+        />
       )}
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      {!readOnly && <ApprovalRestartNotice status={selected?.approvalStatus} />}
+      <Form
+        layout="vertical"
+        disabled={readOnly}
+        onFinish={handleSubmit(onSubmit)}
+      >
+        <div className="w-50">
+          <ApprovalStatusField status={selected?.approvalStatus} />
+        </div>
         <div className="form-grid-2">
           <Form.Item
             label="Employee"
@@ -229,11 +240,11 @@ function EditPassSlip({ id }: { id: string }) {
             <Button onClick={() => navigate({ to: "/applications/pass-slip" })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
-            <PermissionGate permission="Pass Slip:Edit">
+            {!readOnly && (
               <Button type="primary" htmlType="submit" loading={isUpdating}>
                 {NAVIGATION_BUTTON_LABEL.SAVE}
               </Button>
-            </PermissionGate>
+            )}
           </Space>
         </div>
       </Form>
@@ -258,6 +269,7 @@ function EditPassSlip({ id }: { id: string }) {
 function CreatePassSlip() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
+  const readOnly = !useHasPermission("Pass Slip:Create");
   const { mutateAsync: add, isPending: isCreating } = useCreatePassSlip();
   const { data: rawEmployees = [] } = useEmployees();
 
@@ -316,7 +328,15 @@ function CreatePassSlip() {
 
   return (
     <div className="form-page-body">
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form
+        layout="vertical"
+        disabled={readOnly}
+        onFinish={handleSubmit(onSubmit)}
+      >
+        <div className="w-50">
+          <ApprovalStatusField />
+        </div>
+
         {/* ── Shared header ── */}
         <div className="form-grid-2">
           <Form.Item
@@ -514,6 +534,7 @@ export default function PassSlipDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Pass Slip:Edit");
 
   return (
     <div className="content-page">
@@ -521,7 +542,11 @@ export default function PassSlipDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit ? "Edit Pass Slip" : "File Pass Slip"}
+              {!isEdit
+                ? "File Pass Slip"
+                : canEdit
+                  ? "Edit Pass Slip"
+                  : "View Pass Slip"}
             </Title>
             <p className="page-toolbar-subtitle">{PASS_SLIP_LABEL.SUBTITLE}</p>
           </div>

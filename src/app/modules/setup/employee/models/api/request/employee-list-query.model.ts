@@ -17,7 +17,6 @@ export interface EmployeeListQuery {
   positionIds?: string[];
   timeShiftIds?: string[];
 
-  jobLevels?: string[];
   salaryTypes?: string[];
   employmentStatuses?: string[];
   statuses?: string[];
@@ -25,6 +24,8 @@ export interface EmployeeListQuery {
 
   employeeNo?: string;
   bioId?: string;
+  /** Job Level is free text, so it's searched rather than picked from a list. */
+  jobLevel?: string;
   fullName?: string;
   email?: string;
   contact?: string;

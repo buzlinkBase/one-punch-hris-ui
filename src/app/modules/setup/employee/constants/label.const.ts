@@ -310,16 +310,33 @@ export const EMPLOYMENT_STATUS_OPTIONS = [
   { value: "Deceased", label: "Deceased" },
 ];
 
+// Job Level is free text -- these are only suggestions (mirrors hrms-api JobLevels.Suggested);
+// any other typed value is saved as-is.
+export const DEFAULT_JOB_LEVEL = "Rank and File";
+
 export const JOB_LEVEL_OPTIONS = [
-  { value: "Managerial", label: "Managerial" },
-  { value: "Supervisory", label: "Supervisory" },
-  { value: "Executive", label: "Executive" },
-  { value: "RankandFile", label: "Rank and File" },
-  { value: "EntryLevel", label: "Entry Level" },
-  { value: "TechnicalSpecialist", label: "Technical Specialist" },
-  { value: "Contractual", label: "Contractual" },
-  { value: "FieldStaff", label: "Field Staff" },
-];
+  "Managerial",
+  "Supervisory",
+  "Executive",
+  DEFAULT_JOB_LEVEL,
+  "Entry Level",
+  "Technical Specialist",
+  "Contractual",
+  "Field Staff",
+].map((level) => ({ value: level, label: level }));
+
+// Rows saved while Job Level was an enum hold the enum name -- shown readably until re-saved.
+const LEGACY_JOB_LEVEL_LABEL: Record<string, string> = {
+  RankandFile: DEFAULT_JOB_LEVEL,
+  EntryLevel: "Entry Level",
+  TechnicalSpecialist: "Technical Specialist",
+  FieldStaff: "Field Staff",
+};
+
+export function formatJobLevel(value?: string | null): string {
+  if (!value) return "";
+  return LEGACY_JOB_LEVEL_LABEL[value] ?? value;
+}
 
 export const GENDER_OPTIONS = [
   { value: "Male", label: "Male" },

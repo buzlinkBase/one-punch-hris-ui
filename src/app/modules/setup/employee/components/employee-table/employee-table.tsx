@@ -19,8 +19,8 @@ import {
   EMPLOYEE_LABEL,
   EMPLOYMENT_STATUS_OPTIONS,
   GENDER_OPTIONS,
-  JOB_LEVEL_OPTIONS,
   SALARY_TYPE_OPTIONS,
+  formatJobLevel,
 } from "../../constants/label.const";
 import { formatFullName } from "../../utils/format-full-name";
 import { useEmployeeFilterOptions } from "../../hooks/use-employee-queries";
@@ -53,12 +53,6 @@ interface Props {
   onPriorEmployerTax?: (record: EmployeeResponse) => void;
   onOpeningBalance?: (record: EmployeeResponse) => void;
 }
-
-const JOB_LEVEL_LABELS: Record<string, string> = {
-  RankandFile: "Rank and File",
-  EntryLevel: "Entry Level",
-  TechnicalSpecialist: "Technical Specialist",
-};
 
 const STATUS_OPTIONS = [
   { text: "Active", value: "Active" },
@@ -299,8 +293,8 @@ export default function EmployeeTable({
       dataIndex: "jobLevel",
       ...resizable("jobLevel"),
       ...sortable("jobLevel"),
-      ...listFilter("jobLevel", toFilterOptions(JOB_LEVEL_OPTIONS)),
-      render: (v?: string) => (v ? (JOB_LEVEL_LABELS[v] ?? v) : null),
+      ...textFilter("jobLevel", "Search job level"),
+      render: (v?: string) => formatJobLevel(v) || null,
     },
     {
       title: EMPLOYEE_LABEL.TIME_SHIFT,

@@ -8,6 +8,7 @@ import {
   InputNumber,
   Select,
   Space,
+  Tag,
   Typography,
   message,
 } from "antd";
@@ -22,6 +23,7 @@ import {
 } from "../../hooks/use-salary-adjustment-queries";
 import { ADJUSTMENT_TYPE_OPTIONS } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 
@@ -37,6 +39,10 @@ export default function SalaryAdjustmentDetail() {
   const navigate = useNavigate();
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = !!id;
+  // Without the save permission the page is a read-only view of the record.
+  const readOnly = !useHasPermission(
+    isEdit ? "Salary Adjustment:Edit" : "Salary Adjustment:Create",
+  );
   const [form] = Form.useForm<FormValues>();
 
   const { data: existing, isLoading: loadingExisting } =
@@ -103,7 +109,11 @@ export default function SalaryAdjustmentDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit ? "Edit Salary Adjustment" : "New Salary Adjustment"}
+              {readOnly && isEdit
+                ? "View Salary Adjustment"
+                : isEdit
+                  ? "Edit Salary Adjustment"
+                  : "New Salary Adjustment"}
             </Title>
             <p className="page-toolbar-subtitle">
               One-time salary, allowance, or deduction correction applied during
@@ -111,6 +121,7 @@ export default function SalaryAdjustmentDetail() {
             </p>
           </div>
           <Space>
+            {readOnly && <Tag>View only</Tag>}
             <Button
               onClick={() =>
                 navigate({ to: "/applications/salary-adjustment" })
@@ -139,6 +150,7 @@ export default function SalaryAdjustmentDetail() {
         <Form
           form={form}
           layout="vertical"
+          disabled={readOnly}
           onFinish={handleSubmit}
           style={{ maxWidth: 560 }}
         >

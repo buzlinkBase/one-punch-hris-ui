@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag, Tooltip } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
   DeleteOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
@@ -11,6 +12,15 @@ import type { UserResponse } from "../../models/api/response/user-response.model
 import { USER_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { AUDIT_LABEL } from "@/app/modules/security/audit/constants/label.const";
+
+const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+
+// An invited member without an account yet has no activity to show.
+function hasAccount(record: UserResponse): boolean {
+  return !!record.userId && record.userId !== EMPTY_GUID;
+}
 
 interface Props {
   data: UserResponse[];
@@ -20,6 +30,7 @@ interface Props {
 
 export default function UserTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
+  const canViewAudit = useHasPermission("Audit Trail:View");
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
@@ -112,7 +123,7 @@ export default function UserTable({ data, loading, onDelete }: Props) {
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 120,
       render: (_, record) => (
         <Space>
           <Button
@@ -120,6 +131,24 @@ export default function UserTable({ data, loading, onDelete }: Props) {
             icon={<EditOutlined />}
             onClick={() => navigate({ to: `/security/users/${record.id}` })}
           />
+          {canViewAudit && hasAccount(record) && (
+            <Tooltip title={AUDIT_LABEL.VIEW_ACTIVITY}>
+              <Button
+                type="text"
+                icon={<HistoryOutlined />}
+                aria-label={AUDIT_LABEL.VIEW_ACTIVITY}
+                onClick={() =>
+                  navigate({
+                    to: "/security/audit",
+                    search: {
+                      userId: record.userId,
+                      userName: record.fullName || record.email,
+                    },
+                  })
+                }
+              />
+            </Tooltip>
+          )}
           {onDelete && (
             <Popconfirm
               title="Remove this member from the company?"

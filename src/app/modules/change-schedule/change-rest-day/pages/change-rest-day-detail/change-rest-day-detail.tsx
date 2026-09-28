@@ -43,6 +43,7 @@ import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
 import type { CreateChangeRestDay } from "../../models/api/request/create-change-rest-day.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -475,14 +476,16 @@ function CreateBatchForm() {
           >
             {NAVIGATION_BUTTON_LABEL.BACK}
           </Button>
-          <Button
-            type="primary"
-            loading={isSubmitting}
-            disabled={isSubmitDisabled}
-            onClick={handleSubmit}
-          >
-            {saveLabel}
-          </Button>
+          <PermissionGate permission="Change Rest Day:Create">
+            <Button
+              type="primary"
+              loading={isSubmitting}
+              disabled={isSubmitDisabled}
+              onClick={handleSubmit}
+            >
+              {saveLabel}
+            </Button>
+          </PermissionGate>
         </Space>
       </div>
     </div>
@@ -643,14 +646,16 @@ function EditForm({ id }: { id: string }) {
           </Card>
 
           <div className="form-actions">
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isUpdating}
-              disabled={isUpdating}
-            >
-              Update
-            </Button>
+            <PermissionGate permission="Change Rest Day:Edit">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isUpdating}
+                disabled={isUpdating}
+              >
+                Update
+              </Button>
+            </PermissionGate>
             <Button
               onClick={() =>
                 navigate({ to: "/change-schedule/change-rest-day" })

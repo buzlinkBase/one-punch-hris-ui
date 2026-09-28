@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  AutoComplete,
   Form,
   Input,
   InputNumber,
@@ -1254,12 +1255,18 @@ export default function EmployeeDetail() {
                       <Controller
                         name="jobLevel"
                         control={control}
+                        // Free text: pick a suggested level or type any other.
                         render={({ field }) => (
-                          <Select
+                          <AutoComplete
                             {...field}
                             value={field.value ?? undefined}
                             options={JOB_LEVEL_OPTIONS}
-                            placeholder="Select job level"
+                            placeholder="Select or type a job level"
+                            filterOption={(input, option) =>
+                              String(option?.value ?? "")
+                                .toLowerCase()
+                                .includes(input.toLowerCase())
+                            }
                           />
                         )}
                       />

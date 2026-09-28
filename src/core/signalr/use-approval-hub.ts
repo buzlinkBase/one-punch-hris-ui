@@ -58,7 +58,11 @@ export function useApprovalHub() {
         applicationId: payload.applicationId,
         approvalInstanceId: payload.approvalInstanceId,
         createdAt: payload.timestampUtc,
-        severity: payload.statusLabel === "Declined" ? "warning" : "info",
+        severity:
+          payload.statusLabel === "Declined" ||
+          payload.statusLabel === "Cancelled"
+            ? "warning"
+            : "info",
       });
 
       queryClient.invalidateQueries({
