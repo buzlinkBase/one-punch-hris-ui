@@ -2,7 +2,10 @@ import { Card, Col, Empty, Row, Statistic, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useMyCashBond } from "../../../shared/hooks/use-my-employee-queries";
-import type { MyCashBondRun } from "../../models/api/response/portal-cash-bond-response.model";
+import type {
+  MyCashBondAdjustment,
+  MyCashBondRun,
+} from "../../models/api/response/portal-cash-bond-response.model";
 
 const { Title, Text } = Typography;
 
@@ -25,9 +28,27 @@ const columns: ColumnsType<MyCashBondRun> = [
   },
 ];
 
+const adjustmentColumns: ColumnsType<MyCashBondAdjustment> = [
+  {
+    title: "Date",
+    dataIndex: "entryDate",
+    key: "date",
+    render: (v: string) => dayjs(v).format("MMM DD, YYYY"),
+  },
+  { title: "Details", dataIndex: "particulars", key: "particulars" },
+  {
+    title: "Amount",
+    dataIndex: "amount",
+    key: "amount",
+    align: "right",
+    render: fmt,
+  },
+];
+
 export default function PortalCashBond() {
   const { data, isLoading } = useMyCashBond();
   const runs = data?.runs ?? [];
+  const adjustments = data?.adjustments ?? [];
 
   return (
     <div className="content-page">
@@ -46,7 +67,7 @@ export default function PortalCashBond() {
 
       <div className="form-page-body">
         <Card>
-          {!isLoading && runs.length === 0 ? (
+          {!isLoading && runs.length === 0 && adjustments.length === 0 ? (
             <Empty description="No cash bond deductions on file." />
           ) : (
             <>
@@ -72,6 +93,19 @@ export default function PortalCashBond() {
                   </Card>
                 </Col>
               </Row>
+              {adjustments.length > 0 && (
+                <div className="mb-4">
+                  <Title level={5}>Beginning Balance & Adjustments</Title>
+                  <Table<MyCashBondAdjustment>
+                    rowKey={(r, i) => `${r.entryDate}-${i}`}
+                    columns={adjustmentColumns}
+                    dataSource={adjustments}
+                    pagination={false}
+                    size="small"
+                  />
+                </div>
+              )}
+              <Title level={5}>Payroll Deductions</Title>
               <Table<MyCashBondRun>
                 rowKey="payrollId"
                 loading={isLoading}

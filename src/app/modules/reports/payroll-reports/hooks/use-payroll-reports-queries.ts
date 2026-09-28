@@ -51,6 +51,24 @@ export function useCashBondReport(asOf: string) {
   });
 }
 
+// Refreshes every screen showing a cash bond total: this report (any "as of"), the employee's
+// My Cash Bond, and Last Pay's cash bond status.
+export function useAdjustCashBond() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: payrollReportsApi.adjustCashBond,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["payroll-reports", "cash-bond"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["me", "cash-bond"] });
+      queryClient.invalidateQueries({
+        queryKey: ["last-pay-cash-bond-status"],
+      });
+    },
+  });
+}
+
 export function useLeaveLedger(year: number) {
   return useQuery({
     queryKey: ["payroll-reports", "leave-ledger", year],

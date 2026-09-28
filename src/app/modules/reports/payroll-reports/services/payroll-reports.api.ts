@@ -6,6 +6,7 @@ import type {
   BankDisbursementResponse,
   DeductionLedgerResponse,
   CashBondReportResponse,
+  AdjustCashBondRequest,
   LeaveCreditsBalanceResponse,
   RetirementLedgerResponse,
   AdjustRetirementRequest,
@@ -38,6 +39,7 @@ const UNIFORM_ALLOWANCE_ENDPOINT = buildApiUrl(
   "uniformallowance",
 );
 const RETIREMENT_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "retirement");
+const CASH_BOND_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "cash-bond");
 
 async function get<T>(path: string, params: Record<string, string | number>) {
   const res = await httpClient.getUnwrapped<ReportEnvelope<T>>(
@@ -62,6 +64,8 @@ export const payrollReportsApi = {
     get<DeductionLedgerResponse>("deduction-ledger", { asOf }),
   cashBondReport: (asOf: string) =>
     get<CashBondReportResponse>("cash-bond", { asOf }),
+  adjustCashBond: (payload: AdjustCashBondRequest) =>
+    httpClient.postUnwrapped<void>(`${CASH_BOND_ENDPOINT}/adjust`, payload),
   leaveLedger: (year: number) =>
     get<LeaveCreditsBalanceResponse>("leave-ledger", { year }),
   retirementLedger: (from: string, to: string) =>

@@ -23,6 +23,7 @@ import {
   BalanceAdjustModal,
   type BalanceAdjustTarget,
 } from "../../components/balance-adjust-modal/balance-adjust-modal";
+import { SignedAmount } from "../../components/signed-amount/signed-amount";
 import {
   useUniformAllowanceLedger,
   useAdjustUniformAllowance,
@@ -52,10 +53,9 @@ const EXPORT_HEADERS = [
   "Full Name",
   "Entry Type",
   "Entry Date",
-  "Add",
-  "Less",
+  "Amount",
   "Balance",
-  "Particulars",
+  "Remarks",
 ];
 
 const toRows = (records: UniformAllowanceLedgerResponse[]) =>
@@ -64,8 +64,7 @@ const toRows = (records: UniformAllowanceLedgerResponse[]) =>
     r.fullName,
     r.entryType,
     r.entryDate,
-    fmt(r.add),
-    fmt(r.less),
+    fmt(r.amount),
     fmt(r.balance),
     r.particulars,
   ]);
@@ -94,18 +93,11 @@ const columns: ColumnsType<UniformAllowanceLedgerResponse> = [
     render: (v: string) => dayjs(v).format("MMM DD, YYYY"),
   },
   {
-    title: "Add",
-    dataIndex: "add",
-    key: "add",
+    title: "Amount",
+    dataIndex: "amount",
+    key: "amount",
     align: "right",
-    render: (v: number) => (v > 0 ? fmt(v) : ""),
-  },
-  {
-    title: "Less",
-    dataIndex: "less",
-    key: "less",
-    align: "right",
-    render: (v: number) => (v > 0 ? fmt(v) : ""),
+    render: (v: number) => <SignedAmount value={v} />,
   },
   {
     title: "Balance",
@@ -115,7 +107,7 @@ const columns: ColumnsType<UniformAllowanceLedgerResponse> = [
     render: (v: number) => <strong>{fmt(v)}</strong>,
   },
   {
-    title: "Particulars",
+    title: "Remarks",
     dataIndex: "particulars",
     key: "particulars",
   },

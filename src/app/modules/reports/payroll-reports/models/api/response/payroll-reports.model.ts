@@ -54,8 +54,22 @@ export interface CashBondReportResponse {
   employeeNo: string;
   fullName: string;
   cashBondRate: number;
+  /** Net of manual entries, e.g. the opening balance from before this system. */
+  adjustments: number;
+  collectedFromPayroll: number;
+  /** adjustments + collectedFromPayroll */
   totalCollected: number;
   payrollRunsCount: number;
+}
+
+// Cash Bond Tracking "Add entry" / "Adjust" -- see hrms-api's CashBondController.Adjust.
+export interface AdjustCashBondRequest {
+  employeeId: string;
+  amount: number;
+  isAddition: boolean;
+  particulars: string;
+  /** YYYY-MM-DD; counts toward the total for any "as of" date on or after it. */
+  entryDate?: string;
 }
 
 // OneTime, employer-advanced government leave payouts awaiting/undergoing SSS-style
@@ -122,8 +136,8 @@ export interface LeaveCreditsBalanceResponse {
 }
 
 // One row per RetirementLedger entry (a true transaction log, unlike
-// LeaveCreditsBalanceResponse above which is a current-balance snapshot) — every accrual (Add)
-// and payout (Less) ever posted against an employee's Retirement Fund.
+// LeaveCreditsBalanceResponse above which is a current-balance snapshot) — every accrual (+)
+// and payout (−) ever posted against an employee's Retirement Fund.
 export interface RetirementLedgerResponse {
   employeeId: string;
   employeeNo: string;
@@ -133,8 +147,8 @@ export interface RetirementLedgerResponse {
   // entry (see AdjustRetirementRequest below) has none.
   payrollId: string | null;
   entryDate: string;
-  add: number;
-  less: number;
+  // Signed: + adds to the balance, − deducts from it.
+  amount: number;
   balance: number;
   particulars: string;
 }
@@ -155,8 +169,8 @@ export interface UniformAllowanceLedgerResponse {
   fullName: string;
   entryType: "Accrual" | "Adjustment" | "Release";
   entryDate: string;
-  add: number;
-  less: number;
+  // Signed: + adds to the balance, − deducts from it.
+  amount: number;
   balance: number;
   particulars: string;
 }

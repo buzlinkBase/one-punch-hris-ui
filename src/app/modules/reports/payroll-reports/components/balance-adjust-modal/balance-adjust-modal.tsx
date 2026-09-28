@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Form, Input, InputNumber, Modal, Radio, Select } from "antd";
+import {
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Radio,
+  Select,
+} from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 
 const fmt = (n: number) =>
@@ -16,6 +25,8 @@ export interface BalanceAdjustSubmitValues {
   amount: number;
   isAddition: boolean;
   particulars: string;
+  /** YYYY-MM-DD; only sent when the modal shows the entry date field. */
+  entryDate?: string;
 }
 
 interface FormValues {
@@ -23,6 +34,7 @@ interface FormValues {
   amount: number;
   direction: "add" | "remove";
   particulars: string;
+  entryDate?: Dayjs;
 }
 
 interface Props {
@@ -34,6 +46,9 @@ interface Props {
   target: BalanceAdjustTarget | null;
   onSubmit: (values: BalanceAdjustSubmitValues) => Promise<void>;
   isSubmitting: boolean;
+  // For balances reported "as of" a date (Cash Bond): lets HR date the entry, e.g. an opening
+  // balance dated before any payroll in this system. Defaults to today.
+  showEntryDate?: boolean;
 }
 
 // Shared by the Retirement and Uniform Allowance Ledger reports -- both need the exact same
@@ -45,6 +60,7 @@ export function BalanceAdjustModal({
   target,
   onSubmit,
   isSubmitting,
+  showEntryDate = false,
 }: Props) {
   const [form] = Form.useForm<FormValues>();
   const { data: employees = [] } = useEmployeeFilter(
@@ -59,6 +75,7 @@ export function BalanceAdjustModal({
         amount: undefined,
         direction: "add",
         particulars: "",
+        entryDate: dayjs(),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,6 +88,10 @@ export function BalanceAdjustModal({
       amount: values.amount,
       isAddition: values.direction === "add",
       particulars: values.particulars,
+      entryDate:
+        showEntryDate && values.entryDate
+          ? values.entryDate.format("YYYY-MM-DD")
+          : undefined,
     });
   };
 
@@ -128,6 +149,16 @@ export function BalanceAdjustModal({
         >
           <InputNumber style={{ width: "100%" }} min={0.01} step={0.5} />
         </Form.Item>
+        {showEntryDate && (
+          <Form.Item
+            name="entryDate"
+            label="Entry Date"
+            rules={[{ required: true, message: "Required" }]}
+            extra="Counts toward the total from this date onward."
+          >
+            <DatePicker className="w-full" allowClear={false} />
+          </Form.Item>
+        )}
         <Form.Item
           name="particulars"
           label="Reason"
