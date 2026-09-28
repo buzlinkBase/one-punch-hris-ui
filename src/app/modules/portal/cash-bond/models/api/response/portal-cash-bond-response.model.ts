@@ -9,8 +9,17 @@ export interface MyCashBondRun {
   amount: number;
 }
 
+/** Entered by HR, e.g. cash bond already deducted before this system. Signed amount. */
+export interface MyCashBondAdjustment {
+  entryDate: string;
+  amount: number;
+  particulars: string;
+}
+
 export interface MyCashBondModel {
   cashBondRate: number;
+  /** Payroll runs plus HR entries. */
   totalCollected: number;
   runs: MyCashBondRun[];
+  adjustments: MyCashBondAdjustment[];
 }
