@@ -88,6 +88,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/portal/incomplete-punches",
           },
           {
+            key: "portal-raw-attendance",
+            label: "My Raw Attendance",
+            path: "/portal/raw-attendance",
+          },
+          {
             key: "portal-shift-schedule",
             label: "My Shift Schedule",
             path: "/portal/shift-schedule",
@@ -96,7 +101,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
       {
         key: "portal-group-pay",
-        label: "My Pay",
+        label: "My Pay & Benefits",
         type: "group",
         children: [
           {
@@ -113,6 +118,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             key: "portal-thirteenth-month",
             label: "My 13th Month Pay",
             path: "/portal/thirteenth-month",
+          },
+          {
+            key: "portal-cash-bond",
+            label: "My Cash Bond",
+            path: "/portal/cash-bond",
           },
         ],
       },
@@ -142,19 +152,9 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/portal/pass-slip",
           },
           {
-            key: "portal-change-rest-day",
-            label: "Change Rest Day",
-            path: "/portal/change-rest-day",
-          },
-          {
             key: "portal-loan-applications",
             label: "Loans",
             path: "/portal/loan-applications",
-          },
-          {
-            key: "portal-cash-bond",
-            label: "Cash Bond",
-            path: "/portal/cash-bond",
           },
         ],
       },

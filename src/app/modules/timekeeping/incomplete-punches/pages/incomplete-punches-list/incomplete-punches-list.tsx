@@ -36,22 +36,17 @@ import { INCOMPLETE_PUNCHES_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import {
+  countLogs,
+  filterIncompletePunches,
+  LOG_KEYS,
+} from "../../utils/incomplete-punch.util";
 
 const { Title, Text } = Typography;
-
-const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
-const LOG_KEYS = Array.from(
-  { length: 20 },
-  (_, i) => `log${i + 1}` as keyof CleanAttendanceLogColumnar,
-);
 
 function fmtTime(v: string | null | undefined): string {
   if (!v) return "";
   return dayjs(v).format("HH:mm");
-}
-
-function countLogs(row: CleanAttendanceLogColumnar): number {
-  return LOG_KEYS.filter((k) => row[k] !== null).length;
 }
 
 function currentSemiMonthlyRange(): { fromDate: string; toDate: string } {
@@ -96,16 +91,7 @@ export default function IncompletePunchesList() {
     },
   );
 
-  const incomplete = useMemo(
-    () =>
-      rawData
-        .filter((r) => r.employeeId !== EMPTY_GUID && r.empNo !== "")
-        .filter((r) => {
-          const count = countLogs(r);
-          return count === 0 || count % 2 !== 0;
-        }),
-    [rawData],
-  );
+  const incomplete = useMemo(() => filterIncompletePunches(rawData), [rawData]);
 
   const activeLogKeys = useMemo(
     () => LOG_KEYS.filter((k) => incomplete.some((r) => r[k] !== null)),

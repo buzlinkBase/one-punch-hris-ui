@@ -3,7 +3,10 @@ import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { EmployeeFullResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 import type { PayrollRunResponse } from "@/app/modules/daily-time-record/for-payroll/models/api/response/payroll-run-result.model";
 import type { DtrDetailResponse } from "@/app/modules/daily-time-record/detail/models/api/response/dtr-detail-response.model";
-import type { CleanAttendanceLogColumnar } from "@/app/modules/timekeeping/raw-logs/models/api/response/raw-attendance-log.model";
+import type {
+  CleanAttendanceLogColumnar,
+  RawColumnarAttendanceLog,
+} from "@/app/modules/timekeeping/raw-logs/models/api/response/raw-attendance-log.model";
 import type { EmployeeFixedScheduleResponse } from "@/app/modules/change-schedule/fixed-schedule/models/api/response/employee-fixed-schedule-response.model";
 import type { LeaveBalanceResponse } from "@/app/modules/setup/leave-balance/models/api/response/leave-balance-response.model";
 import type { LeaveApplicationResponse } from "@/app/modules/applications/leave-application/models/api/response/leave-application-response.model";
@@ -73,6 +76,16 @@ export const meApi = {
   }): Promise<CleanAttendanceLogColumnar[]> {
     return httpClient.getUnwrapped<CleanAttendanceLogColumnar[]>(
       `${BASE_URL}/incomplete-punches`,
+      { params },
+    );
+  },
+
+  getMyRawAttendance(params: {
+    from: string;
+    to: string;
+  }): Promise<RawColumnarAttendanceLog[]> {
+    return httpClient.getUnwrapped<RawColumnarAttendanceLog[]>(
+      `${BASE_URL}/raw-attendance`,
       { params },
     );
   },
