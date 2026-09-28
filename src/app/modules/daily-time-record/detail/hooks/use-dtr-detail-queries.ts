@@ -3,6 +3,7 @@ import { dtrDetailApi } from "../services/dtr-detail.api";
 import type { DtrDetailFilter } from "../models/api/request/dtr-detail-filter.model";
 import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
 import type { BatchesModel } from "../../summary/models/api/response/batches.model";
+import { invalidateLeaveBalances } from "@/shared/utils/invalidate-leave-balances";
 
 const QUERY_KEY = ["daily-time-record", "detail"];
 const BATCH_CODES_KEY = ["daily-time-record", "detail", "batch-codes"];
@@ -27,8 +28,10 @@ export function useSaveDtrDetail() {
 }
 
 export function useDeleteDtrBatch() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (batchCode: string) => dtrDetailApi.deleteByBatch(batchCode),
+    onSettled: () => invalidateLeaveBalances(queryClient),
   });
 }
 
@@ -47,6 +50,7 @@ export function useApproveDtrBatch() {
       dtrDetailApi.approveBatch(batchId, note),
     onSettled: (_data, _error, { batchId }) => {
       queryClient.invalidateQueries({ queryKey: BATCH_CODES_KEY });
+      invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "Dtr", batchId],
       });
@@ -88,6 +92,7 @@ export function useApproveDtrBatchDeletion() {
       dtrDetailApi.approveDeletion(batchId, note),
     onSettled: (_data, _error, { batchId }) => {
       queryClient.invalidateQueries({ queryKey: BATCH_CODES_KEY });
+      invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "DtrDeletion", batchId],
       });

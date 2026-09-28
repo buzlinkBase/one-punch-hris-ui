@@ -193,7 +193,7 @@ function GeneralPolicyTab() {
                 type="warning"
                 showIcon
                 className="sm:col-span-2"
-                message="Additive mode computes less than the standard DOLE-compliant formula for hours that are both overtime and night-differential. Confirm this matches your company policy or a specific client's negotiated agreement before saving."
+                message="Additive mode doesn't compound night-shift overtime (NDOT). Those hours are split into regular OT pay plus a night-differential top-up, which pays less than the standard DOLE formula. Use it only if your company or client agreement allows it."
               />
             )}
           </div>
