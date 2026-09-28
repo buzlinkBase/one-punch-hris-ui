@@ -14,6 +14,8 @@ import LeaveApplicationTable from "../../components/leave-application-table";
 import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
@@ -45,6 +47,7 @@ export default function LeaveApplicationList() {
     if (!employeeFilter) return applications;
     return applications.filter((a) => a.employeeId === employeeFilter);
   }, [applications, employeeFilter]);
+  const approval = useApprovalTabs(filtered);
 
   return (
     <div className="content-page">
@@ -110,8 +113,15 @@ export default function LeaveApplicationList() {
         />
       </div>
 
+      <ApprovalTabs
+        value={approval.tab}
+        onChange={approval.setTab}
+        pendingCount={approval.pendingCount}
+        processedCount={approval.processedCount}
+      />
+
       <LeaveApplicationTable
-        data={filtered}
+        data={approval.rows}
         employees={employees}
         leaveTypes={leaveTypes}
         loading={isLoading || isFetching}

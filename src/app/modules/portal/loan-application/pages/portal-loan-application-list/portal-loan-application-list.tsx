@@ -17,12 +17,15 @@ import {
 } from "@/shared/utils/loan-amortization.util";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
 export default function PortalLoanApplicationList() {
   const navigate = useNavigate();
   const { data: loans = [], isLoading } = useMyLoanApplications();
+  const approval = useApprovalTabs(loans);
   const { data: rawDeductions = [] } = useDeductions();
   const { mutateAsync: withdraw, isPending: isWithdrawing } =
     useWithdrawMyLoanApplication();
@@ -132,11 +135,18 @@ export default function PortalLoanApplicationList() {
 
       <div className="form-page-body">
         <Card>
+          <ApprovalTabs
+            value={approval.tab}
+            onChange={approval.setTab}
+            pendingCount={approval.pendingCount}
+            processedCount={approval.processedCount}
+            pendingLabel="Pending"
+          />
           <Table<DeductionApplicationResponse>
             rowKey="id"
             loading={isLoading}
             columns={columns}
-            dataSource={loans}
+            dataSource={approval.rows}
             pagination={{ pageSize: 10 }}
             expandable={{
               expandedRowRender: (record) => (
