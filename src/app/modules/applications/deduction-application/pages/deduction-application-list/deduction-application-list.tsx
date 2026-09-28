@@ -13,6 +13,8 @@ import { useDeductions } from "@/app/modules/setup/deduction/hooks/use-deduction
 import DeductionApplicationTable from "../../components/deduction-application-table";
 import { DEDUCTION_APPLICATION_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
@@ -59,6 +61,7 @@ export default function DeductionApplicationList() {
     if (!employeeFilter) return applications;
     return applications.filter((a) => a.employeeId === employeeFilter);
   }, [applications, employeeFilter]);
+  const approval = useApprovalTabs(filtered);
 
   return (
     <div className="content-page">
@@ -112,8 +115,15 @@ export default function DeductionApplicationList() {
         />
       </div>
 
+      <ApprovalTabs
+        value={approval.tab}
+        onChange={approval.setTab}
+        pendingCount={approval.pendingCount}
+        processedCount={approval.processedCount}
+      />
+
       <DeductionApplicationTable
-        data={filtered}
+        data={approval.rows}
         loading={isLoading || isFetching}
         employeeMap={employeeMap}
         deductionMap={deductionMap}

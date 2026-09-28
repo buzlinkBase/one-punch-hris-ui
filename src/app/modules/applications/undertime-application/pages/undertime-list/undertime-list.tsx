@@ -12,6 +12,8 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import UndertimeTable from "../../components/undertime-table";
 import { UNDERTIME_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
@@ -46,6 +48,7 @@ export default function UndertimeList() {
     if (!employeeFilter) return applications;
     return applications.filter((a) => a.employeeId === employeeFilter);
   }, [applications, employeeFilter]);
+  const approval = useApprovalTabs(filtered);
 
   return (
     <div className="content-page">
@@ -109,8 +112,15 @@ export default function UndertimeList() {
         />
       </div>
 
+      <ApprovalTabs
+        value={approval.tab}
+        onChange={approval.setTab}
+        pendingCount={approval.pendingCount}
+        processedCount={approval.processedCount}
+      />
+
       <UndertimeTable
-        data={filtered}
+        data={approval.rows}
         employees={employees}
         loading={isLoading || isFetching}
         onApprove={(record) => changeStatus({ record, status: "Approved" })}

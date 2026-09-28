@@ -13,6 +13,8 @@ import OvertimeApplicationTable from "../../components/overtime-application-tabl
 import { OVERTIME_APPLICATION_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
@@ -48,6 +50,7 @@ export default function OvertimeApplicationList() {
     if (!employeeFilter) return applications;
     return applications.filter((a) => a.employeeId === employeeFilter);
   }, [applications, employeeFilter]);
+  const approval = useApprovalTabs(filtered);
 
   return (
     <div className="content-page">
@@ -116,8 +119,15 @@ export default function OvertimeApplicationList() {
         />
       </div>
 
+      <ApprovalTabs
+        value={approval.tab}
+        onChange={approval.setTab}
+        pendingCount={approval.pendingCount}
+        processedCount={approval.processedCount}
+      />
+
       <OvertimeApplicationTable
-        data={filtered}
+        data={approval.rows}
         employees={employees}
         loading={isLoading || isFetching}
         actionLoading={isChangingStatus}

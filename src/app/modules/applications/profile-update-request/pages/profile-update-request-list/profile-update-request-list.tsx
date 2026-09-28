@@ -1,10 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Modal,
   Space,
   Table,
-  Tabs,
   Tag,
   Tooltip,
   Typography,
@@ -33,6 +32,8 @@ import {
 } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
@@ -66,14 +67,7 @@ export default function ProfileUpdateRequestList() {
   const resolveEmployeeName = (employeeId: string) =>
     rawEmployees.find((e) => e.id === employeeId)?.fullName ?? undefined;
 
-  const pending = useMemo(
-    () => requests.filter((r) => r.approvalStatus === "ForApproval"),
-    [requests],
-  );
-  const history = useMemo(
-    () => requests.filter((r) => r.approvalStatus !== "ForApproval"),
-    [requests],
-  );
+  const approval = useApprovalTabs(requests);
 
   const columns: ColumnsType<EmployeeProfileUpdateRequestResponse> = [
     {
@@ -175,38 +169,19 @@ export default function ProfileUpdateRequestList() {
         </div>
       </div>
 
-      <Tabs
-        type="card"
-        items={[
-          {
-            key: "pending",
-            label: `For Approval (${pending.length})`,
-            children: (
-              <Table
-                rowKey="id"
-                dataSource={pending}
-                columns={columns}
-                loading={isLoading || isFetching}
-                size="small"
-                pagination={{ pageSize: 20, showSizeChanger: false }}
-              />
-            ),
-          },
-          {
-            key: "history",
-            label: "History",
-            children: (
-              <Table
-                rowKey="id"
-                dataSource={history}
-                columns={columns}
-                loading={isLoading || isFetching}
-                size="small"
-                pagination={{ pageSize: 20, showSizeChanger: false }}
-              />
-            ),
-          },
-        ]}
+      <ApprovalTabs
+        value={approval.tab}
+        onChange={approval.setTab}
+        pendingCount={approval.pendingCount}
+        processedCount={approval.processedCount}
+      />
+      <Table
+        rowKey="id"
+        dataSource={approval.rows}
+        columns={columns}
+        loading={isLoading || isFetching}
+        size="small"
+        pagination={{ pageSize: 20, showSizeChanger: false }}
       />
 
       <Modal

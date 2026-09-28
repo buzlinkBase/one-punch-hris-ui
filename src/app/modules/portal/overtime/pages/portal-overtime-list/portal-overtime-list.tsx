@@ -10,12 +10,15 @@ import {
 import type { OvertimeApplicationResponse } from "@/app/modules/applications/overtime-application/models/api/response/overtime-application-response.model";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
 export default function PortalOvertimeList() {
   const navigate = useNavigate();
   const { data: applications, isLoading } = useMyOvertimeApplications();
+  const approval = useApprovalTabs(applications ?? []);
   const { mutateAsync: withdraw, isPending: isWithdrawing } =
     useWithdrawMyOvertimeApplication();
 
@@ -100,11 +103,18 @@ export default function PortalOvertimeList() {
 
       <div className="form-page-body">
         <Card>
+          <ApprovalTabs
+            value={approval.tab}
+            onChange={approval.setTab}
+            pendingCount={approval.pendingCount}
+            processedCount={approval.processedCount}
+            pendingLabel="Pending"
+          />
           <Table<OvertimeApplicationResponse>
             rowKey="id"
             loading={isLoading}
             columns={columns}
-            dataSource={applications ?? []}
+            dataSource={approval.rows}
             pagination={{ pageSize: 15 }}
           />
         </Card>
