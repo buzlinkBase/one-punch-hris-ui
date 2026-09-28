@@ -9,6 +9,7 @@ import type { UpdateLeaveApplication } from "../models/api/request/update-leave-
 import type { LeaveApplicationResponse } from "../models/api/response/leave-application-response.model";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import type { AxiosError } from "axios";
+import { invalidateLeaveBalances } from "@/shared/utils/invalidate-leave-balances";
 
 const QUERY_KEY = ["leave-applications"];
 
@@ -56,6 +57,7 @@ export function useDeleteLeaveApplication() {
     mutationFn: (id: string) => leaveApplicationApi.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLeaveBalances(queryClient);
     },
   });
 }
@@ -121,6 +123,7 @@ export function useChangeLeaveApplicationStatus() {
         : leaveApplicationApi.decline(record.id, note),
     onSuccess: (_, { record }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "Leave", record.id],
       });

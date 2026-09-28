@@ -4,6 +4,7 @@ import type { PayrollRunRequest } from "../models/api/request/payroll-run-reques
 import type { GenerateThirteenthMonthRequest } from "../models/api/request/generate-thirteenth-month-request.model";
 import type { GenerateLastPayRequest } from "../models/api/request/generate-last-pay-request.model";
 import type { TaxAnnualizationRunRequest } from "../models/api/request/tax-annualization-run-request.model";
+import { invalidateLeaveBalances } from "@/shared/utils/invalidate-leave-balances";
 
 const BATCH_KEY = ["dtr-batches"];
 const PAYROLL_BATCHES_KEY = ["payroll-batches"];
@@ -19,7 +20,10 @@ export function usePostDtrBatch() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (batchCode: string) => forPayrollApi.postBatch(batchCode),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: BATCH_KEY }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BATCH_KEY });
+      invalidateLeaveBalances(queryClient);
+    },
   });
 }
 
@@ -27,7 +31,10 @@ export function useUnpostDtrBatch() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (batchCode: string) => forPayrollApi.unpostBatch(batchCode),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: BATCH_KEY }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BATCH_KEY });
+      invalidateLeaveBalances(queryClient);
+    },
   });
 }
 
@@ -161,6 +168,8 @@ export function useDeletePayrollBatch() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      // Deleting a payroll run unposts its DTRs, which gives their leave days back.
+      invalidateLeaveBalances(queryClient);
     },
   });
 }
@@ -196,6 +205,7 @@ export function useApprovePayrollBatchDeletion() {
     onSettled: (_data, _error, { batchId }) => {
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "PayrollPostingDeletion", batchId],
       });

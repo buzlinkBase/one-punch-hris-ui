@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { leaveBalanceApi } from "../services/leave-balance.api";
 import type { AdjustLeaveBalance } from "../models/api/request/adjust-leave-balance.model";
+import { invalidateLeaveBalances } from "@/shared/utils/invalidate-leave-balances";
 
 const QUERY_KEY = ["leave-balance"];
 
@@ -13,6 +14,20 @@ export function useLeaveBalance(
     queryKey: [...QUERY_KEY, employeeId, leaveId, year],
     queryFn: () => leaveBalanceApi.getBalance(employeeId!, leaveId!, year!),
     enabled: !!employeeId && !!leaveId && !!year,
+  });
+}
+
+export function usePreviewDtrReconcile() {
+  return useMutation({
+    mutationFn: (year: number) => leaveBalanceApi.reconcileWithDtr(year, true),
+  });
+}
+
+export function useApplyDtrReconcile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (year: number) => leaveBalanceApi.reconcileWithDtr(year, false),
+    onSuccess: () => invalidateLeaveBalances(queryClient),
   });
 }
 
