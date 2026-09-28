@@ -8,9 +8,9 @@ import type {
   CashBondReportResponse,
   AdjustCashBondRequest,
   LeaveCreditsBalanceResponse,
-  RetirementLedgerResponse,
+  LedgerEntryResponse,
+  FundLedgerSummaryResponse,
   AdjustRetirementRequest,
-  UniformAllowanceLedgerResponse,
   UniformAllowanceBalanceResponse,
   AdjustUniformAllowanceRequest,
   ReleaseUniformAllowanceRequest,
@@ -64,18 +64,29 @@ export const payrollReportsApi = {
     get<DeductionLedgerResponse>("deduction-ledger", { asOf }),
   cashBondReport: (asOf: string) =>
     get<CashBondReportResponse>("cash-bond", { asOf }),
+  cashBondEntries: (employeeId: string, asOf: string) =>
+    get<LedgerEntryResponse>(`cash-bond/${employeeId}/entries`, { asOf }),
   adjustCashBond: (payload: AdjustCashBondRequest) =>
     httpClient.postUnwrapped<void>(`${CASH_BOND_ENDPOINT}/adjust`, payload),
   leaveLedger: (year: number) =>
     get<LeaveCreditsBalanceResponse>("leave-ledger", { year }),
-  retirementLedger: (from: string, to: string) =>
-    get<RetirementLedgerResponse>("retirement-ledger", { from, to }),
+  leaveEntries: (employeeId: string, leaveId: string, year: number) =>
+    get<LedgerEntryResponse>(`leave-ledger/${employeeId}/${leaveId}/entries`, {
+      year,
+    }),
+  retirementLedger: (asOf: string) =>
+    get<FundLedgerSummaryResponse>("retirement-ledger", { asOf }),
+  retirementEntries: (employeeId: string, asOf: string) =>
+    get<LedgerEntryResponse>(`retirement-ledger/${employeeId}/entries`, {
+      asOf,
+    }),
   adjustRetirement: (payload: AdjustRetirementRequest) =>
     httpClient.postUnwrapped<void>(`${RETIREMENT_ENDPOINT}/adjust`, payload),
-  uniformAllowanceLedger: (from: string, to: string) =>
-    get<UniformAllowanceLedgerResponse>("uniform-allowance-ledger", {
-      from,
-      to,
+  uniformAllowanceLedger: (asOf: string) =>
+    get<FundLedgerSummaryResponse>("uniform-allowance-ledger", { asOf }),
+  uniformAllowanceEntries: (employeeId: string, asOf: string) =>
+    get<LedgerEntryResponse>(`uniform-allowance-ledger/${employeeId}/entries`, {
+      asOf,
     }),
   adjustUniformAllowance: (payload: AdjustUniformAllowanceRequest) =>
     httpClient.postUnwrapped<void>(

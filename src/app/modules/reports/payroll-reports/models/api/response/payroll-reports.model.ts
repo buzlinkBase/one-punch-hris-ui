@@ -135,43 +135,37 @@ export interface LeaveCreditsBalanceResponse {
   availableToFile: number;
 }
 
-// One row per RetirementLedger entry (a true transaction log, unlike
-// LeaveCreditsBalanceResponse above which is a current-balance snapshot) — every accrual (+)
-// and payout (−) ever posted against an employee's Retirement Fund.
-export interface RetirementLedgerResponse {
+// One movement in an employee's ledger details (Cash Bond, Retirement, Uniform Allowance,
+// Leave), oldest first — see hrms-api's LedgerEntryModel.
+export interface LedgerEntryResponse {
+  entryDate: string;
+  entryType: string;
+  /** Signed: + adds to the balance, − deducts from it. */
+  amount: number;
+  /** Balance after this entry. */
+  balance: number;
+  remarks: string;
+  /** Set when the entry came from a payroll run. */
+  payrollId: string | null;
+}
+
+// Retirement / Uniform Allowance ledger main list: one row per employee as of a date.
+export interface FundLedgerSummaryResponse {
   employeeId: string;
   employeeNo: string;
   fullName: string;
-  entryType: "Accrual" | "Adjustment" | "Payout";
-  // Only Accrual/Payout entries originate from an actual payroll run -- a manual Adjustment
-  // entry (see AdjustRetirementRequest below) has none.
-  payrollId: string | null;
-  entryDate: string;
-  // Signed: + adds to the balance, − deducts from it.
-  amount: number;
+  totalAdded: number;
+  /** Positive magnitude of every − entry. */
+  totalDeducted: number;
   balance: number;
-  particulars: string;
+  entryCount: number;
+  lastEntryDate: string | null;
 }
 
 export interface AdjustRetirementRequest {
   employeeId: string;
   amount: number;
   isAddition: boolean;
-  particulars: string;
-}
-
-// One row per UniformAllowanceLedger entry -- a true transaction log like RetirementLedgerResponse
-// above, but includes entryType since Uniform Allowance's ledger has three distinct entry kinds
-// (Accrual / Adjustment / Release) the UI needs to tell apart.
-export interface UniformAllowanceLedgerResponse {
-  employeeId: string;
-  employeeNo: string;
-  fullName: string;
-  entryType: "Accrual" | "Adjustment" | "Release";
-  entryDate: string;
-  // Signed: + adds to the balance, − deducts from it.
-  amount: number;
-  balance: number;
   particulars: string;
 }
 

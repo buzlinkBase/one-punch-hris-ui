@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, DatePicker, Form, Space, Tooltip, message } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
@@ -10,8 +10,10 @@ import {
   type BalanceAdjustSubmitValues,
   type BalanceAdjustTarget,
 } from "../../components/balance-adjust-modal/balance-adjust-modal";
+import { LedgerDrawer } from "../../components/ledger-drawer/ledger-drawer";
 import {
   useAdjustCashBond,
+  useCashBondEntries,
   useCashBondReport,
 } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -97,8 +99,18 @@ export default function CashBondReport() {
   const { data = [], isLoading, refetch } = useCashBondReport(asOf);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
+  // The row whose ledger details are open; its Adjust lives inside the drawer.
+  const [viewing, setViewing] = useState<CashBondReportResponse | null>(null);
+  const { data: entries = [], isFetching: entriesLoading } = useCashBondEntries(
+    viewing?.employeeId,
+    asOf,
+  );
+  // Keeps the drawer's balance current after an adjustment refetches the list.
+  const viewingRow =
+    data.find((r) => r.employeeId === viewing?.employeeId) ?? viewing;
+
   // "add" = toolbar entry for any employee (e.g. an opening balance for someone with no cash
-  // bond collected in this system yet); a target = adjusting one row's total.
+  // bond collected in this system yet); a target = adjusting the viewed employee's total.
   const [adjustModal, setAdjustModal] = useState<
     "add" | BalanceAdjustTarget | null
   >(null);
@@ -120,27 +132,19 @@ export default function CashBondReport() {
     ...columns,
     {
       title: "",
-      key: "adjust",
+      key: "view",
       width: 48,
       fixed: "right",
       render: (_, r) => (
-        <PermissionGate permission="Payroll Reports:Edit">
-          <Tooltip title="Adjust cash bond">
-            <Button
-              size="small"
-              type="text"
-              icon={<EditOutlined />}
-              aria-label="Adjust cash bond"
-              onClick={() =>
-                setAdjustModal({
-                  employeeId: r.employeeId,
-                  employeeName: r.fullName,
-                  balance: r.totalCollected,
-                })
-              }
-            />
-          </Tooltip>
-        </PermissionGate>
+        <Tooltip title="View ledger">
+          <Button
+            size="small"
+            type="text"
+            icon={<EyeOutlined />}
+            aria-label="View cash bond ledger"
+            onClick={() => setViewing(r)}
+          />
+        </Tooltip>
       ),
     },
   ];
@@ -192,6 +196,24 @@ export default function CashBondReport() {
               />
             </div>
           </Form>
+        }
+      />
+
+      <LedgerDrawer
+        open={viewing !== null}
+        onClose={() => setViewing(null)}
+        title={viewingRow?.fullName}
+        balanceLabel={`Total collected as of ${dayjs(asOf).format("MMM DD, YYYY")}`}
+        balance={viewingRow?.totalCollected ?? 0}
+        entries={entries}
+        loading={entriesLoading}
+        onAdjust={() =>
+          viewingRow &&
+          setAdjustModal({
+            employeeId: viewingRow.employeeId,
+            employeeName: viewingRow.fullName,
+            balance: viewingRow.totalCollected,
+          })
         }
       />
 
