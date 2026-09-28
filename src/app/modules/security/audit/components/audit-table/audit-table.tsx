@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { Table, Button, Input, Tag, Select } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import type { AuditResponse } from "../../models/api/response/audit-response.model";
+import type {
+  AuditAction,
+  AuditModuleOption,
+  AuditResponse,
+  AuditStatus,
+} from "../../models/api/response/audit-response.model";
 import {
   AUDIT_LABEL,
   AUDIT_ACTION_COLORS,
@@ -14,68 +18,63 @@ import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
-const ACTION_OPTIONS = [
-  { value: "", label: "All Actions" },
+const ACTION_OPTIONS: { value: AuditAction; label: string }[] = [
   { value: "LOGIN", label: "Login" },
   { value: "LOGOUT", label: "Logout" },
   { value: "CREATE", label: "Create" },
   { value: "UPDATE", label: "Update" },
   { value: "DELETE", label: "Delete" },
-  { value: "VIEW", label: "View" },
-  { value: "EXPORT", label: "Export" },
   { value: "APPROVE", label: "Approve" },
   { value: "REJECT", label: "Reject" },
 ];
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All Statuses" },
+const STATUS_OPTIONS: { value: AuditStatus; label: string }[] = [
   { value: "SUCCESS", label: "Success" },
   { value: "FAILED", label: "Failed" },
 ];
 
-interface Props {
-  data: AuditResponse[];
-  loading?: boolean;
+export interface AuditFilters {
+  action?: AuditAction;
+  status?: AuditStatus;
+  module?: string;
+  search?: string;
+  range?: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null;
 }
 
-export default function AuditTable({ data, loading }: Props) {
+interface Props {
+  data: AuditResponse[];
+  total: number;
+  page: number;
+  pageSize: number;
+  loading?: boolean;
+  filters: AuditFilters;
+  modules: AuditModuleOption[];
+  onFiltersChange: (filters: AuditFilters) => void;
+  onPageChange: (page: number, pageSize: number) => void;
+}
+
+/** One server-side page of the trail; every filter change goes back to the server. */
+export default function AuditTable({
+  data,
+  total,
+  page,
+  pageSize,
+  loading,
+  filters,
+  modules,
+  onFiltersChange,
+  onPageChange,
+}: Props) {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [actionFilter, setActionFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [dateRange, setDateRange] = useState<
-    [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
-  >(null);
+  const [searchText, setSearchText] = useState(filters.search ?? "");
 
   const { widths, handleResize } = useResizableColumns({
     timestamp: 180,
     action: 110,
     module: 160,
-    userName: 160,
-    description: 300,
+    userName: 180,
+    description: 320,
     status: 100,
-  });
-
-  const filtered = data.filter((item) => {
-    const matchesSearch =
-      !search ||
-      Object.values(item).some((val) =>
-        String(val ?? "")
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-      );
-
-    const matchesAction = !actionFilter || item.action === actionFilter;
-    const matchesStatus = !statusFilter || item.status === statusFilter;
-
-    const matchesDate =
-      !dateRange ||
-      !dateRange[0] ||
-      !dateRange[1] ||
-      (dayjs(item.timestamp).isAfter(dateRange[0].startOf("day")) &&
-        dayjs(item.timestamp).isBefore(dateRange[1].endOf("day")));
-
-    return matchesSearch && matchesAction && matchesStatus && matchesDate;
   });
 
   const columns: ColumnsType<AuditResponse> = [
@@ -89,8 +88,6 @@ export default function AuditTable({ data, loading }: Props) {
           width: widths.timestamp,
           onResize: (w: number) => handleResize("timestamp", w),
         }) as object,
-      sorter: (a, b) => dayjs(a.timestamp).unix() - dayjs(b.timestamp).unix(),
-      defaultSortOrder: "descend",
       render: (val: string) => dayjs(val).format("MMM DD, YYYY HH:mm"),
     },
     {
@@ -123,6 +120,7 @@ export default function AuditTable({ data, loading }: Props) {
       dataIndex: "userName",
       key: "userName",
       width: widths.userName,
+      ellipsis: true,
       onHeaderCell: () =>
         ({
           width: widths.userName,
@@ -174,40 +172,66 @@ export default function AuditTable({ data, loading }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-3">
-        <Input
-          prefix={<SearchOutlined />}
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+        <Input.Search
+          placeholder="Search description, user, record..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          onSearch={(value) =>
+            onFiltersChange({ ...filters, search: value.trim() || undefined })
+          }
           allowClear
-          style={{ maxWidth: 260 }}
+          className="w-full sm:w-72"
         />
         <Select
+          allowClear
+          placeholder="All actions"
           options={ACTION_OPTIONS}
-          value={actionFilter}
-          onChange={setActionFilter}
-          style={{ minWidth: 150 }}
+          value={filters.action}
+          onChange={(action) => onFiltersChange({ ...filters, action })}
+          className="min-w-40"
         />
         <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All modules"
+          options={modules}
+          value={filters.module}
+          onChange={(module) => onFiltersChange({ ...filters, module })}
+          className="min-w-48"
+        />
+        <Select
+          allowClear
+          placeholder="All statuses"
           options={STATUS_OPTIONS}
-          value={statusFilter}
-          onChange={setStatusFilter}
-          style={{ minWidth: 140 }}
+          value={filters.status}
+          onChange={(status) => onFiltersChange({ ...filters, status })}
+          className="min-w-36"
         />
         <MobileRangePicker
-          value={dateRange}
+          value={filters.range ?? null}
           onChange={(range) =>
-            setDateRange(range ? [range[0] ?? null, range[1] ?? null] : null)
+            onFiltersChange({
+              ...filters,
+              range: range ? [range[0] ?? null, range[1] ?? null] : null,
+            })
           }
         />
       </div>
       <Table
         rowKey="id"
-        dataSource={filtered}
+        dataSource={data}
         columns={columns}
         size="small"
         loading={loading}
-        pagination={{ pageSize: 15, showTotal: (total) => `${total} records` }}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (count) => `${count} records`,
+          onChange: onPageChange,
+        }}
         scroll={{ x: "max-content" }}
         sticky
         components={{ header: { cell: ResizableTitle } }}
