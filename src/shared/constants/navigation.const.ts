@@ -72,6 +72,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "My Profile",
         path: "/portal/profile",
       },
+      // {
+      //   key: "portal-announcements",
+      //   label: "Announcements",
+      //   path: "/portal/announcements",
+      // },
       {
         key: "portal-group-time",
         label: "My Time",
@@ -684,6 +689,18 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       },
     ],
   },
+  // {
+  //   key: "communication",
+  //   label: "Communication",
+  //   children: [
+  //     {
+  //       key: "communication-announcements",
+  //       label: "Announcements",
+  //       path: "/communication/announcements",
+  //       permission: "Announcements:View",
+  //     },
+  //   ],
+  // },
   {
     key: "security",
     label: "Security",

@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Badge,
   Button,
@@ -36,6 +42,8 @@ import {
   SafetyCertificateOutlined,
   SafetyOutlined,
   MoonOutlined,
+  NotificationOutlined,
+  PushpinFilled,
   SettingOutlined,
   SolutionOutlined,
   SunOutlined,
@@ -61,6 +69,12 @@ import { useTenantHub } from "@/core/signalr/use-tenant-hub";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { useApprovalHub } from "@/core/signalr/use-approval-hub";
 import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
+import { useAnnouncementHub } from "@/core/signalr/use-announcement-hub";
+import {
+  useMyLatestAnnouncements,
+  useMyUnreadAnnouncementCount,
+} from "@/app/modules/portal/announcements/hooks/use-my-announcement-queries";
+import { AcknowledgementGate } from "@/app/modules/portal/announcements/components/acknowledgement-gate/acknowledgement-gate";
 import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
@@ -206,6 +220,9 @@ function getNavIcon(key: string): ReactNode {
     clients: <TeamOutlined />,
     biometric: <SafetyCertificateOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
+    "portal-announcements": <NotificationOutlined />,
+    communication: <NotificationOutlined />,
+    "communication-announcements": <NotificationOutlined />,
     security: <SafetyOutlined />,
     "security-users": <UserOutlined />,
     "security-roles": <IdcardOutlined />,
@@ -444,6 +461,18 @@ export default function MainLayout() {
     (s) => s.markAllRead,
   );
 
+  // Company announcements are saved server-side (unlike the two in-memory stores above) and stay
+  // unread until actually opened. Must come after useApprovalHub -- same hub connection.
+  const openAnnouncement = useCallback(
+    (announcementId: string) =>
+      navigate({ to: `/portal/announcements/${announcementId}` }),
+    [navigate],
+  );
+  useAnnouncementHub(openAnnouncement);
+  const { data: announcementUnreadCount = 0 } = useMyUnreadAnnouncementCount();
+  const { data: latestAnnouncements } = useMyLatestAnnouncements();
+  const announcements = latestAnnouncements?.data ?? [];
+
   const notifications = useMemo(
     () =>
       [...tenantNotifications, ...approvalNotifications].sort(
@@ -452,11 +481,91 @@ export default function MainLayout() {
       ),
     [tenantNotifications, approvalNotifications],
   );
-  const unreadCount = tenantUnreadCount + approvalUnreadCount;
+  const unreadCount =
+    tenantUnreadCount + approvalUnreadCount + announcementUnreadCount;
   const markAllRead = () => {
     markTenantNotificationsRead();
     markApprovalNotificationsRead();
   };
+  const activityItems: MenuItem[] = notifications.map((n) => ({
+    key: n.id,
+    label: (
+      <div className="py-0.5">
+        <p className="m-0 text-[13px] font-semibold text-(--ant-color-text)">
+          {n.title}
+        </p>
+        <p className="mt-0.5 mb-0 text-xs whitespace-normal text-(--ant-color-text-secondary)">
+          {n.message}
+        </p>
+        <p className="mt-1 mb-0 text-[11px] text-(--ant-color-text-tertiary)">
+          {new Date(n.createdAt).toLocaleString()}
+        </p>
+      </div>
+    ),
+  }));
+  const announcementItems: MenuItem[] =
+    announcements.length > 0
+      ? [
+          {
+            key: "__announcements",
+            type: "group",
+            label: "Announcements",
+            children: announcements.map((a) => ({
+              key: `announcement-${a.id}`,
+              onClick: () => openAnnouncement(a.id),
+              label: (
+                <div className="py-0.5">
+                  <p
+                    className={`m-0 flex items-center gap-1.5 text-[13px] text-(--ant-color-text) ${a.isRead ? "font-normal" : "font-semibold"}`}
+                  >
+                    {!a.isRead && (
+                      <span className="inline-block size-1.5 shrink-0 rounded-full bg-(--ant-color-primary)" />
+                    )}
+                    {a.isPinned && (
+                      <PushpinFilled className="text-(--ant-color-primary)" />
+                    )}
+                    <span className="truncate">{a.title}</span>
+                  </p>
+                  <p className="mt-0.5 mb-0 text-xs whitespace-normal text-(--ant-color-text-secondary)">
+                    {a.needsAcknowledgement
+                      ? "Needs your acknowledgement"
+                      : (a.publishedByName ?? "Company")}
+                  </p>
+                </div>
+              ),
+            })),
+          },
+          {
+            key: "__all-announcements",
+            onClick: () => navigate({ to: "/portal/announcements" }),
+            label: (
+              <span className="text-xs text-(--ant-color-primary)">
+                View all announcements
+              </span>
+            ),
+          },
+          ...(activityItems.length > 0
+            ? [{ key: "__announcements-divider", type: "divider" as const }]
+            : []),
+        ]
+      : [];
+  const bellItems: MenuItem[] =
+    announcementItems.length + activityItems.length > 0
+      ? [...announcementItems, ...activityItems]
+      : [
+          {
+            key: "__empty",
+            disabled: true,
+            label: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No notifications yet"
+                className="py-3"
+              />
+            ),
+          },
+        ];
+
   const hrDbFailed =
     hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
 
@@ -849,58 +958,8 @@ export default function MainLayout() {
                   if (open) markAllRead();
                 }}
                 menu={{
-                  style: { minWidth: 320, maxHeight: 380, overflowY: "auto" },
-                  items:
-                    notifications.length > 0
-                      ? notifications.map((n) => ({
-                          key: n.id,
-                          label: (
-                            <div style={{ padding: "2px 0" }}>
-                              <p
-                                style={{
-                                  margin: 0,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                  color: "#1f2937",
-                                }}
-                              >
-                                {n.title}
-                              </p>
-                              <p
-                                style={{
-                                  margin: "2px 0 0",
-                                  fontSize: 12,
-                                  color: "#6b7280",
-                                  whiteSpace: "normal",
-                                }}
-                              >
-                                {n.message}
-                              </p>
-                              <p
-                                style={{
-                                  margin: "4px 0 0",
-                                  fontSize: 11,
-                                  color: "#9ca3af",
-                                }}
-                              >
-                                {new Date(n.createdAt).toLocaleString()}
-                              </p>
-                            </div>
-                          ),
-                        }))
-                      : [
-                          {
-                            key: "__empty",
-                            disabled: true,
-                            label: (
-                              <Empty
-                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                description="No notifications yet"
-                                style={{ padding: "12px 0" }}
-                              />
-                            ),
-                          },
-                        ],
+                  className: "min-w-80 max-w-96 max-h-110 overflow-y-auto",
+                  items: bellItems,
                 }}
               >
                 <button
@@ -1063,6 +1122,7 @@ export default function MainLayout() {
           ) : (
             <Outlet />
           )}
+          <AcknowledgementGate />
         </Content>
       </Layout>
     </Layout>
