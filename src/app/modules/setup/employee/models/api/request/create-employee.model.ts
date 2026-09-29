@@ -4,7 +4,6 @@ import type {
   DailyRateMode,
   FactorDays,
   EmploymentStatus,
-  JobLevel,
   RestDayModel,
   EmployeeFixedScheduleDayModel,
   EmployeeSettingModel,
@@ -21,7 +20,7 @@ export interface CreateEmployee {
   branchId?: string | null;
   sectionId?: string | null;
   positionId?: string | null;
-  jobLevel: JobLevel;
+  jobLevel?: string;
   timeShiftId?: string | null;
   dateRegistered: string;
   hireDate?: string | null;
@@ -30,6 +29,8 @@ export interface CreateEmployee {
   civilStatus?: string;
   dateResigned?: string | null;
   hiringEntity?: string;
+  /** Saved only when the caller has confidential clearance; ignored otherwise. */
+  isConfidential?: boolean;
   firstName: string;
   lastName: string;
   middleName?: string;
