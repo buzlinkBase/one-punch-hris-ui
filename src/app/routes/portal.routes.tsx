@@ -7,6 +7,13 @@ const PortalProfile = lazy(
 const PortalProfileEdit = lazy(
   () => import("@/app/modules/portal/profile/pages/portal-profile-edit"),
 );
+const PortalAnnouncements = lazy(
+  () => import("@/app/modules/portal/announcements/pages/portal-announcements"),
+);
+const PortalAnnouncementReader = lazy(
+  () =>
+    import("@/app/modules/portal/announcements/pages/portal-announcement-reader"),
+);
 const PortalPayslips = lazy(
   () => import("@/app/modules/portal/payslips/pages/portal-payslips"),
 );
@@ -75,6 +82,8 @@ const PortalThirteenthMonth = lazy(
 export const portalRoutes: SetupRouteConfig[] = [
   { path: "profile", component: PortalProfile },
   { path: "profile/edit", component: PortalProfileEdit },
+  { path: "announcements", component: PortalAnnouncements },
+  { path: "announcements/$id", component: PortalAnnouncementReader },
   { path: "payslips", component: PortalPayslips },
   { path: "dtr", component: PortalDtr },
   { path: "incomplete-punches", component: PortalIncompletePunches },

@@ -17,6 +17,7 @@ import MainLayout from "@/app/layouts/main-layout";
 import AuthLayout from "@/app/layouts/auth-layout";
 import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
+import { communicationRoutes } from "./communication.routes";
 import { authStorage } from "@/core/auth/auth-storage";
 import {
   resolveFallbackLanding,
@@ -540,6 +541,20 @@ const portalIndexRoute = createRoute({
 const portalChildRoutes = portalRoutes.map((route) =>
   createRoute({
     getParentRoute: () => portalRoute,
+    path: route.path,
+    component: withSuspense(route.component),
+  }),
+);
+
+const communicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "communication",
+  component: MainLayout,
+});
+
+const communicationChildRoutes = communicationRoutes.map((route) =>
+  createRoute({
+    getParentRoute: () => communicationRoute,
     path: route.path,
     component: withSuspense(route.component),
   }),
@@ -1531,6 +1546,7 @@ const routeTree = rootRoute.addChildren([
   profileRoute.addChildren([profileIndexRoute]),
   portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
+  communicationRoute.addChildren([...communicationChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
   attendanceEntryRoute.addChildren([
