@@ -28,7 +28,7 @@ export const employeeFormSchema = z.object({
   branchId: z.string().nullable().optional(),
   sectionId: z.string().nullable().optional(),
   positionId: z.string().nullable().optional(),
-  jobLevel: z.string().trim().min(1, "Job level is required"),
+  jobLevel: z.string().trim().optional(),
   timeShiftId: z.string().nullable().optional(),
   employmentStatus: z.enum([
     "Regular",
@@ -46,6 +46,7 @@ export const employeeFormSchema = z.object({
     "Deceased",
   ]),
   hiringEntity: z.string().optional(),
+  isConfidential: z.boolean().optional(),
   dateRegistered: z.string().min(1, "Date registered is required"),
   hireDate: z.string().nullable().optional(),
   contractStart: z.string().nullable().optional(),

@@ -62,6 +62,8 @@ import { useThemeStore } from "@/core/stores/theme.store";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
 import { resolveFallbackLanding } from "@/core/auth/tenant-routing";
 import { filterNavByPermission } from "./filter-nav-by-permission";
+import { ConfidentialDataNotice } from "@/shared/components/confidential-data-notice/confidential-data-notice";
+import { showsConfidentialNotice } from "@/shared/components/confidential-data-notice/confidential-notice-paths";
 import { useAuthUser } from "@/core/auth/use-auth-user";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
@@ -1120,7 +1122,12 @@ export default function MainLayout() {
               failed={hrDbFailed}
             />
           ) : (
-            <Outlet />
+            <>
+              {showsConfidentialNotice(location.pathname) && (
+                <ConfidentialDataNotice />
+              )}
+              <Outlet />
+            </>
           )}
           <AcknowledgementGate />
         </Content>

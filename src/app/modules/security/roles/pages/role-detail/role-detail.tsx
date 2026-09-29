@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Form,
   Input,
@@ -10,7 +10,9 @@ import {
   Checkbox,
   Divider,
   Empty,
+  Tooltip,
 } from "antd";
+import { InfoCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller } from "react-hook-form";
@@ -28,10 +30,24 @@ import {
 import { usePermissions } from "@/app/modules/security/permissions/hooks/use-permission-queries";
 import type { Permission } from "../../models/api/response/role-response.model";
 import { ROLE_LABEL } from "../../constants/label.const";
+import { permissionHint } from "../../constants/permission-hints.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
+
+// A permission label with an info icon + tooltip when there's something to explain.
+function WithHint({ hint, children }: { hint?: string; children: ReactNode }) {
+  if (!hint) return <>{children}</>;
+  return (
+    <Tooltip title={hint}>
+      <span className="inline-flex items-center gap-1">
+        {children}
+        <InfoCircleOutlined className="text-(--ant-color-text-tertiary)" />
+      </span>
+    </Tooltip>
+  );
+}
 
 export default function RoleDetail() {
   const { id } = useRouteParams<{ id?: string }>();
@@ -227,7 +243,9 @@ export default function RoleDetail() {
                                   )
                                 }
                               >
-                                <Text strong>{feature}</Text>
+                                <WithHint hint={permissionHint(feature)}>
+                                  <Text strong>{feature}</Text>
+                                </WithHint>
                               </Checkbox>
                               <div className="pl-6">
                                 <Checkbox.Group
@@ -244,7 +262,13 @@ export default function RoleDetail() {
                                     ]);
                                   }}
                                   options={featurePermissions.map((p) => ({
-                                    label: p.action,
+                                    label: (
+                                      <WithHint
+                                        hint={permissionHint(feature, p.action)}
+                                      >
+                                        {p.action}
+                                      </WithHint>
+                                    ),
                                     value: p.id,
                                   }))}
                                 />

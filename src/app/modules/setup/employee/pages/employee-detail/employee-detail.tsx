@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  AutoComplete,
   Form,
   Input,
   InputNumber,
@@ -32,6 +31,7 @@ import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import httpClient from "@/core/http/http-client";
+import { authStorage } from "@/core/auth/auth-storage";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 import {
   useForm,
@@ -64,7 +64,6 @@ import {
   FACTOR_DAYS_DEFAULT_FLAGS,
   MONTHLY_TOTAL_DAYS_OPTIONS,
   EMPLOYMENT_STATUS_OPTIONS,
-  JOB_LEVEL_OPTIONS,
   GENDER_OPTIONS,
   CIVIL_STATUS_OPTIONS,
   BLOOD_TYPE_OPTIONS,
@@ -135,6 +134,9 @@ const filterByLabel = (
     .toLowerCase()
     .includes(input.toLowerCase());
 
+// Tabs that show pay figures -- left out when the API hid them (see payHidden).
+const PAY_TAB_KEYS = ["compensation", "govids"];
+
 const REST_DAY_OPTIONS = [
   { value: "Monday", label: "Mon" },
   { value: "Tuesday", label: "Tue" },
@@ -196,8 +198,13 @@ export default function EmployeeDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  // Only cleared users see or change the tag; the API ignores it from anyone else.
+  const canTagConfidential = authStorage.hasConfidentialClearance();
   const formGridClass = isMobile ? "form-grid-1" : "form-grid-2";
   const { data: selected } = useEmployee(isEdit ? id : undefined);
+  // A confidential employee seen through a partial clearance comes back with pay blanked; the
+  // API keeps the stored pay on save, so the pay tabs are simply left out.
+  const payHidden = selected?.figuresHidden ?? false;
   const { mutateAsync: add, isPending: isCreating } = useCreateEmployee();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployee();
   const { data: departments = [], isLoading: isDepartmentsLoading } =
@@ -333,7 +340,6 @@ export default function EmployeeDetail() {
     const personalFields = ["firstName", "lastName"];
     const employmentFields = [
       "payrollGroupId",
-      "jobLevel",
       "employmentStatus",
       "dateRegistered",
     ];
@@ -795,6 +801,14 @@ export default function EmployeeDetail() {
         </Card>
         <div className="mb-2"></div>
         {/* ── Tabbed Sections ── */}
+        {payHidden && (
+          <Alert
+            type="info"
+            showIcon
+            className="mb-2"
+            message={EMPLOYEE_LABEL.PAY_HIDDEN_NOTICE}
+          />
+        )}
         <Card>
           <Tabs
             type="card"
@@ -1246,29 +1260,11 @@ export default function EmployeeDetail() {
                       </div>
                     </Form.Item>
 
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.JOB_LEVEL}
-                      required
-                      validateStatus={errors.jobLevel ? "error" : ""}
-                      help={errors.jobLevel?.message}
-                    >
+                    <Form.Item label={EMPLOYEE_LABEL.JOB_LEVEL}>
                       <Controller
                         name="jobLevel"
                         control={control}
-                        // Free text: pick a suggested level or type any other.
-                        render={({ field }) => (
-                          <AutoComplete
-                            {...field}
-                            value={field.value ?? undefined}
-                            options={JOB_LEVEL_OPTIONS}
-                            placeholder="Select or type a job level"
-                            filterOption={(input, option) =>
-                              String(option?.value ?? "")
-                                .toLowerCase()
-                                .includes(input.toLowerCase())
-                            }
-                          />
-                        )}
+                        render={({ field }) => <Input {...field} />}
                       />
                     </Form.Item>
 
@@ -1373,6 +1369,24 @@ export default function EmployeeDetail() {
                         )}
                       />
                     </Form.Item>
+
+                    {canTagConfidential && (
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.CONFIDENTIAL}
+                        extra={EMPLOYEE_LABEL.CONFIDENTIAL_HELP}
+                      >
+                        <Controller
+                          name="isConfidential"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </Form.Item>
+                    )}
 
                     <Form.Item label={EMPLOYEE_LABEL.HIRING_ENTITY}>
                       <Controller
@@ -2257,7 +2271,7 @@ export default function EmployeeDetail() {
                   </div>
                 ),
               },
-            ]}
+            ].filter((tab) => !payHidden || !PAY_TAB_KEYS.includes(tab.key))}
           />
         </Card>
 

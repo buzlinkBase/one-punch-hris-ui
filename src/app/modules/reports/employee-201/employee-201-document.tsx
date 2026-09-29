@@ -1,7 +1,6 @@
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
 import dayjs from "dayjs";
 import type { EmployeeFullResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
-import { formatJobLevel } from "@/app/modules/setup/employee/constants/label.const";
 
 const PRIMARY = "#1DA081";
 const LABEL_COLOR = "#666666";
@@ -242,7 +241,7 @@ export default function Employee201Document({
           />
           <TwoColRow
             left={["Position", data.positionName]}
-            right={["Job Level", formatJobLevel(data.jobLevel)]}
+            right={["Job Level", data.jobLevel]}
           />
           <TwoColRow
             left={["Branch", data.branchName]}

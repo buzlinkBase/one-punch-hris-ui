@@ -20,8 +20,6 @@ export type EmploymentStatus =
   | "Resigned"
   | "Retired"
   | "Deceased";
-/** Free text -- see JOB_LEVEL_OPTIONS for the suggested values. */
-export type JobLevel = string;
 
 export type DayName =
   | "Monday"
@@ -119,7 +117,7 @@ export interface EmployeeResponse {
   branchId?: string | null;
   sectionId?: string | null;
   positionId?: string | null;
-  jobLevel: JobLevel;
+  jobLevel?: string;
   timeShiftId?: string | null;
   dateRegistered: string;
   hireDate: string;
@@ -128,6 +126,9 @@ export interface EmployeeResponse {
   civilStatus?: string;
   dateResigned?: string | null;
   hiringEntity?: string;
+  isConfidential?: boolean;
+  /** Pay fields blanked: a confidential employee seen through a partial clearance. */
+  figuresHidden?: boolean;
   firstName: string;
   lastName: string;
   middleName?: string;

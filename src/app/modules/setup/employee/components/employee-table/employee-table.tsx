@@ -8,6 +8,7 @@ import {
   WalletOutlined,
   MoreOutlined,
   ExclamationCircleFilled,
+  LockOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType, ColumnType, TableProps } from "antd/es/table";
 import type { MenuProps } from "antd";
@@ -20,7 +21,6 @@ import {
   EMPLOYMENT_STATUS_OPTIONS,
   GENDER_OPTIONS,
   SALARY_TYPE_OPTIONS,
-  formatJobLevel,
 } from "../../constants/label.const";
 import { formatFullName } from "../../utils/format-full-name";
 import { useEmployeeFilterOptions } from "../../hooks/use-employee-queries";
@@ -244,7 +244,17 @@ export default function EmployeeTable({
       ...resizable("fullName"),
       ...sortable("fullName"),
       ...textFilter("fullName", "Search name"),
-      render: (_, record) => formatFullName(record),
+      // Only users with confidential clearance ever receive confidential rows.
+      render: (_, record) => (
+        <Space size={4}>
+          {formatFullName(record)}
+          {record.isConfidential && (
+            <Tag icon={<LockOutlined />} color="gold" variant="filled">
+              {EMPLOYEE_LABEL.CONFIDENTIAL}
+            </Tag>
+          )}
+        </Space>
+      ),
     },
     {
       title: EMPLOYEE_LABEL.POSITION,
@@ -294,7 +304,6 @@ export default function EmployeeTable({
       ...resizable("jobLevel"),
       ...sortable("jobLevel"),
       ...textFilter("jobLevel", "Search job level"),
-      render: (v?: string) => formatJobLevel(v) || null,
     },
     {
       title: EMPLOYEE_LABEL.TIME_SHIFT,
