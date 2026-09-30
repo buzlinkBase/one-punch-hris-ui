@@ -25,6 +25,7 @@ import {
 } from "@/core/auth/tenant-routing";
 import { getPermissionForPath } from "@/shared/constants/navigation.const";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
+import { RouteErrorFallback } from "./route-error-fallback";
 
 const Login = lazy(() => import("@/app/modules/auth/login/login"));
 const Register = lazy(() => import("@/app/modules/auth/register"));
@@ -1704,6 +1705,8 @@ const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   defaultPendingComponent: RouterPendingFallback,
+  // Reloads once when a page chunk from before a deploy is gone; a friendly screen otherwise.
+  defaultErrorComponent: RouteErrorFallback,
 });
 
 export default router;
