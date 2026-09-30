@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button, Space, Typography, notification } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { MailOutlined, ReloadOutlined } from "@ant-design/icons";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useRemoveMembership, useUsers } from "../../hooks/use-user-queries";
 import UserTable from "../../components/user-table";
-import InviteUserModal from "../../components/invite-user-modal/invite-user-modal";
+import BatchInviteModal from "../../components/batch-invite-modal/batch-invite-modal";
 import { USER_LABEL } from "../../constants/label.const";
 
 const { Title } = Typography;
@@ -54,10 +55,15 @@ export default function UserList() {
               loading={isFetching}
               onClick={() => refetch()}
             ></Button>
-            {/* <Button
-              icon={<MailOutlined />}
-              onClick={() => setInviteOpen(true)}
-            ></Button> */}
+            <PermissionGate permission="Users:Invite">
+              <Button
+                type="primary"
+                icon={<MailOutlined />}
+                onClick={() => setInviteOpen(true)}
+              >
+                Invite Users
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>
@@ -68,7 +74,10 @@ export default function UserList() {
         onDelete={handleRemoveMembership}
       />
 
-      <InviteUserModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      <BatchInviteModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+      />
     </div>
   );
 }

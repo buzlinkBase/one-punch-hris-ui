@@ -163,12 +163,13 @@ export default function EmployeeTable({
             label: "Print 201 File",
             onClick: () => handlePrint201(record.id),
           },
-          onInvite && {
-            key: "invite",
-            icon: <MailOutlined />,
-            label: "Invite to Company",
-            onClick: () => onInvite(record),
-          },
+          onInvite &&
+            authStorage.hasPermission("Users:Invite") && {
+              key: "invite",
+              icon: <MailOutlined />,
+              label: "Invite to Company",
+              onClick: () => onInvite(record),
+            },
           onPriorEmployerTax && {
             key: "priorEmployerTax",
             icon: <FileProtectOutlined />,
