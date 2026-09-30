@@ -16,7 +16,8 @@ import axios from "axios";
 import { EmailChipInput } from "@/shared/components/email-chip-input/email-chip-input";
 import { isValidEmail } from "@/shared/components/email-chip-input/parse-email-list";
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
-import { useAssignableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
+import { useGrantableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import type { ProblemDetails } from "@/shared/types/api-response.model";
 import {
@@ -98,7 +99,10 @@ export default function BatchInviteModal({
   const role = useWatch({ control, name: "role" });
   const clientId = useWatch({ control, name: "clientId" });
 
-  const { data: roles = [], isLoading: loadingRoles } = useAssignableRoles();
+  // Without Users:AssignRole every invite gets the default role for its kind; the API enforces
+  // the same, and never lets anyone grant a role with permissions they don't hold.
+  const canAssignRole = useHasPermission("Users:AssignRole");
+  const { data: roles = [], isLoading: loadingRoles } = useGrantableRoles();
   const { data: clients = [], isLoading: loadingClients } = useClients();
   const { mutate: sendBatch, isPending: sending } = useSendBatchInvitations();
 
@@ -173,11 +177,8 @@ export default function BatchInviteModal({
   const changeEntityType = (next: InviteEntityType) => {
     setValue("entityType", next);
     setValue("clientId", undefined);
-    if (!role || role === DEFAULT_ROLE[entityType]) {
-      setValue(
-        "role",
-        roles.includes(DEFAULT_ROLE[next]) ? DEFAULT_ROLE[next] : "",
-      );
+    if (!canAssignRole || !role || role === DEFAULT_ROLE[entityType]) {
+      setValue("role", DEFAULT_ROLE[next]);
     }
   };
 
@@ -198,7 +199,7 @@ export default function BatchInviteModal({
           entityType: values.entityType,
           clientId:
             values.entityType === "Client" ? values.clientId : undefined,
-          role: values.role,
+          role: canAssignRole ? values.role : DEFAULT_ROLE[values.entityType],
           recipients,
         },
         idempotencyKey: idempotencyKey.current,
@@ -240,7 +241,11 @@ export default function BatchInviteModal({
       ? ""
       : `${ready.length} ready to invite, ${blockedCount} need attention.`;
 
-  const roleOptions = roles.map((r) => ({ label: r, value: r }));
+  // The default role is always offered: anyone who may invite may give it.
+  const defaultRole = DEFAULT_ROLE[entityType];
+  const roleOptions = (
+    canAssignRole ? [...new Set([defaultRole, ...roles])] : [defaultRole]
+  ).map((r) => ({ label: r, value: r }));
   const clientOptions = clients.map((c) => ({
     label: `${c.code} - ${c.name}`,
     value: c.id,
@@ -356,7 +361,11 @@ export default function BatchInviteModal({
               required
               validateStatus={errors.role ? "error" : ""}
               help={errors.role?.message}
-              extra="Every person in this batch gets this role."
+              extra={
+                canAssignRole
+                  ? "Every person in this batch gets this role."
+                  : `Invitations use the default role (${defaultRole}). Roles can be changed later from the Users page by someone allowed to.`
+              }
             >
               <Controller
                 name="role"
@@ -364,9 +373,11 @@ export default function BatchInviteModal({
                 render={({ field }) => (
                   <Select
                     {...field}
+                    value={canAssignRole ? field.value : defaultRole}
                     placeholder="Select a role"
                     options={roleOptions}
-                    loading={loadingRoles}
+                    loading={canAssignRole && loadingRoles}
+                    disabled={!canAssignRole || sending}
                   />
                 )}
               />

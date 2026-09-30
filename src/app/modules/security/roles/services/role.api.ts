@@ -11,6 +11,11 @@ export const roleApi = {
     return httpClient.getUnwrapped<Role[]>(ENDPOINT);
   },
 
+  /** Role names the caller may grant: never Owner, and none with permissions they lack. */
+  async getGrantable(): Promise<string[]> {
+    return httpClient.getUnwrapped<string[]>(`${ENDPOINT}/grantable`);
+  },
+
   async getById(id: string): Promise<Role> {
     return httpClient.getUnwrapped<Role>(`${ENDPOINT}/${id}`);
   },

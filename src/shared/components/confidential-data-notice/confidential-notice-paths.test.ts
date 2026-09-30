@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { showsConfidentialNotice } from "./confidential-notice-paths";
+import {
+  confidentialNoticeFor,
+  showsConfidentialNotice,
+} from "./confidential-notice-paths";
+
+describe("confidentialNoticeFor", () => {
+  it.each([
+    ["/payroll/summary", "access"],
+    ["/reports/tardiness", "access"],
+    ["/daily-time-record/summary", "operations"],
+    ["/daily-time-record/for-payroll", "operations"],
+    ["/setup/employee", null],
+  ])("%s needs %s", (path, clearance) => {
+    expect(confidentialNoticeFor(path)).toBe(clearance);
+  });
+});
 
 describe("showsConfidentialNotice", () => {
   it.each([

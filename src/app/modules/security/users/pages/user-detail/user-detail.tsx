@@ -17,7 +17,7 @@ import {
   useReplaceRoles,
   useUpdateMemberStatus,
 } from "../../hooks/use-user-queries";
-import { useAssignableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
+import { useGrantableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
 import { USER_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -39,8 +39,8 @@ export default function UserDetail() {
     useReplaceRoles();
   const { mutateAsync: updateStatus, isPending: isUpdatingStatus } =
     useUpdateMemberStatus();
-  const { data: assignableRoles = [], isLoading: loadingRoles } =
-    useAssignableRoles();
+  const { data: grantableRoles = [], isLoading: loadingRoles } =
+    useGrantableRoles();
 
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("");
@@ -59,6 +59,16 @@ export default function UserDetail() {
       selectedStatus !== selected.status);
 
   const isOwner = selected?.roles?.includes("Owner");
+
+  // Roles you may grant, plus the member's current ones. A current role you couldn't grant
+  // yourself stays visible but locked -- they can keep it, you can't hand it out.
+  const roleOptions = [
+    ...new Set([...grantableRoles, ...(selected?.roles ?? [])]),
+  ].map((r) => ({
+    value: r,
+    label: r,
+    disabled: !grantableRoles.includes(r),
+  }));
   const isSaving = isReplacingRoles || isUpdatingStatus;
 
   const handleSave = async () => {
@@ -160,10 +170,7 @@ export default function UserDetail() {
                   mode="multiple"
                   value={selectedRoles}
                   onChange={setSelectedRoles}
-                  options={assignableRoles.map((r) => ({
-                    value: r,
-                    label: r,
-                  }))}
+                  options={roleOptions}
                   loading={loadingRoles}
                   style={{ width: "100%" }}
                   placeholder="Select roles"
