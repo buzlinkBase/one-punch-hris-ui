@@ -8,13 +8,13 @@ export const PERMISSION_HINTS: Record<string, Record<string, string>> = {
       "Choose a role other than the default (Employee / Client) when inviting. Only roles whose permissions the user holds themselves can be given.",
   },
   "Confidential Records": {
-    "": "Employees tagged Confidential are hidden from anyone without one of these.",
+    "": "Employees marked Confidential (for example, executives) are hidden from everyone, Admins included, except the Owner and roles given one of these. Choose the one that matches what the role needs to see.",
     Access:
-      "Everything about confidential employees, including salary, payroll runs, payslips and pay reports. Also lets the user tag or untag an employee as Confidential.",
+      "Full view. Sees everything about confidential employees, including their salary, payroll, payslips and pay reports. Can also mark or unmark an employee as Confidential.",
     Operations:
-      "Day-to-day records of confidential employees: DTR, attendance, schedules, rest days, leave, overtime, OB, pass slip and undertime. Salary, payroll and pay reports stay hidden.",
+      "Attendance and requests only. Sees their time records (DTR, attendance, schedules, rest days) and their leave, overtime, OB, pass slip and undertime requests. Their pay stays hidden.",
     Entries:
-      "Money entries for confidential employees: cash bond, allowances / other income and deductions / loans. Salary, payroll and pay reports stay hidden.",
+      "Money entries only. Can see and manage their cash bond, allowances / other income, and deductions / loans. Their salary, payroll and pay reports stay hidden.",
   },
 };
 
