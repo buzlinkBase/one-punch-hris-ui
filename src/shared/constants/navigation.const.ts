@@ -543,6 +543,36 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   {
+    key: "analytics",
+    label: "Analytics",
+    children: [
+      {
+        key: "analytics-workforce",
+        label: "Workforce",
+        path: "/analytics/workforce",
+        permission: "Workforce Analytics:View",
+      },
+      {
+        key: "analytics-attendance",
+        label: "Attendance & Time",
+        path: "/analytics/attendance",
+        permission: "Attendance Analytics:View",
+      },
+      {
+        key: "analytics-payroll",
+        label: "Payroll & Labor Cost",
+        path: "/analytics/payroll",
+        permission: "Payroll Analytics:View",
+      },
+      {
+        key: "analytics-requests",
+        label: "Leave & Requests",
+        path: "/analytics/requests",
+        permission: "Request Analytics:View",
+      },
+    ],
+  },
+  {
     key: "reports",
     label: "Reports",
     path: "/reports",

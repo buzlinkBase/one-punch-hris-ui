@@ -1,0 +1,72 @@
+import { Card, Skeleton, Typography } from "antd";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  MinusOutlined,
+} from "@ant-design/icons";
+import type { AnalyticsKpi } from "../models/analytics.model";
+import {
+  formatValue,
+  kpiChange,
+  type KpiDirection,
+  type KpiTone,
+} from "../utils/analytics-format";
+
+const { Text } = Typography;
+
+const TONE_TYPE: Record<KpiTone, "success" | "danger" | "secondary"> = {
+  good: "success",
+  bad: "danger",
+  flat: "secondary",
+  neutral: "secondary",
+};
+
+interface KpiTileProps {
+  kpi?: AnalyticsKpi;
+  direction?: KpiDirection;
+  loading?: boolean;
+}
+
+/** One headline figure with its change against the previous period (arrow + text, never color alone). */
+export function KpiTile({ kpi, direction, loading }: KpiTileProps) {
+  if (loading || !kpi) {
+    return (
+      <Card size="small" className="h-full">
+        <Skeleton active paragraph={{ rows: 1 }} title={{ width: "50%" }} />
+      </Card>
+    );
+  }
+
+  const change = kpiChange(kpi, direction);
+  const Arrow =
+    change.trend === "up"
+      ? ArrowUpOutlined
+      : change.trend === "down"
+        ? ArrowDownOutlined
+        : MinusOutlined;
+
+  return (
+    <Card size="small" className="h-full">
+      <div className="text-xs text-(--ant-color-text-secondary)">
+        {kpi.label}
+      </div>
+      <div className="mt-1 text-2xl font-semibold leading-tight tabular-nums">
+        {formatValue(kpi.value, kpi.unit)}
+      </div>
+      <div className="mt-1 text-xs">
+        {change.text ? (
+          <Text type={TONE_TYPE[change.tone]} className="text-xs!">
+            <Arrow aria-hidden /> {change.text}{" "}
+            <Text type="secondary" className="text-xs!">
+              vs previous period
+            </Text>
+          </Text>
+        ) : (
+          <Text type="secondary" className="text-xs!">
+            No earlier data to compare
+          </Text>
+        )}
+      </div>
+    </Card>
+  );
+}

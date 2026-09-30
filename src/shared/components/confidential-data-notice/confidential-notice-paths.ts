@@ -15,6 +15,12 @@ const NOTICE_PATHS: [prefix: string, clearance: ConfidentialNoticeClearance][] =
     ["/reports/", "access"],
     ["/daily-time-record/summary", "operations"],
     ["/daily-time-record/for-", "operations"],
+    // Analytics counts whole employees (workforce) and pay (payroll) -- both need full access;
+    // DTR and request figures are Operations-class.
+    ["/analytics/workforce", "access"],
+    ["/analytics/payroll", "access"],
+    ["/analytics/attendance", "operations"],
+    ["/analytics/requests", "operations"],
   ];
 
 /** Which clearance the page at `pathname` needs to be complete, or null when it has no notice. */
