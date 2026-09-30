@@ -11,6 +11,8 @@ export const APPROVAL_HUB_METHODS = {
 } as const;
 
 export interface ApprovalPushNotification {
+  /** The saved bell entry this push delivers; absent for pushes to every eligible approver. */
+  id?: string | null;
   applicationType: ApprovalApplicationType;
   applicationId: string;
   approvalInstanceId: string;
