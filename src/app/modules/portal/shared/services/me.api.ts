@@ -7,7 +7,7 @@ import type {
   CleanAttendanceLogColumnar,
   RawColumnarAttendanceLog,
 } from "@/app/modules/timekeeping/raw-logs/models/api/response/raw-attendance-log.model";
-import type { EmployeeFixedScheduleResponse } from "@/app/modules/change-schedule/fixed-schedule/models/api/response/employee-fixed-schedule-response.model";
+import type { RosterResponse } from "@/app/modules/reports/rostering/models/api/response/roster-response.model";
 import type { LeaveBalanceResponse } from "@/app/modules/setup/leave-balance/models/api/response/leave-balance-response.model";
 import type { LeaveApplicationResponse } from "@/app/modules/applications/leave-application/models/api/response/leave-application-response.model";
 import type { CreateLeaveApplication } from "@/app/modules/applications/leave-application/models/api/request/create-leave-application.model";
@@ -90,15 +90,17 @@ export const meApi = {
     );
   },
 
-  async getMyFixedSchedule(): Promise<EmployeeFixedScheduleResponse[]> {
-    try {
-      return await httpClient.getUnwrapped<EmployeeFixedScheduleResponse[]>(
-        `${BASE_URL}/fixed-schedule`,
-        { _skipErrorNotification: true },
-      );
-    } catch {
-      return [];
-    }
+  /**
+   * My shift and rest day per date, resolved by the DTR's own schedule chain (rotation plan >
+   * fixed schedule > permanent shift > open shift), so it always matches what the DTR computes.
+   */
+  getMySchedule(params: {
+    from: string;
+    to: string;
+  }): Promise<RosterResponse[]> {
+    return httpClient.getUnwrapped<RosterResponse[]>(`${BASE_URL}/schedule`, {
+      params,
+    });
   },
 
   getMyLeaveCredits(year?: number): Promise<LeaveBalanceResponse[]> {
