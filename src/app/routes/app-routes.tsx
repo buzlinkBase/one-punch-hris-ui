@@ -38,6 +38,7 @@ const Dashboard = lazy(() => import("@/app/modules/dashboard/dashboard"));
 const Profile = lazy(
   () => import("@/app/modules/account/profile/pages/profile/profile"),
 );
+const HelpCenter = lazy(() => import("@/app/modules/help/pages/help-center"));
 const PortalProfile = lazy(
   () => import("@/app/modules/portal/profile/pages/portal-profile"),
 );
@@ -524,6 +525,26 @@ const profileIndexRoute = createRoute({
   getParentRoute: () => profileRoute,
   path: "/",
   component: withSuspense(Profile),
+});
+
+// The Help Center (user manual). Deliberately not in NAVIGATION_ITEMS: every signed-in user may
+// open it, and each guide is filtered by the reader's own permissions instead.
+const helpRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "help",
+  component: MainLayout,
+});
+
+const helpIndexRoute = createRoute({
+  getParentRoute: () => helpRoute,
+  path: "/",
+  component: withSuspense(HelpCenter),
+});
+
+const helpArticleRoute = createRoute({
+  getParentRoute: () => helpRoute,
+  path: "$articleId",
+  component: withSuspense(HelpCenter),
 });
 
 const portalRoute = createRoute({
@@ -1544,6 +1565,7 @@ const routeTree = rootRoute.addChildren([
   acceptInviteRoute.addChildren([acceptInviteIndexRoute]),
   dashboardRoute.addChildren([dashboardIndexRoute]),
   profileRoute.addChildren([profileIndexRoute]),
+  helpRoute.addChildren([helpIndexRoute, helpArticleRoute]),
   portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   communicationRoute.addChildren([...communicationChildRoutes]),
