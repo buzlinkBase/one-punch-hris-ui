@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { message } from "antd";
+import { message, notification } from "antd";
 import { authStorage } from "@/core/auth/auth-storage";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
@@ -10,10 +10,13 @@ import { approvalHub } from "./approval-hub.connection";
 import {
   TENANT_HUB_METHODS,
   type HrDbCreatedNotification,
+  type RolesChangedNotification,
   type SessionRevokedNotification,
   type TenantCreatedNotification,
   type TenantRenamedNotification,
 } from "./tenant-hub.types";
+import { rolesChangedAction } from "./roles-changed-action";
+import { describeAccessChange } from "./describe-access-change";
 
 const POLL_INTERVAL_MS = 10_000;
 const POLL_MAX_MS = 10 * 60_000; // stop after 10 minutes
@@ -77,7 +80,16 @@ export function useTenantHub() {
       });
     };
 
-    const handleRolesChanged = async () => {
+    const handleRolesChanged = async (payload?: RolesChangedNotification) => {
+      // Only the company this session is working in matters -- see rolesChangedAction.
+      const action = rolesChangedAction(
+        payload?.tenantId,
+        authStorage.getTenantId(),
+        authStorage.getTenants().map((t) => t.tenantId),
+      );
+      if (action === "ignore") return;
+
+      const before = authStorage.getUser();
       try {
         // force=true -- this fires because roles changed, not because the token expired, so
         // the existing-token-is-still-valid shortcut inside refreshAccessToken must be
@@ -87,10 +99,20 @@ export function useTenantHub() {
         // A real 401 already hard-redirects to /login inside refreshAccessToken.
         return;
       }
+      if (action === "refresh-silently") return;
+
       queryClient.invalidateQueries();
       // Approver-group membership is derived from the token on connect -- see restart().
       void approvalHub.restart().catch(() => {});
-      message.info("Your permissions were updated.");
+
+      const after = authStorage.getUser();
+      if (!before || !after) return;
+      const notice = describeAccessChange(before, after);
+      notification.info({
+        message: notice.title,
+        description: notice.description,
+        placement: "topRight",
+      });
     };
 
     const handleTenantRenamed = async (
