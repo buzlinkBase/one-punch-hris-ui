@@ -75,6 +75,8 @@ function getStatusTitle(status?: number): string {
       return "Not Found";
     case 422:
       return "Validation Error";
+    case 429:
+      return "Too Many Requests";
     case 500:
       return "Server Error";
     default:
