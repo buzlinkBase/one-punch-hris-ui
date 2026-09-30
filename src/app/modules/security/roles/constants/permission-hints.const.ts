@@ -1,6 +1,10 @@
 // Tooltip text for permissions whose name alone doesn't say enough, keyed by feature, then
 // action. A feature-level entry ("") explains the whole row.
 export const PERMISSION_HINTS: Record<string, Record<string, string>> = {
+  Users: {
+    Invite:
+      "Send company invitations to employees and client logins, one at a time or up to 100 at once.",
+  },
   "Confidential Records": {
     "": "Employees tagged Confidential are hidden from anyone without one of these.",
     Access:
