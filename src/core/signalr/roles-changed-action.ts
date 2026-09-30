@@ -6,9 +6,8 @@
  *   data, and tell them what changed.
  * - `refresh-silently`: a company missing from their switcher (a reactivated membership) -- the
  *   refresh's fresh company list brings it back; nothing on screen changed, so no notice.
- * - `ignore`: another company they already have. A refresh would re-mint for their default
- *   company and could pull them out of the one they're in; switching there later fetches its
- *   current roles anyway.
+ * - `ignore`: another company they already have. Nothing in this session changed, so there's
+ *   nothing to refresh; switching there later fetches its current roles anyway.
  *
  * A push without a company id (an older AuthApi) keeps the old always-refresh behavior.
  */

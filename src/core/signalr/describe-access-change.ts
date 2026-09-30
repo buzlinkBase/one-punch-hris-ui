@@ -91,8 +91,8 @@ export function describeAccessChange(
   const company = before.tenantName || after.tenantName || "this company";
   const title = `Your access in ${company} was updated`;
 
-  // The refresh re-mints for the default company, so it can land somewhere else; comparing the
-  // roles of two different companies would say something false.
+  // A refresh stays in the session's company unless the user no longer belongs to it -- then it
+  // lands in their default company, and comparing two companies' roles would say something false.
   if (
     before.tenantId &&
     after.tenantId &&
