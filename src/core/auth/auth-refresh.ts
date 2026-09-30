@@ -22,15 +22,11 @@ async function performRefresh(): Promise<string> {
   // matter how many times it silently refreshes.
   //
   // name/roles/permissions/tenantId/tenantName are replaced wholesale every refresh, matching
-  // the new access token exactly: RefreshLogin (UserService) always re-mints via
-  // JwtService.CreateTokenAsync(user) -- the single-arg overload, which always scopes to the
-  // user's DefaultTenantId. There's no per-refresh-token tenant scoping today, so a session that
-  // switched to a non-default tenant already silently reverts to the default tenant at the real
-  // bearer-token level on the next background refresh, regardless of what this function does.
-  // Keeping the old cached roles/tenant here would just make the UI lie about what the token can
-  // actually authenticate as. (A real fix -- persisting which tenant a refresh token was issued
-  // for, so RefreshLogin can re-mint for that tenant instead of always the default -- is tracked
-  // separately; this function can't paper over that on its own.)
+  // the new access token exactly. RefreshLogin (UserService) re-mints for the company this
+  // session's refresh token was issued for (RefreshToken.TenantId), so a session stays in its
+  // company even when the account-wide default moves (a switch on another device). It only
+  // lands somewhere else when the user no longer belongs to that company -- then it's their
+  // default company, and the token's claims below say so.
   authStorage.save(accessToken, {
     ...(user ?? { email, tenants: [] }),
     name,
