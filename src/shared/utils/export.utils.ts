@@ -11,7 +11,8 @@ export function buildFlatCsv(headers: string[], rows: string[][]): string {
 export interface ExcelSheet {
   name: string;
   headers: string[];
-  rows: string[][];
+  /** Numbers are written as numeric cells, so they sum and sort in Excel. */
+  rows: (string | number)[][];
 }
 
 /** Builds and downloads a real, multi-worksheet .xlsx file — one sheet per entry. */

@@ -18,6 +18,7 @@ import AuthLayout from "@/app/layouts/auth-layout";
 import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
 import { communicationRoutes } from "./communication.routes";
+import { ANALYTICS_PAGES, analyticsRoutes } from "./analytics.routes";
 import { authStorage } from "@/core/auth/auth-storage";
 import {
   resolveFallbackLanding,
@@ -577,6 +578,32 @@ const communicationRoute = createRoute({
 const communicationChildRoutes = communicationRoutes.map((route) =>
   createRoute({
     getParentRoute: () => communicationRoute,
+    path: route.path,
+    component: withSuspense(route.component),
+  }),
+);
+
+const analyticsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "analytics",
+  component: MainLayout,
+});
+
+// /analytics itself has no page: open the first Analytics page this user may see.
+const analyticsIndexRoute = createRoute({
+  getParentRoute: () => analyticsRoute,
+  path: "/",
+  beforeLoad: () => {
+    const first = ANALYTICS_PAGES.find((page) =>
+      authStorage.hasAnyPermission(page.permission),
+    );
+    throw redirect({ to: first?.path ?? resolveFallbackLanding() });
+  },
+});
+
+const analyticsChildRoutes = analyticsRoutes.map((route) =>
+  createRoute({
+    getParentRoute: () => analyticsRoute,
     path: route.path,
     component: withSuspense(route.component),
   }),
@@ -1570,6 +1597,7 @@ const routeTree = rootRoute.addChildren([
   portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   communicationRoute.addChildren([...communicationChildRoutes]),
+  analyticsRoute.addChildren([analyticsIndexRoute, ...analyticsChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
   attendanceEntryRoute.addChildren([
