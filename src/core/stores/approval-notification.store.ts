@@ -1,28 +1,17 @@
 import { create } from "zustand";
-import type { ApprovalApplicationType } from "@/shared/types/approval.model";
-
-export interface ApprovalNotificationPayload {
-  id: string;
-  title: string;
-  message: string;
-  applicationType: ApprovalApplicationType;
-  applicationId: string;
-  approvalInstanceId: string;
-  createdAt: string;
-  severity: "success" | "error" | "info" | "warning";
-}
+import type { BellEntry } from "@/core/notifications/models/user-notification.model";
 
 interface ApprovalNotificationStore {
-  notifications: ApprovalNotificationPayload[];
+  notifications: BellEntry[];
   unreadCount: number;
-  addNotification: (notification: ApprovalNotificationPayload) => void;
+  addNotification: (notification: BellEntry) => void;
   markAllRead: () => void;
   clearNotifications: () => void;
 }
 
-// Mirrors tenant-hub.store.ts's notification slice exactly -- kept as its own store (a
-// different concern from tenant/account events) but rendered in the same bell dropdown in
-// main-layout.tsx.
+// Only the approval pushes that aren't saved server-side -- the ones sent to every eligible
+// approver of a type (no configured workflow). Pushes for one person are saved and come from
+// the API (use-user-notifications.ts). Rendered in the same bell dropdown in main-layout.tsx.
 const MAX_NOTIFICATIONS = 50;
 
 export const useApprovalNotificationStore = create<ApprovalNotificationStore>(

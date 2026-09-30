@@ -71,6 +71,11 @@ import { useTenantHub } from "@/core/signalr/use-tenant-hub";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { useApprovalHub } from "@/core/signalr/use-approval-hub";
 import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
+import {
+  useMarkAllNotificationsRead,
+  useMyNotifications,
+} from "@/core/notifications/hooks/use-user-notifications";
+import { toBellEntry } from "@/core/notifications/approval-bell-entry";
 import { useAnnouncementHub } from "@/core/signalr/use-announcement-hub";
 import {
   useMyLatestAnnouncements,
@@ -450,17 +455,25 @@ export default function MainLayout() {
   const markTenantNotificationsRead = useTenantHubStore((s) => s.markAllRead);
   const hrDb = useTenantHubStore((s) => s.getHrDbStatus(sessionUser.tenantId));
 
-  // Same bell shows both tenant/account events and approval-workflow events -- two separate
-  // stores (different concerns, see approval-notification.store.ts's doc comment), merged here
-  // purely for display by timestamp.
+  // Same bell shows tenant/account events and approval-workflow events, merged here purely for
+  // display by timestamp. Approval updates for one person are saved server-side (they survive a
+  // refresh and reach people who were offline); pushes to every eligible approver aren't, and
+  // live in useApprovalNotificationStore for this session only.
   useApprovalHub();
-  const approvalNotifications = useApprovalNotificationStore(
+  const { data: savedPage } = useMyNotifications();
+  const { mutate: markSavedRead } = useMarkAllNotificationsRead();
+  const savedNotifications = useMemo(
+    () => (savedPage?.items ?? []).map(toBellEntry),
+    [savedPage],
+  );
+  const savedUnreadCount = savedPage?.unreadCount ?? 0;
+  const unsavedApprovalNotifications = useApprovalNotificationStore(
     (s) => s.notifications,
   );
-  const approvalUnreadCount = useApprovalNotificationStore(
+  const unsavedApprovalUnreadCount = useApprovalNotificationStore(
     (s) => s.unreadCount,
   );
-  const markApprovalNotificationsRead = useApprovalNotificationStore(
+  const markUnsavedApprovalRead = useApprovalNotificationStore(
     (s) => s.markAllRead,
   );
 
@@ -478,34 +491,48 @@ export default function MainLayout() {
 
   const notifications = useMemo(
     () =>
-      [...tenantNotifications, ...approvalNotifications].sort(
+      [
+        ...tenantNotifications,
+        ...savedNotifications,
+        ...unsavedApprovalNotifications,
+      ].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
-    [tenantNotifications, approvalNotifications],
+    [tenantNotifications, savedNotifications, unsavedApprovalNotifications],
   );
   const unreadCount =
-    tenantUnreadCount + approvalUnreadCount + announcementUnreadCount;
+    tenantUnreadCount +
+    savedUnreadCount +
+    unsavedApprovalUnreadCount +
+    announcementUnreadCount;
   const markAllRead = () => {
     markTenantNotificationsRead();
-    markApprovalNotificationsRead();
+    markUnsavedApprovalRead();
+    if (savedUnreadCount > 0) markSavedRead();
   };
-  const activityItems: MenuItem[] = notifications.map((n) => ({
-    key: n.id,
-    label: (
-      <div className="py-0.5">
-        <p className="m-0 text-[13px] font-semibold text-(--ant-color-text)">
-          {n.title}
-        </p>
-        <p className="mt-0.5 mb-0 text-xs whitespace-normal text-(--ant-color-text-secondary)">
-          {n.message}
-        </p>
-        <p className="mt-1 mb-0 text-[11px] text-(--ant-color-text-tertiary)">
-          {new Date(n.createdAt).toLocaleString()}
-        </p>
-      </div>
-    ),
-  }));
+  const activityItems: MenuItem[] = notifications.map((n) => {
+    // Approval updates open the related request; tenant/account events have nowhere to go.
+    const link = "link" in n ? n.link : undefined;
+    return {
+      key: n.id,
+      onClick: link ? () => navigate({ to: link }) : undefined,
+      label: (
+        <div className="py-0.5">
+          <p className="m-0 text-[13px] font-semibold text-(--ant-color-text)">
+            {n.title}
+          </p>
+          <p className="mt-0.5 mb-0 text-xs whitespace-normal text-(--ant-color-text-secondary)">
+            {n.message}
+          </p>
+          <p className="mt-1 mb-0 flex items-center justify-between gap-2 text-[11px] text-(--ant-color-text-tertiary)">
+            <span>{new Date(n.createdAt).toLocaleString()}</span>
+            {link && <span className="text-(--ant-color-primary)">View</span>}
+          </p>
+        </div>
+      ),
+    };
+  });
   const announcementItems: MenuItem[] =
     announcements.length > 0
       ? [

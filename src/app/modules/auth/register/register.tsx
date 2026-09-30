@@ -14,13 +14,12 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import { useGoogleLogin } from "@react-oauth/google";
 import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import {
   registerFormSchema,
   type RegisterFormValues,
 } from "./models/forms/register-form.schema";
 import { useRegisterMutation } from "./hooks/use-register-mutation";
-import type { ApiResponse } from "@/shared/types/api-response.model";
+import { authErrorMessage } from "@/core/auth/auth-error-message";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
@@ -78,13 +77,12 @@ export default function Register() {
       const result = await register(values);
       setSubmittedEmail(result.email ?? values.email);
     } catch (err) {
-      const description = axios.isAxiosError(err)
-        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ?? "Registration failed. Please try again.")
-        : "An unexpected error occurred.";
       notification.error({
         message: "Registration failed",
-        description,
+        description: authErrorMessage(
+          err,
+          "Registration failed. Please try again.",
+        ),
         placement: "topRight",
       });
     }
@@ -109,11 +107,10 @@ export default function Register() {
         const destination = await resolveTenantDestination();
         navigate({ to: destination ?? "/dashboard" });
       } catch (err) {
-        const description = axios.isAxiosError(err)
-          ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-              ?.errorMessage ?? "Google sign-up failed.")
-          : "An unexpected error occurred.";
-        notification.error({ message: "Sign up failed", description });
+        notification.error({
+          message: "Sign up failed",
+          description: authErrorMessage(err, "Google sign-up failed."),
+        });
       } finally {
         setGoogleSigningUp(false);
       }
