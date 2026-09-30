@@ -24,6 +24,7 @@ import {
   BarChartOutlined,
   BankOutlined,
   BellOutlined,
+  QuestionCircleOutlined,
   CalendarOutlined,
   CheckOutlined,
   ClockCircleOutlined,
@@ -76,6 +77,7 @@ import {
   useMyNotifications,
 } from "@/core/notifications/hooks/use-user-notifications";
 import { toBellEntry } from "@/core/notifications/approval-bell-entry";
+import { ContextHelpDrawer } from "@/app/modules/help/components/context-help-drawer/context-help-drawer";
 import { useAnnouncementHub } from "@/core/signalr/use-announcement-hub";
 import {
   useMyLatestAnnouncements,
@@ -441,6 +443,7 @@ export default function MainLayout() {
     () => window.matchMedia("(max-width: 767px)").matches,
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
@@ -980,6 +983,20 @@ export default function MainLayout() {
                 value={undefined}
                 style={{ width: 240 }}
                 allowClear
+              />
+              <Tooltip title="Help for this screen">
+                <button
+                  type="button"
+                  className="header-collapse-trigger"
+                  aria-label="Help"
+                  onClick={() => setHelpOpen(true)}
+                >
+                  <QuestionCircleOutlined />
+                </button>
+              </Tooltip>
+              <ContextHelpDrawer
+                open={helpOpen}
+                onClose={() => setHelpOpen(false)}
               />
               <Dropdown
                 trigger={["click"]}
