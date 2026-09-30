@@ -38,11 +38,13 @@ const DEFAULT_ROLE: Record<InviteEntityType, string> = {
   Client: "Client",
 };
 
-const DEFAULT_VALUES: BatchInviteFormValues = {
-  entityType: "Employee",
-  role: DEFAULT_ROLE.Employee,
+const defaultValues = (
+  entityType: InviteEntityType,
+): BatchInviteFormValues => ({
+  entityType,
+  role: DEFAULT_ROLE[entityType],
   clientId: undefined,
-};
+});
 
 function errorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
@@ -61,6 +63,8 @@ function errorMessage(err: unknown): string {
 interface BatchInviteModalProps {
   open: boolean;
   onClose: () => void;
+  /** What the form starts on; give the modal a matching `key` so a change starts it fresh. */
+  defaultEntityType?: InviteEntityType;
 }
 
 /**
@@ -70,6 +74,7 @@ interface BatchInviteModalProps {
 export default function BatchInviteModal({
   open,
   onClose,
+  defaultEntityType = "Employee",
 }: BatchInviteModalProps) {
   const [modal, contextHolder] = Modal.useModal();
   const [emails, setEmails] = useState<string[]>([]);
@@ -87,7 +92,7 @@ export default function BatchInviteModal({
     formState: { errors },
   } = useForm<BatchInviteFormValues>({
     resolver: zodResolver(batchInviteFormSchema),
-    defaultValues: DEFAULT_VALUES,
+    defaultValues: defaultValues(defaultEntityType),
   });
   const entityType = useWatch({ control, name: "entityType" });
   const role = useWatch({ control, name: "role" });
@@ -140,7 +145,7 @@ export default function BatchInviteModal({
     setNotice(null);
     setSummary(null);
     idempotencyKey.current = null;
-    reset(DEFAULT_VALUES);
+    reset(defaultValues(defaultEntityType));
   };
 
   const close = () => {
