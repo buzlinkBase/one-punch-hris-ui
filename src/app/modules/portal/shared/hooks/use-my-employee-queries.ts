@@ -70,11 +70,10 @@ export function useMyRawAttendance(params: { from?: string; to?: string }) {
   });
 }
 
-export function useMyFixedSchedule() {
+export function useMySchedule(from: string, to: string) {
   return useQuery({
-    queryKey: ["me", "fixed-schedule"],
-    queryFn: () => meApi.getMyFixedSchedule(),
-    staleTime: 5 * 60 * 1000,
+    queryKey: ["me", "schedule", from, to],
+    queryFn: () => meApi.getMySchedule({ from, to }),
   });
 }
 
