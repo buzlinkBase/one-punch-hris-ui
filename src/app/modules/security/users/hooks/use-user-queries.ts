@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -5,7 +6,9 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { userApi } from "../services/user.api";
+import { userLinkApi } from "../services/user-link.api";
 import { batchInvitationApi } from "../services/batch-invitation.api";
+import { classifyUsers, hasAccount } from "../utils/classify-users";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import type { SendInvitationRequest } from "../models/api/request/send-invitation-request.model";
 import type {
@@ -19,6 +22,89 @@ export function useUsers() {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: () => userApi.getAll(),
+  });
+}
+
+/**
+ * The members, each tagged as an employee user, client user or other. Accounts are linked by user
+ * id; invites not yet accepted by email. Until the links load (or if they fail) everyone shows,
+ * just untagged.
+ */
+export function useUserRows() {
+  const users = useUsers();
+  const members = useMemo(() => users.data ?? [], [users.data]);
+
+  const request = useMemo(
+    () => ({
+      userIds: members
+        .filter(hasAccount)
+        .map((m) => m.userId)
+        .sort(),
+      emails: members
+        .filter((m) => !hasAccount(m))
+        .map((m) => (m.email ?? "").trim().toLowerCase())
+        .filter(Boolean)
+        .sort(),
+    }),
+    [members],
+  );
+
+  const links = useQuery({
+    queryKey: [...QUERY_KEY, "links", request],
+    queryFn: () => userLinkApi.getLinks(request),
+    enabled: members.length > 0,
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = useMemo(
+    () => classifyUsers(members, links.data ?? []),
+    [members, links.data],
+  );
+
+  return {
+    rows,
+    isLoading: users.isLoading,
+    isFetching: users.isFetching || links.isFetching,
+    refetch: users.refetch,
+  };
+}
+
+export interface BulkResult {
+  succeeded: number;
+  failed: number;
+}
+
+async function settle(tasks: Promise<unknown>[]): Promise<BulkResult> {
+  const results = await Promise.allSettled(tasks);
+  const failed = results.filter((r) => r.status === "rejected").length;
+  return { succeeded: results.length - failed, failed };
+}
+
+/** Sets one status on many members; each is applied on its own so one failure doesn't stop the rest. */
+export function useBulkUpdateStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      membershipIds,
+      status,
+    }: {
+      membershipIds: string[];
+      status: string;
+    }) => settle(membershipIds.map((id) => userApi.updateStatus(id, status))),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useBulkRemoveMembership() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ membershipIds }: { membershipIds: string[] }) =>
+      settle(membershipIds.map((id) => userApi.removeMembership(id))),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
   });
 }
 
