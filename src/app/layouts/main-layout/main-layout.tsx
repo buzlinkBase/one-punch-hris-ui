@@ -63,7 +63,7 @@ import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
 import { resolveFallbackLanding } from "@/core/auth/tenant-routing";
 import { filterNavByPermission } from "./filter-nav-by-permission";
 import { ConfidentialDataNotice } from "@/shared/components/confidential-data-notice/confidential-data-notice";
-import { showsConfidentialNotice } from "@/shared/components/confidential-data-notice/confidential-notice-paths";
+import { confidentialNoticeFor } from "@/shared/components/confidential-data-notice/confidential-notice-paths";
 import { useAuthUser } from "@/core/auth/use-auth-user";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
@@ -440,6 +440,7 @@ export default function MainLayout() {
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const noticeClearance = confidentialNoticeFor(location.pathname);
   const sessionUser = getSessionUser();
 
   useTenantHub();
@@ -1123,8 +1124,8 @@ export default function MainLayout() {
             />
           ) : (
             <>
-              {showsConfidentialNotice(location.pathname) && (
-                <ConfidentialDataNotice />
+              {noticeClearance && (
+                <ConfidentialDataNotice clearance={noticeClearance} />
               )}
               <Outlet />
             </>

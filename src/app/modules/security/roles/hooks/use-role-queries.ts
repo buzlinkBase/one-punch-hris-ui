@@ -70,16 +70,13 @@ export function useSetRolePermissions() {
 }
 
 /**
- * Role names a member can be assigned via the invite/role-assignment flow — every non-Owner
- * System Role plus this tenant's Custom Roles, mirroring tenant-api's own
- * RoleService.IsAssignableAsync rule (Owner is never grantable this way).
+ * Role names the signed-in user may grant when inviting or editing members -- never Owner, and
+ * no role holding a permission they don't have themselves (TenantApi RoleGrantPolicy). Under the
+ * roles key, so editing a role's permissions refreshes it.
  */
-export function useAssignableRoles() {
-  const { data: roles = [], ...rest } = useRoles();
-  return {
-    ...rest,
-    data: roles
-      .filter((r) => !(r.isSystemRole && r.name === "Owner"))
-      .map((r) => r.name),
-  };
+export function useGrantableRoles() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "grantable"],
+    queryFn: () => roleApi.getGrantable(),
+  });
 }

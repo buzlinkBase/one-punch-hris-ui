@@ -4,6 +4,8 @@ export const PERMISSION_HINTS: Record<string, Record<string, string>> = {
   Users: {
     Invite:
       "Send company invitations to employees and client logins, one at a time or up to 100 at once.",
+    AssignRole:
+      "Choose a role other than the default (Employee / Client) when inviting. Only roles whose permissions the user holds themselves can be given.",
   },
   "Confidential Records": {
     "": "Employees tagged Confidential are hidden from anyone without one of these.",
