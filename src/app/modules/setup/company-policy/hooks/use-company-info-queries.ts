@@ -11,6 +11,22 @@ export function useCompanyInfo() {
   });
 }
 
+export function useUploadCompanyLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => companyInfoApi.uploadLogo(file),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  });
+}
+
+export function useRemoveCompanyLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => companyInfoApi.removeLogo(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  });
+}
+
 export function useUpdateCompanyInfo() {
   const queryClient = useQueryClient();
   return useMutation({
