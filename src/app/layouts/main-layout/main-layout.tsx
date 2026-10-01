@@ -35,6 +35,7 @@ import {
   FieldTimeOutlined,
   IdcardOutlined,
   LineChartOutlined,
+  LockOutlined,
   MenuFoldOutlined,
   MenuOutlined,
   MenuUnfoldOutlined,
@@ -57,8 +58,17 @@ import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
 import {
   NAVIGATION_ITEMS,
+  getFeaturesForPath,
   getPermissionForPath,
+  getRequiredFeatures,
 } from "@/shared/constants/navigation.const";
+import {
+  LIMIT_KEYS,
+  SUBSCRIPTION_PROBLEM_TYPES,
+  UNLIMITED,
+  type FeatureKey,
+  type NavFeature,
+} from "@/shared/constants/entitlement-keys.const";
 import type { NavItem } from "@/shared/constants/navigation.const";
 import { useThemeStore } from "@/core/stores/theme.store";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
@@ -87,6 +97,12 @@ import {
 import { AcknowledgementGate } from "@/app/modules/portal/announcements/components/acknowledgement-gate/acknowledgement-gate";
 import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
+import { useSubscriptionState } from "@/app/modules/billing/hooks/use-subscription-state";
+import { SubscriptionBanner } from "@/app/modules/billing/components/subscription-banner";
+import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
+import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
+import type { FeatureLock } from "@/app/modules/billing/utils/feature-lock";
+import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import type { MenuProps } from "antd";
 
@@ -251,12 +267,23 @@ function getNavIcon(key: string): ReactNode {
 /** Nav keys that don't depend on the tenant's HR database and stay enabled while it provisions. */
 const HR_DB_INDEPENDENT_KEYS = new Set(["dashboard"]);
 
+/** Why a menu item is locked by the plan, for its tooltip. */
+function lockTooltip(lock: FeatureLock): string {
+  return lock.reason === "revoked"
+    ? "Not included in your subscription"
+    : `Available on the ${lock.availableOn ?? "higher"} plan`;
+}
+
 function buildMenuItems(
   items: typeof NAVIGATION_ITEMS,
   hrDbReady: boolean,
   collapsed = false,
+  lockFor: (features: FeatureKey[]) => FeatureLock | null = () => null,
+  inherited: NavFeature[] = [],
 ): MenuItem[] {
   return items.map((item) => {
+    // A page needs every subscription feature on its ancestor chain (navigation.const.ts).
+    const features = item.feature ? [...inherited, item.feature] : inherited;
     if (item.type === "divider") {
       return { type: "divider" as const, key: item.key };
     }
@@ -285,12 +312,20 @@ function buildMenuItems(
         label,
         icon: getNavIcon(item.key),
         children: item.children
-          ? buildMenuItems(item.children, hrDbReady, collapsed)
+          ? buildMenuItems(
+              item.children,
+              hrDbReady,
+              collapsed,
+              lockFor,
+              features,
+            )
           : undefined,
       };
     }
 
     const disabled = !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
+    // Locked items stay clickable: the page explains what the plan lacks and how to get it.
+    const lock = item.path ? lockFor(getRequiredFeatures(features)) : null;
 
     // When collapsed, AntD's built-in popup already shows the label text on hover —
     // wrapping in Tooltip creates a nested tooltip that breaks the popup text rendering.
@@ -306,6 +341,13 @@ function buildMenuItems(
           {item.label}
         </span>
       </Tooltip>
+    ) : lock ? (
+      <Tooltip title={lockTooltip(lock)} placement="right">
+        <span className="flex items-center justify-between gap-2">
+          <span className="overflow-hidden text-ellipsis">{item.label}</span>
+          <LockOutlined className="text-xs opacity-60" />
+        </span>
+      </Tooltip>
     ) : (
       <span className="block overflow-hidden text-ellipsis">{item.label}</span>
     );
@@ -316,7 +358,7 @@ function buildMenuItems(
       icon: getNavIcon(item.key),
       disabled,
       children: item.children
-        ? buildMenuItems(item.children, hrDbReady, collapsed)
+        ? buildMenuItems(item.children, hrDbReady, collapsed, lockFor, features)
         : undefined,
     };
   });
@@ -658,7 +700,48 @@ export default function MainLayout() {
   // p-4/md:p-6 padding staying in place, so only the outer m-*/app-content-surface are dropped.
   const isPortalRoute = location.pathname.startsWith("/portal");
 
-  const menuItems = buildMenuItems(navItems, hrDb.ready, collapsed);
+  // The company's subscription: locks menu items and whole pages the plan doesn't include.
+  const subscription = useSubscriptionState();
+  const pageLock = subscription.lockFor(
+    getRequiredFeatures(getFeaturesForPath(location.pathname)),
+  );
+  const showRestriction = usePlanRestrictionStore((s) => s.show);
+
+  // Owning another company is a plan limit (companies.max) -- known here only when this user
+  // owns the current company, whose subscription is then their own. The server checks it
+  // regardless; this just says so before the user fills in the form.
+  const companiesMax =
+    subscription.snapshot?.limits[LIMIT_KEYS.COMPANIES_MAX] ?? UNLIMITED;
+  const ownsCurrentCompany = sessionUser.tenants.some(
+    (t) => t.tenantId === sessionUser.tenantId && t.roles.includes("Owner"),
+  );
+  const ownedCompanies = sessionUser.tenants.filter((t) =>
+    t.roles.includes("Owner"),
+  ).length;
+  const companyLimitReached =
+    ownsCurrentCompany &&
+    companiesMax !== UNLIMITED &&
+    ownedCompanies >= companiesMax;
+  const handleNewCompany = () => {
+    if (!companyLimitReached) {
+      navigate({ to: "/create-tenant" });
+      return;
+    }
+    showRestriction({
+      type: SUBSCRIPTION_PROBLEM_TYPES.PLAN_LIMIT_REACHED,
+      detail: `Your plan allows ${companiesMax} ${companiesMax === 1 ? "company" : "companies"}. Upgrade to add another.`,
+      limit: LIMIT_KEYS.COMPANIES_MAX,
+      max: companiesMax,
+      used: ownedCompanies,
+    });
+  };
+
+  const menuItems = buildMenuItems(
+    navItems,
+    hrDb.ready,
+    collapsed,
+    subscription.lockFor,
+  );
   const navEntries = flattenNavigation(navItems);
   const headerContext = buildHeaderContext(location.pathname, navEntries);
   const activeMenuKey = resolveActiveMenuKey(location.pathname, navEntries);
@@ -1107,9 +1190,12 @@ export default function MainLayout() {
                               }}
                             >
                               New company
+                              {companyLimitReached && (
+                                <LockOutlined className="ml-2 text-xs opacity-60" />
+                              )}
                             </span>
                           ),
-                          onClick: () => navigate({ to: "/create-tenant" }),
+                          onClick: handleNewCompany,
                         },
                       ],
                     }}
@@ -1174,13 +1260,15 @@ export default function MainLayout() {
             />
           ) : (
             <>
+              <SubscriptionBanner />
               {noticeClearance && (
                 <ConfidentialDataNotice clearance={noticeClearance} />
               )}
-              <Outlet />
+              {pageLock ? <FeatureLocked lock={pageLock} /> : <Outlet />}
             </>
           )}
           <AcknowledgementGate />
+          <PlanRestrictionModal />
         </Content>
       </Layout>
     </Layout>
