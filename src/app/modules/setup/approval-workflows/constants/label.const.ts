@@ -10,6 +10,7 @@ export const APPROVAL_WORKFLOWS_LABEL = {
     "Configure how many approval levels each application type must pass through, and who approves at each step. Types left unconfigured keep today's single-step behavior.",
   CREATE_TITLE: "New Approval Workflow",
   EDIT_TITLE: "Edit Approval Workflow",
+  VIEW_TITLE: "View Approval Workflow",
 };
 
 export const APPLICATION_TYPE_OPTIONS: {

@@ -87,6 +87,14 @@ export function useEmployeeFilterOptions() {
   };
 }
 
+// Under the ["employees"] prefix, so saving an employee refreshes it with any new level.
+export function useJobLevels() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "job-levels"],
+    queryFn: () => employeeApi.getJobLevels(),
+  });
+}
+
 export function useEmployee(id: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY, id],

@@ -20,7 +20,12 @@ import {
   message,
   notification,
   Badge,
+  AutoComplete,
 } from "antd";
+import {
+  buildJobLevelOptions,
+  jobLevelMatches,
+} from "../../services/job-level-options";
 import {
   errorCountByTab,
   summarizeFormErrors,
@@ -59,6 +64,7 @@ import {
   useUpdateEmployee,
   useUploadEmployeePhoto,
   useRemoveEmployeePhoto,
+  useJobLevels,
 } from "../../hooks/use-employee-queries";
 import { ImageUpload } from "@/shared/components/image-upload/image-upload";
 import { employeeMapper } from "../../services/employee.mapper";
@@ -72,6 +78,7 @@ import {
   FACTOR_DAYS_DEFAULT_FLAGS,
   MONTHLY_TOTAL_DAYS_OPTIONS,
   EMPLOYMENT_STATUS_OPTIONS,
+  JOB_LEVEL_OPTIONS,
   GENDER_OPTIONS,
   CIVIL_STATUS_OPTIONS,
   BLOOD_TYPE_OPTIONS,
@@ -215,6 +222,11 @@ export default function EmployeeDetail() {
   const payHidden = selected?.figuresHidden ?? false;
   const { mutateAsync: add, isPending: isCreating } = useCreateEmployee();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployee();
+  const { data: usedJobLevels = [] } = useJobLevels();
+  const jobLevelOptions = buildJobLevelOptions(
+    JOB_LEVEL_OPTIONS,
+    usedJobLevels,
+  );
   const { mutateAsync: uploadPhoto } = useUploadEmployeePhoto();
   const { mutateAsync: removePhoto } = useRemoveEmployeePhoto();
   // A new employee's photo waits here until the record exists.
@@ -1291,7 +1303,25 @@ export default function EmployeeDetail() {
                       <Controller
                         name="jobLevel"
                         control={control}
-                        render={({ field }) => <Input {...field} />}
+                        render={({ field }) => (
+                          // Suggestions only: any typed level is kept as typed.
+                          <AutoComplete
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            ref={field.ref}
+                            options={jobLevelOptions}
+                            // Options come grouped; only the levels (not the group headers) have a value.
+                            filterOption={(input, option) =>
+                              !!option &&
+                              "value" in option &&
+                              typeof option.value === "string" &&
+                              jobLevelMatches(input, option.value)
+                            }
+                            allowClear
+                            placeholder="Select or type a level"
+                          />
+                        )}
                       />
                     </Form.Item>
 

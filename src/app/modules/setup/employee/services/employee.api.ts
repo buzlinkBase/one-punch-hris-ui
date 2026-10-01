@@ -36,6 +36,11 @@ export const employeeApi = {
     );
   },
 
+  /** The job levels already used in this company (for the Job Level suggestions). */
+  getJobLevels(): Promise<string[]> {
+    return httpClient.getUnwrapped<string[]>(`${BASE_URL}/job-levels`);
+  },
+
   async getById(id: string): Promise<EmployeeResponse> {
     return httpClient.getUnwrapped<EmployeeResponse>(`${BASE_URL}/${id}`);
   },
