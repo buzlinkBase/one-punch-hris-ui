@@ -5,6 +5,7 @@ export const COMPANY_POLICY_LABEL = {
 
   SECTION_COMPANY_INFO: "Company Profile",
   COMPANY_NAME: "Company Name",
+  LOGO: "Company Logo",
   SHORT_NAME: "Short Name",
   ADDRESS: "Address",
   CONTACT: "Contact Number",

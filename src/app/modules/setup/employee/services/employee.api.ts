@@ -61,6 +61,22 @@ export const employeeApi = {
     return httpClient.delete<void>(`${BASE_URL}/${id}`);
   },
 
+  /** Stores (or replaces) the profile photo; resolves to a link to show it. */
+  async uploadPhoto(id: string, file: File): Promise<string> {
+    const form = new FormData();
+    form.append("file", file);
+    const result = await httpClient.postUnwrapped<{ url: string }>(
+      `${BASE_URL}/${id}/photo`,
+      form,
+      { headers: { "Content-Type": undefined } },
+    );
+    return result.url;
+  },
+
+  removePhoto(id: string): Promise<void> {
+    return httpClient.delete<void>(`${BASE_URL}/${id}/photo`);
+  },
+
   async uploadEmployees(file: File): Promise<void> {
     const form = new FormData();
     form.append("excelFile", file);

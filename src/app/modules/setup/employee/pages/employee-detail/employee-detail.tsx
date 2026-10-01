@@ -15,14 +15,12 @@ import {
   Divider,
   Radio,
   Tabs,
-  Avatar,
   Tooltip,
   Alert,
   message,
 } from "antd";
 import {
   UserOutlined,
-  CameraOutlined,
   PlusOutlined,
   PrinterOutlined,
   InfoCircleOutlined,
@@ -52,7 +50,10 @@ import {
   useEmployees,
   useCreateEmployee,
   useUpdateEmployee,
+  useUploadEmployeePhoto,
+  useRemoveEmployeePhoto,
 } from "../../hooks/use-employee-queries";
+import { ImageUpload } from "@/shared/components/image-upload/image-upload";
 import { employeeMapper } from "../../services/employee.mapper";
 import {
   EMPLOYEE_LABEL,
@@ -207,6 +208,15 @@ export default function EmployeeDetail() {
   const payHidden = selected?.figuresHidden ?? false;
   const { mutateAsync: add, isPending: isCreating } = useCreateEmployee();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployee();
+  const { mutateAsync: uploadPhoto } = useUploadEmployeePhoto();
+  const { mutateAsync: removePhoto } = useRemoveEmployeePhoto();
+  // A new employee's photo waits here until the record exists.
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  // Same gate as the photo endpoint: anyone who may edit -- or, while creating, add -- employees.
+  const canEditPhoto = authStorage.hasAnyPermission(
+    "Workforce Setup:Edit",
+    ...(isEdit ? [] : ["Workforce Setup:Create"]),
+  );
   const { data: departments = [], isLoading: isDepartmentsLoading } =
     useDepartments();
   const { data: allEmployees = [], isLoading: isEmployeesLoading } =
@@ -322,11 +332,22 @@ export default function EmployeeDetail() {
         timeShiftId,
       })),
     };
+    // The photo is saved by its own upload, never with the form.
+    delete payload.profileImg;
     try {
       if (isEdit && id) {
         await update({ id, ...payload });
       } else {
-        await add(payload);
+        const created = await add(payload);
+        if (pendingPhoto && created.id) {
+          try {
+            await uploadPhoto({ id: created.id, file: pendingPhoto });
+          } catch {
+            message.warning(
+              "The employee was saved, but the photo couldn't be uploaded. Open the employee to try again.",
+            );
+          }
+        }
       }
       navigate({ to: "/setup/employee" });
     } catch {
@@ -359,7 +380,6 @@ export default function EmployeeDetail() {
   };
 
   const isSubmitting = isUpdating || isCreating;
-  const imgInputRef = useRef<HTMLInputElement>(null);
 
   const watchedDepartmentId = useWatch({ control, name: "departmentId" });
   const watchedFirstName = useWatch({ control, name: "firstName" });
@@ -687,63 +707,29 @@ export default function EmployeeDetail() {
               name="profileImg"
               control={control}
               render={({ field }) => (
-                <div
-                  style={{
-                    position: "relative",
-                    flexShrink: 0,
-                    cursor: "pointer",
+                // Saved on its own, right away; for a new employee it's held and uploaded once
+                // the record exists (see onSubmit).
+                <ImageUpload
+                  compact
+                  label="photo"
+                  shape="circle"
+                  value={field.value}
+                  placeholder={<UserOutlined />}
+                  disabled={!canEditPhoto}
+                  onUpload={async (file) => {
+                    if (isEdit && id) {
+                      field.onChange(await uploadPhoto({ id, file }));
+                    } else {
+                      setPendingPhoto(file);
+                      field.onChange(URL.createObjectURL(file));
+                    }
                   }}
-                  onClick={() => imgInputRef.current?.click()}
-                  title="Click to upload photo"
-                >
-                  <Avatar
-                    size={72}
-                    src={field.value || undefined}
-                    icon={!field.value ? <UserOutlined /> : undefined}
-                    style={{
-                      backgroundColor: !field.value ? "#1DA081" : undefined,
-                      fontSize: 32,
-                      display: "block",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      background: "rgba(0,0,0,0.35)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: 0,
-                      transition: "opacity 0.2s",
-                    }}
-                    className="avatar-upload-overlay"
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLDivElement).style.opacity = "1")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLDivElement).style.opacity = "0")
-                    }
-                  >
-                    <CameraOutlined style={{ color: "#fff", fontSize: 20 }} />
-                  </div>
-                  <input
-                    ref={imgInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () =>
-                        field.onChange(reader.result as string);
-                      reader.readAsDataURL(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
+                  onRemove={async () => {
+                    if (isEdit && id) await removePhoto(id);
+                    else setPendingPhoto(null);
+                    field.onChange("");
+                  }}
+                />
               )}
             />
             <div style={{ flex: "1 1 200px", minWidth: 180 }}>

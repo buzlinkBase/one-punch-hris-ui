@@ -1,0 +1,27 @@
+import { describe, expect, it } from "vitest";
+import { IMAGE_MAX_BYTES, imageFileProblem } from "./image-file";
+
+describe("imageFileProblem", () => {
+  it("accepts PNG, JPG and WebP up to 2 MB", () => {
+    expect(imageFileProblem({ type: "image/png", size: 1000 })).toBeNull();
+    expect(
+      imageFileProblem({ type: "image/jpeg", size: IMAGE_MAX_BYTES }),
+    ).toBeNull();
+    expect(imageFileProblem({ type: "image/webp", size: 10 })).toBeNull();
+  });
+
+  it("refuses other types, empty files and files over 2 MB", () => {
+    expect(imageFileProblem({ type: "image/svg+xml", size: 10 })).toMatch(
+      /PNG, JPG or WebP/,
+    );
+    expect(imageFileProblem({ type: "application/pdf", size: 10 })).toMatch(
+      /PNG, JPG or WebP/,
+    );
+    expect(imageFileProblem({ type: "image/png", size: 0 })).toBe(
+      "The file is empty.",
+    );
+    expect(
+      imageFileProblem({ type: "image/png", size: IMAGE_MAX_BYTES + 1 }),
+    ).toMatch(/2 MB/);
+  });
+});

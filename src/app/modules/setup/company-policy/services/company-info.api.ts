@@ -13,4 +13,20 @@ export const companyInfoApi = {
   update(data: UpdateCompanyInfo): Promise<void> {
     return httpClient.put<void>(ENDPOINT, data);
   },
+
+  /** Stores (or replaces) the logo; resolves to a link to show it. */
+  async uploadLogo(file: File): Promise<string> {
+    const form = new FormData();
+    form.append("file", file);
+    const result = await httpClient.postUnwrapped<{ url: string }>(
+      `${ENDPOINT}/logo`,
+      form,
+      { headers: { "Content-Type": undefined } },
+    );
+    return result.url;
+  },
+
+  removeLogo(): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/logo`);
+  },
 };
