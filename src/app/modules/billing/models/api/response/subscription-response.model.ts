@@ -8,7 +8,11 @@ export type SubscriptionStatus =
   | "None"
   | "Unrestricted"
   | "Unowned"
-  | "Unavailable";
+  | "Unavailable"
+  /** The company is still setting up and its owner has no plan yet -- full access. */
+  | "Provisioning"
+  /** The company was deleted. */
+  | "Invalid";
 
 export type AccessMode = "Full" | "ReadOnly";
 

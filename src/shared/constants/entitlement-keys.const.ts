@@ -42,6 +42,8 @@ export const SUBSCRIPTION_PROBLEM_TYPES = {
   PLAN_REQUIRED: "plan-required",
   PLAN_LIMIT_REACHED: "plan-limit-reached",
   READ_ONLY: "subscription-read-only",
+  /** The owner's plan lapsed and this member isn't the owner or a billing admin. */
+  LOCKED: "subscription-locked",
 } as const;
 
 export type SubscriptionProblemType =
