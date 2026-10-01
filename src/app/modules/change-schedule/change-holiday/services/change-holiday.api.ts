@@ -8,16 +8,10 @@ import type { ChangeHolidayFilter } from "../models/api/request/change-holiday-f
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "changeholidays");
 
 export const changeHolidayApi = {
-  async getAll(
-    filter: ChangeHolidayFilter = {},
-  ): Promise<ChangeHolidayResponse[]> {
-    try {
-      return await httpClient.getUnwrapped<ChangeHolidayResponse[]>(ENDPOINT, {
-        params: filter,
-      });
-    } catch {
-      return [];
-    }
+  getAll(filter: ChangeHolidayFilter = {}): Promise<ChangeHolidayResponse[]> {
+    return httpClient.getUnwrapped<ChangeHolidayResponse[]>(ENDPOINT, {
+      params: filter,
+    });
   },
 
   getById(id: string): Promise<ChangeHolidayResponse> {

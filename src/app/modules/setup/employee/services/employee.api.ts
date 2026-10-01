@@ -15,14 +15,10 @@ const BASE_URL = buildApiUrl(API_PREFIX.hrms, "employees");
 
 export const employeeApi = {
   async getAll(keyword?: string): Promise<EmployeeResponse[]> {
-    try {
-      const data = await httpClient.getUnwrapped<
-        PaginatedResponse<EmployeeResponse[]>
-      >(BASE_URL, keyword ? { params: { Keyword: keyword } } : undefined);
-      return data.data ?? [];
-    } catch {
-      return [];
-    }
+    const data = await httpClient.getUnwrapped<
+      PaginatedResponse<EmployeeResponse[]>
+    >(BASE_URL, keyword ? { params: { Keyword: keyword } } : undefined);
+    return data.data ?? [];
   },
 
   // Setup → Employee table only -- paging, sorting and filtering all happen on the server.

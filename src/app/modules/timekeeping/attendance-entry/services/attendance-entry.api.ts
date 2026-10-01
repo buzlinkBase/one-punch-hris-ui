@@ -63,15 +63,11 @@ export const attendanceEntryApi = {
     if (filter.actualStart) params.actualStart = filter.actualStart;
     if (filter.actualEnd) params.actualEnd = filter.actualEnd;
 
-    try {
-      const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
-        `${ENDPOINT}/dtr-view-att-by-shift`,
-        { params },
-      );
-      return raw.map(mapRecord);
-    } catch {
-      return [];
-    }
+    const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
+      `${ENDPOINT}/dtr-view-att-by-shift`,
+      { params },
+    );
+    return raw.map(mapRecord);
   },
 
   async getAll(
@@ -82,15 +78,11 @@ export const attendanceEntryApi = {
     if (filter.toDate) params.toDate = filter.toDate;
     if (filter.employeeId) params.employeeId = filter.employeeId;
 
-    try {
-      const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
-        `${ENDPOINT}/generate`,
-        { params },
-      );
-      return raw.map(mapRecord);
-    } catch {
-      return [];
-    }
+    const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
+      `${ENDPOINT}/generate`,
+      { params },
+    );
+    return raw.map(mapRecord);
   },
 
   async update(payload: UpdateAttendanceEntry): Promise<void> {
@@ -110,24 +102,21 @@ export const attendanceEntryApi = {
   async filterEmployees(
     filter: EmployeeFilter = {},
   ): Promise<EmployeeFilterResponse[]> {
-    try {
-      const params: Record<string, string> = {};
-      if (filter.departmentId) params.departmentId = filter.departmentId;
-      if (filter.payrollGroupId) params.payrollGroupId = filter.payrollGroupId;
-      if (filter.clientId) params.clientId = filter.clientId;
-      if (filter.branchId) params.branchId = filter.branchId;
-      if (filter.operationAreaId)
-        params.operationAreaId = filter.operationAreaId;
-      if (filter.dayName != null) params.dayName = String(filter.dayName);
-      if (filter.managerId) params.managerId = filter.managerId;
+    // A failure propagates rather than becoming [] -- an empty list was cached as a success,
+    // leaving every employee dropdown in the app empty until the cache expired.
+    const params: Record<string, string> = {};
+    if (filter.departmentId) params.departmentId = filter.departmentId;
+    if (filter.payrollGroupId) params.payrollGroupId = filter.payrollGroupId;
+    if (filter.clientId) params.clientId = filter.clientId;
+    if (filter.branchId) params.branchId = filter.branchId;
+    if (filter.operationAreaId) params.operationAreaId = filter.operationAreaId;
+    if (filter.dayName != null) params.dayName = String(filter.dayName);
+    if (filter.managerId) params.managerId = filter.managerId;
 
-      return await httpClient.getUnwrapped<EmployeeFilterResponse[]>(
-        ENDPOINT_EMPLOYEE_FILTER,
-        { params },
-      );
-    } catch {
-      return [];
-    }
+    return httpClient.getUnwrapped<EmployeeFilterResponse[]>(
+      ENDPOINT_EMPLOYEE_FILTER,
+      { params },
+    );
   },
 
   async create(entries: CreateAttendanceEntry[]): Promise<void> {

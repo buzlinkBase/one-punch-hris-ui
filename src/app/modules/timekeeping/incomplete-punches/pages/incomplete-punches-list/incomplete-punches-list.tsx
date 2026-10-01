@@ -277,7 +277,7 @@ export default function IncompletePunchesList() {
         }) as object,
       render: (_: unknown, record: CleanAttendanceLogColumnar) => {
         const count = countLogs(record);
-        if (count === 0) return <Tag color="default">No logs</Tag>;
+        if (count === 0) return <Tag color="error">No punches</Tag>;
         return (
           <Tag color="warning">
             {count} punch{count !== 1 ? "es" : ""}

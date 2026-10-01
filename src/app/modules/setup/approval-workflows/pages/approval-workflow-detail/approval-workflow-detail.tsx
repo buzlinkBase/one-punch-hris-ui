@@ -51,6 +51,7 @@ import { PermissionGate } from "@/shared/components/permission-gate/permission-g
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { withReferencedEmployees } from "../../services/approver-options";
 
 const { Title } = Typography;
 
@@ -103,10 +104,13 @@ export default function ApprovalWorkflowDetail() {
     value: p.id,
     label: p.name,
   }));
-  const employeeOptions = employees.map((e) => ({
-    value: e.id,
-    label: e.name ?? e.id,
-  }));
+  const employeeOptions = withReferencedEmployees(
+    employees.map((e) => ({
+      value: e.id,
+      label: e.name ?? e.id,
+    })),
+    selected?.approverNames,
+  );
 
   const {
     control,
