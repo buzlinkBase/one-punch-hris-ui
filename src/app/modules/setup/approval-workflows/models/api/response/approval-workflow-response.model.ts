@@ -37,4 +37,9 @@ export interface ApprovalWorkflowResponse {
   /** Set on the active workflow when another version is waiting to take over from it. */
   replacedByWorkflowName?: string | null;
   steps: ApprovalWorkflowStepResponse[];
+  /**
+   * Names of the employees the steps reference, keyed by id -- "Confidential" for one the
+   * caller may not see (they're missing from the employee dropdown list).
+   */
+  approverNames?: Record<string, string>;
 }

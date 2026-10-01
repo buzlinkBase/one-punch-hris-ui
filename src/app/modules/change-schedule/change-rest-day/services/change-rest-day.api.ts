@@ -8,16 +8,10 @@ import type { ChangeRestDayFilter } from "../models/api/request/change-rest-day-
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "changerestdays");
 
 export const changeRestDayApi = {
-  async getAll(
-    filter: ChangeRestDayFilter = {},
-  ): Promise<ChangeRestDayResponse[]> {
-    try {
-      return await httpClient.getUnwrapped<ChangeRestDayResponse[]>(ENDPOINT, {
-        params: filter,
-      });
-    } catch {
-      return [];
-    }
+  getAll(filter: ChangeRestDayFilter = {}): Promise<ChangeRestDayResponse[]> {
+    return httpClient.getUnwrapped<ChangeRestDayResponse[]>(ENDPOINT, {
+      params: filter,
+    });
   },
 
   getById(id: string): Promise<ChangeRestDayResponse> {

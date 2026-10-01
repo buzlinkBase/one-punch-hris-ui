@@ -30,14 +30,11 @@ function buildParams(filter: DtrDetailFilter): Record<string, string> {
 }
 
 export const dtrDetailApi = {
-  async getAll(filter: DtrDetailFilter = {}): Promise<DtrDetailResponse[]> {
-    try {
-      return await httpClient.getUnwrapped<DtrDetailResponse[]>(ENDPOINT, {
-        params: buildParams(filter),
-      });
-    } catch {
-      return [];
-    }
+  // A failed generate propagates -- returning [] showed it as "no DTR for this period".
+  getAll(filter: DtrDetailFilter = {}): Promise<DtrDetailResponse[]> {
+    return httpClient.getUnwrapped<DtrDetailResponse[]>(ENDPOINT, {
+      params: buildParams(filter),
+    });
   },
 
   save(records: DtrDetailResponse[]): Promise<DtrDetailResponse[]> {
