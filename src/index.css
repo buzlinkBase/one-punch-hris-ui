@@ -640,6 +640,43 @@ textarea:-webkit-autofill:focus {
   border: 1px solid var(--border-subtle);
 }
 
+/* Shared image picker (shared/components/image-upload): the photo/logo with a camera overlay
+   on hover. Kept here, outside a layer, so it outranks antd's own .ant-avatar styles. */
+.image-upload-trigger {
+  @apply relative shrink-0 cursor-pointer overflow-hidden border-0 bg-transparent p-0 leading-none;
+}
+.image-upload-trigger.is-circle {
+  @apply rounded-full;
+}
+.image-upload-trigger.is-square {
+  @apply rounded-lg;
+}
+.image-upload-trigger:disabled {
+  @apply cursor-not-allowed;
+}
+.image-upload-avatar {
+  @apply flex items-center justify-center;
+}
+.image-upload-avatar.is-empty {
+  background-color: #1da081;
+}
+.image-upload-avatar.is-logo {
+  background-color: var(--ant-color-fill-tertiary);
+  color: var(--ant-color-text-tertiary);
+}
+.image-upload-avatar.is-logo img {
+  @apply object-contain;
+}
+.image-upload-overlay {
+  @apply absolute inset-0 flex items-center justify-center text-xl text-white opacity-0 transition-opacity duration-200;
+  background: rgba(0, 0, 0, 0.35);
+}
+.image-upload-trigger:hover .image-upload-overlay,
+.image-upload-trigger:focus-visible .image-upload-overlay,
+.image-upload-overlay.is-busy {
+  @apply opacity-100;
+}
+
 .login-header {
   @apply flex flex-col items-center text-center gap-2 mb-6;
 }

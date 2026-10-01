@@ -100,12 +100,13 @@ export default function CompanyInfoTab() {
           <ImageUpload
             label="logo"
             shape="square"
+            crop="logo"
             value={company?.logoUrl}
             placeholder={<BankOutlined />}
             onUpload={(file) => uploadLogo(file)}
             onRemove={() => removeLogo()}
             disabled={!canEditLogo}
-            hint="PNG, JPG or WebP, up to 2 MB. A square or wide image on a plain background looks best."
+            hint="PNG, JPG or WebP. You can crop it after choosing; it's resized automatically. A logo on a transparent or plain background looks best."
           />
         </Form.Item>
         <div className="form-grid-2">
