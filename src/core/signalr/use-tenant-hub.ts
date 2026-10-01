@@ -12,11 +12,13 @@ import {
   type HrDbCreatedNotification,
   type RolesChangedNotification,
   type SessionRevokedNotification,
+  type SignedOutNotification,
   type TenantCreatedNotification,
   type TenantRenamedNotification,
 } from "./tenant-hub.types";
 import { rolesChangedAction } from "./roles-changed-action";
 import { describeAccessChange } from "./describe-access-change";
+import { SIGNED_OUT_PARAM, shouldSignOut } from "./signed-out-action";
 
 const POLL_INTERVAL_MS = 10_000;
 const POLL_MAX_MS = 10 * 60_000; // stop after 10 minutes
@@ -155,11 +157,21 @@ export function useTenantHub() {
       }
     };
 
+    // The password was changed elsewhere (or reset): this session's refresh token is already
+    // revoked, so leave now rather than fail at the next refresh. The login page says why.
+    const handleSignedOut = (payload: SignedOutNotification) => {
+      if (!shouldSignOut(payload, authStorage.getToken())) return;
+      queryClient.clear();
+      authStorage.clear();
+      window.location.href = `/login?${SIGNED_OUT_PARAM}=${encodeURIComponent(payload.reason ?? "")}`;
+    };
+
     connection.on(TENANT_HUB_METHODS.onTenantCreated, handleTenantCreated);
     connection.on(TENANT_HUB_METHODS.onHrDbCreated, handleHrDbCreated);
     connection.on(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
     connection.on(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
     connection.on(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
+    connection.on(TENANT_HUB_METHODS.onSignedOut, handleSignedOut);
 
     // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke (the
     // first mount's connection gets stopped mid-negotiate by its own cleanup before this ever
@@ -220,6 +232,7 @@ export function useTenantHub() {
       connection.off(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
       connection.off(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
       connection.off(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
+      connection.off(TENANT_HUB_METHODS.onSignedOut, handleSignedOut);
       if (pollTimer.current) clearInterval(pollTimer.current);
       void tenantHub.stop();
       started.current = false;
