@@ -25,6 +25,10 @@ export const TENANT_HUB_METHODS = {
   /** Fired when the account's password was changed or reset (UsersController) -- every other
    *  session was revoked, so sign out now instead of when the access token expires. */
   onSignedOut: "SignedOut",
+  /** Fired to every member of an account's companies when its subscription changes (plan,
+   *  status, payment, override -- SubscriptionChangedWorker) -- refetch the entitlements so
+   *  locked and unlocked features update without re-logging in. */
+  onSubscriptionChanged: "SubscriptionChanged",
 } as const;
 
 export interface SignedOutNotification {
@@ -51,6 +55,11 @@ export interface RolesChangedNotification {
 
 export interface SessionRevokedNotification {
   tenantId: string;
+}
+
+export interface SubscriptionChangedNotification {
+  tenantIds: string[];
+  reason: string;
 }
 
 export interface TenantRenamedNotification {

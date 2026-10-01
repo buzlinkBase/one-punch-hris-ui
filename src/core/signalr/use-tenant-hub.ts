@@ -13,6 +13,7 @@ import {
   type RolesChangedNotification,
   type SessionRevokedNotification,
   type SignedOutNotification,
+  type SubscriptionChangedNotification,
   type TenantCreatedNotification,
   type TenantRenamedNotification,
 } from "./tenant-hub.types";
@@ -166,12 +167,27 @@ export function useTenantHub() {
       window.location.href = `/login?${SIGNED_OUT_PARAM}=${encodeURIComponent(payload.reason ?? "")}`;
     };
 
+    // The plan, status or an override changed: the company's entitlements are stale.
+    const handleSubscriptionChanged = (
+      payload?: SubscriptionChangedNotification,
+    ) => {
+      const tenantId = authStorage.getTenantId() ?? "";
+      if (payload?.tenantIds?.length && !payload.tenantIds.includes(tenantId)) {
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: ["subscription"] });
+    };
+
     connection.on(TENANT_HUB_METHODS.onTenantCreated, handleTenantCreated);
     connection.on(TENANT_HUB_METHODS.onHrDbCreated, handleHrDbCreated);
     connection.on(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
     connection.on(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
     connection.on(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
     connection.on(TENANT_HUB_METHODS.onSignedOut, handleSignedOut);
+    connection.on(
+      TENANT_HUB_METHODS.onSubscriptionChanged,
+      handleSubscriptionChanged,
+    );
 
     // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke (the
     // first mount's connection gets stopped mid-negotiate by its own cleanup before this ever
@@ -233,6 +249,10 @@ export function useTenantHub() {
       connection.off(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
       connection.off(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
       connection.off(TENANT_HUB_METHODS.onSignedOut, handleSignedOut);
+      connection.off(
+        TENANT_HUB_METHODS.onSubscriptionChanged,
+        handleSubscriptionChanged,
+      );
       if (pollTimer.current) clearInterval(pollTimer.current);
       void tenantHub.stop();
       started.current = false;

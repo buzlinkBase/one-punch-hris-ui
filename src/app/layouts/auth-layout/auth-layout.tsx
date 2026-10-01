@@ -1,4 +1,5 @@
 import { Outlet } from "@tanstack/react-router";
+import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
 
 export default function AuthLayout() {
   return (
@@ -6,6 +7,8 @@ export default function AuthLayout() {
       <div className="w-full max-w-md">
         <Outlet />
       </div>
+      {/* e.g. creating a company past the plan's limit (/create-tenant) */}
+      <PlanRestrictionModal />
     </div>
   );
 }

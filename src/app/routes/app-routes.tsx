@@ -1309,6 +1309,12 @@ const SalaryAdjustmentDetail = lazy(
 const AuditList = lazy(
   () => import("@/app/modules/security/audit/pages/audit-list"),
 );
+const BillingOverview = lazy(
+  () => import("@/app/modules/billing/pages/billing-overview"),
+);
+const PlanSelection = lazy(
+  () => import("@/app/modules/billing/pages/plan-selection"),
+);
 const AuditDetail = lazy(
   () => import("@/app/modules/security/audit/pages/audit-detail"),
 );
@@ -1541,6 +1547,25 @@ const securityAuditDetailRoute = createRoute({
   component: withSuspense(AuditDetail),
 });
 
+// The account's subscription: plan, usage, payments, and choosing a plan.
+const billingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "billing",
+  component: MainLayout,
+});
+
+const billingIndexRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "/",
+  component: withSuspense(BillingOverview),
+});
+
+const billingPlansRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "plans",
+  component: withSuspense(PlanSelection),
+});
+
 const enrollBiometricsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "enroll-biometrics",
@@ -1683,6 +1708,7 @@ const routeTree = rootRoute.addChildren([
     securityAuditIndexRoute,
     securityAuditDetailRoute,
   ]),
+  billingRoute.addChildren([billingIndexRoute, billingPlansRoute]),
   leaveApplicationRoute.addChildren([
     leaveApplicationIndexRoute,
     leaveApplicationCreateRoute,
