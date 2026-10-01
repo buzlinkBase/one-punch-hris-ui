@@ -1,5 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { IMAGE_MAX_BYTES, imageFileProblem } from "./image-file";
+import {
+  IMAGE_MAX_BYTES,
+  IMAGE_SOURCE_MAX_BYTES,
+  imageFileProblem,
+  imageSourceProblem,
+} from "./image-file";
+
+describe("imageSourceProblem", () => {
+  it("lets a large photo through to be cropped and shrunk", () => {
+    expect(
+      imageSourceProblem({ type: "image/jpeg", size: IMAGE_SOURCE_MAX_BYTES }),
+    ).toBeNull();
+  });
+
+  it("refuses files over 20 MB and other types", () => {
+    expect(
+      imageSourceProblem({
+        type: "image/jpeg",
+        size: IMAGE_SOURCE_MAX_BYTES + 1,
+      }),
+    ).toMatch(/20 MB/);
+    expect(imageSourceProblem({ type: "image/gif", size: 10 })).toMatch(
+      /PNG, JPG or WebP/,
+    );
+  });
+});
 
 describe("imageFileProblem", () => {
   it("accepts PNG, JPG and WebP up to 2 MB", () => {

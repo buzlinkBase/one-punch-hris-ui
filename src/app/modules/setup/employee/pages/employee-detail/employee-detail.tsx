@@ -18,7 +18,14 @@ import {
   Tooltip,
   Alert,
   message,
+  notification,
+  Badge,
 } from "antd";
+import {
+  errorCountByTab,
+  summarizeFormErrors,
+} from "../../services/form-error-summary";
+import type { EmployeeFormTab } from "../../constants/form-sections.const";
 import {
   UserOutlined,
   PlusOutlined,
@@ -242,6 +249,7 @@ export default function EmployeeDetail() {
     handleSubmit,
     reset,
     setValue,
+    setFocus,
     formState: { errors },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema) as Resolver<EmployeeFormValues>,
@@ -356,26 +364,50 @@ export default function EmployeeDetail() {
   };
 
   const handleInvalid = (fieldErrors: FieldErrors<EmployeeFormValues>) => {
-    const keys = Object.keys(fieldErrors);
-    const tabsWithErrors: string[] = [];
-    const personalFields = ["firstName", "lastName"];
-    const employmentFields = [
-      "payrollGroupId",
-      "employmentStatus",
-      "dateRegistered",
-    ];
-    const compensationFields = ["salaryType", "modeOfPayment"];
-    if (keys.some((k) => personalFields.includes(k)))
-      tabsWithErrors.push("Personal Information");
-    if (keys.some((k) => employmentFields.includes(k)))
-      tabsWithErrors.push("Employment Details");
-    if (keys.some((k) => compensationFields.includes(k)))
-      tabsWithErrors.push("Compensation");
-    message.warning(
-      tabsWithErrors.length
-        ? `Required fields missing in: ${tabsWithErrors.join(", ")}. Please review and fill them in.`
-        : "Please fill in all required fields before saving.",
-      5,
+    // Name every problem with its tab, then open the first one with the cursor in it -- the
+    // field may be on a tab the user isn't looking at.
+    const problems = summarizeFormErrors(fieldErrors);
+    if (problems.length === 0) return;
+    notification.error({
+      key: "employee-form-invalid",
+      message: `Can't save yet: fix ${problems.length} ${problems.length === 1 ? "field" : "fields"}`,
+      description: (
+        <ul className="m-0 pl-4">
+          {problems.map((p) => (
+            <li key={p.name}>
+              {p.tabLabel ? `${p.tabLabel} › ` : ""}
+              <strong>{p.label}</strong>: {p.message}
+            </li>
+          ))}
+        </ul>
+      ),
+      duration: 10,
+      placement: "topRight",
+    });
+    const first = problems[0];
+    if (first.tab) setActiveTab(first.tab);
+    // After the tab switch has rendered, so the field is visible and can take focus.
+    requestAnimationFrame(() => {
+      try {
+        setFocus(first.name as Parameters<typeof setFocus>[0]);
+      } catch {
+        // Some inputs (date pickers, selects) can't take focus; the tab is open either way.
+      }
+    });
+  };
+
+  const [activeTab, setActiveTab] = useState<string>("personal");
+  // Live: a tab keeps its red count until its fields are fixed.
+  const tabErrorCounts = errorCountByTab(summarizeFormErrors(errors));
+  const tabLabel = (key: EmployeeFormTab, label: string) => {
+    const count = tabErrorCounts[key];
+    return count ? (
+      <Space size={6}>
+        {label}
+        <Badge count={count} size="small" />
+      </Space>
+    ) : (
+      label
     );
   };
 
@@ -699,7 +731,13 @@ export default function EmployeeDetail() {
         </div>
       </div>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit, handleInvalid)}>
+      <Form
+        layout="vertical"
+        // The browser's own checks would stop Save silently when the bad field is on another
+        // tab; the form's validation names it and opens that tab instead.
+        noValidate
+        onFinish={handleSubmit(onSubmit, handleInvalid)}
+      >
         {/* ── 201 File Header ── */}
         <Card className="mb-4">
           <div className="flex flex-wrap items-center gap-5">
@@ -711,6 +749,7 @@ export default function EmployeeDetail() {
                 // the record exists (see onSubmit).
                 <ImageUpload
                   compact
+                  crop="photo"
                   label="photo"
                   shape="circle"
                   value={field.value}
@@ -798,10 +837,12 @@ export default function EmployeeDetail() {
         <Card>
           <Tabs
             type="card"
+            activeKey={activeTab}
+            onChange={setActiveTab}
             items={[
               {
                 key: "personal",
-                label: "Personal Information",
+                label: tabLabel("personal", "Personal Information"),
                 forceRender: true,
                 children: (
                   <div className={formGridClass} style={{ paddingTop: 16 }}>
@@ -981,7 +1022,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "employment",
-                label: "Employment Details",
+                label: tabLabel("employment", "Employment Details"),
                 forceRender: true,
                 children: (
                   <div className={formGridClass} style={{ paddingTop: 16 }}>
@@ -1468,7 +1509,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "compensation",
-                label: "Compensation",
+                label: tabLabel("compensation", "Compensation"),
                 forceRender: true,
                 children: (
                   <div className={formGridClass} style={{ paddingTop: 16 }}>
@@ -1838,7 +1879,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "govids",
-                label: "Gov't IDs & Rates",
+                label: tabLabel("govids", "Gov't IDs & Rates"),
                 forceRender: true,
                 children: (
                   <div className="pt-4 flex flex-col gap-3">
@@ -2147,7 +2188,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "settings",
-                label: "Eligibility",
+                label: tabLabel("settings", "Eligibility"),
                 forceRender: true,
                 children: (
                   <div style={{ paddingTop: 16, maxWidth: 480 }}>

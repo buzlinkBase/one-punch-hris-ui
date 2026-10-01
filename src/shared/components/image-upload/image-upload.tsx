@@ -6,7 +6,13 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import { problemDetail } from "@/core/auth/guard-error";
-import { IMAGE_ACCEPT, imageFileProblem } from "./image-file";
+import {
+  IMAGE_ACCEPT,
+  imageFileProblem,
+  imageSourceProblem,
+} from "./image-file";
+import { CROP_PRESETS, type CropPresetName } from "./image-processing";
+import { ImageCropModal } from "./image-crop-modal";
 
 interface ImageUploadProps {
   /** What to show now: a link or inline image; empty for none. */
@@ -26,15 +32,20 @@ interface ImageUploadProps {
   label: string;
   /** Just the image (click it to change) and a small Remove link -- for tight headers. */
   compact?: boolean;
+  /**
+   * Frame the picked image in a crop dialog, then shrink it before upload ("photo": a square,
+   * "logo": its own shape). Without it the file is uploaded as picked.
+   */
+  crop?: CropPresetName;
 }
 
-const SIZE = { circle: "size-[72px]", square: "size-24" } as const;
+// Set through antd's own size prop -- antd's .ant-avatar sizing outranks utility classes.
+const SIZE = { circle: 72, square: 96 } as const;
 
+// Look-and-feel lives in index.css (.image-upload-*), which also outranks antd's styles.
 function avatarClass(shape: "circle" | "square", hasImage: boolean): string {
-  const base = `${SIZE[shape]} flex! items-center justify-center text-3xl`;
-  if (shape === "square")
-    return `${base} bg-(--ant-color-fill-tertiary)! text-(--ant-color-text-tertiary)! [&_img]:object-contain`;
-  return hasImage ? base : `${base} bg-[#1DA081]!`;
+  if (shape === "square") return "image-upload-avatar is-logo";
+  return hasImage ? "image-upload-avatar" : "image-upload-avatar is-empty";
 }
 
 /**
@@ -51,10 +62,24 @@ export function ImageUpload({
   hint,
   label,
   compact,
+  crop,
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  // The file waiting in the crop dialog, its preview URL, and a new key per pick so the dialog
+  // starts fresh. The URL is created on pick and released on close -- in event handlers, never
+  // an effect.
+  const [cropping, setCropping] = useState<{
+    file: File;
+    source: string;
+    key: number;
+  } | null>(null);
   const locked = disabled || busy;
+
+  const closeCrop = () => {
+    if (cropping) URL.revokeObjectURL(cropping.source);
+    setCropping(null);
+  };
 
   const choose = () => {
     if (!locked) inputRef.current?.click();
@@ -76,6 +101,20 @@ export function ImageUpload({
     } finally {
       setBusy(false);
     }
+  };
+
+  // A picked file goes to the crop dialog first when cropping is on, else straight up.
+  const picked = (file: File) => {
+    if (!crop) {
+      void upload(file);
+      return;
+    }
+    const problem = imageSourceProblem(file);
+    if (problem) {
+      message.error(problem);
+      return;
+    }
+    setCropping({ file, source: URL.createObjectURL(file), key: Date.now() });
   };
 
   const remove = async () => {
@@ -101,24 +140,17 @@ export function ImageUpload({
       title={
         disabled ? undefined : value ? `Change ${label}` : `Upload ${label}`
       }
-      className={`group relative shrink-0 cursor-pointer overflow-hidden border-0 bg-transparent p-0 disabled:cursor-not-allowed ${
-        shape === "circle" ? "rounded-full" : "rounded-lg"
-      }`}
+      className={`image-upload-trigger ${shape === "circle" ? "is-circle" : "is-square"}`}
     >
       <Avatar
         shape={shape}
+        size={SIZE[shape]}
         src={value || undefined}
         icon={!value ? placeholder : undefined}
         className={avatarClass(shape, Boolean(value))}
       />
       {!disabled && (
-        <span
-          className={`absolute inset-0 flex items-center justify-center bg-black/35 text-xl text-white transition-opacity ${
-            busy
-              ? "opacity-100"
-              : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
-          }`}
-        >
+        <span className={`image-upload-overlay ${busy ? "is-busy" : ""}`}>
           {busy ? <Spin size="small" /> : <CameraOutlined />}
         </span>
       )}
@@ -126,17 +158,38 @@ export function ImageUpload({
   );
 
   const fileInput = (
+    // The hidden attribute, not a class: nothing can ever show the bare "Choose File" box.
     <input
       ref={inputRef}
       type="file"
       accept={IMAGE_ACCEPT}
-      className="hidden"
+      hidden
       onChange={(e) => {
         const file = e.target.files?.[0];
         e.target.value = "";
-        if (file) void upload(file);
+        if (file) picked(file);
       }}
     />
+  );
+
+  const fileInputAndCrop = (
+    <>
+      {fileInput}
+      {crop && cropping && (
+        <ImageCropModal
+          key={cropping.key}
+          file={cropping.file}
+          source={cropping.source}
+          preset={CROP_PRESETS[crop]}
+          label={label}
+          onCancel={closeCrop}
+          onDone={(processed) => {
+            closeCrop();
+            void upload(processed);
+          }}
+        />
+      )}
+    </>
   );
 
   if (compact) {
@@ -155,7 +208,7 @@ export function ImageUpload({
             Remove
           </Button>
         )}
-        {fileInput}
+        {fileInputAndCrop}
       </div>
     );
   }
@@ -193,7 +246,7 @@ export function ImageUpload({
           </div>
         )}
       </div>
-      {fileInput}
+      {fileInputAndCrop}
     </div>
   );
 }

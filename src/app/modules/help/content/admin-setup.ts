@@ -98,6 +98,9 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Company Info: company name, address, TIN, RDO code, SSS / PhilHealth / Pag-IBIG employer numbers and the authorized signatory. These print on government forms and reports.",
           },
           {
+            text: "Company Logo (top of Company Info): click Upload, choose a PNG, JPG or WebP, adjust the crop and click Use image. It's saved right away and resized automatically.",
+          },
+          {
             text: "Attendance & Payroll Policy: overtime rules (OT Inclusion, OT Eligibility), late policy (half-day and whole-day thresholds), night differential, how many manual attendance entries a day are allowed, holiday rules, when SSS/PhilHealth/Pag-IBIG and withholding tax are credited across months, minimum take-home pay, and the OT/ND calculation method.",
           },
           {
@@ -327,6 +330,9 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           },
           {
             text: "Personal Information: name, gender, date of birth, email address and contact details. The email is the one they'll sign in with.",
+          },
+          {
+            text: "Photo: click the round picture at the top, choose a PNG, JPG or WebP, frame the face and click Use image. It's resized automatically and location details from phone photos are removed. On a new employee it's saved together with the record.",
           },
           {
             text: "Employment Details: Payroll Group, Department, Position, Branch, Project Site, Reports To, Permanent Shift, rest days, Employment Status and Hire Date.",
