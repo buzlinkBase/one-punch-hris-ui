@@ -173,6 +173,8 @@ function ChangePasswordForm({ email }: { email: string }) {
       await changePassword({ email, ...values });
       notification.success({
         message: "Password changed",
+        description:
+          "You've been signed out on your other devices. This one stays signed in.",
         placement: "topRight",
       });
       reset();

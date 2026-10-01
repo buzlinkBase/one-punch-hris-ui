@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Card,
   Form,
   Input,
@@ -24,6 +25,10 @@ import {
   saveInvitationSession,
 } from "@/core/auth/invitation-session";
 import { useGoogleLogin } from "@react-oauth/google";
+import {
+  SIGNED_OUT_PARAM,
+  signedOutMessage,
+} from "@/core/signalr/signed-out-action";
 
 const { Title, Text } = Typography;
 
@@ -188,6 +193,16 @@ export default function Login() {
           Sign in to continue managing your HR operations.
         </Text>
       </div>
+
+      {/* Signed out because the password was changed elsewhere or reset (use-tenant-hub). */}
+      {searchParams?.[SIGNED_OUT_PARAM] !== undefined && (
+        <Alert
+          type="info"
+          showIcon
+          className="mb-4"
+          message={signedOutMessage(searchParams[SIGNED_OUT_PARAM])}
+        />
+      )}
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item

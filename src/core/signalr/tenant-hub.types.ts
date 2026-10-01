@@ -22,7 +22,16 @@ export const TENANT_HUB_METHODS = {
    *  HRIS Company Info's "Company Name" is saved) — refresh the session so the token's
    *  tenantName and the company switcher pick up the new name. */
   onTenantRenamed: "TenantRenamed",
+  /** Fired when the account's password was changed or reset (UsersController) -- every other
+   *  session was revoked, so sign out now instead of when the access token expires. */
+  onSignedOut: "SignedOut",
 } as const;
+
+export interface SignedOutNotification {
+  /** The `jti` of the session that changed the password, which stays signed in; null after a reset. */
+  exceptTokenId?: string | null;
+  reason: "PasswordChanged" | "PasswordReset" | string;
+}
 
 export interface TenantCreatedNotification {
   tenantId: string;

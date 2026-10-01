@@ -189,6 +189,7 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
           },
         ],
         tips: [
+          "Changing your password signs you out on every other device, such as your phone or another computer. The device you changed it on stays signed in. Resetting a forgotten password signs you out everywhere.",
           'If you signed up with Google and never set a password, click "Don\'t have a password yet?" to create one.',
         ],
       },
