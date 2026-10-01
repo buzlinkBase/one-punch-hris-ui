@@ -503,6 +503,9 @@ export default function DtrDetailTable({
           startTime={selectedRow.startTime}
           endTime={selectedRow.endTime}
           timeShiftId={selectedRow.shiftId}
+          shiftName={selectedRow.shiftName}
+          shiftStartTime={selectedRow.shiftStartTime}
+          shiftEndTime={selectedRow.shiftEndTime}
         />
       )}
 

@@ -48,6 +48,9 @@ import { PermissionGate } from "@/shared/components/permission-gate/permission-g
 
 const { Text } = Typography;
 
+// Hidden for now -- flip back to true to show the Pay/Release Date picker again.
+const SHOW_PAY_RELEASE_DATE = false;
+
 // ValidationException messages (e.g. "A Pay/Release Date is required...") land in
 // data.detail via GlobalExceptionHandler — surface that instead of a generic fallback.
 const getErrorDetail = (err: unknown, fallback: string) =>
@@ -460,16 +463,18 @@ export default function ForPayrollGenerateTab() {
             onClick={() => refetch()}
             loading={isFetching && !isLoading}
           />
-          <Tooltip title="Pay/Release Date — only required when Company Policy's cross-month statutory posting is set to use the pay date">
-            <DatePicker
-              size="middle"
-              placeholder="Pay/Release Date"
-              value={payDate ? dayjs(payDate) : null}
-              onChange={(date) =>
-                setPayDate(date ? date.format("YYYY-MM-DD") : null)
-              }
-            />
-          </Tooltip>
+          {SHOW_PAY_RELEASE_DATE && (
+            <Tooltip title="Pay/Release Date — only required when Company Policy's cross-month statutory posting is set to use the pay date">
+              <DatePicker
+                size="middle"
+                placeholder="Pay/Release Date"
+                value={payDate ? dayjs(payDate) : null}
+                onChange={(date) =>
+                  setPayDate(date ? date.format("YYYY-MM-DD") : null)
+                }
+              />
+            </Tooltip>
+          )}
           <PermissionGate permission="Payroll Run:Create">
             <Tooltip title={!canRun ? "Select at least one posted batch" : ""}>
               <Button
