@@ -38,6 +38,14 @@ describe("toPlanRestriction", () => {
     expect(restriction?.used).toBe(100);
   });
 
+  it("recognizes a locked-out member", () => {
+    expect(
+      toPlanRestriction({
+        data: { type: "subscription-locked", detail: "Contact the owner." },
+      })?.type,
+    ).toBe("subscription-locked");
+  });
+
   it("ignores every other error", () => {
     expect(
       toPlanRestriction({ data: { type: "https://httpstatuses.com/403" } }),

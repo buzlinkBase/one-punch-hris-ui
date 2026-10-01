@@ -56,6 +56,8 @@ export const STATUS_LABELS: Record<SubscriptionStatus, string> = {
   Unrestricted: "Active",
   Unowned: "Active",
   Unavailable: "Active",
+  Provisioning: "Setting up",
+  Invalid: "Closed",
 };
 
 export const STATUS_COLORS: Record<SubscriptionStatus, string> = {
@@ -69,6 +71,8 @@ export const STATUS_COLORS: Record<SubscriptionStatus, string> = {
   Unrestricted: "success",
   Unowned: "success",
   Unavailable: "success",
+  Provisioning: "processing",
+  Invalid: "error",
 };
 
 /** Plain-language names for each feature, shown on plan cards and lock tooltips. */

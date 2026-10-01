@@ -102,6 +102,8 @@ import { SubscriptionBanner } from "@/app/modules/billing/components/subscriptio
 import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
 import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
 import type { FeatureLock } from "@/app/modules/billing/utils/feature-lock";
+import { CompanyLocked } from "@/app/modules/billing/components/company-locked";
+import { isCompanyLocked } from "@/app/modules/billing/utils/company-lock";
 import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import type { MenuProps } from "antd";
@@ -736,8 +738,14 @@ export default function MainLayout() {
     });
   };
 
+  // The owner's plan lapsed and this member isn't the owner or a billing admin: the company is
+  // closed to them (the server refuses their requests too), so no menu -- just the lock screen.
+  const companyLocked = isCompanyLocked(
+    subscription.snapshot,
+    subscription.canViewBilling,
+  );
   const menuItems = buildMenuItems(
-    navItems,
+    companyLocked ? [] : navItems,
     hrDb.ready,
     collapsed,
     subscription.lockFor,
@@ -1257,6 +1265,13 @@ export default function MainLayout() {
             <ProvisioningScreen
               tenantName={sessionUser.tenantName}
               failed={hrDbFailed}
+            />
+          ) : companyLocked ? (
+            <CompanyLocked
+              companyName={sessionUser.tenantName}
+              status={subscription.snapshot?.status}
+              canSwitch={sessionUser.tenants.length > 1}
+              onSignOut={handleLogout}
             />
           ) : (
             <>

@@ -101,6 +101,16 @@ describe("subscriptionBanner -- after the trial", () => {
     ).toBe("canceling");
   });
 
+  it("shows nothing while a new company is still setting up", () => {
+    expect(
+      subscriptionBanner(
+        snapshot({ status: "Provisioning", trialEndsAtUtc: null }),
+        7,
+        TRIAL_START,
+      ),
+    ).toBeNull();
+  });
+
   it("shows nothing for a paid, current account", () => {
     expect(
       subscriptionBanner(snapshot({ status: "Active" }), 7, TRIAL_START),
