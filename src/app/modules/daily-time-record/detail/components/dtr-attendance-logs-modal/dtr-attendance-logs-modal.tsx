@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import {
   Button,
   DatePicker,
+  Form,
   Input,
   Modal,
   Popconfirm,
+  Select,
   Space,
   Table,
   Tag,
@@ -13,19 +15,43 @@ import {
 } from "antd";
 import {
   CheckOutlined,
+  ClockCircleOutlined,
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import type { ColumnsType } from "antd/es/table";
 import {
+  useCreateAttendanceEntries,
   useDeleteAttendanceEntryLog,
   useShiftAttendanceLogs,
   useUpdateAttendanceEntry,
 } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { getNotify } from "@/shared/utils/notify";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { describeShift } from "./describe-shift";
+import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import type { AttendanceEntryResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/attendance-entry-response.model";
+
+interface NewLogLocation {
+  branchId: string | null;
+  clientId: string | null;
+  operationAreaId: string | null;
+  departmentId: string | null;
+}
+
+const NO_LOCATION: NewLogLocation = {
+  branchId: null,
+  clientId: null,
+  operationAreaId: null,
+  departmentId: null,
+};
 
 interface Props {
   open: boolean;
@@ -36,6 +62,10 @@ interface Props {
   startTime?: string | null;
   endTime?: string | null;
   timeShiftId?: string | null;
+  /** The day's scheduled shift -- shown as a guide for which times to enter. */
+  shiftName?: string | null;
+  shiftStartTime?: string | null;
+  shiftEndTime?: string | null;
 }
 
 export default function DtrAttendanceLogsModal({
@@ -47,8 +77,16 @@ export default function DtrAttendanceLogsModal({
   startTime,
   endTime,
   timeShiftId,
+  shiftName,
+  shiftStartTime,
+  shiftEndTime,
 }: Props) {
+  const shiftLabel = describeShift(shiftName, shiftStartTime, shiftEndTime);
   const { token } = theme.useToken();
+  // Same permissions the attendance endpoints enforce (AttendanceController).
+  const canViewLogs = useHasPermission("Attendance Manual Entry:View");
+  const canEditLogs = useHasPermission("Attendance Manual Entry:Edit");
+  const canDeleteLogs = useHasPermission("Attendance Manual Entry:Delete");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<Dayjs | null>(null);
   const [editingRemarks, setEditingRemarks] = useState("");
@@ -84,12 +122,90 @@ export default function DtrAttendanceLogsModal({
       actualStart: startTime,
       actualEnd: endTime,
     },
-    { enabled: open && !!employeeId && !!workDate, searchKey: fetchKey },
+    {
+      enabled: open && canViewLogs && !!employeeId && !!workDate,
+      searchKey: fetchKey,
+    },
   );
 
   const { mutateAsync: updateEntry, isPending: isSaving } =
     useUpdateAttendanceEntry();
   const { mutateAsync: deleteEntry } = useDeleteAttendanceEntryLog();
+  const { mutateAsync: createEntries, isPending: isAdding } =
+    useCreateAttendanceEntries();
+
+  // Adding a manual time log for this employee, from inside the DTR.
+  const [adding, setAdding] = useState(false);
+  const [newTime, setNewTime] = useState<Dayjs | null>(null);
+  // The picker starts on the DTR day at 00:00; Save waits for a real time to be picked, so an
+  // untouched default never saves a midnight log (outside the shift, so it wouldn't even list).
+  const [timePicked, setTimePicked] = useState(false);
+  const [newRemarks, setNewRemarks] = useState("");
+  // Where the punch happened -- blank keeps the employee's own assignment.
+  const [newLocation, setNewLocation] = useState<NewLogLocation>(NO_LOCATION);
+
+  const { data: branches = [] } = useBranches();
+  const { data: clients = [] } = useClients();
+  const { data: areas = [] } = useOperationAreas();
+  const { data: departments = [] } = useDepartments();
+  const branchOptions = branches.map((b) => ({ value: b.id, label: b.name }));
+  const clientOptions = clients.map((c) => ({ value: c.id, label: c.name }));
+  const areaOptions = areas
+    .filter((a) => !newLocation.branchId || a.branchId === newLocation.branchId)
+    .map((a) => ({ value: a.id, label: a.name }));
+  const departmentOptions = departments.map((d) => ({
+    value: d.id,
+    label: d.name,
+  }));
+
+  const startAdd = () => {
+    cancelEdit();
+    setAdding(true);
+    setNewTime(dayjs(workDate));
+    setTimePicked(false);
+    setNewRemarks("");
+    setNewLocation(NO_LOCATION);
+  };
+
+  const cancelAdd = () => {
+    setAdding(false);
+    setNewTime(null);
+    setTimePicked(false);
+    setNewRemarks("");
+    setNewLocation(NO_LOCATION);
+  };
+
+  const pickNewTime = (value: Dayjs | null) => {
+    setNewTime(value);
+    setTimePicked(value !== null);
+  };
+
+  const canSaveAdd = !!newTime && timePicked && !!newRemarks.trim();
+
+  const saveAdd = async () => {
+    if (!newTime || !canSaveAdd) return;
+    try {
+      await createEntries([
+        {
+          employeeId,
+          workTime: newTime
+            .second(0)
+            .millisecond(0)
+            .format("YYYY-MM-DDTHH:mm:ss"),
+          remarks: newRemarks.trim(),
+          ...newLocation,
+        },
+      ]);
+      getNotify().success({
+        message: "Attendance log added.",
+        description: "Regenerate the DTR to apply it to this day's hours.",
+      });
+      cancelAdd();
+      refetch();
+    } catch {
+      getNotify().error({ message: "Failed to add attendance log." });
+    }
+  };
 
   const startEdit = (record: AttendanceEntryResponse) => {
     setEditingId(record.id);
@@ -229,6 +345,7 @@ export default function DtrAttendanceLogsModal({
       fixed: "right",
       render: (_, record) => {
         if (record.logSource !== "MANUAL") return null;
+        if (!canEditLogs && !canDeleteLogs) return null;
 
         if (editingId === record.id) {
           return (
@@ -255,26 +372,30 @@ export default function DtrAttendanceLogsModal({
 
         return (
           <Space size={4}>
-            <Button
-              type="text"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => startEdit(record)}
-            />
-            <Popconfirm
-              title="Delete this attendance log?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="Yes"
-              cancelText="No"
-            >
+            {canEditLogs && (
               <Button
                 type="text"
                 size="small"
-                danger
-                icon={<DeleteOutlined />}
-                loading={deletingId === record.id}
+                icon={<EditOutlined />}
+                onClick={() => startEdit(record)}
               />
-            </Popconfirm>
+            )}
+            {canDeleteLogs && (
+              <Popconfirm
+                title="Delete this attendance log?"
+                onConfirm={() => handleDelete(record.id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={deletingId === record.id}
+                />
+              </Popconfirm>
+            )}
           </Space>
         );
       },
@@ -286,6 +407,7 @@ export default function DtrAttendanceLogsModal({
       open={open}
       onCancel={() => {
         cancelEdit();
+        cancelAdd();
         onClose();
       }}
       footer={null}
@@ -301,6 +423,15 @@ export default function DtrAttendanceLogsModal({
           >
             {employeeName ?? employeeId} &mdash; {dateLabel}
           </div>
+          {shiftLabel && (
+            <Tag
+              icon={<ClockCircleOutlined />}
+              color="processing"
+              className="mt-1.5! font-normal!"
+            >
+              Shift: {shiftLabel}
+            </Tag>
+          )}
         </div>
       }
       width={760}
@@ -314,8 +445,126 @@ export default function DtrAttendanceLogsModal({
         size="small"
         pagination={false}
         scroll={{ x: "max-content" }}
-        locale={{ emptyText: "No attendance logs found for this date." }}
+        locale={{
+          emptyText: canViewLogs
+            ? "No attendance logs found for this date."
+            : "You don't have permission to view attendance logs (Attendance Manual Entry: View).",
+        }}
       />
+      <PermissionGate permission="Attendance Manual Entry:Edit">
+        {adding ? (
+          <Form layout="vertical" className="mt-3">
+            <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
+              <Form.Item label="Time Log" required className="mb-3!">
+                <DatePicker
+                  showTime={{ format: "HH:mm" }}
+                  format="YYYY-MM-DD HH:mm"
+                  placeholder="Time log"
+                  value={newTime}
+                  onChange={pickNewTime}
+                  needConfirm={false}
+                  status={timePicked ? undefined : "warning"}
+                  className="w-full!"
+                />
+              </Form.Item>
+              <Form.Item label="Branch" className="mb-3!">
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Employee's branch"
+                  options={branchOptions}
+                  value={newLocation.branchId ?? undefined}
+                  onChange={(v) =>
+                    // Project Site is restricted to the selected Branch.
+                    setNewLocation((c) => ({
+                      ...c,
+                      branchId: v ?? null,
+                      operationAreaId: null,
+                    }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label="Client" className="mb-3!">
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Employee's client"
+                  options={clientOptions}
+                  value={newLocation.clientId ?? undefined}
+                  onChange={(v) =>
+                    setNewLocation((c) => ({ ...c, clientId: v ?? null }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label="Project Site" className="mb-3!">
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Employee's project site"
+                  options={areaOptions}
+                  value={newLocation.operationAreaId ?? undefined}
+                  onChange={(v) =>
+                    setNewLocation((c) => ({
+                      ...c,
+                      operationAreaId: v ?? null,
+                    }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label="Department" className="mb-3!">
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Employee's department"
+                  options={departmentOptions}
+                  value={newLocation.departmentId ?? undefined}
+                  onChange={(v) =>
+                    setNewLocation((c) => ({ ...c, departmentId: v ?? null }))
+                  }
+                />
+              </Form.Item>
+              <Form.Item label="Remarks" required className="mb-3!">
+                <Input
+                  placeholder="Why is this being entered manually?"
+                  value={newRemarks}
+                  onChange={(e) => setNewRemarks(e.target.value)}
+                  onPressEnter={saveAdd}
+                />
+              </Form.Item>
+            </div>
+            <div className="flex justify-end">
+              <Space size={4}>
+                <Button
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  loading={isAdding}
+                  disabled={!canSaveAdd}
+                  onClick={saveAdd}
+                >
+                  Save
+                </Button>
+                <Button icon={<CloseOutlined />} onClick={cancelAdd}>
+                  Cancel
+                </Button>
+              </Space>
+            </div>
+          </Form>
+        ) : (
+          <Button
+            type="dashed"
+            icon={<PlusOutlined />}
+            onClick={startAdd}
+            className="mt-3"
+            block
+          >
+            Add time log
+          </Button>
+        )}
+      </PermissionGate>
     </Modal>
   );
 }

@@ -338,7 +338,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Under DTR Batches, select the approved DTR batch(es) for this cutoff.",
           },
           {
-            text: "Enter the Pay/Release Date and click Preview. Check earnings, deductions and net pay in Payroll Results.",
+            text: "Click Preview. Check earnings, deductions and net pay in Payroll Results.",
           },
           {
             text: "Click Save Payroll, add Remarks if needed, and click Save. The payroll goes For Approval.",
