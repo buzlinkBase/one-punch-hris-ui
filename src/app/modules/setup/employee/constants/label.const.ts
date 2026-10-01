@@ -299,6 +299,20 @@ export const MONTHLY_TOTAL_DAYS_OPTIONS: FactorDaysOption[] = [
   },
 ];
 
+/**
+ * Common Philippine job levels, most senior first -- offered on the Job Level field alongside the
+ * levels the company already uses. Job Level stays free text, so any other value still works.
+ */
+export const JOB_LEVEL_OPTIONS = [
+  "Executive",
+  "Managerial",
+  "Supervisory",
+  "Professional / Technical",
+  "Rank and File",
+  "Entry Level",
+  "Trainee / Intern",
+];
+
 export const EMPLOYMENT_STATUS_OPTIONS = [
   { value: "Regular", label: "Regular" },
   { value: "PartTime", label: "Part Time" },

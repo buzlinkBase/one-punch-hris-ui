@@ -448,11 +448,34 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           {
             text: "Add steps in order. For each step choose who approves: a specific Person, a Department, a Position, the applicant's manager, or the applicant's department. Also choose whether a note is None, Optional or Required.",
           },
-          { text: "Save. New requests of that type follow the workflow." },
+          {
+            text: "Save. It's saved as inactive; click Activate in the list and new requests of that type follow it.",
+          },
         ],
         tips: [
-          "Requests already in progress keep the steps they started with.",
           "Owners and Admins can reassign a stuck step to another approver from the request's Approval Progress.",
+        ],
+      },
+      {
+        heading: "Changing a workflow that's in use",
+        body: [
+          "While requests are still going through a workflow, it can't be edited -- they follow its steps as they go. The list shows how many are pending and offers View instead of Edit, so you can still see every step.",
+          "Once none are pending, Edit is back: the change applies to the next applications. Requests already finished keep their record of who approved what.",
+        ],
+        steps: [
+          {
+            text: "To change it now, click Copy (or Copy as new version on the workflow's page). Adjust the copy and save it; it's saved as inactive.",
+          },
+          {
+            text: "Activate now: new requests use the copy right away, and requests already pending finish on the old one.",
+          },
+          {
+            text: "Or Switch when idle: new requests keep using the current workflow until it has no pending requests, then the copy takes over automatically. Cancel it any time from the tag in the list.",
+          },
+        ],
+        tips: [
+          "A workflow that past requests used can't be deleted -- deactivate it instead. One that was never used can be deleted.",
+          "When an employee withdraws a pending request, it stops counting as pending.",
         ],
       },
     ],
