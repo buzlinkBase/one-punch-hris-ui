@@ -4,6 +4,7 @@ import {
   Card,
   Col,
   Dropdown,
+  Empty,
   Row,
   Select,
   Space,
@@ -43,6 +44,7 @@ import {
   APPROVAL_STATUS_LABEL,
   PAYROLL_TYPE_LABEL,
 } from "../../constants/label.const";
+import { getEmptyMessage } from "./payroll-summary-empty";
 import { earningsColumns } from "./columns/earnings.columns";
 import { holidayColumns } from "./columns/holiday.columns";
 import { deductionsColumns } from "./columns/deductions.columns";
@@ -252,9 +254,32 @@ export default function PayrollSummary() {
     [results],
   );
 
+  const emptyMessage = getEmptyMessage({
+    hasBatches: batches.length > 0,
+    batchSelected: !!selectedBatchId,
+    loadedCount: allResults.length,
+    statusLabel:
+      STATUS_FILTER_OPTIONS.find((o) => o.value === statusFilter)?.label ??
+      statusFilter,
+    statusFiltered: statusFilter !== "All",
+  });
+
   const tableProps = {
     rowKey: "employeeId",
     loading: isLoading,
+    locale: {
+      emptyText: (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            <div>
+              <div className="font-medium">{emptyMessage.title}</div>
+              <div className="text-xs opacity-70">{emptyMessage.hint}</div>
+            </div>
+          }
+        />
+      ),
+    },
     size: "small" as const,
     scroll: { x: "max-content" as const },
     pagination: { pageSize: 50, showSizeChanger: false },
