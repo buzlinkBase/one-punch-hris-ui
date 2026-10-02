@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { Button, Space, Table, Tooltip, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -16,6 +16,7 @@ import DtrAttendanceLogsModal from "../dtr-attendance-logs-modal/dtr-attendance-
 import DtrChangeTimeShiftModal from "../dtr-change-time-shift-modal/dtr-change-time-shift-modal";
 import DtrChangeRestDayModal from "../dtr-change-rest-day-modal/dtr-change-rest-day-modal";
 import DtrSetRestDayModal from "../dtr-set-rest-day-modal/dtr-set-rest-day-modal";
+import { toDisplayHours } from "../../utils/dtr-hours-display";
 
 interface Props {
   data: DtrDetailResponse[];
@@ -53,6 +54,8 @@ export default function DtrDetailTable({
 
   // Derive selected row from current data — auto-clears when data is replaced
   const selectedRow = data.find((r) => rowKey(r) === selectedKey) ?? null;
+  // ND-OT folded into Hrs/ND/OT for display -- see dtr-hours-display.
+  const displayData = useMemo(() => data.map(toDisplayHours), [data]);
 
   const { widths, handleResize } = useResizableColumns({
     fullName: 260,
@@ -67,35 +70,27 @@ export default function DtrDetailTable({
     regularNetHours: 80,
     regularOTHours: 75,
     regularNDHours: 75,
-    regularNDOTHours: 75,
     restDayHours: 80,
     restDayOTHours: 75,
     restDayNDHours: 75,
-    restDayNDOTHours: 90,
     legalHolHours: 75,
     legalHolOTHours: 75,
     legalHolNightDiffHours: 75,
-    legalHolNightDiffOTHours: 90,
     specialHolHours: 75,
     specialHolOTHours: 75,
     specialHolNightDiffHours: 80,
-    specialHolNightDiffOTHours: 95,
     restLegalDayHours: 75,
     restLegalDayOTHours: 75,
     restLegalDayNDHours: 75,
-    restLegalDayNDOTHours: 80,
     restSpecialDayHours: 75,
     restSpecialDayOTHours: 75,
     restSpecialDayNDHours: 75,
-    restSpecialDayNDOTHours: 80,
     doubleLegalHours: 75,
     doubleLegalOTHours: 75,
     doubleLegalNDHours: 75,
-    doubleLegalNDOTHours: 90,
     restDoubleLegalHours: 75,
     restDoubleLegalOTHours: 75,
     restDoubleLegalNDHours: 75,
-    restDoubleLegalNDOTHours: 90,
     obHours: 75,
     paidLeaveHours: 75,
     unpaidLeaveHours: 85,
@@ -339,7 +334,6 @@ export default function DtrDetailTable({
             col("Hrs", "regularNetHours", 80),
             col("OT", "regularOTHours", 75),
             col("ND", "regularNDHours", 75),
-            col("ND-OT", "regularNDOTHours", 75),
           ],
         },
         {
@@ -349,7 +343,6 @@ export default function DtrDetailTable({
             col("Hrs", "restDayHours", 80),
             col("OT", "restDayOTHours", 75),
             col("ND", "restDayNDHours", 75),
-            col("ND-OT", "restDayNDOTHours", 90),
           ],
         },
         {
@@ -359,7 +352,6 @@ export default function DtrDetailTable({
             col("Hrs", "legalHolHours", 75),
             col("OT", "legalHolOTHours", 75),
             col("ND", "legalHolNightDiffHours", 75),
-            col("ND-OT", "legalHolNightDiffOTHours", 90),
           ],
         },
         {
@@ -369,7 +361,6 @@ export default function DtrDetailTable({
             col("Hrs", "specialHolHours", 75),
             col("OT", "specialHolOTHours", 75),
             col("ND", "specialHolNightDiffHours", 80),
-            col("ND-OT", "specialHolNightDiffOTHours", 95),
           ],
         },
         {
@@ -379,7 +370,6 @@ export default function DtrDetailTable({
             col("Hrs", "restLegalDayHours", 75),
             col("OT", "restLegalDayOTHours", 75),
             col("ND", "restLegalDayNDHours", 75),
-            col("ND-OT", "restLegalDayNDOTHours", 80),
           ],
         },
         {
@@ -389,7 +379,6 @@ export default function DtrDetailTable({
             col("Hrs", "restSpecialDayHours", 75),
             col("OT", "restSpecialDayOTHours", 75),
             col("ND", "restSpecialDayNDHours", 75),
-            col("ND-OT", "restSpecialDayNDOTHours", 80),
           ],
         },
         {
@@ -399,7 +388,6 @@ export default function DtrDetailTable({
             col("Hrs", "doubleLegalHours", 75),
             col("OT", "doubleLegalOTHours", 75),
             col("ND", "doubleLegalNDHours", 75),
-            col("ND-OT", "doubleLegalNDOTHours", 90),
           ],
         },
         {
@@ -409,7 +397,6 @@ export default function DtrDetailTable({
             col("Hrs", "restDoubleLegalHours", 75),
             col("OT", "restDoubleLegalOTHours", 75),
             col("ND", "restDoubleLegalNDHours", 75),
-            col("ND-OT", "restDoubleLegalNDOTHours", 90),
           ],
         },
         {
@@ -472,7 +459,7 @@ export default function DtrDetailTable({
     <>
       <Table
         rowKey={rowKey}
-        dataSource={data}
+        dataSource={displayData}
         columns={columns}
         size="small"
         loading={loading}

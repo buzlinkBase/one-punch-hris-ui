@@ -1,4 +1,5 @@
 import type { DtrSummaryResponse } from "../models/api/response/dtr-summary-response.model";
+import { displayHoursOf } from "../../detail/utils/dtr-hours-display";
 
 type SumLeafCol = { key: keyof DtrSummaryResponse; label: string };
 type SumSubGroup = { label: string; cols: SumLeafCol[] };
@@ -33,7 +34,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "regularNetHours", label: "Hrs" },
           { key: "regularOTHours", label: "OT" },
           { key: "regularNDHours", label: "ND" },
-          { key: "regularNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -42,7 +42,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "restDayHours", label: "Hrs" },
           { key: "restDayOTHours", label: "OT" },
           { key: "restDayNDHours", label: "ND" },
-          { key: "restDayNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -51,7 +50,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "legalHolHours", label: "Hrs" },
           { key: "legalHolOTHours", label: "OT" },
           { key: "legalHolNightDiffHours", label: "ND" },
-          { key: "legalHolNightDiffOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -60,7 +58,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "specialHolHours", label: "Hrs" },
           { key: "specialHolOTHours", label: "OT" },
           { key: "specialHolNightDiffHours", label: "ND" },
-          { key: "specialHolNightDiffOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -69,7 +66,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "restLegalDayHours", label: "Hrs" },
           { key: "restLegalDayOTHours", label: "OT" },
           { key: "restLegalDayNDHours", label: "ND" },
-          { key: "restLegalDayNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -78,7 +74,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "restSpecialDayHours", label: "Hrs" },
           { key: "restSpecialDayOTHours", label: "OT" },
           { key: "restSpecialDayNDHours", label: "ND" },
-          { key: "restSpecialDayNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -87,7 +82,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "doubleLegalHours", label: "Hrs" },
           { key: "doubleLegalOTHours", label: "OT" },
           { key: "doubleLegalNDHours", label: "ND" },
-          { key: "doubleLegalNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -96,7 +90,6 @@ export const GROUPED_COLS: SumTopGroup[] = [
           { key: "restDoubleLegalHours", label: "Hrs" },
           { key: "restDoubleLegalOTHours", label: "OT" },
           { key: "restDoubleLegalNDHours", label: "ND" },
-          { key: "restDoubleLegalNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -123,7 +116,8 @@ export function fmtCell(
   r: DtrSummaryResponse,
   key: keyof DtrSummaryResponse,
 ): string {
-  const v = r[key];
+  // ND-OT folded into Hrs/ND/OT, same as the on-screen table.
+  const v = displayHoursOf(r)[key];
   if (typeof v === "number") return v === 0 ? "" : v.toFixed(1);
   return String(v ?? "");
 }
