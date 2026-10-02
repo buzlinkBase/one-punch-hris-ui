@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { displayHoursOf, toDisplayHours } from "./dtr-hours-display";
+import {
+  displayHoursOf,
+  toDisplayHours,
+  type DtrHourFields,
+} from "./dtr-hours-display";
 import { GROUPED_COLS as DETAIL_COLS } from "./dtr-export.utils";
 import { GROUPED_COLS as SUMMARY_COLS } from "../../summary/utils/dtr-summary-export.utils";
 
@@ -41,7 +45,10 @@ describe("toDisplayHours", () => {
   });
 
   it("treats missing hours as 0", () => {
-    const r = toDisplayHours({ restDayHours: 8, restDayNDOTHours: null });
+    const r = toDisplayHours<DtrHourFields>({
+      restDayHours: 8,
+      restDayNDOTHours: null,
+    });
     expect(r.restDayHours).toBe(8);
     expect(r.restDayNDHours).toBe(0);
     expect(r.restDayOTHours).toBe(0);
