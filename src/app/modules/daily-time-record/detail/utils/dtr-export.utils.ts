@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
+import { displayHoursOf } from "./dtr-hours-display";
 
 export type LeafCol = { key: keyof DtrDetailResponse; label: string };
 export type SubGroup = { label: string; cols: LeafCol[] };
@@ -37,7 +38,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "regularNetHours", label: "Hrs" },
           { key: "regularOTHours", label: "OT" },
           { key: "regularNDHours", label: "ND" },
-          { key: "regularNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -46,7 +46,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "restDayHours", label: "Hrs" },
           { key: "restDayOTHours", label: "OT" },
           { key: "restDayNDHours", label: "ND" },
-          { key: "restDayNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -55,7 +54,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "legalHolHours", label: "Hrs" },
           { key: "legalHolOTHours", label: "OT" },
           { key: "legalHolNightDiffHours", label: "ND" },
-          { key: "legalHolNightDiffOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -64,7 +62,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "specialHolHours", label: "Hrs" },
           { key: "specialHolOTHours", label: "OT" },
           { key: "specialHolNightDiffHours", label: "ND" },
-          { key: "specialHolNightDiffOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -73,7 +70,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "restLegalDayHours", label: "Hrs" },
           { key: "restLegalDayOTHours", label: "OT" },
           { key: "restLegalDayNDHours", label: "ND" },
-          { key: "restLegalDayNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -82,7 +78,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "restSpecialDayHours", label: "Hrs" },
           { key: "restSpecialDayOTHours", label: "OT" },
           { key: "restSpecialDayNDHours", label: "ND" },
-          { key: "restSpecialDayNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -91,7 +86,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "doubleLegalHours", label: "Hrs" },
           { key: "doubleLegalOTHours", label: "OT" },
           { key: "doubleLegalNDHours", label: "ND" },
-          { key: "doubleLegalNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -100,7 +94,6 @@ export const GROUPED_COLS: TopGroup[] = [
           { key: "restDoubleLegalHours", label: "Hrs" },
           { key: "restDoubleLegalOTHours", label: "OT" },
           { key: "restDoubleLegalNDHours", label: "ND" },
-          { key: "restDoubleLegalNDOTHours", label: "ND-OT" },
         ],
       },
       {
@@ -127,7 +120,8 @@ export function fmtCell(
   r: DtrDetailResponse,
   key: keyof DtrDetailResponse,
 ): string {
-  const v = r[key];
+  // ND-OT folded into Hrs/ND/OT, same as the on-screen table.
+  const v = displayHoursOf(r)[key];
   if (key === "startTime" || key === "endTime")
     return v ? dayjs(v as string).format("HH:mm") : "";
   if (typeof v === "number") return v === 0 ? "" : v.toFixed(1);
