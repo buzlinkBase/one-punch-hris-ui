@@ -27,7 +27,8 @@ export default function ForPayrollList() {
               Payroll Run
             </Title>
             <p className="page-toolbar-subtitle">
-              Select a payroll group and cutoff, then run payroll calculation.
+              Pick a cutoff to see who is ready to be paid, choose a payroll
+              group, then preview and save.
             </p>
           </div>
         </div>

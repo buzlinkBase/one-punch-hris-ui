@@ -320,7 +320,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     audience: "hr",
     chapter: "DTR & payroll",
     summary:
-      "Compute pay from approved DTR batches, preview it and save it for approval.",
+      "See who is ready to be paid, compute pay from their approved DTR, preview it and save it for approval.",
     permission: "Payroll Run:View",
     paths: ["/daily-time-record/for-payroll"],
     sections: [
@@ -335,7 +335,13 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             },
           },
           {
-            text: "Under DTR Batches, select the approved DTR batch(es) for this cutoff.",
+            text: "Set the cutoff dates. Who can be paid shows each payroll group with how many employees are ready and how many are still waiting.",
+          },
+          {
+            text: "Click a payroll group. Its employees are listed with their status: Ready, Partly ready, Awaiting DTR approval, No DTR yet or Already paid.",
+          },
+          {
+            text: "Everyone Ready is selected for you. Tick or untick employees, or use Add partly ready to also pay their approved days now.",
           },
           {
             text: "Click Preview. Check earnings, deductions and net pay in Payroll Results.",
@@ -345,6 +351,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           },
         ],
         tips: [
+          "Only approved DTR days are paid. Hover a status or the pending days to see which DTR batch is still waiting.",
           "Loans, other income and salary adjustments scheduled for the period are included automatically, so record them first.",
           "If the minimum take-home rule in Company Settings would be breached, some deductions are held back to protect it.",
         ],
