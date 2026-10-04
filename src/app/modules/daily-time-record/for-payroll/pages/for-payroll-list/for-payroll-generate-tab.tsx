@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -27,6 +27,7 @@ import {
   useGeneratePayroll,
 } from "../../hooks/use-for-payroll-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import type {
   PayrollNotReadyEmployee,
   PayrollRunResult,
@@ -86,6 +87,8 @@ export default function ForPayrollGenerateTab() {
   const { token } = theme.useToken();
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [payrollGroupId, setPayrollGroupId] = useState<string | null>(null);
+  // Empty = every employee of the group; otherwise only these.
+  const [employeeIds, setEmployeeIds] = useState<string[]>([]);
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
   const [notReady, setNotReady] = useState<PayrollNotReadyEmployee[]>([]);
   const [payDate, setPayDate] = useState<string | null>(null);
@@ -99,6 +102,18 @@ export default function ForPayrollGenerateTab() {
     value: p.id,
     label: p.code || p.name,
   }));
+  const { data: allEmployees = [], isLoading: employeesLoading } =
+    useEmployees();
+  const employeeOptions = useMemo(
+    () =>
+      allEmployees
+        .filter((e) => e.payrollGroupId === payrollGroupId)
+        .map((e) => ({
+          value: e.id,
+          label: `${e.employeeNo ? `${e.employeeNo} — ` : ""}${e.lastName}, ${e.firstName}`,
+        })),
+    [allEmployees, payrollGroupId],
+  );
   const selectedGroupLabel =
     payrollGroupOptions.find((o) => o.value === payrollGroupId)?.label ?? "";
   const { mutate: calculate, isPending: calculating } = useCalculatePayroll();
@@ -117,6 +132,7 @@ export default function ForPayrollGenerateTab() {
     fromDate: dateRange?.[0],
     toDate: dateRange?.[1],
     payrollGroupId,
+    employeeIds: employeeIds.length ? employeeIds : undefined,
     payDate,
     remarks,
   });
@@ -415,6 +431,25 @@ export default function ForPayrollGenerateTab() {
               value={payrollGroupId}
               onChange={(v) => {
                 setPayrollGroupId(v);
+                setEmployeeIds([]);
+                clearResults();
+              }}
+            />
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              maxTagCount="responsive"
+              style={{ minWidth: 260 }}
+              size="small"
+              placeholder="All employees in the group"
+              disabled={!payrollGroupId}
+              loading={employeesLoading}
+              options={employeeOptions}
+              value={employeeIds}
+              onChange={(v) => {
+                setEmployeeIds(v);
                 clearResults();
               }}
             />
@@ -481,8 +516,9 @@ export default function ForPayrollGenerateTab() {
           </Space>
         </div>
         <Text type="secondary" className="block mt-2">
-          Pays every approved, not-yet-paid DTR day of the group's employees in
-          the range — whichever DTR batch or client it was reported under.
+          Pays every approved, not-yet-paid DTR day of the group's employees (or
+          only the employees you pick) in the range — whichever DTR batch or
+          client it was reported under.
         </Text>
       </Card>
 
@@ -632,7 +668,7 @@ export default function ForPayrollGenerateTab() {
 
       <PayrollRunPostModal
         open={postModalOpen}
-        summary={`payroll group ${selectedGroupLabel}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
+        summary={`${employeeIds.length ? `${employeeIds.length} selected employee(s) of ` : ""}payroll group ${selectedGroupLabel}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
         isSaving={generating}
         onClose={() => setPostModalOpen(false)}
         onConfirm={handleConfirmGenerate}
