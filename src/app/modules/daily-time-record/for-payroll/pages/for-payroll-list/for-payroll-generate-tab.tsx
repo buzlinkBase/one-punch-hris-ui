@@ -49,8 +49,9 @@ import { PermissionGate } from "@/shared/components/permission-gate/permission-g
 
 const { Text } = Typography;
 
-// Hidden for now -- flip back to true to show the Pay/Release Date picker again.
-const SHOW_PAY_RELEASE_DATE = false;
+// The backend rejects a run with 400 ("A Pay/Release Date is required...") when Company
+// Policy's cross-month statutory posting is set to PayDate, so the picker must stay visible.
+const SHOW_PAY_RELEASE_DATE = true;
 
 // ValidationException messages (e.g. "A Pay/Release Date is required...") land in
 // data.detail via GlobalExceptionHandler — surface that instead of a generic fallback.
