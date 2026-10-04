@@ -60,6 +60,22 @@ const getErrorDetail = (err: unknown, fallback: string) =>
       fallback)
     : fallback;
 
+// Matches on the group's code or its description.
+const filterByLabel = (
+  input: string,
+  option?: { label?: string | number | boolean; fullLabel?: string },
+) => {
+  const q = input.toLowerCase();
+  return (
+    String(option?.label ?? "")
+      .toLowerCase()
+      .includes(q) ||
+    String(option?.fullLabel ?? "")
+      .toLowerCase()
+      .includes(q)
+  );
+};
+
 const fmt = (n: number) =>
   n?.toLocaleString("en-PH", {
     minimumFractionDigits: 2,
@@ -104,9 +120,12 @@ export default function ForPayrollGenerateTab() {
 
   const { data: payrollGroups = [], isLoading: groupsLoading } =
     usePayrollGroups();
+  // Same as DTR generation: the dropdown lists "code - description", the selected value shows
+  // the code only.
   const payrollGroupOptions = payrollGroups.map((p) => ({
     value: p.id,
     label: p.code || p.name,
+    fullLabel: p.code ? p.name : undefined,
   }));
   const { data: allEmployees = [], isLoading: employeesLoading } =
     useEmployees();
@@ -446,10 +465,15 @@ export default function ForPayrollGenerateTab() {
               style={{ minWidth: 200 }}
               size="small"
               showSearch
-              optionFilterProp="label"
+              filterOption={filterByLabel}
               placeholder="Payroll group"
               loading={groupsLoading}
               options={payrollGroupOptions}
+              optionRender={(opt) =>
+                opt.data.fullLabel
+                  ? `${opt.data.label} - ${opt.data.fullLabel}`
+                  : String(opt.data.label ?? "")
+              }
               value={payrollGroupId}
               onChange={(v) => {
                 setPayrollGroupId(v);
