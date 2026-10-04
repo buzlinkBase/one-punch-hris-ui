@@ -6,6 +6,9 @@ export interface PayrollRunRequest {
   payrollGroupId?: string | null;
   // Optional narrowing to specific employees within the group.
   employeeIds?: string[];
+  // Narrow the group by the employee's own client / department tags (not the DTR's).
+  clientIds?: string[];
+  departmentIds?: string[];
   // Legacy batch mode — only used when no cutoff fields are sent.
   batchCodes?: string[];
   payDate?: string | null;

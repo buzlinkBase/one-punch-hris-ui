@@ -27,6 +27,8 @@ import {
   useGeneratePayroll,
 } from "../../hooks/use-for-payroll-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import type {
   PayrollNotReadyEmployee,
@@ -87,7 +89,11 @@ export default function ForPayrollGenerateTab() {
   const { token } = theme.useToken();
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
   const [payrollGroupId, setPayrollGroupId] = useState<string | null>(null);
-  // Empty = every employee of the group; otherwise only these.
+  // Optional narrowing of the group by the employee's own client / department tags (not the
+  // ones stamped on their DTR). Empty = no narrowing.
+  const [clientIds, setClientIds] = useState<string[]>([]);
+  const [departmentIds, setDepartmentIds] = useState<string[]>([]);
+  // Empty = every employee left after the filters above; otherwise only these.
   const [employeeIds, setEmployeeIds] = useState<string[]>([]);
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
   const [notReady, setNotReady] = useState<PayrollNotReadyEmployee[]>([]);
@@ -104,15 +110,29 @@ export default function ForPayrollGenerateTab() {
   }));
   const { data: allEmployees = [], isLoading: employeesLoading } =
     useEmployees();
+  const { data: clients = [] } = useClients();
+  const { data: departments = [] } = useDepartments();
+  const clientOptions = clients.map((c) => ({ value: c.id, label: c.name }));
+  const departmentOptions = departments.map((d) => ({
+    value: d.id,
+    label: d.name,
+  }));
   const employeeOptions = useMemo(
     () =>
       allEmployees
-        .filter((e) => e.payrollGroupId === payrollGroupId)
+        .filter(
+          (e) =>
+            e.payrollGroupId === payrollGroupId &&
+            (clientIds.length === 0 ||
+              (!!e.clientId && clientIds.includes(e.clientId))) &&
+            (departmentIds.length === 0 ||
+              (!!e.departmentId && departmentIds.includes(e.departmentId))),
+        )
         .map((e) => ({
           value: e.id,
           label: `${e.employeeNo ? `${e.employeeNo} — ` : ""}${e.lastName}, ${e.firstName}`,
         })),
-    [allEmployees, payrollGroupId],
+    [allEmployees, payrollGroupId, clientIds, departmentIds],
   );
   const selectedGroupLabel =
     payrollGroupOptions.find((o) => o.value === payrollGroupId)?.label ?? "";
@@ -133,6 +153,8 @@ export default function ForPayrollGenerateTab() {
     toDate: dateRange?.[1],
     payrollGroupId,
     employeeIds: employeeIds.length ? employeeIds : undefined,
+    clientIds: clientIds.length ? clientIds : undefined,
+    departmentIds: departmentIds.length ? departmentIds : undefined,
     payDate,
     remarks,
   });
@@ -441,6 +463,42 @@ export default function ForPayrollGenerateTab() {
               showSearch
               optionFilterProp="label"
               maxTagCount="responsive"
+              style={{ minWidth: 200 }}
+              size="small"
+              placeholder="All clients"
+              disabled={!payrollGroupId}
+              options={clientOptions}
+              value={clientIds}
+              onChange={(v) => {
+                setClientIds(v);
+                setEmployeeIds([]);
+                clearResults();
+              }}
+            />
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              maxTagCount="responsive"
+              style={{ minWidth: 200 }}
+              size="small"
+              placeholder="All departments"
+              disabled={!payrollGroupId}
+              options={departmentOptions}
+              value={departmentIds}
+              onChange={(v) => {
+                setDepartmentIds(v);
+                setEmployeeIds([]);
+                clearResults();
+              }}
+            />
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              maxTagCount="responsive"
               style={{ minWidth: 260 }}
               size="small"
               placeholder="All employees in the group"
@@ -517,8 +575,9 @@ export default function ForPayrollGenerateTab() {
         </div>
         <Text type="secondary" className="block mt-2">
           Pays every approved, not-yet-paid DTR day of the group's employees (or
-          only the employees you pick) in the range — whichever DTR batch or
-          client it was reported under.
+          only those matching the client, department or employees you pick) in
+          the range — whichever DTR batch or client it was reported under.
+          Client and department are the employee's own settings, not the DTR's.
         </Text>
       </Card>
 
@@ -668,7 +727,7 @@ export default function ForPayrollGenerateTab() {
 
       <PayrollRunPostModal
         open={postModalOpen}
-        summary={`${employeeIds.length ? `${employeeIds.length} selected employee(s) of ` : ""}payroll group ${selectedGroupLabel}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
+        summary={`${clientIds.length || departmentIds.length ? "filtered employees of " : ""}${employeeIds.length ? `${employeeIds.length} selected employee(s) of ` : ""}payroll group ${selectedGroupLabel}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
         isSaving={generating}
         onClose={() => setPostModalOpen(false)}
         onConfirm={handleConfirmGenerate}
