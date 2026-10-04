@@ -131,17 +131,21 @@ export default function ForPayrollGenerateTab() {
     useEmployees();
   const { data: clients = [] } = useClients();
   const { data: departments = [] } = useDepartments();
-  const clientOptions = clients.map((c) => ({ value: c.id, label: c.name }));
-  const departmentOptions = departments.map((d) => ({
-    value: d.id,
-    label: d.name,
-  }));
+  // Memoized so the dropdowns aren't handed a brand-new options array on every render.
+  const clientOptions = useMemo(
+    () => clients.map((c) => ({ value: c.id, label: c.name })),
+    [clients],
+  );
+  const departmentOptions = useMemo(
+    () => departments.map((d) => ({ value: d.id, label: d.name })),
+    [departments],
+  );
   const employeeOptions = useMemo(
     () =>
       allEmployees
         .filter(
           (e) =>
-            e.payrollGroupId === payrollGroupId &&
+            (!payrollGroupId || e.payrollGroupId === payrollGroupId) &&
             (clientIds.length === 0 ||
               (!!e.clientId && clientIds.includes(e.clientId))) &&
             (departmentIds.length === 0 ||
@@ -158,8 +162,9 @@ export default function ForPayrollGenerateTab() {
   const { mutate: calculate, isPending: calculating } = useCalculatePayroll();
   const { mutate: generate, isPending: generating } = useGeneratePayroll();
 
-  const canRun = !!payrollGroupId && !!dateRange?.[0] && !!dateRange?.[1];
-  const runHint = "Select a payroll group and a date range";
+  // Only the date range is required; group, client, department and employees all narrow it.
+  const canRun = !!dateRange?.[0] && !!dateRange?.[1];
+  const runHint = "Select a date range";
 
   // A different group or range makes the shown results/warnings stale.
   const clearResults = () => {
@@ -462,11 +467,12 @@ export default function ForPayrollGenerateTab() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <Space wrap>
             <Select
-              style={{ minWidth: 200 }}
+              style={{ width: 200 }}
               size="small"
+              allowClear
               showSearch
               filterOption={filterByLabel}
-              placeholder="Payroll group"
+              placeholder="All payroll groups"
               loading={groupsLoading}
               options={payrollGroupOptions}
               optionRender={(opt) =>
@@ -476,7 +482,7 @@ export default function ForPayrollGenerateTab() {
               }
               value={payrollGroupId}
               onChange={(v) => {
-                setPayrollGroupId(v);
+                setPayrollGroupId(v ?? null);
                 setEmployeeIds([]);
                 clearResults();
               }}
@@ -486,11 +492,11 @@ export default function ForPayrollGenerateTab() {
               allowClear
               showSearch
               optionFilterProp="label"
-              maxTagCount="responsive"
-              style={{ minWidth: 200 }}
+              maxTagCount={1}
+              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+              style={{ width: 200 }}
               size="small"
               placeholder="All clients"
-              disabled={!payrollGroupId}
               options={clientOptions}
               value={clientIds}
               onChange={(v) => {
@@ -504,11 +510,11 @@ export default function ForPayrollGenerateTab() {
               allowClear
               showSearch
               optionFilterProp="label"
-              maxTagCount="responsive"
-              style={{ minWidth: 200 }}
+              maxTagCount={1}
+              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+              style={{ width: 200 }}
               size="small"
               placeholder="All departments"
-              disabled={!payrollGroupId}
               options={departmentOptions}
               value={departmentIds}
               onChange={(v) => {
@@ -522,11 +528,11 @@ export default function ForPayrollGenerateTab() {
               allowClear
               showSearch
               optionFilterProp="label"
-              maxTagCount="responsive"
-              style={{ minWidth: 260 }}
+              maxTagCount={1}
+              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+              style={{ width: 260 }}
               size="small"
-              placeholder="All employees in the group"
-              disabled={!payrollGroupId}
+              placeholder="All employees"
               loading={employeesLoading}
               options={employeeOptions}
               value={employeeIds}
@@ -598,10 +604,11 @@ export default function ForPayrollGenerateTab() {
           </Space>
         </div>
         <Text type="secondary" className="block mt-2">
-          Pays every approved, not-yet-paid DTR day of the group's employees (or
-          only those matching the client, department or employees you pick) in
-          the range — whichever DTR batch or client it was reported under.
-          Client and department are the employee's own settings, not the DTR's.
+          Only the date range is required. Pays every approved, not-yet-paid DTR
+          day of the employees matching the payroll group, client, department or
+          employees you pick (all employees if none) in the range — whichever
+          DTR batch or client it was reported under. Client and department are
+          the employee's own settings, not the DTR's.
         </Text>
       </Card>
 
@@ -751,7 +758,7 @@ export default function ForPayrollGenerateTab() {
 
       <PayrollRunPostModal
         open={postModalOpen}
-        summary={`${clientIds.length || departmentIds.length ? "filtered employees of " : ""}${employeeIds.length ? `${employeeIds.length} selected employee(s) of ` : ""}payroll group ${selectedGroupLabel}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
+        summary={`${employeeIds.length ? `${employeeIds.length} selected employee(s)` : "all matching employees"}${payrollGroupId ? ` of payroll group ${selectedGroupLabel}` : ""}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
         isSaving={generating}
         onClose={() => setPostModalOpen(false)}
         onConfirm={handleConfirmGenerate}
