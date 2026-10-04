@@ -174,7 +174,7 @@ export default function AttendanceEntryCreate() {
     if (t && outTime && includeOut) {
       const inMin = t.hour() * 60 + t.minute();
       const outMin = outTime.hour() * 60 + outTime.minute();
-      setOutDayOffset(outMin < inMin ? 1 : 0);
+      setOutDayOffset(outMin <= inMin ? 1 : 0);
     }
   };
 
@@ -183,7 +183,7 @@ export default function AttendanceEntryCreate() {
     if (t && inTime && includeIn) {
       const outMin = t.hour() * 60 + t.minute();
       const inMin = inTime.hour() * 60 + inTime.minute();
-      setOutDayOffset(outMin < inMin ? 1 : 0);
+      setOutDayOffset(outMin <= inMin ? 1 : 0);
     }
   };
 
@@ -195,7 +195,12 @@ export default function AttendanceEntryCreate() {
       if (shift) {
         setInTime(shiftTimeToDayjs(shift.startTime));
         setOutTime(shiftTimeToDayjs(shift.endTime));
-        setOutDayOffset(parseDayOffset(shift.endTime));
+        // Same clock-time in and out (e.g. 08:00 – 08:00) means out is the next day.
+        const outOffset = parseDayOffset(shift.endTime);
+        const sameClock =
+          shiftTimeToDayjs(shift.endTime).format("HH:mm") ===
+          shiftTimeToDayjs(shift.startTime).format("HH:mm");
+        setOutDayOffset(outOffset || (sameClock ? 1 : 0));
       }
     }
   };

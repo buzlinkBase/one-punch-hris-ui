@@ -358,6 +358,7 @@ export default function FixedTimeShiftDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     referenceTime={startTime}
+                    sameTimeIsNextDay
                   />
                 )}
               />

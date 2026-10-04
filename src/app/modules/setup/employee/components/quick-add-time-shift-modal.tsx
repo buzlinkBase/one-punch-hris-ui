@@ -1,7 +1,8 @@
 import { Form, Input, Modal, TimePicker } from "antd";
-import { useForm, Controller, type Resolver } from "react-hook-form";
+import { useForm, Controller, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { TimeSpanPicker } from "@/shared/components/time-span-picker";
 import {
   fromTimeSpan,
   toTimeSpan,
@@ -52,6 +53,8 @@ export default function QuickAddTimeShiftModal({
       endTime: "17:00:00",
     },
   });
+
+  const startTime = useWatch({ control, name: "startTime" });
 
   const { mutateAsync: create, isPending } = useCreateFixedTimeShift();
 
@@ -152,11 +155,11 @@ export default function QuickAddTimeShiftModal({
             name="endTime"
             control={control}
             render={({ field }) => (
-              <TimePicker
-                className="w-full"
-                value={fromTimeSpan(field.value)}
-                onChange={(val) => field.onChange(toTimeSpan(val))}
-                format="HH:mm"
+              <TimeSpanPicker
+                value={field.value}
+                onChange={field.onChange}
+                referenceTime={startTime}
+                sameTimeIsNextDay
               />
             )}
           />

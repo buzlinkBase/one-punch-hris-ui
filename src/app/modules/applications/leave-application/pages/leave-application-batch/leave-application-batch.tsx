@@ -64,7 +64,7 @@ const filterOption = (
     .includes(input.toLowerCase());
 
 function isCrossMidnight(start: string, end: string): boolean {
-  return !!start && !!end && end < start;
+  return !!start && !!end && end <= start;
 }
 
 function buildStartDateTime(date: string, time: string): string {
@@ -79,7 +79,7 @@ function buildEndDateTime(
   endTime: string,
 ): string {
   const end = dayjs(`${endDate}T${endTime}`);
-  const adjusted = endTime < startTime ? end.add(1, "day") : end;
+  const adjusted = endTime <= startTime ? end.add(1, "day") : end;
   return adjusted.format("YYYY-MM-DDTHH:mm:ss");
 }
 

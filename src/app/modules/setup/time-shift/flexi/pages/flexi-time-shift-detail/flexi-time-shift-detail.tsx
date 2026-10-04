@@ -280,6 +280,7 @@ export default function FlexiTimeShiftDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     referenceTime={startTime}
+                    sameTimeIsNextDay
                   />
                 )}
               />

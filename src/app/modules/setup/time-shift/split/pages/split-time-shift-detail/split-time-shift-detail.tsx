@@ -283,6 +283,7 @@ export default function SplitTimeShiftDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     referenceTime={startTime}
+                    sameTimeIsNextDay
                   />
                 )}
               />
