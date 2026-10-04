@@ -82,6 +82,8 @@ export default function DtrBatchTab() {
     viewingBatchCode ?? "",
   );
 
+  const viewingBatch = batches.find((b) => b.code === viewingBatchCode);
+
   const { data: payrollGroups = [] } = usePayrollGroups();
   const payrollGroupLabel = (id?: string | null) =>
     payrollGroups.find((p) => p.id === id)?.code ??
@@ -300,6 +302,7 @@ export default function DtrBatchTab() {
           <Tooltip title="View">
             <Button
               size="small"
+              type={r.code === viewingBatchCode ? "primary" : "default"}
               icon={<EyeOutlined />}
               onClick={() => setViewingBatchCode(r.code ?? null)}
             />
@@ -457,12 +460,55 @@ export default function DtrBatchTab() {
         scroll={{ x: "max-content" }}
       />
 
-      {viewingBatchCode && (
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <Text strong>
-              DTR Detail — <Text code>{viewingBatchCode}</Text>
+      {/* Opens in a popup instead of below the list, so it's seen without scrolling. */}
+      <Modal
+        open={!!viewingBatchCode}
+        onCancel={() => setViewingBatchCode(null)}
+        footer={null}
+        destroyOnHidden
+        width="95vw"
+        style={{ maxWidth: 1600, top: 24 }}
+        title={
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pr-8">
+            <span>DTR Detail</span>
+            <Text code className="font-normal!">
+              {viewingBatchCode}
             </Text>
+            {viewingBatch && (
+              <Space size={8} wrap className="font-normal">
+                {viewingBatch.fromDate && viewingBatch.toDate && (
+                  <Text type="secondary">
+                    {`${dayjs(viewingBatch.fromDate).format("MMM DD")} – ${dayjs(viewingBatch.toDate).format("MMM DD, YYYY")}`}
+                  </Text>
+                )}
+                {payrollGroupLabel(viewingBatch.payrollGroupId) && (
+                  <Text type="secondary">
+                    {payrollGroupLabel(viewingBatch.payrollGroupId)}
+                  </Text>
+                )}
+                {viewingBatch.employeeCount !== undefined && (
+                  <Text type="secondary">
+                    {viewingBatch.employeeCount} employee
+                    {viewingBatch.employeeCount !== 1 ? "s" : ""}
+                  </Text>
+                )}
+                <Tag
+                  className="m-0!"
+                  color={
+                    APPROVAL_STATUS_COLOR[viewingBatch.approvalStatus ?? ""] ??
+                    "default"
+                  }
+                >
+                  {APPROVAL_STATUS_LABEL[viewingBatch.approvalStatus ?? ""] ??
+                    "Approved"}
+                </Tag>
+              </Space>
+            )}
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-end">
             <Dropdown
               menu={{ items: exportMenuItems }}
               trigger={["click"]}
@@ -479,7 +525,7 @@ export default function DtrBatchTab() {
           </div>
           <DtrDetailTable data={records} loading={isLoadingDetail} readOnly />
         </div>
-      )}
+      </Modal>
 
       <Modal
         open={!!historyTarget}
