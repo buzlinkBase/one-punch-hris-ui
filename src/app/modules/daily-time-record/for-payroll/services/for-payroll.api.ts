@@ -14,6 +14,7 @@ import type {
   LastPayCashBondStatus,
 } from "../models/api/response/last-pay-review.model";
 import type { PayrollBatchListModel } from "../models/api/response/payroll-batch-list.model";
+import type { PayrollReadinessEmployee } from "../models/api/response/payroll-readiness.model";
 
 const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
 const PAYROLL_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrolls");
@@ -36,6 +37,21 @@ export const forPayrollApi = {
     return httpClient.post<void>(`${DTR_ENDPOINT}/unpost`, null, {
       params: { batchCode },
     });
+  },
+
+  // Who in the cutoff can be paid now (approved / pending / already-paid DTR days per employee),
+  // listed on the Payroll Run screen before anything is previewed. Group optional = every group.
+  getReadiness(params: {
+    from: string;
+    to: string;
+    payrollGroupId?: string;
+  }): Promise<PayrollReadinessEmployee[]> {
+    return httpClient
+      .getUnwrapped<{
+        data: PayrollReadinessEmployee[];
+        total: number;
+      }>(`${PAYROLL_ENDPOINT}/readiness`, { params })
+      .then((res) => res.data ?? []);
   },
 
   calculate(payload: PayrollRunRequest): Promise<PayrollRunResponse> {

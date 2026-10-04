@@ -19,6 +19,7 @@ import type { ColumnsType } from "antd/es/table";
 import {
   EyeOutlined,
   PlayCircleOutlined,
+  ReloadOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -26,6 +27,7 @@ import axios from "axios";
 import {
   useCalculatePayroll,
   useGeneratePayroll,
+  usePayrollReadiness,
 } from "../../hooks/use-for-payroll-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
@@ -47,6 +49,13 @@ import PayrollRunPostModal from "../../components/payroll-run-post-modal";
 import TimeHourPayResultsModal from "../../components/time-hour-pay-results-modal";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import PayrollReadinessOverview from "../../components/payroll-readiness-overview";
+import PayrollReadinessTable from "../../components/payroll-readiness-table";
+import {
+  buildReadinessRows,
+  isPayable,
+} from "../../utils/payroll-readiness.util";
 
 const { Text } = Typography;
 
@@ -115,14 +124,19 @@ const RequiredField = ({ children }: { children: ReactNode }) => {
 
 export default function ForPayrollGenerateTab() {
   const { token } = theme.useToken();
-  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
+  // Starts on the current semi-monthly cutoff so the readiness overview shows right away.
+  const [dateRange, setDateRange] = useState<[string, string] | null>(() => {
+    const { fromDate, toDate } = getSemiMonthlyCutoff();
+    return [fromDate, toDate];
+  });
   const [payrollGroupId, setPayrollGroupId] = useState<string | null>(null);
   // Optional narrowing of the group by the employee's own client / department tags (not the
   // ones stamped on their DTR). Empty = no narrowing.
   const [clientIds, setClientIds] = useState<string[]>([]);
   const [departmentIds, setDepartmentIds] = useState<string[]>([]);
-  // Empty = every employee left after the filters above; otherwise only these.
-  const [employeeIds, setEmployeeIds] = useState<string[]>([]);
+  // Who this run pays, picked in the readiness table. null = not touched since the scope last
+  // changed, which means "everyone Ready" (and keeps following the list as it refetches).
+  const [pickedIds, setPickedIds] = useState<string[] | null>(null);
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
   const [notReady, setNotReady] = useState<PayrollNotReadyEmployee[]>([]);
   const [payDate, setPayDate] = useState<string | null>(null);
@@ -153,60 +167,76 @@ export default function ForPayrollGenerateTab() {
     () => departments.map((d) => ({ value: d.id, label: d.name })),
     [departments],
   );
-  // Whether an employee passes the group / client / department filters as given. The options
-  // are always derived from the filters as they are right now, so removing a filter widens the
-  // list again; there is no remembered narrowing.
-  const matchesFilters = (
-    e: (typeof allEmployees)[number],
-    clients: string[],
-    departments: string[],
-  ) =>
-    e.payrollGroupId === payrollGroupId &&
-    (clients.length === 0 || (!!e.clientId && clients.includes(e.clientId))) &&
-    (departments.length === 0 ||
-      (!!e.departmentId && departments.includes(e.departmentId)));
-  const employeeOptions = useMemo(
+  // Client / department narrowing, from the employee's own tags. Applies to both the employee
+  // list and the server's readiness rows (which carry the same tags).
+  const matchesNarrowing = (e: {
+    clientId?: string | null;
+    departmentId?: string | null;
+  }) =>
+    (clientIds.length === 0 ||
+      (!!e.clientId && clientIds.includes(e.clientId))) &&
+    (departmentIds.length === 0 ||
+      (!!e.departmentId && departmentIds.includes(e.departmentId)));
+
+  const {
+    data: readiness = [],
+    isFetching: readinessLoading,
+    refetch: refetchReadiness,
+  } = usePayrollReadiness(dateRange?.[0], dateRange?.[1]);
+  // Every group's rows for the cutoff (overview tiles), then the selected group's (table).
+  const allReadinessRows = useMemo(
     () =>
-      allEmployees
-        .filter((e) => matchesFilters(e, clientIds, departmentIds))
-        .map((e) => ({
-          value: e.id,
-          label: `${e.employeeNo ? `${e.employeeNo} — ` : ""}${e.lastName}, ${e.firstName}`,
-        })),
+      dateRange
+        ? buildReadinessRows(
+            readiness.filter(matchesNarrowing),
+            allEmployees.filter(matchesNarrowing),
+            dateRange[0],
+            dateRange[1],
+          )
+        : [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [allEmployees, payrollGroupId, clientIds, departmentIds],
+    [readiness, allEmployees, dateRange, clientIds, departmentIds],
   );
-  // After a client/department change, keep the picked employees that still match the new
-  // filters and drop only the ones that no longer do.
-  const keepMatchingEmployees = (clients: string[], departments: string[]) =>
-    setEmployeeIds((prev) => {
-      const allowed = new Set(
-        allEmployees
-          .filter((e) => matchesFilters(e, clients, departments))
-          .map((e) => e.id),
-      );
-      return prev.filter((id) => allowed.has(id));
-    });
+  const groupRows = useMemo(
+    () => allReadinessRows.filter((r) => r.payrollGroupId === payrollGroupId),
+    [allReadinessRows, payrollGroupId],
+  );
+  // The effective selection: what the user picked (minus anyone no longer payable, e.g. paid by a
+  // run since), or every Ready employee by default.
+  const employeeIds = useMemo(() => {
+    const payable = new Set(
+      groupRows.filter((r) => isPayable(r.status)).map((r) => r.employeeId),
+    );
+    return pickedIds
+      ? pickedIds.filter((id) => payable.has(id))
+      : groupRows.filter((r) => r.status === "Ready").map((r) => r.employeeId);
+  }, [groupRows, pickedIds]);
+
   const selectedGroupLabel =
     payrollGroupOptions.find((o) => o.value === payrollGroupId)?.label ?? "";
   const { mutate: calculate, isPending: calculating } = useCalculatePayroll();
   const { mutate: generate, isPending: generating } = useGeneratePayroll();
 
-  // Payroll group and date range are required; client, department and employees narrow it.
-  const canRun = !!payrollGroupId && !!dateRange?.[0] && !!dateRange?.[1];
-  const runHint = "Select a payroll group and a date range";
+  // Payroll group, date range and at least one ready employee are required.
+  const hasScope = !!payrollGroupId && !!dateRange?.[0] && !!dateRange?.[1];
+  const canRun = hasScope && employeeIds.length > 0;
+  const runHint = !hasScope
+    ? "Select a date range and a payroll group"
+    : "Select at least one ready employee below";
 
-  // A different group or range makes the shown results/warnings stale.
+  // A different group or range makes the shown results/warnings stale, and resets the pick back
+  // to "everyone Ready".
   const clearResults = () => {
     setResults(null);
     setNotReady([]);
+    setPickedIds(null);
   };
 
   const buildPayload = (remarks?: string) => ({
     fromDate: dateRange?.[0],
     toDate: dateRange?.[1],
     payrollGroupId,
-    employeeIds: employeeIds.length ? employeeIds : undefined,
+    employeeIds,
     clientIds: clientIds.length ? clientIds : undefined,
     departmentIds: departmentIds.length ? departmentIds : undefined,
     payDate,
@@ -231,6 +261,7 @@ export default function ForPayrollGenerateTab() {
       onSuccess: (res) => {
         setResults(res.data);
         setNotReady([]);
+        setPickedIds(null);
         setPostModalOpen(false);
         message.success(
           `Payroll generated and saved for ${res.total} employee(s).`,
@@ -497,82 +528,6 @@ export default function ForPayrollGenerateTab() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <Space wrap>
             <RequiredField>
-              <Select
-                style={{ width: 200 }}
-                size="small"
-                showSearch
-                filterOption={filterByLabel}
-                placeholder="Payroll group"
-                loading={groupsLoading}
-                options={payrollGroupOptions}
-                optionRender={(opt) =>
-                  opt.data.fullLabel
-                    ? `${opt.data.label} - ${opt.data.fullLabel}`
-                    : String(opt.data.label ?? "")
-                }
-                value={payrollGroupId}
-                onChange={(v) => {
-                  setPayrollGroupId(v ?? null);
-                  setEmployeeIds([]);
-                  clearResults();
-                }}
-              />
-            </RequiredField>
-            <Select
-              mode="multiple"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              maxTagCount={1}
-              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
-              style={{ width: 200 }}
-              size="small"
-              placeholder="All clients"
-              options={clientOptions}
-              value={clientIds}
-              onChange={(v) => {
-                setClientIds(v);
-                keepMatchingEmployees(v, departmentIds);
-                clearResults();
-              }}
-            />
-            <Select
-              mode="multiple"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              maxTagCount={1}
-              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
-              style={{ width: 200 }}
-              size="small"
-              placeholder="All departments"
-              options={departmentOptions}
-              value={departmentIds}
-              onChange={(v) => {
-                setDepartmentIds(v);
-                keepMatchingEmployees(clientIds, v);
-                clearResults();
-              }}
-            />
-            <Select
-              mode="multiple"
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              maxTagCount={1}
-              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
-              style={{ width: 260 }}
-              size="small"
-              placeholder="All employees"
-              loading={employeesLoading}
-              options={employeeOptions}
-              value={employeeIds}
-              onChange={(v) => {
-                setEmployeeIds(v);
-                clearResults();
-              }}
-            />
-            <RequiredField>
               <MobileRangePicker
                 size="small"
                 value={
@@ -591,6 +546,61 @@ export default function ForPayrollGenerateTab() {
                 }}
               />
             </RequiredField>
+            <RequiredField>
+              <Select
+                style={{ width: 200 }}
+                size="small"
+                showSearch
+                filterOption={filterByLabel}
+                placeholder="Payroll group"
+                loading={groupsLoading}
+                options={payrollGroupOptions}
+                optionRender={(opt) =>
+                  opt.data.fullLabel
+                    ? `${opt.data.label} - ${opt.data.fullLabel}`
+                    : String(opt.data.label ?? "")
+                }
+                value={payrollGroupId}
+                onChange={(v) => {
+                  setPayrollGroupId(v ?? null);
+                  clearResults();
+                }}
+              />
+            </RequiredField>
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              maxTagCount={1}
+              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+              style={{ width: 200 }}
+              size="small"
+              placeholder="All clients"
+              options={clientOptions}
+              value={clientIds}
+              onChange={(v) => {
+                setClientIds(v);
+                clearResults();
+              }}
+            />
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              maxTagCount={1}
+              maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+              style={{ width: 200 }}
+              size="small"
+              placeholder="All departments"
+              options={departmentOptions}
+              value={departmentIds}
+              onChange={(v) => {
+                setDepartmentIds(v);
+                clearResults();
+              }}
+            />
           </Space>
           <Space>
             {SHOW_PAY_RELEASE_DATE && (
@@ -613,7 +623,7 @@ export default function ForPayrollGenerateTab() {
                   loading={calculating}
                   disabled={!canRun}
                 >
-                  Preview
+                  Preview{canRun ? ` (${employeeIds.length})` : ""}
                 </Button>
               </Tooltip>
             </PermissionGate>
@@ -630,13 +640,64 @@ export default function ForPayrollGenerateTab() {
                   loading={generating}
                   disabled={!canRun}
                 >
-                  Save Payroll
+                  Save Payroll{canRun ? ` (${employeeIds.length})` : ""}
                 </Button>
               </Tooltip>
             </PermissionGate>
           </Space>
         </div>
       </Card>
+
+      {dateRange && (
+        <Card
+          size="small"
+          title={
+            payrollGroupId
+              ? `Who can be paid — ${selectedGroupLabel}`
+              : "Who can be paid — pick a payroll group"
+          }
+          extra={
+            <Space>
+              {payrollGroupId && (
+                <Text type="secondary" className="text-xs">
+                  {employeeIds.length} selected
+                </Text>
+              )}
+              <Tooltip title="Refresh — picks up DTR approved since this page opened">
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<ReloadOutlined />}
+                  loading={readinessLoading}
+                  onClick={() => refetchReadiness()}
+                />
+              </Tooltip>
+            </Space>
+          }
+        >
+          <div className="flex flex-col gap-4">
+            <PayrollReadinessOverview
+              groups={payrollGroupOptions}
+              rows={allReadinessRows}
+              loading={readinessLoading && !readiness.length}
+              selectedGroupId={payrollGroupId}
+              onSelect={(id) => {
+                if (id === payrollGroupId) return;
+                setPayrollGroupId(id);
+                clearResults();
+              }}
+            />
+            {payrollGroupId && (
+              <PayrollReadinessTable
+                rows={groupRows}
+                loading={readinessLoading || employeesLoading}
+                selectedIds={employeeIds}
+                onSelectionChange={setPickedIds}
+              />
+            )}
+          </div>
+        </Card>
+      )}
 
       {notReady.length > 0 && (
         <>
@@ -801,7 +862,7 @@ export default function ForPayrollGenerateTab() {
 
       <PayrollRunPostModal
         open={postModalOpen}
-        summary={`${employeeIds.length ? `${employeeIds.length} selected employee(s)` : "all matching employees"}${payrollGroupId ? ` of payroll group ${selectedGroupLabel}` : ""}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
+        summary={`${employeeIds.length} selected employee(s)${payrollGroupId ? ` of payroll group ${selectedGroupLabel}` : ""}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
         isSaving={generating}
         onClose={() => setPostModalOpen(false)}
         onConfirm={handleConfirmGenerate}
