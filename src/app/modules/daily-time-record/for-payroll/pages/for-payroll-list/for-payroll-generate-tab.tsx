@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   DatePicker,
+  Modal,
   Select,
   Space,
   Statistic,
@@ -126,6 +127,7 @@ export default function ForPayrollGenerateTab() {
   const [notReady, setNotReady] = useState<PayrollNotReadyEmployee[]>([]);
   const [payDate, setPayDate] = useState<string | null>(null);
   const [postModalOpen, setPostModalOpen] = useState(false);
+  const [notReadyOpen, setNotReadyOpen] = useState(false);
   const [dailyBreakdownRow, setDailyBreakdownRow] =
     useState<PayrollRunResult | null>(null);
 
@@ -637,14 +639,31 @@ export default function ForPayrollGenerateTab() {
       </Card>
 
       {notReady.length > 0 && (
-        <Alert
-          type="warning"
-          showIcon
-          message={`${notReady.length} employee(s) not fully included`}
-          description={
-            <ul className="m-0 pl-4">
+        <>
+          <Alert
+            type="warning"
+            showIcon
+            message={`${notReady.length} employee(s) not fully included`}
+            action={
+              <Button size="small" onClick={() => setNotReadyOpen(true)}>
+                View details
+              </Button>
+            }
+          />
+          <Modal
+            title={`${notReady.length} employee(s) not fully included`}
+            open={notReadyOpen}
+            onCancel={() => setNotReadyOpen(false)}
+            footer={
+              <Button type="primary" onClick={() => setNotReadyOpen(false)}>
+                Close
+              </Button>
+            }
+            width={720}
+          >
+            <ul className="m-0 pl-4 max-h-[60vh] overflow-y-auto">
               {notReady.map((e) => (
-                <li key={`${e.employeeId}-${e.reason}`}>
+                <li key={`${e.employeeId}-${e.reason}`} className="mb-1">
                   <strong>{e.fullName || e.employeeId}</strong> —{" "}
                   {e.reason === "FixedSalaryAlreadyPaid"
                     ? "skipped: a payroll run already paid this cutoff's fixed salary. Delete that run to include their remaining days."
@@ -656,8 +675,8 @@ export default function ForPayrollGenerateTab() {
                 </li>
               ))}
             </ul>
-          }
-        />
+          </Modal>
+        </>
       )}
 
       {results && (
