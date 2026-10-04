@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import dayjs from "dayjs";
 import { Button, Space, Table, Tooltip, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -16,7 +16,6 @@ import DtrAttendanceLogsModal from "../dtr-attendance-logs-modal/dtr-attendance-
 import DtrChangeTimeShiftModal from "../dtr-change-time-shift-modal/dtr-change-time-shift-modal";
 import DtrChangeRestDayModal from "../dtr-change-rest-day-modal/dtr-change-rest-day-modal";
 import DtrSetRestDayModal from "../dtr-set-rest-day-modal/dtr-set-rest-day-modal";
-import { toDisplayHours } from "../../utils/dtr-hours-display";
 
 interface Props {
   data: DtrDetailResponse[];
@@ -54,8 +53,6 @@ export default function DtrDetailTable({
 
   // Derive selected row from current data — auto-clears when data is replaced
   const selectedRow = data.find((r) => rowKey(r) === selectedKey) ?? null;
-  // ND-OT folded into Hrs/ND/OT for display -- see dtr-hours-display.
-  const displayData = useMemo(() => data.map(toDisplayHours), [data]);
 
   const { widths, handleResize } = useResizableColumns({
     fullName: 260,
@@ -459,7 +456,7 @@ export default function DtrDetailTable({
     <>
       <Table
         rowKey={rowKey}
-        dataSource={displayData}
+        dataSource={data}
         columns={columns}
         size="small"
         loading={loading}

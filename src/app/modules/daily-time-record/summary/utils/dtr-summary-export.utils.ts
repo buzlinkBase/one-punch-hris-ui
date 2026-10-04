@@ -1,5 +1,4 @@
 import type { DtrSummaryResponse } from "../models/api/response/dtr-summary-response.model";
-import { displayHoursOf } from "../../detail/utils/dtr-hours-display";
 
 type SumLeafCol = { key: keyof DtrSummaryResponse; label: string };
 type SumSubGroup = { label: string; cols: SumLeafCol[] };
@@ -116,8 +115,7 @@ export function fmtCell(
   r: DtrSummaryResponse,
   key: keyof DtrSummaryResponse,
 ): string {
-  // ND-OT folded into Hrs/ND/OT, same as the on-screen table.
-  const v = displayHoursOf(r)[key];
+  const v = r[key];
   if (typeof v === "number") return v === 0 ? "" : v.toFixed(1);
   return String(v ?? "");
 }
