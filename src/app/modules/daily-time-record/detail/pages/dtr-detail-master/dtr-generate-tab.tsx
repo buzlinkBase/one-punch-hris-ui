@@ -478,31 +478,6 @@ export default function DtrGenerateTab() {
               </Form.Item>
             </div>
           )}
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-1">
-            <Text type="secondary" className="text-xs">
-              Generating calculates DTR from attendance logs. Nothing is saved
-              until you review it and click Save Draft.
-            </Text>
-            <Space>
-              <Button icon={<ClearOutlined />} onClick={handleClear}>
-                Clear
-              </Button>
-              <Tooltip
-                title={canGenerate ? "" : "Select a cutoff and a payroll group"}
-              >
-                <Button
-                  type="primary"
-                  icon={<PlayCircleOutlined />}
-                  loading={isLoading}
-                  disabled={!canGenerate}
-                  onClick={handleGenerate}
-                >
-                  Generate
-                </Button>
-              </Tooltip>
-            </Space>
-          </div>
         </Form>
       </Card>
 
@@ -556,6 +531,32 @@ export default function DtrGenerateTab() {
           </div>
         </Card>
       )}
+
+      {/* Generate sits under the coverage, so the group is checked before generating. */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <Text type="secondary" className="text-xs">
+          Generating calculates DTR from attendance logs. Nothing is saved until
+          you review it and click Save Draft.
+        </Text>
+        <Space>
+          <Button icon={<ClearOutlined />} onClick={handleClear}>
+            Clear
+          </Button>
+          <Tooltip
+            title={canGenerate ? "" : "Select a cutoff and a payroll group"}
+          >
+            <Button
+              type="primary"
+              icon={<PlayCircleOutlined />}
+              loading={isLoading}
+              disabled={!canGenerate}
+              onClick={handleGenerate}
+            >
+              Generate
+            </Button>
+          </Tooltip>
+        </Space>
+      </div>
 
       {hasGenerated && (
         <Card
