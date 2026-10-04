@@ -7,6 +7,25 @@ import { invalidateLeaveBalances } from "@/shared/utils/invalidate-leave-balance
 
 const QUERY_KEY = ["daily-time-record", "detail"];
 const BATCH_CODES_KEY = ["daily-time-record", "detail", "batch-codes"];
+const COVERAGE_KEY = ["dtr-coverage"];
+// The Payroll Run screen's readiness list -- it reads the same DTR days, so anything that saves,
+// approves or deletes DTR makes it stale too (see use-for-payroll-queries.ts).
+const PAYROLL_READINESS_KEY = ["payroll-readiness"];
+
+const invalidateCoverage = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: COVERAGE_KEY });
+  queryClient.invalidateQueries({ queryKey: PAYROLL_READINESS_KEY });
+};
+
+export function useDtrCoverage(from?: string, to?: string) {
+  return useQuery({
+    queryKey: [...COVERAGE_KEY, from, to],
+    queryFn: () => dtrDetailApi.getCoverage({ from: from!, to: to! }),
+    enabled: !!from && !!to,
+    // Saves and approvals by other people don't touch this key, so always refetch on mount/focus.
+    staleTime: 0,
+  });
+}
 
 export function useDtrDetailRecords(
   filter: DtrDetailFilter = {},
@@ -22,8 +41,13 @@ export function useDtrDetailRecords(
 }
 
 export function useSaveDtrDetail() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (records: DtrDetailResponse[]) => dtrDetailApi.save(records),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BATCH_CODES_KEY });
+      invalidateCoverage(queryClient);
+    },
   });
 }
 
@@ -31,7 +55,10 @@ export function useDeleteDtrBatch() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (batchCode: string) => dtrDetailApi.deleteByBatch(batchCode),
-    onSettled: () => invalidateLeaveBalances(queryClient),
+    onSettled: () => {
+      invalidateLeaveBalances(queryClient);
+      invalidateCoverage(queryClient);
+    },
   });
 }
 
@@ -50,6 +77,7 @@ export function useApproveDtrBatch() {
       dtrDetailApi.approveBatch(batchId, note),
     onSettled: (_data, _error, { batchId }) => {
       queryClient.invalidateQueries({ queryKey: BATCH_CODES_KEY });
+      invalidateCoverage(queryClient);
       invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "Dtr", batchId],
@@ -65,6 +93,7 @@ export function useDeclineDtrBatch() {
       dtrDetailApi.declineBatch(batchId, note),
     onSettled: (_data, _error, { batchId }) => {
       queryClient.invalidateQueries({ queryKey: BATCH_CODES_KEY });
+      invalidateCoverage(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "Dtr", batchId],
       });
@@ -92,6 +121,7 @@ export function useApproveDtrBatchDeletion() {
       dtrDetailApi.approveDeletion(batchId, note),
     onSettled: (_data, _error, { batchId }) => {
       queryClient.invalidateQueries({ queryKey: BATCH_CODES_KEY });
+      invalidateCoverage(queryClient);
       invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "DtrDeletion", batchId],

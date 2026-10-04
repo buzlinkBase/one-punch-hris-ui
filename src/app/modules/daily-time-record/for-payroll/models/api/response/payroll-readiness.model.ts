@@ -17,5 +17,7 @@ export interface PayrollReadinessEmployee {
   pendingDays: number;
   paidDays: number;
   pendingBatchCodes: string[];
+  // Distinct work dates (YYYY-MM-DD) that already have a DTR row in the range, any status.
+  savedDates?: string[];
   status: PayrollReadinessStatus;
 }

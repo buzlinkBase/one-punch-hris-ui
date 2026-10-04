@@ -52,7 +52,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             link: { label: "Leave", to: "/applications/leave" },
           },
           {
-            text: "6. Calculate the DTR for the payroll group and period, review it and Save Draft. It goes for approval.",
+            text: "6. Calculate the DTR for the payroll group and cutoff, review each employee and Save Draft. It goes for approval.",
             link: {
               label: "Calculate Daily Time Record",
               to: "/daily-time-record/master",
@@ -257,16 +257,20 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             },
           },
           {
-            text: "Click Filters. Choose the Date Range (the cutoff) and the Payroll Group. Branch, Department, Client, Project Site and Employee are optional.",
+            text: "Set the Cutoff. DTR coverage shows each payroll group with how many employees still need DTR, are awaiting approval or are approved.",
           },
           {
-            text: "Click Generate and review the results: late, undertime, overtime, night differential, rest day and holiday hours per employee.",
+            text: "Click a payroll group (or pick it in Payroll Group). More filters lets you narrow by Branch, Department, Client, Project Site or Employee.",
           },
           {
-            text: "Click Save Draft to save it as a DTR batch. It goes For Approval.",
+            text: "Click Generate. Review lists one row per employee with their days, hours, late, undertime and issues such as missing punches or absences. Expand a row to see and fix their daily records.",
+          },
+          {
+            text: "Everyone with days still to save is ticked. Untick anyone you want to leave out, then click Save Draft. It goes For Approval.",
           },
         ],
         tips: [
+          "Days that already have saved DTR are skipped automatically, so you can generate again for the whole group to fill in only the missing days.",
           "Use Export to download the DTR as CSV or Excel for checking.",
           "Wrong numbers usually mean a missing punch, an unapproved request or the wrong shift. Fix it, generate again and save again.",
         ],
