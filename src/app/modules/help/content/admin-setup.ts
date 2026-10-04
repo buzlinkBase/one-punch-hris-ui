@@ -116,7 +116,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         warning:
           "These rules change how every DTR and payroll is computed. Change them before a cutoff, not in the middle of one, and re-run any DTR you already generated for that period.",
         tips: [
-          "Leave OT/ND Calculation Method on Compounded (the DOLE standard) unless you have a specific reason to change it.",
+          "OT/ND Calculation Method starts on Additive, the most common setup: each hour type is paid at one rate and added up. Switch to Compounded (the DOLE standard) if your company or client agreement requires it. Payroll runs already saved keep the method they were generated with.",
         ],
       },
     ],

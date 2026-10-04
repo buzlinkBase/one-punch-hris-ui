@@ -106,18 +106,21 @@ export const HOLIDAY_TIME_BASIS_OPTIONS = [
   },
 ];
 
-// How hours that are overtime and/or night-differential compound their rates. Compounded
-// (default) is the DOLE-standard formula (dayRate x otRate x ndRate) — see
-// OtNdCalculationMethod/CompoundedOtRateStrategy (backend). Additive computes LESS than
-// Compounded for any such hour — the modal shows a compliance warning when it's selected.
+// How OT / night-differential hours are priced -- each is its own pay calculator on the backend
+// (hrms-api Hrms.Core/Calculators/DtrPay). Additive (the default, most common) prices the DTR's
+// display hours one rate each (Hrs x day rate, OT x OT rate, ND x ND premium); Compounded is the
+// DOLE-standard formula (day x OT x ND). Additive pays LESS than Compounded for such hours, so
+// the screen shows a compliance warning while it's selected.
+export const DEFAULT_OT_ND_CALCULATION_METHOD = "Additive";
+
 export const OT_ND_CALCULATION_METHOD_OPTIONS = [
   {
-    value: "Compounded",
-    label: "Compounded (recommended, DOLE-standard)",
+    value: "Additive",
+    label: "Additive (most common)",
   },
   {
-    value: "Additive",
-    label: "Additive",
+    value: "Compounded",
+    label: "Compounded (DOLE-standard)",
   },
 ];
 
