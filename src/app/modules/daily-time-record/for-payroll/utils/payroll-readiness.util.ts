@@ -5,8 +5,6 @@ import type {
 } from "../models/api/response/payroll-readiness.model";
 import { isActiveInRange } from "@/shared/utils/employee-active.util";
 
-export { isActiveInRange };
-
 // Readiness plus "NoDtr": an active employee of the group with no DTR day at all in the cutoff --
 // nobody generated their DTR yet, which is just as much a reason they'd be missing from the run.
 export type ReadinessRowStatus = PayrollReadinessStatus | "NoDtr";

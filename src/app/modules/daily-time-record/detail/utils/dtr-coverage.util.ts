@@ -51,7 +51,7 @@ export interface CoverageRow {
 
 const day = (d: string) => d.slice(0, 10);
 
-export const daysInRange = (from: string, to: string) =>
+const daysInRange = (from: string, to: string) =>
   dayjs(to).diff(dayjs(from), "day") + 1;
 
 export function coverageStatus(
@@ -111,7 +111,7 @@ export function countByCoverage(rows: { status: CoverageStatus }[]) {
 
 // ── Review: the freshly generated DTR, one summary per employee ───────────────────────────────
 
-export type SaveState = "New" | "FillsMissing" | "AlreadySaved";
+type SaveState = "New" | "FillsMissing" | "AlreadySaved";
 
 export const SAVE_STATE_LABEL: Record<SaveState, string> = {
   New: "To save",
@@ -151,8 +151,7 @@ const sum = (
   pick: (r: DtrDetailResponse) => number,
 ) => rows.reduce((s, r) => s + (pick(r) ?? 0), 0);
 
-export const isMissingPunch = (r: DtrDetailResponse) =>
-  !!r.startTime !== !!r.endTime;
+const isMissingPunch = (r: DtrDetailResponse) => !!r.startTime !== !!r.endTime;
 
 export const hasIssues = (s: EmployeeDtrSummary) =>
   s.missingPunchDays > 0 || s.absences > 0;

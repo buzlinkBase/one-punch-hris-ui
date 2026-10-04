@@ -27,6 +27,7 @@ import {
   OT_INCLUSION_OPTIONS,
   OT_ELIGIBILITY_OPTIONS,
   OT_ND_CALCULATION_METHOD_OPTIONS,
+  DEFAULT_OT_ND_CALCULATION_METHOD,
   HOLIDAY_TIME_BASIS_OPTIONS,
   CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
@@ -65,7 +66,7 @@ function GeneralPolicyTab() {
       crossMonthStatutoryCreditPolicy: "CutoffStartMonth",
       wTaxCrossMonthCreditPolicy: "CutoffEndMonth",
       requiredTakehomePercentage: 10,
-      otNdCalculationMethod: "Compounded",
+      otNdCalculationMethod: DEFAULT_OT_ND_CALCULATION_METHOD,
     },
   });
 
@@ -98,7 +99,8 @@ function GeneralPolicyTab() {
         wTaxCrossMonthCreditPolicy:
           policy.wTaxCrossMonthCreditPolicy ?? "CutoffEndMonth",
         requiredTakehomePercentage: policy.requiredTakehomePercentage ?? 10,
-        otNdCalculationMethod: policy.otNdCalculationMethod ?? "Compounded",
+        otNdCalculationMethod:
+          policy.otNdCalculationMethod ?? DEFAULT_OT_ND_CALCULATION_METHOD,
       });
     }
   }, [policy, reset]);
@@ -193,7 +195,7 @@ function GeneralPolicyTab() {
                 type="warning"
                 showIcon
                 className="sm:col-span-2"
-                message="Additive mode doesn't compound night-shift overtime (NDOT). Those hours are split into regular OT pay plus a night-differential top-up, which pays less than the standard DOLE formula. Use it only if your company or client agreement allows it."
+                message="Additive pays each hour bucket at one rate: regular hours at the day rate, overtime at the OT rate (no day-type multiplier), and night hours at the night-differential premium only. Night-shift overtime (NDOT) is split into OT plus the night premium. This pays less than the DOLE-standard Compounded formula on rest days and holidays, so use it only if your company or client agreement allows it."
               />
             )}
           </div>

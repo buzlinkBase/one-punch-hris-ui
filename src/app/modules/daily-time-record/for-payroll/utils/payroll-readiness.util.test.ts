@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 import type { PayrollReadinessEmployee } from "../models/api/response/payroll-readiness.model";
+import { isActiveInRange } from "@/shared/utils/employee-active.util";
 import {
   buildReadinessRows,
   countByStatus,
-  isActiveInRange,
   isPayable,
 } from "./payroll-readiness.util";
 
