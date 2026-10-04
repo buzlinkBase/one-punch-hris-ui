@@ -3,6 +3,7 @@ import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
 import type { DtrDetailFilter } from "../models/api/request/dtr-detail-filter.model";
 import type { BatchesModel } from "../../summary/models/api/response/batches.model";
+import type { PayrollReadinessEmployee } from "../../for-payroll/models/api/response/payroll-readiness.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/dtr-detail");
 const SAVE_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
@@ -15,6 +16,7 @@ const LOAD_DETAIL_ENDPOINT = buildApiUrl(
   "dailyrecords/load-detail",
 );
 const BATCH_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/batch");
+const COVERAGE_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/coverage");
 
 function buildParams(filter: DtrDetailFilter): Record<string, string> {
   const p: Record<string, string> = {};
@@ -35,6 +37,20 @@ export const dtrDetailApi = {
     return httpClient.getUnwrapped<DtrDetailResponse[]>(ENDPOINT, {
       params: buildParams(filter),
     });
+  },
+
+  // Which days of the cutoff already have saved DTR, per employee (draft, approved or paid) --
+  // see DailyRecordsController.GetCoverage. Same row shape as the Payroll Run readiness list.
+  getCoverage(params: {
+    from: string;
+    to: string;
+  }): Promise<PayrollReadinessEmployee[]> {
+    return httpClient
+      .getUnwrapped<{
+        data: PayrollReadinessEmployee[];
+        total: number;
+      }>(COVERAGE_ENDPOINT, { params })
+      .then((res) => res.data ?? []);
   },
 
   save(records: DtrDetailResponse[]): Promise<DtrDetailResponse[]> {

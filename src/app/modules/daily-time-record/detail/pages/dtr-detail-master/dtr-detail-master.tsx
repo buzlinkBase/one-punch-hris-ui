@@ -27,8 +27,8 @@ export default function DtrDetailMaster() {
               Calculate Daily Time Record (DTR)
             </Title>
             <p className="page-toolbar-subtitle">
-              View per-day time record details by batch code or generate by date
-              range.
+              See who still needs DTR for the cutoff, generate it, review each
+              employee, then save a draft for approval.
             </p>
           </div>
         </div>

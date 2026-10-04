@@ -1,9 +1,11 @@
-import dayjs from "dayjs";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 import type {
   PayrollReadinessEmployee,
   PayrollReadinessStatus,
 } from "../models/api/response/payroll-readiness.model";
+import { isActiveInRange } from "@/shared/utils/employee-active.util";
+
+export { isActiveInRange };
 
 // Readiness plus "NoDtr": an active employee of the group with no DTR day at all in the cutoff --
 // nobody generated their DTR yet, which is just as much a reason they'd be missing from the run.
@@ -60,20 +62,6 @@ export const READINESS_STATUS_HINT: Record<ReadinessRowStatus, string> = {
 // Statuses a run would actually pay something for -- the only selectable rows.
 export const isPayable = (s: ReadinessRowStatus) =>
   s === "Ready" || s === "Partial";
-
-const SEPARATED = new Set(["Terminated", "Resigned", "Retired", "Deceased"]);
-
-// Whether an employee with no DTR in the cutoff is still expected to have one: hired by the end of
-// the cutoff and not separated before it started.
-export const isActiveInRange = (
-  e: EmployeeResponse,
-  from: string,
-  to: string,
-) => {
-  if (e.hireDate && dayjs(e.hireDate).isAfter(to, "day")) return false;
-  if (e.dateResigned) return !dayjs(e.dateResigned).isBefore(from, "day");
-  return !SEPARATED.has(e.employmentStatus);
-};
 
 // Every readiness row in scope, plus a NoDtr row for each in-scope active employee the server
 // returned nothing for. Both lists are expected to be narrowed by group/client/department already
