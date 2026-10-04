@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Alert,
   Button,
@@ -100,6 +100,17 @@ const withBand = (
     ...c,
     className: [c.className, className].filter(Boolean).join(" "),
   }));
+
+// Red asterisk in front of a required filter.
+const RequiredField = ({ children }: { children: ReactNode }) => {
+  const { token } = theme.useToken();
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span style={{ color: token.colorError }}>*</span>
+      {children}
+    </span>
+  );
+};
 
 export default function ForPayrollGenerateTab() {
   const { token } = theme.useToken();
@@ -483,26 +494,28 @@ export default function ForPayrollGenerateTab() {
       <Card size="small" title="Payroll Run Scope">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <Space wrap>
-            <Select
-              style={{ width: 200 }}
-              size="small"
-              showSearch
-              filterOption={filterByLabel}
-              placeholder="Payroll group"
-              loading={groupsLoading}
-              options={payrollGroupOptions}
-              optionRender={(opt) =>
-                opt.data.fullLabel
-                  ? `${opt.data.label} - ${opt.data.fullLabel}`
-                  : String(opt.data.label ?? "")
-              }
-              value={payrollGroupId}
-              onChange={(v) => {
-                setPayrollGroupId(v ?? null);
-                setEmployeeIds([]);
-                clearResults();
-              }}
-            />
+            <RequiredField>
+              <Select
+                style={{ width: 200 }}
+                size="small"
+                showSearch
+                filterOption={filterByLabel}
+                placeholder="Payroll group"
+                loading={groupsLoading}
+                options={payrollGroupOptions}
+                optionRender={(opt) =>
+                  opt.data.fullLabel
+                    ? `${opt.data.label} - ${opt.data.fullLabel}`
+                    : String(opt.data.label ?? "")
+                }
+                value={payrollGroupId}
+                onChange={(v) => {
+                  setPayrollGroupId(v ?? null);
+                  setEmployeeIds([]);
+                  clearResults();
+                }}
+              />
+            </RequiredField>
             <Select
               mode="multiple"
               allowClear
@@ -557,23 +570,25 @@ export default function ForPayrollGenerateTab() {
                 clearResults();
               }}
             />
-            <MobileRangePicker
-              size="small"
-              value={
-                dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null
-              }
-              onChange={(dates) => {
-                setDateRange(
-                  dates
-                    ? [
-                        dates[0]?.format("YYYY-MM-DD") ?? "",
-                        dates[1]?.format("YYYY-MM-DD") ?? "",
-                      ]
-                    : null,
-                );
-                clearResults();
-              }}
-            />
+            <RequiredField>
+              <MobileRangePicker
+                size="small"
+                value={
+                  dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null
+                }
+                onChange={(dates) => {
+                  setDateRange(
+                    dates
+                      ? [
+                          dates[0]?.format("YYYY-MM-DD") ?? "",
+                          dates[1]?.format("YYYY-MM-DD") ?? "",
+                        ]
+                      : null,
+                  );
+                  clearResults();
+                }}
+              />
+            </RequiredField>
           </Space>
           <Space>
             {SHOW_PAY_RELEASE_DATE && (
