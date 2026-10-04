@@ -140,31 +140,48 @@ export default function ForPayrollGenerateTab() {
     () => departments.map((d) => ({ value: d.id, label: d.name })),
     [departments],
   );
+  // Whether an employee passes the group / client / department filters as given. The options
+  // are always derived from the filters as they are right now, so removing a filter widens the
+  // list again; there is no remembered narrowing.
+  const matchesFilters = (
+    e: (typeof allEmployees)[number],
+    clients: string[],
+    departments: string[],
+  ) =>
+    e.payrollGroupId === payrollGroupId &&
+    (clients.length === 0 || (!!e.clientId && clients.includes(e.clientId))) &&
+    (departments.length === 0 ||
+      (!!e.departmentId && departments.includes(e.departmentId)));
   const employeeOptions = useMemo(
     () =>
       allEmployees
-        .filter(
-          (e) =>
-            (!payrollGroupId || e.payrollGroupId === payrollGroupId) &&
-            (clientIds.length === 0 ||
-              (!!e.clientId && clientIds.includes(e.clientId))) &&
-            (departmentIds.length === 0 ||
-              (!!e.departmentId && departmentIds.includes(e.departmentId))),
-        )
+        .filter((e) => matchesFilters(e, clientIds, departmentIds))
         .map((e) => ({
           value: e.id,
           label: `${e.employeeNo ? `${e.employeeNo} — ` : ""}${e.lastName}, ${e.firstName}`,
         })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [allEmployees, payrollGroupId, clientIds, departmentIds],
   );
+  // After a client/department change, keep the picked employees that still match the new
+  // filters and drop only the ones that no longer do.
+  const keepMatchingEmployees = (clients: string[], departments: string[]) =>
+    setEmployeeIds((prev) => {
+      const allowed = new Set(
+        allEmployees
+          .filter((e) => matchesFilters(e, clients, departments))
+          .map((e) => e.id),
+      );
+      return prev.filter((id) => allowed.has(id));
+    });
   const selectedGroupLabel =
     payrollGroupOptions.find((o) => o.value === payrollGroupId)?.label ?? "";
   const { mutate: calculate, isPending: calculating } = useCalculatePayroll();
   const { mutate: generate, isPending: generating } = useGeneratePayroll();
 
-  // Only the date range is required; group, client, department and employees all narrow it.
-  const canRun = !!dateRange?.[0] && !!dateRange?.[1];
-  const runHint = "Select a date range";
+  // Payroll group and date range are required; client, department and employees narrow it.
+  const canRun = !!payrollGroupId && !!dateRange?.[0] && !!dateRange?.[1];
+  const runHint = "Select a payroll group and a date range";
 
   // A different group or range makes the shown results/warnings stale.
   const clearResults = () => {
@@ -469,10 +486,9 @@ export default function ForPayrollGenerateTab() {
             <Select
               style={{ width: 200 }}
               size="small"
-              allowClear
               showSearch
               filterOption={filterByLabel}
-              placeholder="All payroll groups"
+              placeholder="Payroll group"
               loading={groupsLoading}
               options={payrollGroupOptions}
               optionRender={(opt) =>
@@ -501,7 +517,7 @@ export default function ForPayrollGenerateTab() {
               value={clientIds}
               onChange={(v) => {
                 setClientIds(v);
-                setEmployeeIds([]);
+                keepMatchingEmployees(v, departmentIds);
                 clearResults();
               }}
             />
@@ -519,7 +535,7 @@ export default function ForPayrollGenerateTab() {
               value={departmentIds}
               onChange={(v) => {
                 setDepartmentIds(v);
-                setEmployeeIds([]);
+                keepMatchingEmployees(clientIds, v);
                 clearResults();
               }}
             />
@@ -603,13 +619,6 @@ export default function ForPayrollGenerateTab() {
             </PermissionGate>
           </Space>
         </div>
-        <Text type="secondary" className="block mt-2">
-          Only the date range is required. Pays every approved, not-yet-paid DTR
-          day of the employees matching the payroll group, client, department or
-          employees you pick (all employees if none) in the range — whichever
-          DTR batch or client it was reported under. Client and department are
-          the employee's own settings, not the DTR's.
-        </Text>
       </Card>
 
       {notReady.length > 0 && (
