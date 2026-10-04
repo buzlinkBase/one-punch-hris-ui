@@ -27,7 +27,7 @@ export default function ForPayrollList() {
               Payroll Run
             </Title>
             <p className="page-toolbar-subtitle">
-              Select posted DTR batches and run payroll calculation.
+              Select a payroll group and cutoff, then run payroll calculation.
             </p>
           </div>
         </div>
