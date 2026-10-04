@@ -1,8 +1,10 @@
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Card,
   DatePicker,
+  Select,
   Space,
   Statistic,
   Table,
@@ -16,18 +18,19 @@ import type { ColumnsType } from "antd/es/table";
 import {
   EyeOutlined,
   PlayCircleOutlined,
-  ReloadOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import axios from "axios";
 import {
-  useDtrBatches,
   useCalculatePayroll,
   useGeneratePayroll,
 } from "../../hooks/use-for-payroll-queries";
-import type { DtrBatchModel } from "../../models/api/response/dtr-batch-response.model";
-import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import type {
+  PayrollNotReadyEmployee,
+  PayrollRunResult,
+} from "../../models/api/response/payroll-run-result.model";
 import {
   otPay,
   ndPay,
@@ -35,12 +38,7 @@ import {
   basicPay,
   holidayPay,
 } from "../../utils/ot-nd-pay.util";
-import {
-  APPROVAL_STATUS_COLOR,
-  APPROVAL_STATUS_LABEL,
-} from "../../constants/label.const";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
-import DtrBatchPreviewModal from "../../components/dtr-batch-preview-modal";
 import PayrollRunPostModal from "../../components/payroll-run-post-modal";
 import TimeHourPayResultsModal from "../../components/time-hour-pay-results-modal";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
@@ -87,33 +85,38 @@ const withBand = (
 export default function ForPayrollGenerateTab() {
   const { token } = theme.useToken();
   const [dateRange, setDateRange] = useState<[string, string] | null>(null);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [payrollGroupId, setPayrollGroupId] = useState<string | null>(null);
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
-  const [previewBatchCode, setPreviewBatchCode] = useState<string | null>(null);
+  const [notReady, setNotReady] = useState<PayrollNotReadyEmployee[]>([]);
   const [payDate, setPayDate] = useState<string | null>(null);
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [dailyBreakdownRow, setDailyBreakdownRow] =
     useState<PayrollRunResult | null>(null);
 
-  const {
-    data: allBatches = [],
-    isLoading,
-    isFetching,
-    refetch,
-  } = useDtrBatches(dateRange?.[0], dateRange?.[1]);
-  // Already processed — a payroll run (draft or posted) already exists for this batch — so
-  // it has nothing left to do here; keep the list to only what's actually runnable instead
-  // of showing it disabled with a tag.
-  const batches = allBatches.filter((b) => !b.isPayrollGenerated);
+  const { data: payrollGroups = [], isLoading: groupsLoading } =
+    usePayrollGroups();
+  const payrollGroupOptions = payrollGroups.map((p) => ({
+    value: p.id,
+    label: p.code || p.name,
+  }));
+  const selectedGroupLabel =
+    payrollGroupOptions.find((o) => o.value === payrollGroupId)?.label ?? "";
   const { mutate: calculate, isPending: calculating } = useCalculatePayroll();
   const { mutate: generate, isPending: generating } = useGeneratePayroll();
 
-  const canRun = selected.length > 0;
+  const canRun = !!payrollGroupId && !!dateRange?.[0] && !!dateRange?.[1];
+  const runHint = "Select a payroll group and a date range";
 
-  const clearSelection = () => setSelected([]);
+  // A different group or range makes the shown results/warnings stale.
+  const clearResults = () => {
+    setResults(null);
+    setNotReady([]);
+  };
 
   const buildPayload = (remarks?: string) => ({
-    batchCodes: selected,
+    fromDate: dateRange?.[0],
+    toDate: dateRange?.[1],
+    payrollGroupId,
     payDate,
     remarks,
   });
@@ -123,6 +126,7 @@ export default function ForPayrollGenerateTab() {
     calculate(buildPayload(), {
       onSuccess: (res) => {
         setResults(res.data);
+        setNotReady(res.notReady ?? []);
         message.success(`Preview: ${res.total} employee(s) calculated.`);
       },
       onError: (err) =>
@@ -134,6 +138,7 @@ export default function ForPayrollGenerateTab() {
     generate(buildPayload(remarks), {
       onSuccess: (res) => {
         setResults(res.data);
+        setNotReady([]);
         setPostModalOpen(false);
         message.success(
           `Payroll generated and saved for ${res.total} employee(s).`,
@@ -143,66 +148,6 @@ export default function ForPayrollGenerateTab() {
         message.error(getErrorDetail(err, "Payroll generation failed.")),
     });
   };
-
-  const batchColumns: ColumnsType<DtrBatchModel> = [
-    {
-      title: "Batch Code",
-      dataIndex: "code",
-      key: "code",
-      width: 220,
-      render: (v) => (
-        <Text code className="whitespace-nowrap">
-          {v}
-        </Text>
-      ),
-    },
-    {
-      title: "Period",
-      key: "period",
-      width: 190,
-      render: (_, r) => `${fmtDate(r.fromDate)} — ${fmtDate(r.toDate)}`,
-    },
-    {
-      title: "Posting Description",
-      dataIndex: "postingDescription",
-      key: "postingDescription",
-      width: 220,
-      ellipsis: { showTitle: false },
-      render: (v?: string | null) =>
-        v ? (
-          <Tooltip title={v}>
-            <Text type="secondary">{v}</Text>
-          </Tooltip>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
-    },
-    {
-      title: "Status",
-      key: "status",
-      width: 130,
-      render: (_, r) => (
-        <Tag color={APPROVAL_STATUS_COLOR[r.approvalStatus ?? ""] ?? "default"}>
-          {APPROVAL_STATUS_LABEL[r.approvalStatus ?? ""] ?? "Approved"}
-        </Tag>
-      ),
-    },
-    {
-      title: "",
-      key: "view",
-      width: 40,
-      render: (_, r) => (
-        <Tooltip title="View DTR contents">
-          <Button
-            type="text"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => setPreviewBatchCode(r.code)}
-          />
-        </Tooltip>
-      ),
-    },
-  ];
 
   const resultColumns: ColumnsType<PayrollRunResult> = [
     {
@@ -456,110 +401,114 @@ export default function ForPayrollGenerateTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Space>
-          <Button
-            icon={<ReloadOutlined spin={isFetching} />}
-            onClick={() => refetch()}
-            loading={isFetching && !isLoading}
-          />
-          {SHOW_PAY_RELEASE_DATE && (
-            <Tooltip title="Pay/Release Date — only required when Company Policy's cross-month statutory posting is set to use the pay date">
-              <DatePicker
-                size="middle"
-                placeholder="Pay/Release Date"
-                value={payDate ? dayjs(payDate) : null}
-                onChange={(date) =>
-                  setPayDate(date ? date.format("YYYY-MM-DD") : null)
-                }
-              />
-            </Tooltip>
-          )}
-          <PermissionGate permission="Payroll Run:Create">
-            <Tooltip title={!canRun ? "Select at least one posted batch" : ""}>
-              <Button
-                icon={<PlayCircleOutlined />}
-                onClick={runPayroll}
-                loading={calculating}
-                disabled={!canRun}
-              >
-                Preview
-              </Button>
-            </Tooltip>
-          </PermissionGate>
-          <PermissionGate permission="Payroll Run:Create">
-            <Tooltip
-              title={
-                !canRun
-                  ? "Select at least one posted batch"
-                  : "Calculate & save to payroll register"
-              }
-            >
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={() => setPostModalOpen(true)}
-                loading={generating}
-                disabled={!canRun}
-              >
-                Save Payroll
-              </Button>
-            </Tooltip>
-          </PermissionGate>
-        </Space>
-      </div>
-
-      <Card size="small" title="DTR Batches">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-          <MobileRangePicker
-            size="small"
-            value={
-              dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null
-            }
-            onChange={(dates) =>
-              setDateRange(
-                dates
-                  ? [
-                      dates[0]?.format("YYYY-MM-DD") ?? "",
-                      dates[1]?.format("YYYY-MM-DD") ?? "",
-                    ]
-                  : null,
-              )
-            }
-          />
-          <Space size="small">
-            <Button
+      <Card size="small" title="Payroll Run Scope">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <Space wrap>
+            <Select
+              style={{ minWidth: 200 }}
               size="small"
-              onClick={clearSelection}
-              disabled={selected.length === 0}
-            >
-              Clear
-            </Button>
+              showSearch
+              optionFilterProp="label"
+              placeholder="Payroll group"
+              loading={groupsLoading}
+              options={payrollGroupOptions}
+              value={payrollGroupId}
+              onChange={(v) => {
+                setPayrollGroupId(v);
+                clearResults();
+              }}
+            />
+            <MobileRangePicker
+              size="small"
+              value={
+                dateRange ? [dayjs(dateRange[0]), dayjs(dateRange[1])] : null
+              }
+              onChange={(dates) => {
+                setDateRange(
+                  dates
+                    ? [
+                        dates[0]?.format("YYYY-MM-DD") ?? "",
+                        dates[1]?.format("YYYY-MM-DD") ?? "",
+                      ]
+                    : null,
+                );
+                clearResults();
+              }}
+            />
+          </Space>
+          <Space>
+            {SHOW_PAY_RELEASE_DATE && (
+              <Tooltip title="Pay/Release Date — only required when Company Policy's cross-month statutory posting is set to use the pay date">
+                <DatePicker
+                  size="middle"
+                  placeholder="Pay/Release Date"
+                  value={payDate ? dayjs(payDate) : null}
+                  onChange={(date) =>
+                    setPayDate(date ? date.format("YYYY-MM-DD") : null)
+                  }
+                />
+              </Tooltip>
+            )}
+            <PermissionGate permission="Payroll Run:Create">
+              <Tooltip title={!canRun ? runHint : ""}>
+                <Button
+                  icon={<PlayCircleOutlined />}
+                  onClick={runPayroll}
+                  loading={calculating}
+                  disabled={!canRun}
+                >
+                  Preview
+                </Button>
+              </Tooltip>
+            </PermissionGate>
+            <PermissionGate permission="Payroll Run:Create">
+              <Tooltip
+                title={
+                  !canRun ? runHint : "Calculate & save to payroll register"
+                }
+              >
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  onClick={() => setPostModalOpen(true)}
+                  loading={generating}
+                  disabled={!canRun}
+                >
+                  Save Payroll
+                </Button>
+              </Tooltip>
+            </PermissionGate>
           </Space>
         </div>
-        <Table
-          rowKey="code"
-          dataSource={batches}
-          columns={batchColumns}
-          loading={isLoading}
-          size="small"
-          pagination={false}
-          scroll={{ x: "max-content" }}
-          rowSelection={{
-            selectedRowKeys: selected,
-            onChange: (keys) => setSelected(keys as string[]),
-            // Visible but unselectable until the DTR batch itself clears its own approval --
-            // Payroll generation is blocked server-side for an unapproved batch anyway (see
-            // PayrollProcessorService.GenerateAsync), so surfacing that here up front avoids a
-            // wasted round-trip. A legacy batch with no approvalStatus at all (predates
-            // DTRBatch) is treated as already-Approved, same convention as the Status tag above.
-            getCheckboxProps: (record) => ({
-              disabled:
-                !!record.approvalStatus && record.approvalStatus !== "Approved",
-            }),
-          }}
-        />
+        <Text type="secondary" className="block mt-2">
+          Pays every approved, not-yet-paid DTR day of the group's employees in
+          the range — whichever DTR batch or client it was reported under.
+        </Text>
       </Card>
+
+      {notReady.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          message={`${notReady.length} employee(s) not fully included`}
+          description={
+            <ul className="m-0 pl-4">
+              {notReady.map((e) => (
+                <li key={`${e.employeeId}-${e.reason}`}>
+                  <strong>{e.fullName || e.employeeId}</strong> —{" "}
+                  {e.reason === "FixedSalaryAlreadyPaid"
+                    ? "skipped: a payroll run already paid this cutoff's fixed salary. Delete that run to include their remaining days."
+                    : `${e.unapprovedDays} day(s) still awaiting DTR approval${
+                        e.batchCodes.length
+                          ? ` (${e.batchCodes.join(", ")})`
+                          : ""
+                      }. They will be paid in a later run once approved.`}
+                </li>
+              ))}
+            </ul>
+          }
+        />
+      )}
 
       {results && (
         <Card
@@ -674,12 +623,6 @@ export default function ForPayrollGenerateTab() {
         </Card>
       )}
 
-      <DtrBatchPreviewModal
-        open={!!previewBatchCode}
-        batchCode={previewBatchCode}
-        onClose={() => setPreviewBatchCode(null)}
-      />
-
       <TimeHourPayResultsModal
         open={!!dailyBreakdownRow}
         onClose={() => setDailyBreakdownRow(null)}
@@ -689,7 +632,7 @@ export default function ForPayrollGenerateTab() {
 
       <PayrollRunPostModal
         open={postModalOpen}
-        batchCount={selected.length}
+        summary={`payroll group ${selectedGroupLabel}, ${dateRange ? `${fmtDate(dateRange[0])} — ${fmtDate(dateRange[1])}` : ""}`}
         isSaving={generating}
         onClose={() => setPostModalOpen(false)}
         onConfirm={handleConfirmGenerate}

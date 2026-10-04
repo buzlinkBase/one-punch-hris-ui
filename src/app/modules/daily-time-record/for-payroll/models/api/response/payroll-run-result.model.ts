@@ -317,7 +317,21 @@ export interface DtrPayResult {
   unpaidLeave: number;
 }
 
+// An employee a cutoff-mode run could not (fully) pay — shown as a warning on the preview.
+export interface PayrollNotReadyEmployee {
+  employeeId: string;
+  fullName?: string | null;
+  unapprovedDays: number;
+  batchCodes: string[];
+  // "UnapprovedDtr": days still awaiting DTR approval.
+  // "FixedSalaryAlreadyPaid": FIXED-salary employee skipped because an earlier run already
+  // paid this cutoff's salary.
+  reason: "UnapprovedDtr" | "FixedSalaryAlreadyPaid";
+}
+
 export interface PayrollRunResponse {
   data: PayrollRunResult[];
   total: number;
+  // Only returned by /calculate (the preview).
+  notReady?: PayrollNotReadyEmployee[];
 }
