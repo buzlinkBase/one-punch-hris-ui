@@ -22,6 +22,8 @@ interface Props {
   loading?: boolean;
   onChanged?: () => void;
   readOnly?: boolean;
+  // Hides the row actions for days whose DTR can no longer be changed (already saved).
+  isRowLocked?: (r: DtrDetailResponse) => boolean;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -38,6 +40,7 @@ export default function DtrDetailTable({
   loading,
   onChanged,
   readOnly,
+  isRowLocked,
   dateFrom,
   dateTo,
 }: Props) {
@@ -125,6 +128,7 @@ export default function DtrDetailTable({
     width: 130,
     title: "",
     render: (_: unknown, record: DtrDetailResponse) => {
+      if (isRowLocked?.(record)) return null;
       const select = () => setSelectedKey(rowKey(record));
       return (
         <Space size={4}>

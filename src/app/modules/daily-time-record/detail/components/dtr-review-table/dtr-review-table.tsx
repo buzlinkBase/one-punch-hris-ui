@@ -277,6 +277,7 @@ export default function DtrReviewTable({
           expandedRowRender: (s) => (
             <DtrDetailTable
               data={s.rows}
+              isRowLocked={(r) => !s.newRows.includes(r)}
               onChanged={onChanged}
               dateFrom={dateFrom}
               dateTo={dateTo}
