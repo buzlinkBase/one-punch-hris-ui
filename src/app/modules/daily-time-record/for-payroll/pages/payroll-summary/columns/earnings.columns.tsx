@@ -77,6 +77,14 @@ export const earningsColumns = (
     render: (_, r) => fmt(ndPay(r)),
   },
   {
+    // Always shown regardless of OT/ND Calculation Method. Under Additive this pay is already
+    // folded into OT Pay/ND Pay above, so it is informational there.
+    title: "NDOT Pay",
+    key: "ndot",
+    align: "right",
+    render: (_, r) => fmt(r.nightDifferentialOTPay),
+  },
+  {
     title: "Rest Day",
     key: "restDay",
     align: "right",

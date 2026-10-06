@@ -284,6 +284,7 @@ export const EARNINGS_HEADERS = [
   "Basic",
   "OT Pay",
   "ND Pay",
+  "NDOT Pay",
   "Rest Day",
   "Paid Leave",
   "1x Payout (Co)",
@@ -310,6 +311,7 @@ export const buildEarningsRows = (results: PayrollRunResult[]) =>
     fmt(basicPay(r)),
     fmt(otPay(r)),
     fmt(ndPay(r)),
+    fmt(r.nightDifferentialOTPay),
     fmt(restDayTotal(r)),
     r.salaryType === "FIXED"
       ? fmt(r.nonCompanyPaidLeaves ?? 0)
