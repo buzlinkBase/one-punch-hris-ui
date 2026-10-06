@@ -28,6 +28,8 @@ import {
   OT_ELIGIBILITY_OPTIONS,
   OT_ND_CALCULATION_METHOD_OPTIONS,
   DEFAULT_OT_ND_CALCULATION_METHOD,
+  HOURLY_RATE_DIVISOR_OPTIONS,
+  DEFAULT_HOURLY_RATE_DIVISOR,
   HOLIDAY_TIME_BASIS_OPTIONS,
   CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
@@ -67,6 +69,7 @@ function GeneralPolicyTab() {
       wTaxCrossMonthCreditPolicy: "CutoffEndMonth",
       requiredTakehomePercentage: 10,
       otNdCalculationMethod: DEFAULT_OT_ND_CALCULATION_METHOD,
+      hourlyRateDivisor: DEFAULT_HOURLY_RATE_DIVISOR,
     },
   });
 
@@ -101,6 +104,8 @@ function GeneralPolicyTab() {
         requiredTakehomePercentage: policy.requiredTakehomePercentage ?? 10,
         otNdCalculationMethod:
           policy.otNdCalculationMethod ?? DEFAULT_OT_ND_CALCULATION_METHOD,
+        hourlyRateDivisor:
+          policy.hourlyRateDivisor ?? DEFAULT_HOURLY_RATE_DIVISOR,
       });
     }
   }, [policy, reset]);
@@ -198,6 +203,35 @@ function GeneralPolicyTab() {
                 message="Additive pays each hour bucket at one rate: regular hours at the day rate, overtime at the OT rate (no day-type multiplier), and night hours at the night-differential premium only. Night-shift overtime (NDOT) is split into OT plus the night premium. This pays less than the DOLE-standard Compounded formula on rest days and holidays, so use it only if your company or client agreement allows it."
               />
             )}
+          </div>
+        </Card>
+
+        {/* Hourly Rate */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_HOURLY_RATE}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.HOURLY_RATE_DIVISOR}
+              validateStatus={errors.hourlyRateDivisor ? "error" : ""}
+              help={errors.hourlyRateDivisor?.message}
+              extra="The hourly rate used for regular hours, late, undertime, leave, overtime, night differential and holiday pay is the daily rate divided by this. Applies to payroll generated after saving; existing payroll runs are not recomputed unless regenerated."
+              className="sm:col-span-2"
+            >
+              <Controller
+                name="hourlyRateDivisor"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={HOURLY_RATE_DIVISOR_OPTIONS}
+                    placeholder="Select hourly rate divisor"
+                  />
+                )}
+              />
+            </Form.Item>
           </div>
         </Card>
 

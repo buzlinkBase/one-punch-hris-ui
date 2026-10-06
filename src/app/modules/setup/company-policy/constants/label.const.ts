@@ -28,6 +28,7 @@ export const COMPANY_POLICY_LABEL = {
   SECTION_STATUTORY: "Cross-Month Cutoff Credit Policies",
   SECTION_MINIMUM_TAKEHOME: "Minimum Take-Home Pay",
   SECTION_OT_ND_CALCULATION: "OT/ND Calculation Method",
+  SECTION_HOURLY_RATE: "Hourly Rate",
 
   OT_INCLUSION: "OT Inclusion",
   OT_ELIGIBILITY: "OT Eligibility",
@@ -49,6 +50,7 @@ export const COMPANY_POLICY_LABEL = {
   WTAX_CROSS_MONTH_CREDIT_POLICY: "Credit Withholding Tax To",
   REQUIRED_TAKEHOME_PERCENTAGE: "Minimum Take-Home (% of Gross Income)",
   OT_ND_CALCULATION_METHOD: "OT/ND Calculation Method",
+  HOURLY_RATE_DIVISOR: "Hourly Rate Divisor",
 
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
@@ -121,6 +123,21 @@ export const OT_ND_CALCULATION_METHOD_OPTIONS = [
   {
     value: "Compounded",
     label: "Compounded (DOLE-standard)",
+  },
+];
+
+// What the daily rate is divided by to get the hourly rate every payroll hour bucket is priced
+// from (hrms-api RateHelper.GetHourlyRate). Fixed 8 hours is the default.
+export const DEFAULT_HOURLY_RATE_DIVISOR = "Fixed8Hours";
+
+export const HOURLY_RATE_DIVISOR_OPTIONS = [
+  {
+    value: "Fixed8Hours",
+    label: "Fixed 8 hours (Daily Rate ÷ 8)",
+  },
+  {
+    value: "ShiftMaxWorkingHours",
+    label: "Shift's max working hours (Daily Rate ÷ shift hours)",
   },
 ];
 
