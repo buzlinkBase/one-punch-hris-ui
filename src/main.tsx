@@ -3,6 +3,10 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./app.tsx";
 import { reloadForNewVersion } from "./core/app-update/chunk-load-recovery";
+import { startAuthSessionSync } from "./core/auth/auth-session-sync";
+
+// Follow the session another tab signs in/out/switches (the session is shared by all tabs).
+startAuthSessionSync();
 
 // A page chunk from the previous deploy is gone: reload once to get the new build. When a
 // reload was just tried, let the error through so the route's error screen shows instead.

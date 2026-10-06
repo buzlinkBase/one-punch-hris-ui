@@ -40,10 +40,9 @@ import {
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
-import {
-  APPROVAL_STATUS_LABEL,
-  PAYROLL_TYPE_LABEL,
-} from "../../constants/label.const";
+import { APPROVAL_STATUS_LABEL } from "../../constants/label.const";
+import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
+import { buildPayrollBatchOptions } from "./utils/payroll-batch-option.util";
 import { getEmptyMessage } from "./payroll-summary-empty";
 import { earningsColumns } from "./columns/earnings.columns";
 import { holidayColumns } from "./columns/holiday.columns";
@@ -109,6 +108,18 @@ export default function PayrollSummary() {
   const { data: batches = [] } = usePayrollBatches(
     batchDateRange?.[0],
     batchDateRange?.[1],
+  );
+
+  const { data: employees = [] } = useEmployees();
+  // Remarks, status, employee count, payout date and generator, so several runs of the same
+  // period can be told apart -- see buildPayrollBatchOptions.
+  const batchOptions = useMemo(
+    () =>
+      buildPayrollBatchOptions(
+        batches,
+        (id) => employees.find((e) => e.id === id)?.fullName ?? undefined,
+      ),
+    [batches, employees],
   );
 
   const selectedBatch = useMemo(
@@ -319,11 +330,25 @@ export default function PayrollSummary() {
               placeholder="Select a payroll batch"
               showSearch
               optionFilterProp="label"
-              style={{ width: 260 }}
-              options={batches.map((b) => ({
-                value: b.id,
-                label: `${dayjs(b.payPeriodStart).format("MMM D")} – ${dayjs(b.payPeriodEnd).format("MMM D, YYYY")} · ${PAYROLL_TYPE_LABEL[b.payrollType] ?? b.payrollType}`,
-              }))}
+              className="w-80"
+              popupMatchSelectWidth={false}
+              classNames={{ popup: { root: "min-w-[420px] max-w-[90vw]" } }}
+              notFoundContent="No payroll batches in this date range"
+              options={batchOptions}
+              optionRender={(option) => {
+                const { remarks, detail } = option.data as {
+                  remarks: string | null;
+                  detail: string;
+                };
+                return (
+                  <div className="whitespace-normal py-0.5">
+                    {remarks && <div className="font-medium">{remarks}</div>}
+                    <div className={remarks ? "text-xs opacity-70" : ""}>
+                      {detail}
+                    </div>
+                  </div>
+                );
+              }}
             />
             <Select<StatusFilter>
               value={statusFilter}

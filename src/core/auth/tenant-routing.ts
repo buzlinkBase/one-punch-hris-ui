@@ -1,5 +1,6 @@
 import { authStorage } from "./auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import { refreshAccessToken } from "./auth-refresh";
 import {
   flattenNavPaths,
   getPermissionForPath,
@@ -46,7 +47,11 @@ export function resolveFallbackLanding(): string {
 }
 
 /** Resolves where the user should land based on tenant state. `null` means the current tenant context is already resolved. */
-export async function resolveTenantDestination(): Promise<TenantRedirect> {
+export function resolveTenantDestination(): Promise<TenantRedirect> {
+  return resolve(false);
+}
+
+async function resolve(serverVerified: boolean): Promise<TenantRedirect> {
   if (authStorage.getTenantId()) return null;
 
   const token = authStorage.getToken();
@@ -57,6 +62,19 @@ export async function resolveTenantDestination(): Promise<TenantRedirect> {
   }
 
   const tenants = authStorage.getTenants();
+
+  // "No company" is only believed once the server says so. The session in localStorage is shared
+  // by every tab, so it can belong to a different account than this tab's user (another tab
+  // signed in as someone else) or simply be out of date -- trusting an empty local list sent users
+  // who already finished company setup back to it. A forced refresh returns the signed-in
+  // account's authoritative memberships (and re-mints the token); then resolve again from that.
+  // A failed refresh throws rather than falling through, so a network error can't land an
+  // existing user on company setup.
+  if (tenants.length === 0 && !serverVerified) {
+    await refreshAccessToken(true);
+    return resolve(true);
+  }
+
   if (tenants.length > 1) return "/select-tenant";
 
   if (tenants.length === 1) {
