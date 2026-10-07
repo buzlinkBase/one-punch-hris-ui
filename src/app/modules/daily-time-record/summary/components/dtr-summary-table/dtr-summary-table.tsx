@@ -4,6 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { DtrSummaryResponse } from "../../models/api/response/dtr-summary-response.model";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatSummaryNumber } from "../../utils/dtr-summary-export.utils";
 
 interface Props {
   data: DtrSummaryResponse[];
@@ -94,7 +95,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     [data],
   );
 
-  const tc = (v: number) => ({
+  const tc = (key: keyof DtrSummaryResponse, v: number) => ({
     align: "right" as const,
     children:
       v === 0 ? (
@@ -102,7 +103,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           —
         </span>
       ) : (
-        <span style={{ fontWeight: 600 }}>{v.toFixed(1)}</span>
+        <span style={{ fontWeight: 600 }}>{formatSummaryNumber(key, v)}</span>
       ),
   });
 
@@ -129,7 +130,11 @@ export default function DtrSummaryTable({ data, loading }: Props) {
             —
           </span>
         );
-      return <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>;
+      return (
+        <span style={{ fontWeight: 500 }}>
+          {formatSummaryNumber(dataIndex, n)}
+        </span>
+      );
     },
   });
 
@@ -277,8 +282,12 @@ export default function DtrSummaryTable({ data, loading }: Props) {
                   <Table.Summary.Cell index={0}>
                     <strong>Total</strong>
                   </Table.Summary.Cell>
-                  {Object.values(totals).map((v, i) => (
-                    <Table.Summary.Cell key={i} index={i + 1} {...tc(v)} />
+                  {Object.entries(totals).map(([key, v], i) => (
+                    <Table.Summary.Cell
+                      key={key}
+                      index={i + 1}
+                      {...tc(key as keyof DtrSummaryResponse, v)}
+                    />
                   ))}
                 </Table.Summary.Row>
               </Table.Summary>

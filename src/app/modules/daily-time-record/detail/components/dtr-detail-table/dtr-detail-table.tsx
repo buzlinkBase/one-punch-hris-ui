@@ -12,6 +12,7 @@ import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-res
 import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatDecimal } from "@/shared/utils/number.util";
 import DtrAttendanceLogsModal from "../dtr-attendance-logs-modal/dtr-attendance-logs-modal";
 import DtrChangeTimeShiftModal from "../dtr-change-time-shift-modal/dtr-change-time-shift-modal";
 import DtrChangeRestDayModal from "../dtr-change-rest-day-modal/dtr-change-rest-day-modal";
@@ -119,7 +120,7 @@ export default function DtrDetailTable({
             —
           </span>
         );
-      return <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>;
+      return <span style={{ fontWeight: 500 }}>{formatDecimal(n)}</span>;
     },
   });
 
@@ -427,7 +428,7 @@ export default function DtrDetailTable({
                       —
                     </span>
                   ) : (
-                    <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>
+                    <span style={{ fontWeight: 500 }}>{formatDecimal(n)}</span>
                   );
                 if (!record.leavesInfo || record.leavesInfo.length === 0)
                   return cell;
@@ -437,8 +438,8 @@ export default function DtrDetailTable({
                       <div>
                         {record.leavesInfo.map((li, idx) => (
                           <div key={`${li.leaveId}-${idx}`}>
-                            {li.name ?? "Leave"}: {li.hours.toFixed(1)} hrs (
-                            {li.payType === "WithoutPay" ? "Unpaid" : "Paid"})
+                            {li.name ?? "Leave"}: {formatDecimal(li.hours)} hrs
+                            ({li.payType === "WithoutPay" ? "Unpaid" : "Paid"})
                           </div>
                         ))}
                       </div>

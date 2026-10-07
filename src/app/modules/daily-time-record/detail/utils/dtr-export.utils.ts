@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { formatDecimal } from "@/shared/utils/number.util";
 import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
 
 export type LeafCol = { key: keyof DtrDetailResponse; label: string };
@@ -122,7 +123,7 @@ export function fmtCell(
   const v = r[key];
   if (key === "startTime" || key === "endTime")
     return v ? dayjs(v as string).format("HH:mm") : "";
-  if (typeof v === "number") return v === 0 ? "" : v.toFixed(1);
+  if (typeof v === "number") return v === 0 ? "" : formatDecimal(v);
   return String(v ?? "");
 }
 

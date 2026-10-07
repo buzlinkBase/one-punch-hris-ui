@@ -11,6 +11,7 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { SearchOutlined, WarningOutlined } from "@ant-design/icons";
+import { formatDecimal } from "@/shared/utils/number.util";
 import DtrDetailTable from "../dtr-detail-table";
 import {
   COVERAGE_STATUS_COLOR,
@@ -39,12 +40,8 @@ interface Props {
   dateTo?: string;
 }
 
-const num = (v: number, digits = 1) =>
-  v ? (
-    <Text>{Number.isInteger(v) ? v : v.toFixed(digits)}</Text>
-  ) : (
-    <Text type="secondary">—</Text>
-  );
+const num = (v: number, digits = 2) =>
+  v ? <Text>{formatDecimal(v, digits)}</Text> : <Text type="secondary">—</Text>;
 
 // The generated DTR, one row per employee with their cutoff totals. Expanding a row shows that
 // employee's daily rows (with the usual attendance / shift / rest-day actions). Employees whose
@@ -164,7 +161,7 @@ export default function DtrReviewTable({
       key: "days",
       width: 70,
       align: "right",
-      render: (_, s) => num(s.days),
+      render: (_, s) => num(s.days, 0),
     },
     {
       title: "Reg hrs",
@@ -192,14 +189,14 @@ export default function DtrReviewTable({
       key: "late",
       width: 90,
       align: "right",
-      render: (_, s) => num(s.lateMinutes, 0),
+      render: (_, s) => num(s.lateMinutes),
     },
     {
       title: "UT (min)",
       key: "ut",
       width: 85,
       align: "right",
-      render: (_, s) => num(s.utMinutes, 0),
+      render: (_, s) => num(s.utMinutes),
     },
     {
       title: "Leave hrs",

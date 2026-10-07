@@ -1,9 +1,11 @@
 import type { PayrollRunResult } from "../../../models/api/response/payroll-run-result.model";
 
+// Exactly 2 decimals — a minimum alone lets toLocaleString show 3 (1.0333 -> "1.033").
+const TWO_DECIMALS = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
 export const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
-export const fmtH = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }) + " h";
+  (n ?? 0).toLocaleString("en-PH", TWO_DECIMALS);
+export const fmtH = (n: number) => fmt(n) + " h";
 
 // Holiday-category totals, mirroring PayslipDocument.cs's formulas exactly — each folds
 // its own base + OT + ND + NDOT tiers into one figure; "Holiday Duty" excludes the

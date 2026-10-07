@@ -4,6 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { TardinessResponse } from "../../models/api/response/tardiness-response.model";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatDecimal } from "@/shared/utils/number.util";
 
 interface TardinessSummary {
   employeeNo: string;
@@ -113,7 +114,7 @@ export default function TardinessSummaryTable({ data, loading }: Props) {
           width: widths.totalTardinessMins,
           onResize: (w: number) => handleResize("totalTardinessMins", w),
         }) as object,
-      render: (v: number) => `${v} mins`,
+      render: (v: number) => `${formatDecimal(v)} mins`,
     },
     {
       title: "Total Deductible (Mins)",
@@ -128,9 +129,9 @@ export default function TardinessSummaryTable({ data, loading }: Props) {
         }) as object,
       render: (v: number) =>
         v > 0 ? (
-          <Tag color="red">{v} mins</Tag>
+          <Tag color="red">{formatDecimal(v)} mins</Tag>
         ) : (
-          <Tag color="success">0 mins</Tag>
+          <Tag color="success">0.00 mins</Tag>
         ),
     },
   ];
