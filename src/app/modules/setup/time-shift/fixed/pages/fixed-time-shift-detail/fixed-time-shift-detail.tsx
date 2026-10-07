@@ -122,6 +122,7 @@ export default function FixedTimeShiftDetail() {
       otStart: "17:00:00",
       overTimeThreshold: 60,
       maxOvertimeHours: null,
+      nightDiffThreshold: null,
     },
   });
 
@@ -234,6 +235,7 @@ export default function FixedTimeShiftDetail() {
         otStart: selected.otStart,
         overTimeThreshold: selected.overTimeThreshold,
         maxOvertimeHours: selected.maxOvertimeHours,
+        nightDiffThreshold: selected.nightDiffThreshold,
       });
     }
   }, [selected, isEdit, reset]);
@@ -269,6 +271,7 @@ export default function FixedTimeShiftDetail() {
       maxOvertimeHours: values.withOT
         ? (values.maxOvertimeHours ?? null)
         : null,
+      nightDiffThreshold: values.nightDiffThreshold ?? null,
     };
 
     if (isEdit && id) await update({ id, ...payload });
@@ -772,6 +775,31 @@ export default function FixedTimeShiftDetail() {
               </div>
             </>
           )}
+          <div className="form-grid-2">
+            <Form.Item
+              label={FIXED_TIME_SHIFT_LABEL.NIGHT_DIFF_THRESHOLD}
+              validateStatus={errors.nightDiffThreshold ? "error" : ""}
+              help={
+                errors.nightDiffThreshold?.message ??
+                "Leave blank or 0 to use the company Night Diff Threshold"
+              }
+            >
+              <Controller
+                name="nightDiffThreshold"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    className="w-full"
+                    value={field.value ?? undefined}
+                    onChange={(v) => field.onChange(v ?? null)}
+                    min={0}
+                    suffix="min"
+                    placeholder="Company default"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">

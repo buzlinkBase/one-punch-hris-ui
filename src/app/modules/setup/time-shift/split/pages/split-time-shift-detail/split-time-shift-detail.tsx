@@ -106,6 +106,7 @@ export default function SplitTimeShiftDetail() {
       withOT: false,
       overTimeThreshold: 60,
       maxOvertimeHours: null,
+      nightDiffThreshold: null,
     },
   });
 
@@ -161,6 +162,7 @@ export default function SplitTimeShiftDetail() {
         withOT: selected.withOT,
         overTimeThreshold: selected.overTimeThreshold,
         maxOvertimeHours: selected.maxOvertimeHours,
+        nightDiffThreshold: selected.nightDiffThreshold,
       });
     }
   }, [selected, isEdit, reset]);
@@ -194,6 +196,7 @@ export default function SplitTimeShiftDetail() {
       maxOvertimeHours: values.withOT
         ? (values.maxOvertimeHours ?? null)
         : null,
+      nightDiffThreshold: values.nightDiffThreshold ?? null,
       minimumWorkMinutes: values.minimumWorkMinutes,
       maxWorkingMinutes: values.maxWorkingMinutes,
     };
@@ -472,6 +475,31 @@ export default function SplitTimeShiftDetail() {
               </Form.Item>
             </div>
           )}
+          <div className="form-grid-2">
+            <Form.Item
+              label={SPLIT_TIME_SHIFT_LABEL.NIGHT_DIFF_THRESHOLD}
+              validateStatus={errors.nightDiffThreshold ? "error" : ""}
+              help={
+                errors.nightDiffThreshold?.message ??
+                "Leave blank or 0 to use the company Night Diff Threshold"
+              }
+            >
+              <Controller
+                name="nightDiffThreshold"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    className="w-full"
+                    value={field.value ?? undefined}
+                    onChange={(v) => field.onChange(v ?? null)}
+                    min={0}
+                    suffix="min"
+                    placeholder="Company default"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">

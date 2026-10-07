@@ -21,6 +21,7 @@ export const FIXED_TIME_SHIFT_LABEL = {
   OT_START: "OT Start Time",
   OT_THRESHOLD: "OT Threshold (hrs)",
   MAX_OT_HOURS: "Max OT Hours",
+  NIGHT_DIFF_THRESHOLD: "Night Diff Threshold (min)",
   CREATE_TITLE: "Create Fixed Time Shift",
   EDIT_TITLE: "Edit Fixed Time Shift",
 };
