@@ -1315,6 +1315,9 @@ const BillingOverview = lazy(
 const PlanSelection = lazy(
   () => import("@/app/modules/billing/pages/plan-selection"),
 );
+const PaymentResult = lazy(
+  () => import("@/app/modules/billing/pages/payment-result"),
+);
 const AuditDetail = lazy(
   () => import("@/app/modules/security/audit/pages/audit-detail"),
 );
@@ -1566,6 +1569,13 @@ const billingPlansRoute = createRoute({
   component: withSuspense(PlanSelection),
 });
 
+// Where the payment gateway's page sends the payer back (?checkout={id}[&canceled=1]).
+const billingPaymentRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "payment",
+  component: withSuspense(PaymentResult),
+});
+
 const enrollBiometricsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "enroll-biometrics",
@@ -1708,7 +1718,11 @@ const routeTree = rootRoute.addChildren([
     securityAuditIndexRoute,
     securityAuditDetailRoute,
   ]),
-  billingRoute.addChildren([billingIndexRoute, billingPlansRoute]),
+  billingRoute.addChildren([
+    billingIndexRoute,
+    billingPlansRoute,
+    billingPaymentRoute,
+  ]),
   leaveApplicationRoute.addChildren([
     leaveApplicationIndexRoute,
     leaveApplicationCreateRoute,

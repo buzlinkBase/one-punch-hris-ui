@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authStorage } from "@/core/auth/auth-storage";
 import { useAuthUser } from "@/core/auth/use-auth-user";
@@ -66,4 +67,47 @@ export function useCancelSubscription() {
 
 export function useResumeSubscription() {
   return useSubscriptionMutation(() => subscriptionApi.resume());
+}
+
+/** Pay online: opens the gateway's payment page -- the browser leaves the app for it. */
+export function useStartCheckout() {
+  return useMutation({
+    mutationFn: () => subscriptionApi.startCheckout(),
+    onSuccess: ({ checkoutUrl }) => window.location.assign(checkoutUrl),
+  });
+}
+
+const CHECKOUT_POLL_MS = 3000;
+
+/**
+ * An online payment, refetched every few seconds while `poll` is on and it's still unpaid --
+ * the server checks with the gateway each time, so this confirms it even if the webhook is late.
+ */
+export function useCheckout(checkoutId: string | undefined, poll: boolean) {
+  return useQuery({
+    queryKey: [...SUBSCRIPTION_QUERY_KEY, "checkout", checkoutId],
+    queryFn: () => subscriptionApi.getCheckout(checkoutId ?? ""),
+    enabled: !!checkoutId,
+    staleTime: 0,
+    retry: 1,
+    refetchInterval: (query) =>
+      poll && query.state.data?.status === "Open" ? CHECKOUT_POLL_MS : false,
+  });
+}
+
+/** Refetches the plan and entitlements -- after a payment changed them. */
+export function useRefreshSubscription() {
+  const queryClient = useQueryClient();
+  return useCallback(
+    () =>
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [...SUBSCRIPTION_QUERY_KEY, "billing"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...SUBSCRIPTION_QUERY_KEY, "entitlements"],
+        }),
+      ]),
+    [queryClient],
+  );
 }

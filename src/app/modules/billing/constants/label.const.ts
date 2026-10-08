@@ -2,7 +2,11 @@ import {
   FEATURE_KEYS,
   LIMIT_KEYS,
 } from "@/shared/constants/entitlement-keys.const";
-import type { SubscriptionStatus } from "../models/api/response/subscription-response.model";
+import type {
+  PaymentDueReason,
+  PaymentMethod,
+  SubscriptionStatus,
+} from "../models/api/response/subscription-response.model";
 
 export const BILLING_LABEL = {
   TITLE: "Billing",
@@ -40,9 +44,57 @@ export const BILLING_LABEL = {
   UNLIMITED: "Unlimited",
   UNKNOWN: "--",
   PAYMENT_INSTRUCTIONS_TITLE: "How to pay",
+  PAY: "Pay",
+  PAY_LATER: "Pay later",
+  PAY_ONLINE_HINT:
+    "Pay online -- your plan is activated as soon as the payment goes through.",
+  PAY_OTHER_WAYS: "Or pay by bank transfer:",
   CONTACT_ADMIN:
     "Your company's subscription needs attention. Contact your company admin.",
   NOT_IN_SUBSCRIPTION: "Not included in your subscription. Contact support.",
+};
+
+export const PAYMENT_DUE_TITLES: Record<PaymentDueReason, string> = {
+  PlanChange: "Payment due for your new plan",
+  Renewal: "Renew your plan",
+  Reactivation: "Reactivate your plan",
+};
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  BankTransfer: "Bank transfer",
+  Cash: "Cash",
+  Check: "Check",
+  GCash: "GCash",
+  Maya: "Maya",
+  Card: "Card",
+  Other: "Other",
+  QrPh: "QR Ph",
+  GrabPay: "GrabPay",
+  ShopeePay: "ShopeePay",
+  OnlineBanking: "Online banking",
+  BillEase: "BillEase",
+};
+
+/** The return screen after the payment page (/billing/payment). */
+export const PAYMENT_RESULT_LABEL = {
+  CONFIRMING: "Confirming your payment...",
+  CONFIRMING_HINT:
+    "This usually takes a few seconds. Please keep this page open.",
+  PAID: "Payment received",
+  PAID_HINT: "Your plan is active. A receipt was sent to your email.",
+  CANCELED: "Payment canceled",
+  CANCELED_HINT:
+    "Nothing was charged. You can pay any time from the Billing page.",
+  CLOSED: "This payment page has closed",
+  CLOSED_HINT:
+    "Nothing was charged on it. Start the payment again from the Billing page.",
+  WAITING: "Still waiting for confirmation",
+  WAITING_HINT:
+    "If you completed the payment, it will show on the Billing page within a few minutes.",
+  NOT_FOUND: "We couldn't find this payment",
+  NOT_FOUND_HINT: "Check the Billing page for your latest payments.",
+  CHECK_AGAIN: "Check again",
+  GO_TO_BILLING: "Go to billing",
 };
 
 export const STATUS_LABELS: Record<SubscriptionStatus, string> = {
