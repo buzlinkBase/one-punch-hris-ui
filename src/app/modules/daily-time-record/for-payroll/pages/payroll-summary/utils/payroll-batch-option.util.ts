@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import type { PayrollBatchListModel } from "../../../models/api/response/payroll-batch-list.model";
 import {
+  APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
   PAYROLL_TYPE_LABEL,
 } from "../../../constants/label.const";
@@ -13,7 +14,22 @@ export interface PayrollBatchOption {
   remarks: string | null;
   // Second line of the dropdown row: what tells same-period generations apart.
   detail: string;
+  // Structured pieces of the dropdown row, so the period leads and the status reads as a tag.
+  period: string;
+  status: string;
+  statusColor: string;
+  meta: string;
 }
+
+// Newest pay period first; the later-ending run wins when two start on the same day.
+export const sortBatchesLatestFirst = (
+  batches: PayrollBatchListModel[],
+): PayrollBatchListModel[] =>
+  [...batches].sort(
+    (a, b) =>
+      b.payPeriodStart.localeCompare(a.payPeriodStart) ||
+      b.payPeriodEnd.localeCompare(a.payPeriodEnd),
+  );
 
 const formatPeriod = (b: PayrollBatchListModel) =>
   `${dayjs(b.payPeriodStart).format("MMM D")} – ${dayjs(b.payPeriodEnd).format("MMM D, YYYY")}`;
@@ -44,11 +60,26 @@ export const buildPayrollBatchOption = (
   ];
   const detail = detailParts.filter(Boolean).join(" · ");
 
+  const meta = [
+    type,
+    employees,
+    b.payDate ? `Payout ${dayjs(b.payDate).format("MMM D")}` : null,
+    generatedByName ? `by ${generatedByName}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return {
     value: b.id,
     label: remarks ? `${remarks} — ${detail}` : detail,
     remarks,
     detail,
+    period: formatPeriod(b),
+    status: statusLabel(b),
+    statusColor: b.pendingDeletion
+      ? "error"
+      : (APPROVAL_STATUS_COLOR[b.approvalStatus] ?? "default"),
+    meta,
   };
 };
 
@@ -71,6 +102,7 @@ export const buildPayrollBatchOptions = (
           ...o,
           label: `${o.label} · #${o.value.slice(-4)}`,
           detail: `${o.detail} · #${o.value.slice(-4)}`,
+          meta: `${o.meta} · #${o.value.slice(-4)}`,
         }
       : o,
   );

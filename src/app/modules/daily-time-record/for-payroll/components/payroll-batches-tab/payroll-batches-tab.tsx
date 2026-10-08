@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   Modal,
@@ -31,6 +31,7 @@ import {
   useDeclinePayrollBatchDeletion,
 } from "../../hooks/use-for-payroll-queries";
 import type { PayrollBatchListModel } from "../../models/api/response/payroll-batch-list.model";
+import { sortBatchesLatestFirst } from "../../pages/payroll-summary/utils/payroll-batch-option.util";
 import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
@@ -43,12 +44,12 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import { getLastMonthToCurrentRange } from "@/shared/utils/cutoff.util";
 
 const { Text } = Typography;
 
 const defaultRange = (): [string, string] => {
-  const { fromDate, toDate } = getSemiMonthlyCutoff();
+  const { fromDate, toDate } = getLastMonthToCurrentRange();
   return [fromDate, toDate];
 };
 
@@ -62,10 +63,14 @@ export default function PayrollBatchesTab() {
   const [messageApi, contextHolder] = message.useMessage();
 
   const {
-    data: batches = [],
+    data: batchData,
     isLoading: isLoadingBatches,
     refetch: refetchBatches,
   } = usePayrollBatches(dateRange[0], dateRange[1]);
+  const batches = useMemo(
+    () => sortBatchesLatestFirst(batchData ?? []),
+    [batchData],
+  );
 
   const { data: employees = [] } = useEmployees();
   const employeeName = (id?: string | null) =>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   Dropdown,
@@ -57,14 +57,20 @@ import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import { getLastMonthToCurrentRange } from "@/shared/utils/cutoff.util";
 
 const { Text } = Typography;
 
 const defaultRange = (): [string, string] => {
-  const { fromDate, toDate } = getSemiMonthlyCutoff();
+  const { fromDate, toDate } = getLastMonthToCurrentRange();
   return [fromDate, toDate];
 };
+
+// Newest period first; code breaks ties between batches covering the same period.
+const byLatestFirst = (a: BatchesModel, b: BatchesModel) =>
+  (b.toDate ?? "").localeCompare(a.toDate ?? "") ||
+  (b.fromDate ?? "").localeCompare(a.fromDate ?? "") ||
+  (b.code ?? "").localeCompare(a.code ?? "");
 
 export default function DtrBatchTab() {
   const [viewingBatchCode, setViewingBatchCode] = useState<string | null>(null);
@@ -73,10 +79,14 @@ export default function DtrBatchTab() {
   const queryClient = useQueryClient();
 
   const {
-    data: batches = [],
+    data: batchData,
     isLoading: isLoadingBatches,
     refetch: refetchBatches,
   } = useDtrDetailBatchCodes(dateRange[0], dateRange[1]);
+  const batches = useMemo(
+    () => [...(batchData ?? [])].sort(byLatestFirst),
+    [batchData],
+  );
 
   const { data: records = [], isLoading: isLoadingDetail } = useDtrDetailMaster(
     viewingBatchCode ?? "",

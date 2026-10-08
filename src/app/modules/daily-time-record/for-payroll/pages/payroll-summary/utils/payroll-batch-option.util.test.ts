@@ -3,6 +3,7 @@ import type { PayrollBatchListModel } from "../../../models/api/response/payroll
 import {
   buildPayrollBatchOption,
   buildPayrollBatchOptions,
+  sortBatchesLatestFirst,
 } from "./payroll-batch-option.util";
 
 const batch = (
@@ -50,6 +51,39 @@ describe("buildPayrollBatchOption", () => {
     expect(o.detail).toContain("1 employee");
     expect(o.detail).not.toContain("1 employees");
     expect(o.detail).toContain("Pending Deletion");
+  });
+});
+
+describe("buildPayrollBatchOption structured fields", () => {
+  it("exposes the period, status tag and meta line separately", () => {
+    const o = buildPayrollBatchOption(batch({ payDate: "2026-10-16" }), "Ana");
+    expect(o.period).toBe("Oct 1 – Oct 15, 2026");
+    expect(o.status).toBe("For Approval");
+    expect(o.statusColor).toBe("warning");
+    expect(o.meta).toBe("Regular · 25 employees · Payout Oct 16 · by Ana");
+  });
+});
+
+describe("sortBatchesLatestFirst", () => {
+  it("orders by pay period start descending, then end descending", () => {
+    const sorted = sortBatchesLatestFirst([
+      batch({
+        id: "a",
+        payPeriodStart: "2026-09-16",
+        payPeriodEnd: "2026-09-30",
+      }),
+      batch({
+        id: "b",
+        payPeriodStart: "2026-10-01",
+        payPeriodEnd: "2026-10-15",
+      }),
+      batch({
+        id: "c",
+        payPeriodStart: "2026-10-01",
+        payPeriodEnd: "2026-10-31",
+      }),
+    ]);
+    expect(sorted.map((b) => b.id)).toEqual(["c", "b", "a"]);
   });
 });
 

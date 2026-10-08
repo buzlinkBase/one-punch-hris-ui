@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, Tag } from "antd";
+import { Form, Select, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
@@ -13,7 +13,15 @@ import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
-const EXPORT_HEADERS = [
+type ModeFilter = "All" | "ATM" | "Cash";
+
+const MODE_OPTIONS: { value: ModeFilter; label: string }[] = [
+  { value: "All", label: "All" },
+  { value: "ATM", label: "ATM" },
+  { value: "Cash", label: "Cash" },
+];
+
+const BANK_EXPORT_HEADERS = [
   "Employee No",
   "Full Name",
   "Mode of Payment",
@@ -24,7 +32,16 @@ const EXPORT_HEADERS = [
   "Net Pay",
 ];
 
-const toRows = (records: BankDisbursementResponse[]) =>
+const CASH_EXPORT_HEADERS = [
+  "Employee No",
+  "Full Name",
+  "Period Start",
+  "Period End",
+  "Net Pay",
+  "Signature",
+];
+
+const toBankRows = (records: BankDisbursementResponse[]) =>
   records.map((r) => [
     r.employeeNo,
     r.fullName,
@@ -36,7 +53,17 @@ const toRows = (records: BankDisbursementResponse[]) =>
     fmt(r.netPay),
   ]);
 
-const columns: ColumnsType<BankDisbursementResponse> = [
+const toCashRows = (records: BankDisbursementResponse[]) =>
+  records.map((r) => [
+    r.employeeNo,
+    r.fullName,
+    r.payPeriodStart,
+    r.payPeriodEnd,
+    fmt(r.netPay),
+    "",
+  ]);
+
+const bankColumns: ColumnsType<BankDisbursementResponse> = [
   {
     title: "Employee No",
     dataIndex: "employeeNo",
@@ -72,7 +99,34 @@ const columns: ColumnsType<BankDisbursementResponse> = [
   },
 ];
 
+const cashColumns: ColumnsType<BankDisbursementResponse> = [
+  {
+    title: "Employee No",
+    dataIndex: "employeeNo",
+    key: "no",
+    width: 120,
+    fixed: "left",
+  },
+  { title: "Full Name", dataIndex: "fullName", key: "name", width: 220 },
+  {
+    title: "Period",
+    key: "period",
+    render: (_, r) =>
+      `${dayjs(r.payPeriodStart).format("MMM DD")} – ${dayjs(r.payPeriodEnd).format("MMM DD, YYYY")}`,
+  },
+  {
+    title: "Net Pay",
+    dataIndex: "netPay",
+    key: "net",
+    align: "right",
+    width: 140,
+    render: fmt,
+  },
+  { title: "Signature", key: "signature", width: 200, render: () => "" },
+];
+
 export default function BankDisbursement() {
+  const [mode, setMode] = useState<ModeFilter>("All");
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
     dayjs().endOf("month").format("YYYY-MM-DD"),
@@ -82,7 +136,9 @@ export default function BankDisbursement() {
     isLoading,
     refetch,
   } = useBankDisbursement(range[0], range[1]);
-  const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
+  const byMode = data.filter((r) => mode === "All" || r.modeOfPayment === mode);
+  const isCash = mode === "Cash";
+  const employeeFilter = useReportNameFilter(byMode, (r) => r.fullName);
   const bankFilter = useReportNameFilter(
     employeeFilter.filtered,
     (r) => r.bankName,
@@ -94,12 +150,12 @@ export default function BankDisbursement() {
       subtitle={PAYROLL_REPORTS_LABEL.BANK_SUBTITLE}
       data={bankFilter.filtered}
       loading={isLoading}
-      columns={columns}
+      columns={isCash ? cashColumns : bankColumns}
       onRefresh={() => refetch()}
-      rowKey={(r) => r.employeeId}
-      exportFileName="bank-disbursement"
-      exportHeaders={EXPORT_HEADERS}
-      exportRows={toRows}
+      rowKey={(r) => `${r.employeeId}-${r.payPeriodStart}-${r.payPeriodEnd}`}
+      exportFileName={isCash ? "cash-disbursement" : "bank-disbursement"}
+      exportHeaders={isCash ? CASH_EXPORT_HEADERS : BANK_EXPORT_HEADERS}
+      exportRows={isCash ? toCashRows : toBankRows}
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
@@ -120,18 +176,28 @@ export default function BankDisbursement() {
                 }}
               />
             </Form.Item>
+            <Form.Item label="Mode of Payment" className="mb-0">
+              <Select
+                className="w-36"
+                options={MODE_OPTIONS}
+                value={mode}
+                onChange={setMode}
+              />
+            </Form.Item>
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}
               value={employeeFilter.selected}
               onChange={employeeFilter.setSelected}
             />
-            <ReportNameFilter
-              label="Bank"
-              options={bankFilter.options}
-              value={bankFilter.selected}
-              onChange={bankFilter.setSelected}
-            />
+            {!isCash && (
+              <ReportNameFilter
+                label="Bank"
+                options={bankFilter.options}
+                value={bankFilter.selected}
+                onChange={bankFilter.setSelected}
+              />
+            )}
           </div>
         </Form>
       }

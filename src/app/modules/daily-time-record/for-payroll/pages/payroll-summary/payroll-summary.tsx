@@ -11,12 +11,15 @@ import {
   Statistic,
   Table,
   Tabs,
+  Tag,
   Typography,
   message,
   theme,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
+  LeftOutlined,
+  RightOutlined,
   ReloadOutlined,
   FileTextOutlined,
   PrinterOutlined,
@@ -39,10 +42,13 @@ import {
   downloadMultiSheetExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
-import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import { getLastMonthToCurrentRange } from "@/shared/utils/cutoff.util";
 import { APPROVAL_STATUS_LABEL } from "../../constants/label.const";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import { buildPayrollBatchOptions } from "./utils/payroll-batch-option.util";
+import {
+  buildPayrollBatchOptions,
+  sortBatchesLatestFirst,
+} from "./utils/payroll-batch-option.util";
 import { getEmptyMessage } from "./payroll-summary-empty";
 import { earningsColumns } from "./columns/earnings.columns";
 import { holidayColumns } from "./columns/holiday.columns";
@@ -94,21 +100,40 @@ export default function PayrollSummary() {
   // Declined to inspect a pending or declined run's figures from this page.
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Approved");
 
-  // Narrows the batch selector below -- defaults to the current semi-monthly cutoff, same as
-  // the Saved Payroll Runs tab, so the dropdown isn't a long scroll through every run ever made.
+  // Narrows the batch selector below -- defaults to last month through this month, same as
+  // the Saved Payroll Runs tab, so the dropdown isn't a long scroll through every run ever made
+  // yet still includes a run generated late for the previous period.
   // Arriving pre-selected via ?batchId= instead falls back to no filter (the backend's own wide
   // default) so that specific batch is guaranteed to be in the dropdown's option list.
   const [batchDateRange, setBatchDateRange] = useState<[string, string] | null>(
     () => {
       if (searchParams.batchId) return null;
-      const { fromDate, toDate } = getSemiMonthlyCutoff();
+      const { fromDate, toDate } = getLastMonthToCurrentRange();
       return [fromDate, toDate];
     },
   );
-  const { data: batches = [] } = usePayrollBatches(
+  const { data: batchData, isFetching: isFetchingBatches } = usePayrollBatches(
     batchDateRange?.[0],
     batchDateRange?.[1],
   );
+  const batches = useMemo(
+    () => sortBatchesLatestFirst(batchData ?? []),
+    [batchData],
+  );
+
+  // Open on the newest run instead of an empty page, and fall back to it when a range change
+  // drops the picked run from the list. While the list is still loading the pick is kept as-is,
+  // so a deep-linked batch isn't replaced before it arrives.
+  const batchId =
+    isFetchingBatches || batches.some((b) => b.id === selectedBatchId)
+      ? selectedBatchId
+      : batches[0]?.id;
+
+  const selectedIndex = batches.findIndex((b) => b.id === batchId);
+  const stepBatch = (offset: number) => {
+    const next = batches[selectedIndex + offset];
+    if (next) setSelectedBatchId(next.id);
+  };
 
   const { data: employees = [] } = useEmployees();
   // Remarks, status, employee count, payout date and generator, so several runs of the same
@@ -123,8 +148,8 @@ export default function PayrollSummary() {
   );
 
   const selectedBatch = useMemo(
-    () => batches.find((b) => b.id === selectedBatchId),
-    [batches, selectedBatchId],
+    () => batches.find((b) => b.id === batchId),
+    [batches, batchId],
   );
 
   const {
@@ -132,7 +157,7 @@ export default function PayrollSummary() {
     isLoading,
     refetch,
     isFetching,
-  } = usePayrolls({ payrollBatchId: selectedBatchId });
+  } = usePayrolls({ payrollBatchId: batchId });
 
   const allResults = useMemo<PayrollRunResult[]>(
     () => response?.data ?? [],
@@ -171,10 +196,7 @@ export default function PayrollSummary() {
   };
 
   const handlePrintSummary = async () => {
-    if (!results.length || !selectedBatch) {
-      message.info("No data to print. Select a payroll batch first.");
-      return;
-    }
+    if (!results.length || !selectedBatch) return;
     const printTab = window.open("about:blank", "_blank");
     try {
       const blob = await httpClient.get<Blob>(
@@ -196,10 +218,7 @@ export default function PayrollSummary() {
   };
 
   const handleExport = (format: "csv" | "excel") => {
-    if (!results.length || !selectedBatch) {
-      message.info("No data to export. Select a payroll batch first.");
-      return;
-    }
+    if (!results.length || !selectedBatch) return;
     const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}`;
     if (format === "csv") {
       triggerDownload(
@@ -267,7 +286,7 @@ export default function PayrollSummary() {
 
   const emptyMessage = getEmptyMessage({
     hasBatches: batches.length > 0,
-    batchSelected: !!selectedBatchId,
+    batchSelected: !!batchId,
     loadedCount: allResults.length,
     statusLabel:
       STATUS_FILTER_OPTIONS.find((o) => o.value === statusFilter)?.label ??
@@ -324,37 +343,61 @@ export default function PayrollSummary() {
                   ]);
               }}
             />
-            <Select
-              value={selectedBatchId}
-              onChange={setSelectedBatchId}
-              placeholder="Select a payroll batch"
-              showSearch
-              optionFilterProp="label"
-              className="w-80"
-              popupMatchSelectWidth={false}
-              classNames={{ popup: { root: "min-w-[420px] max-w-[90vw]" } }}
-              notFoundContent="No payroll batches in this date range"
-              options={batchOptions}
-              optionRender={(option) => {
-                const { remarks, detail } = option.data as {
-                  remarks: string | null;
-                  detail: string;
-                };
-                return (
-                  <div className="whitespace-normal py-0.5">
-                    {remarks && <div className="font-medium">{remarks}</div>}
-                    <div className={remarks ? "text-xs opacity-70" : ""}>
-                      {detail}
+            <Space.Compact>
+              <Button
+                icon={<LeftOutlined />}
+                title="Older payroll"
+                disabled={
+                  selectedIndex < 0 || selectedIndex >= batches.length - 1
+                }
+                onClick={() => stepBatch(1)}
+              />
+              <Select
+                value={batchId}
+                onChange={setSelectedBatchId}
+                placeholder="Select a payroll batch"
+                showSearch
+                optionFilterProp="label"
+                className="w-80"
+                popupMatchSelectWidth={false}
+                classNames={{ popup: { root: "min-w-[420px] max-w-[90vw]" } }}
+                notFoundContent="No payroll batches in this date range"
+                options={batchOptions}
+                optionRender={(option) => {
+                  const { remarks, period, status, statusColor, meta } =
+                    option.data as {
+                      remarks: string | null;
+                      period: string;
+                      status: string;
+                      statusColor: string;
+                      meta: string;
+                    };
+                  return (
+                    <div className="whitespace-normal py-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{period}</span>
+                        <Tag color={statusColor} className="mr-0!">
+                          {status}
+                        </Tag>
+                      </div>
+                      {remarks && <div className="text-sm">{remarks}</div>}
+                      <div className="text-xs opacity-70">{meta}</div>
                     </div>
-                  </div>
-                );
-              }}
-            />
+                  );
+                }}
+              />
+              <Button
+                icon={<RightOutlined />}
+                title="Newer payroll"
+                disabled={selectedIndex <= 0}
+                onClick={() => stepBatch(-1)}
+              />
+            </Space.Compact>
             <Select<StatusFilter>
               value={statusFilter}
               onChange={setStatusFilter}
               options={STATUS_FILTER_OPTIONS}
-              style={{ width: 150 }}
+              className="w-37.5"
             />
             <Button
               icon={<ReloadOutlined spin={isFetching} />}
