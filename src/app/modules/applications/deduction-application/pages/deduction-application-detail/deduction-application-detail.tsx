@@ -140,6 +140,7 @@ export default function DeductionApplicationDetail() {
       if (existing.breakdown?.length) {
         setBreakdown(
           existing.breakdown.map((r, i) => ({
+            id: r.id,
             period: i + 1,
             date: r.date?.replace(/Z$/, "").split("T")[0] ?? "",
             principal: r.principal,
@@ -199,7 +200,7 @@ export default function DeductionApplicationDetail() {
           note: values.note ?? "",
           remarks: values.remarks ?? "",
           details: breakdown.map((r) => ({
-            id: existing.breakdown[r.period - 1]?.id ?? "",
+            id: r.id,
             date: r.date,
             principal: r.principal,
             interest: r.interest,

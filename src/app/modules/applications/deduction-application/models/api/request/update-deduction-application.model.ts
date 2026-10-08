@@ -1,5 +1,6 @@
 export interface UpdateDeductionApplicationDetail {
-  id: string;
+  // Omitted for an installment that isn't stored yet (e.g. after regenerating the schedule).
+  id?: string;
   date: string;
   principal: number;
   interest: number;
