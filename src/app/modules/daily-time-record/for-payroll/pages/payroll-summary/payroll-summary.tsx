@@ -58,6 +58,7 @@ import { deductionsColumns } from "./columns/deductions.columns";
 import { hoursColumns } from "./columns/hours.columns";
 import { erColumns } from "./columns/employer-contributions.columns";
 import {
+  EXCEL_AMOUNT_FORMAT,
   EXPORT_HEADERS,
   buildExportRows,
   EARNINGS_HEADERS,
@@ -71,11 +72,15 @@ import {
   HOURS_HEADERS,
   buildHoursRows,
 } from "./utils/payroll-summary-export.util";
+import {
+  buildFilterFileSuffix,
+  buildPrintSummaryParams,
+  filterPayrollResults,
+  type PayrollSummaryFilter,
+  type StatusFilter,
+} from "./utils/payroll-summary-filter.util";
 
 const { Title } = Typography;
-
-type StatusFilter =
-  "All" | "ForApproval" | "Approved" | "Declined" | "Cancelled";
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "All", label: "All" },
@@ -185,20 +190,20 @@ export default function PayrollSummary() {
     [payrollGroups],
   );
 
-  // Payroll rows carry no client / payroll group of their own, so both filters match on the
-  // employee's current assignment.
-  const results = useMemo(() => {
-    const employeeById = new Map(employees.map((e) => [e.id, e]));
-    return allResults.filter((r) => {
-      if (statusFilter !== "All" && r.approvalStatus !== statusFilter)
-        return false;
-      const emp = employeeById.get(r.employeeId);
-      if (clientFilter && emp?.clientId !== clientFilter) return false;
-      if (payrollGroupFilter && emp?.payrollGroupId !== payrollGroupFilter)
-        return false;
-      return true;
-    });
-  }, [allResults, statusFilter, clientFilter, payrollGroupFilter, employees]);
+  // One filter for the table, Export and Print — see filterPayrollResults. Client / payroll
+  // group match the client / payroll group each row was paid under, not the employee's current one.
+  const filter = useMemo<PayrollSummaryFilter>(
+    () => ({
+      status: statusFilter,
+      clientId: clientFilter,
+      payrollGroupId: payrollGroupFilter,
+    }),
+    [statusFilter, clientFilter, payrollGroupFilter],
+  );
+  const results = useMemo(
+    () => filterPayrollResults(allResults, filter),
+    [allResults, filter],
+  );
 
   // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
   // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
@@ -223,6 +228,8 @@ export default function PayrollSummary() {
     }
   };
 
+  // Sends the selected batch plus the on-screen filter, so the PDF lists exactly the rows in
+  // the table — see buildPrintSummaryParams / PayrollsController.PrintSummary.
   const handlePrintSummary = async () => {
     if (!results.length || !selectedBatch) return;
     const printTab = window.open("about:blank", "_blank");
@@ -230,10 +237,7 @@ export default function PayrollSummary() {
       const blob = await httpClient.get<Blob>(
         `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/print-summary`,
         {
-          params: {
-            from: selectedBatch.payPeriodStart,
-            to: selectedBatch.payPeriodEnd,
-          },
+          params: buildPrintSummaryParams(selectedBatch.id, filter),
           responseType: "blob",
         },
       );
@@ -247,7 +251,15 @@ export default function PayrollSummary() {
 
   const handleExport = (format: "csv" | "excel") => {
     if (!results.length || !selectedBatch) return;
-    const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}`;
+    // Built from `results`, so the files hold exactly the filtered rows on screen; the name
+    // carries the applied filters.
+    const filterSuffix = buildFilterFileSuffix({
+      status: statusFilter,
+      clientCode: clients.find((c) => c.id === clientFilter)?.code,
+      payrollGroupCode: payrollGroups.find((p) => p.id === payrollGroupFilter)
+        ?.code,
+    });
+    const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}${filterSuffix}`;
     if (format === "csv") {
       triggerDownload(
         buildFlatCsv(EXPORT_HEADERS, buildExportRows(results)),
@@ -261,26 +273,31 @@ export default function PayrollSummary() {
             name: "Earnings",
             headers: EARNINGS_HEADERS,
             rows: buildEarningsRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
             name: "Holiday Breakdown",
             headers: HOLIDAY_HEADERS,
             rows: buildHolidayRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
             name: "Deductions & Net",
             headers: DEDUCTIONS_HEADERS,
             rows: buildDeductionsRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
             name: "Employer Contributions",
             headers: ER_HEADERS,
             rows: buildErRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
             name: "Hours Breakdown",
             headers: HOURS_HEADERS,
             rows: buildHoursRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
         ],
         `payroll-summary-${suffix}.xlsx`,

@@ -499,7 +499,7 @@ export default function ForPayrollGenerateTab() {
             title: "Absent",
             key: "absent",
             align: "right",
-            render: (_, r) => fmt(r.absences),
+            render: (_, r) => fmt(r.absencesAmount),
           },
         ],
         BAND_CLASS.attendance,
@@ -802,7 +802,7 @@ export default function ForPayrollGenerateTab() {
                   otherDed: sum((r) => r.otherDeductions),
                   late: sum((r) => r.lateAmount),
                   ut: sum((r) => r.underTimeAmount),
-                  absent: sum((r) => r.absences),
+                  absent: sum((r) => r.absencesAmount),
                   net: sum((r) => r.netPay),
                 };
                 const cells = [

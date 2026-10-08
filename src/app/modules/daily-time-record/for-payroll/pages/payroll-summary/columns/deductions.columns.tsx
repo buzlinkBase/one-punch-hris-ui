@@ -71,7 +71,7 @@ export const deductionsColumns = (
   },
   {
     title: "Absent",
-    dataIndex: "absences",
+    dataIndex: "absencesAmount",
     key: "abs",
     align: "right",
     render: fmt,
