@@ -14,9 +14,11 @@ import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import { LIMIT_KEYS } from "@/shared/constants/entitlement-keys.const";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { PaymentDueAlert } from "../../components/payment-due-alert";
 import {
   BILLING_LABEL,
   LIMIT_SHORT_LABELS,
+  PAYMENT_METHOD_LABELS,
   STATUS_COLORS,
   STATUS_LABELS,
 } from "../../constants/label.const";
@@ -91,7 +93,13 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
     align: "right",
     render: (_, row) => formatMoney(row.amount, row.currency),
   },
-  { title: "Method", dataIndex: "method", key: "method" },
+  {
+    title: "Method",
+    dataIndex: "method",
+    key: "method",
+    render: (value: PaymentResponse["method"]) =>
+      PAYMENT_METHOD_LABELS[value] ?? value,
+  },
   { title: "Reference", dataIndex: "reference", key: "reference" },
 ];
 
@@ -115,8 +123,10 @@ export default function BillingOverview() {
   const snapshot = billing.entitlements;
   const status = snapshot.status;
   const pending = billing.pendingChange;
-  // How to pay: a chosen plan waiting for payment, or an account that has to pay to continue.
+  // How to pay: something is due (a chosen plan, a renewal, a comeback), or the account has to
+  // pay to continue.
   const awaitingPayment =
+    !!billing.paymentDue ||
     pending?.timing === "OnPayment" ||
     ["Expired", "PastDue", "Suspended", "Canceled"].includes(status);
 
@@ -210,17 +220,7 @@ export default function BillingOverview() {
           )}
 
           {awaitingPayment && (
-            <Alert
-              className="mt-4"
-              type="warning"
-              showIcon
-              message={BILLING_LABEL.PAYMENT_INSTRUCTIONS_TITLE}
-              description={
-                <span className="whitespace-pre-line">
-                  {billing.paymentInstructions}
-                </span>
-              }
-            />
+            <PaymentDueAlert billing={billing} canPay={canManage} />
           )}
 
           {canManage && status === "Active" && (

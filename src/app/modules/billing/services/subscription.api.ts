@@ -3,6 +3,8 @@ import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { PlanChangeRequest } from "../models/api/request/plan-change-request.model";
 import type {
   BillingResponse,
+  CheckoutResponse,
+  CheckoutStartedResponse,
   EntitlementsResponse,
   PlanChangeQuoteResponse,
   PlanResponse,
@@ -47,5 +49,20 @@ export const subscriptionApi = {
 
   resume(): Promise<void> {
     return httpClient.post<void>(`${ENDPOINT}/resume`);
+  },
+
+  /** Opens the payment gateway's page for what's due now -- needs Billing:Manage. */
+  startCheckout(): Promise<CheckoutStartedResponse> {
+    return httpClient.postUnwrapped<CheckoutStartedResponse>(
+      `${ENDPOINT}/checkout`,
+    );
+  },
+
+  /** Where an online payment stands; the server asks the gateway while it's unpaid. */
+  getCheckout(checkoutId: string): Promise<CheckoutResponse> {
+    return httpClient.getUnwrapped<CheckoutResponse>(
+      `${ENDPOINT}/checkout/${checkoutId}`,
+      { _skipErrorNotification: true },
+    );
   },
 };

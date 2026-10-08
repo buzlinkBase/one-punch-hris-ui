@@ -12,6 +12,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { PayNowButton } from "../../components/pay-now-button";
 import { PlanCard } from "../../components/plan-card";
 import { PaymentInstructions } from "../../components/payment-instructions";
 import { BILLING_LABEL, LIMIT_LABELS } from "../../constants/label.const";
@@ -90,6 +91,11 @@ export default function PlanSelection() {
   const vatNote = plans.some((p) => !p.pricesIncludeVat)
     ? BILLING_LABEL.VAT_EXCLUSIVE
     : BILLING_LABEL.VAT_INCLUSIVE;
+  // A plan that waits for payment can be paid right away, when online payment is set up.
+  const payOnline =
+    quote?.timing === "OnPayment" &&
+    !!billing?.onlinePaymentEnabled &&
+    canManage;
 
   const choose = async (plan: PlanResponse) => {
     setError(null);
@@ -229,9 +235,21 @@ export default function PlanSelection() {
         open={!!quote}
         title={BILLING_LABEL.PAYMENT_INSTRUCTIONS_TITLE}
         footer={
-          <Button type="primary" onClick={() => navigate({ to: "/billing" })}>
-            Done
-          </Button>
+          payOnline && quote ? (
+            <Space>
+              <Button onClick={() => navigate({ to: "/billing" })}>
+                {BILLING_LABEL.PAY_LATER}
+              </Button>
+              <PayNowButton
+                amount={quote.amountDue}
+                currency={quote.currency}
+              />
+            </Space>
+          ) : (
+            <Button type="primary" onClick={() => navigate({ to: "/billing" })}>
+              Done
+            </Button>
+          )
         }
         onCancel={() => setQuote(null)}
       >
@@ -240,6 +258,7 @@ export default function PlanSelection() {
             quote={quote}
             instructions={billing?.paymentInstructions ?? ""}
             effectiveDate={formatManilaDate(quote.effectiveAtUtc)}
+            payOnline={payOnline}
           />
         )}
       </Modal>
