@@ -28,7 +28,14 @@ export const APPROVAL_LIST_QUERY_KEYS: Record<
     ["me", "profile-update-requests"],
     ["profile-update-requests"],
   ],
-  Dtr: [["daily-time-record"], ["dtr-batches"]],
+  // Coverage and payroll readiness read the saved DTR days, which a background "Save Draft"
+  // changes when it finishes.
+  Dtr: [
+    ["daily-time-record"],
+    ["dtr-batches"],
+    ["dtr-coverage"],
+    ["payroll-readiness"],
+  ],
   DtrDeletion: [["daily-time-record"], ["dtr-batches"]],
   PayrollPosting: [["payroll-batches"]],
   PayrollPostingDeletion: [["payroll-batches"]],

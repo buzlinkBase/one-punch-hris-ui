@@ -12,9 +12,25 @@ export type ApprovalUpdate = Pick<
   | "statusLabel"
   | "stepNumber"
   | "totalSteps"
+  | "note"
 >;
 
+// The outcome notices of a background DTR "Save Draft" (DtrDraftSaveService). They reuse the
+// approval notification channel, but they report a save, not an approval step.
+export const DTR_DRAFT_SAVED = "Draft Saved";
+export const DTR_SAVE_FAILED = "Save Failed";
+export const DTR_NOTHING_TO_SAVE = "Nothing To Save";
+
 export function approvalMessage(update: ApprovalUpdate): string {
+  if (update.statusLabel === DTR_DRAFT_SAVED) {
+    return update.note || "Your DTR draft was saved and is awaiting approval.";
+  }
+  if (update.statusLabel === DTR_SAVE_FAILED) {
+    return `Your DTR draft couldn't be saved. ${update.note ?? ""}`.trim();
+  }
+  if (update.statusLabel === DTR_NOTHING_TO_SAVE) {
+    return update.note || "Every selected day already has a saved DTR.";
+  }
   const step =
     update.stepNumber && update.totalSteps
       ? `step ${update.stepNumber} of ${update.totalSteps}`
@@ -41,8 +57,12 @@ export function toBellEntry(notification: UserNotification): BellEntry {
     link: approvalLink(notification),
     severity:
       notification.statusLabel === "Declined" ||
-      notification.statusLabel === "Cancelled"
+      notification.statusLabel === "Cancelled" ||
+      notification.statusLabel === DTR_SAVE_FAILED ||
+      notification.statusLabel === DTR_NOTHING_TO_SAVE
         ? "warning"
-        : "info",
+        : notification.statusLabel === DTR_DRAFT_SAVED
+          ? "success"
+          : "info",
   };
 }

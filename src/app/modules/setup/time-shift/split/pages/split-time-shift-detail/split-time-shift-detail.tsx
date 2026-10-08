@@ -12,6 +12,7 @@ import {
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { useIsDuplicateRoute } from "@/shared/hooks/use-is-duplicate-route";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -78,9 +79,10 @@ function addHoursToTimeSpan(timeSpan: string, hours: number): string {
 
 export default function SplitTimeShiftDetail() {
   const { id } = useRouteParams<{ id?: string }>();
-  const isEdit = Boolean(id);
+  const isDuplicate = useIsDuplicateRoute();
+  const isEdit = Boolean(id) && !isDuplicate;
   const navigate = useNavigate();
-  const { data: selected } = useSplitTimeShift(isEdit ? id : undefined);
+  const { data: selected } = useSplitTimeShift(id);
   const { mutateAsync: add, isPending: isCreating } = useCreateSplitTimeShift();
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateSplitTimeShift();
@@ -142,15 +144,17 @@ export default function SplitTimeShiftDetail() {
     lunchEndSec <= lunchStartSec;
 
   useEffect(() => {
-    if (isEdit || !startTime) return;
+    if (isEdit || isDuplicate || !startTime) return;
     setValue("endTime", addHoursToTimeSpan(startTime, 16));
-  }, [startTime, isEdit, setValue]);
+  }, [startTime, isEdit, isDuplicate, setValue]);
 
   useEffect(() => {
-    if (isEdit && selected) {
+    if ((isEdit || isDuplicate) && selected) {
       // TimeSpanPicker stores "d.HH:mm:ss" — pass API values through directly.
       reset({
-        shiftName: selected.shiftName,
+        shiftName: isDuplicate
+          ? `${selected.shiftName} (Copy)`
+          : selected.shiftName,
         startTime: selected.startTime,
         endTime: selected.endTime,
         unpaidLunchBreak: selected.withLunchBreak === "UNPAID_BREAK",
@@ -165,7 +169,7 @@ export default function SplitTimeShiftDetail() {
         nightDiffThreshold: selected.nightDiffThreshold,
       });
     }
-  }, [selected, isEdit, reset]);
+  }, [selected, isEdit, isDuplicate, reset]);
 
   const onSubmit = async (values: SplitTimeShiftFormValues) => {
     // All time values from TimeSpanPicker are already in "HH:mm:ss" or "d.HH:mm:ss" — pass through directly.

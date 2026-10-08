@@ -331,10 +331,10 @@ export default function Employee201Document({
                 {rate?.computationType || "—"}
               </Text>
               <Text style={[styles.tdCell, { width: 55 }]}>
-                {fmtRate(rate?.eE)}
+                {fmtRate(rate?.ee)}
               </Text>
               <Text style={[styles.tdCell, { width: 55 }]}>
-                {noER ? "—" : fmtRate(rate?.eR)}
+                {noER ? "—" : fmtRate(rate?.er)}
               </Text>
               <Text style={[styles.tdCell, { width: 55 }]}>
                 {fmtRate(rate?.addOns)}

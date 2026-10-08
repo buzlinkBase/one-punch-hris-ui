@@ -2,10 +2,20 @@ import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
 import type { DtrDetailFilter } from "../models/api/request/dtr-detail-filter.model";
+import type { SaveDtrDraftRequest } from "../models/api/request/save-dtr-draft.model";
+import type { DtrEmployeeSummaryResponse } from "../models/api/response/dtr-employee-summary.model";
 import type { BatchesModel } from "../../summary/models/api/response/batches.model";
 import type { PayrollReadinessEmployee } from "../../for-payroll/models/api/response/payroll-readiness.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords/dtr-detail");
+const SUMMARY_ENDPOINT = buildApiUrl(
+  API_PREFIX.hrms,
+  "dailyrecords/dtr-summary",
+);
+const SAVE_DRAFT_ENDPOINT = buildApiUrl(
+  API_PREFIX.hrms,
+  "dailyrecords/save-draft",
+);
 const SAVE_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
 const BATCH_LIST_ENDPOINT = buildApiUrl(
   API_PREFIX.hrms,
@@ -37,6 +47,24 @@ export const dtrDetailApi = {
     return httpClient.getUnwrapped<DtrDetailResponse[]>(ENDPOINT, {
       params: buildParams(filter),
     });
+  },
+
+  // One summary per employee -- what the Calculate DTR review table shows. A company with
+  // thousands of employees is tens of thousands of day rows, which stay on the server until one
+  // employee is expanded (getAll with that employeeId).
+  getSummary(
+    filter: DtrDetailFilter = {},
+  ): Promise<DtrEmployeeSummaryResponse[]> {
+    return httpClient.getUnwrapped<DtrEmployeeSummaryResponse[]>(
+      SUMMARY_ENDPOINT,
+      { params: buildParams(filter) },
+    );
+  },
+
+  // Queues the save (202) -- the server recomputes and saves the rows in the background and
+  // notifies the requester through the bell, see DtrDraftSaveService.
+  queueSaveDraft(request: SaveDtrDraftRequest): Promise<void> {
+    return httpClient.post<void>(SAVE_DRAFT_ENDPOINT, request);
   },
 
   // Which days of the cutoff already have saved DTR, per employee (draft, approved or paid) --

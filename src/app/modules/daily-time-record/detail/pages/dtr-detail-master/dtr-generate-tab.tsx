@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Button,
@@ -24,8 +24,9 @@ import {
 import dayjs from "dayjs";
 import {
   useDtrCoverage,
-  useDtrDetailRecords,
-  useSaveDtrDetail,
+  useDtrSummary,
+  useFetchDtrDetailRows,
+  useQueueDtrDraftSave,
 } from "../../hooks/use-dtr-detail-queries";
 import DtrPostModal from "../../components/dtr-post-modal";
 import DtrCoverageOverview from "../../components/dtr-coverage-overview";
@@ -37,8 +38,11 @@ import {
   buildCoverageRows,
   buildEmployeeSummaries,
   countByCoverage,
+  isSavable,
+  unsavedEmployeeIds,
 } from "../../utils/dtr-coverage.util";
 import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
+import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
 import {
   buildDtrCsv,
   fmtCell,
@@ -91,6 +95,11 @@ const filterByLabel = (
 
 const EMPTY_FILTER: DtrDetailFilter = {};
 
+// While a background Save Draft runs, how often the saved days are re-read, and how long the
+// screen waits before it stops showing "Saving" (the bell carries the outcome either way).
+const SAVE_POLL_MS = 4_000;
+const SAVE_WAIT_MS = 10 * 60_000;
+
 const { Text } = Typography;
 
 const fmtRange = (from?: string, to?: string) =>
@@ -111,6 +120,13 @@ export default function DtrGenerateTab() {
   // Who Save Draft covers. null = untouched since the last Generate, which means "everyone with
   // days still to save" (and follows the list when coverage refetches).
   const [pickedIds, setPickedIds] = useState<string[] | null>(null);
+  // Employees whose Save Draft was queued and may not be written yet. They can't be ticked again,
+  // so the same days are never queued twice while the server is still on them.
+  const [saving, setSaving] = useState<{ ids: string[] } | null>(null);
+  // The save that just finished writing, so the "saved" message is said once.
+  const [finishedSaving, setFinishedSaving] = useState<{
+    ids: string[];
+  } | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
   const hasGenerated = committedFilter !== null;
@@ -204,21 +220,28 @@ export default function DtrGenerateTab() {
   );
 
   // ── Generated DTR, summarised per employee ────────────────────────────────────────────────
+  // One small summary per employee; each employee's day rows load only when that row is expanded.
   const {
-    data: records = [],
+    data: serverSummaries = [],
     isLoading,
     refetch,
-  } = useDtrDetailRecords(committedFilter ?? EMPTY_FILTER, {
+  } = useDtrSummary(committedFilter ?? EMPTY_FILTER, {
     enabled: hasGenerated,
     generateKey,
   });
   // Coverage for the range that was actually generated (usually the same query as above), so
   // already-saved days are known even if the date picker has moved on since.
+  // Re-read while a queued save is still being written, so the table catches up by itself.
   const { data: committedCoverage = [] } = useDtrCoverage(
     committedFilter?.fromDate,
     committedFilter?.toDate,
+    (data) =>
+      saving &&
+      unsavedEmployeeIds(serverSummaries, data ?? [], saving.ids).length > 0
+        ? SAVE_POLL_MS
+        : false,
   );
-  const { summaries, coverageById } = useMemo(() => {
+  const { summaries: generatedSummaries, coverageById } = useMemo(() => {
     const savedDates = new Map(
       committedCoverage.map((c) => [c.employeeId, c.savedDates ?? []]),
     );
@@ -232,16 +255,53 @@ export default function DtrGenerateTab() {
           )
         : [];
     return {
-      summaries: buildEmployeeSummaries(records, savedDates),
+      summaries: buildEmployeeSummaries(serverSummaries, savedDates),
       coverageById: new Map(statusRows.map((r) => [r.employeeId, r.status])),
     };
-  }, [records, committedCoverage, committedFilter]);
+  }, [serverSummaries, committedCoverage, committedFilter]);
+
+  // The moment the server has written every queued day, the save is over: forget it. Without this
+  // the employees stayed marked as saving, and after their saved DTR was deleted they came back as
+  // "Saving" instead of "To save". Adjusting state while rendering (guarded) is the supported way
+  // to react to data that just arrived.
+  if (
+    saving &&
+    serverSummaries.length > 0 &&
+    unsavedEmployeeIds(serverSummaries, committedCoverage, saving.ids)
+      .length === 0
+  ) {
+    setFinishedSaving(saving);
+    setSaving(null);
+  }
+
+  // Queued employees whose days aren't all saved yet show as "Saving" instead of "To save".
+  const summaries = useMemo(() => {
+    if (!saving) return generatedSummaries;
+    const queued = new Set(saving.ids);
+    return generatedSummaries.map((s) =>
+      queued.has(s.employeeId) && isSavable(s)
+        ? { ...s, saveState: "Saving" as const }
+        : s,
+    );
+  }, [generatedSummaries, saving]);
+
+  // Stop waiting after a while -- a failed save leaves nothing to catch up to; the bell says why.
+  useEffect(() => {
+    if (!saving) return;
+    const timer = setTimeout(() => setSaving(null), SAVE_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [saving]);
+
+  // Said once per finished save.
+  useEffect(() => {
+    if (finishedSaving) {
+      messageApi.success("DTR draft saved. It's now awaiting approval.");
+    }
+  }, [finishedSaving, messageApi]);
 
   const selectedIds = useMemo(() => {
     const savable = new Set(
-      summaries
-        .filter((s) => s.saveState !== "AlreadySaved")
-        .map((s) => s.employeeId),
+      summaries.filter(isSavable).map((s) => s.employeeId),
     );
     return pickedIds ? pickedIds.filter((id) => savable.has(id)) : [...savable];
   }, [summaries, pickedIds]);
@@ -249,25 +309,42 @@ export default function DtrGenerateTab() {
     const ids = new Set(selectedIds);
     return summaries.filter((s) => ids.has(s.employeeId));
   }, [summaries, selectedIds]);
-  const rowsToSave = useMemo(
-    () => selectedSummaries.flatMap((s) => s.newRows),
-    [selectedSummaries],
-  );
+  // Days Save Draft will write: the ticked employees' days with no saved DTR yet.
+  const daysToSave = selectedSummaries.reduce((n, s) => n + s.newDays, 0);
   const skippedDays = selectedSummaries.reduce((n, s) => n + s.savedDays, 0);
 
-  const { mutateAsync: saveRecords, isPending: isSaving } = useSaveDtrDetail();
+  const { mutateAsync: queueSave, isPending: isSaving } =
+    useQueueDtrDraftSave();
+  const { mutateAsync: fetchRows, isPending: isExporting } =
+    useFetchDtrDetailRows();
   const [postModalOpen, setPostModalOpen] = useState(false);
 
-  // "Save Draft" persists only the ticked employees' days that have no saved DTR yet and starts
-  // the DTR posting approval flow -- the batch only posts (DailyRecord.Posted flips true) once
-  // it's approved from the Saved DTR tab. See DailyRecordService.SaveDraftAsync.
+  // "Save Draft" hands the server what this was generated from plus the ticked employees; the
+  // server recomputes and saves their days that have no saved DTR yet, in the background, and
+  // starts the DTR posting approval flow -- the batch only posts (DailyRecord.Posted flips true)
+  // once it's approved from the Saved DTR tab. The bell tells the requester when it's done. See
+  // DtrDraftSaveService.
   const handleConfirmSaveDraft = async (postingDescription: string) => {
-    const payload = rowsToSave.map((r) => ({ ...r, postingDescription }));
-    await saveRecords(payload);
+    if (!committedFilter?.fromDate || !committedFilter.toDate) return;
+    if (!committedFilter.payrollGroupId) return;
+    await queueSave({
+      fromDate: committedFilter.fromDate,
+      toDate: committedFilter.toDate,
+      payrollGroupId: committedFilter.payrollGroupId,
+      branchId: committedFilter.branchId,
+      departmentId: committedFilter.departmentId,
+      clientId: committedFilter.clientId,
+      operationAreaId: committedFilter.operationAreaId,
+      employeeIds: selectedIds,
+      postingDescription: postingDescription || undefined,
+    });
     setPostModalOpen(false);
     setPickedIds(null);
-    messageApi.success(
-      `DTR for ${selectedSummaries.length} employee${selectedSummaries.length !== 1 ? "s" : ""} saved as a draft, awaiting approval.`,
+    setSaving((current) => ({
+      ids: [...new Set([...(current?.ids ?? []), ...selectedIds])],
+    }));
+    messageApi.info(
+      `Saving DTR for ${selectedSummaries.length} employee${selectedSummaries.length !== 1 ? "s" : ""} in the background. This page updates when it's done, and you'll get a notification.`,
     );
   };
 
@@ -297,9 +374,17 @@ export default function DtrGenerateTab() {
 
   // ── Export ────────────────────────────────────────────────────────────────────
 
-  const handleExport = (format: "csv" | "excel") => {
-    if (!records.length) {
+  // The review screen only holds per-employee summaries, so the day rows are fetched now.
+  const handleExport = async (format: "csv" | "excel") => {
+    if (!committedFilter || !summaries.length) {
       messageApi.info("No data to export. Click Generate first.");
+      return;
+    }
+    let records: DtrDetailResponse[];
+    try {
+      records = await fetchRows(committedFilter);
+    } catch {
+      messageApi.error("Couldn't load the DTR for export. Please try again.");
       return;
     }
     const date = dayjs().format("YYYYMMDD");
@@ -317,11 +402,15 @@ export default function DtrGenerateTab() {
   };
 
   const exportMenuItems: MenuProps["items"] = [
-    { key: "csv", label: "Export as CSV", onClick: () => handleExport("csv") },
+    {
+      key: "csv",
+      label: "Export as CSV",
+      onClick: () => void handleExport("csv"),
+    },
     {
       key: "excel",
       label: "Export as Excel",
-      onClick: () => handleExport("excel"),
+      onClick: () => void handleExport("excel"),
     },
   ];
 
@@ -567,12 +656,13 @@ export default function DtrGenerateTab() {
               <Dropdown
                 menu={{ items: exportMenuItems }}
                 trigger={["click"]}
-                disabled={!records.length}
+                disabled={!summaries.length}
               >
                 <Button
                   size="small"
                   icon={<DownloadOutlined />}
-                  disabled={!records.length}
+                  disabled={!summaries.length}
+                  loading={isExporting}
                 >
                   Export
                 </Button>
@@ -580,7 +670,7 @@ export default function DtrGenerateTab() {
               <PermissionGate permission="DTR Master:Manage">
                 <Tooltip
                   title={
-                    rowsToSave.length
+                    daysToSave
                       ? ""
                       : "Tick at least one employee with days to save"
                   }
@@ -589,12 +679,12 @@ export default function DtrGenerateTab() {
                     size="small"
                     type="primary"
                     icon={<SaveOutlined />}
-                    disabled={!rowsToSave.length}
+                    disabled={!daysToSave}
                     loading={isSaving}
                     onClick={() => setPostModalOpen(true)}
                   >
                     Save Draft
-                    {rowsToSave.length
+                    {daysToSave
                       ? ` (${selectedSummaries.length} employee${selectedSummaries.length !== 1 ? "s" : ""})`
                       : ""}
                   </Button>
@@ -610,15 +700,14 @@ export default function DtrGenerateTab() {
             selectedIds={selectedIds}
             onSelectionChange={setPickedIds}
             onChanged={() => refetch()}
-            dateFrom={committedFilter?.fromDate}
-            dateTo={committedFilter?.toDate}
+            filter={committedFilter ?? EMPTY_FILTER}
           />
         </Card>
       )}
 
       <DtrPostModal
         open={postModalOpen}
-        recordCount={rowsToSave.length}
+        recordCount={daysToSave}
         employeeCount={selectedSummaries.length}
         skippedCount={skippedDays}
         isSaving={isSaving}

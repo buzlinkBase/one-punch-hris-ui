@@ -12,7 +12,8 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { SearchOutlined, WarningOutlined } from "@ant-design/icons";
 import { formatDecimal } from "@/shared/utils/number.util";
-import DtrDetailTable from "../dtr-detail-table";
+import EmployeeDayRows from "./employee-day-rows";
+import type { DtrDetailFilter } from "../../models/api/request/dtr-detail-filter.model";
 import {
   COVERAGE_STATUS_COLOR,
   COVERAGE_STATUS_HINT,
@@ -20,6 +21,7 @@ import {
   SAVE_STATE_COLOR,
   SAVE_STATE_LABEL,
   hasIssues,
+  isSavable,
   type CoverageStatus,
   type EmployeeDtrSummary,
 } from "../../utils/dtr-coverage.util";
@@ -36,8 +38,8 @@ interface Props {
   onSelectionChange: (ids: string[]) => void;
   // Refetch after a row action (change shift, rest day...) in an expanded employee.
   onChanged?: () => void;
-  dateFrom?: string;
-  dateTo?: string;
+  // What the DTR was generated from -- an expanded employee loads their own days with it.
+  filter: DtrDetailFilter;
 }
 
 const num = (v: number, digits = 2) =>
@@ -53,17 +55,13 @@ export default function DtrReviewTable({
   selectedIds,
   onSelectionChange,
   onChanged,
-  dateFrom,
-  dateTo,
+  filter: generatedFilter,
 }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
 
   const toSaveIds = useMemo(
-    () =>
-      summaries
-        .filter((s) => s.saveState !== "AlreadySaved")
-        .map((s) => s.employeeId),
+    () => summaries.filter(isSavable).map((s) => s.employeeId),
     [summaries],
   );
   const counts = useMemo(
@@ -71,7 +69,7 @@ export default function DtrReviewTable({
       all: summaries.length,
       toSave: toSaveIds.length,
       issues: summaries.filter(hasIssues).length,
-      saved: summaries.length - toSaveIds.length,
+      saved: summaries.filter((s) => s.saveState === "AlreadySaved").length,
     }),
     [summaries, toSaveIds],
   );
@@ -79,7 +77,7 @@ export default function DtrReviewTable({
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     return summaries.filter((s) => {
-      if (filter === "toSave" && s.saveState === "AlreadySaved") return false;
+      if (filter === "toSave" && !isSavable(s)) return false;
       if (filter === "issues" && !hasIssues(s)) return false;
       if (filter === "saved" && s.saveState !== "AlreadySaved") return false;
       return !q || s.fullName.toLowerCase().includes(q);
@@ -105,7 +103,9 @@ export default function DtrReviewTable({
               ? `${s.savedDays} day(s) already saved are skipped; ${s.newDays} new day(s) will be saved.`
               : s.saveState === "AlreadySaved"
                 ? "Every generated day already has saved DTR."
-                : undefined
+                : s.saveState === "Saving"
+                  ? "Save Draft is running on the server for this employee. This updates by itself when it finishes."
+                  : undefined
           }
         >
           <Tag color={SAVE_STATE_COLOR[s.saveState]}>
@@ -267,17 +267,15 @@ export default function DtrReviewTable({
           preserveSelectedRowKeys: true,
           onChange: (keys) => onSelectionChange(keys as string[]),
           getCheckboxProps: (s) => ({
-            disabled: s.saveState === "AlreadySaved",
+            disabled: !isSavable(s),
           }),
         }}
         expandable={{
           expandedRowRender: (s) => (
-            <DtrDetailTable
-              data={s.rows}
-              isRowLocked={(r) => !s.newRows.includes(r)}
+            <EmployeeDayRows
+              summary={s}
+              filter={generatedFilter}
               onChanged={onChanged}
-              dateFrom={dateFrom}
-              dateTo={dateTo}
             />
           ),
         }}

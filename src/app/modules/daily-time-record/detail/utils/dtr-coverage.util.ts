@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 import { isActiveInRange } from "@/shared/utils/employee-active.util";
 import type { PayrollReadinessEmployee } from "../../for-payroll/models/api/response/payroll-readiness.model";
-import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
+import type { DtrEmployeeSummaryResponse } from "../models/api/response/dtr-employee-summary.model";
 
 // ── Coverage: how much of the cutoff already has saved DTR, per employee ─────────────────────
 
@@ -111,26 +111,34 @@ export function countByCoverage(rows: { status: CoverageStatus }[]) {
 
 // ── Review: the freshly generated DTR, one summary per employee ───────────────────────────────
 
-type SaveState = "New" | "FillsMissing" | "AlreadySaved";
+export type SaveState = "New" | "FillsMissing" | "AlreadySaved" | "Saving";
 
 export const SAVE_STATE_LABEL: Record<SaveState, string> = {
   New: "To save",
   FillsMissing: "Fills missing days",
   AlreadySaved: "Already saved",
+  // Save Draft was clicked and the server is still writing this employee's days.
+  Saving: "Saving in background…",
 };
 
 export const SAVE_STATE_COLOR: Record<SaveState, string> = {
   New: "success",
   FillsMissing: "processing",
   AlreadySaved: "default",
+  Saving: "processing",
 };
+
+// Only these can be ticked for Save Draft -- not what is already saved, and not what is already
+// being saved (which is how a second click can't queue the same days twice).
+export const isSavable = (s: { saveState: SaveState }) =>
+  s.saveState === "New" || s.saveState === "FillsMissing";
 
 export interface EmployeeDtrSummary {
   employeeId: string;
   fullName: string;
-  rows: DtrDetailResponse[];
-  // The rows whose date has no saved DTR yet -- the only ones Save Draft sends.
-  newRows: DtrDetailResponse[];
+  // Days (yyyy-MM-dd) that already have a saved DTR -- Save Draft skips these, and the expanded
+  // day rows show them as locked.
+  savedDates: string[];
   days: number;
   newDays: number;
   savedDays: number;
@@ -146,54 +154,59 @@ export interface EmployeeDtrSummary {
   saveState: SaveState;
 }
 
-const sum = (
-  rows: DtrDetailResponse[],
-  pick: (r: DtrDetailResponse) => number,
-) => rows.reduce((s, r) => s + (pick(r) ?? 0), 0);
-
-const isMissingPunch = (r: DtrDetailResponse) => !!r.startTime !== !!r.endTime;
+// Which of the given employees still have a generated day with no saved DTR -- what a background
+// Save Draft has yet to write. Empty once the server has finished them all.
+export function unsavedEmployeeIds(
+  summaries: DtrEmployeeSummaryResponse[],
+  coverage: PayrollReadinessEmployee[],
+  ids: string[],
+): string[] {
+  const wanted = new Set(ids);
+  const saved = new Map(
+    coverage.map((c) => [c.employeeId, new Set((c.savedDates ?? []).map(day))]),
+  );
+  return summaries
+    .filter((s) => wanted.has(s.employeeId))
+    .filter((s) => {
+      const done = saved.get(s.employeeId);
+      return s.workDates.some((d) => !done?.has(day(d)));
+    })
+    .map((s) => s.employeeId);
+}
 
 export const hasIssues = (s: EmployeeDtrSummary) =>
   s.missingPunchDays > 0 || s.absences > 0;
 
+// The server's per-employee summaries (dtr-summary), each set against the days that already have
+// a saved DTR. The totals come straight from the server; only the save state is worked out here.
 export function buildEmployeeSummaries(
-  records: DtrDetailResponse[],
+  summaries: DtrEmployeeSummaryResponse[],
   savedDatesByEmployee: Map<string, string[]>,
 ): EmployeeDtrSummary[] {
-  const byEmployee = new Map<string, DtrDetailResponse[]>();
-  for (const r of records) {
-    const list = byEmployee.get(r.employeeId) ?? [];
-    list.push(r);
-    byEmployee.set(r.employeeId, list);
-  }
-
-  return [...byEmployee.entries()]
-    .map(([employeeId, rows]) => {
-      const saved = new Set(savedDatesByEmployee.get(employeeId) ?? []);
-      const newRows = rows.filter((r) => !saved.has(day(r.workDate)));
-      const distinct = (list: DtrDetailResponse[]) =>
-        new Set(list.map((r) => day(r.workDate))).size;
-      const days = distinct(rows);
-      const newDays = distinct(newRows);
-      const missingPunchDays = new Set(
-        rows.filter(isMissingPunch).map((r) => day(r.workDate)),
-      ).size;
+  return summaries
+    .map((s) => {
+      const savedDates = (savedDatesByEmployee.get(s.employeeId) ?? []).map(
+        day,
+      );
+      const saved = new Set(savedDates);
+      const workDates = [...new Set(s.workDates.map(day))];
+      const newDays = workDates.filter((d) => !saved.has(d)).length;
+      const days = workDates.length;
       return {
-        employeeId,
-        fullName: rows.find((r) => r.fullName)?.fullName ?? employeeId,
-        rows,
-        newRows,
+        employeeId: s.employeeId,
+        fullName: s.fullName ?? s.employeeId,
+        savedDates,
         days,
         newDays,
         savedDays: days - newDays,
-        regularHours: sum(rows, (r) => r.regularNetHours),
-        otHours: sum(rows, (r) => r.regularOTHours + r.restDayOTHours),
-        ndHours: sum(rows, (r) => r.regularNDHours + r.restDayNDHours),
-        lateMinutes: sum(rows, (r) => r.lateMinutes),
-        utMinutes: sum(rows, (r) => r.utMinutes),
-        absences: sum(rows, (r) => r.absentCount),
-        leaveHours: sum(rows, (r) => r.paidLeaveHours + r.unpaidLeaveHours),
-        missingPunchDays,
+        regularHours: s.regularHours,
+        otHours: s.otHours,
+        ndHours: s.ndHours,
+        lateMinutes: s.lateMinutes,
+        utMinutes: s.utMinutes,
+        absences: s.absences,
+        leaveHours: s.leaveHours,
+        missingPunchDays: s.missingPunchDays,
         saveState: (newDays === 0
           ? "AlreadySaved"
           : newDays < days

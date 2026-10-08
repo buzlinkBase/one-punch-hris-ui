@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 import type { PayrollReadinessEmployee } from "../../for-payroll/models/api/response/payroll-readiness.model";
-import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
+import type { DtrEmployeeSummaryResponse } from "../models/api/response/dtr-employee-summary.model";
 import {
   buildCoverageRows,
   buildEmployeeSummaries,
   countByCoverage,
   coverageStatus,
   hasIssues,
+  isSavable,
+  unsavedEmployeeIds,
 } from "./dtr-coverage.util";
 
 const FROM = "2026-01-01";
@@ -40,26 +42,22 @@ const employee = (over: Partial<EmployeeResponse>) =>
     ...over,
   }) as EmployeeResponse;
 
-const dtr = (over: Partial<DtrDetailResponse>) =>
-  ({
-    employeeId: "e1",
-    fullName: "Cruz, Juan",
-    workDate: "2026-01-01",
-    workType: "RegularWorkDay",
-    startTime: "2026-01-01T08:00:00",
-    endTime: "2026-01-01T17:00:00",
-    regularNetHours: 8,
-    regularOTHours: 0,
-    restDayOTHours: 0,
-    regularNDHours: 0,
-    restDayNDHours: 0,
-    lateMinutes: 0,
-    utMinutes: 0,
-    absentCount: 0,
-    paidLeaveHours: 0,
-    unpaidLeaveHours: 0,
-    ...over,
-  }) as DtrDetailResponse;
+const summary = (
+  over: Partial<DtrEmployeeSummaryResponse>,
+): DtrEmployeeSummaryResponse => ({
+  employeeId: "e1",
+  fullName: "Cruz, Juan",
+  workDates: ["2026-01-01", "2026-01-02", "2026-01-03"],
+  regularHours: 16,
+  otHours: 0,
+  ndHours: 0,
+  lateMinutes: 0,
+  utMinutes: 0,
+  absences: 1,
+  leaveHours: 0,
+  missingPunchDays: 1,
+  ...over,
+});
 
 describe("coverageStatus", () => {
   it("is Partial when some days of the cutoff have no saved DTR", () => {
@@ -120,38 +118,106 @@ describe("buildCoverageRows", () => {
 });
 
 describe("buildEmployeeSummaries", () => {
-  const records = [
-    dtr({ workDate: "2026-01-01" }),
-    dtr({ workDate: "2026-01-02", endTime: null }),
-    dtr({ workDate: "2026-01-03", absentCount: 1, regularNetHours: 0 }),
-    dtr({ employeeId: "e2", fullName: "Santos, Ana", workDate: "2026-01-01" }),
+  const summaries = [
+    summary({}),
+    summary({
+      employeeId: "e2",
+      fullName: "Santos, Ana",
+      workDates: ["2026-01-01"],
+      regularHours: 8,
+      absences: 0,
+      missingPunchDays: 0,
+    }),
   ];
 
-  it("splits each employee's rows into new and already-saved days", () => {
+  it("sets each employee's days against the already-saved ones", () => {
     const [cruz, santos] = buildEmployeeSummaries(
-      records,
+      summaries,
       new Map([
         ["e1", ["2026-01-01"]],
         ["e2", ["2026-01-01"]],
       ]),
     );
     expect(cruz.saveState).toBe("FillsMissing");
-    expect(cruz.newRows.map((r) => r.workDate)).toEqual([
-      "2026-01-02",
-      "2026-01-03",
-    ]);
+    expect(cruz.newDays).toBe(2);
     expect(cruz.savedDays).toBe(1);
+    expect(cruz.savedDates).toEqual(["2026-01-01"]);
     expect(santos.saveState).toBe("AlreadySaved");
-    expect(santos.newRows).toEqual([]);
+    expect(santos.newDays).toBe(0);
   });
 
-  it("totals hours and flags missing punches and absences", () => {
-    const [cruz] = buildEmployeeSummaries(records, new Map());
+  it("keeps the server's totals and flags missing punches and absences", () => {
+    const [cruz] = buildEmployeeSummaries(summaries, new Map());
     expect(cruz.saveState).toBe("New");
     expect(cruz.days).toBe(3);
     expect(cruz.regularHours).toBe(16);
     expect(cruz.missingPunchDays).toBe(1);
     expect(cruz.absences).toBe(1);
     expect(hasIssues(cruz)).toBe(true);
+  });
+
+  it("matches saved dates sent with a time part and sorts by name", () => {
+    const [abad, zamora] = buildEmployeeSummaries(
+      [
+        summary({ fullName: "Zamora, Zed" }),
+        summary({ employeeId: "e2", fullName: "Abad, Al" }),
+      ],
+      new Map([["e1", ["2026-01-02T00:00:00"]]]),
+    );
+    expect(abad.fullName).toBe("Abad, Al");
+    expect(zamora.savedDates).toEqual(["2026-01-02"]);
+    expect(zamora.newDays).toBe(2);
+  });
+});
+
+describe("unsavedEmployeeIds", () => {
+  const summaries = [
+    summary({}),
+    summary({ employeeId: "e2", workDates: ["2026-01-01", "2026-01-02"] }),
+    summary({ employeeId: "e3", workDates: ["2026-01-01"] }),
+  ];
+
+  it("lists queued employees that still have a generated day with no saved DTR", () => {
+    const left = unsavedEmployeeIds(
+      summaries,
+      [
+        coverage({
+          employeeId: "e1",
+          savedDates: ["2026-01-01", "2026-01-02", "2026-01-03"],
+        }),
+        coverage({ employeeId: "e2", savedDates: ["2026-01-01"] }),
+      ],
+      ["e1", "e2", "e3"],
+    );
+
+    expect(left).toEqual(["e2", "e3"]);
+  });
+
+  it("is empty once the server has written every queued day", () => {
+    expect(
+      unsavedEmployeeIds(
+        summaries,
+        [
+          coverage({
+            employeeId: "e1",
+            savedDates: ["2026-01-01T00:00:00", "2026-01-02", "2026-01-03"],
+          }),
+        ],
+        ["e1"],
+      ),
+    ).toEqual([]);
+  });
+
+  it("ignores employees that weren't queued", () => {
+    expect(unsavedEmployeeIds(summaries, [], ["e3"])).toEqual(["e3"]);
+  });
+});
+
+describe("isSavable", () => {
+  it("only lets what is neither saved nor being saved be ticked", () => {
+    expect(isSavable({ saveState: "New" })).toBe(true);
+    expect(isSavable({ saveState: "FillsMissing" })).toBe(true);
+    expect(isSavable({ saveState: "AlreadySaved" })).toBe(false);
+    expect(isSavable({ saveState: "Saving" })).toBe(false);
   });
 });

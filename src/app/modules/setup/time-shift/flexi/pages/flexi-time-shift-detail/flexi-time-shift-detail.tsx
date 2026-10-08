@@ -12,6 +12,7 @@ import {
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { useIsDuplicateRoute } from "@/shared/hooks/use-is-duplicate-route";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -78,9 +79,10 @@ function addHoursToTimeSpan(timeSpan: string, hours: number): string {
 
 export default function FlexiTimeShiftDetail() {
   const { id } = useRouteParams<{ id?: string }>();
-  const isEdit = Boolean(id);
+  const isDuplicate = useIsDuplicateRoute();
+  const isEdit = Boolean(id) && !isDuplicate;
   const navigate = useNavigate();
-  const { data: selected } = useFlexiTimeShift(isEdit ? id : undefined);
+  const { data: selected } = useFlexiTimeShift(id);
   const { mutateAsync: add, isPending: isCreating } = useCreateFlexiTimeShift();
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateFlexiTimeShift();
@@ -142,14 +144,16 @@ export default function FlexiTimeShiftDetail() {
     lunchEndSec <= lunchStartSec;
 
   useEffect(() => {
-    if (isEdit || !startTime) return;
+    if (isEdit || isDuplicate || !startTime) return;
     setValue("endTime", addHoursToTimeSpan(startTime, 16));
-  }, [startTime, isEdit, setValue]);
+  }, [startTime, isEdit, isDuplicate, setValue]);
 
   useEffect(() => {
-    if (isEdit && selected) {
+    if ((isEdit || isDuplicate) && selected) {
       reset({
-        shiftName: selected.shiftName,
+        shiftName: isDuplicate
+          ? `${selected.shiftName} (Copy)`
+          : selected.shiftName,
         startTime: selected.startTime,
         endTime: selected.endTime,
         unpaidLunchBreak: selected.withLunchBreak === "UNPAID_BREAK",
@@ -164,7 +168,7 @@ export default function FlexiTimeShiftDetail() {
         nightDiffThreshold: selected.nightDiffThreshold,
       });
     }
-  }, [selected, isEdit, reset]);
+  }, [selected, isEdit, isDuplicate, reset]);
 
   const onSubmit = async (values: FlexiTimeShiftFormValues) => {
     const payload: CreateFlexiTimeShift = {

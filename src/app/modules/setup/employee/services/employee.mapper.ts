@@ -62,32 +62,32 @@ export const employeeMapper = {
       sssRate: response.sssRate
         ? {
             computationType: response.sssRate.computationType ?? "Table",
-            eE: response.sssRate.eE ?? 0,
-            eR: response.sssRate.eR ?? 0,
-            eC: response.sssRate.eC ?? 0,
+            eE: response.sssRate.ee ?? 0,
+            eR: response.sssRate.er ?? 0,
+            eC: response.sssRate.ec ?? 0,
             addOns: response.sssRate.addOns ?? 0,
           }
         : { computationType: "Table", eE: 0, eR: 0, eC: 0, addOns: 0 },
       phicRate: response.phicRate
         ? {
             computationType: response.phicRate.computationType ?? "Table",
-            eE: response.phicRate.eE ?? 0,
-            eR: response.phicRate.eR ?? 0,
+            eE: response.phicRate.ee ?? 0,
+            eR: response.phicRate.er ?? 0,
             addOns: response.phicRate.addOns ?? 0,
           }
         : { computationType: "Table", eE: 0, eR: 0, addOns: 0 },
       hdmfRate: response.hdmfRate
         ? {
             computationType: response.hdmfRate.computationType ?? "Table",
-            eE: response.hdmfRate.eE ?? 0,
-            eR: response.hdmfRate.eR ?? 0,
+            eE: response.hdmfRate.ee ?? 0,
+            eR: response.hdmfRate.er ?? 0,
             addOns: response.hdmfRate.addOns ?? 0,
           }
         : { computationType: "Table", eE: 0, eR: 0, addOns: 0 },
       taxRate: response.taxRate
         ? {
             computationType: response.taxRate.computationType ?? "Table",
-            eE: response.taxRate.eE ?? 0,
+            eE: response.taxRate.ee ?? 0,
             addOns: response.taxRate.addOns ?? 0,
           }
         : { computationType: "Table", eE: 0, addOns: 0 },
