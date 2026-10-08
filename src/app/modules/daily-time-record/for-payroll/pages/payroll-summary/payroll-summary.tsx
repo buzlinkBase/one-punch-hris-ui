@@ -52,21 +52,15 @@ import {
   sortBatchesLatestFirst,
 } from "./utils/payroll-batch-option.util";
 import { getEmptyMessage } from "./payroll-summary-empty";
-import { earningsColumns } from "./columns/earnings.columns";
-import { holidayColumns } from "./columns/holiday.columns";
-import { deductionsColumns } from "./columns/deductions.columns";
+import { payrollColumns } from "./columns/payroll.columns";
 import { hoursColumns } from "./columns/hours.columns";
 import { erColumns } from "./columns/employer-contributions.columns";
 import {
   EXCEL_AMOUNT_FORMAT,
   EXPORT_HEADERS,
   buildExportRows,
-  EARNINGS_HEADERS,
-  buildEarningsRows,
-  HOLIDAY_HEADERS,
-  buildHolidayRows,
-  DEDUCTIONS_HEADERS,
-  buildDeductionsRows,
+  PAYROLL_HEADERS,
+  buildPayrollRows,
   ER_HEADERS,
   buildErRows,
   HOURS_HEADERS,
@@ -228,6 +222,15 @@ export default function PayrollSummary() {
     }
   };
 
+  // Payroll tab: earnings -> deductions -> Net in one row; the 7 holiday categories stay
+  // folded behind the Holiday header's toggle until asked for.
+  const [holidayExpanded, setHolidayExpanded] = useState(false);
+  const payrollTableColumns = payrollColumns({
+    onPrint: handlePrintPayslip,
+    holidayExpanded,
+    onToggleHoliday: () => setHolidayExpanded((v) => !v),
+  });
+
   // Sends the selected batch plus the on-screen filter, so the PDF lists exactly the rows in
   // the table — see buildPrintSummaryParams / PayrollsController.PrintSummary.
   const handlePrintSummary = async () => {
@@ -270,21 +273,9 @@ export default function PayrollSummary() {
       downloadMultiSheetExcel(
         [
           {
-            name: "Earnings",
-            headers: EARNINGS_HEADERS,
-            rows: buildEarningsRows(results),
-            numberFormat: EXCEL_AMOUNT_FORMAT,
-          },
-          {
-            name: "Holiday Breakdown",
-            headers: HOLIDAY_HEADERS,
-            rows: buildHolidayRows(results),
-            numberFormat: EXCEL_AMOUNT_FORMAT,
-          },
-          {
-            name: "Deductions & Net",
-            headers: DEDUCTIONS_HEADERS,
-            rows: buildDeductionsRows(results),
+            name: "Payroll",
+            headers: PAYROLL_HEADERS,
+            rows: buildPayrollRows(results),
             numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
@@ -555,34 +546,13 @@ export default function PayrollSummary() {
         <Tabs
           items={[
             {
-              key: "earnings",
-              label: "Earnings",
+              key: "payroll",
+              label: "Payroll",
               children: (
                 <Table
                   dataSource={results}
-                  columns={earningsColumns(handlePrintPayslip)}
-                  {...tableProps}
-                />
-              ),
-            },
-            {
-              key: "holidays",
-              label: "Holiday Breakdown",
-              children: (
-                <Table
-                  dataSource={results}
-                  columns={holidayColumns}
-                  {...tableProps}
-                />
-              ),
-            },
-            {
-              key: "deductions",
-              label: "Deductions & Net",
-              children: (
-                <Table
-                  dataSource={results}
-                  columns={deductionsColumns(token.colorPrimary)}
+                  columns={payrollTableColumns}
+                  bordered
                   {...tableProps}
                 />
               ),

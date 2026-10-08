@@ -281,7 +281,10 @@ export const buildExportRows = (results: PayrollRunResult[]) =>
     num(r.restDoubleLegalNDOTPremiumPay ?? 0),
   ]);
 
-export const EARNINGS_HEADERS = [
+// The Payroll tab in one sheet, same column order as the screen, with the holiday categories
+// always expanded after Holiday. The categories include their own OT/ND pay, so they don't add
+// up to Holiday Total (that's the Earnings figure — see ../columns/payroll.columns.tsx).
+export const PAYROLL_HEADERS = [
   "Employee",
   "Status",
   "Salary Type",
@@ -292,11 +295,18 @@ export const EARNINGS_HEADERS = [
   "OT Pay",
   "ND Pay",
   "NDOT Pay",
+  "Legal Holiday (Unworked)",
+  "Legal Holiday Duty (Worked)",
+  "Rest Day + Legal Holiday",
+  "Special Holiday",
+  "Rest Day + Special Holiday",
+  "Double Legal Holiday",
+  "Rest Day + Double Legal Holiday",
+  "Holiday Total",
   "Rest Day",
   "Paid Leave",
   "1x Payout (Co)",
   "1x Payout (Gov)",
-  "Holiday Total",
   "COLA",
   "Allowances",
   "Bonuses",
@@ -306,63 +316,6 @@ export const EARNINGS_HEADERS = [
   "Reimbursement",
   "Gross",
   "Retirement Accrual",
-];
-export const buildEarningsRows = (results: PayrollRunResult[]) =>
-  results.map((r) => [
-    r.fullName,
-    r.id ? (r.isPosted ? "Posted" : "Draft") : "",
-    r.salaryType === "FIXED" ? "Fixed" : "Variable",
-    num(r.dailyRate),
-    r.payPeriodStart ? dayjs(r.payPeriodStart).format("YYYY-MM-DD") : "",
-    r.payPeriodEnd ? dayjs(r.payPeriodEnd).format("YYYY-MM-DD") : "",
-    num(basicPay(r)),
-    num(otPay(r)),
-    num(ndPay(r)),
-    num(r.nightDifferentialOTPay),
-    num(restDayTotal(r)),
-    r.salaryType === "FIXED"
-      ? num(r.nonCompanyPaidLeaves ?? 0)
-      : num(r.paidLeaves ?? 0),
-    num(r.companyFundedLeavePay ?? 0),
-    num(r.governmentFundedLeavePay ?? 0),
-    num(holidayPay(r)),
-    num(r.cola),
-    num(r.totalRegularAllowances),
-    num(r.totalBonuses),
-    num(r.totalCommissions),
-    num(r.totalDeminimises),
-    num(r.totalOtherIncome),
-    num(r.reimbursement),
-    num(r.grossIncome),
-    num(r.retirementAccrual ?? 0),
-  ]);
-
-export const HOLIDAY_HEADERS = [
-  "Employee",
-  "Legal Holiday (Unworked)",
-  "Legal Holiday Duty (Worked)",
-  "Rest Day + Legal Holiday",
-  "Special Holiday",
-  "Rest Day + Special Holiday",
-  "Double Legal Holiday",
-  "Rest Day + Double Legal Holiday",
-  "Holiday Total",
-];
-export const buildHolidayRows = (results: PayrollRunResult[]) =>
-  results.map((r) => [
-    r.fullName,
-    num(r.legalHolidayUnworkedPay ?? 0),
-    num(holidayDuty(r)),
-    num(restLegalTotal(r)),
-    num(specialTotal(r)),
-    num(restSpecialTotal(r)),
-    num(doubleLegalTotal(r)),
-    num(restDoubleLegalTotal(r)),
-    num(r.holidayPay),
-  ]);
-
-export const DEDUCTIONS_HEADERS = [
-  "Employee",
   "SSS",
   "PhilHealth",
   "Pag-IBIG",
@@ -374,9 +327,41 @@ export const DEDUCTIONS_HEADERS = [
   "Absent",
   "Net Pay",
 ];
-export const buildDeductionsRows = (results: PayrollRunResult[]) =>
+export const buildPayrollRows = (results: PayrollRunResult[]) =>
   results.map((r) => [
     r.fullName,
+    r.id ? (r.isPosted ? "Posted" : "Draft") : "",
+    r.salaryType === "FIXED" ? "Fixed" : "Variable",
+    num(r.dailyRate),
+    r.payPeriodStart ? dayjs(r.payPeriodStart).format("YYYY-MM-DD") : "",
+    r.payPeriodEnd ? dayjs(r.payPeriodEnd).format("YYYY-MM-DD") : "",
+    num(basicPay(r)),
+    num(otPay(r)),
+    num(ndPay(r)),
+    num(r.nightDifferentialOTPay),
+    num(r.legalHolidayUnworkedPay ?? 0),
+    num(holidayDuty(r)),
+    num(restLegalTotal(r)),
+    num(specialTotal(r)),
+    num(restSpecialTotal(r)),
+    num(doubleLegalTotal(r)),
+    num(restDoubleLegalTotal(r)),
+    num(holidayPay(r)),
+    num(restDayTotal(r)),
+    r.salaryType === "FIXED"
+      ? num(r.nonCompanyPaidLeaves ?? 0)
+      : num(r.paidLeaves ?? 0),
+    num(r.companyFundedLeavePay ?? 0),
+    num(r.governmentFundedLeavePay ?? 0),
+    num(r.cola),
+    num(r.totalRegularAllowances),
+    num(r.totalBonuses),
+    num(r.totalCommissions),
+    num(r.totalDeminimises),
+    num(r.totalOtherIncome),
+    num(r.reimbursement),
+    num(r.grossIncome),
+    num(r.retirementAccrual ?? 0),
     num(r.sssContribution),
     num(r.philHealthContribution),
     num(r.pagIbigContribution),

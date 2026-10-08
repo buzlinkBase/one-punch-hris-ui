@@ -1,18 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { PayrollRunResult } from "../../../models/api/response/payroll-run-result.model";
 import {
-  DEDUCTIONS_HEADERS,
-  EARNINGS_HEADERS,
   ER_HEADERS,
   EXPORT_HEADERS,
-  HOLIDAY_HEADERS,
   HOURS_HEADERS,
-  buildDeductionsRows,
-  buildEarningsRows,
+  PAYROLL_HEADERS,
   buildErRows,
   buildExportRows,
-  buildHolidayRows,
   buildHoursRows,
+  buildPayrollRows,
 } from "./payroll-summary-export.util";
 
 const row = {
@@ -37,9 +33,7 @@ const row = {
 
 const sheets = [
   ["CSV", EXPORT_HEADERS, buildExportRows],
-  ["Earnings", EARNINGS_HEADERS, buildEarningsRows],
-  ["Holiday", HOLIDAY_HEADERS, buildHolidayRows],
-  ["Deductions", DEDUCTIONS_HEADERS, buildDeductionsRows],
+  ["Payroll", PAYROLL_HEADERS, buildPayrollRows],
   ["ER", ER_HEADERS, buildErRows],
   ["Hours", HOURS_HEADERS, buildHoursRows],
 ] as const;
@@ -69,15 +63,15 @@ describe("payroll summary export rows", () => {
   );
 
   it("rounds to 2 decimals and keeps the derived figures", () => {
-    const deductions = buildDeductionsRows([row])[0];
-    const col = (h: string) => deductions[DEDUCTIONS_HEADERS.indexOf(h)];
+    const payroll = buildPayrollRows([row])[0];
+    const col = (h: string) => payroll[PAYROLL_HEADERS.indexOf(h)];
     expect(col("Cash Bond")).toBe(200);
     expect(col("Other Deductions")).toBe(300);
     expect(col("Late/UT")).toBe(55);
     expect(col("Absent")).toBe(610);
 
-    const earnings = buildEarningsRows([row])[0];
-    expect(earnings[EARNINGS_HEADERS.indexOf("Basic")]).toBe(1234.57);
+    expect(col("Basic")).toBe(1234.57);
+    expect(col("Net Pay")).toBe(12000);
     expect(buildHoursRows([row])[0][HOURS_HEADERS.indexOf("Regular")]).toBe(
       1.03,
     );
