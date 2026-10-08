@@ -45,6 +45,8 @@ import {
 import { getLastMonthToCurrentRange } from "@/shared/utils/cutoff.util";
 import { APPROVAL_STATUS_LABEL } from "../../constants/label.const";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import {
   buildPayrollBatchOptions,
   sortBatchesLatestFirst,
@@ -164,13 +166,39 @@ export default function PayrollSummary() {
     [response],
   );
 
-  const results = useMemo(
-    () =>
-      statusFilter === "All"
-        ? allResults
-        : allResults.filter((r) => r.approvalStatus === statusFilter),
-    [allResults, statusFilter],
+  const { data: clients = [] } = useClients();
+  const { data: payrollGroups = [] } = usePayrollGroups();
+  const [clientFilter, setClientFilter] = useState<string | undefined>();
+  const [payrollGroupFilter, setPayrollGroupFilter] = useState<
+    string | undefined
+  >();
+  const clientFilterOptions = useMemo(
+    () => clients.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` })),
+    [clients],
   );
+  const payrollGroupFilterOptions = useMemo(
+    () =>
+      payrollGroups.map((p) => ({
+        value: p.id,
+        label: `${p.code} - ${p.name}`,
+      })),
+    [payrollGroups],
+  );
+
+  // Payroll rows carry no client / payroll group of their own, so both filters match on the
+  // employee's current assignment.
+  const results = useMemo(() => {
+    const employeeById = new Map(employees.map((e) => [e.id, e]));
+    return allResults.filter((r) => {
+      if (statusFilter !== "All" && r.approvalStatus !== statusFilter)
+        return false;
+      const emp = employeeById.get(r.employeeId);
+      if (clientFilter && emp?.clientId !== clientFilter) return false;
+      if (payrollGroupFilter && emp?.payrollGroupId !== payrollGroupFilter)
+        return false;
+      return true;
+    });
+  }, [allResults, statusFilter, clientFilter, payrollGroupFilter, employees]);
 
   // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
   // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
@@ -328,6 +356,11 @@ export default function PayrollSummary() {
               hour breakdown.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 mb-4">
+        <div>
           <Space wrap>
             <MobileRangePicker
               value={
@@ -398,6 +431,26 @@ export default function PayrollSummary() {
               onChange={setStatusFilter}
               options={STATUS_FILTER_OPTIONS}
               className="w-37.5"
+            />
+            <Select
+              value={clientFilter}
+              onChange={setClientFilter}
+              options={clientFilterOptions}
+              placeholder="All clients"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              className="w-48"
+            />
+            <Select
+              value={payrollGroupFilter}
+              onChange={setPayrollGroupFilter}
+              options={payrollGroupFilterOptions}
+              placeholder="All payroll groups"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              className="w-48"
             />
             <Button
               icon={<ReloadOutlined spin={isFetching} />}

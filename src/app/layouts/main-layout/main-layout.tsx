@@ -1254,6 +1254,8 @@ export default function MainLayout() {
           </div>
         </Header>
 
+        {hrDb.ready && !companyLocked && <SubscriptionBanner />}
+
         <Content
           className={
             isPortalRoute
@@ -1275,7 +1277,6 @@ export default function MainLayout() {
             />
           ) : (
             <>
-              <SubscriptionBanner />
               {noticeClearance && (
                 <ConfidentialDataNotice clearance={noticeClearance} />
               )}

@@ -138,7 +138,7 @@ export function SubscriptionBanner() {
   return (
     <>
       <Alert
-        className="mb-4"
+        className="mx-2 mt-2 md:mx-6 md:mt-4"
         type={text.type}
         showIcon
         message={text.message}
