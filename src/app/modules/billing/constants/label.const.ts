@@ -39,6 +39,7 @@ export const BILLING_LABEL = {
   VAT_EXCLUSIVE: "Prices exclude 12% VAT.",
   RECOMMENDED: "Recommended",
   BEST_FIT: "Best fit for you",
+  OFFERED_TO_YOU: "Offered to you",
   CURRENT: "Current plan",
   SELECT: "Choose",
   UNLIMITED: "Unlimited",

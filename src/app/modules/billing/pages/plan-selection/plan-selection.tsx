@@ -40,6 +40,14 @@ const CYCLE_OPTIONS = [
   },
 ];
 
+/** Column classes by plan count: written out in full so Tailwind sees them. */
+function gridColumns(count: number): string {
+  if (count <= 1) return "md:mx-auto md:max-w-md";
+  if (count === 2) return "md:grid-cols-2";
+  if (count === 3) return "md:grid-cols-3";
+  return "md:grid-cols-2 xl:grid-cols-4";
+}
+
 function violationsOf(error: unknown): LimitViolation[] {
   const violations = (error as AxiosError<{ data?: { violations?: unknown } }>)
     .response?.data?.data?.violations;
@@ -180,7 +188,7 @@ export default function PlanSelection() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className={`grid grid-cols-1 gap-4 ${gridColumns(plans.length)}`}>
         {plans.map((plan) => (
           <PlanCard
             key={plan.code}

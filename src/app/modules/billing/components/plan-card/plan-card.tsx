@@ -64,11 +64,18 @@ export function PlanCard({
         <div>
           <div className="flex items-center justify-between gap-2">
             <h3 className="m-0 text-lg font-semibold">{plan.name}</h3>
-            {highlighted && (
-              <Tag color="green" className="m-0">
-                {BILLING_LABEL.BEST_FIT}
-              </Tag>
-            )}
+            <div className="flex flex-wrap justify-end gap-1">
+              {!plan.isPublic && (
+                <Tag color="blue" className="m-0">
+                  {BILLING_LABEL.OFFERED_TO_YOU}
+                </Tag>
+              )}
+              {highlighted && (
+                <Tag color="green" className="m-0">
+                  {BILLING_LABEL.BEST_FIT}
+                </Tag>
+              )}
+            </div>
           </div>
           <p className="mt-1 mb-0 text-sm text-(--ant-color-text-secondary)">
             {plan.description}
