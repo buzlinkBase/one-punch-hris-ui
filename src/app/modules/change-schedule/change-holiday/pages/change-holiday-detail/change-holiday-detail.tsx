@@ -33,6 +33,11 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useHolidays } from "@/app/modules/setup/holiday/hooks/use-holiday-queries";
@@ -136,10 +141,7 @@ function CreateForm() {
     value: c.id,
     label: `${c.code} - ${c.name}`,
   }));
-  const payrollGroupOptions = payrollGroups.map((p) => ({
-    value: p.id,
-    label: `${p.code} - ${p.name}`,
-  }));
+  const payrollGroupOptions = toPayrollGroupOptions(payrollGroups);
   const areaOptions = areas
     .filter((a) => !branchId || a.branchId === branchId)
     .map((a) => ({
@@ -402,11 +404,12 @@ function CreateForm() {
               <Select
                 placeholder="All payroll groups"
                 options={payrollGroupOptions}
+                optionRender={payrollGroupOptionRender}
                 value={payrollGroupId ?? undefined}
                 onChange={(v: string | undefined) =>
                   setPayrollGroupId(v ?? null)
                 }
-                showSearch={{ filterOption: filterByLabel }}
+                showSearch={{ filterOption: filterPayrollGroupOption }}
                 allowClear
               />
             </Form.Item>

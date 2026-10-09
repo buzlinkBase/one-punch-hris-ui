@@ -89,6 +89,11 @@ import { isActiveStatus } from "@/shared/utils/status.util";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import { useSplitTimeShifts } from "@/app/modules/setup/time-shift/split/hooks/use-split-time-shift-queries";
 import { useFlexiTimeShifts } from "@/app/modules/setup/time-shift/flexi/hooks/use-flexi-time-shift-queries";
@@ -602,12 +607,9 @@ export default function EmployeeDetail() {
       value: a.id,
       label: `${a.code} - ${a.name}`,
     }));
-  const payrollGroupOptions = payrollGroups
-    .filter((p) => isActiveStatus(p.status))
-    .map((p) => ({
-      value: p.id,
-      label: `${p.code} - ${p.name}`,
-    }));
+  const payrollGroupOptions = toPayrollGroupOptions(
+    payrollGroups.filter((p) => isActiveStatus(p.status)),
+  );
 
   const formatShiftTime = (t: string) => {
     const dot = t.indexOf(".");
@@ -1192,10 +1194,12 @@ export default function EmployeeDetail() {
                               value={field.value || undefined}
                               onChange={(v?: string) => field.onChange(v ?? "")}
                               options={payrollGroupOptions}
+                              optionRender={payrollGroupOptionRender}
                               loading={isRefLoading}
                               allowClear
-                              showSearch
-                              filterOption={filterByLabel}
+                              showSearch={{
+                                filterOption: filterPayrollGroupOption,
+                              }}
                               placeholder="Select payroll group"
                               style={{ flex: 1 }}
                             />

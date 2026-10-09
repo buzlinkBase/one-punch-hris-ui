@@ -6,6 +6,7 @@ export const CLIENT_LABEL = {
   EMAIL: "Email",
   PHONE: "Phone",
   ADDRESS: "Address",
+  LOGO: "Company Logo",
   CONTACT_PERSON: "Contact Person",
   CREATE_TITLE: "Create Client",
   EDIT_TITLE: "Edit Client",

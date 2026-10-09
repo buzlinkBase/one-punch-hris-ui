@@ -41,6 +41,11 @@ import {
   useDeletePayrollBatch,
 } from "../../hooks/use-for-payroll-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import type { ErrorResponse } from "@/shared/types/api-response.model";
 import httpClient from "@/core/http/http-client";
@@ -74,10 +79,7 @@ export default function GenerateThirteenthMonth() {
   const [results, setResults] = useState<PayrollRunResult[]>([]);
 
   const { data: payrollGroups = [] } = usePayrollGroups();
-  const payrollGroupOptions = payrollGroups.map((p) => ({
-    value: p.id,
-    label: p.code || p.name,
-  }));
+  const payrollGroupOptions = toPayrollGroupOptions(payrollGroups);
 
   const { mutateAsync: generate, isPending: isGenerating } =
     useGenerateThirteenthMonth();
@@ -363,6 +365,8 @@ export default function GenerateThirteenthMonth() {
                   mode="multiple"
                   allowClear
                   placeholder="All payroll groups"
+                  showSearch={{ filterOption: filterPayrollGroupOption }}
+                  optionRender={payrollGroupOptionRender}
                   options={payrollGroupOptions}
                   value={payrollGroupIds}
                   onChange={setPayrollGroupIds}

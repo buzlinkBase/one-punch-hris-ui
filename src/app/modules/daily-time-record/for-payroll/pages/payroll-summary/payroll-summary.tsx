@@ -48,6 +48,11 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
+import {
   buildPayrollBatchOptions,
   sortBatchesLatestFirst,
 } from "./utils/payroll-batch-option.util";
@@ -176,11 +181,7 @@ export default function PayrollSummary() {
     [clients],
   );
   const payrollGroupFilterOptions = useMemo(
-    () =>
-      payrollGroups.map((p) => ({
-        value: p.id,
-        label: `${p.code} - ${p.name}`,
-      })),
+    () => toPayrollGroupOptions(payrollGroups),
     [payrollGroups],
   );
 
@@ -456,8 +457,8 @@ export default function PayrollSummary() {
               options={payrollGroupFilterOptions}
               placeholder="All payroll groups"
               allowClear
-              showSearch
-              optionFilterProp="label"
+              showSearch={{ filterOption: filterPayrollGroupOption }}
+              optionRender={payrollGroupOptionRender}
               className="w-48"
             />
             <Button

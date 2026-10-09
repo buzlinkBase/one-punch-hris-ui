@@ -22,4 +22,17 @@ export const clientApi = {
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/${id}`);
   },
+  async uploadLogo(id: string, file: File): Promise<string> {
+    const form = new FormData();
+    form.append("file", file);
+    const result = await httpClient.postUnwrapped<{ url: string }>(
+      `${ENDPOINT}/${id}/logo`,
+      form,
+      { headers: { "Content-Type": undefined } },
+    );
+    return result.url;
+  },
+  removeLogo(id: string): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/${id}/logo`);
+  },
 };
