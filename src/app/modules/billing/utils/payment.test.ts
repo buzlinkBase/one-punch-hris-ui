@@ -17,12 +17,14 @@ const due: PaymentDueResponse = {
   billingCycle: "Monthly",
   amount: 4999,
   reason: "PlanChange",
+  addOnsAmount: 0,
 };
 
 function checkout(overrides: Partial<CheckoutResponse> = {}): CheckoutResponse {
   return {
     id: "0199b6c2-0000-7000-8000-000000000001",
     status: "Open",
+    kind: "Plan",
     planName: "Payroll",
     billingCycle: "Annual",
     amount: 49990,
@@ -47,6 +49,20 @@ describe("describeDue", () => {
     expect(text).toContain("Payroll (Monthly)");
     expect(text).toContain("4,999.00");
   });
+
+  it("says how much of a renewal is storage", () => {
+    const text = describeDue(
+      { ...due, amount: 5799, addOnsAmount: 800 },
+      "PHP",
+    );
+    expect(text).toContain("5,799.00");
+    expect(text).toContain("includes");
+    expect(text).toContain("800.00 storage");
+  });
+
+  it("stays quiet about storage when there is none", () => {
+    expect(describeDue(due, "PHP")).not.toContain("storage");
+  });
 });
 
 describe("describeCheckout", () => {
@@ -58,6 +74,18 @@ describe("describeCheckout", () => {
 
   it("leaves the method out while unpaid", () => {
     expect(describeCheckout(checkout())).not.toContain("via");
+  });
+
+  it("describes a storage purchase by what was bought, with no billing cycle", () => {
+    const text = describeCheckout(
+      checkout({
+        kind: "StorageAddOn",
+        planName: "2 x 50 GB storage block",
+        amount: 400,
+        paymentMethod: "GCash",
+      }),
+    );
+    expect(text).toMatch(/^2 x 50 GB storage block: .*400\.00 via GCash$/);
   });
 
   it("uses readable names for online methods", () => {

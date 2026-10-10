@@ -98,6 +98,7 @@ import { AcknowledgementGate } from "@/app/modules/portal/announcements/componen
 import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
 import { useSubscriptionState } from "@/app/modules/billing/hooks/use-subscription-state";
+import { StorageBanner } from "@/app/modules/billing/components/storage-banner";
 import { SubscriptionBanner } from "@/app/modules/billing/components/subscription-banner";
 import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
 import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
@@ -1255,6 +1256,7 @@ export default function MainLayout() {
         </Header>
 
         {hrDb.ready && !companyLocked && <SubscriptionBanner />}
+        {hrDb.ready && !companyLocked && <StorageBanner />}
 
         <Content
           className={

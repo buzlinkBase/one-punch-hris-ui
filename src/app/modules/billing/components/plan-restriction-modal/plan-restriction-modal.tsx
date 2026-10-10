@@ -2,11 +2,15 @@ import { Button, Modal, Typography } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
-import { SUBSCRIPTION_PROBLEM_TYPES } from "@/shared/constants/entitlement-keys.const";
+import {
+  LIMIT_KEYS,
+  SUBSCRIPTION_PROBLEM_TYPES,
+} from "@/shared/constants/entitlement-keys.const";
 import {
   BILLING_LABEL,
   FEATURE_LABELS,
   LIMIT_LABELS,
+  STORAGE_LABEL,
 } from "../../constants/label.const";
 import { useSubscriptionState } from "../../hooks/use-subscription-state";
 
@@ -35,9 +39,13 @@ export function PlanRestrictionModal() {
     (restriction.feature && FEATURE_LABELS[restriction.feature]) ??
     (restriction.limit && LIMIT_LABELS[restriction.limit]) ??
     null;
+  // A full disk isn't fixed by a bigger plan alone: the way out is storage blocks, on Billing.
+  const isStorage =
+    restriction.type === SUBSCRIPTION_PROBLEM_TYPES.PLAN_LIMIT_REACHED &&
+    restriction.limit === LIMIT_KEYS.STORAGE_MAX_MB;
   const goToPlans = () => {
     clear();
-    navigate({ to: "/billing/plans" });
+    navigate({ to: isStorage ? "/billing" : "/billing/plans" });
   };
 
   return (
@@ -47,7 +55,9 @@ export function PlanRestrictionModal() {
       title={
         <span className="flex items-center gap-2">
           <LockOutlined className="text-(--ant-color-primary)" />
-          {TITLES[restriction.type] ?? "Not available"}
+          {isStorage
+            ? STORAGE_LABEL.FULL_TITLE
+            : (TITLES[restriction.type] ?? "Not available")}
         </span>
       }
       footer={[
@@ -56,7 +66,7 @@ export function PlanRestrictionModal() {
         </Button>,
         canViewBilling && (
           <Button key="plans" type="primary" onClick={goToPlans}>
-            {BILLING_LABEL.CHOOSE_PLAN}
+            {isStorage ? STORAGE_LABEL.UPGRADE : BILLING_LABEL.CHOOSE_PLAN}
           </Button>
         ),
       ]}

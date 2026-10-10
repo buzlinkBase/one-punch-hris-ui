@@ -11,17 +11,25 @@ export function cycleLabel(cycle: BillingCycle): string {
   return cycle === "Annual" ? BILLING_LABEL.ANNUAL : BILLING_LABEL.MONTHLY;
 }
 
-/** "Payroll (Monthly): ₱4,999.00" */
+/** "Payroll (Monthly): ₱4,999.00", or "...: ₱5,799.00 (includes ₱800.00 storage)" */
 export function describeDue(due: PaymentDueResponse, currency: string): string {
-  return `${due.planName} (${cycleLabel(due.billingCycle)}): ${formatMoney(due.amount, currency)}`;
+  const storage =
+    due.addOnsAmount > 0
+      ? ` (includes ${formatMoney(due.addOnsAmount, currency)} storage)`
+      : "";
+  return `${due.planName} (${cycleLabel(due.billingCycle)}): ${formatMoney(due.amount, currency)}${storage}`;
 }
 
-/** "Payroll (Monthly): ₱4,999.00 via GCash" */
+/** "Payroll (Monthly): ₱4,999.00 via GCash"; a storage purchase has no cycle: "2 x 50 GB storage block: ₱400.00" */
 export function describeCheckout(checkout: CheckoutResponse): string {
   const method = checkout.paymentMethod
     ? ` via ${PAYMENT_METHOD_LABELS[checkout.paymentMethod]}`
     : "";
-  return `${checkout.planName} (${cycleLabel(checkout.billingCycle)}): ${formatMoney(checkout.amount, checkout.currency)}${method}`;
+  const what =
+    checkout.kind === "StorageAddOn"
+      ? checkout.planName
+      : `${checkout.planName} (${cycleLabel(checkout.billingCycle)})`;
+  return `${what}: ${formatMoney(checkout.amount, checkout.currency)}${method}`;
 }
 
 /**

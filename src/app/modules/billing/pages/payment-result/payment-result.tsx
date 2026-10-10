@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button, Result, Space, Spin } from "antd";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { PAYMENT_RESULT_LABEL } from "../../constants/label.const";
+import {
+  PAYMENT_RESULT_LABEL,
+  STORAGE_LABEL,
+} from "../../constants/label.const";
 import {
   useCheckout,
   useRefreshSubscription,
@@ -72,7 +75,11 @@ export default function PaymentResult() {
         <Result
           status="success"
           title={PAYMENT_RESULT_LABEL.PAID}
-          subTitle={`${summary}${PAYMENT_RESULT_LABEL.PAID_HINT}`}
+          subTitle={`${summary}${
+            checkout?.kind === "StorageAddOn"
+              ? STORAGE_LABEL.PAID_HINT
+              : PAYMENT_RESULT_LABEL.PAID_HINT
+          }`}
           extra={toBilling}
         />
       )}

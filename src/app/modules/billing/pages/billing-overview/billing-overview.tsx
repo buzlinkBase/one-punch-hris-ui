@@ -15,6 +15,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { LIMIT_KEYS } from "@/shared/constants/entitlement-keys.const";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { PaymentDueAlert } from "../../components/payment-due-alert";
+import { StorageCard } from "../../components/storage-card";
 import {
   BILLING_LABEL,
   LIMIT_SHORT_LABELS,
@@ -26,6 +27,7 @@ import {
   useBilling,
   useCancelSubscription,
   useResumeSubscription,
+  useUsage,
   useWithdrawPlanChange,
 } from "../../hooks/use-subscription-queries";
 import { BILLING_PERMISSION } from "../../hooks/use-subscription-state";
@@ -59,6 +61,9 @@ const USAGE_COLUMNS: ColumnsType<CompanyUsageResponse> = [
     key,
     render: (_: unknown, row: CompanyUsageResponse) => {
       const used = row.used[key] ?? null;
+      if (key === LIMIT_KEYS.EMPLOYEES_MAX) {
+        return used === null ? BILLING_LABEL.UNKNOWN : used;
+      }
       const max = row.max[key] ?? null;
       return (
         <span
@@ -102,6 +107,75 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
   },
   { title: "Reference", dataIndex: "reference", key: "reference" },
 ];
+
+/**
+ * Usage per company. Counting asks other services and is slow, so this loads on its own: the rest
+ * of the screen shows at once and this card fills in when its data lands.
+ */
+function UsageCard({
+  companiesUsed,
+  companiesMax,
+}: {
+  companiesUsed: number;
+  companiesMax: number | null;
+}) {
+  const { data: usage, isLoading } = useUsage();
+
+  // Employees are one pool for the account: the total across companies against its one limit.
+  const companies = usage?.companies ?? [];
+  const employeeCounts = companies.map(
+    (company) => company.used[LIMIT_KEYS.EMPLOYEES_MAX] ?? null,
+  );
+  const employeesUsed = employeeCounts.includes(null)
+    ? null
+    : employeeCounts.reduce<number>((sum, count) => sum + (count ?? 0), 0);
+  const employeesMax = companies[0]?.max[LIMIT_KEYS.EMPLOYEES_MAX] ?? null;
+
+  return (
+    <Card
+      title={BILLING_LABEL.USAGE}
+      extra={
+        <Space
+          size="large"
+          className="text-sm text-(--ant-color-text-secondary)"
+        >
+          <span>
+            {BILLING_LABEL.COMPANIES}: {companiesUsed} /{" "}
+            {companiesMax ?? BILLING_LABEL.UNLIMITED}
+          </span>
+          {usage && (
+            <span
+              className={
+                isOver(employeesUsed, employeesMax)
+                  ? "font-semibold text-(--ant-color-error)"
+                  : ""
+              }
+            >
+              {LIMIT_SHORT_LABELS[LIMIT_KEYS.EMPLOYEES_MAX]}:{" "}
+              {usageText(employeesUsed, employeesMax)}
+            </span>
+          )}
+        </Space>
+      }
+    >
+      <p className="mt-0 text-sm text-(--ant-color-text-secondary)">
+        {BILLING_LABEL.USAGE_HINT}
+      </p>
+      {isLoading ? (
+        <Skeleton active paragraph={{ rows: 2 }} title={false} />
+      ) : (
+        <Table
+          rowKey="tenantId"
+          size="small"
+          pagination={false}
+          columns={USAGE_COLUMNS}
+          dataSource={companies}
+          scroll={{ x: "max-content" }}
+        />
+      )}
+    </Card>
+  );
+}
 
 /** Billing: the account's plan and status, usage against limits, and payments. */
 export default function BillingOverview() {
@@ -249,27 +323,15 @@ export default function BillingOverview() {
           )}
         </Card>
 
-        <Card
-          title={BILLING_LABEL.USAGE}
-          extra={
-            <span className="text-sm text-(--ant-color-text-secondary)">
-              {BILLING_LABEL.COMPANIES}: {billing.companiesUsed} /{" "}
-              {billing.companiesMax ?? BILLING_LABEL.UNLIMITED}
-            </span>
-          }
-        >
-          <p className="mt-0 text-sm text-(--ant-color-text-secondary)">
-            {BILLING_LABEL.USAGE_HINT}
-          </p>
-          <Table
-            rowKey="tenantId"
-            size="small"
-            pagination={false}
-            columns={USAGE_COLUMNS}
-            dataSource={billing.companies}
-            scroll={{ x: "max-content" }}
-          />
-        </Card>
+        <StorageCard
+          canManage={canManage}
+          onlinePaymentEnabled={billing.onlinePaymentEnabled}
+        />
+
+        <UsageCard
+          companiesUsed={billing.companiesUsed}
+          companiesMax={billing.companiesMax}
+        />
 
         <Card title={BILLING_LABEL.PAYMENTS}>
           <Table
