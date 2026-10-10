@@ -26,7 +26,8 @@ export const BILLING_LABEL = {
   RESUME_SUBSCRIPTION: "Keep my subscription",
   WITHDRAW_CHANGE: "Withdraw change",
   USAGE: "Usage",
-  USAGE_HINT: "Limits apply to each company separately.",
+  USAGE_HINT:
+    "Employees are counted across all your companies together; admin users and biometric devices are limited per company.",
   COMPANIES: "Companies",
   PAYMENTS: "Payments",
   NO_PAYMENTS: "No payments recorded yet.",
@@ -146,9 +147,10 @@ export const FEATURE_LABELS: Record<string, string> = {
 
 export const LIMIT_LABELS: Record<string, string> = {
   [LIMIT_KEYS.COMPANIES_MAX]: "Companies",
-  [LIMIT_KEYS.EMPLOYEES_MAX]: "Active employees per company",
+  [LIMIT_KEYS.EMPLOYEES_MAX]: "Active employees (shared by all your companies)",
   [LIMIT_KEYS.ADMINS_MAX]: "Admin users per company",
   [LIMIT_KEYS.BIOMETRIC_DEVICES_MAX]: "Biometric devices per company",
+  [LIMIT_KEYS.STORAGE_MAX_MB]: "File storage (shared by all your companies)",
 };
 
 /** Short names for the usage table's columns. */
@@ -156,6 +158,55 @@ export const LIMIT_SHORT_LABELS: Record<string, string> = {
   [LIMIT_KEYS.EMPLOYEES_MAX]: "Employees",
   [LIMIT_KEYS.ADMINS_MAX]: "Admin users",
   [LIMIT_KEYS.BIOMETRIC_DEVICES_MAX]: "Devices",
+};
+
+export const STORAGE_LABEL = {
+  TITLE: "Storage",
+  SUBTITLE:
+    "File storage for your account, shared by all your companies: your plan's capacity plus any storage blocks you add.",
+  BY_COMPANY: "Used by company",
+  BASE_PLAN: "Plan storage",
+  ADD_ONS: "Storage add-ons",
+  TOTAL: "Total storage",
+  NO_ADD_ONS: "No storage blocks yet.",
+  UPGRADE: "Upgrade storage",
+  FULL_TITLE: "Storage is full",
+  BUY: "Add storage",
+  UNKNOWN_USAGE: "Usage can't be shown right now.",
+  FREE_GRANT: "Included at no charge",
+  REDUCE: "Reduce",
+  WITHDRAW_REDUCTION: "Keep these blocks",
+  BILLING_SUMMARY: "Billing",
+  PLAN_LINE: "Plan",
+  ADD_ONS_LINE: "Storage add-ons",
+  TOTAL_LINE: "Total",
+  BUY_TITLE: "Add storage",
+  BUY_BLOCK: "Storage block",
+  BUY_QUANTITY: "Number of blocks",
+  BUY_PRORATED: "Due today (prorated)",
+  BUY_PRORATED_HINT:
+    "You pay only for the days left in your current billing period. From your next renewal the blocks are billed with your plan, at the monthly or annual block price to match your billing cycle.",
+  BUY_NEW_RECURRING: "Storage add-ons from your next renewal",
+  UNIT_COST: "Unit cost",
+  CYCLE_TOTAL_MONTHLY: "Monthly",
+  CYCLE_TOTAL_ANNUAL: "Yearly",
+  BUY_NEW_LIMIT: "Your storage after payment",
+  BUY_CONFIRM: "Pay",
+  BUY_UNAVAILABLE:
+    "Storage can be added once your plan is paid and running. Choose or renew a plan first.",
+  NO_OFFERINGS: "No storage blocks are available to your account right now.",
+  REDUCE_TITLE: "Reduce storage blocks",
+  REDUCE_HINT:
+    "The change takes effect at the end of your current billing period. Until then you keep the storage you paid for.",
+  REDUCE_OVER_LIMIT:
+    "You're using more than your storage will be after the reduction. Free up space before your renewal date, or uploads will be blocked.",
+  REDUCE_PENDING: "Reduces to {blocks} on {date}",
+  BANNER_WARNING: "Your storage is {percent}% full.",
+  BANNER_CRITICAL:
+    "Your storage is almost full ({percent}% used). Uploads will be blocked when it runs out.",
+  BANNER_ADMIN_HINT:
+    "Ask your company's owner or billing admin to add storage.",
+  PAID_HINT: "Your extra storage is active now.",
 };
 
 export const SUPPORT_TIER_LABELS: Record<string, string> = {

@@ -108,6 +108,16 @@ export interface PaymentResponse {
   periodEndUtc: string;
 }
 
+/**
+ * Usage per company and the recommended plan (TenantApi UsageView). Apart from `BillingResponse`
+ * because counting asks other services and is slow -- it's loaded after the rest of the screen.
+ */
+export interface UsageResponse {
+  companies: CompanyUsageResponse[];
+  /** The cheapest plan covering what the account used and fitting its usage. */
+  recommendedPlanCode: string | null;
+}
+
 /** The billing screen (TenantApi BillingView). */
 export interface BillingResponse {
   entitlements: EntitlementSnapshot;
@@ -122,9 +132,7 @@ export interface BillingResponse {
   currency: string;
   companiesUsed: number;
   companiesMax: number | null;
-  companies: CompanyUsageResponse[];
   payments: PaymentResponse[];
-  recommendedPlanCode: string | null;
   paymentInstructions: string;
   /** What Pay now would pay for; null when nothing is due. */
   paymentDue: PaymentDueResponse | null;
@@ -139,8 +147,11 @@ export interface PaymentDueResponse {
   planCode: string;
   planName: string;
   billingCycle: BillingCycle;
+  /** The whole charge: the plan's price plus `addOnsAmount`. */
   amount: number;
   reason: PaymentDueReason;
+  /** The part of `amount` that renews the company's paid storage blocks. */
+  addOnsAmount: number;
 }
 
 /** POST subscriptions/checkout: the payment page to send the browser to. */
@@ -151,10 +162,15 @@ export interface CheckoutStartedResponse {
 
 export type CheckoutStatus = "Open" | "Paid" | "Expired" | "Failed";
 
+/** What a checkout buys: a period of a plan, or blocks of extra storage. */
+export type CheckoutKind = "Plan" | "StorageAddOn";
+
 /** GET subscriptions/checkout/{id}: where an online payment stands. */
 export interface CheckoutResponse {
   id: string;
   status: CheckoutStatus;
+  kind: CheckoutKind;
+  /** The plan's name, or for a storage checkout what was bought ("2 x 50 GB storage block"). */
   planName: string;
   billingCycle: BillingCycle;
   amount: number;

@@ -10,6 +10,7 @@ import {
 } from "antd";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
+import { LIMIT_KEYS } from "@/shared/constants/entitlement-keys.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { PayNowButton } from "../../components/pay-now-button";
@@ -20,6 +21,7 @@ import {
   useBilling,
   usePlans,
   useRequestPlanChange,
+  useUsage,
 } from "../../hooks/use-subscription-queries";
 import { BILLING_PERMISSION } from "../../hooks/use-subscription-state";
 import type {
@@ -29,6 +31,7 @@ import type {
   PlanResponse,
 } from "../../models/api/response/subscription-response.model";
 import { formatManilaDate, formatMoney } from "../../utils/format";
+import { formatStorage } from "../../utils/storage";
 
 const { Title } = Typography;
 
@@ -48,6 +51,13 @@ function gridColumns(count: number): string {
   return "md:grid-cols-2 xl:grid-cols-4";
 }
 
+/** A count, or for storage (kept in MB) a size people can read. */
+function violationAmount(limitKey: string, amount: number): string {
+  return limitKey === LIMIT_KEYS.STORAGE_MAX_MB
+    ? formatStorage(amount)
+    : String(amount);
+}
+
 function violationsOf(error: unknown): LimitViolation[] {
   const violations = (error as AxiosError<{ data?: { violations?: unknown } }>)
     .response?.data?.data?.violations;
@@ -63,7 +73,7 @@ function errorDetail(error: unknown): string {
 
 /**
  * All plans side by side with a monthly/annual toggle. Pre-selects the plan that fits what the
- * account actually used in its trial (BillingView.recommendedPlanCode). Choosing a plan records
+ * account actually used in its trial (UsageView.recommendedPlanCode). Choosing a plan records
  * the change; it takes effect once payment is confirmed (upgrades) or at period end (downgrades).
  */
 export default function PlanSelection() {
@@ -75,6 +85,8 @@ export default function PlanSelection() {
 
   const { data: billing, isLoading: billingLoading } = useBilling();
   const { data: plans = [], isLoading: plansLoading } = usePlans();
+  // Slow (counts in other services): the page shows without it, and the best fit appears when it lands.
+  const { data: usage } = useUsage();
   const requestChange = useRequestPlanChange();
 
   const [cycle, setCycle] = useState<BillingCycle>(
@@ -88,7 +100,7 @@ export default function PlanSelection() {
   const snapshot = billing?.entitlements;
   const isPaidActive = snapshot?.status === "Active";
   const bestFit =
-    billing?.recommendedPlanCode ??
+    usage?.recommendedPlanCode ??
     plans.find((p) => p.isRecommended)?.code ??
     null;
   const currentOrder =
@@ -170,7 +182,7 @@ export default function PlanSelection() {
                     {LIMIT_LABELS[v.limitKey] ?? v.limitKey}{" "}
                     {v.max === null
                       ? "couldn't be checked -- try again shortly"
-                      : `${v.used} (this plan allows ${v.max})`}
+                      : `${violationAmount(v.limitKey, v.used)} (this plan allows ${violationAmount(v.limitKey, v.max)})`}
                   </li>
                 ))}
               </ul>

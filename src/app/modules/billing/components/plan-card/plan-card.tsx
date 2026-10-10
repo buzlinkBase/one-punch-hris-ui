@@ -11,6 +11,7 @@ import {
   LIMIT_LABELS,
   SUPPORT_TIER_LABELS,
 } from "../../constants/label.const";
+import { formatStorage } from "../../utils/storage";
 import type {
   BillingCycle,
   PlanResponse,
@@ -33,8 +34,12 @@ interface PlanCardProps {
 const FEATURE_ORDER = Object.values(FEATURE_KEYS);
 const LIMIT_ORDER = Object.values(LIMIT_KEYS);
 
-function limitText(max: number): string {
-  return max === UNLIMITED ? BILLING_LABEL.UNLIMITED : max.toLocaleString();
+function limitText(key: string, max: number): string {
+  if (max === UNLIMITED) return BILLING_LABEL.UNLIMITED;
+  // Storage is stored in MB; people read GB.
+  return key === LIMIT_KEYS.STORAGE_MAX_MB
+    ? formatStorage(max)
+    : max.toLocaleString();
 }
 
 /** One plan, side by side with the others on the plan selection screen. */
@@ -101,7 +106,7 @@ export function PlanCard({
             <li key={key} className="flex justify-between gap-2">
               <span>{LIMIT_LABELS[key]}</span>
               <span className="font-semibold">
-                {limitText(plan.limits[key] ?? 0)}
+                {limitText(key, plan.limits[key] ?? 0)}
               </span>
             </li>
           ))}
