@@ -146,8 +146,8 @@ export const FEATURE_LABELS: Record<string, string> = {
   [FEATURE_KEYS.ANNOUNCEMENTS]: "Company announcements",
   [FEATURE_KEYS.AUDIT_TRAIL]: "Audit trail",
   [FEATURE_KEYS.CLIENTS_AGENCY]: "Clients & cost reports",
-  [FEATURE_KEYS.TIMEKEEPING_MOBILE]: "Onepunch Mobile Attendance",
-  [FEATURE_KEYS.PATROL_APP]: "One Patrol App",
+  [FEATURE_KEYS.TIMEKEEPING_MOBILE]: "Mobile Attendance (Geofencing)",
+  [FEATURE_KEYS.PATROL_APP]: "Patrol & Incident Report App",
 };
 
 export const LIMIT_LABELS: Record<string, string> = {
