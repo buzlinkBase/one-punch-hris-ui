@@ -40,6 +40,8 @@ import type { ChangeRestDayFilter } from "../../models/api/request/change-rest-d
 import type { ChangeRestDayResponse } from "../../models/api/response/change-rest-day-response.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title, Text } = Typography;
 
@@ -89,6 +91,7 @@ export default function ChangeRestDayList() {
   const { mutateAsync: declineEntry, isPending: isDeclining } =
     useDeclineChangeRestDay();
   const { data: employeeData = [] } = useEmployeeFilter();
+  const approval = useApprovalTabs(records);
 
   const employees = employeeData.map((e) => ({
     value: e.id,
@@ -512,26 +515,34 @@ export default function ChangeRestDayList() {
             key: "entries",
             label: "Entries",
             children: (
-              <Table<ChangeRestDayResponse>
-                rowKey={(r) => `${r.batchCode}-${r.employeeId}`}
-                dataSource={records}
-                columns={entryColumns}
-                loading={isTableLoading}
-                size="small"
-                pagination={{
-                  pageSize: 15,
-                  size: "small",
-                  showSizeChanger: false,
-                }}
-                scroll={{ x: "max-content" }}
-                sticky
-                components={{ header: { cell: ResizableTitle } }}
-                locale={{
-                  emptyText: committed.fromDate
-                    ? "No records found for the selected filters."
-                    : "Set the date range and click Search.",
-                }}
-              />
+              <>
+                <ApprovalTabs
+                  value={approval.tab}
+                  onChange={approval.setTab}
+                  pendingCount={approval.pendingCount}
+                  processedCount={approval.processedCount}
+                />
+                <Table<ChangeRestDayResponse>
+                  rowKey={(r) => `${r.batchCode}-${r.employeeId}`}
+                  dataSource={approval.rows}
+                  columns={entryColumns}
+                  loading={isTableLoading}
+                  size="small"
+                  pagination={{
+                    pageSize: 15,
+                    size: "small",
+                    showSizeChanger: false,
+                  }}
+                  scroll={{ x: "max-content" }}
+                  sticky
+                  components={{ header: { cell: ResizableTitle } }}
+                  locale={{
+                    emptyText: committed.fromDate
+                      ? "No records found for the selected filters."
+                      : "Set the date range and click Search.",
+                  }}
+                />
+              </>
             ),
           },
           {

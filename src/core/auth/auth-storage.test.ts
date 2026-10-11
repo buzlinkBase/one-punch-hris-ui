@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { authStorage } from "./auth-storage";
+import {
+  authStorage,
+  CONFIDENTIAL_CLEARANCE_PERMISSION,
+  CONFIDENTIAL_ENTRIES_PERMISSION,
+  CONFIDENTIAL_OPERATIONS_PERMISSION,
+} from "./auth-storage";
 
 describe("authStorage.removeTenant", () => {
   beforeEach(() => {
@@ -98,5 +103,70 @@ describe("authStorage.renameTenant", () => {
       "My Space",
       "Beta Renamed",
     ]);
+  });
+});
+
+describe("authStorage.hasConfidentialClearance", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const signIn = (roles: string[], permissions: string[] = []) =>
+    authStorage.save("token", {
+      email: "user@example.com",
+      name: "User",
+      roles,
+      permissions,
+    });
+
+  it("clears the Owner without an explicit grant", () => {
+    signIn(["Owner"]);
+    expect(authStorage.hasConfidentialClearance()).toBe(true);
+  });
+
+  it("does not clear an Admin without the grant", () => {
+    signIn(["Admin"], ["Workforce Setup:View"]);
+    expect(authStorage.hasConfidentialClearance()).toBe(false);
+  });
+
+  it("clears any role granted the permission", () => {
+    signIn(["HR"], [CONFIDENTIAL_CLEARANCE_PERMISSION]);
+    expect(authStorage.hasConfidentialClearance()).toBe(true);
+  });
+});
+
+describe("authStorage.getConfidentialGrants", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const signIn = (roles: string[], permissions: string[] = []) =>
+    authStorage.save("token", {
+      email: "user@example.com",
+      name: "User",
+      roles,
+      permissions,
+    });
+
+  it("reads each partial clearance from its own permission", () => {
+    signIn(["HR"], [CONFIDENTIAL_OPERATIONS_PERMISSION]);
+    expect(authStorage.getConfidentialGrants()).toEqual({
+      operations: true,
+      entries: false,
+    });
+
+    signIn(["HR"], [CONFIDENTIAL_ENTRIES_PERMISSION]);
+    expect(authStorage.getConfidentialGrants()).toEqual({
+      operations: false,
+      entries: true,
+    });
+  });
+
+  it("gives an Admin without the grants neither", () => {
+    signIn(["Admin"]);
+    expect(authStorage.getConfidentialGrants()).toEqual({
+      operations: false,
+      entries: false,
+    });
   });
 });

@@ -10,12 +10,15 @@ import {
 import type { TravelOrderApplicationResponse } from "@/app/modules/applications/travel-order-application/models/api/response/travel-order-application-response.model";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
 export default function PortalOfficialBusinessList() {
   const navigate = useNavigate();
   const { data: applications, isLoading } = useMyTravelOrderApplications();
+  const approval = useApprovalTabs(applications ?? []);
   const { mutateAsync: withdraw, isPending: isWithdrawing } =
     useWithdrawMyTravelOrderApplication();
 
@@ -100,11 +103,18 @@ export default function PortalOfficialBusinessList() {
 
       <div className="form-page-body">
         <Card>
+          <ApprovalTabs
+            value={approval.tab}
+            onChange={approval.setTab}
+            pendingCount={approval.pendingCount}
+            processedCount={approval.processedCount}
+            pendingLabel="Pending"
+          />
           <Table<TravelOrderApplicationResponse>
             rowKey="id"
             loading={isLoading}
             columns={columns}
-            dataSource={applications ?? []}
+            dataSource={approval.rows}
             pagination={{ pageSize: 15 }}
           />
         </Card>

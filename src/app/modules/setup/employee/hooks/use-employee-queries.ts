@@ -87,6 +87,14 @@ export function useEmployeeFilterOptions() {
   };
 }
 
+// Under the ["employees"] prefix, so saving an employee refreshes it with any new level.
+export function useJobLevels() {
+  return useQuery({
+    queryKey: [...QUERY_KEY, "job-levels"],
+    queryFn: () => employeeApi.getJobLevels(),
+  });
+}
+
 export function useEmployee(id: string | undefined) {
   return useQuery({
     queryKey: [...QUERY_KEY, id],
@@ -130,6 +138,34 @@ export function useUpdateEmployee() {
       });
       invalidateEmployeeFilter(queryClient);
     },
+  });
+}
+
+// The photo is saved on its own, right away -- not with the rest of the form. The cached
+// employee is only marked stale (no refetch): a refetch would reset the open form and throw
+// away edits the user hasn't saved yet. The page shows the returned link itself.
+export function useUploadEmployeePhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) =>
+      employeeApi.uploadPhoto(id, file),
+    onSuccess: (_url, { id }) =>
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEY, id],
+        refetchType: "none",
+      }),
+  });
+}
+
+export function useRemoveEmployeePhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => employeeApi.removePhoto(id),
+    onSuccess: (_result, id) =>
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEY, id],
+        refetchType: "none",
+      }),
   });
 }
 

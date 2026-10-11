@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Form, Input, InputNumber, Modal, Radio, Select } from "antd";
+import {
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Radio,
+  Select,
+} from "antd";
+import dayjs, { type Dayjs } from "dayjs";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 
 const fmt = (n: number) =>
@@ -16,6 +25,8 @@ export interface BalanceAdjustSubmitValues {
   amount: number;
   isAddition: boolean;
   particulars: string;
+  /** YYYY-MM-DD; only sent when the modal shows the entry date field. */
+  entryDate?: string;
 }
 
 interface FormValues {
@@ -23,17 +34,25 @@ interface FormValues {
   amount: number;
   direction: "add" | "remove";
   particulars: string;
+  entryDate?: Dayjs;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  // Row-triggered "Edit": the employee is fixed and shown read-only. Toolbar-triggered "Add":
+  // "Adjust" from a ledger's details: the employee is fixed and shown read-only. Toolbar "Add":
   // null, and an employee picker is shown instead — this is what lets HR seed an opening entry
   // for an employee who has no ledger rows yet (e.g. adopting this system mid-year).
   target: BalanceAdjustTarget | null;
   onSubmit: (values: BalanceAdjustSubmitValues) => Promise<void>;
   isSubmitting: boolean;
+  // For balances reported "as of" a date (Cash Bond): lets HR date the entry, e.g. an opening
+  // balance dated before any payroll in this system. Defaults to today.
+  showEntryDate?: boolean;
+  // What the amount is counted in, e.g. "Days" for leave credits. Defaults to "Amount" (pesos).
+  amountLabel?: string;
+  // Spinner increment; any value down to 0.0001 can still be typed (e.g. 0.25 or 0.125 days).
+  amountStep?: number;
 }
 
 // Shared by the Retirement and Uniform Allowance Ledger reports -- both need the exact same
@@ -45,6 +64,9 @@ export function BalanceAdjustModal({
   target,
   onSubmit,
   isSubmitting,
+  showEntryDate = false,
+  amountLabel = "Amount",
+  amountStep = 1,
 }: Props) {
   const [form] = Form.useForm<FormValues>();
   const { data: employees = [] } = useEmployeeFilter(
@@ -59,6 +81,7 @@ export function BalanceAdjustModal({
         amount: undefined,
         direction: "add",
         particulars: "",
+        entryDate: dayjs(),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,6 +94,10 @@ export function BalanceAdjustModal({
       amount: values.amount,
       isAddition: values.direction === "add",
       particulars: values.particulars,
+      entryDate:
+        showEntryDate && values.entryDate
+          ? values.entryDate.format("YYYY-MM-DD")
+          : undefined,
     });
   };
 
@@ -123,11 +150,30 @@ export function BalanceAdjustModal({
         </Form.Item>
         <Form.Item
           name="amount"
-          label="Amount"
+          label={amountLabel}
           rules={[{ required: true, message: "Required" }]}
         >
-          <InputNumber style={{ width: "100%" }} min={0.01} step={0.5} />
+          <InputNumber
+            className="w-full"
+            min={0.0001}
+            step={amountStep}
+            precision={4}
+            // Drops precision's trailing zeros ("0.2500" → "0.25") without fighting typing.
+            formatter={(v, { userTyping, input }) =>
+              userTyping ? input : v === undefined ? "" : String(Number(v))
+            }
+          />
         </Form.Item>
+        {showEntryDate && (
+          <Form.Item
+            name="entryDate"
+            label="Entry Date"
+            rules={[{ required: true, message: "Required" }]}
+            extra="Counts toward the total from this date onward."
+          >
+            <DatePicker className="w-full" allowClear={false} />
+          </Form.Item>
+        )}
         <Form.Item
           name="particulars"
           label="Reason"

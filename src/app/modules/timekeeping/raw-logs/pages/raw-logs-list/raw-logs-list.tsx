@@ -255,9 +255,11 @@ export default function RawLogsList() {
       messageApi.info("No data to export. Click Generate first.");
       return;
     }
-    const headers = Object.keys(rows[0]);
+    // Every row's columns, not just the first row's -- columnar rows only carry the Log columns
+    // they have, so a later row with more punches would otherwise lose them in the file.
+    const headers = [...new Set(rows.flatMap((r) => Object.keys(r)))];
     const strRows = rows.map((r) => headers.map((h) => r[h] ?? ""));
-    const date = new Date().toISOString().split("T")[0];
+    const date = dayjs().format("YYYY-MM-DD");
     if (format === "csv") {
       triggerDownload(buildFlatCsv(headers, strRows), `${name}-${date}.csv`);
     } else {

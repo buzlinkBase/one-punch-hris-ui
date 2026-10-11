@@ -49,6 +49,11 @@ import {
 import { useYearLocks, useReopenYear } from "../../hooks/use-year-lock-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
+import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
 } from "../../constants/label.const";
@@ -83,10 +88,7 @@ export default function GenerateYearEndAdjustment() {
   const [results, setResults] = useState<PayrollRunResult[]>([]);
 
   const { data: payrollGroups = [] } = usePayrollGroups();
-  const payrollGroupOptions = payrollGroups.map((p) => ({
-    value: p.id,
-    label: p.code || p.name,
-  }));
+  const payrollGroupOptions = toPayrollGroupOptions(payrollGroups);
 
   const { mutateAsync: previewRun, isPending: isPreviewing } =
     usePreviewYearEndAdjustment();
@@ -444,6 +446,8 @@ export default function GenerateYearEndAdjustment() {
                   mode="multiple"
                   allowClear
                   placeholder="All payroll groups"
+                  showSearch={{ filterOption: filterPayrollGroupOption }}
+                  optionRender={payrollGroupOptionRender}
                   options={payrollGroupOptions}
                   value={payrollGroupIds}
                   onChange={setPayrollGroupIds}

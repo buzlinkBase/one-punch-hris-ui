@@ -43,6 +43,21 @@ export const approvalWorkflowApi = {
     return httpClient.post<void>(`${ENDPOINT}/${id}/deactivate`);
   },
 
+  /**
+   * Activate when the current one drains: takes over once the active workflow for its
+   * type/scope has no pending requests. Resolves to whether it took over right away.
+   */
+  async scheduleActivation(id: string): Promise<boolean> {
+    const result = await httpClient.postUnwrapped<{ activated: boolean }>(
+      `${ENDPOINT}/${id}/schedule-activation`,
+    );
+    return result.activated;
+  },
+
+  cancelScheduledActivation(id: string): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/${id}/schedule-activation`);
+  },
+
   remove(id: string): Promise<void> {
     return httpClient.delete<void>(`${ENDPOINT}/${id}`);
   },

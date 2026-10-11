@@ -13,4 +13,6 @@ export interface CompanyInfoResponse {
   pagIbigNumber?: string;
   authorizedSignatoryName?: string;
   authorizedSignatoryTitle?: string;
+  /** A short-lived link to the logo; empty when there's none. */
+  logoUrl?: string;
 }

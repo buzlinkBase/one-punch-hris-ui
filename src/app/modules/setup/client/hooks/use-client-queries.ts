@@ -41,6 +41,27 @@ export function useUpdateClient() {
   });
 }
 
+export function useUploadClientLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) =>
+      clientApi.uploadLogo(id, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useRemoveClientLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => clientApi.removeLogo(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
 export function useDeleteClient() {
   const queryClient = useQueryClient();
   return useMutation({

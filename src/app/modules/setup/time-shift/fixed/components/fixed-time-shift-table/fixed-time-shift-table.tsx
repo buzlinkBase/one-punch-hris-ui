@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tag, Tooltip } from "antd";
 import {
   SearchOutlined,
+  CopyOutlined,
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
@@ -227,9 +228,22 @@ export default function FixedTimeShiftTable({
       title: "Actions",
       key: "actions",
       fixed: "right",
-      width: 80,
+      width: 120,
       render: (_, record) => (
         <Space>
+          <PermissionGate permission="Time Shift Setup:Create">
+            <Tooltip title="Duplicate">
+              <Button
+                type="text"
+                icon={<CopyOutlined />}
+                onClick={() =>
+                  navigate({
+                    to: `/setup/time-shift/fixed/duplicate/${record.id}`,
+                  })
+                }
+              />
+            </Tooltip>
+          </PermissionGate>
           <PermissionGate permission="Time Shift Setup:Edit">
             <Button
               type="text"

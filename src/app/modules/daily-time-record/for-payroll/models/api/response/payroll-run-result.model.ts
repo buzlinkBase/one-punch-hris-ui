@@ -29,6 +29,11 @@ export interface PayrollRunResult {
   // not yet acknowledged. Informational only — see backend Payroll.AcknowledgedAt. Only
   // meaningful when id is set.
   acknowledgedAt?: string | null;
+  // The client / payroll group this row was paid under, snapshotted at Generate time (backend
+  // Payroll.ClientId/PayrollGroupId) — not the employee's current assignment. Payroll Summary's
+  // Client and Payroll Group filters match on these, same as the server-side printout.
+  clientId?: string | null;
+  payrollGroupId?: string | null;
   employeeId: string;
   fullName: string;
   payPeriodStart: string;
@@ -171,7 +176,8 @@ export interface PayrollRunResult {
   // LastPayRunPayload.IncludeRetirementPayout.
   retirementPayout?: number;
   // Attendance
-  absences: number;
+  // Backend Payroll/PayrollSummaryLine.AbsencesAmount -- the name must match the API exactly.
+  absencesAmount: number;
   absentCount: number;
   lateAmount: number;
   lateHours: number;
@@ -317,7 +323,21 @@ export interface DtrPayResult {
   unpaidLeave: number;
 }
 
+// An employee a cutoff-mode run could not (fully) pay — shown as a warning on the preview.
+export interface PayrollNotReadyEmployee {
+  employeeId: string;
+  fullName?: string | null;
+  unapprovedDays: number;
+  batchCodes: string[];
+  // "UnapprovedDtr": days still awaiting DTR approval.
+  // "FixedSalaryAlreadyPaid": FIXED-salary employee skipped because an earlier run already
+  // paid this cutoff's salary.
+  reason: "UnapprovedDtr" | "FixedSalaryAlreadyPaid";
+}
+
 export interface PayrollRunResponse {
   data: PayrollRunResult[];
   total: number;
+  // Only returned by /calculate (the preview).
+  notReady?: PayrollNotReadyEmployee[];
 }

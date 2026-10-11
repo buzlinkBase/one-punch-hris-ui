@@ -73,13 +73,13 @@ function buildEndDateTime(
 ): string {
   if (!date || !endTime) return "";
   const end = dayjs(`${date}T${endTime}`);
-  return (endTime < startTime ? end.add(1, "day") : end).format(
+  return (endTime <= startTime ? end.add(1, "day") : end).format(
     "YYYY-MM-DDTHH:mm:ss",
   );
 }
 
 function isCrossMidnight(startTime: string, endTime: string): boolean {
-  return !!startTime && !!endTime && endTime < startTime;
+  return !!startTime && !!endTime && endTime <= startTime;
 }
 
 function detectMode(isManualEntry?: boolean): "datetime" | "hours" {

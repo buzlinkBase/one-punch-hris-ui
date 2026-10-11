@@ -25,6 +25,7 @@ export interface FixedTimeShiftResponse {
   otStart: string;
   overTimeThreshold: number;
   maxOvertimeHours: number | null;
+  nightDiffThreshold: number | null;
   minimumWorkMinutes: number;
   maxWorkingMinutes: number;
 }

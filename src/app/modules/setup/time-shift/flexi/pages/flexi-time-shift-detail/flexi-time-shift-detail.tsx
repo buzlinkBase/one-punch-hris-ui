@@ -12,6 +12,7 @@ import {
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { useIsDuplicateRoute } from "@/shared/hooks/use-is-duplicate-route";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -78,9 +79,10 @@ function addHoursToTimeSpan(timeSpan: string, hours: number): string {
 
 export default function FlexiTimeShiftDetail() {
   const { id } = useRouteParams<{ id?: string }>();
-  const isEdit = Boolean(id);
+  const isDuplicate = useIsDuplicateRoute();
+  const isEdit = Boolean(id) && !isDuplicate;
   const navigate = useNavigate();
-  const { data: selected } = useFlexiTimeShift(isEdit ? id : undefined);
+  const { data: selected } = useFlexiTimeShift(id);
   const { mutateAsync: add, isPending: isCreating } = useCreateFlexiTimeShift();
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateFlexiTimeShift();
@@ -106,6 +108,7 @@ export default function FlexiTimeShiftDetail() {
       withOT: false,
       overTimeThreshold: 60,
       maxOvertimeHours: null,
+      nightDiffThreshold: null,
     },
   });
 
@@ -141,14 +144,16 @@ export default function FlexiTimeShiftDetail() {
     lunchEndSec <= lunchStartSec;
 
   useEffect(() => {
-    if (isEdit || !startTime) return;
+    if (isEdit || isDuplicate || !startTime) return;
     setValue("endTime", addHoursToTimeSpan(startTime, 16));
-  }, [startTime, isEdit, setValue]);
+  }, [startTime, isEdit, isDuplicate, setValue]);
 
   useEffect(() => {
-    if (isEdit && selected) {
+    if ((isEdit || isDuplicate) && selected) {
       reset({
-        shiftName: selected.shiftName,
+        shiftName: isDuplicate
+          ? `${selected.shiftName} (Copy)`
+          : selected.shiftName,
         startTime: selected.startTime,
         endTime: selected.endTime,
         unpaidLunchBreak: selected.withLunchBreak === "UNPAID_BREAK",
@@ -160,9 +165,10 @@ export default function FlexiTimeShiftDetail() {
         withOT: selected.withOT,
         overTimeThreshold: selected.overTimeThreshold,
         maxOvertimeHours: selected.maxOvertimeHours,
+        nightDiffThreshold: selected.nightDiffThreshold,
       });
     }
-  }, [selected, isEdit, reset]);
+  }, [selected, isEdit, isDuplicate, reset]);
 
   const onSubmit = async (values: FlexiTimeShiftFormValues) => {
     const payload: CreateFlexiTimeShift = {
@@ -192,6 +198,7 @@ export default function FlexiTimeShiftDetail() {
       maxOvertimeHours: values.withOT
         ? (values.maxOvertimeHours ?? null)
         : null,
+      nightDiffThreshold: values.nightDiffThreshold ?? null,
       minimumWorkMinutes: values.minimumWorkMinutes,
       maxWorkingMinutes: values.maxWorkingMinutes,
     };
@@ -280,6 +287,7 @@ export default function FlexiTimeShiftDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     referenceTime={startTime}
+                    sameTimeIsNextDay
                   />
                 )}
               />
@@ -468,6 +476,31 @@ export default function FlexiTimeShiftDetail() {
               </Form.Item>
             </div>
           )}
+          <div className="form-grid-2">
+            <Form.Item
+              label={FLEXI_TIME_SHIFT_LABEL.NIGHT_DIFF_THRESHOLD}
+              validateStatus={errors.nightDiffThreshold ? "error" : ""}
+              help={
+                errors.nightDiffThreshold?.message ??
+                "Leave blank or 0 to use the company Night Diff Threshold"
+              }
+            >
+              <Controller
+                name="nightDiffThreshold"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    className="w-full"
+                    value={field.value ?? undefined}
+                    onChange={(v) => field.onChange(v ?? null)}
+                    min={0}
+                    suffix="min"
+                    placeholder="Company default"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
 
           <div className="form-action-footer">
             <Space className="form-action-footer-row">

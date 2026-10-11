@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Card,
   Form,
   Input,
@@ -12,12 +13,11 @@ import { SafetyCertificateOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { loginFormSchema, type LoginFormValues } from "./login-form.schema";
 import { authApi } from "./services/auth.api";
 import { getNotify } from "@/shared/utils/notify";
-import type { ApiResponse } from "@/shared/types/api-response.model";
 import { authStorage } from "@/core/auth/auth-storage";
+import { authErrorMessage } from "@/core/auth/auth-error-message";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
 import { guardCode } from "@/core/auth/guard-error";
 import {
@@ -25,6 +25,10 @@ import {
   saveInvitationSession,
 } from "@/core/auth/invitation-session";
 import { useGoogleLogin } from "@react-oauth/google";
+import {
+  SIGNED_OUT_PARAM,
+  signedOutMessage,
+} from "@/core/signalr/signed-out-action";
 
 const { Title, Text } = Typography;
 
@@ -111,13 +115,9 @@ export default function Login() {
       await acceptPendingInvitation();
       await proceedAfterLogin();
     } catch (err) {
-      const description = axios.isAxiosError(err)
-        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ?? "Invalid email or password.")
-        : "An unexpected error occurred.";
       getNotify().error({
         message: "Login failed",
-        description,
+        description: authErrorMessage(err, "Invalid email or password."),
         placement: "topRight",
       });
     }
@@ -143,11 +143,10 @@ export default function Login() {
         await acceptPendingInvitation();
         await proceedAfterLogin();
       } catch (err) {
-        const description = axios.isAxiosError(err)
-          ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-              ?.errorMessage ?? "Google login failed.")
-          : "An unexpected error occurred.";
-        notification.error({ message: "Login failed", description });
+        notification.error({
+          message: "Login failed",
+          description: authErrorMessage(err, "Google login failed."),
+        });
       } finally {
         setGoogleLoggingIn(false);
       }
@@ -194,6 +193,16 @@ export default function Login() {
           Sign in to continue managing your HR operations.
         </Text>
       </div>
+
+      {/* Signed out because the password was changed elsewhere or reset (use-tenant-hub). */}
+      {searchParams?.[SIGNED_OUT_PARAM] !== undefined && (
+        <Alert
+          type="info"
+          showIcon
+          className="mb-4"
+          message={signedOutMessage(searchParams[SIGNED_OUT_PARAM])}
+        />
+      )}
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item

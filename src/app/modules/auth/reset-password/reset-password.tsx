@@ -13,14 +13,13 @@ import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useState } from "react";
 import {
   resetPasswordFormSchema,
   type ResetPasswordFormValues,
 } from "./models/forms/reset-password-form.schema";
 import { useResetPasswordMutation } from "./hooks/use-reset-password-mutation";
-import type { ApiResponse } from "@/shared/types/api-response.model";
+import { authErrorMessage } from "@/core/auth/auth-error-message";
 
 const { Title, Text } = Typography;
 
@@ -47,13 +46,12 @@ export default function ResetPassword() {
       await resetPassword({ token, newPassword });
       setDone(true);
     } catch (err) {
-      const description = axios.isAxiosError(err)
-        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ?? "Failed to reset password. Please try again.")
-        : "An unexpected error occurred.";
       notification.error({
         message: "Reset failed",
-        description,
+        description: authErrorMessage(
+          err,
+          "Failed to reset password. Please try again.",
+        ),
         placement: "topRight",
       });
     }

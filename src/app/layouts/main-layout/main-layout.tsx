@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Badge,
   Button,
@@ -18,6 +24,7 @@ import {
   BarChartOutlined,
   BankOutlined,
   BellOutlined,
+  QuestionCircleOutlined,
   CalendarOutlined,
   CheckOutlined,
   ClockCircleOutlined,
@@ -27,6 +34,8 @@ import {
   FileProtectOutlined,
   FieldTimeOutlined,
   IdcardOutlined,
+  LineChartOutlined,
+  LockOutlined,
   MenuFoldOutlined,
   MenuOutlined,
   MenuUnfoldOutlined,
@@ -36,6 +45,8 @@ import {
   SafetyCertificateOutlined,
   SafetyOutlined,
   MoonOutlined,
+  NotificationOutlined,
+  PushpinFilled,
   SettingOutlined,
   SolutionOutlined,
   SunOutlined,
@@ -47,13 +58,24 @@ import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
 import {
   NAVIGATION_ITEMS,
+  getFeaturesForPath,
   getPermissionForPath,
+  getRequiredFeatures,
 } from "@/shared/constants/navigation.const";
+import {
+  LIMIT_KEYS,
+  SUBSCRIPTION_PROBLEM_TYPES,
+  UNLIMITED,
+  type FeatureKey,
+  type NavFeature,
+} from "@/shared/constants/entitlement-keys.const";
 import type { NavItem } from "@/shared/constants/navigation.const";
 import { useThemeStore } from "@/core/stores/theme.store";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
 import { resolveFallbackLanding } from "@/core/auth/tenant-routing";
 import { filterNavByPermission } from "./filter-nav-by-permission";
+import { ConfidentialDataNotice } from "@/shared/components/confidential-data-notice/confidential-data-notice";
+import { confidentialNoticeFor } from "@/shared/components/confidential-data-notice/confidential-notice-paths";
 import { useAuthUser } from "@/core/auth/use-auth-user";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
@@ -61,8 +83,29 @@ import { useTenantHub } from "@/core/signalr/use-tenant-hub";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { useApprovalHub } from "@/core/signalr/use-approval-hub";
 import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
+import {
+  useMarkAllNotificationsRead,
+  useMyNotifications,
+} from "@/core/notifications/hooks/use-user-notifications";
+import { toBellEntry } from "@/core/notifications/approval-bell-entry";
+import { ContextHelpDrawer } from "@/app/modules/help/components/context-help-drawer/context-help-drawer";
+import { useAnnouncementHub } from "@/core/signalr/use-announcement-hub";
+import {
+  useMyLatestAnnouncements,
+  useMyUnreadAnnouncementCount,
+} from "@/app/modules/portal/announcements/hooks/use-my-announcement-queries";
+import { AcknowledgementGate } from "@/app/modules/portal/announcements/components/acknowledgement-gate/acknowledgement-gate";
 import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
+import { useSubscriptionState } from "@/app/modules/billing/hooks/use-subscription-state";
+import { StorageBanner } from "@/app/modules/billing/components/storage-banner";
+import { SubscriptionBanner } from "@/app/modules/billing/components/subscription-banner";
+import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
+import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
+import type { FeatureLock } from "@/app/modules/billing/utils/feature-lock";
+import { CompanyLocked } from "@/app/modules/billing/components/company-locked";
+import { isCompanyLocked } from "@/app/modules/billing/utils/company-lock";
+import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import type { MenuProps } from "antd";
 
@@ -182,6 +225,11 @@ function getNavIcon(key: string): ReactNode {
     "daily-time-record-detail": <FileTextOutlined />,
     "daily-time-record-summary": <BarChartOutlined />,
     "daily-time-record-for-payroll": <IdcardOutlined />,
+    analytics: <LineChartOutlined />,
+    "analytics-workforce": <TeamOutlined />,
+    "analytics-attendance": <ClockCircleOutlined />,
+    "analytics-payroll": <DollarOutlined />,
+    "analytics-requests": <FileProtectOutlined />,
     reports: <BarChartOutlined />,
     "reports-tardiness": <ClockCircleOutlined />,
     setup: <SettingOutlined />,
@@ -206,6 +254,9 @@ function getNavIcon(key: string): ReactNode {
     clients: <TeamOutlined />,
     biometric: <SafetyCertificateOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
+    "portal-announcements": <NotificationOutlined />,
+    communication: <NotificationOutlined />,
+    "communication-announcements": <NotificationOutlined />,
     security: <SafetyOutlined />,
     "security-users": <UserOutlined />,
     "security-roles": <IdcardOutlined />,
@@ -219,12 +270,23 @@ function getNavIcon(key: string): ReactNode {
 /** Nav keys that don't depend on the tenant's HR database and stay enabled while it provisions. */
 const HR_DB_INDEPENDENT_KEYS = new Set(["dashboard"]);
 
+/** Why a menu item is locked by the plan, for its tooltip. */
+function lockTooltip(lock: FeatureLock): string {
+  return lock.reason === "revoked"
+    ? "Not included in your subscription"
+    : `Available on the ${lock.availableOn ?? "higher"} plan`;
+}
+
 function buildMenuItems(
   items: typeof NAVIGATION_ITEMS,
   hrDbReady: boolean,
   collapsed = false,
+  lockFor: (features: FeatureKey[]) => FeatureLock | null = () => null,
+  inherited: NavFeature[] = [],
 ): MenuItem[] {
   return items.map((item) => {
+    // A page needs every subscription feature on its ancestor chain (navigation.const.ts).
+    const features = item.feature ? [...inherited, item.feature] : inherited;
     if (item.type === "divider") {
       return { type: "divider" as const, key: item.key };
     }
@@ -253,12 +315,20 @@ function buildMenuItems(
         label,
         icon: getNavIcon(item.key),
         children: item.children
-          ? buildMenuItems(item.children, hrDbReady, collapsed)
+          ? buildMenuItems(
+              item.children,
+              hrDbReady,
+              collapsed,
+              lockFor,
+              features,
+            )
           : undefined,
       };
     }
 
     const disabled = !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
+    // Locked items stay clickable: the page explains what the plan lacks and how to get it.
+    const lock = item.path ? lockFor(getRequiredFeatures(features)) : null;
 
     // When collapsed, AntD's built-in popup already shows the label text on hover —
     // wrapping in Tooltip creates a nested tooltip that breaks the popup text rendering.
@@ -274,6 +344,13 @@ function buildMenuItems(
           {item.label}
         </span>
       </Tooltip>
+    ) : lock ? (
+      <Tooltip title={lockTooltip(lock)} placement="right">
+        <span className="flex items-center justify-between gap-2">
+          <span className="overflow-hidden text-ellipsis">{item.label}</span>
+          <LockOutlined className="text-xs opacity-60" />
+        </span>
+      </Tooltip>
     ) : (
       <span className="block overflow-hidden text-ellipsis">{item.label}</span>
     );
@@ -284,7 +361,7 @@ function buildMenuItems(
       icon: getNavIcon(item.key),
       disabled,
       children: item.children
-        ? buildMenuItems(item.children, hrDbReady, collapsed)
+        ? buildMenuItems(item.children, hrDbReady, collapsed, lockFor, features)
         : undefined,
     };
   });
@@ -417,10 +494,12 @@ export default function MainLayout() {
     () => window.matchMedia("(max-width: 767px)").matches,
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const noticeClearance = confidentialNoticeFor(location.pathname);
   const sessionUser = getSessionUser();
 
   useTenantHub();
@@ -430,33 +509,147 @@ export default function MainLayout() {
   const markTenantNotificationsRead = useTenantHubStore((s) => s.markAllRead);
   const hrDb = useTenantHubStore((s) => s.getHrDbStatus(sessionUser.tenantId));
 
-  // Same bell shows both tenant/account events and approval-workflow events -- two separate
-  // stores (different concerns, see approval-notification.store.ts's doc comment), merged here
-  // purely for display by timestamp.
+  // Same bell shows tenant/account events and approval-workflow events, merged here purely for
+  // display by timestamp. Approval updates for one person are saved server-side (they survive a
+  // refresh and reach people who were offline); pushes to every eligible approver aren't, and
+  // live in useApprovalNotificationStore for this session only.
   useApprovalHub();
-  const approvalNotifications = useApprovalNotificationStore(
+  const { data: savedPage } = useMyNotifications();
+  const { mutate: markSavedRead } = useMarkAllNotificationsRead();
+  const savedNotifications = useMemo(
+    () => (savedPage?.items ?? []).map(toBellEntry),
+    [savedPage],
+  );
+  const savedUnreadCount = savedPage?.unreadCount ?? 0;
+  const unsavedApprovalNotifications = useApprovalNotificationStore(
     (s) => s.notifications,
   );
-  const approvalUnreadCount = useApprovalNotificationStore(
+  const unsavedApprovalUnreadCount = useApprovalNotificationStore(
     (s) => s.unreadCount,
   );
-  const markApprovalNotificationsRead = useApprovalNotificationStore(
+  const markUnsavedApprovalRead = useApprovalNotificationStore(
     (s) => s.markAllRead,
   );
 
+  // Company announcements are saved server-side (unlike the two in-memory stores above) and stay
+  // unread until actually opened. Must come after useApprovalHub -- same hub connection.
+  const openAnnouncement = useCallback(
+    (announcementId: string) =>
+      navigate({ to: `/portal/announcements/${announcementId}` }),
+    [navigate],
+  );
+  useAnnouncementHub(openAnnouncement);
+  const { data: announcementUnreadCount = 0 } = useMyUnreadAnnouncementCount();
+  const { data: latestAnnouncements } = useMyLatestAnnouncements();
+  const announcements = latestAnnouncements?.data ?? [];
+
   const notifications = useMemo(
     () =>
-      [...tenantNotifications, ...approvalNotifications].sort(
+      [
+        ...tenantNotifications,
+        ...savedNotifications,
+        ...unsavedApprovalNotifications,
+      ].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
-    [tenantNotifications, approvalNotifications],
+    [tenantNotifications, savedNotifications, unsavedApprovalNotifications],
   );
-  const unreadCount = tenantUnreadCount + approvalUnreadCount;
+  const unreadCount =
+    tenantUnreadCount +
+    savedUnreadCount +
+    unsavedApprovalUnreadCount +
+    announcementUnreadCount;
   const markAllRead = () => {
     markTenantNotificationsRead();
-    markApprovalNotificationsRead();
+    markUnsavedApprovalRead();
+    if (savedUnreadCount > 0) markSavedRead();
   };
+  const activityItems: MenuItem[] = notifications.map((n) => {
+    // Approval updates open the related request; tenant/account events have nowhere to go.
+    const link = "link" in n ? n.link : undefined;
+    return {
+      key: n.id,
+      onClick: link ? () => navigate({ to: link }) : undefined,
+      label: (
+        <div className="py-0.5">
+          <p className="m-0 text-[13px] font-semibold text-(--ant-color-text)">
+            {n.title}
+          </p>
+          <p className="mt-0.5 mb-0 text-xs whitespace-normal text-(--ant-color-text-secondary)">
+            {n.message}
+          </p>
+          <p className="mt-1 mb-0 flex items-center justify-between gap-2 text-[11px] text-(--ant-color-text-tertiary)">
+            <span>{new Date(n.createdAt).toLocaleString()}</span>
+            {link && <span className="text-(--ant-color-primary)">View</span>}
+          </p>
+        </div>
+      ),
+    };
+  });
+  const announcementItems: MenuItem[] =
+    announcements.length > 0
+      ? [
+          {
+            key: "__announcements",
+            type: "group",
+            label: "Announcements",
+            children: announcements.map((a) => ({
+              key: `announcement-${a.id}`,
+              onClick: () => openAnnouncement(a.id),
+              label: (
+                <div className="py-0.5">
+                  <p
+                    className={`m-0 flex items-center gap-1.5 text-[13px] text-(--ant-color-text) ${a.isRead ? "font-normal" : "font-semibold"}`}
+                  >
+                    {!a.isRead && (
+                      <span className="inline-block size-1.5 shrink-0 rounded-full bg-(--ant-color-primary)" />
+                    )}
+                    {a.isPinned && (
+                      <PushpinFilled className="text-(--ant-color-primary)" />
+                    )}
+                    <span className="truncate">{a.title}</span>
+                  </p>
+                  <p className="mt-0.5 mb-0 text-xs whitespace-normal text-(--ant-color-text-secondary)">
+                    {a.needsAcknowledgement
+                      ? "Needs your acknowledgement"
+                      : (a.publishedByName ?? "Company")}
+                  </p>
+                </div>
+              ),
+            })),
+          },
+          {
+            key: "__all-announcements",
+            onClick: () => navigate({ to: "/portal/announcements" }),
+            label: (
+              <span className="text-xs text-(--ant-color-primary)">
+                View all announcements
+              </span>
+            ),
+          },
+          ...(activityItems.length > 0
+            ? [{ key: "__announcements-divider", type: "divider" as const }]
+            : []),
+        ]
+      : [];
+  const bellItems: MenuItem[] =
+    announcementItems.length + activityItems.length > 0
+      ? [...announcementItems, ...activityItems]
+      : [
+          {
+            key: "__empty",
+            disabled: true,
+            label: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No notifications yet"
+                className="py-3"
+              />
+            ),
+          },
+        ];
+
   const hrDbFailed =
     hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
 
@@ -510,7 +703,54 @@ export default function MainLayout() {
   // p-4/md:p-6 padding staying in place, so only the outer m-*/app-content-surface are dropped.
   const isPortalRoute = location.pathname.startsWith("/portal");
 
-  const menuItems = buildMenuItems(navItems, hrDb.ready, collapsed);
+  // The company's subscription: locks menu items and whole pages the plan doesn't include.
+  const subscription = useSubscriptionState();
+  const pageLock = subscription.lockFor(
+    getRequiredFeatures(getFeaturesForPath(location.pathname)),
+  );
+  const showRestriction = usePlanRestrictionStore((s) => s.show);
+
+  // Owning another company is a plan limit (companies.max) -- known here only when this user
+  // owns the current company, whose subscription is then their own. The server checks it
+  // regardless; this just says so before the user fills in the form.
+  const companiesMax =
+    subscription.snapshot?.limits[LIMIT_KEYS.COMPANIES_MAX] ?? UNLIMITED;
+  const ownsCurrentCompany = sessionUser.tenants.some(
+    (t) => t.tenantId === sessionUser.tenantId && t.roles.includes("Owner"),
+  );
+  const ownedCompanies = sessionUser.tenants.filter((t) =>
+    t.roles.includes("Owner"),
+  ).length;
+  const companyLimitReached =
+    ownsCurrentCompany &&
+    companiesMax !== UNLIMITED &&
+    ownedCompanies >= companiesMax;
+  const handleNewCompany = () => {
+    if (!companyLimitReached) {
+      navigate({ to: "/create-tenant" });
+      return;
+    }
+    showRestriction({
+      type: SUBSCRIPTION_PROBLEM_TYPES.PLAN_LIMIT_REACHED,
+      detail: `Your plan allows ${companiesMax} ${companiesMax === 1 ? "company" : "companies"}. Upgrade to add another.`,
+      limit: LIMIT_KEYS.COMPANIES_MAX,
+      max: companiesMax,
+      used: ownedCompanies,
+    });
+  };
+
+  // The owner's plan lapsed and this member isn't the owner or a billing admin: the company is
+  // closed to them (the server refuses their requests too), so no menu -- just the lock screen.
+  const companyLocked = isCompanyLocked(
+    subscription.snapshot,
+    subscription.canViewBilling,
+  );
+  const menuItems = buildMenuItems(
+    companyLocked ? [] : navItems,
+    hrDb.ready,
+    collapsed,
+    subscription.lockFor,
+  );
   const navEntries = flattenNavigation(navItems);
   const headerContext = buildHeaderContext(location.pathname, navEntries);
   const activeMenuKey = resolveActiveMenuKey(location.pathname, navEntries);
@@ -842,6 +1082,20 @@ export default function MainLayout() {
                 style={{ width: 240 }}
                 allowClear
               />
+              <Tooltip title="Help for this screen">
+                <button
+                  type="button"
+                  className="header-collapse-trigger"
+                  aria-label="Help"
+                  onClick={() => setHelpOpen(true)}
+                >
+                  <QuestionCircleOutlined />
+                </button>
+              </Tooltip>
+              <ContextHelpDrawer
+                open={helpOpen}
+                onClose={() => setHelpOpen(false)}
+              />
               <Dropdown
                 trigger={["click"]}
                 placement="bottomRight"
@@ -849,58 +1103,8 @@ export default function MainLayout() {
                   if (open) markAllRead();
                 }}
                 menu={{
-                  style: { minWidth: 320, maxHeight: 380, overflowY: "auto" },
-                  items:
-                    notifications.length > 0
-                      ? notifications.map((n) => ({
-                          key: n.id,
-                          label: (
-                            <div style={{ padding: "2px 0" }}>
-                              <p
-                                style={{
-                                  margin: 0,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                  color: "#1f2937",
-                                }}
-                              >
-                                {n.title}
-                              </p>
-                              <p
-                                style={{
-                                  margin: "2px 0 0",
-                                  fontSize: 12,
-                                  color: "#6b7280",
-                                  whiteSpace: "normal",
-                                }}
-                              >
-                                {n.message}
-                              </p>
-                              <p
-                                style={{
-                                  margin: "4px 0 0",
-                                  fontSize: 11,
-                                  color: "#9ca3af",
-                                }}
-                              >
-                                {new Date(n.createdAt).toLocaleString()}
-                              </p>
-                            </div>
-                          ),
-                        }))
-                      : [
-                          {
-                            key: "__empty",
-                            disabled: true,
-                            label: (
-                              <Empty
-                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                description="No notifications yet"
-                                style={{ padding: "12px 0" }}
-                              />
-                            ),
-                          },
-                        ],
+                  className: "min-w-80 max-w-96 max-h-110 overflow-y-auto",
+                  items: bellItems,
                 }}
               >
                 <button
@@ -995,9 +1199,12 @@ export default function MainLayout() {
                               }}
                             >
                               New company
+                              {companyLimitReached && (
+                                <LockOutlined className="ml-2 text-xs opacity-60" />
+                              )}
                             </span>
                           ),
-                          onClick: () => navigate({ to: "/create-tenant" }),
+                          onClick: handleNewCompany,
                         },
                       ],
                     }}
@@ -1048,6 +1255,9 @@ export default function MainLayout() {
           </div>
         </Header>
 
+        {hrDb.ready && !companyLocked && <SubscriptionBanner />}
+        {hrDb.ready && !companyLocked && <StorageBanner />}
+
         <Content
           className={
             isPortalRoute
@@ -1060,9 +1270,23 @@ export default function MainLayout() {
               tenantName={sessionUser.tenantName}
               failed={hrDbFailed}
             />
+          ) : companyLocked ? (
+            <CompanyLocked
+              companyName={sessionUser.tenantName}
+              status={subscription.snapshot?.status}
+              canSwitch={sessionUser.tenants.length > 1}
+              onSignOut={handleLogout}
+            />
           ) : (
-            <Outlet />
+            <>
+              {noticeClearance && (
+                <ConfidentialDataNotice clearance={noticeClearance} />
+              )}
+              {pageLock ? <FeatureLocked lock={pageLock} /> : <Outlet />}
+            </>
           )}
+          <AcknowledgementGate />
+          <PlanRestrictionModal />
         </Content>
       </Layout>
     </Layout>

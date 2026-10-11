@@ -26,6 +26,11 @@ import type { CreateAttendanceEntry } from "../../models/api/request/create-atte
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
@@ -174,7 +179,7 @@ export default function AttendanceEntryCreate() {
     if (t && outTime && includeOut) {
       const inMin = t.hour() * 60 + t.minute();
       const outMin = outTime.hour() * 60 + outTime.minute();
-      setOutDayOffset(outMin < inMin ? 1 : 0);
+      setOutDayOffset(outMin <= inMin ? 1 : 0);
     }
   };
 
@@ -183,7 +188,7 @@ export default function AttendanceEntryCreate() {
     if (t && inTime && includeIn) {
       const outMin = t.hour() * 60 + t.minute();
       const inMin = inTime.hour() * 60 + inTime.minute();
-      setOutDayOffset(outMin < inMin ? 1 : 0);
+      setOutDayOffset(outMin <= inMin ? 1 : 0);
     }
   };
 
@@ -195,7 +200,12 @@ export default function AttendanceEntryCreate() {
       if (shift) {
         setInTime(shiftTimeToDayjs(shift.startTime));
         setOutTime(shiftTimeToDayjs(shift.endTime));
-        setOutDayOffset(parseDayOffset(shift.endTime));
+        // Same clock-time in and out (e.g. 08:00 – 08:00) means out is the next day.
+        const outOffset = parseDayOffset(shift.endTime);
+        const sameClock =
+          shiftTimeToDayjs(shift.endTime).format("HH:mm") ===
+          shiftTimeToDayjs(shift.startTime).format("HH:mm");
+        setOutDayOffset(outOffset || (sameClock ? 1 : 0));
       }
     }
   };
@@ -212,10 +222,7 @@ export default function AttendanceEntryCreate() {
     value: c.id,
     label: `${c.code} - ${c.name}`,
   }));
-  const payrollGroupOptions = payrollGroups.map((p) => ({
-    value: p.id,
-    label: `${p.code} - ${p.name}`,
-  }));
+  const payrollGroupOptions = toPayrollGroupOptions(payrollGroups);
   const areaOptions = areas
     .filter((a) => !branchId || a.branchId === branchId)
     .map((a) => ({
@@ -511,11 +518,12 @@ export default function AttendanceEntryCreate() {
               <Select
                 placeholder="All payroll groups"
                 options={payrollGroupOptions}
+                optionRender={payrollGroupOptionRender}
                 value={payrollGroupId ?? undefined}
                 onChange={(v: string | undefined) =>
                   setPayrollGroupId(v ?? null)
                 }
-                showSearch={{ filterOption: filterByLabel }}
+                showSearch={{ filterOption: filterPayrollGroupOption }}
                 allowClear
               />
             </Form.Item>

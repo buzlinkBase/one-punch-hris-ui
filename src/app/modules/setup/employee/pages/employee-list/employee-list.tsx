@@ -21,7 +21,7 @@ import {
   clearedQuery,
   hasActiveFilters,
 } from "../../components/employee-table/employee-list-query.mapper";
-import type { EmployeeListQuery } from "../../models/api/request/employee-list-query.model";
+import { useEmployeeListViewStore } from "../../store/employee-list-view.store";
 import EmployeeImportPreviewModal from "../../components/employee-import-preview-modal/employee-import-preview-modal";
 import { EMPLOYEE_LABEL } from "../../constants/label.const";
 import InviteUserModal from "@/app/modules/security/users/components/invite-user-modal/invite-user-modal";
@@ -35,20 +35,17 @@ const { Title } = Typography;
 
 const { Search } = Input;
 
-const EMPLOYEE_PAGE_SIZE = 20;
-
-const INITIAL_QUERY: EmployeeListQuery = {
-  page: 1,
-  limit: EMPLOYEE_PAGE_SIZE,
-};
-
 export default function EmployeeList() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Single source of truth for the table: page, size, sort, keyword and every column filter.
-  // Paging/sorting/filtering all run on the server (GET employees/list).
-  const [query, setQuery] = useState<EmployeeListQuery>(INITIAL_QUERY);
-  const [searchText, setSearchText] = useState("");
+  // Paging/sorting/filtering all run on the server (GET employees/list). Held in a store so that
+  // editing an employee and coming back (which remounts this page) refreshes the same search the
+  // user was on -- with no filter active it is just the plain list.
+  const query = useEmployeeListViewStore((s) => s.query);
+  const setQuery = useEmployeeListViewStore((s) => s.setQuery);
+  const searchText = useEmployeeListViewStore((s) => s.searchText);
+  const setSearchText = useEmployeeListViewStore((s) => s.setSearchText);
   const { data, isLoading, refetch, isFetching } = useEmployeeSearch(query);
   const employees = data?.data ?? [];
   const total = data?.metaData?.totalCount ?? 0;

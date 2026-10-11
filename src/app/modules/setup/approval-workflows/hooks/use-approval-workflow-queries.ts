@@ -63,6 +63,27 @@ export function useDeactivateApprovalWorkflow() {
   });
 }
 
+export function useScheduleApprovalWorkflowActivation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => approvalWorkflowApi.scheduleActivation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useCancelScheduledApprovalWorkflowActivation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      approvalWorkflowApi.cancelScheduledActivation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
 export function useDeleteApprovalWorkflow() {
   const queryClient = useQueryClient();
   return useMutation({

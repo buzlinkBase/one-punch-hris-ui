@@ -8,6 +8,18 @@ const KEYS = {
 
 const EXPIRY_BUFFER_MS = 60_000;
 
+/** hrms-api ConfidentialAccessScope.ClearancePermission. */
+export const CONFIDENTIAL_CLEARANCE_PERMISSION = "Confidential Records:Access";
+/** Partial clearances: day-to-day records / money entries, never pay figures. */
+export const CONFIDENTIAL_OPERATIONS_PERMISSION =
+  "Confidential Records:Operations";
+export const CONFIDENTIAL_ENTRIES_PERMISSION = "Confidential Records:Entries";
+
+export interface ConfidentialGrants {
+  operations: boolean;
+  entries: boolean;
+}
+
 export interface AuthUser {
   email: string;
   name: string;
@@ -76,6 +88,14 @@ export const authStorage = {
     return () => listeners.delete(listener);
   },
 
+  /**
+   * Another tab changed the shared session in localStorage (see auth-session-sync.ts): drops the
+   * cached snapshot and tells subscribers, same as a local save. notify() itself is module-private.
+   */
+  notifyExternalChange() {
+    notify();
+  },
+
   /** Stable-reference snapshot of getUser(), for useSyncExternalStore (see useAuthUser). */
   getUserSnapshot(): AuthUser | null {
     if (userSnapshot === undefined) {
@@ -131,6 +151,22 @@ export const authStorage = {
     if (this.hasRole("Owner")) return true;
     const granted = this.getPermissions();
     return codes.some((code) => granted.includes(code));
+  },
+
+  // Clearance to see and tag confidential employees -- the Owner, or a role the Owner granted
+  // the permission to. Admin gets no shortcut (mirrors hrms-api's HasConfidentialClearance); the
+  // API enforces it, this only decides what to show.
+  hasConfidentialClearance(): boolean {
+    return this.hasPermission(CONFIDENTIAL_CLEARANCE_PERMISSION);
+  },
+
+  // Explicit grants only (no Owner shortcut needed -- the Owner has full clearance anyway).
+  getConfidentialGrants(): ConfidentialGrants {
+    const granted = this.getPermissions();
+    return {
+      operations: granted.includes(CONFIDENTIAL_OPERATIONS_PERMISSION),
+      entries: granted.includes(CONFIDENTIAL_ENTRIES_PERMISSION),
+    };
   },
 
   hasRole(role: string): boolean {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { message } from "antd";
+import { message, notification } from "antd";
 import { authStorage } from "@/core/auth/auth-storage";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
@@ -10,10 +10,16 @@ import { approvalHub } from "./approval-hub.connection";
 import {
   TENANT_HUB_METHODS,
   type HrDbCreatedNotification,
+  type RolesChangedNotification,
   type SessionRevokedNotification,
+  type SignedOutNotification,
+  type SubscriptionChangedNotification,
   type TenantCreatedNotification,
   type TenantRenamedNotification,
 } from "./tenant-hub.types";
+import { rolesChangedAction } from "./roles-changed-action";
+import { describeAccessChange } from "./describe-access-change";
+import { SIGNED_OUT_PARAM, shouldSignOut } from "./signed-out-action";
 
 const POLL_INTERVAL_MS = 10_000;
 const POLL_MAX_MS = 10 * 60_000; // stop after 10 minutes
@@ -77,7 +83,16 @@ export function useTenantHub() {
       });
     };
 
-    const handleRolesChanged = async () => {
+    const handleRolesChanged = async (payload?: RolesChangedNotification) => {
+      // Only the company this session is working in matters -- see rolesChangedAction.
+      const action = rolesChangedAction(
+        payload?.tenantId,
+        authStorage.getTenantId(),
+        authStorage.getTenants().map((t) => t.tenantId),
+      );
+      if (action === "ignore") return;
+
+      const before = authStorage.getUser();
       try {
         // force=true -- this fires because roles changed, not because the token expired, so
         // the existing-token-is-still-valid shortcut inside refreshAccessToken must be
@@ -87,10 +102,20 @@ export function useTenantHub() {
         // A real 401 already hard-redirects to /login inside refreshAccessToken.
         return;
       }
+      if (action === "refresh-silently") return;
+
       queryClient.invalidateQueries();
       // Approver-group membership is derived from the token on connect -- see restart().
       void approvalHub.restart().catch(() => {});
-      message.info("Your permissions were updated.");
+
+      const after = authStorage.getUser();
+      if (!before || !after) return;
+      const notice = describeAccessChange(before, after);
+      notification.info({
+        message: notice.title,
+        description: notice.description,
+        placement: "topRight",
+      });
     };
 
     const handleTenantRenamed = async (
@@ -133,11 +158,36 @@ export function useTenantHub() {
       }
     };
 
+    // The password was changed elsewhere (or reset): this session's refresh token is already
+    // revoked, so leave now rather than fail at the next refresh. The login page says why.
+    const handleSignedOut = (payload: SignedOutNotification) => {
+      if (!shouldSignOut(payload, authStorage.getToken())) return;
+      queryClient.clear();
+      authStorage.clear();
+      window.location.href = `/login?${SIGNED_OUT_PARAM}=${encodeURIComponent(payload.reason ?? "")}`;
+    };
+
+    // The plan, status or an override changed: the company's entitlements are stale.
+    const handleSubscriptionChanged = (
+      payload?: SubscriptionChangedNotification,
+    ) => {
+      const tenantId = authStorage.getTenantId() ?? "";
+      if (payload?.tenantIds?.length && !payload.tenantIds.includes(tenantId)) {
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: ["subscription"] });
+    };
+
     connection.on(TENANT_HUB_METHODS.onTenantCreated, handleTenantCreated);
     connection.on(TENANT_HUB_METHODS.onHrDbCreated, handleHrDbCreated);
     connection.on(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
     connection.on(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
     connection.on(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
+    connection.on(TENANT_HUB_METHODS.onSignedOut, handleSignedOut);
+    connection.on(
+      TENANT_HUB_METHODS.onSubscriptionChanged,
+      handleSubscriptionChanged,
+    );
 
     // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke (the
     // first mount's connection gets stopped mid-negotiate by its own cleanup before this ever
@@ -198,6 +248,11 @@ export function useTenantHub() {
       connection.off(TENANT_HUB_METHODS.onRolesChanged, handleRolesChanged);
       connection.off(TENANT_HUB_METHODS.onSessionRevoked, handleSessionRevoked);
       connection.off(TENANT_HUB_METHODS.onTenantRenamed, handleTenantRenamed);
+      connection.off(TENANT_HUB_METHODS.onSignedOut, handleSignedOut);
+      connection.off(
+        TENANT_HUB_METHODS.onSubscriptionChanged,
+        handleSubscriptionChanged,
+      );
       if (pollTimer.current) clearInterval(pollTimer.current);
       void tenantHub.stop();
       started.current = false;

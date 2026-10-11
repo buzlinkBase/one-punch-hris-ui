@@ -114,6 +114,7 @@ export default function PortalLoanApplicationCreate() {
     });
     setBreakdown(
       (record.breakdown ?? []).map((r, i) => ({
+        id: r.id,
         period: i + 1,
         date: r.date?.replace(/Z$/, "").split("T")[0] ?? "",
         principal: r.principal,
@@ -204,12 +205,13 @@ export default function PortalLoanApplicationCreate() {
     };
 
     if (record) {
-      // Existing installment ids by period, like the admin edit -- rows update in place.
+      // Each stored installment sends its own id back so it updates in place; a regenerated
+      // schedule has none, so the API replaces the old installments.
       await update({
         ...common,
         id: record.id,
         details: breakdown.map((r) => ({
-          id: record.breakdown?.[r.period - 1]?.id ?? "",
+          id: r.id,
           date: r.date,
           principal: r.principal,
           interest: r.interest,

@@ -5,6 +5,7 @@ export const COMPANY_POLICY_LABEL = {
 
   SECTION_COMPANY_INFO: "Company Profile",
   COMPANY_NAME: "Company Name",
+  LOGO: "Company Logo",
   SHORT_NAME: "Short Name",
   ADDRESS: "Address",
   CONTACT: "Contact Number",
@@ -27,6 +28,7 @@ export const COMPANY_POLICY_LABEL = {
   SECTION_STATUTORY: "Cross-Month Cutoff Credit Policies",
   SECTION_MINIMUM_TAKEHOME: "Minimum Take-Home Pay",
   SECTION_OT_ND_CALCULATION: "OT/ND Calculation Method",
+  SECTION_HOURLY_RATE: "Hourly Rate",
 
   OT_INCLUSION: "OT Inclusion",
   OT_ELIGIBILITY: "OT Eligibility",
@@ -48,6 +50,7 @@ export const COMPANY_POLICY_LABEL = {
   WTAX_CROSS_MONTH_CREDIT_POLICY: "Credit Withholding Tax To",
   REQUIRED_TAKEHOME_PERCENTAGE: "Minimum Take-Home (% of Gross Income)",
   OT_ND_CALCULATION_METHOD: "OT/ND Calculation Method",
+  HOURLY_RATE_DIVISOR: "Hourly Rate Divisor",
 
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
@@ -105,18 +108,36 @@ export const HOLIDAY_TIME_BASIS_OPTIONS = [
   },
 ];
 
-// How hours that are overtime and/or night-differential compound their rates. Compounded
-// (default) is the DOLE-standard formula (dayRate x otRate x ndRate) — see
-// OtNdCalculationMethod/CompoundedOtRateStrategy (backend). Additive computes LESS than
-// Compounded for any such hour — the modal shows a compliance warning when it's selected.
+// How OT / night-differential hours are priced -- each is its own pay calculator on the backend
+// (hrms-api Hrms.Core/Calculators/DtrPay). Additive (the default, most common) prices the DTR's
+// display hours one rate each (Hrs x day rate, OT x OT rate, ND x ND premium); Compounded is the
+// DOLE-standard formula (day x OT x ND). Additive pays LESS than Compounded for such hours, so
+// the screen shows a compliance warning while it's selected.
+export const DEFAULT_OT_ND_CALCULATION_METHOD = "Additive";
+
 export const OT_ND_CALCULATION_METHOD_OPTIONS = [
   {
-    value: "Compounded",
-    label: "Compounded (recommended, DOLE-standard)",
+    value: "Additive",
+    label: "Additive (most common)",
   },
   {
-    value: "Additive",
-    label: "Additive",
+    value: "Compounded",
+    label: "Compounded (DOLE-standard)",
+  },
+];
+
+// What the daily rate is divided by to get the hourly rate every payroll hour bucket is priced
+// from (hrms-api RateHelper.GetHourlyRate). Fixed 8 hours is the default.
+export const DEFAULT_HOURLY_RATE_DIVISOR = "Fixed8Hours";
+
+export const HOURLY_RATE_DIVISOR_OPTIONS = [
+  {
+    value: "Fixed8Hours",
+    label: "Fixed 8 hours (Daily Rate ÷ 8)",
+  },
+  {
+    value: "ShiftMaxWorkingHours",
+    label: "Shift's max working hours (Daily Rate ÷ shift hours)",
   },
 ];
 

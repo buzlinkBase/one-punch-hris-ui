@@ -11,12 +11,15 @@ import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-ty
 import type { LeaveApplicationResponse } from "@/app/modules/applications/leave-application/models/api/response/leave-application-response.model";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
 export default function PortalLeaveApplicationList() {
   const navigate = useNavigate();
   const { data: applications, isLoading } = useMyLeaveApplications();
+  const approval = useApprovalTabs(applications ?? []);
   const { data: leaveTypes } = useLeaveTypes();
   const { mutateAsync: withdraw, isPending: isWithdrawing } =
     useWithdrawMyLeaveApplication();
@@ -108,11 +111,18 @@ export default function PortalLeaveApplicationList() {
 
       <div className="form-page-body">
         <Card>
+          <ApprovalTabs
+            value={approval.tab}
+            onChange={approval.setTab}
+            pendingCount={approval.pendingCount}
+            processedCount={approval.processedCount}
+            pendingLabel="Pending"
+          />
           <Table<LeaveApplicationResponse>
             rowKey="id"
             loading={isLoading}
             columns={columns}
-            dataSource={applications ?? []}
+            dataSource={approval.rows}
             pagination={{ pageSize: 15 }}
           />
         </Card>

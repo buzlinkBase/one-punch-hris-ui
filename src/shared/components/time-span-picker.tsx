@@ -22,6 +22,11 @@ interface TimeSpanPickerProps {
    * the value is emitted as next-day. The manual checkbox is hidden.
    */
   referenceTime?: string | null;
+  /**
+   * Auto mode only: also treat a picked time equal to the reference time as
+   * next-day (e.g. 08:00 → 08:00 is a 24h span). Use for shift end times.
+   */
+  sameTimeIsNextDay?: boolean;
   disabled?: boolean;
 }
 
@@ -38,6 +43,7 @@ export function TimeSpanPicker({
   className,
   placeholder,
   referenceTime,
+  sameTimeIsNextDay = false,
   disabled = false,
 }: TimeSpanPickerProps) {
   const dayOffset = getDayOffset(value);
@@ -60,9 +66,13 @@ export function TimeSpanPicker({
     if (autoMode) {
       const refOffset = getDayOffset(referenceTime);
       const refPart = getTimePart(referenceTime);
-      // If picked time is earlier than the reference's time-of-day, it's one
-      // day ahead of the reference (which may itself already be +1 or more).
-      offset = timeStr < refPart ? refOffset + 1 : refOffset;
+      // If picked time is earlier than (or, with sameTimeIsNextDay, equal to)
+      // the reference's time-of-day, it's one day ahead of the reference
+      // (which may itself already be +1 or more).
+      const crosses = sameTimeIsNextDay
+        ? timeStr <= refPart
+        : timeStr < refPart;
+      offset = crosses ? refOffset + 1 : refOffset;
     }
     emit(timeStr, offset);
   };

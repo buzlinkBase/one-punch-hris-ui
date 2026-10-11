@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import { authStorage } from "@/core/auth/auth-storage";
 import { queryClient } from "@/core/query-client";
+import { MY_NOTIFICATIONS_QUERY_KEY } from "@/core/notifications/hooks/use-user-notifications";
+import { approvalMessage } from "@/core/notifications/approval-bell-entry";
+import { approvalLink } from "@/core/notifications/approval-link";
 import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
 import { approvalHub } from "./approval-hub.connection";
 import { APPROVAL_LIST_QUERY_KEYS } from "./approval-query-keys";
@@ -9,38 +12,20 @@ import {
   type ApprovalPushNotification,
 } from "./approval-hub.types";
 
-function buildMessage(payload: ApprovalPushNotification): string {
-  const step =
-    payload.stepNumber && payload.totalSteps
-      ? `step ${payload.stepNumber} of ${payload.totalSteps}`
-      : null;
-  if (payload.statusLabel === "Pending Your Approval") {
-    return `${payload.applicantName}'s ${payload.applicationTypeLabel} application is waiting on you${
-      step ? ` (${step})` : ""
-    }.`;
-  }
-  // Intermediate step cleared on a multi-step chain -- the applicant's "it moved forward" notice.
-  if (payload.statusLabel === "Step Approved") {
-    return `Your ${payload.applicationTypeLabel} application passed ${step ?? "a step"} and moved to the next approver.`;
-  }
-  return `Your ${payload.applicationTypeLabel} application was ${payload.statusLabel.toLowerCase()}.`;
-}
-
 /**
- * Starts hrms-api's NotificationHub connection for the authenticated session and keeps
- * useApprovalNotificationStore in sync with pushed approval events. Mount once at the
+ * Starts hrms-api's NotificationHub connection for the authenticated session. Mount once at the
  * app-shell level (MainLayout), alongside useTenantHub — it stays alive for as long as that
  * layout is mounted.
  *
- * On every push, also invalidates the two query keys ApprovalStatusCell/ApprovalTimeline read
- * (src/shared/hooks/use-approval-queries.ts) plus every list showing that application type
- * (APPROVAL_LIST_QUERY_KEYS), so any currently-open page refreshes live instead of waiting on
- * the 5-minute staleTime.
+ * A push for one person is already saved server-side (the bell's entries, see
+ * use-user-notifications.ts), so it only refreshes the bell; a push to every eligible approver
+ * isn't saved and goes to useApprovalNotificationStore for this session. It also invalidates the two
+ * query keys ApprovalStatusCell/ApprovalTimeline read (src/shared/hooks/use-approval-queries.ts)
+ * plus every list showing that application type (APPROVAL_LIST_QUERY_KEYS), so any open page
+ * refreshes live instead of waiting on the 5-minute staleTime.
  */
 export function useApprovalHub() {
-  const addNotification = useApprovalNotificationStore(
-    (s) => s.addNotification,
-  );
+  const addUnsaved = useApprovalNotificationStore((s) => s.addNotification);
   const started = useRef(false);
 
   useEffect(() => {
@@ -50,20 +35,21 @@ export function useApprovalHub() {
     const connection = approvalHub.getConnection();
 
     const handleApprovalNotification = (payload: ApprovalPushNotification) => {
-      addNotification({
-        id: `approval-${payload.approvalInstanceId}-${payload.statusLabel}-${payload.timestampUtc}`,
-        title: `${payload.applicationTypeLabel} — ${payload.statusLabel}`,
-        message: buildMessage(payload),
-        applicationType: payload.applicationType,
-        applicationId: payload.applicationId,
-        approvalInstanceId: payload.approvalInstanceId,
-        createdAt: payload.timestampUtc,
-        severity:
-          payload.statusLabel === "Declined" ||
-          payload.statusLabel === "Cancelled"
-            ? "warning"
-            : "info",
-      });
+      if (payload.id) {
+        // Saved server-side: the bell reloads its entries.
+        queryClient.invalidateQueries({ queryKey: MY_NOTIFICATIONS_QUERY_KEY });
+      } else {
+        // A push to every eligible approver isn't saved (the request is in the approval
+        // queue), so it's shown for this session only, as before.
+        addUnsaved({
+          id: `approval-${payload.approvalInstanceId}-${payload.statusLabel}-${payload.timestampUtc}`,
+          title: `${payload.applicationTypeLabel} — ${payload.statusLabel}`,
+          message: approvalMessage(payload),
+          createdAt: payload.timestampUtc,
+          link: approvalLink(payload),
+          severity: "info",
+        });
+      }
 
       queryClient.invalidateQueries({
         queryKey: [
@@ -95,8 +81,7 @@ export function useApprovalHub() {
 
     // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke --
     // see tenant-hub.connection.ts's stop() for the full rationale. A genuine connection
-    // failure just means no live push for this session; the existing 5-minute staleTime/
-    // window-focus refetch is the fallback.
+    // failure just means no live push for this session; the bell still loads its saved entries.
     void approvalHub.start().catch(() => {});
 
     return () => {
@@ -107,5 +92,5 @@ export function useApprovalHub() {
       void approvalHub.stop();
       started.current = false;
     };
-  }, [addNotification]);
+  }, [addUnsaved]);
 }

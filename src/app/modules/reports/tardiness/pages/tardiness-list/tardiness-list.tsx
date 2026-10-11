@@ -18,6 +18,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { formatDecimal } from "@/shared/utils/number.util";
 import { useTardinessRecords } from "../../hooks/use-tardiness-queries";
 
 function getSemiMonthlyCutoff(): { fromDate: string; toDate: string } {
@@ -82,9 +83,9 @@ function toTardinessRows(records: TardinessResponse[]): string[][] {
     r.department ?? "",
     r.scheduledIn,
     r.actualIn ?? "",
-    String(r.gracePeriodMinutes),
-    String(r.tardinessMinutes),
-    String(r.deductibleMinutes),
+    formatDecimal(r.gracePeriodMinutes),
+    formatDecimal(r.tardinessMinutes),
+    formatDecimal(r.deductibleMinutes),
   ]);
 }
 

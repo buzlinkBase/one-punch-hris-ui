@@ -13,6 +13,8 @@ import TravelOrderTable from "../../components/travel-order-table";
 import { TRAVEL_ORDER_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
@@ -48,6 +50,7 @@ export default function TravelOrderList() {
     if (!employeeFilter) return applications;
     return applications.filter((a) => a.employeeId === employeeFilter);
   }, [applications, employeeFilter]);
+  const approval = useApprovalTabs(filtered);
 
   return (
     <div className="content-page">
@@ -115,8 +118,15 @@ export default function TravelOrderList() {
         />
       </div>
 
+      <ApprovalTabs
+        value={approval.tab}
+        onChange={approval.setTab}
+        pendingCount={approval.pendingCount}
+        processedCount={approval.processedCount}
+      />
+
       <TravelOrderTable
-        data={filtered}
+        data={approval.rows}
         employees={employees}
         loading={isLoading || isFetching}
         actionLoading={isChangingStatus}

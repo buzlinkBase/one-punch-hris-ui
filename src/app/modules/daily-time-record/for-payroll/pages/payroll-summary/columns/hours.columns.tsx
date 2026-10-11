@@ -4,7 +4,9 @@ import { fmtH } from "../utils/payroll-summary.util";
 
 // Full Hrs/OT/ND/ND-OT breakdown per pay category, mirroring the DTR Detail table's
 // grouping exactly (dtr-detail-table.tsx) so Payroll Summary has the same granularity
-// once DTR rows are rolled up into a run — see backend ComputeHoursBreakdown.
+// once DTR rows are rolled up into a run — see backend ComputeHoursBreakdown. Hours are
+// natural: Hrs and OT include their night hours, ND holds every night hour, and ND-OT is the
+// night-OT part already counted in both OT and ND.
 const hourCol = (
   title: string,
   dataIndex: keyof PayrollRunResult,

@@ -28,6 +28,11 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import type { EmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/models/api/request/employee-filter.model";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import type { DeviceCommandRecord } from "../../models/api/response/device-command-record.model";
 import type { SetEmployeeCommandPayload } from "../../models/api/request/set-employee-command.model";
@@ -305,10 +310,10 @@ function QueryTemplatesSection({ sn }: { sn: string }) {
         />
         <Select
           allowClear
-          showSearch
-          optionFilterProp="label"
+          showSearch={{ filterOption: filterPayrollGroupOption }}
           placeholder="All Payroll Groups"
-          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
+          options={toPayrollGroupOptions(payrollGroups)}
+          optionRender={payrollGroupOptionRender}
           value={filter.payrollGroupId ?? undefined}
           onChange={(val) =>
             setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))
@@ -498,10 +503,10 @@ function SyncEmployeesPanel({
         />
         <Select
           allowClear
-          showSearch
-          optionFilterProp="label"
+          showSearch={{ filterOption: filterPayrollGroupOption }}
           placeholder="All Payroll Groups"
-          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
+          options={toPayrollGroupOptions(payrollGroups)}
+          optionRender={payrollGroupOptionRender}
           value={filter.payrollGroupId ?? undefined}
           onChange={(val) =>
             setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))
@@ -919,10 +924,10 @@ function BulkDeleteEmployeePanel({ sn }: { sn: string }) {
         />
         <Select
           allowClear
-          showSearch
-          optionFilterProp="label"
+          showSearch={{ filterOption: filterPayrollGroupOption }}
           placeholder="All Payroll Groups"
-          options={payrollGroups.map((p) => ({ value: p.id, label: p.name }))}
+          options={toPayrollGroupOptions(payrollGroups)}
+          optionRender={payrollGroupOptionRender}
           value={filter.payrollGroupId ?? undefined}
           onChange={(val) =>
             setFilter((f) => ({ ...f, payrollGroupId: val ?? null }))

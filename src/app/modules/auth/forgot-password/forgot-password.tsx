@@ -11,14 +11,13 @@ import { LockOutlined } from "@ant-design/icons";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useState } from "react";
 import {
   forgotPasswordFormSchema,
   type ForgotPasswordFormValues,
 } from "./models/forms/forgot-password-form.schema";
 import { useForgotPasswordMutation } from "./hooks/use-forgot-password-mutation";
-import type { ApiResponse } from "@/shared/types/api-response.model";
+import { authErrorMessage } from "@/core/auth/auth-error-message";
 
 const { Title, Text } = Typography;
 
@@ -42,13 +41,12 @@ export default function ForgotPassword() {
       await forgotPassword(values);
       setSent(true);
     } catch (err) {
-      const description = axios.isAxiosError(err)
-        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ?? "Failed to send reset email. Please try again.")
-        : "An unexpected error occurred.";
       notification.error({
         message: "Request failed",
-        description,
+        description: authErrorMessage(
+          err,
+          "Failed to send reset email. Please try again.",
+        ),
         placement: "topRight",
       });
     }

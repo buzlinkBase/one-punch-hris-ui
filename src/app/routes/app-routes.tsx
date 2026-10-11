@@ -17,6 +17,8 @@ import MainLayout from "@/app/layouts/main-layout";
 import AuthLayout from "@/app/layouts/auth-layout";
 import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
+import { communicationRoutes } from "./communication.routes";
+import { ANALYTICS_PAGES, analyticsRoutes } from "./analytics.routes";
 import { authStorage } from "@/core/auth/auth-storage";
 import {
   resolveFallbackLanding,
@@ -24,6 +26,7 @@ import {
 } from "@/core/auth/tenant-routing";
 import { getPermissionForPath } from "@/shared/constants/navigation.const";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
+import { RouteErrorFallback } from "./route-error-fallback";
 
 const Login = lazy(() => import("@/app/modules/auth/login/login"));
 const Register = lazy(() => import("@/app/modules/auth/register"));
@@ -37,6 +40,7 @@ const Dashboard = lazy(() => import("@/app/modules/dashboard/dashboard"));
 const Profile = lazy(
   () => import("@/app/modules/account/profile/pages/profile/profile"),
 );
+const HelpCenter = lazy(() => import("@/app/modules/help/pages/help-center"));
 const PortalProfile = lazy(
   () => import("@/app/modules/portal/profile/pages/portal-profile"),
 );
@@ -525,6 +529,26 @@ const profileIndexRoute = createRoute({
   component: withSuspense(Profile),
 });
 
+// The Help Center (user manual). Deliberately not in NAVIGATION_ITEMS: every signed-in user may
+// open it, and each guide is filtered by the reader's own permissions instead.
+const helpRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "help",
+  component: MainLayout,
+});
+
+const helpIndexRoute = createRoute({
+  getParentRoute: () => helpRoute,
+  path: "/",
+  component: withSuspense(HelpCenter),
+});
+
+const helpArticleRoute = createRoute({
+  getParentRoute: () => helpRoute,
+  path: "$articleId",
+  component: withSuspense(HelpCenter),
+});
+
 const portalRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "portal",
@@ -540,6 +564,46 @@ const portalIndexRoute = createRoute({
 const portalChildRoutes = portalRoutes.map((route) =>
   createRoute({
     getParentRoute: () => portalRoute,
+    path: route.path,
+    component: withSuspense(route.component),
+  }),
+);
+
+const communicationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "communication",
+  component: MainLayout,
+});
+
+const communicationChildRoutes = communicationRoutes.map((route) =>
+  createRoute({
+    getParentRoute: () => communicationRoute,
+    path: route.path,
+    component: withSuspense(route.component),
+  }),
+);
+
+const analyticsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "analytics",
+  component: MainLayout,
+});
+
+// /analytics itself has no page: open the first Analytics page this user may see.
+const analyticsIndexRoute = createRoute({
+  getParentRoute: () => analyticsRoute,
+  path: "/",
+  beforeLoad: () => {
+    const first = ANALYTICS_PAGES.find((page) =>
+      authStorage.hasAnyPermission(page.permission),
+    );
+    throw redirect({ to: first?.path ?? resolveFallbackLanding() });
+  },
+});
+
+const analyticsChildRoutes = analyticsRoutes.map((route) =>
+  createRoute({
+    getParentRoute: () => analyticsRoute,
     path: route.path,
     component: withSuspense(route.component),
   }),
@@ -1245,6 +1309,15 @@ const SalaryAdjustmentDetail = lazy(
 const AuditList = lazy(
   () => import("@/app/modules/security/audit/pages/audit-list"),
 );
+const BillingOverview = lazy(
+  () => import("@/app/modules/billing/pages/billing-overview"),
+);
+const PlanSelection = lazy(
+  () => import("@/app/modules/billing/pages/plan-selection"),
+);
+const PaymentResult = lazy(
+  () => import("@/app/modules/billing/pages/payment-result"),
+);
 const AuditDetail = lazy(
   () => import("@/app/modules/security/audit/pages/audit-detail"),
 );
@@ -1477,6 +1550,32 @@ const securityAuditDetailRoute = createRoute({
   component: withSuspense(AuditDetail),
 });
 
+// The account's subscription: plan, usage, payments, and choosing a plan.
+const billingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "billing",
+  component: MainLayout,
+});
+
+const billingIndexRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "/",
+  component: withSuspense(BillingOverview),
+});
+
+const billingPlansRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "plans",
+  component: withSuspense(PlanSelection),
+});
+
+// Where the payment gateway's page sends the payer back (?checkout={id}[&canceled=1]).
+const billingPaymentRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "payment",
+  component: withSuspense(PaymentResult),
+});
+
 const enrollBiometricsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "enroll-biometrics",
@@ -1529,8 +1628,11 @@ const routeTree = rootRoute.addChildren([
   acceptInviteRoute.addChildren([acceptInviteIndexRoute]),
   dashboardRoute.addChildren([dashboardIndexRoute]),
   profileRoute.addChildren([profileIndexRoute]),
+  helpRoute.addChildren([helpIndexRoute, helpArticleRoute]),
   portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
+  communicationRoute.addChildren([...communicationChildRoutes]),
+  analyticsRoute.addChildren([analyticsIndexRoute, ...analyticsChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),
   attendanceEntryRoute.addChildren([
@@ -1616,6 +1718,11 @@ const routeTree = rootRoute.addChildren([
     securityAuditIndexRoute,
     securityAuditDetailRoute,
   ]),
+  billingRoute.addChildren([
+    billingIndexRoute,
+    billingPlansRoute,
+    billingPaymentRoute,
+  ]),
   leaveApplicationRoute.addChildren([
     leaveApplicationIndexRoute,
     leaveApplicationCreateRoute,
@@ -1666,6 +1773,8 @@ const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   defaultPendingComponent: RouterPendingFallback,
+  // Reloads once when a page chunk from before a deploy is gone; a friendly screen otherwise.
+  defaultErrorComponent: RouteErrorFallback,
 });
 
 export default router;

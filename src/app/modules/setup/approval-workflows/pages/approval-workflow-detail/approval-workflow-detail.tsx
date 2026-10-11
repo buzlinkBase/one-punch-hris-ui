@@ -11,14 +11,17 @@ import {
   Card,
   Alert,
   Divider,
+  notification,
 } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { authStorage } from "@/core/auth/auth-storage";
 import {
   useForm,
   useFieldArray,
@@ -48,6 +51,7 @@ import { PermissionGate } from "@/shared/components/permission-gate/permission-g
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { withReferencedEmployees } from "../../services/approver-options";
 
 const { Title } = Typography;
 
@@ -75,8 +79,14 @@ export default function ApprovalWorkflowDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  // "Copy as a new version": a new workflow pre-filled from this one.
+  const search = useSearch({ strict: false }) as Record<string, unknown>;
+  const copyFrom =
+    !isEdit && typeof search.copyFrom === "string"
+      ? search.copyFrom
+      : undefined;
 
-  const { data: selected } = useApprovalWorkflow(isEdit ? id : undefined);
+  const { data: selected } = useApprovalWorkflow(isEdit ? id : copyFrom);
   const { mutateAsync: create, isPending: isCreating } =
     useCreateApprovalWorkflow();
   const { mutateAsync: update, isPending: isUpdating } =
@@ -94,10 +104,13 @@ export default function ApprovalWorkflowDetail() {
     value: p.id,
     label: p.name,
   }));
-  const employeeOptions = employees.map((e) => ({
-    value: e.id,
-    label: e.name ?? e.id,
-  }));
+  const employeeOptions = withReferencedEmployees(
+    employees.map((e) => ({
+      value: e.id,
+      label: e.name ?? e.id,
+    })),
+    selected?.approverNames,
+  );
 
   const {
     control,
@@ -120,10 +133,10 @@ export default function ApprovalWorkflowDetail() {
   });
 
   useEffect(() => {
-    if (isEdit && selected) {
+    if (selected && (isEdit || copyFrom)) {
       reset({
         applicationType: selected.applicationType,
-        name: selected.name,
+        name: isEdit ? selected.name : `${selected.name} (copy)`,
         scopeDepartmentId: selected.scopeDepartmentId ?? undefined,
         steps: selected.steps.map((s) => ({
           approverType: s.approverType,
@@ -136,9 +149,17 @@ export default function ApprovalWorkflowDetail() {
         })),
       });
     }
-  }, [selected, isEdit, reset]);
+  }, [selected, isEdit, copyFrom, reset]);
 
-  const isLocked = isEdit && selected && !selected.isEditable;
+  const canManage = authStorage.hasAnyPermission("Approval Workflows:Edit");
+  // Read-only while requests are still going through it (they read its steps live), or for
+  // someone who may only view workflows.
+  const inProgress = isEdit && selected ? selected.inProgressCount : 0;
+  const isLocked = Boolean(
+    isEdit && selected && (!selected.canEdit || !canManage),
+  );
+  const copyThis = () =>
+    navigate({ to: `${LIST_PATH}/create`, search: { copyFrom: id } });
 
   const onSubmit = async (values: ApprovalWorkflowFormValues) => {
     const payload = {
@@ -164,6 +185,12 @@ export default function ApprovalWorkflowDetail() {
       await update({ id, data: payload });
     } else {
       await create(payload);
+      notification.success({
+        message: "Workflow saved as inactive",
+        description:
+          "Activate it from the list when ready -- now, or once the current workflow has no pending requests.",
+        placement: "topRight",
+      });
     }
     navigate({ to: LIST_PATH });
   };
@@ -174,15 +201,30 @@ export default function ApprovalWorkflowDetail() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              {isEdit
-                ? APPROVAL_WORKFLOWS_LABEL.EDIT_TITLE
-                : APPROVAL_WORKFLOWS_LABEL.CREATE_TITLE}
+              {isLocked
+                ? APPROVAL_WORKFLOWS_LABEL.VIEW_TITLE
+                : isEdit
+                  ? APPROVAL_WORKFLOWS_LABEL.EDIT_TITLE
+                  : APPROVAL_WORKFLOWS_LABEL.CREATE_TITLE}
             </Title>
           </div>
           <Space>
-            <Tag color={isEdit ? "processing" : "success"}>
-              {isEdit ? "Editing" : "New Record"}
+            <Tag
+              color={isLocked ? "default" : isEdit ? "processing" : "success"}
+            >
+              {isLocked
+                ? "Read only"
+                : isEdit
+                  ? "Editing"
+                  : copyFrom
+                    ? "New Version"
+                    : "New Record"}
             </Tag>
+            {isEdit && canManage && (
+              <Button icon={<CopyOutlined />} onClick={copyThis}>
+                Copy as new version
+              </Button>
+            )}
             <Button onClick={() => navigate({ to: LIST_PATH })}>
               {NAVIGATION_BUTTON_LABEL.BACK}
             </Button>
@@ -191,13 +233,29 @@ export default function ApprovalWorkflowDetail() {
       </div>
 
       <div className="form-page-body">
-        {isLocked && (
+        {isLocked && inProgress > 0 && (
           <Alert
             className="mb-4"
-            type="warning"
+            type="info"
             showIcon
-            message="This workflow has already been used and can no longer be edited."
-            description="Deactivate it from the list and create a new version instead."
+            message={`${inProgress} ${inProgress === 1 ? "request is" : "requests are"} still going through this workflow, so it can't be edited right now.`}
+            description="You can edit it once they finish -- changes then apply to the next applications. To change it now, copy it as a new version and activate that (or schedule it to take over when these finish)."
+            action={
+              canManage && (
+                <Button size="small" icon={<CopyOutlined />} onClick={copyThis}>
+                  Copy as new version
+                </Button>
+              )
+            }
+          />
+        )}
+        {copyFrom && selected && (
+          <Alert
+            className="mb-4"
+            type="info"
+            showIcon
+            message={`A new version of "${selected.name}"`}
+            description="It's saved as inactive. Afterwards, activate it from the list -- now, or once the current workflow has no pending requests."
           />
         )}
 
@@ -298,16 +356,17 @@ export default function ApprovalWorkflowDetail() {
               <Button onClick={() => navigate({ to: LIST_PATH })}>
                 {NAVIGATION_BUTTON_LABEL.BACK}
               </Button>
-              <PermissionGate permission="Approval Workflows:Edit">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={isCreating || isUpdating}
-                  disabled={!!isLocked}
-                >
-                  {NAVIGATION_BUTTON_LABEL.SAVE}
-                </Button>
-              </PermissionGate>
+              {!isLocked && (
+                <PermissionGate permission="Approval Workflows:Edit">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={isCreating || isUpdating}
+                  >
+                    {NAVIGATION_BUTTON_LABEL.SAVE}
+                  </Button>
+                </PermissionGate>
+              )}
             </Space>
           </div>
         </Form>

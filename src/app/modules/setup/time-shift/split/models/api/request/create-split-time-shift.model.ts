@@ -23,6 +23,8 @@ export interface CreateSplitTimeShift {
   overTimeThreshold: number;
   // Null or 0 = no limit on OT hours creditable for a day on this shift.
   maxOvertimeHours: number | null;
+  // Null or 0 = use the company Night Diff Threshold.
+  nightDiffThreshold: number | null;
   minimumWorkMinutes: number;
   maxWorkingMinutes: number;
 }

@@ -10,12 +10,15 @@ import {
 import type { PortalPassSlipResponse } from "../../../shared/models/api/response/portal-pass-slip-response.model";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
+import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
+import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 
 const { Title } = Typography;
 
 export default function PortalPassSlipList() {
   const navigate = useNavigate();
   const { data: applications, isLoading } = useMyPassSlipApplications();
+  const approval = useApprovalTabs(applications ?? []);
   const { mutateAsync: withdraw, isPending: isWithdrawing } =
     useWithdrawMyPassSlipApplication();
 
@@ -103,11 +106,18 @@ export default function PortalPassSlipList() {
 
       <div className="form-page-body">
         <Card>
+          <ApprovalTabs
+            value={approval.tab}
+            onChange={approval.setTab}
+            pendingCount={approval.pendingCount}
+            processedCount={approval.processedCount}
+            pendingLabel="Pending"
+          />
           <Table<PortalPassSlipResponse>
             rowKey="id"
             loading={isLoading}
             columns={columns}
-            dataSource={applications ?? []}
+            dataSource={approval.rows}
             pagination={{ pageSize: 15 }}
           />
         </Card>

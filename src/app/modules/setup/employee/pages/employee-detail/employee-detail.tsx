@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  AutoComplete,
   Form,
   Input,
   InputNumber,
@@ -16,14 +15,24 @@ import {
   Divider,
   Radio,
   Tabs,
-  Avatar,
   Tooltip,
   Alert,
   message,
+  notification,
+  Badge,
+  AutoComplete,
 } from "antd";
 import {
+  buildJobLevelOptions,
+  jobLevelMatches,
+} from "../../services/job-level-options";
+import {
+  errorCountByTab,
+  summarizeFormErrors,
+} from "../../services/form-error-summary";
+import type { EmployeeFormTab } from "../../constants/form-sections.const";
+import {
   UserOutlined,
-  CameraOutlined,
   PlusOutlined,
   PrinterOutlined,
   InfoCircleOutlined,
@@ -32,6 +41,7 @@ import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import httpClient from "@/core/http/http-client";
+import { authStorage } from "@/core/auth/auth-storage";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 import {
   useForm,
@@ -52,7 +62,11 @@ import {
   useEmployees,
   useCreateEmployee,
   useUpdateEmployee,
+  useUploadEmployeePhoto,
+  useRemoveEmployeePhoto,
+  useJobLevels,
 } from "../../hooks/use-employee-queries";
+import { ImageUpload } from "@/shared/components/image-upload/image-upload";
 import { employeeMapper } from "../../services/employee.mapper";
 import {
   EMPLOYEE_LABEL,
@@ -75,6 +89,11 @@ import { isActiveStatus } from "@/shared/utils/status.util";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import { useSplitTimeShifts } from "@/app/modules/setup/time-shift/split/hooks/use-split-time-shift-queries";
 import { useFlexiTimeShifts } from "@/app/modules/setup/time-shift/flexi/hooks/use-flexi-time-shift-queries";
@@ -134,6 +153,9 @@ const filterByLabel = (
   String(option?.label ?? "")
     .toLowerCase()
     .includes(input.toLowerCase());
+
+// Tabs that show pay figures -- left out when the API hid them (see payHidden).
+const PAY_TAB_KEYS = ["compensation", "govids"];
 
 const REST_DAY_OPTIONS = [
   { value: "Monday", label: "Mon" },
@@ -196,10 +218,29 @@ export default function EmployeeDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  // Only cleared users see or change the tag; the API ignores it from anyone else.
+  const canTagConfidential = authStorage.hasConfidentialClearance();
   const formGridClass = isMobile ? "form-grid-1" : "form-grid-2";
   const { data: selected } = useEmployee(isEdit ? id : undefined);
+  // A confidential employee seen through a partial clearance comes back with pay blanked; the
+  // API keeps the stored pay on save, so the pay tabs are simply left out.
+  const payHidden = selected?.figuresHidden ?? false;
   const { mutateAsync: add, isPending: isCreating } = useCreateEmployee();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateEmployee();
+  const { data: usedJobLevels = [] } = useJobLevels();
+  const jobLevelOptions = buildJobLevelOptions(
+    JOB_LEVEL_OPTIONS,
+    usedJobLevels,
+  );
+  const { mutateAsync: uploadPhoto } = useUploadEmployeePhoto();
+  const { mutateAsync: removePhoto } = useRemoveEmployeePhoto();
+  // A new employee's photo waits here until the record exists.
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  // Same gate as the photo endpoint: anyone who may edit -- or, while creating, add -- employees.
+  const canEditPhoto = authStorage.hasAnyPermission(
+    "Workforce Setup:Edit",
+    ...(isEdit ? [] : ["Workforce Setup:Create"]),
+  );
   const { data: departments = [], isLoading: isDepartmentsLoading } =
     useDepartments();
   const { data: allEmployees = [], isLoading: isEmployeesLoading } =
@@ -225,6 +266,7 @@ export default function EmployeeDetail() {
     handleSubmit,
     reset,
     setValue,
+    setFocus,
     formState: { errors },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema) as Resolver<EmployeeFormValues>,
@@ -315,11 +357,22 @@ export default function EmployeeDetail() {
         timeShiftId,
       })),
     };
+    // The photo is saved by its own upload, never with the form.
+    delete payload.profileImg;
     try {
       if (isEdit && id) {
         await update({ id, ...payload });
       } else {
-        await add(payload);
+        const created = await add(payload);
+        if (pendingPhoto && created.id) {
+          try {
+            await uploadPhoto({ id: created.id, file: pendingPhoto });
+          } catch {
+            message.warning(
+              "The employee was saved, but the photo couldn't be uploaded. Open the employee to try again.",
+            );
+          }
+        }
       }
       navigate({ to: "/setup/employee" });
     } catch {
@@ -328,32 +381,54 @@ export default function EmployeeDetail() {
   };
 
   const handleInvalid = (fieldErrors: FieldErrors<EmployeeFormValues>) => {
-    const keys = Object.keys(fieldErrors);
-    const tabsWithErrors: string[] = [];
-    const personalFields = ["firstName", "lastName"];
-    const employmentFields = [
-      "payrollGroupId",
-      "jobLevel",
-      "employmentStatus",
-      "dateRegistered",
-    ];
-    const compensationFields = ["salaryType", "modeOfPayment"];
-    if (keys.some((k) => personalFields.includes(k)))
-      tabsWithErrors.push("Personal Information");
-    if (keys.some((k) => employmentFields.includes(k)))
-      tabsWithErrors.push("Employment Details");
-    if (keys.some((k) => compensationFields.includes(k)))
-      tabsWithErrors.push("Compensation");
-    message.warning(
-      tabsWithErrors.length
-        ? `Required fields missing in: ${tabsWithErrors.join(", ")}. Please review and fill them in.`
-        : "Please fill in all required fields before saving.",
-      5,
+    // Name every problem with its tab, then open the first one with the cursor in it -- the
+    // field may be on a tab the user isn't looking at.
+    const problems = summarizeFormErrors(fieldErrors);
+    if (problems.length === 0) return;
+    notification.error({
+      key: "employee-form-invalid",
+      message: `Can't save yet: fix ${problems.length} ${problems.length === 1 ? "field" : "fields"}`,
+      description: (
+        <ul className="m-0 pl-4">
+          {problems.map((p) => (
+            <li key={p.name}>
+              {p.tabLabel ? `${p.tabLabel} › ` : ""}
+              <strong>{p.label}</strong>: {p.message}
+            </li>
+          ))}
+        </ul>
+      ),
+      duration: 10,
+      placement: "topRight",
+    });
+    const first = problems[0];
+    if (first.tab) setActiveTab(first.tab);
+    // After the tab switch has rendered, so the field is visible and can take focus.
+    requestAnimationFrame(() => {
+      try {
+        setFocus(first.name as Parameters<typeof setFocus>[0]);
+      } catch {
+        // Some inputs (date pickers, selects) can't take focus; the tab is open either way.
+      }
+    });
+  };
+
+  const [activeTab, setActiveTab] = useState<string>("personal");
+  // Live: a tab keeps its red count until its fields are fixed.
+  const tabErrorCounts = errorCountByTab(summarizeFormErrors(errors));
+  const tabLabel = (key: EmployeeFormTab, label: string) => {
+    const count = tabErrorCounts[key];
+    return count ? (
+      <Space size={6}>
+        {label}
+        <Badge count={count} size="small" />
+      </Space>
+    ) : (
+      label
     );
   };
 
   const isSubmitting = isUpdating || isCreating;
-  const imgInputRef = useRef<HTMLInputElement>(null);
 
   const watchedDepartmentId = useWatch({ control, name: "departmentId" });
   const watchedFirstName = useWatch({ control, name: "firstName" });
@@ -532,12 +607,9 @@ export default function EmployeeDetail() {
       value: a.id,
       label: `${a.code} - ${a.name}`,
     }));
-  const payrollGroupOptions = payrollGroups
-    .filter((p) => isActiveStatus(p.status))
-    .map((p) => ({
-      value: p.id,
-      label: `${p.code} - ${p.name}`,
-    }));
+  const payrollGroupOptions = toPayrollGroupOptions(
+    payrollGroups.filter((p) => isActiveStatus(p.status)),
+  );
 
   const formatShiftTime = (t: string) => {
     const dot = t.indexOf(".");
@@ -673,7 +745,13 @@ export default function EmployeeDetail() {
         </div>
       </div>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit, handleInvalid)}>
+      <Form
+        layout="vertical"
+        // The browser's own checks would stop Save silently when the bad field is on another
+        // tab; the form's validation names it and opens that tab instead.
+        noValidate
+        onFinish={handleSubmit(onSubmit, handleInvalid)}
+      >
         {/* ── 201 File Header ── */}
         <Card className="mb-4">
           <div className="flex flex-wrap items-center gap-5">
@@ -681,63 +759,30 @@ export default function EmployeeDetail() {
               name="profileImg"
               control={control}
               render={({ field }) => (
-                <div
-                  style={{
-                    position: "relative",
-                    flexShrink: 0,
-                    cursor: "pointer",
+                // Saved on its own, right away; for a new employee it's held and uploaded once
+                // the record exists (see onSubmit).
+                <ImageUpload
+                  compact
+                  crop="photo"
+                  label="photo"
+                  shape="circle"
+                  value={field.value}
+                  placeholder={<UserOutlined />}
+                  disabled={!canEditPhoto}
+                  onUpload={async (file) => {
+                    if (isEdit && id) {
+                      field.onChange(await uploadPhoto({ id, file }));
+                    } else {
+                      setPendingPhoto(file);
+                      field.onChange(URL.createObjectURL(file));
+                    }
                   }}
-                  onClick={() => imgInputRef.current?.click()}
-                  title="Click to upload photo"
-                >
-                  <Avatar
-                    size={72}
-                    src={field.value || undefined}
-                    icon={!field.value ? <UserOutlined /> : undefined}
-                    style={{
-                      backgroundColor: !field.value ? "#1DA081" : undefined,
-                      fontSize: 32,
-                      display: "block",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      background: "rgba(0,0,0,0.35)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: 0,
-                      transition: "opacity 0.2s",
-                    }}
-                    className="avatar-upload-overlay"
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLDivElement).style.opacity = "1")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLDivElement).style.opacity = "0")
-                    }
-                  >
-                    <CameraOutlined style={{ color: "#fff", fontSize: 20 }} />
-                  </div>
-                  <input
-                    ref={imgInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () =>
-                        field.onChange(reader.result as string);
-                      reader.readAsDataURL(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
+                  onRemove={async () => {
+                    if (isEdit && id) await removePhoto(id);
+                    else setPendingPhoto(null);
+                    field.onChange("");
+                  }}
+                />
               )}
             />
             <div style={{ flex: "1 1 200px", minWidth: 180 }}>
@@ -795,13 +840,23 @@ export default function EmployeeDetail() {
         </Card>
         <div className="mb-2"></div>
         {/* ── Tabbed Sections ── */}
+        {payHidden && (
+          <Alert
+            type="info"
+            showIcon
+            className="mb-2"
+            message={EMPLOYEE_LABEL.PAY_HIDDEN_NOTICE}
+          />
+        )}
         <Card>
           <Tabs
             type="card"
+            activeKey={activeTab}
+            onChange={setActiveTab}
             items={[
               {
                 key: "personal",
-                label: "Personal Information",
+                label: tabLabel("personal", "Personal Information"),
                 forceRender: true,
                 children: (
                   <div className={formGridClass} style={{ paddingTop: 16 }}>
@@ -981,7 +1036,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "employment",
-                label: "Employment Details",
+                label: tabLabel("employment", "Employment Details"),
                 forceRender: true,
                 children: (
                   <div className={formGridClass} style={{ paddingTop: 16 }}>
@@ -1139,10 +1194,12 @@ export default function EmployeeDetail() {
                               value={field.value || undefined}
                               onChange={(v?: string) => field.onChange(v ?? "")}
                               options={payrollGroupOptions}
+                              optionRender={payrollGroupOptionRender}
                               loading={isRefLoading}
                               allowClear
-                              showSearch
-                              filterOption={filterByLabel}
+                              showSearch={{
+                                filterOption: filterPayrollGroupOption,
+                              }}
                               placeholder="Select payroll group"
                               style={{ flex: 1 }}
                             />
@@ -1246,27 +1303,27 @@ export default function EmployeeDetail() {
                       </div>
                     </Form.Item>
 
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.JOB_LEVEL}
-                      required
-                      validateStatus={errors.jobLevel ? "error" : ""}
-                      help={errors.jobLevel?.message}
-                    >
+                    <Form.Item label={EMPLOYEE_LABEL.JOB_LEVEL}>
                       <Controller
                         name="jobLevel"
                         control={control}
-                        // Free text: pick a suggested level or type any other.
                         render={({ field }) => (
+                          // Suggestions only: any typed level is kept as typed.
                           <AutoComplete
-                            {...field}
-                            value={field.value ?? undefined}
-                            options={JOB_LEVEL_OPTIONS}
-                            placeholder="Select or type a job level"
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            ref={field.ref}
+                            options={jobLevelOptions}
+                            // Options come grouped; only the levels (not the group headers) have a value.
                             filterOption={(input, option) =>
-                              String(option?.value ?? "")
-                                .toLowerCase()
-                                .includes(input.toLowerCase())
+                              !!option &&
+                              "value" in option &&
+                              typeof option.value === "string" &&
+                              jobLevelMatches(input, option.value)
                             }
+                            allowClear
+                            placeholder="Select or type a level"
                           />
                         )}
                       />
@@ -1374,6 +1431,24 @@ export default function EmployeeDetail() {
                       />
                     </Form.Item>
 
+                    {canTagConfidential && (
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.CONFIDENTIAL}
+                        extra={EMPLOYEE_LABEL.CONFIDENTIAL_HELP}
+                      >
+                        <Controller
+                          name="isConfidential"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value ?? false}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </Form.Item>
+                    )}
+
                     <Form.Item label={EMPLOYEE_LABEL.HIRING_ENTITY}>
                       <Controller
                         name="hiringEntity"
@@ -1468,7 +1543,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "compensation",
-                label: "Compensation",
+                label: tabLabel("compensation", "Compensation"),
                 forceRender: true,
                 children: (
                   <div className={formGridClass} style={{ paddingTop: 16 }}>
@@ -1838,7 +1913,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "govids",
-                label: "Gov't IDs & Rates",
+                label: tabLabel("govids", "Gov't IDs & Rates"),
                 forceRender: true,
                 children: (
                   <div className="pt-4 flex flex-col gap-3">
@@ -2147,7 +2222,7 @@ export default function EmployeeDetail() {
               },
               {
                 key: "settings",
-                label: "Eligibility",
+                label: tabLabel("settings", "Eligibility"),
                 forceRender: true,
                 children: (
                   <div style={{ paddingTop: 16, maxWidth: 480 }}>
@@ -2257,7 +2332,7 @@ export default function EmployeeDetail() {
                   </div>
                 ),
               },
-            ]}
+            ].filter((tab) => !payHidden || !PAY_TAB_KEYS.includes(tab.key))}
           />
         </Card>
 

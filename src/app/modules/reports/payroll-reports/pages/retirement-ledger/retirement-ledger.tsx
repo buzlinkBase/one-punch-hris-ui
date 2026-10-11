@@ -1,132 +1,56 @@
 import { useState } from "react";
-import { Button, Form, Space, Tag, Tooltip, message } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import { Button, DatePicker, Form, Space, Tooltip, message } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import {
   BalanceAdjustModal,
+  type BalanceAdjustSubmitValues,
   type BalanceAdjustTarget,
 } from "../../components/balance-adjust-modal/balance-adjust-modal";
+import { LedgerDrawer } from "../../components/ledger-drawer/ledger-drawer";
 import {
-  useRetirementLedger,
+  buildFundSummaryColumns,
+  fundSummaryExport,
+} from "../../components/fund-summary-columns/fund-summary-columns";
+import {
   useAdjustRetirement,
+  useRetirementEntries,
+  useRetirementLedger,
 } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
-import type { RetirementLedgerResponse } from "../../models/api/response/payroll-reports.model";
+import type { FundLedgerSummaryResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
-import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
-
-const ENTRY_TYPE_COLOR: Record<string, string> = {
-  Accrual: "blue",
-  Adjustment: "orange",
-  Payout: "green",
-};
-
-const EXPORT_HEADERS = [
-  "Employee No",
-  "Full Name",
-  "Entry Type",
-  "Entry Date",
-  "Add",
-  "Less",
-  "Balance",
-  "Particulars",
-];
-
-const toRows = (records: RetirementLedgerResponse[]) =>
-  records.map((r) => [
-    r.employeeNo,
-    r.fullName,
-    r.entryType,
-    r.entryDate,
-    fmt(r.add),
-    fmt(r.less),
-    fmt(r.balance),
-    r.particulars,
-  ]);
-
-const columns: ColumnsType<RetirementLedgerResponse> = [
-  {
-    title: "Employee No",
-    dataIndex: "employeeNo",
-    key: "no",
-    width: 120,
-    fixed: "left",
-  },
-  { title: "Full Name", dataIndex: "fullName", key: "name", width: 180 },
-  {
-    title: "Type",
-    dataIndex: "entryType",
-    key: "type",
-    width: 100,
-    render: (v: string) => <Tag color={ENTRY_TYPE_COLOR[v]}>{v}</Tag>,
-  },
-  {
-    title: "Entry Date",
-    dataIndex: "entryDate",
-    key: "date",
-    width: 120,
-    render: (v: string) => dayjs(v).format("MMM DD, YYYY"),
-  },
-  {
-    title: "Add",
-    dataIndex: "add",
-    key: "add",
-    align: "right",
-    render: (v: number) => (v > 0 ? fmt(v) : ""),
-  },
-  {
-    title: "Less",
-    dataIndex: "less",
-    key: "less",
-    align: "right",
-    render: (v: number) => (v > 0 ? fmt(v) : ""),
-  },
-  {
-    title: "Balance",
-    dataIndex: "balance",
-    key: "balance",
-    align: "right",
-    render: (v: number) => <strong>{fmt(v)}</strong>,
-  },
-  {
-    title: "Particulars",
-    dataIndex: "particulars",
-    key: "particulars",
-  },
-];
+const LABELS = { added: "Accrued", deducted: "Paid Out" };
+const EXPORT = fundSummaryExport(LABELS);
 
 export default function RetirementLedger() {
-  const [range, setRange] = useState<[string, string]>([
-    dayjs().startOf("year").format("YYYY-MM-DD"),
-    dayjs().endOf("year").format("YYYY-MM-DD"),
-  ]);
-  const {
-    data = [],
-    isLoading,
-    refetch,
-  } = useRetirementLedger(range[0], range[1]);
+  const [asOf, setAsOf] = useState(dayjs().format("YYYY-MM-DD"));
+  const { data = [], isLoading, refetch } = useRetirementLedger(asOf);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
-  // Add/Edit only -- unlike Uniform Allowance, Retirement has no general-purpose Release here;
-  // its payout is specifically wired through Last Pay at separation (IncludeRetirementPayout).
+  // The row whose ledger details are open; its Adjust lives inside the drawer.
+  const [viewing, setViewing] = useState<FundLedgerSummaryResponse | null>(
+    null,
+  );
+  const { data: entries = [], isFetching: entriesLoading } =
+    useRetirementEntries(viewing?.employeeId, asOf);
+  // Keeps the drawer's balance current after an adjustment refetches the list.
+  const viewingRow =
+    data.find((r) => r.employeeId === viewing?.employeeId) ?? viewing;
+
+  // "add" = toolbar entry for any employee (e.g. an opening balance); a target = the viewed
+  // employee. Unlike Uniform Allowance there is no general-purpose Release here -- retirement is
+  // paid out through Last Pay at separation (IncludeRetirementPayout).
   const [adjustModal, setAdjustModal] = useState<
     "add" | BalanceAdjustTarget | null
   >(null);
   const { mutateAsync: adjust, isPending: isAdjusting } = useAdjustRetirement();
 
-  const handleAdjustSubmit = async (values: {
-    employeeId: string;
-    amount: number;
-    isAddition: boolean;
-    particulars: string;
-  }) => {
+  const handleAdjustSubmit = async (values: BalanceAdjustSubmitValues) => {
     try {
       await adjust(values);
       message.success(
@@ -138,34 +62,6 @@ export default function RetirementLedger() {
     }
   };
 
-  const displayColumns: ColumnsType<RetirementLedgerResponse> = [
-    ...columns,
-    {
-      title: "",
-      key: "adjust",
-      width: 48,
-      fixed: "right",
-      render: (_, r) => (
-        <PermissionGate permission="Payroll Reports:Edit">
-          <Tooltip title="Adjust balance">
-            <Button
-              size="small"
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() =>
-                setAdjustModal({
-                  employeeId: r.employeeId,
-                  employeeName: r.fullName,
-                  balance: r.balance,
-                })
-              }
-            />
-          </Tooltip>
-        </PermissionGate>
-      ),
-    },
-  ];
-
   return (
     <>
       <PayrollReportShell
@@ -173,20 +69,19 @@ export default function RetirementLedger() {
         subtitle={PAYROLL_REPORTS_LABEL.RETIREMENT_SUBTITLE}
         data={employeeFilter.filtered}
         loading={isLoading}
-        columns={displayColumns}
+        columns={buildFundSummaryColumns(LABELS, setViewing)}
         onRefresh={() => refetch()}
-        rowKey={(r) =>
-          `${r.employeeId}-${r.entryType}-${r.entryDate}-${r.payrollId ?? "manual"}`
-        }
-        exportFileName={`retirement-ledger-${range[0]}-to-${range[1]}`}
-        exportHeaders={EXPORT_HEADERS}
-        exportRows={toRows}
+        rowKey={(r) => r.employeeId}
+        exportFileName={`retirement-ledger-${asOf}`}
+        exportHeaders={EXPORT.headers}
+        exportRows={EXPORT.rows}
         extraActions={
           <Space>
             <PermissionGate permission="Payroll Reports:Edit">
-              <Tooltip title="Add entry">
+              <Tooltip title="Add entry (e.g. opening balance)">
                 <Button
                   icon={<PlusOutlined />}
+                  aria-label="Add retirement entry"
                   onClick={() => setAdjustModal("add")}
                 />
               </Tooltip>
@@ -196,21 +91,14 @@ export default function RetirementLedger() {
         filters={
           <Form layout="vertical">
             <div className="flex items-end gap-4 flex-wrap">
-              <Form.Item
-                label="Date Range"
-                className="mb-0"
-                style={{ maxWidth: 360 }}
-              >
-                <MobileRangePicker
-                  style={{ width: "100%" }}
-                  value={[dayjs(range[0]), dayjs(range[1])]}
-                  onChange={(dates) => {
-                    if (dates)
-                      setRange([
-                        dates[0]?.format("YYYY-MM-DD") ?? "",
-                        dates[1]?.format("YYYY-MM-DD") ?? "",
-                      ]);
-                  }}
+              <Form.Item label="As Of" className="mb-0 w-56">
+                <DatePicker
+                  className="w-full"
+                  value={dayjs(asOf)}
+                  allowClear={false}
+                  onChange={(date) =>
+                    date && setAsOf(date.format("YYYY-MM-DD"))
+                  }
                 />
               </Form.Item>
               <ReportNameFilter
@@ -221,6 +109,24 @@ export default function RetirementLedger() {
               />
             </div>
           </Form>
+        }
+      />
+
+      <LedgerDrawer
+        open={viewing !== null}
+        onClose={() => setViewing(null)}
+        title={viewingRow?.fullName}
+        balanceLabel={`Balance as of ${dayjs(asOf).format("MMM DD, YYYY")}`}
+        balance={viewingRow?.balance ?? 0}
+        entries={entries}
+        loading={entriesLoading}
+        onAdjust={() =>
+          viewingRow &&
+          setAdjustModal({
+            employeeId: viewingRow.employeeId,
+            employeeName: viewingRow.fullName,
+            balance: viewingRow.balance,
+          })
         }
       />
 

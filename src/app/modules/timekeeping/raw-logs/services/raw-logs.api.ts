@@ -32,57 +32,42 @@ function buildParams(filters: RawLogsFilterRequest): Record<string, string> {
   return p;
 }
 
+// Failures propagate (the error interceptor already toasts them): returning [] made a failed
+// Generate look like "no logs for this range" and was cached as a success.
 export const rawLogsApi = {
-  async getRawAttendanceLogs(
+  getRawAttendanceLogs(
     filters: RawLogsFilterRequest = {},
   ): Promise<RawAttendanceLog[]> {
-    try {
-      return await httpClient.getUnwrapped<RawAttendanceLog[]>(
-        EP_RAW_ATTENDANCE,
-        { params: buildParams(filters) },
-      );
-    } catch {
-      return [];
-    }
+    return httpClient.getUnwrapped<RawAttendanceLog[]>(EP_RAW_ATTENDANCE, {
+      params: buildParams(filters),
+    });
   },
 
-  async getRawColumnarLogs(
+  getRawColumnarLogs(
     filters: RawLogsFilterRequest = {},
   ): Promise<RawColumnarAttendanceLog[]> {
-    try {
-      return await httpClient.getUnwrapped<RawColumnarAttendanceLog[]>(
-        EP_RAW_COLUMNAR,
-        { params: buildParams(filters) },
-      );
-    } catch {
-      return [];
-    }
+    return httpClient.getUnwrapped<RawColumnarAttendanceLog[]>(
+      EP_RAW_COLUMNAR,
+      { params: buildParams(filters) },
+    );
   },
 
   async getCleanRowLogs(
     filters: RawLogsFilterRequest = {},
   ): Promise<CleanAttendanceLogRow[]> {
-    try {
-      const data = await httpClient.getUnwrapped<CleanAttendanceLogRow[][]>(
-        EP_CLEAN_ROW,
-        { params: buildParams(filters) },
-      );
-      return data.flat();
-    } catch {
-      return [];
-    }
+    const data = await httpClient.getUnwrapped<CleanAttendanceLogRow[][]>(
+      EP_CLEAN_ROW,
+      { params: buildParams(filters) },
+    );
+    return data.flat();
   },
 
-  async getCleanColumnarLogs(
+  getCleanColumnarLogs(
     filters: RawLogsFilterRequest = {},
   ): Promise<CleanAttendanceLogColumnar[]> {
-    try {
-      return await httpClient.getUnwrapped<CleanAttendanceLogColumnar[]>(
-        EP_CLEAN_COLUMNAR,
-        { params: buildParams(filters) },
-      );
-    } catch {
-      return [];
-    }
+    return httpClient.getUnwrapped<CleanAttendanceLogColumnar[]>(
+      EP_CLEAN_COLUMNAR,
+      { params: buildParams(filters) },
+    );
   },
 };

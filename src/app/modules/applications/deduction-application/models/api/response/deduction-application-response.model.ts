@@ -5,6 +5,8 @@ export interface DeductionApplicationDetailResponse {
   interest: number;
   amount: number;
   balance: number;
+  status: string;
+  recordOrder: number;
   notes: string;
 }
 

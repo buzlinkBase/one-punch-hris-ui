@@ -17,6 +17,8 @@ export const SplitTimeShiftFormSchema = z.object({
   overTimeThreshold: z.number().min(0),
   // Null or 0 = no limit on OT hours creditable for a day on this shift.
   maxOvertimeHours: z.number().min(0).nullable().optional(),
+  // Null or 0 = use the company Night Diff Threshold.
+  nightDiffThreshold: z.number().min(0).nullable().optional(),
 });
 
 export type SplitTimeShiftFormValues = z.infer<typeof SplitTimeShiftFormSchema>;

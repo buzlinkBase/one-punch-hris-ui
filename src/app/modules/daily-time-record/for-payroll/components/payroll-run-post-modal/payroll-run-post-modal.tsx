@@ -3,7 +3,8 @@ import { Modal, Form, Input } from "antd";
 
 interface Props {
   open: boolean;
-  batchCount: number;
+  // What the run covers, e.g. "payroll group PG-01, Jan 01 — Jan 15".
+  summary: string;
   isSaving: boolean;
   onClose: () => void;
   onConfirm: (remarks: string) => void;
@@ -11,7 +12,7 @@ interface Props {
 
 export default function PayrollRunPostModal({
   open,
-  batchCount,
+  summary,
   isSaving,
   onClose,
   onConfirm,
@@ -38,7 +39,7 @@ export default function PayrollRunPostModal({
       destroyOnClose
     >
       <p className="mb-3 text-gray-500">
-        {`This will calculate and save payroll from ${batchCount} selected DTR batch${batchCount !== 1 ? "es" : ""}.`}
+        {`This will calculate and save payroll for ${summary}, from every approved DTR day not yet paid.`}
       </p>
       <Form layout="vertical">
         <Form.Item label="Remarks">

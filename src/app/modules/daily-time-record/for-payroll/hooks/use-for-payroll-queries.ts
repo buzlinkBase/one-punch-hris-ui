@@ -8,6 +8,20 @@ import { invalidateLeaveBalances } from "@/shared/utils/invalidate-leave-balance
 
 const BATCH_KEY = ["dtr-batches"];
 const PAYROLL_BATCHES_KEY = ["payroll-batches"];
+// Which employees a cutoff can pay -- changes whenever DTR days are approved/unposted or a payroll
+// run pays/releases them, so every such mutation below invalidates it.
+const READINESS_KEY = ["payroll-readiness"];
+
+export function usePayrollReadiness(from?: string, to?: string) {
+  return useQuery({
+    queryKey: [...READINESS_KEY, from, to],
+    queryFn: () => forPayrollApi.getReadiness({ from: from!, to: to! }),
+    enabled: !!from && !!to,
+    // DTR approvals happen on other screens (and by other people) without touching this key,
+    // so always refetch on mount/focus rather than trusting the 5-minute default.
+    staleTime: 0,
+  });
+}
 
 export function useDtrBatches(from?: string, to?: string) {
   return useQuery({
@@ -22,6 +36,7 @@ export function usePostDtrBatch() {
     mutationFn: (batchCode: string) => forPayrollApi.postBatch(batchCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BATCH_KEY });
+      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
       invalidateLeaveBalances(queryClient);
     },
   });
@@ -33,6 +48,7 @@ export function useUnpostDtrBatch() {
     mutationFn: (batchCode: string) => forPayrollApi.unpostBatch(batchCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BATCH_KEY });
+      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
       invalidateLeaveBalances(queryClient);
     },
   });
@@ -46,8 +62,13 @@ export function useCalculatePayroll() {
 }
 
 export function useGeneratePayroll() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: PayrollRunRequest) => forPayrollApi.generate(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
+      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+    },
   });
 }
 
@@ -168,6 +189,7 @@ export function useDeletePayrollBatch() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
       // Deleting a payroll run unposts its DTRs, which gives their leave days back.
       invalidateLeaveBalances(queryClient);
     },
@@ -205,6 +227,7 @@ export function useApprovePayrollBatchDeletion() {
     onSettled: (_data, _error, { batchId }) => {
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
       invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "PayrollPostingDeletion", batchId],

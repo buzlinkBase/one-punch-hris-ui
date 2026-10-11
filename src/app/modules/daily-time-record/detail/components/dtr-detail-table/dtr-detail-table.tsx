@@ -12,6 +12,7 @@ import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-res
 import { DTR_DETAIL_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatDecimal } from "@/shared/utils/number.util";
 import DtrAttendanceLogsModal from "../dtr-attendance-logs-modal/dtr-attendance-logs-modal";
 import DtrChangeTimeShiftModal from "../dtr-change-time-shift-modal/dtr-change-time-shift-modal";
 import DtrChangeRestDayModal from "../dtr-change-rest-day-modal/dtr-change-rest-day-modal";
@@ -22,6 +23,8 @@ interface Props {
   loading?: boolean;
   onChanged?: () => void;
   readOnly?: boolean;
+  // Hides the row actions for days whose DTR can no longer be changed (already saved).
+  isRowLocked?: (r: DtrDetailResponse) => boolean;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -38,6 +41,7 @@ export default function DtrDetailTable({
   loading,
   onChanged,
   readOnly,
+  isRowLocked,
   dateFrom,
   dateTo,
 }: Props) {
@@ -67,35 +71,27 @@ export default function DtrDetailTable({
     regularNetHours: 80,
     regularOTHours: 75,
     regularNDHours: 75,
-    regularNDOTHours: 75,
     restDayHours: 80,
     restDayOTHours: 75,
     restDayNDHours: 75,
-    restDayNDOTHours: 90,
     legalHolHours: 75,
     legalHolOTHours: 75,
     legalHolNightDiffHours: 75,
-    legalHolNightDiffOTHours: 90,
     specialHolHours: 75,
     specialHolOTHours: 75,
     specialHolNightDiffHours: 80,
-    specialHolNightDiffOTHours: 95,
     restLegalDayHours: 75,
     restLegalDayOTHours: 75,
     restLegalDayNDHours: 75,
-    restLegalDayNDOTHours: 80,
     restSpecialDayHours: 75,
     restSpecialDayOTHours: 75,
     restSpecialDayNDHours: 75,
-    restSpecialDayNDOTHours: 80,
     doubleLegalHours: 75,
     doubleLegalOTHours: 75,
     doubleLegalNDHours: 75,
-    doubleLegalNDOTHours: 90,
     restDoubleLegalHours: 75,
     restDoubleLegalOTHours: 75,
     restDoubleLegalNDHours: 75,
-    restDoubleLegalNDOTHours: 90,
     obHours: 75,
     paidLeaveHours: 75,
     unpaidLeaveHours: 85,
@@ -124,7 +120,7 @@ export default function DtrDetailTable({
             —
           </span>
         );
-      return <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>;
+      return <span style={{ fontWeight: 500 }}>{formatDecimal(n)}</span>;
     },
   });
 
@@ -133,6 +129,7 @@ export default function DtrDetailTable({
     width: 130,
     title: "",
     render: (_: unknown, record: DtrDetailResponse) => {
+      if (isRowLocked?.(record)) return null;
       const select = () => setSelectedKey(rowKey(record));
       return (
         <Space size={4}>
@@ -339,7 +336,6 @@ export default function DtrDetailTable({
             col("Hrs", "regularNetHours", 80),
             col("OT", "regularOTHours", 75),
             col("ND", "regularNDHours", 75),
-            col("ND-OT", "regularNDOTHours", 75),
           ],
         },
         {
@@ -349,7 +345,6 @@ export default function DtrDetailTable({
             col("Hrs", "restDayHours", 80),
             col("OT", "restDayOTHours", 75),
             col("ND", "restDayNDHours", 75),
-            col("ND-OT", "restDayNDOTHours", 90),
           ],
         },
         {
@@ -359,7 +354,6 @@ export default function DtrDetailTable({
             col("Hrs", "legalHolHours", 75),
             col("OT", "legalHolOTHours", 75),
             col("ND", "legalHolNightDiffHours", 75),
-            col("ND-OT", "legalHolNightDiffOTHours", 90),
           ],
         },
         {
@@ -369,7 +363,6 @@ export default function DtrDetailTable({
             col("Hrs", "specialHolHours", 75),
             col("OT", "specialHolOTHours", 75),
             col("ND", "specialHolNightDiffHours", 80),
-            col("ND-OT", "specialHolNightDiffOTHours", 95),
           ],
         },
         {
@@ -379,7 +372,6 @@ export default function DtrDetailTable({
             col("Hrs", "restLegalDayHours", 75),
             col("OT", "restLegalDayOTHours", 75),
             col("ND", "restLegalDayNDHours", 75),
-            col("ND-OT", "restLegalDayNDOTHours", 80),
           ],
         },
         {
@@ -389,7 +381,6 @@ export default function DtrDetailTable({
             col("Hrs", "restSpecialDayHours", 75),
             col("OT", "restSpecialDayOTHours", 75),
             col("ND", "restSpecialDayNDHours", 75),
-            col("ND-OT", "restSpecialDayNDOTHours", 80),
           ],
         },
         {
@@ -399,7 +390,6 @@ export default function DtrDetailTable({
             col("Hrs", "doubleLegalHours", 75),
             col("OT", "doubleLegalOTHours", 75),
             col("ND", "doubleLegalNDHours", 75),
-            col("ND-OT", "doubleLegalNDOTHours", 90),
           ],
         },
         {
@@ -409,7 +399,6 @@ export default function DtrDetailTable({
             col("Hrs", "restDoubleLegalHours", 75),
             col("OT", "restDoubleLegalOTHours", 75),
             col("ND", "restDoubleLegalNDHours", 75),
-            col("ND-OT", "restDoubleLegalNDOTHours", 90),
           ],
         },
         {
@@ -439,7 +428,7 @@ export default function DtrDetailTable({
                       —
                     </span>
                   ) : (
-                    <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>
+                    <span style={{ fontWeight: 500 }}>{formatDecimal(n)}</span>
                   );
                 if (!record.leavesInfo || record.leavesInfo.length === 0)
                   return cell;
@@ -449,8 +438,8 @@ export default function DtrDetailTable({
                       <div>
                         {record.leavesInfo.map((li, idx) => (
                           <div key={`${li.leaveId}-${idx}`}>
-                            {li.name ?? "Leave"}: {li.hours.toFixed(1)} hrs (
-                            {li.payType === "WithoutPay" ? "Unpaid" : "Paid"})
+                            {li.name ?? "Leave"}: {formatDecimal(li.hours)} hrs
+                            ({li.payType === "WithoutPay" ? "Unpaid" : "Paid"})
                           </div>
                         ))}
                       </div>
@@ -503,6 +492,9 @@ export default function DtrDetailTable({
           startTime={selectedRow.startTime}
           endTime={selectedRow.endTime}
           timeShiftId={selectedRow.shiftId}
+          shiftName={selectedRow.shiftName}
+          shiftStartTime={selectedRow.shiftStartTime}
+          shiftEndTime={selectedRow.shiftEndTime}
         />
       )}
 

@@ -8,14 +8,22 @@ import {
 } from "../../models/forms/company-info-form.schema";
 import {
   useCompanyInfo,
+  useRemoveCompanyLogo,
   useUpdateCompanyInfo,
+  useUploadCompanyLogo,
 } from "../../hooks/use-company-info-queries";
 import { COMPANY_POLICY_LABEL } from "../../constants/label.const";
 import { authStorage } from "@/core/auth/auth-storage";
+import { ImageUpload } from "@/shared/components/image-upload/image-upload";
+import { BankOutlined } from "@ant-design/icons";
 
 export default function CompanyInfoTab() {
   const { data: company, isLoading } = useCompanyInfo();
   const { mutateAsync: update, isPending } = useUpdateCompanyInfo();
+  const { mutateAsync: uploadLogo } = useUploadCompanyLogo();
+  const { mutateAsync: removeLogo } = useRemoveCompanyLogo();
+  // Same gate as the logo endpoints (Organization Setup:Edit).
+  const canEditLogo = authStorage.hasAnyPermission("Organization Setup:Edit");
 
   const {
     control,
@@ -88,6 +96,19 @@ export default function CompanyInfoTab() {
         loading={isLoading}
         size="small"
       >
+        <Form.Item label={COMPANY_POLICY_LABEL.LOGO}>
+          <ImageUpload
+            label="logo"
+            shape="square"
+            crop="logo"
+            value={company?.logoUrl}
+            placeholder={<BankOutlined />}
+            onUpload={(file) => uploadLogo(file)}
+            onRemove={() => removeLogo()}
+            disabled={!canEditLogo}
+            hint="PNG, JPG or WebP. You can crop it after choosing; it's resized automatically. A logo on a transparent or plain background looks best."
+          />
+        </Form.Item>
         <div className="form-grid-2">
           <Form.Item
             label={COMPANY_POLICY_LABEL.COMPANY_NAME}

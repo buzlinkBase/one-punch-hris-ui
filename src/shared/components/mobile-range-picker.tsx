@@ -1,12 +1,18 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { DatePicker } from "antd";
 import type { Dayjs } from "dayjs";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
+import {
+  pickRange,
+  rangeKey,
+  shownRange,
+  type DateRange,
+  type RangeDraft,
+} from "./mobile-range-draft";
 
 const { RangePicker } = DatePicker;
 
 type RangePickerProps = React.ComponentProps<typeof RangePicker>;
-type DayjsRange = [Dayjs | null, Dayjs | null] | null;
 
 interface MobileRangePickerProps extends Pick<
   RangePickerProps,
@@ -31,8 +37,9 @@ const DEFAULT_FORMAT = "YYYY-MM-DD";
  * dual-month popup overflows/clips on phone-width viewports, so below the
  * app's mobile breakpoint this renders two stacked single DatePickers
  * (From/Start, To/End) instead, each with a normal single-panel popup —
- * emitting the same `[Dayjs|null, Dayjs|null]|null` + date-strings pair
- * RangePicker's own `onChange` does, so existing callers need no other change.
+ * emitting the same `[Dayjs, Dayjs]|null` + date-strings pair RangePicker's
+ * own `onChange` does, and like it only once both ends are picked (a lone end
+ * is held here until then), so existing callers need no other change.
  */
 export function MobileRangePicker({
   value,
@@ -48,6 +55,7 @@ export function MobileRangePicker({
   disabled,
 }: MobileRangePickerProps) {
   const isMobile = useIsMobile();
+  const [draft, setDraft] = useState<RangeDraft | null>(null);
 
   if (!isMobile) {
     return (
@@ -67,12 +75,20 @@ export function MobileRangePicker({
     );
   }
 
-  const [from, to] = value ?? [null, null];
+  const current: DateRange | null = value
+    ? [value[0] ?? null, value[1] ?? null]
+    : null;
+  const [from, to] = shownRange(current, draft);
   const fmt = typeof format === "string" ? format : DEFAULT_FORMAT;
 
   const emit = (newFrom: Dayjs | null, newTo: Dayjs | null) => {
-    const next: DayjsRange = newFrom || newTo ? [newFrom, newTo] : null;
-    onChange?.(next, [
+    const pick = pickRange([newFrom, newTo]);
+    if (pick.kind === "draft") {
+      setDraft({ range: pick.range, basis: rangeKey(current) });
+      return;
+    }
+    setDraft(null);
+    onChange?.(pick.range, [
       newFrom ? newFrom.format(fmt) : "",
       newTo ? newTo.format(fmt) : "",
     ]);
@@ -81,7 +97,7 @@ export function MobileRangePicker({
   return (
     <div className={`flex flex-col gap-2 ${className ?? ""}`} style={style}>
       <DatePicker
-        style={{ width: "100%" }}
+        className="w-full!"
         size={size}
         status={status}
         format={format}
@@ -94,7 +110,7 @@ export function MobileRangePicker({
         onChange={(d) => emit(d ?? null, to ?? null)}
       />
       <DatePicker
-        style={{ width: "100%" }}
+        className="w-full!"
         size={size}
         status={status}
         format={format}
