@@ -106,6 +106,10 @@ export interface PaymentResponse {
   billingCycle: BillingCycle;
   periodStartUtc: string;
   periodEndUtc: string;
+  /** "Storage" for blocks bought mid-period. */
+  kind: "Plan" | "Storage";
+  /** Storage payments: what was bought, e.g. "2 x 50 GB Storage". */
+  description: string | null;
 }
 
 /**

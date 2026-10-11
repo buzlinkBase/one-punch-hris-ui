@@ -85,7 +85,19 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
     key: "paidAtUtc",
     render: (value: string) => formatManilaDate(value),
   },
-  { title: "Plan", dataIndex: "planName", key: "planName" },
+  {
+    title: "For",
+    key: "for",
+    render: (_, row) =>
+      row.kind === "Storage" ? (
+        <span>
+          <Tag color="purple">{BILLING_LABEL.STORAGE_PAYMENT}</Tag>{" "}
+          {row.description}
+        </span>
+      ) : (
+        row.planName
+      ),
+  },
   {
     title: "Period",
     key: "period",

@@ -10,8 +10,10 @@ import {
   Skeleton,
   Table,
   Tag,
+  Tooltip,
   theme,
 } from "antd";
+import { PlusCircleOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { BILLING_LABEL, STORAGE_LABEL } from "../../constants/label.const";
 import {
@@ -131,9 +133,13 @@ export function StorageCard({
                   {STORAGE_LABEL.WITHDRAW_REDUCTION}
                 </Button>
               ) : (
-                <Button size="small" onClick={() => setReducing(row)}>
-                  {STORAGE_LABEL.REDUCE}
-                </Button>
+                <Tooltip
+                  title={`${STORAGE_LABEL.REDUCE_TIP} From ${formatManilaDate(row.renewsAtUtc)}, each block removed lowers what you pay by ${formatMoney(row.unitPrice, summary.currency)} ${perCycle(summary.billingCycle)}.`}
+                >
+                  <Button size="small" onClick={() => setReducing(row)}>
+                    {STORAGE_LABEL.REDUCE}
+                  </Button>
+                </Tooltip>
               ),
           },
         ]
@@ -146,7 +152,10 @@ export function StorageCard({
       extra={
         canBuy && (
           <Button
-            type={summary.level === "Normal" ? "default" : "primary"}
+            type="primary"
+            size="large"
+            icon={<PlusCircleOutlined />}
+            className="shadow-md!"
             disabled={!summary.canPurchase}
             onClick={() => setBuying(true)}
           >

@@ -44,6 +44,9 @@ export const BILLING_LABEL = {
   CURRENT: "Current plan",
   SELECT: "Choose",
   UNLIMITED: "Unlimited",
+  STORAGE_PAYMENT: "Storage",
+  STORAGE_PACKAGE: "Storage package",
+  STORAGE_PACKAGE_NOTE: "Included in plan, shared by all your companies",
   UNKNOWN: "--",
   PAYMENT_INSTRUCTIONS_TITLE: "How to pay",
   PAY: "Pay",
@@ -172,6 +175,8 @@ export const STORAGE_LABEL = {
   UPGRADE: "Upgrade storage",
   FULL_TITLE: "Storage is full",
   BUY: "Add storage",
+  REDUCE_TIP:
+    "Keep fewer blocks. Nothing changes today: you keep the storage you paid for until this period ends.",
   UNKNOWN_USAGE: "Usage can't be shown right now.",
   FREE_GRANT: "Included at no charge",
   REDUCE: "Reduce",
