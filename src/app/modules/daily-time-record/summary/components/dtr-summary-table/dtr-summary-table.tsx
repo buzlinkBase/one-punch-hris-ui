@@ -4,7 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { DtrSummaryResponse } from "../../models/api/response/dtr-summary-response.model";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
-import { toDisplayHours } from "../../../detail/utils/dtr-hours-display";
+import { formatSummaryNumber } from "../../utils/dtr-summary-export.utils";
 
 interface Props {
   data: DtrSummaryResponse[];
@@ -54,11 +54,8 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     unpaidLeaveHours: 105,
   });
 
-  // ND-OT folded into Hrs/ND/OT for display -- see dtr-hours-display.
-  const displayData = useMemo(() => data.map(toDisplayHours), [data]);
-
   const sum = (field: keyof DtrSummaryResponse) =>
-    displayData.reduce((acc, row) => acc + ((row[field] as number) ?? 0), 0);
+    data.reduce((acc, row) => acc + ((row[field] as number) ?? 0), 0);
 
   const totals = useMemo(
     () => ({
@@ -95,10 +92,10 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       unpaidLeaveHours: sum("unpaidLeaveHours"),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [displayData],
+    [data],
   );
 
-  const tc = (v: number) => ({
+  const tc = (key: keyof DtrSummaryResponse, v: number) => ({
     align: "right" as const,
     children:
       v === 0 ? (
@@ -106,7 +103,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           —
         </span>
       ) : (
-        <span style={{ fontWeight: 600 }}>{v.toFixed(1)}</span>
+        <span style={{ fontWeight: 600 }}>{formatSummaryNumber(key, v)}</span>
       ),
   });
 
@@ -133,7 +130,11 @@ export default function DtrSummaryTable({ data, loading }: Props) {
             —
           </span>
         );
-      return <span style={{ fontWeight: 500 }}>{n.toFixed(1)}</span>;
+      return (
+        <span style={{ fontWeight: 500 }}>
+          {formatSummaryNumber(dataIndex, n)}
+        </span>
+      );
     },
   });
 
@@ -263,7 +264,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
   return (
     <Table
       rowKey="employeeId"
-      dataSource={displayData}
+      dataSource={data}
       columns={columns}
       size="small"
       loading={loading}
@@ -281,8 +282,12 @@ export default function DtrSummaryTable({ data, loading }: Props) {
                   <Table.Summary.Cell index={0}>
                     <strong>Total</strong>
                   </Table.Summary.Cell>
-                  {Object.values(totals).map((v, i) => (
-                    <Table.Summary.Cell key={i} index={i + 1} {...tc(v)} />
+                  {Object.entries(totals).map(([key, v], i) => (
+                    <Table.Summary.Cell
+                      key={key}
+                      index={i + 1}
+                      {...tc(key as keyof DtrSummaryResponse, v)}
+                    />
                   ))}
                 </Table.Summary.Row>
               </Table.Summary>

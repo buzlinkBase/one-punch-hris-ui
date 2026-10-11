@@ -52,6 +52,8 @@ import { useHasPermission } from "@/shared/hooks/use-has-permission";
 const { Title } = Typography;
 
 interface ScheduleRow {
+  // The stored row's id; absent for freshly generated rows, which the API adds as new.
+  id?: string;
   index: number;
   date: string;
   amount: number;
@@ -189,6 +191,7 @@ export default function OtherIncomeApplicationDetail() {
       if (existing.schedule?.length) {
         setSchedule(
           existing.schedule.map((r, i) => ({
+            id: r.id,
             index: i + 1,
             date: r.date?.replace(/Z$/, "").split("T")[0] ?? "",
             amount: r.amount,
@@ -236,8 +239,8 @@ export default function OtherIncomeApplicationDetail() {
           amount: values.amount,
           isProrated: values.isProrated,
           remarks: values.remarks ?? "",
-          schedule: schedule.map((r, i) => ({
-            id: existing.schedule[i]?.id ?? "",
+          schedule: schedule.map((r) => ({
+            id: r.id,
             date: r.date,
             amount: r.amount,
           })),

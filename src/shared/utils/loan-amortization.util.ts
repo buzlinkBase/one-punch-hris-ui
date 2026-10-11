@@ -2,6 +2,8 @@ import dayjs from "dayjs";
 import type { ColumnsType } from "antd/es/table";
 
 export interface LoanBreakdownRow {
+  // The stored installment's id; absent for freshly generated rows, which the API adds as new.
+  id?: string;
   period: number;
   date: string;
   principal: number;

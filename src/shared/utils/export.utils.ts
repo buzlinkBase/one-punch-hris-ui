@@ -1,7 +1,13 @@
 import * as XLSX from "xlsx";
 
-export function buildFlatCsv(headers: string[], rows: string[][]): string {
-  const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
+/** Strings are quoted; numbers are written bare (no thousands separator) so spreadsheet apps
+ * read them as numbers. */
+export function buildFlatCsv(
+  headers: string[],
+  rows: (string | number)[][],
+): string {
+  const esc = (v: string | number) =>
+    typeof v === "number" ? String(v) : `"${v.replaceAll('"', '""')}"`;
   return [
     headers.map(esc).join(","),
     ...rows.map((row) => row.map(esc).join(",")),
@@ -13,6 +19,16 @@ export interface ExcelSheet {
   headers: string[];
   /** Numbers are written as numeric cells, so they sum and sort in Excel. */
   rows: (string | number)[][];
+  /** Optional Excel display format for every numeric cell (e.g. "#,##0.00"); the value stays a number. */
+  numberFormat?: string;
+}
+
+function applyNumberFormat(ws: XLSX.WorkSheet, format: string): void {
+  for (const [address, value] of Object.entries(ws)) {
+    if (address.startsWith("!")) continue;
+    const cell = value as XLSX.CellObject;
+    if (cell.t === "n") cell.z = format;
+  }
 }
 
 /** Builds and downloads a real, multi-worksheet .xlsx file — one sheet per entry. */
@@ -23,6 +39,7 @@ export function downloadMultiSheetExcel(
   const wb = XLSX.utils.book_new();
   for (const sheet of sheets) {
     const ws = XLSX.utils.aoa_to_sheet([sheet.headers, ...sheet.rows]);
+    if (sheet.numberFormat) applyNumberFormat(ws, sheet.numberFormat);
     // Excel worksheet names: max 31 chars, and : \ / ? * [ ] aren't allowed.
     const safeName = sheet.name.replace(/[:\\/?*[\]]/g, "").slice(0, 31);
     XLSX.utils.book_append_sheet(wb, ws, safeName);

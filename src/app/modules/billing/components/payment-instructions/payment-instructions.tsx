@@ -9,16 +9,19 @@ interface PaymentInstructionsProps {
   instructions: string;
   /** Philippine date a period-end change takes effect. */
   effectiveDate: string;
+  /** Pay now is offered beside this: the instructions become the other way to pay. */
+  payOnline?: boolean;
 }
 
 /**
- * What to pay and how, after choosing a plan. Until online payment exists the plan is
- * activated once the payment is confirmed on our side.
+ * What to pay and how, after choosing a plan: online (Pay now, activated at once) when it's set
+ * up, otherwise by bank transfer, activated once the payment is confirmed on our side.
  */
 export function PaymentInstructions({
   quote,
   instructions,
   effectiveDate,
+  payOnline = false,
 }: PaymentInstructionsProps) {
   const atPeriodEnd = quote.timing === "AtPeriodEnd";
 
@@ -48,7 +51,17 @@ export function PaymentInstructions({
           price applies from your next period.
         </p>
       ) : (
-        <p className="m-0 whitespace-pre-line">{instructions}</p>
+        <>
+          {payOnline && (
+            <>
+              <p className="m-0">{BILLING_LABEL.PAY_ONLINE_HINT}</p>
+              <p className="m-0 text-(--ant-color-text-secondary)">
+                {BILLING_LABEL.PAY_OTHER_WAYS}
+              </p>
+            </>
+          )}
+          <p className="m-0 whitespace-pre-line">{instructions}</p>
+        </>
       )}
     </div>
   );

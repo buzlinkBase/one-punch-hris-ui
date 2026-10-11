@@ -78,10 +78,10 @@ const ndOnlyPremiumPortion = (r: PayrollRunResult) =>
 // non-folded figures already reconcile to Gross under Compounded on their own, and folding them
 // there too would just be cosmetic). Compounded mode is byte-for-byte unchanged.
 //
-// NOT used by the separate Holiday Breakdown tab/sheet's own "Holiday Total" column -- that one
-// sums fully self-contained per-category totals (holidayDuty, restLegalTotal, etc., already
-// including every tier) that must NOT also receive this fold, or the day-rate portion would be
-// double-counted within that row.
+// NOT applied to the Payroll tab/sheet's expanded holiday category columns (holidayDuty,
+// restLegalTotal, etc.) -- those are fully self-contained per-category totals, already
+// including every tier, that must NOT also receive this fold, or the day-rate portion would be
+// double-counted. Only the Holiday / Holiday Total figure uses it.
 export const basicPay = (r: PayrollRunResult) =>
   r.basicPay + (isAdditiveMode(r) ? regularNdDayRatePortion(r) : 0);
 

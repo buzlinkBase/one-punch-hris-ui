@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
+import { formatDecimal } from "@/shared/utils/number.util";
 import type { DtrDetailResponse } from "../models/api/response/dtr-detail-response.model";
-import { displayHoursOf } from "./dtr-hours-display";
 
 export type LeafCol = { key: keyof DtrDetailResponse; label: string };
 export type SubGroup = { label: string; cols: LeafCol[] };
@@ -120,11 +120,10 @@ export function fmtCell(
   r: DtrDetailResponse,
   key: keyof DtrDetailResponse,
 ): string {
-  // ND-OT folded into Hrs/ND/OT, same as the on-screen table.
-  const v = displayHoursOf(r)[key];
+  const v = r[key];
   if (key === "startTime" || key === "endTime")
     return v ? dayjs(v as string).format("HH:mm") : "";
-  if (typeof v === "number") return v === 0 ? "" : v.toFixed(1);
+  if (typeof v === "number") return v === 0 ? "" : formatDecimal(v);
   return String(v ?? "");
 }
 

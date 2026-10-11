@@ -88,6 +88,14 @@ export const authStorage = {
     return () => listeners.delete(listener);
   },
 
+  /**
+   * Another tab changed the shared session in localStorage (see auth-session-sync.ts): drops the
+   * cached snapshot and tells subscribers, same as a local save. notify() itself is module-private.
+   */
+  notifyExternalChange() {
+    notify();
+  },
+
   /** Stable-reference snapshot of getUser(), for useSyncExternalStore (see useAuthUser). */
   getUserSnapshot(): AuthUser | null {
     if (userSnapshot === undefined) {

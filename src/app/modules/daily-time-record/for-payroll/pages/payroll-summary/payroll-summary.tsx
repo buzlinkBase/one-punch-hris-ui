@@ -11,12 +11,15 @@ import {
   Statistic,
   Table,
   Tabs,
+  Tag,
   Typography,
   message,
   theme,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
+  LeftOutlined,
+  RightOutlined,
   ReloadOutlined,
   FileTextOutlined,
   PrinterOutlined,
@@ -39,36 +42,44 @@ import {
   downloadMultiSheetExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
-import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import { getLastMonthToCurrentRange } from "@/shared/utils/cutoff.util";
+import { APPROVAL_STATUS_LABEL } from "../../constants/label.const";
+import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
 import {
-  APPROVAL_STATUS_LABEL,
-  PAYROLL_TYPE_LABEL,
-} from "../../constants/label.const";
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
+import {
+  buildPayrollBatchOptions,
+  sortBatchesLatestFirst,
+} from "./utils/payroll-batch-option.util";
 import { getEmptyMessage } from "./payroll-summary-empty";
-import { earningsColumns } from "./columns/earnings.columns";
-import { holidayColumns } from "./columns/holiday.columns";
-import { deductionsColumns } from "./columns/deductions.columns";
+import { payrollColumns } from "./columns/payroll.columns";
 import { hoursColumns } from "./columns/hours.columns";
 import { erColumns } from "./columns/employer-contributions.columns";
 import {
+  EXCEL_AMOUNT_FORMAT,
   EXPORT_HEADERS,
   buildExportRows,
-  EARNINGS_HEADERS,
-  buildEarningsRows,
-  HOLIDAY_HEADERS,
-  buildHolidayRows,
-  DEDUCTIONS_HEADERS,
-  buildDeductionsRows,
+  PAYROLL_HEADERS,
+  buildPayrollRows,
   ER_HEADERS,
   buildErRows,
   HOURS_HEADERS,
   buildHoursRows,
 } from "./utils/payroll-summary-export.util";
+import {
+  buildFilterFileSuffix,
+  buildPrintSummaryParams,
+  filterPayrollResults,
+  type PayrollSummaryFilter,
+  type StatusFilter,
+} from "./utils/payroll-summary-filter.util";
 
 const { Title } = Typography;
-
-type StatusFilter =
-  "All" | "ForApproval" | "Approved" | "Declined" | "Cancelled";
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "All", label: "All" },
@@ -95,25 +106,56 @@ export default function PayrollSummary() {
   // Declined to inspect a pending or declined run's figures from this page.
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Approved");
 
-  // Narrows the batch selector below -- defaults to the current semi-monthly cutoff, same as
-  // the Saved Payroll Runs tab, so the dropdown isn't a long scroll through every run ever made.
+  // Narrows the batch selector below -- defaults to last month through this month, same as
+  // the Saved Payroll Runs tab, so the dropdown isn't a long scroll through every run ever made
+  // yet still includes a run generated late for the previous period.
   // Arriving pre-selected via ?batchId= instead falls back to no filter (the backend's own wide
   // default) so that specific batch is guaranteed to be in the dropdown's option list.
   const [batchDateRange, setBatchDateRange] = useState<[string, string] | null>(
     () => {
       if (searchParams.batchId) return null;
-      const { fromDate, toDate } = getSemiMonthlyCutoff();
+      const { fromDate, toDate } = getLastMonthToCurrentRange();
       return [fromDate, toDate];
     },
   );
-  const { data: batches = [] } = usePayrollBatches(
+  const { data: batchData, isFetching: isFetchingBatches } = usePayrollBatches(
     batchDateRange?.[0],
     batchDateRange?.[1],
   );
+  const batches = useMemo(
+    () => sortBatchesLatestFirst(batchData ?? []),
+    [batchData],
+  );
+
+  // Open on the newest run instead of an empty page, and fall back to it when a range change
+  // drops the picked run from the list. While the list is still loading the pick is kept as-is,
+  // so a deep-linked batch isn't replaced before it arrives.
+  const batchId =
+    isFetchingBatches || batches.some((b) => b.id === selectedBatchId)
+      ? selectedBatchId
+      : batches[0]?.id;
+
+  const selectedIndex = batches.findIndex((b) => b.id === batchId);
+  const stepBatch = (offset: number) => {
+    const next = batches[selectedIndex + offset];
+    if (next) setSelectedBatchId(next.id);
+  };
+
+  const { data: employees = [] } = useEmployees();
+  // Remarks, status, employee count, payout date and generator, so several runs of the same
+  // period can be told apart -- see buildPayrollBatchOptions.
+  const batchOptions = useMemo(
+    () =>
+      buildPayrollBatchOptions(
+        batches,
+        (id) => employees.find((e) => e.id === id)?.fullName ?? undefined,
+      ),
+    [batches, employees],
+  );
 
   const selectedBatch = useMemo(
-    () => batches.find((b) => b.id === selectedBatchId),
-    [batches, selectedBatchId],
+    () => batches.find((b) => b.id === batchId),
+    [batches, batchId],
   );
 
   const {
@@ -121,19 +163,41 @@ export default function PayrollSummary() {
     isLoading,
     refetch,
     isFetching,
-  } = usePayrolls({ payrollBatchId: selectedBatchId });
+  } = usePayrolls({ payrollBatchId: batchId });
 
   const allResults = useMemo<PayrollRunResult[]>(
     () => response?.data ?? [],
     [response],
   );
 
+  const { data: clients = [] } = useClients();
+  const { data: payrollGroups = [] } = usePayrollGroups();
+  const [clientFilter, setClientFilter] = useState<string | undefined>();
+  const [payrollGroupFilter, setPayrollGroupFilter] = useState<
+    string | undefined
+  >();
+  const clientFilterOptions = useMemo(
+    () => clients.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` })),
+    [clients],
+  );
+  const payrollGroupFilterOptions = useMemo(
+    () => toPayrollGroupOptions(payrollGroups),
+    [payrollGroups],
+  );
+
+  // One filter for the table, Export and Print — see filterPayrollResults. Client / payroll
+  // group match the client / payroll group each row was paid under, not the employee's current one.
+  const filter = useMemo<PayrollSummaryFilter>(
+    () => ({
+      status: statusFilter,
+      clientId: clientFilter,
+      payrollGroupId: payrollGroupFilter,
+    }),
+    [statusFilter, clientFilter, payrollGroupFilter],
+  );
   const results = useMemo(
-    () =>
-      statusFilter === "All"
-        ? allResults
-        : allResults.filter((r) => r.approvalStatus === statusFilter),
-    [allResults, statusFilter],
+    () => filterPayrollResults(allResults, filter),
+    [allResults, filter],
   );
 
   // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
@@ -159,20 +223,25 @@ export default function PayrollSummary() {
     }
   };
 
+  // Payroll tab: earnings -> deductions -> Net in one row; the 7 holiday categories stay
+  // folded behind the Holiday header's toggle until asked for.
+  const [holidayExpanded, setHolidayExpanded] = useState(false);
+  const payrollTableColumns = payrollColumns({
+    onPrint: handlePrintPayslip,
+    holidayExpanded,
+    onToggleHoliday: () => setHolidayExpanded((v) => !v),
+  });
+
+  // Sends the selected batch plus the on-screen filter, so the PDF lists exactly the rows in
+  // the table — see buildPrintSummaryParams / PayrollsController.PrintSummary.
   const handlePrintSummary = async () => {
-    if (!results.length || !selectedBatch) {
-      message.info("No data to print. Select a payroll batch first.");
-      return;
-    }
+    if (!results.length || !selectedBatch) return;
     const printTab = window.open("about:blank", "_blank");
     try {
       const blob = await httpClient.get<Blob>(
         `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/print-summary`,
         {
-          params: {
-            from: selectedBatch.payPeriodStart,
-            to: selectedBatch.payPeriodEnd,
-          },
+          params: buildPrintSummaryParams(selectedBatch.id, filter),
           responseType: "blob",
         },
       );
@@ -185,11 +254,16 @@ export default function PayrollSummary() {
   };
 
   const handleExport = (format: "csv" | "excel") => {
-    if (!results.length || !selectedBatch) {
-      message.info("No data to export. Select a payroll batch first.");
-      return;
-    }
-    const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}`;
+    if (!results.length || !selectedBatch) return;
+    // Built from `results`, so the files hold exactly the filtered rows on screen; the name
+    // carries the applied filters.
+    const filterSuffix = buildFilterFileSuffix({
+      status: statusFilter,
+      clientCode: clients.find((c) => c.id === clientFilter)?.code,
+      payrollGroupCode: payrollGroups.find((p) => p.id === payrollGroupFilter)
+        ?.code,
+    });
+    const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}${filterSuffix}`;
     if (format === "csv") {
       triggerDownload(
         buildFlatCsv(EXPORT_HEADERS, buildExportRows(results)),
@@ -200,29 +274,22 @@ export default function PayrollSummary() {
       downloadMultiSheetExcel(
         [
           {
-            name: "Earnings",
-            headers: EARNINGS_HEADERS,
-            rows: buildEarningsRows(results),
-          },
-          {
-            name: "Holiday Breakdown",
-            headers: HOLIDAY_HEADERS,
-            rows: buildHolidayRows(results),
-          },
-          {
-            name: "Deductions & Net",
-            headers: DEDUCTIONS_HEADERS,
-            rows: buildDeductionsRows(results),
+            name: "Payroll",
+            headers: PAYROLL_HEADERS,
+            rows: buildPayrollRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
             name: "Employer Contributions",
             headers: ER_HEADERS,
             rows: buildErRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
             name: "Hours Breakdown",
             headers: HOURS_HEADERS,
             rows: buildHoursRows(results),
+            numberFormat: EXCEL_AMOUNT_FORMAT,
           },
         ],
         `payroll-summary-${suffix}.xlsx`,
@@ -256,7 +323,7 @@ export default function PayrollSummary() {
 
   const emptyMessage = getEmptyMessage({
     hasBatches: batches.length > 0,
-    batchSelected: !!selectedBatchId,
+    batchSelected: !!batchId,
     loadedCount: allResults.length,
     statusLabel:
       STATUS_FILTER_OPTIONS.find((o) => o.value === statusFilter)?.label ??
@@ -298,6 +365,11 @@ export default function PayrollSummary() {
               hour breakdown.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 mb-4">
+        <div>
           <Space wrap>
             <MobileRangePicker
               value={
@@ -313,23 +385,81 @@ export default function PayrollSummary() {
                   ]);
               }}
             />
-            <Select
-              value={selectedBatchId}
-              onChange={setSelectedBatchId}
-              placeholder="Select a payroll batch"
-              showSearch
-              optionFilterProp="label"
-              style={{ width: 260 }}
-              options={batches.map((b) => ({
-                value: b.id,
-                label: `${dayjs(b.payPeriodStart).format("MMM D")} – ${dayjs(b.payPeriodEnd).format("MMM D, YYYY")} · ${PAYROLL_TYPE_LABEL[b.payrollType] ?? b.payrollType}`,
-              }))}
-            />
+            <Space.Compact>
+              <Button
+                icon={<LeftOutlined />}
+                title="Older payroll"
+                disabled={
+                  selectedIndex < 0 || selectedIndex >= batches.length - 1
+                }
+                onClick={() => stepBatch(1)}
+              />
+              <Select
+                value={batchId}
+                onChange={setSelectedBatchId}
+                placeholder="Select a payroll batch"
+                showSearch
+                optionFilterProp="label"
+                className="w-80"
+                popupMatchSelectWidth={false}
+                classNames={{ popup: { root: "min-w-[420px] max-w-[90vw]" } }}
+                notFoundContent="No payroll batches in this date range"
+                options={batchOptions}
+                optionRender={(option) => {
+                  const { remarks, period, status, statusColor, meta } =
+                    option.data as {
+                      remarks: string | null;
+                      period: string;
+                      status: string;
+                      statusColor: string;
+                      meta: string;
+                    };
+                  return (
+                    <div className="whitespace-normal py-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{period}</span>
+                        <Tag color={statusColor} className="mr-0!">
+                          {status}
+                        </Tag>
+                      </div>
+                      {remarks && <div className="text-sm">{remarks}</div>}
+                      <div className="text-xs opacity-70">{meta}</div>
+                    </div>
+                  );
+                }}
+              />
+              <Button
+                icon={<RightOutlined />}
+                title="Newer payroll"
+                disabled={selectedIndex <= 0}
+                onClick={() => stepBatch(-1)}
+              />
+            </Space.Compact>
             <Select<StatusFilter>
               value={statusFilter}
               onChange={setStatusFilter}
               options={STATUS_FILTER_OPTIONS}
-              style={{ width: 150 }}
+              className="w-37.5"
+            />
+            <Select
+              value={clientFilter}
+              onChange={setClientFilter}
+              options={clientFilterOptions}
+              placeholder="All clients"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              className="w-48"
+            />
+            <Select
+              value={payrollGroupFilter}
+              onChange={setPayrollGroupFilter}
+              options={payrollGroupFilterOptions}
+              placeholder="All payroll groups"
+              allowClear
+              showSearch={{ filterOption: filterPayrollGroupOption }}
+              optionRender={payrollGroupOptionRender}
+              className="w-48"
             />
             <Button
               icon={<ReloadOutlined spin={isFetching} />}
@@ -417,34 +547,13 @@ export default function PayrollSummary() {
         <Tabs
           items={[
             {
-              key: "earnings",
-              label: "Earnings",
+              key: "payroll",
+              label: "Payroll",
               children: (
                 <Table
                   dataSource={results}
-                  columns={earningsColumns(handlePrintPayslip)}
-                  {...tableProps}
-                />
-              ),
-            },
-            {
-              key: "holidays",
-              label: "Holiday Breakdown",
-              children: (
-                <Table
-                  dataSource={results}
-                  columns={holidayColumns}
-                  {...tableProps}
-                />
-              ),
-            },
-            {
-              key: "deductions",
-              label: "Deductions & Net",
-              children: (
-                <Table
-                  dataSource={results}
-                  columns={deductionsColumns(token.colorPrimary)}
+                  columns={payrollTableColumns}
+                  bordered
                   {...tableProps}
                 />
               ),

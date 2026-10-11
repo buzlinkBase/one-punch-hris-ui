@@ -4,6 +4,11 @@ import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
+import {
+  filterPayrollGroupOption,
+  payrollGroupOptionRender,
+  toPayrollGroupOptions,
+} from "@/shared/utils/payroll-group-options.util";
 import { EMPLOYMENT_STATUS_OPTIONS } from "@/app/modules/setup/employee/constants/label.const";
 import type { AnalyticsFilter } from "../models/analytics.model";
 import { ANALYTICS_DATE_FORMAT } from "../utils/analytics-filter";
@@ -70,10 +75,12 @@ export function AnalyticsFilters({ value, onChange }: AnalyticsFiltersProps) {
       />
       <Select
         {...selectProps}
+        showSearch={{ filterOption: filterPayrollGroupOption }}
         placeholder="All payroll groups"
         value={value.payrollGroupId}
         onChange={(v?: string) => set("payrollGroupId", v)}
-        options={payrollGroups.map((g) => ({ value: g.id, label: g.name }))}
+        options={toPayrollGroupOptions(payrollGroups)}
+        optionRender={payrollGroupOptionRender}
       />
       <Select
         {...selectProps}

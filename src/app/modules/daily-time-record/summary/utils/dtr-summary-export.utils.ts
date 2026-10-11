@@ -1,5 +1,15 @@
+import { formatDecimal } from "@/shared/utils/number.util";
 import type { DtrSummaryResponse } from "../models/api/response/dtr-summary-response.model";
-import { displayHoursOf } from "../../detail/utils/dtr-hours-display";
+
+// Absent is a day count; every other number in the summary is hours.
+const COUNT_FIELDS = new Set<keyof DtrSummaryResponse>(["absentCount"]);
+
+export function formatSummaryNumber(
+  key: keyof DtrSummaryResponse,
+  v: number,
+): string {
+  return COUNT_FIELDS.has(key) ? String(v) : formatDecimal(v);
+}
 
 type SumLeafCol = { key: keyof DtrSummaryResponse; label: string };
 type SumSubGroup = { label: string; cols: SumLeafCol[] };
@@ -116,9 +126,8 @@ export function fmtCell(
   r: DtrSummaryResponse,
   key: keyof DtrSummaryResponse,
 ): string {
-  // ND-OT folded into Hrs/ND/OT, same as the on-screen table.
-  const v = displayHoursOf(r)[key];
-  if (typeof v === "number") return v === 0 ? "" : v.toFixed(1);
+  const v = r[key];
+  if (typeof v === "number") return v === 0 ? "" : formatSummaryNumber(key, v);
   return String(v ?? "");
 }
 

@@ -707,7 +707,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
       {
         key: "payroll-reports-bank",
         feature: FEATURE_KEYS.PAYROLL_CORE,
-        label: "Bank Disbursement",
+        label: "Disbursement",
         path: "/payroll/reports/bank-disbursement",
         permission: "Payroll Reports:View",
       },

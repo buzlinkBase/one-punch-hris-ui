@@ -43,6 +43,36 @@ describe("approvalMessage", () => {
       "Your Leave application was declined.",
     );
   });
+
+  it("reports a background DTR save with the server's detail", () => {
+    const dtr = {
+      applicationType: "Dtr" as const,
+      applicationTypeLabel: "DTR",
+    };
+    expect(
+      approvalMessage(
+        saved({
+          ...dtr,
+          statusLabel: "Draft Saved",
+          note: "46 employee(s), 690 day record(s) saved as a draft awaiting approval.",
+        }),
+      ),
+    ).toBe(
+      "46 employee(s), 690 day record(s) saved as a draft awaiting approval.",
+    );
+    expect(
+      approvalMessage(
+        saved({
+          ...dtr,
+          statusLabel: "Save Failed",
+          note: "Nothing was saved.",
+        }),
+      ),
+    ).toBe("Your DTR draft couldn't be saved. Nothing was saved.");
+    expect(
+      approvalMessage(saved({ ...dtr, statusLabel: "Nothing To Save" })),
+    ).toBe("Every selected day already has a saved DTR.");
+  });
 });
 
 describe("toBellEntry", () => {
@@ -53,5 +83,14 @@ describe("toBellEntry", () => {
     expect(entry.createdAt).toBe("2026-09-30T08:00:00Z");
     expect(entry.title).toBe("Leave — Declined");
     expect(entry.severity).toBe("warning");
+  });
+
+  it("flags a failed DTR save as a warning and a saved one as success", () => {
+    expect(toBellEntry(saved({ statusLabel: "Save Failed" })).severity).toBe(
+      "warning",
+    );
+    expect(toBellEntry(saved({ statusLabel: "Draft Saved" })).severity).toBe(
+      "success",
+    );
   });
 });

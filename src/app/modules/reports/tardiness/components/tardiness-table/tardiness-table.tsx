@@ -4,6 +4,7 @@ import type { TardinessResponse } from "../../models/api/response/tardiness-resp
 import { TARDINESS_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatDecimal } from "@/shared/utils/number.util";
 import dayjs from "dayjs";
 
 interface Props {
@@ -77,7 +78,7 @@ export default function TardinessTable({ data, loading }: Props) {
     },
     {
       ...col("gracePeriodMinutes", TARDINESS_LABEL.GRACE_PERIOD, 130),
-      render: (v: number) => `${v} mins`,
+      render: (v: number) => `${formatDecimal(v)} mins`,
     },
     {
       title: TARDINESS_LABEL.TARDINESS_MINS,
@@ -92,7 +93,7 @@ export default function TardinessTable({ data, loading }: Props) {
       align: "right",
       render: (v: number) =>
         v > 0 ? (
-          <Tag color="orange">{v} mins</Tag>
+          <Tag color="orange">{formatDecimal(v)} mins</Tag>
         ) : (
           <Tag color="success">On time</Tag>
         ),
@@ -110,9 +111,9 @@ export default function TardinessTable({ data, loading }: Props) {
       align: "right",
       render: (v: number, row: TardinessResponse) =>
         row.isWithinGracePeriod ? (
-          <Tag color="blue">0 mins (Grace)</Tag>
+          <Tag color="blue">0.00 mins (Grace)</Tag>
         ) : v > 0 ? (
-          <Tag color="red">{v} mins</Tag>
+          <Tag color="red">{formatDecimal(v)} mins</Tag>
         ) : (
           <Tag color="success">—</Tag>
         ),

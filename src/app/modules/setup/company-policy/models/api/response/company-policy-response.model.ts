@@ -17,4 +17,5 @@ export interface CompanyPolicyResponse {
   wTaxCrossMonthCreditPolicy: string;
   requiredTakehomePercentage: number;
   otNdCalculationMethod: string;
+  hourlyRateDivisor: string;
 }

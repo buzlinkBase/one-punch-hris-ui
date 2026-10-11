@@ -1,5 +1,6 @@
 export interface UpdateOtherIncomeSchedule {
-  id: string;
+  // Omitted for a row that isn't stored yet (e.g. after Generate Schedule).
+  id?: string;
   date: string;
   amount: number;
 }

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Form,
   Input,
@@ -8,7 +8,9 @@ import {
   Space,
   Tag,
   Tabs,
+  message,
 } from "antd";
+import { BankOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller } from "react-hook-form";
@@ -21,7 +23,11 @@ import {
   useClient,
   useCreateClient,
   useUpdateClient,
+  useUploadClientLogo,
+  useRemoveClientLogo,
 } from "../../hooks/use-client-queries";
+import { ImageUpload } from "@/shared/components/image-upload/image-upload";
+import { authStorage } from "@/core/auth/auth-storage";
 import { CLIENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import ClientBillingTab from "./client-billing-tab";
@@ -44,6 +50,17 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
   const { data: selected } = useClient(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateClient();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateClient();
+  const { mutateAsync: uploadLogo } = useUploadClientLogo();
+  const { mutateAsync: removeLogo } = useRemoveClientLogo();
+  // A new client's logo waits here until the record exists.
+  const [pendingLogo, setPendingLogo] = useState<File | null>(null);
+  // Local override of the saved logo ("" = removed); undefined shows what the server has.
+  const [logoPreview, setLogoPreview] = useState<string | undefined>();
+  // Same gate as the logo endpoint: anyone who may edit -- or, while creating, add -- clients.
+  const canEditLogo = authStorage.hasAnyPermission(
+    "Workforce Setup:Edit",
+    ...(isEdit ? [] : ["Workforce Setup:Create"]),
+  );
 
   const {
     control,
@@ -89,8 +106,20 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
       uniformAllowanceBasis:
         selected?.uniformAllowanceBasis ?? ("TenureMonths" as const),
     };
-    if (isEdit && id) await update({ id, ...values, ...allowanceFields });
-    else await add({ ...values, ...allowanceFields });
+    if (isEdit && id) {
+      await update({ id, ...values, ...allowanceFields });
+    } else {
+      const created = await add({ ...values, ...allowanceFields });
+      if (pendingLogo && created.id) {
+        try {
+          await uploadLogo({ id: created.id, file: pendingLogo });
+        } catch {
+          message.warning(
+            "The client was saved, but the logo couldn't be uploaded. Open the client to try again.",
+          );
+        }
+      }
+    }
     navigate({ to: "/setup/client" });
   };
 
@@ -100,6 +129,32 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
       onFinish={handleSubmit(onSubmit)}
       className="form-page-body"
     >
+      {/* Saved on its own, right away; for a new client it's held and uploaded once the
+          record exists (see onSubmit). */}
+      <Form.Item label={CLIENT_LABEL.LOGO}>
+        <ImageUpload
+          crop="logo"
+          label="logo"
+          shape="square"
+          value={logoPreview ?? selected?.logoUrl ?? undefined}
+          placeholder={<BankOutlined />}
+          disabled={!canEditLogo}
+          onUpload={async (file) => {
+            if (isEdit && id) {
+              setLogoPreview(await uploadLogo({ id, file }));
+            } else {
+              setPendingLogo(file);
+              setLogoPreview(URL.createObjectURL(file));
+            }
+          }}
+          onRemove={async () => {
+            if (isEdit && id) await removeLogo(id);
+            else setPendingLogo(null);
+            setLogoPreview("");
+          }}
+        />
+      </Form.Item>
+
       <Form.Item
         label={CLIENT_LABEL.CODE}
         validateStatus={errors.code ? "error" : ""}

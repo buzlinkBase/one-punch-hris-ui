@@ -10,8 +10,10 @@ import {
 } from "antd";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
+import { LIMIT_KEYS } from "@/shared/constants/entitlement-keys.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { PayNowButton } from "../../components/pay-now-button";
 import { PlanCard } from "../../components/plan-card";
 import { PaymentInstructions } from "../../components/payment-instructions";
 import { BILLING_LABEL, LIMIT_LABELS } from "../../constants/label.const";
@@ -19,6 +21,7 @@ import {
   useBilling,
   usePlans,
   useRequestPlanChange,
+  useUsage,
 } from "../../hooks/use-subscription-queries";
 import { BILLING_PERMISSION } from "../../hooks/use-subscription-state";
 import type {
@@ -28,6 +31,7 @@ import type {
   PlanResponse,
 } from "../../models/api/response/subscription-response.model";
 import { formatManilaDate, formatMoney } from "../../utils/format";
+import { formatStorage } from "../../utils/storage";
 
 const { Title } = Typography;
 
@@ -38,6 +42,21 @@ const CYCLE_OPTIONS = [
     value: "Annual",
   },
 ];
+
+/** Column classes by plan count: written out in full so Tailwind sees them. */
+function gridColumns(count: number): string {
+  if (count <= 1) return "md:mx-auto md:max-w-md";
+  if (count === 2) return "md:grid-cols-2";
+  if (count === 3) return "md:grid-cols-3";
+  return "md:grid-cols-2 xl:grid-cols-4";
+}
+
+/** A count, or for storage (kept in MB) a size people can read. */
+function violationAmount(limitKey: string, amount: number): string {
+  return limitKey === LIMIT_KEYS.STORAGE_MAX_MB
+    ? formatStorage(amount)
+    : String(amount);
+}
 
 function violationsOf(error: unknown): LimitViolation[] {
   const violations = (error as AxiosError<{ data?: { violations?: unknown } }>)
@@ -54,7 +73,7 @@ function errorDetail(error: unknown): string {
 
 /**
  * All plans side by side with a monthly/annual toggle. Pre-selects the plan that fits what the
- * account actually used in its trial (BillingView.recommendedPlanCode). Choosing a plan records
+ * account actually used in its trial (UsageView.recommendedPlanCode). Choosing a plan records
  * the change; it takes effect once payment is confirmed (upgrades) or at period end (downgrades).
  */
 export default function PlanSelection() {
@@ -66,6 +85,8 @@ export default function PlanSelection() {
 
   const { data: billing, isLoading: billingLoading } = useBilling();
   const { data: plans = [], isLoading: plansLoading } = usePlans();
+  // Slow (counts in other services): the page shows without it, and the best fit appears when it lands.
+  const { data: usage } = useUsage();
   const requestChange = useRequestPlanChange();
 
   const [cycle, setCycle] = useState<BillingCycle>(
@@ -79,7 +100,7 @@ export default function PlanSelection() {
   const snapshot = billing?.entitlements;
   const isPaidActive = snapshot?.status === "Active";
   const bestFit =
-    billing?.recommendedPlanCode ??
+    usage?.recommendedPlanCode ??
     plans.find((p) => p.isRecommended)?.code ??
     null;
   const currentOrder =
@@ -90,6 +111,11 @@ export default function PlanSelection() {
   const vatNote = plans.some((p) => !p.pricesIncludeVat)
     ? BILLING_LABEL.VAT_EXCLUSIVE
     : BILLING_LABEL.VAT_INCLUSIVE;
+  // A plan that waits for payment can be paid right away, when online payment is set up.
+  const payOnline =
+    quote?.timing === "OnPayment" &&
+    !!billing?.onlinePaymentEnabled &&
+    canManage;
 
   const choose = async (plan: PlanResponse) => {
     setError(null);
@@ -156,7 +182,7 @@ export default function PlanSelection() {
                     {LIMIT_LABELS[v.limitKey] ?? v.limitKey}{" "}
                     {v.max === null
                       ? "couldn't be checked -- try again shortly"
-                      : `${v.used} (this plan allows ${v.max})`}
+                      : `${violationAmount(v.limitKey, v.used)} (this plan allows ${violationAmount(v.limitKey, v.max)})`}
                   </li>
                 ))}
               </ul>
@@ -174,7 +200,7 @@ export default function PlanSelection() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className={`grid grid-cols-1 gap-4 ${gridColumns(plans.length)}`}>
         {plans.map((plan) => (
           <PlanCard
             key={plan.code}
@@ -229,9 +255,21 @@ export default function PlanSelection() {
         open={!!quote}
         title={BILLING_LABEL.PAYMENT_INSTRUCTIONS_TITLE}
         footer={
-          <Button type="primary" onClick={() => navigate({ to: "/billing" })}>
-            Done
-          </Button>
+          payOnline && quote ? (
+            <Space>
+              <Button onClick={() => navigate({ to: "/billing" })}>
+                {BILLING_LABEL.PAY_LATER}
+              </Button>
+              <PayNowButton
+                amount={quote.amountDue}
+                currency={quote.currency}
+              />
+            </Space>
+          ) : (
+            <Button type="primary" onClick={() => navigate({ to: "/billing" })}>
+              Done
+            </Button>
+          )
         }
         onCancel={() => setQuote(null)}
       >
@@ -240,6 +278,7 @@ export default function PlanSelection() {
             quote={quote}
             instructions={billing?.paymentInstructions ?? ""}
             effectiveDate={formatManilaDate(quote.effectiveAtUtc)}
+            payOnline={payOnline}
           />
         )}
       </Modal>

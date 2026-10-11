@@ -25,6 +25,8 @@ export const LIMIT_KEYS = {
   EMPLOYEES_MAX: "employees.max",
   ADMINS_MAX: "admins.max",
   BIOMETRIC_DEVICES_MAX: "biometric_devices.max",
+  /** File storage per company, in MB: the plan's capacity plus purchased storage blocks. */
+  STORAGE_MAX_MB: "storage.max_mb",
 } as const;
 
 export type LimitKey = (typeof LIMIT_KEYS)[keyof typeof LIMIT_KEYS];
@@ -54,4 +56,6 @@ export const ENTITLEMENT_SOURCES = {
   PLAN: "plan",
   ACCOUNT_OVERRIDE: "account-override",
   COMPANY_OVERRIDE: "company-override",
+  /** The plan's value plus purchased storage blocks. */
+  STORAGE_ADD_ON: "plan+storage-addon",
 } as const;

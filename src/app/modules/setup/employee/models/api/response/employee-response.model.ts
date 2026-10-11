@@ -54,11 +54,13 @@ export interface EmployeeSettingModel {
   isEligibleFor13thMonth: boolean;
 }
 
+// As the API sends it (Newtonsoft camel-cases EE/ER/EC to "ee"/"er"/"ec"). The form's own fields
+// are eE/eR/eC -- the mapper translates; the server accepts either spelling when saving.
 export interface StatutoryRate {
   computationType?: string;
-  eE?: number;
-  eR?: number;
-  eC?: number;
+  ee?: number;
+  er?: number;
+  ec?: number;
   addOns?: number;
 }
 

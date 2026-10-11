@@ -1,5 +1,5 @@
 import axios from "axios";
-import { authStorage, mergeTenants } from "./auth-storage";
+import { authStorage, mergeTenants, type AuthUser } from "./auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 
 // True only when the server actually rejected the refresh token itself (401) -- a network
@@ -9,11 +9,39 @@ function isAuthRejection(err: unknown): boolean {
   return axios.isAxiosError(err) && err.response?.status === 401;
 }
 
+type RefreshResponse = Awaited<ReturnType<typeof authApi.refresh>>;
+
+/**
+ * The session to store after a silent refresh. The refresh cookie decides WHO the response is
+ * for, and the cookie is shared across tabs just like localStorage -- so the stored user can be
+ * a different account (another tab signed in as someone else). Only the SAME account keeps its
+ * locally-known tenants (mergeTenants preserves ones the server omits); a different account
+ * must start clean, or it inherits the other account's companies (see saveInvitationSession).
+ */
+export function buildRefreshedUser(
+  stored: AuthUser | null,
+  response: RefreshResponse,
+): AuthUser {
+  const claims = authStorage.getTenantClaims(response.accessToken);
+  // A response without an email can't prove a different account, so it keeps the stored one.
+  const email = response.email || stored?.email || "";
+  const sameAccount =
+    !!stored?.email && stored.email.toLowerCase() === email.toLowerCase();
+  const base = sameAccount ? stored : null;
+  return {
+    ...(base ?? { tenants: [] }),
+    email,
+    name: response.name,
+    roles: response.roles,
+    permissions: response.permissions,
+    tenantId: claims.tenantId ?? base?.tenantId ?? null,
+    tenantName: claims.tenantName ?? base?.tenantName ?? null,
+    tenants: mergeTenants(base?.tenants ?? [], response.tenants),
+  };
+}
+
 async function performRefresh(): Promise<string> {
-  const { accessToken, email, name, roles, permissions, tenants } =
-    await authApi.refresh();
-  const user = authStorage.getUser();
-  const claims = authStorage.getTenantClaims(accessToken);
+  const response = await authApi.refresh();
   // The server's refresh response carries this user's full, current cross-tenant membership
   // list -- e.g. a membership an invite activated, or a company that finished provisioning,
   // since the last time this session read it. Silent refresh is the only thing that runs
@@ -27,16 +55,11 @@ async function performRefresh(): Promise<string> {
   // company even when the account-wide default moves (a switch on another device). It only
   // lands somewhere else when the user no longer belongs to that company -- then it's their
   // default company, and the token's claims below say so.
-  authStorage.save(accessToken, {
-    ...(user ?? { email, tenants: [] }),
-    name,
-    roles,
-    permissions,
-    tenantId: claims.tenantId ?? user?.tenantId ?? null,
-    tenantName: claims.tenantName ?? user?.tenantName ?? null,
-    tenants: mergeTenants(user?.tenants ?? [], tenants),
-  });
-  return accessToken;
+  authStorage.save(
+    response.accessToken,
+    buildRefreshedUser(authStorage.getUser(), response),
+  );
+  return response.accessToken;
 }
 
 async function refreshOnce(force: boolean): Promise<string> {
