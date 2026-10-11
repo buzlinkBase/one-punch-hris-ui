@@ -3,14 +3,12 @@ name: CI / CD
 on:
   push:
     branches:
-      # - main
       - dev
-      # - production
+      - production
   pull_request:
     branches:
-      # - main
       - dev
-      # - production
+      - production
   workflow_dispatch:
 
 concurrency:
@@ -151,8 +149,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [audit, lint, format-check, type-check, build]
-    # Restricted to dev branch only
-    if: github.event_name == 'push' && contains(fromJSON('["dev"]'), github.ref_name)
+    # Restrict build & push to dev or production pushes
+    if: github.event_name == 'push' && contains(fromJSON('["dev", "production"]'), github.ref_name)
     environment: ${{ github.ref_name }}
     permissions:
       contents: read
@@ -213,17 +211,19 @@ jobs:
           script: |
             set -e
             BRANCH="${{ github.ref_name }}"
-            cd "/opt/hris-react/$BRANCH"
+            cd "/opt/hris-react/hris-deployment"
 
-            # Pull the newly published image for this branch
-            DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" \
-            HOST_PORT="${{ vars.HOST_PORT }}" \
-            docker compose -p "hris-$BRANCH" pull
+            if [ "$BRANCH" = "production" ]; then
+              SERVICE_NAME="hris-frontend-prod"
+              export DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}:production-latest"
+            else
+              SERVICE_NAME="hris-frontend-dev"
+              export DEV_DOCKER_IMAGE="${{ env.DOCKER_IMAGE }}:dev-latest"
+            fi
 
-            # Bring up new container, remove orphaned instances
-            DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}:${{ github.ref_name }}-latest" \
-            HOST_PORT="${{ vars.HOST_PORT }}" \
-            docker compose -p "hris-$BRANCH" up -d --remove-orphans
+            # Pull and restart only the target service in the consolidated stack
+            docker compose pull "$SERVICE_NAME"
+            docker compose up -d --no-deps "$SERVICE_NAME"
 
-            # Clean up old images
+            # Clean up dangling images
             docker image prune -f
