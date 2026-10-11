@@ -118,7 +118,21 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
       PAYMENT_METHOD_LABELS[value] ?? value,
   },
   { title: "Reference", dataIndex: "reference", key: "reference" },
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    render: (value: PaymentResponse["status"]) => (
+      <Tag color={PAYMENT_STATUS_COLORS[value] ?? "default"}>{value}</Tag>
+    ),
+  },
 ];
+
+const PAYMENT_STATUS_COLORS: Record<PaymentResponse["status"], string> = {
+  Paid: "success",
+  Refunded: "warning",
+  Cancelled: "default",
+};
 
 /**
  * Usage per company. Counting asks other services and is slow, so this loads on its own: the rest
@@ -351,6 +365,9 @@ export default function BillingOverview() {
             size="small"
             columns={PAYMENT_COLUMNS}
             dataSource={billing.payments}
+            rowClassName={(row) =>
+              row.status === "Paid" ? "" : "text-(--ant-color-text-tertiary)"
+            }
             locale={{ emptyText: BILLING_LABEL.NO_PAYMENTS }}
             pagination={{ pageSize: 10, hideOnSinglePage: true }}
             scroll={{ x: "max-content" }}

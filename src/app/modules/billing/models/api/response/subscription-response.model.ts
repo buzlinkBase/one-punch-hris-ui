@@ -110,7 +110,11 @@ export interface PaymentResponse {
   kind: "Plan" | "Storage";
   /** Storage payments: what was bought, e.g. "2 x 50 GB Storage". */
   description: string | null;
+  /** "Refunded" / "Cancelled" for a voided payment that stays in the history; "Paid" otherwise. */
+  status: PaymentStatus;
 }
+
+export type PaymentStatus = "Paid" | "Refunded" | "Cancelled";
 
 /**
  * Usage per company and the recommended plan (TenantApi UsageView). Apart from `BillingResponse`
