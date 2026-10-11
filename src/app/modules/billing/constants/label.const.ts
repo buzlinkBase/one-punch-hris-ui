@@ -135,7 +135,7 @@ export const STATUS_COLORS: Record<SubscriptionStatus, string> = {
 /** Plain-language names for each feature, shown on plan cards and lock tooltips. */
 export const FEATURE_LABELS: Record<string, string> = {
   [FEATURE_KEYS.TIMEKEEPING_CORE]: "Attendance, schedules & DTR",
-  [FEATURE_KEYS.TIMEKEEPING_BIOMETRIC]: "Biometric devices",
+  [FEATURE_KEYS.TIMEKEEPING_BIOMETRIC]: "Biometric auto sync",
   [FEATURE_KEYS.APPLICATIONS_CORE]: "Leave, overtime & other applications",
   [FEATURE_KEYS.PORTAL_SELF_SERVICE]: "Employee self-service portal",
   [FEATURE_KEYS.PAYROLL_CORE]: "Payroll, payslips & 13th month",
@@ -146,6 +146,8 @@ export const FEATURE_LABELS: Record<string, string> = {
   [FEATURE_KEYS.ANNOUNCEMENTS]: "Company announcements",
   [FEATURE_KEYS.AUDIT_TRAIL]: "Audit trail",
   [FEATURE_KEYS.CLIENTS_AGENCY]: "Clients & cost reports",
+  [FEATURE_KEYS.TIMEKEEPING_MOBILE]: "Onepunch Mobile Attendance",
+  [FEATURE_KEYS.PATROL_APP]: "One Patrol App",
 };
 
 export const LIMIT_LABELS: Record<string, string> = {

@@ -16,6 +16,8 @@ export const FEATURE_KEYS = {
   ANNOUNCEMENTS: "announcements",
   AUDIT_TRAIL: "audit.trail",
   CLIENTS_AGENCY: "clients.agency",
+  TIMEKEEPING_MOBILE: "timekeeping.mobile",
+  PATROL_APP: "patrol.app",
 } as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[keyof typeof FEATURE_KEYS];
