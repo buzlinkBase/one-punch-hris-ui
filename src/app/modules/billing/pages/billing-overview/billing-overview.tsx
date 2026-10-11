@@ -108,7 +108,17 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
     title: "Amount",
     key: "amount",
     align: "right",
-    render: (_, row) => formatMoney(row.amount, row.currency),
+    render: (_, row) => (
+      <div>
+        <div>{formatMoney(row.amount, row.currency)}</div>
+        {row.refundedAmount > 0 && (
+          <div className="text-xs text-(--ant-color-warning)">
+            {BILLING_LABEL.REFUNDED_AMOUNT} -
+            {formatMoney(row.refundedAmount, row.currency)}
+          </div>
+        )}
+      </div>
+    ),
   },
   {
     title: "Method",
@@ -123,16 +133,30 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
     dataIndex: "status",
     key: "status",
     render: (value: PaymentResponse["status"]) => (
-      <Tag color={PAYMENT_STATUS_COLORS[value] ?? "default"}>{value}</Tag>
+      <Tag color={PAYMENT_STATUS_COLORS[value] ?? "default"}>
+        {PAYMENT_STATUS_LABELS[value] ?? value}
+      </Tag>
     ),
   },
 ];
 
 const PAYMENT_STATUS_COLORS: Record<PaymentResponse["status"], string> = {
   Paid: "success",
+  PartiallyRefunded: "warning",
   Refunded: "warning",
   Cancelled: "default",
 };
+
+const PAYMENT_STATUS_LABELS: Record<PaymentResponse["status"], string> = {
+  Paid: "Paid",
+  PartiallyRefunded: "Partially refunded",
+  Refunded: "Refunded",
+  Cancelled: "Cancelled",
+};
+
+/** A partially refunded payment still counts, so only voided or fully refunded rows are greyed out. */
+const isGreyedOut = (status: PaymentResponse["status"]) =>
+  status === "Refunded" || status === "Cancelled";
 
 /**
  * Usage per company. Counting asks other services and is slow, so this loads on its own: the rest
@@ -366,7 +390,7 @@ export default function BillingOverview() {
             columns={PAYMENT_COLUMNS}
             dataSource={billing.payments}
             rowClassName={(row) =>
-              row.status === "Paid" ? "" : "text-(--ant-color-text-tertiary)"
+              isGreyedOut(row.status) ? "text-(--ant-color-text-tertiary)" : ""
             }
             locale={{ emptyText: BILLING_LABEL.NO_PAYMENTS }}
             pagination={{ pageSize: 10, hideOnSinglePage: true }}

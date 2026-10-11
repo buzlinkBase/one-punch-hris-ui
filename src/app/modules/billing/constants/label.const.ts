@@ -45,6 +45,7 @@ export const BILLING_LABEL = {
   SELECT: "Choose",
   UNLIMITED: "Unlimited",
   STORAGE_PAYMENT: "Storage",
+  REFUNDED_AMOUNT: "Refunded",
   STORAGE_PACKAGE: "Storage package",
   STORAGE_PACKAGE_NOTE: "Included in plan, shared by all your companies",
   UNKNOWN: "--",

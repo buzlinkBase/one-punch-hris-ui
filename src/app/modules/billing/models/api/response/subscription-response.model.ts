@@ -112,9 +112,13 @@ export interface PaymentResponse {
   description: string | null;
   /** "Refunded" / "Cancelled" for a voided payment that stays in the history; "Paid" otherwise. */
   status: PaymentStatus;
+  /** How much has gone back to the payer; set even before the payment is voided. */
+  refundedAmount: number;
 }
 
-export type PaymentStatus = "Paid" | "Refunded" | "Cancelled";
+/** "PartiallyRefunded": some was refunded but the payment still counts. "Refunded"/"Cancelled": voided or fully refunded. */
+export type PaymentStatus =
+  "Paid" | "PartiallyRefunded" | "Refunded" | "Cancelled";
 
 /**
  * Usage per company and the recommended plan (TenantApi UsageView). Apart from `BillingResponse`
