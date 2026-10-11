@@ -7,7 +7,14 @@ import {
   holidayPay,
 } from "../../../utils/ot-nd-pay.util";
 import {
+  breakdownAmount,
+  breakdownRemainder,
+  breakdownTypes,
+  hasBreakdownRemainder,
   holidayDuty,
+  loansBreakdown,
+  otherDeductionsBreakdown,
+  otherIncomeBreakdown,
   restLegalTotal,
   specialTotal,
   restSpecialTotal,
@@ -373,6 +380,65 @@ export const buildPayrollRows = (results: PayrollRunResult[]) =>
     num(r.absencesAmount),
     num(r.netPay),
   ]);
+
+// The expanded view of the Payroll tab, for the exports: a column per loan / other-deduction /
+// Other Income type (plus an Adjustments column when a total holds more than its types — see
+// breakdownRemainder) placed just before that group's total, so the files match the screen with
+// every group unfolded. The types vary by run, so the headers come from `results` instead of
+// being a constant like the sheets above. The inputs are not mutated.
+const BREAKDOWN_GROUPS = [
+  { total: "Loans", spec: loansBreakdown },
+  { total: "Other Deductions", spec: otherDeductionsBreakdown },
+  { total: "Other Income", spec: otherIncomeBreakdown },
+];
+
+type Cell = string | number;
+
+export interface ExportSheet {
+  headers: string[];
+  rows: Cell[][];
+}
+
+const withBreakdownColumns = (
+  headers: string[],
+  rows: Cell[][],
+  results: PayrollRunResult[],
+): ExportSheet => {
+  // Positions come from the untouched headers and are applied right-to-left, so inserting into
+  // one group never shifts another's position (and a type that happens to be named "Loans"
+  // can't be mistaken for the total).
+  const inserts = BREAKDOWN_GROUPS.map(({ total, spec }) => {
+    const types = breakdownTypes(results, spec);
+    const adj = hasBreakdownRemainder(results, spec);
+    return {
+      at: headers.indexOf(total),
+      headers: [
+        ...types.map((t) => t.label),
+        ...(adj ? [`${total} Adj.`] : []),
+      ],
+      values: (r: PayrollRunResult) => [
+        ...types.map((t) => num(breakdownAmount(r, spec, t.itemId))),
+        ...(adj ? [num(breakdownRemainder(r, spec))] : []),
+      ],
+    };
+  })
+    .filter((g) => g.at >= 0 && g.headers.length > 0)
+    .sort((a, b) => b.at - a.at);
+
+  const outHeaders = [...headers];
+  const outRows = rows.map((row) => [...row]);
+  for (const g of inserts) {
+    outHeaders.splice(g.at, 0, ...g.headers);
+    outRows.forEach((row, i) => row.splice(g.at, 0, ...g.values(results[i])));
+  }
+  return { headers: outHeaders, rows: outRows };
+};
+
+export const buildPayrollSheet = (results: PayrollRunResult[]): ExportSheet =>
+  withBreakdownColumns(PAYROLL_HEADERS, buildPayrollRows(results), results);
+
+export const buildExportSheet = (results: PayrollRunResult[]): ExportSheet =>
+  withBreakdownColumns(EXPORT_HEADERS, buildExportRows(results), results);
 
 export const ER_HEADERS = [
   "Employee",

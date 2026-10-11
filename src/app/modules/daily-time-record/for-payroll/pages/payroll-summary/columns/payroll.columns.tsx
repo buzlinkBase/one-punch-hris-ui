@@ -10,8 +10,16 @@ import {
   holidayPay,
 } from "../../../utils/ot-nd-pay.util";
 import {
+  type BreakdownSpec,
+  breakdownAmount,
+  breakdownRemainder,
+  breakdownTypes,
   fmt,
+  hasBreakdownRemainder,
   holidayDuty,
+  loansBreakdown,
+  otherDeductionsBreakdown,
+  otherIncomeBreakdown,
   restLegalTotal,
   specialTotal,
   restSpecialTotal,
@@ -28,6 +36,18 @@ import {
 const { Text } = Typography;
 
 type Column = ColumnsType<PayrollRunResult>[number];
+
+// The totals that can unfold into the columns behind them.
+export type ExpandableGroup =
+  "holiday" | "loans" | "otherDeductions" | "otherIncome";
+
+// What the expandable groups need: which are open, how to flip one, and the rows whose types
+// become the unfolded columns.
+export interface ColumnContext {
+  results: PayrollRunResult[];
+  expanded: Record<ExpandableGroup, boolean>;
+  onToggle: (group: ExpandableGroup) => void;
+}
 
 // Plain right-aligned money column over any row figure.
 const money = (
@@ -72,6 +92,48 @@ const identityColumns: Column[] = [
   },
 ];
 
+// A total that can expand into the columns behind it (Holiday's categories, a deduction or Other
+// Income type per column). Collapsed it is just the total, headed by a toggle button; expanded it
+// becomes a group of `children` ending in that same total.
+interface CollapsibleGroup {
+  label: string;
+  groupKey: string;
+  expanded: boolean;
+  onToggle: () => void;
+  expandedHint: string;
+  children: Column[];
+  total: (title: string) => Column;
+}
+
+const groupToggle = ({
+  label,
+  expanded,
+  onToggle,
+  expandedHint,
+}: CollapsibleGroup) => (
+  <Tooltip title={expanded ? `Hide ${label} breakdown` : expandedHint}>
+    <Button
+      type="text"
+      size="small"
+      icon={expanded ? <DownOutlined /> : <RightOutlined />}
+      iconPlacement="end"
+      onClick={onToggle}
+      className="px-0! font-semibold"
+    >
+      {label}
+    </Button>
+  </Tooltip>
+);
+
+const collapsibleGroup = (group: CollapsibleGroup): Column =>
+  group.expanded
+    ? {
+        title: groupToggle(group),
+        key: group.groupKey,
+        children: [...group.children, group.total("Total")],
+      }
+    : { ...group.total(""), title: groupToggle(group) };
+
 // Earnings' Holiday figure — folds in the 6 holiday categories' ND-hours day-rate portion under
 // Additive mode (see ot-nd-pay.util.ts).
 const holidayTotal = (title: string): Column => ({
@@ -93,40 +155,57 @@ const holidayCategoryColumns: Column[] = [
   money("RD + Double Legal", "restDoubleLegal", restDoubleLegalTotal),
 ];
 
-const holidayToggle = (expanded: boolean, onToggle: () => void) => (
-  <Tooltip
-    title={
-      expanded
-        ? "Hide holiday breakdown"
-        : "Show holiday breakdown — each category includes its own OT/ND pay, so the categories don't add up to Total"
-    }
-  >
-    <Button
-      type="text"
-      size="small"
-      icon={expanded ? <DownOutlined /> : <RightOutlined />}
-      iconPlacement="end"
-      onClick={onToggle}
-      className="px-0! font-semibold"
-    >
-      Holiday
-    </Button>
-  </Tooltip>
-);
+const holidayColumn = ({ expanded, onToggle }: ColumnContext): Column =>
+  collapsibleGroup({
+    label: "Holiday",
+    groupKey: "holidayGroup",
+    expanded: expanded.holiday,
+    onToggle: () => onToggle("holiday"),
+    expandedHint:
+      "Show holiday breakdown — each category includes its own OT/ND pay, so the categories don't add up to Total",
+    children: holidayCategoryColumns,
+    total: holidayTotal,
+  });
 
-const holidayColumn = (expanded: boolean, onToggle: () => void): Column =>
-  expanded
-    ? {
-        title: holidayToggle(expanded, onToggle),
-        key: "holidayGroup",
-        children: [...holidayCategoryColumns, holidayTotal("Total")],
-      }
-    : { ...holidayTotal(""), title: holidayToggle(expanded, onToggle) };
-
-const earningsColumns = (
-  holidayExpanded: boolean,
-  onToggleHoliday: () => void,
+// One column per type behind a total (every employee's loans / other deductions / Other Income),
+// plus an Adjustments column only when some row's total holds more than its itemized types.
+const breakdownColumns = (
+  results: PayrollRunResult[],
+  spec: BreakdownSpec,
+  keyPrefix: string,
 ): Column[] => [
+  ...breakdownTypes(results, spec).map(({ itemId, label }) =>
+    money(label, `${keyPrefix}:${itemId}`, (r) =>
+      breakdownAmount(r, spec, itemId),
+    ),
+  ),
+  ...(hasBreakdownRemainder(results, spec)
+    ? [
+        money("Adjustments", `${keyPrefix}:adj`, (r) =>
+          breakdownRemainder(r, spec),
+        ),
+      ]
+    : []),
+];
+
+const breakdownGroup = (
+  group: ExpandableGroup,
+  label: string,
+  key: string,
+  spec: BreakdownSpec,
+  { results, expanded, onToggle }: ColumnContext,
+): Column =>
+  collapsibleGroup({
+    label,
+    groupKey: `${key}Group`,
+    expanded: expanded[group],
+    onToggle: () => onToggle(group),
+    expandedHint: `Show ${label} per type — Adjustments covers Salary Adjustments and runs saved before types were recorded`,
+    children: breakdownColumns(results, spec, key),
+    total: (title) => money(title, key, spec.total),
+  });
+
+const earningsColumns = (ctx: ColumnContext): Column[] => [
   // Folds in Regular's ND-hours day-rate portion under Additive mode.
   money("Basic", "basic", basicPay),
   // Folds in NDOT's raw-OT-rate portion under Additive mode.
@@ -136,7 +215,7 @@ const earningsColumns = (
   // Always shown regardless of OT/ND Calculation Method. Under Additive this pay is already
   // folded into OT Pay/ND Pay above, so it is informational there.
   money("NDOT Pay", "ndot", (r) => r.nightDifferentialOTPay),
-  holidayColumn(holidayExpanded, onToggleHoliday),
+  holidayColumn(ctx),
   money("Rest Day", "restDay", restDayTotal),
   {
     title: "Paid Leave",
@@ -192,7 +271,13 @@ const earningsColumns = (
   money("Bonuses", "bonuses", (r) => r.totalBonuses),
   money("Commissions", "commissions", (r) => r.totalCommissions),
   money("De Minimis", "deminimis", (r) => r.totalDeminimises),
-  money("Other Income", "other", (r) => r.totalOtherIncome),
+  breakdownGroup(
+    "otherIncome",
+    "Other Income",
+    "other",
+    otherIncomeBreakdown,
+    ctx,
+  ),
   money("Reimbursement", "reimb", (r) => r.reimbursement),
   {
     title: "Gross",
@@ -207,42 +292,45 @@ const earningsColumns = (
   money("Retirement Accrual", "retirementAccrual", (r) => r.retirementAccrual),
 ];
 
-const deductionColumns: Column[] = [
+const deductionColumns = (ctx: ColumnContext): Column[] => [
   money("SSS", "sss", (r) => r.sssContribution),
   money("PhilHealth", "phic", (r) => r.philHealthContribution),
   money("Pag-IBIG", "hdmf", (r) => r.pagIbigContribution),
   money("W-Tax", "tax", (r) => r.withholdingTax),
   money("Cash Bond", "cashBond", (r) => r.cashBondDeduction),
-  money("Loans", "loans", (r) => r.totalLoans),
-  money(
+  breakdownGroup("loans", "Loans", "loans", loansBreakdown, ctx),
+  breakdownGroup(
+    "otherDeductions",
     "Other Deductions",
     "otherDed",
-    (r) => r.otherDeductions - r.totalLoans,
+    otherDeductionsBreakdown,
+    ctx,
   ),
   money("Late/UT", "late", (r) => r.lateAmount + r.underTimeAmount),
   money("Absent", "abs", (r) => r.absencesAmount),
 ];
 
-export interface PayrollColumnsOptions {
+export interface PayrollColumnsOptions extends ColumnContext {
   onPrint: (r: PayrollRunResult) => void;
-  holidayExpanded: boolean;
-  onToggleHoliday: () => void;
 }
 
 // One row reads earnings -> Gross -> deductions -> Net. Employee is pinned left and Net Pay +
 // print pinned right so the figures stay readable while scrolling the wide middle.
 export const payrollColumns = ({
   onPrint,
-  holidayExpanded,
-  onToggleHoliday,
+  ...ctx
 }: PayrollColumnsOptions): ColumnsType<PayrollRunResult> => [
   ...identityColumns,
   {
     title: "Earnings",
     key: "earnings",
-    children: earningsColumns(holidayExpanded, onToggleHoliday),
+    children: earningsColumns(ctx),
   },
-  { title: "Deductions", key: "deductions", children: deductionColumns },
+  {
+    title: "Deductions",
+    key: "deductions",
+    children: deductionColumns(ctx),
+  },
   {
     title: "Net Pay",
     dataIndex: "netPay",

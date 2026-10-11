@@ -8,7 +8,9 @@ import {
   buildErRows,
   buildExportRows,
   buildHoursRows,
+  buildExportSheet,
   buildPayrollRows,
+  buildPayrollSheet,
 } from "./payroll-summary-export.util";
 
 const row = {
@@ -61,6 +63,80 @@ describe("payroll summary export rows", () => {
       });
     },
   );
+
+  describe("expanded Loans / Other Deductions / Other Income columns", () => {
+    const withItems = {
+      ...row,
+      totalOtherIncome: 150,
+      deductionItems: [
+        { itemId: "sss", label: "SSS Loan", amount: 500, isLoan: true },
+        { itemId: "dues", label: "Union Dues", amount: 250 },
+      ],
+      incomeItems: [{ itemId: "hg", label: "HG Allowance", amount: 100 }],
+    } as PayrollRunResult;
+    const other = {
+      ...row,
+      fullName: "Ana Reyes",
+      totalLoans: 0,
+      otherDeductions: 40,
+      totalOtherIncome: 0,
+      deductionItems: [{ itemId: "med", label: "Medical", amount: 40 }],
+    } as PayrollRunResult;
+
+    it.each([
+      ["CSV", buildExportSheet],
+      ["Payroll", buildPayrollSheet],
+    ] as const)(
+      "%s places each type just before its group total",
+      (_, build) => {
+        const { headers } = build([withItems, other]);
+        expect(headers.indexOf("SSS Loan")).toBe(headers.indexOf("Loans") - 1);
+        // Union across employees, A-Z, then the (single) Adjustments column the totals need.
+        const otherDed = headers.indexOf("Other Deductions");
+        expect(headers.slice(otherDed - 3, otherDed)).toEqual([
+          "Medical",
+          "Union Dues",
+          "Other Deductions Adj.",
+        ]);
+        // 150 Other Income vs 100 itemized -> a 50 remainder; the second employee has none.
+        expect(
+          headers.slice(headers.indexOf("HG Allowance")).slice(0, 3),
+        ).toEqual(["HG Allowance", "Other Income Adj.", "Other Income"]);
+      },
+    );
+
+    it.each([
+      ["CSV", buildExportSheet],
+      ["Payroll", buildPayrollSheet],
+    ] as const)(
+      "%s keeps rows aligned with headers and amounts per employee",
+      (_, build) => {
+        const { headers, rows } = build([withItems, other]);
+        rows.forEach((r) => expect(r).toHaveLength(headers.length));
+        const at = (r: (string | number)[], h: string) => r[headers.indexOf(h)];
+        expect(at(rows[0], "SSS Loan")).toBe(500);
+        expect(at(rows[0], "Union Dues")).toBe(250);
+        expect(at(rows[0], "Medical")).toBe(0);
+        expect(at(rows[0], "Other Income Adj.")).toBe(50);
+        expect(at(rows[1], "Medical")).toBe(40);
+        expect(at(rows[1], "SSS Loan")).toBe(0);
+        expect(at(rows[1], "Other Deductions Adj.")).toBe(0);
+      },
+    );
+
+    it("adds no columns when no row has items and the totals are plain", () => {
+      const plain = { ...row, totalLoans: 0, otherDeductions: 0 };
+      expect(buildPayrollSheet([plain]).headers).toEqual(PAYROLL_HEADERS);
+    });
+
+    it("turns a total with no items into an Adjustments column", () => {
+      const { headers, rows } = buildPayrollSheet([row]);
+      // row: 500 loans, 300 other deductions, neither itemized.
+      expect(headers).toContain("Loans Adj.");
+      expect(rows[0][headers.indexOf("Loans Adj.")]).toBe(500);
+      expect(rows[0][headers.indexOf("Other Deductions Adj.")]).toBe(300);
+    });
+  });
 
   it("rounds to 2 decimals and keeps the derived figures", () => {
     const payroll = buildPayrollRows([row])[0];

@@ -57,15 +57,16 @@ import {
   sortBatchesLatestFirst,
 } from "./utils/payroll-batch-option.util";
 import { getEmptyMessage } from "./payroll-summary-empty";
-import { payrollColumns } from "./columns/payroll.columns";
+import {
+  payrollColumns,
+  type ExpandableGroup,
+} from "./columns/payroll.columns";
 import { hoursColumns } from "./columns/hours.columns";
 import { erColumns } from "./columns/employer-contributions.columns";
 import {
   EXCEL_AMOUNT_FORMAT,
-  EXPORT_HEADERS,
-  buildExportRows,
-  PAYROLL_HEADERS,
-  buildPayrollRows,
+  buildExportSheet,
+  buildPayrollSheet,
   ER_HEADERS,
   buildErRows,
   HOURS_HEADERS,
@@ -223,13 +224,20 @@ export default function PayrollSummary() {
     }
   };
 
-  // Payroll tab: earnings -> deductions -> Net in one row; the 7 holiday categories stay
-  // folded behind the Holiday header's toggle until asked for.
-  const [holidayExpanded, setHolidayExpanded] = useState(false);
+  // Payroll tab: earnings -> deductions -> Net in one row; the 7 holiday categories and the
+  // per-type Loans / Other Deductions / Other Income columns stay folded behind their header's
+  // toggle until asked for.
+  const [expanded, setExpanded] = useState<Record<ExpandableGroup, boolean>>({
+    holiday: false,
+    loans: false,
+    otherDeductions: false,
+    otherIncome: false,
+  });
   const payrollTableColumns = payrollColumns({
     onPrint: handlePrintPayslip,
-    holidayExpanded,
-    onToggleHoliday: () => setHolidayExpanded((v) => !v),
+    results,
+    expanded,
+    onToggle: (group) => setExpanded((e) => ({ ...e, [group]: !e[group] })),
   });
 
   // Sends the selected batch plus the on-screen filter, so the PDF lists exactly the rows in
@@ -265,18 +273,21 @@ export default function PayrollSummary() {
     });
     const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}${filterSuffix}`;
     if (format === "csv") {
+      const csv = buildExportSheet(results);
       triggerDownload(
-        buildFlatCsv(EXPORT_HEADERS, buildExportRows(results)),
+        buildFlatCsv(csv.headers, csv.rows),
         `payroll-summary-${suffix}.csv`,
       );
     } else {
-      // One worksheet per tab, matching what's on screen exactly.
+      // One worksheet per tab, matching what's on screen exactly (Payroll with its Loans /
+      // Other Deductions / Other Income groups unfolded).
+      const payroll = buildPayrollSheet(results);
       downloadMultiSheetExcel(
         [
           {
             name: "Payroll",
-            headers: PAYROLL_HEADERS,
-            rows: buildPayrollRows(results),
+            headers: payroll.headers,
+            rows: payroll.rows,
             numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {

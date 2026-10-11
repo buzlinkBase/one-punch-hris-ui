@@ -1,3 +1,13 @@
+// One deduction / Other Income type's share of a saved payroll — backend PayrollBreakdownItem.
+// itemId is the type's id, so the same type lines up across employees; isLoan only applies to
+// deductions (the "LOAN"-coded categories behind totalLoans).
+export interface PayrollBreakdownItem {
+  itemId: string;
+  label: string;
+  amount: number;
+  isLoan?: boolean;
+}
+
 export interface PayrollRunResult {
   // Only populated when this row came from GET /payrolls (Payroll Summary — a persisted
   // record); Calculate/Generate preview responses have no saved Payroll.Id yet.
@@ -171,6 +181,11 @@ export interface PayrollRunResult {
   otherDeductions: number;
   totalDeductions: number;
   totalLoans: number;
+  // Per-type split of otherDeductions (loans flagged isLoan) and of totalOtherIncome, for the
+  // Payroll Summary's expandable columns. Only returned by GET /payrolls and print-summary; a
+  // total can exceed its items' sum (Salary Adjustments, runs saved before items were recorded).
+  deductionItems?: PayrollBreakdownItem[];
+  incomeItems?: PayrollBreakdownItem[];
   // Last Pay > Include retirement fund payout -- the employee's Retirement Fund balance cashed
   // out at separation, non-taxable (added to netPay below, never to grossIncome). See backend
   // LastPayRunPayload.IncludeRetirementPayout.
