@@ -18,4 +18,6 @@ export interface CreateLeaveApplication {
   totalMinutes?: number | null;
   applicationRemarks?: string;
   supportingDocumentUrl?: string;
+  /** Files the form uploaded before the application existed; the server attaches them on save. */
+  attachmentIds?: string[];
 }

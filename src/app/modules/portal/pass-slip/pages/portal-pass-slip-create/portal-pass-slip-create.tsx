@@ -30,6 +30,8 @@ import {
 } from "../../models/forms/portal-pass-slip-form.schema";
 import { buildStartDateTime } from "@/shared/utils/duration.util";
 import { toPassSlipPrefill } from "../../utils/pass-slip-prefill";
+import { useStagedAttachments } from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -55,6 +57,7 @@ export default function PortalPassSlipCreate() {
     useCreateMyPassSlipApplication();
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateMyPassSlipApplication();
+  const staged = useStagedAttachments("PassSlip");
 
   const record = id ? slips.find((s) => s.id === id) : undefined;
   const isExisting = !!id;
@@ -142,8 +145,10 @@ export default function PortalPassSlipCreate() {
 
     try {
       await Promise.all(
-        values.entries.map((entry) =>
+        values.entries.map((entry, index) =>
           create({
+            // Uploaded files belong to one record: the first entry's.
+            attachmentIds: index === 0 ? staged.stagedIds : undefined,
             employeeId: employee!.id,
             applicationDate: values.applicationDate,
             departureTime: buildStartDateTime(
@@ -159,6 +164,7 @@ export default function PortalPassSlipCreate() {
           }),
         ),
       );
+      void staged.refresh();
       message.success(
         values.entries.length === 1
           ? "Pass slip filed."
@@ -357,6 +363,21 @@ export default function PortalPassSlipCreate() {
             render={({ field }) => (
               <TextArea {...field} rows={2} placeholder="Additional details" />
             )}
+          />
+        </Form.Item>
+
+        <Form.Item
+          extra={
+            !id && fields.length > 1
+              ? "With several entries, the files are attached to the first pass slip."
+              : undefined
+          }
+        >
+          <AttachmentField
+            ownerType="PassSlip"
+            ownerId={id}
+            label="Attachments"
+            readOnly={readOnly}
           />
         </Form.Item>
 

@@ -6,4 +6,6 @@ export interface CreatePassSlip {
   destination: string;
   purpose: string;
   remarks?: string;
+  /** Files the form uploaded before the pass slip existed; the server attaches them on save. */
+  attachmentIds?: string[];
 }

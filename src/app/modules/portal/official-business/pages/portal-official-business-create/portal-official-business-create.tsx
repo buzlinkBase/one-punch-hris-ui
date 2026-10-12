@@ -36,6 +36,8 @@ import {
   isCrossMidnight,
 } from "@/shared/utils/duration.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { useStagedAttachments } from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { TextArea } = Input;
 
@@ -58,6 +60,7 @@ export default function PortalOfficialBusinessCreate() {
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateMyTravelOrderApplication();
   const { data: timeShifts = [] } = useFixedTimeShifts();
+  const staged = useStagedAttachments("TravelOrder");
 
   const record = id ? applications.find((a) => a.id === id) : undefined;
   // Only a still-pending application is editable; anything else opens as a view.
@@ -174,8 +177,12 @@ export default function PortalOfficialBusinessCreate() {
       applicationRemarks: values.applicationRemarks,
       ...timePayload,
     };
-    if (id) await update({ id, data: payload });
-    else await create(payload);
+    if (id) {
+      await update({ id, data: payload });
+    } else {
+      await create({ ...payload, attachmentIds: staged.stagedIds });
+      void staged.refresh();
+    }
     navigate({ to: BACK_TO });
   };
 
@@ -433,6 +440,15 @@ export default function PortalOfficialBusinessCreate() {
             name="applicationRemarks"
             control={control}
             render={({ field }) => <TextArea {...field} rows={2} />}
+          />
+        </Form.Item>
+
+        <Form.Item>
+          <AttachmentField
+            ownerType="TravelOrder"
+            ownerId={id}
+            label="Attachments"
+            readOnly={readOnly}
           />
         </Form.Item>
 

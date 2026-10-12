@@ -24,6 +24,11 @@ import {
 } from "../hooks/use-employee-relations-queries";
 import type { AssignAssetResponse } from "../models/api/response/employee-relations-response.models";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
+import {
+  useAttachmentsEnabled,
+  useStagedAttachments,
+} from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { TextArea } = Input;
 
@@ -86,6 +91,9 @@ export default function EmployeeAssignAssetsTab({
 
   const displayData = isLive ? apiData : (draftRecords ?? []);
 
+  const attachmentsOn = useAttachmentsEnabled("AssignAsset");
+  const staged = useStagedAttachments("AssignAsset");
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AssignAssetResponse | null>(null);
   const [form, setForm] = useState(EMPTY);
@@ -124,7 +132,9 @@ export default function EmployeeAssignAssetsTab({
         await upd({ ...editing, ...payload });
         message.success("Updated.");
       } else {
-        await add(payload);
+        const created = await add(payload);
+        // Photos picked while the asset was still new now belong to it.
+        await staged.linkTo(created.id);
         message.success("Added.");
       }
     } else {
@@ -249,6 +259,8 @@ export default function EmployeeAssignAssetsTab({
         open={open}
         title={editing ? "Edit Asset" : "Assign Asset"}
         onCancel={() => {
+          // Photos of an asset that was never saved are not kept.
+          if (!editing) void staged.discard();
           setOpen(false);
           reset();
         }}
@@ -333,13 +345,24 @@ export default function EmployeeAssignAssetsTab({
           <Form.Item label="Remarks">
             <TextArea rows={2} value={form.remarks} onChange={f("remarks")} />
           </Form.Item>
-          <Form.Item label="File / Reference">
-            <Input
-              value={form.file}
-              onChange={f("file")}
-              placeholder="File path or reference"
-            />
-          </Form.Item>
+          {isLive && attachmentsOn ? (
+            <Form.Item>
+              <AttachmentField
+                ownerType="AssignAsset"
+                ownerId={editing?.id}
+                label="Asset photos"
+                imagesOnly
+              />
+            </Form.Item>
+          ) : (
+            <Form.Item label="File / Reference">
+              <Input
+                value={form.file}
+                onChange={f("file")}
+                placeholder="File path or reference"
+              />
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </>

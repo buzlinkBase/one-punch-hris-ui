@@ -55,6 +55,7 @@ export const COMPANY_POLICY_LABEL = {
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
   TAB_RATE_MULTIPLIERS: "Rate Multipliers",
+  TAB_ATTACHMENTS: "Attachments",
   TAB_PAYROLL_SETTINGS: "Payroll Settings",
 };
 

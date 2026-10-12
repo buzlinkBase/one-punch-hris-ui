@@ -12,6 +12,7 @@ import {
   Tag,
   TimePicker,
   Typography,
+  notification,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -43,6 +44,11 @@ import {
   buildEndDateTime,
   isCrossMidnight,
 } from "@/shared/utils/duration.util";
+import {
+  useAttachmentsEnabled,
+  useStagedAttachments,
+} from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { Text } = Typography;
 
@@ -99,6 +105,8 @@ export default function PortalLeaveApplicationCreate() {
     useCreateMyLeaveApplication();
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateMyLeaveApplication();
+  const attachmentsOn = useAttachmentsEnabled("LeaveApplication");
+  const staged = useStagedAttachments("LeaveApplication");
 
   const record = id ? applications.find((a) => a.id === id) : undefined;
   // Only a still-pending application is editable; anything else opens as a view.
@@ -268,6 +276,19 @@ export default function PortalLeaveApplicationCreate() {
   }, [policy]);
 
   const onSubmit = async (values: LeaveApplicationFormValues) => {
+    if (
+      policy?.requiresSupportingDocument &&
+      attachmentsOn &&
+      !id &&
+      staged.stagedIds.length === 0
+    ) {
+      notification.error({
+        message: "Supporting Document Required",
+        description: "Attach at least one supporting document.",
+        placement: "topRight",
+      });
+      return;
+    }
     const isMultiDay = values.mode === "multiday";
     const dateFrom = isMultiDay ? values.leaveDateFrom! : values.leaveDate!;
     const dateTo = isMultiDay ? values.leaveDateTo! : values.leaveDate!;
@@ -330,8 +351,12 @@ export default function PortalLeaveApplicationCreate() {
       supportingDocumentUrl: values.supportingDocumentUrl || undefined,
       ...timePayload,
     };
-    if (id) await update({ id, data: payload });
-    else await create(payload);
+    if (id) {
+      await update({ id, data: payload });
+    } else {
+      await create({ ...payload, attachmentIds: staged.stagedIds });
+      void staged.refresh();
+    }
     navigate({ to: BACK_TO });
   };
 
@@ -699,7 +724,18 @@ export default function PortalLeaveApplicationCreate() {
           />
         </Form.Item>
 
-        {policy?.requiresSupportingDocument && (
+        {attachmentsOn && (
+          <Form.Item>
+            <AttachmentField
+              ownerType="LeaveApplication"
+              ownerId={id}
+              label="Supporting documents"
+              readOnly={readOnly}
+            />
+          </Form.Item>
+        )}
+
+        {!attachmentsOn && policy?.requiresSupportingDocument && (
           <Form.Item
             label={
               <span className="flex items-center gap-1">

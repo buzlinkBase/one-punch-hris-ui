@@ -51,6 +51,11 @@ import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import {
+  useAttachmentsEnabled,
+  useStagedAttachments,
+} from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -198,6 +203,8 @@ export default function LeaveApplicationDetail() {
     useUpdateLeaveApplication();
   const { data: leaveTypes = [] } = useLeaveTypes();
   const { data: employees = [] } = useEmployeeFilter();
+  const attachmentsOn = useAttachmentsEnabled("LeaveApplication");
+  const staged = useStagedAttachments("LeaveApplication");
 
   const leaveTypeOptions = leaveTypes.map((l) => ({
     value: l.id,
@@ -397,6 +404,19 @@ export default function LeaveApplicationDetail() {
       });
       return;
     }
+    if (
+      policy?.requiresSupportingDocument &&
+      attachmentsOn &&
+      !isEdit &&
+      staged.stagedIds.length === 0
+    ) {
+      notification.error({
+        message: "Supporting Document Required",
+        description: "Attach at least one supporting document.",
+        placement: "topRight",
+      });
+      return;
+    }
     const isMultiDay = values.mode === "multiday";
     const dateFrom = isMultiDay ? values.leaveDateFrom! : values.leaveDate!;
     const dateTo = isMultiDay ? values.leaveDateTo! : values.leaveDate!;
@@ -485,7 +505,8 @@ export default function LeaveApplicationDetail() {
     if (isEdit && id) {
       await update({ id, ...basePayload });
     } else {
-      await add(basePayload);
+      await add({ ...basePayload, attachmentIds: staged.stagedIds });
+      void staged.refresh();
     }
     navigate({ to: "/applications/leave" });
   };
@@ -1100,7 +1121,23 @@ export default function LeaveApplicationDetail() {
             />
           </Form.Item>
 
-          {policy?.requiresSupportingDocument && (
+          {attachmentsOn && (
+            <Form.Item>
+              <AttachmentField
+                ownerType="LeaveApplication"
+                ownerId={isEdit ? id : undefined}
+                label="Supporting documents"
+                readOnly={
+                  readOnly ||
+                  (isEdit &&
+                    !!selected &&
+                    selected.approvalStatus !== "ForApproval")
+                }
+              />
+            </Form.Item>
+          )}
+
+          {!attachmentsOn && policy?.requiresSupportingDocument && (
             <Form.Item
               label={
                 <span className="flex items-center gap-1">

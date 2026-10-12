@@ -39,6 +39,8 @@ import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { useStagedAttachments } from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -235,6 +237,15 @@ function EditPassSlip({ id }: { id: string }) {
           />
         </Form.Item>
 
+        <Form.Item>
+          <AttachmentField
+            ownerType="PassSlip"
+            ownerId={id}
+            label="Attachments"
+            readOnly={readOnly}
+          />
+        </Form.Item>
+
         <div className="form-action-footer">
           <Space className="form-action-footer-row">
             <Button onClick={() => navigate({ to: "/applications/pass-slip" })}>
@@ -271,6 +282,7 @@ function CreatePassSlip() {
   const navigate = useNavigate();
   const readOnly = !useHasPermission("Pass Slip:Create");
   const { mutateAsync: add, isPending: isCreating } = useCreatePassSlip();
+  const staged = useStagedAttachments("PassSlip");
   const { data: rawEmployees = [] } = useEmployees();
 
   const employeeOptions = rawEmployees.map((e) => ({
@@ -302,7 +314,7 @@ function CreatePassSlip() {
   const onSubmit = async (values: PassSlipCreateFormValues) => {
     try {
       await Promise.all(
-        values.entries.map((entry) =>
+        values.entries.map((entry, index) =>
           add({
             employeeId: values.employeeId,
             applicationDate: values.applicationDate,
@@ -310,9 +322,12 @@ function CreatePassSlip() {
             destination: "",
             purpose: entry.notes || "",
             remarks: values.remarks || undefined,
+            // Uploaded files belong to one record: the first entry's.
+            attachmentIds: index === 0 ? staged.stagedIds : undefined,
           }),
         ),
       );
+      void staged.refresh();
       message.success(
         values.entries.length === 1
           ? "Pass slip filed."
@@ -508,6 +523,20 @@ function CreatePassSlip() {
                 placeholder="Reason for these entries"
               />
             )}
+          />
+        </Form.Item>
+
+        <Form.Item
+          extra={
+            fields.length > 1
+              ? "With several entries, the files are attached to the first pass slip."
+              : undefined
+          }
+        >
+          <AttachmentField
+            ownerType="PassSlip"
+            label="Attachments"
+            readOnly={readOnly}
           />
         </Form.Item>
 

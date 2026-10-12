@@ -36,6 +36,7 @@ import {
 import CompanyInfoTab from "./company-info-tab";
 import RateMultipliersTab from "./rate-multipliers-tab";
 import PayrollSettingsTab from "./payroll-settings-tab";
+import AttachmentsTab from "./attachments-tab";
 
 const { Title } = Typography;
 
@@ -560,6 +561,11 @@ export default function CompanyPolicy() {
             label: COMPANY_POLICY_LABEL.TAB_RATE_MULTIPLIERS,
             forceRender: true,
             children: <RateMultipliersTab />,
+          },
+          {
+            key: "attachments",
+            label: COMPANY_POLICY_LABEL.TAB_ATTACHMENTS,
+            children: <AttachmentsTab />,
           },
         ]}
       />

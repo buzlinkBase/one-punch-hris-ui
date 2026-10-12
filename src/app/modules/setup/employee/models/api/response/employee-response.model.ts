@@ -101,6 +101,14 @@ export interface EmployeeFullResponse extends EmployeeResponse {
     remarks: string;
     file: string;
   }[];
+  /** Uploaded files of the employee's document records and assets (names only). */
+  attachments?: {
+    id: string;
+    ownerType: "EmployeeRecord" | "AssignAsset";
+    ownerId: string;
+    fileName: string;
+    sizeBytes: number;
+  }[];
   sssRate?: StatutoryRate;
   phicRate?: StatutoryRate;
   hdmfRate?: StatutoryRate;

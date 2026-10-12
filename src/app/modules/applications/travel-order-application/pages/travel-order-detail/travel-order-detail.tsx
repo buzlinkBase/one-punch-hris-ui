@@ -39,6 +39,8 @@ import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { useStagedAttachments } from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -97,6 +99,7 @@ export default function TravelOrderDetail() {
   const { mutateAsync: add, isPending: isCreating } = useCreateTravelOrder();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateTravelOrder();
   const { data: employees = [] } = useEmployeeFilter();
+  const staged = useStagedAttachments("TravelOrder");
   const { data: timeShifts = [] } = useFixedTimeShifts();
 
   const employeeOptions = employees.map((e) => ({
@@ -214,7 +217,8 @@ export default function TravelOrderDetail() {
     if (isEdit && id) {
       await update({ id, ...payload });
     } else {
-      await add(payload);
+      await add({ ...payload, attachmentIds: staged.stagedIds });
+      void staged.refresh();
     }
     navigate({ to: "/applications/official-business" });
   };
@@ -550,6 +554,20 @@ export default function TravelOrderDetail() {
                   placeholder="Additional notes or instructions"
                 />
               )}
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <AttachmentField
+              ownerType="TravelOrder"
+              ownerId={isEdit ? id : undefined}
+              label="Attachments"
+              readOnly={
+                readOnly ||
+                (isEdit &&
+                  !!selected &&
+                  selected.approvalStatus !== "ForApproval")
+              }
             />
           </Form.Item>
 

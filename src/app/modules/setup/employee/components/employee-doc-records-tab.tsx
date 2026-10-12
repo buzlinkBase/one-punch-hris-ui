@@ -18,6 +18,11 @@ import {
   useDeleteDocRecord,
 } from "../hooks/use-employee-relations-queries";
 import type { DocRecordResponse } from "../models/api/response/employee-relations-response.models";
+import {
+  useAttachmentsEnabled,
+  useStagedAttachments,
+} from "@/shared/hooks/use-attachment-queries";
+import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
 
 const { TextArea } = Input;
 
@@ -49,6 +54,9 @@ export default function EmployeeDocRecordsTab({
 
   const displayData = isLive ? apiData : (draftRecords ?? []);
 
+  const attachmentsOn = useAttachmentsEnabled("EmployeeRecord");
+  const staged = useStagedAttachments("EmployeeRecord");
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DocRecordResponse | null>(null);
   const [form, setForm] = useState(EMPTY);
@@ -79,7 +87,9 @@ export default function EmployeeDocRecordsTab({
         await upd({ ...editing, ...payload });
         message.success("Updated.");
       } else {
-        await add(payload);
+        const created = await add(payload);
+        // Files picked while the record was still new now belong to it.
+        await staged.linkTo(created.id);
         message.success("Added.");
       }
     } else {
@@ -169,6 +179,8 @@ export default function EmployeeDocRecordsTab({
         open={open}
         title={editing ? "Edit Document Record" : "Add Document Record"}
         onCancel={() => {
+          // Files of a record that was never saved are not kept.
+          if (!editing) void staged.discard();
           setOpen(false);
           reset();
         }}
@@ -196,13 +208,22 @@ export default function EmployeeDocRecordsTab({
               }
             />
           </Form.Item>
-          <Form.Item label="File / Reference">
+          <Form.Item label="Reference No.">
             <Input
               value={form.file}
               onChange={(e) => setForm((f) => ({ ...f, file: e.target.value }))}
               placeholder="File path or reference number"
             />
           </Form.Item>
+          {isLive && attachmentsOn && (
+            <Form.Item>
+              <AttachmentField
+                ownerType="EmployeeRecord"
+                ownerId={editing?.id}
+                label="Document files"
+              />
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </>

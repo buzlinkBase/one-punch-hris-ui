@@ -9,6 +9,23 @@ const SECTION_BG = "#f5f5f5";
 const TABLE_HEADER_BG = "#e8f5f1";
 const TEXT = "#1a1a1a";
 
+/**
+ * The uploaded files' names of one record, one per line, followed by the older typed reference
+ * when there is one.
+ */
+function filesAndReference(
+  data: EmployeeFullResponse,
+  ownerType: "EmployeeRecord" | "AssignAsset",
+  ownerId: string,
+  reference?: string,
+): string {
+  const lines = (data.attachments ?? [])
+    .filter((a) => a.ownerType === ownerType && a.ownerId === ownerId)
+    .map((a) => a.fileName);
+  if (reference?.trim()) lines.push(reference);
+  return lines.length > 0 ? lines.join("\n") : "—";
+}
+
 const styles = StyleSheet.create({
   page: {
     paddingHorizontal: 40,
@@ -449,6 +466,7 @@ export default function Employee201Document({
               <Text style={[styles.thCell, { width: 35 }]}>Qty</Text>
               <Text style={[styles.thCell, { width: 65 }]}>Issued</Text>
               <Text style={[styles.thCell, { width: 60 }]}>Status</Text>
+              <Text style={[styles.thCell, { flex: 2 }]}>Photos</Text>
             </View>
             {data.assets.map((a) => (
               <View key={a.id} style={styles.tableRow}>
@@ -468,6 +486,9 @@ export default function Employee201Document({
                 <Text style={[styles.tdCell, { width: 60 }]}>
                   {a.status || "—"}
                 </Text>
+                <Text style={[styles.tdCell, { flex: 2 }]}>
+                  {filesAndReference(data, "AssignAsset", a.id)}
+                </Text>
               </View>
             ))}
           </SectionCard>
@@ -479,7 +500,9 @@ export default function Employee201Document({
             <View style={styles.tableHeaderRow}>
               <Text style={[styles.thCell, { width: 100 }]}>Record Type</Text>
               <Text style={[styles.thCell, { flex: 2 }]}>Description</Text>
-              <Text style={[styles.thCell, { flex: 2 }]}>File / Reference</Text>
+              <Text style={[styles.thCell, { flex: 2 }]}>
+                Files / Reference
+              </Text>
             </View>
             {data.employeeRecords.map((r) => (
               <View key={r.id} style={styles.tableRow}>
@@ -490,7 +513,7 @@ export default function Employee201Document({
                   {r.description || "—"}
                 </Text>
                 <Text style={[styles.tdCell, { flex: 2 }]}>
-                  {r.file || "—"}
+                  {filesAndReference(data, "EmployeeRecord", r.id, r.file)}
                 </Text>
               </View>
             ))}
