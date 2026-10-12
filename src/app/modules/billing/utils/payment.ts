@@ -20,6 +20,19 @@ export function describeDue(due: PaymentDueResponse, currency: string): string {
   return `${due.planName} (${cycleLabel(due.billingCycle)}): ${formatMoney(due.amount, currency)}${storage}`;
 }
 
+/** Splits the combined plan-period charge into the amounts shown before checkout. */
+export function paymentDueAmounts(due: PaymentDueResponse): {
+  plan: number;
+  addOns: number;
+  total: number;
+} {
+  return {
+    plan: due.amount - due.addOnsAmount,
+    addOns: due.addOnsAmount,
+    total: due.amount,
+  };
+}
+
 /** "Payroll (Monthly): ₱4,999.00 via GCash"; a storage purchase has no cycle: "2 x 50 GB storage block: ₱400.00" */
 export function describeCheckout(checkout: CheckoutResponse): string {
   const method = checkout.paymentMethod

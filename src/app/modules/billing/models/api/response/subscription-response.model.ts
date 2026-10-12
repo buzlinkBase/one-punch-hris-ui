@@ -114,6 +114,14 @@ export interface PaymentResponse {
   status: PaymentStatus;
   /** How much has gone back to the payer; set even before the payment is voided. */
   refundedAmount: number;
+  /** Point-in-time itemized amounts; null for payments made before itemization was recorded. */
+  lineItems: PaymentLineItemResponse[] | null;
+}
+
+export interface PaymentLineItemResponse {
+  name: string;
+  amount: number;
+  description: string | null;
 }
 
 /** "PartiallyRefunded": some was refunded but the payment still counts. "Refunded"/"Cancelled": voided or fully refunded. */

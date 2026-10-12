@@ -1,7 +1,17 @@
 import { Alert } from "antd";
-import { BILLING_LABEL, PAYMENT_DUE_TITLES } from "../../constants/label.const";
+import {
+  BILLING_LABEL,
+  PAYMENT_DUE_TITLES,
+  STORAGE_LABEL,
+} from "../../constants/label.const";
 import type { BillingResponse } from "../../models/api/response/subscription-response.model";
-import { describeDue, onlinePayable } from "../../utils/payment";
+import { formatMoney } from "../../utils/format";
+import {
+  cycleLabel,
+  describeDue,
+  onlinePayable,
+  paymentDueAmounts,
+} from "../../utils/payment";
 import { PayNowButton } from "../pay-now-button";
 
 interface PaymentDueAlertProps {
@@ -20,6 +30,7 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
   const payable = onlinePayable(billing, canPay);
   const isUpcomingRenewal =
     due?.reason === "Renewal" && billing.entitlements.status === "Active";
+  const dueAmounts = due ? paymentDueAmounts(due) : null;
 
   return (
     <Alert
@@ -33,11 +44,31 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
       }
       description={
         <div className="flex flex-col gap-3">
-          {due && (
-            <span className="font-medium">
-              {describeDue(due, billing.currency)}
-            </span>
-          )}
+          {due &&
+            (due.addOnsAmount > 0 && dueAmounts ? (
+              <div className="max-w-md space-y-1 font-medium">
+                <div className="flex justify-between gap-6">
+                  <span>
+                    {due.planName} ({cycleLabel(due.billingCycle)})
+                  </span>
+                  <span>{formatMoney(dueAmounts.plan, billing.currency)}</span>
+                </div>
+                <div className="flex justify-between gap-6">
+                  <span>{STORAGE_LABEL.ADD_ONS_LINE}</span>
+                  <span>
+                    {formatMoney(dueAmounts.addOns, billing.currency)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-6 border-t border-(--ant-color-border-secondary) pt-1 font-semibold">
+                  <span>{STORAGE_LABEL.TOTAL_LINE}</span>
+                  <span>{formatMoney(dueAmounts.total, billing.currency)}</span>
+                </div>
+              </div>
+            ) : (
+              <span className="font-medium">
+                {describeDue(due, billing.currency)}
+              </span>
+            ))}
           {payable && (
             <>
               <span>{BILLING_LABEL.PAY_ONLINE_HINT}</span>

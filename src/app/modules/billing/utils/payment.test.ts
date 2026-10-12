@@ -9,6 +9,7 @@ import {
   describeCheckout,
   describeDue,
   onlinePayable,
+  paymentDueAmounts,
 } from "./payment";
 
 const due: PaymentDueResponse = {
@@ -62,6 +63,22 @@ describe("describeDue", () => {
 
   it("stays quiet about storage when there is none", () => {
     expect(describeDue(due, "PHP")).not.toContain("storage");
+  });
+});
+
+describe("paymentDueAmounts", () => {
+  it("splits a plan renewal into plan, storage and total amounts", () => {
+    expect(
+      paymentDueAmounts({ ...due, amount: 5799, addOnsAmount: 800 }),
+    ).toEqual({ plan: 4999, addOns: 800, total: 5799 });
+  });
+
+  it("keeps the full amount as the plan charge when there are no add-ons", () => {
+    expect(paymentDueAmounts(due)).toEqual({
+      plan: 4999,
+      addOns: 0,
+      total: 4999,
+    });
   });
 });
 

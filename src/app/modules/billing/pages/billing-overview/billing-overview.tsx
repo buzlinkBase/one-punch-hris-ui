@@ -88,15 +88,26 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
   {
     title: "For",
     key: "for",
-    render: (_, row) =>
-      row.kind === "Storage" ? (
-        <span>
-          <Tag color="purple">{BILLING_LABEL.STORAGE_PAYMENT}</Tag>{" "}
-          {row.description}
-        </span>
-      ) : (
-        row.planName
-      ),
+    render: (_, row) => {
+      if (row.kind === "Storage") {
+        return (
+          <span>
+            <Tag color="purple">{BILLING_LABEL.STORAGE_PAYMENT}</Tag>{" "}
+            {row.description}
+          </span>
+        );
+      }
+      if (row.lineItems?.length) {
+        return (
+          <div className="space-y-0.5">
+            {row.lineItems.map((item, index) => (
+              <div key={`${item.name}-${index}`}>{item.name}</div>
+            ))}
+          </div>
+        );
+      }
+      return row.planName;
+    },
   },
   {
     title: "Period",
@@ -110,7 +121,18 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
     align: "right",
     render: (_, row) => (
       <div>
-        <div>{formatMoney(row.amount, row.currency)}</div>
+        {row.kind === "Plan" && row.lineItems?.length ? (
+          <div className="mb-1 space-y-0.5 text-xs text-(--ant-color-text-secondary)">
+            {row.lineItems.map((item, index) => (
+              <div key={`${item.name}-${index}`}>
+                {formatMoney(item.amount, row.currency)}
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <div className="font-medium">
+          {formatMoney(row.amount, row.currency)}
+        </div>
         {row.refundedAmount > 0 && (
           <div className="text-xs text-(--ant-color-warning)">
             {BILLING_LABEL.REFUNDED_AMOUNT} -
