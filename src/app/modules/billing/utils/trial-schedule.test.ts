@@ -67,6 +67,20 @@ describe("subscriptionBanner -- the trial schedule", () => {
   });
 });
 
+describe("subscriptionBanner -- paying restores a lapsed paid plan", () => {
+  it("asks to pay when a paid plan was suspended, not after an unpaid trial", () => {
+    const paid = snapshot({
+      status: "Suspended",
+      accessMode: "ReadOnly",
+      currentPeriodEndUtc: "2026-09-30T00:00:00Z",
+    });
+    const trial = snapshot({ status: "Expired", accessMode: "ReadOnly" });
+
+    expect(subscriptionBanner(paid, 7, TRIAL_START)?.payToRestore).toBe(true);
+    expect(subscriptionBanner(trial, 7, TRIAL_START)?.payToRestore).toBe(false);
+  });
+});
+
 describe("subscriptionBanner -- after the trial", () => {
   it("keeps read-only accounts on a permanent banner", () => {
     for (const status of ["Expired", "Suspended", "Canceled"] as const) {

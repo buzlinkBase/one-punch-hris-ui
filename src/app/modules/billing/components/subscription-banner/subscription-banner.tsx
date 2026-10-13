@@ -88,9 +88,11 @@ function bannerText(
     case "read-only":
       return {
         type: "error",
-        message: canViewBilling
-          ? "Your company is read-only: you can view and export, but not make changes. Choose a plan to continue."
-          : BILLING_LABEL.CONTACT_ADMIN,
+        message: !canViewBilling
+          ? BILLING_LABEL.CONTACT_ADMIN
+          : state.payToRestore
+            ? "Your account is read-only until payment is received: you can view and export, but not make changes. Pay now to restore full access right away."
+            : "Your company is read-only: you can view and export, but not make changes. Choose a plan to continue.",
       };
   }
 }
@@ -128,9 +130,14 @@ export function SubscriptionBanner() {
     writeSessionFlag(readOnlyPromptKey);
     rerender((n) => n + 1);
   };
+  // A lapsed paid plan is restored by paying what's due (Billing); anything else starts at the plans.
+  const payNow = state.kind === "read-only" && !!state.payToRestore;
+  const actionLabel = payNow
+    ? BILLING_LABEL.PAY_NOW
+    : BILLING_LABEL.CHOOSE_PLAN;
   const goToPlans = () => {
     closePopup();
-    navigate({ to: "/billing/plans" });
+    navigate({ to: payNow ? "/billing" : "/billing/plans" });
   };
 
   const text = bannerText(state, canViewBilling);
@@ -147,7 +154,7 @@ export function SubscriptionBanner() {
         action={
           canViewBilling && (
             <Button size="small" type="primary" onClick={goToPlans}>
-              {BILLING_LABEL.CHOOSE_PLAN}
+              {actionLabel}
             </Button>
           )
         }
@@ -156,7 +163,9 @@ export function SubscriptionBanner() {
         open={popupOpen}
         title={
           state.kind === "read-only"
-            ? "Choose a plan to continue"
+            ? payNow
+              ? "Pay to restore full access"
+              : "Choose a plan to continue"
             : "Your free trial is ending"
         }
         onCancel={closePopup}
@@ -165,7 +174,7 @@ export function SubscriptionBanner() {
             {state.kind === "read-only" ? "Continue read-only" : "Later"}
           </Button>,
           <Button key="plans" type="primary" onClick={goToPlans}>
-            {BILLING_LABEL.CHOOSE_PLAN}
+            {actionLabel}
           </Button>,
         ]}
       >

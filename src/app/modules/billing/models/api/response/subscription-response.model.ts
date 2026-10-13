@@ -20,6 +20,17 @@ export type BillingCycle = "Monthly" | "Annual";
 
 export type PlanChangeTiming = "OnPayment" | "AtPeriodEnd";
 
+export type AccessRestrictionKind = "Suspended" | "LegalHold";
+
+/**
+ * An operator stopped the whole account, the owner included. `reason` is only sent to the owner
+ * and billing admins; other members get null and are just told the account is unavailable.
+ */
+export interface AccessRestriction {
+  kind: AccessRestrictionKind;
+  reason: string | null;
+}
+
 /** One company's effective entitlements (TenantApi EntitlementSnapshot). Dates are UTC ISO. */
 export interface EntitlementSnapshot {
   tenantId: string;
@@ -38,6 +49,8 @@ export interface EntitlementSnapshot {
   currentPeriodEndUtc: string | null;
   graceEndsAtUtc: string | null;
   cancelAtPeriodEnd: boolean;
+  /** Set while the account is suspended or on legal hold by an operator. */
+  restriction?: AccessRestriction | null;
 }
 
 export interface EntitlementsResponse {

@@ -98,6 +98,7 @@ import { AcknowledgementGate } from "@/app/modules/portal/announcements/componen
 import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
 import { useSubscriptionState } from "@/app/modules/billing/hooks/use-subscription-state";
+import { useSubscriptionBoundaryRefresh } from "@/app/modules/billing/hooks/use-subscription-boundary-refresh";
 import { StorageBanner } from "@/app/modules/billing/components/storage-banner";
 import { SubscriptionBanner } from "@/app/modules/billing/components/subscription-banner";
 import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
@@ -705,6 +706,7 @@ export default function MainLayout() {
 
   // The company's subscription: locks menu items and whole pages the plan doesn't include.
   const subscription = useSubscriptionState();
+  useSubscriptionBoundaryRefresh();
   const pageLock = subscription.lockFor(
     getRequiredFeatures(getFeaturesForPath(location.pathname)),
   );
@@ -1274,6 +1276,8 @@ export default function MainLayout() {
             <CompanyLocked
               companyName={sessionUser.tenantName}
               status={subscription.snapshot?.status}
+              restriction={subscription.snapshot?.restriction}
+              canViewBilling={subscription.canViewBilling}
               canSwitch={sessionUser.tenants.length > 1}
               onSignOut={handleLogout}
             />

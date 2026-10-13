@@ -22,6 +22,10 @@ export const BILLING_LABEL = {
   NEXT_AMOUNT: "Next payment",
   CHANGE_PLAN: "Change plan",
   CHOOSE_PLAN: "Choose a plan",
+  PAY_NOW: "Pay now",
+  READ_ONLY_TITLE: "You're in read-only mode",
+  READ_ONLY_REFUSED:
+    "Your changes weren't saved. You can still view and export your data.",
   CANCEL_SUBSCRIPTION: "Cancel subscription",
   RESUME_SUBSCRIPTION: "Keep my subscription",
   WITHDRAW_CHANGE: "Withdraw change",

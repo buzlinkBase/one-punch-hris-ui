@@ -21,6 +21,11 @@ export interface SubscriptionBannerState {
   daysLeft?: number;
   /** The date the banner is about (trial end, period end, grace end), UTC ISO. */
   date?: string | null;
+  /**
+   * Read-only because a paid plan lapsed (unpaid or canceled): paying restores access right away,
+   * so the action is "Pay now" rather than choosing a plan. False after an unpaid trial.
+   */
+  payToRestore?: boolean;
 }
 
 const READ_ONLY_STATUSES = new Set([
@@ -29,6 +34,14 @@ const READ_ONLY_STATUSES = new Set([
   "Canceled",
   "None",
 ]);
+
+/** A paid plan that lapsed (suspended for non-payment, or canceled) -- as opposed to an unpaid trial. */
+export function lapsedPaidPlan(snapshot: EntitlementSnapshot): boolean {
+  return (
+    (snapshot.status === "Suspended" || snapshot.status === "Canceled") &&
+    !!snapshot.currentPeriodEndUtc
+  );
+}
 
 /**
  * Which subscription banner the company should see right now. The trial schedule counts days
@@ -47,7 +60,12 @@ export function subscriptionBanner(
     snapshot.accessMode === "ReadOnly" ||
     READ_ONLY_STATUSES.has(snapshot.status)
   ) {
-    return { kind: "read-only", dismissible: false, showPlanPopup: false };
+    return {
+      kind: "read-only",
+      dismissible: false,
+      showPlanPopup: false,
+      payToRestore: lapsedPaidPlan(snapshot),
+    };
   }
 
   if (snapshot.status === "PastDue") {

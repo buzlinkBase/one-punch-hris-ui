@@ -30,6 +30,15 @@ describe("isCompanyLocked", () => {
     expect(isCompanyLocked(snapshot("ReadOnly"), true)).toBe(false);
   });
 
+  it("closes the company to everyone, the owner too, when an operator restricts the account", () => {
+    const restricted: EntitlementSnapshot = {
+      ...snapshot("Full"),
+      restriction: { kind: "LegalHold", reason: null },
+    };
+    expect(isCompanyLocked(restricted, true)).toBe(true);
+    expect(isCompanyLocked(restricted, false)).toBe(true);
+  });
+
   it("locks no one while the plan is current, or before it loads", () => {
     expect(isCompanyLocked(snapshot("Full"), false)).toBe(false);
     expect(isCompanyLocked(undefined, false)).toBe(false);
