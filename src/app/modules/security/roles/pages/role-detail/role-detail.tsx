@@ -32,8 +32,8 @@ import { usePermissions } from "@/app/modules/security/permissions/hooks/use-per
 import type { Permission } from "../../models/api/response/role-response.model";
 import {
   ROLE_LABEL,
-  DEFAULT_PERMISSION_PRODUCT,
   compareProducts,
+  permissionProduct,
   productLabel,
 } from "../../constants/label.const";
 import { permissionHint } from "../../constants/permission-hints.const";
@@ -100,11 +100,7 @@ export default function RoleDetail() {
 
   const products = useMemo(
     () =>
-      [
-        ...new Set(
-          permissions.map((p) => p.product ?? DEFAULT_PERMISSION_PRODUCT),
-        ),
-      ].sort(compareProducts),
+      [...new Set(permissions.map(permissionProduct))].sort(compareProducts),
     [permissions],
   );
   const activeProduct =
@@ -117,11 +113,7 @@ export default function RoleDetail() {
   const groups = useMemo(() => {
     const byModule = new Map<string, Map<string, Permission[]>>();
     for (const permission of permissions) {
-      if (
-        (permission.product ?? DEFAULT_PERMISSION_PRODUCT) !== activeProduct
-      ) {
-        continue;
-      }
+      if (permissionProduct(permission) !== activeProduct) continue;
       const byFeature = byModule.get(permission.module) ?? new Map();
       const list = byFeature.get(permission.feature) ?? [];
       list.push(permission);

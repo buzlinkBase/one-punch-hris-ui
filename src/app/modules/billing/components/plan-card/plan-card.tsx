@@ -1,4 +1,4 @@
-import { Button, Card, Tag } from "antd";
+import { Button, Card, Collapse, Tag } from "antd";
 import {
   CheckCircleFilled,
   DatabaseOutlined,
@@ -13,7 +13,9 @@ import {
   BILLING_LABEL,
   FEATURE_LABELS,
   LIMIT_LABELS,
+  PLAN_SECTION,
   SUPPORT_TIER_LABELS,
+  SYSTEM_FEATURE_KEYS,
 } from "../../constants/label.const";
 import { formatStorage } from "../../utils/storage";
 import type {
@@ -30,12 +32,18 @@ interface PlanCardProps {
   isCurrent: boolean;
   /** A feature to draw attention to (the one the user tried to open). */
   focusFeature?: string;
+  /** The open accordion section: one value for every card, so plans stay comparable. */
+  openSection?: string;
+  onOpenSectionChange: (section?: string) => void;
   canChoose: boolean;
   choosing: boolean;
   onChoose: (plan: PlanResponse) => void;
 }
 
-const FEATURE_ORDER = Object.values(FEATURE_KEYS);
+// The systems get their own section; what's left are the HRMS features.
+const FEATURE_ORDER = Object.values(FEATURE_KEYS).filter(
+  (key) => !SYSTEM_FEATURE_KEYS.includes(key),
+);
 // Storage is shown as its own package block, not in the limits list.
 const LIMIT_ORDER = Object.values(LIMIT_KEYS).filter(
   (key) => key !== LIMIT_KEYS.STORAGE_MAX_MB,
@@ -56,10 +64,45 @@ export function PlanCard({
   highlighted,
   isCurrent,
   focusFeature,
+  openSection,
+  onOpenSectionChange,
   canChoose,
   choosing,
   onChoose,
 }: PlanCardProps) {
+  const includedFeatures = FEATURE_ORDER.filter(
+    (key) => plan.features[key],
+  ).length;
+  const includedSystems = SYSTEM_FEATURE_KEYS.filter(
+    (key) => plan.features[key],
+  ).length;
+
+  const renderFeatures = (keys: string[], includedClass: string) => (
+    <ul className="m-0 flex list-none flex-col gap-2 p-0 text-sm">
+      {keys.map((key) => {
+        const included = plan.features[key];
+        return (
+          <li
+            key={key}
+            className={[
+              "flex items-start gap-2",
+              included ? includedClass : "text-(--ant-color-text-quaternary)",
+              key === focusFeature
+                ? "-mx-2 rounded-md bg-(--ant-color-primary-bg) px-2 py-0.5 font-semibold"
+                : "",
+            ].join(" ")}
+          >
+            {included ? (
+              <CheckCircleFilled className="mt-0.5 text-base text-(--ant-color-primary)!" />
+            ) : (
+              <MinusOutlined className="mt-1 text-xs" />
+            )}
+            <span>{FEATURE_LABELS[key]}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
   const annual = cycle === "Annual";
   const price = annual ? plan.annualPrice : plan.monthlyPrice;
 
@@ -161,38 +204,37 @@ export function PlanCard({
           </span>
         </div>
 
-        <ul className="m-0 flex flex-1 list-none flex-col gap-2 p-0 text-sm">
-          {FEATURE_ORDER.map((key) => {
-            const included = plan.features[key];
-            return (
-              <li
-                key={key}
-                className={[
-                  "flex items-start gap-2",
-                  included ? "" : "text-(--ant-color-text-quaternary)",
-                  key === focusFeature
-                    ? "-mx-2 rounded-md bg-(--ant-color-primary-bg) px-2 py-0.5 font-semibold"
-                    : "",
-                ].join(" ")}
-              >
-                {included ? (
-                  <CheckCircleFilled className="mt-0.5 text-base text-(--ant-color-primary)!" />
-                ) : (
-                  <MinusOutlined className="mt-1 text-xs" />
-                )}
-                <span>{FEATURE_LABELS[key]}</span>
-              </li>
-            );
-          })}
-          {plan.supportTier && (
-            <li className="flex items-start gap-2">
-              <CheckCircleFilled className="mt-0.5 text-base text-(--ant-color-primary)!" />
-              <span>
-                {SUPPORT_TIER_LABELS[plan.supportTier] ?? plan.supportTier}
-              </span>
-            </li>
-          )}
-        </ul>
+        <Collapse
+          accordion
+          ghost
+          size="small"
+          className="flex-1"
+          activeKey={openSection}
+          onChange={(keys) =>
+            onOpenSectionChange(Array.isArray(keys) ? keys[0] : keys)
+          }
+          items={[
+            {
+              key: PLAN_SECTION.SYSTEMS,
+              label: `${BILLING_LABEL.SYSTEMS_TITLE} (${includedSystems}/${SYSTEM_FEATURE_KEYS.length})`,
+              children: renderFeatures(SYSTEM_FEATURE_KEYS, "font-semibold"),
+            },
+            {
+              key: PLAN_SECTION.FEATURES,
+              label: `${BILLING_LABEL.FEATURES_TITLE} (${includedFeatures}/${FEATURE_ORDER.length})`,
+              children: renderFeatures(FEATURE_ORDER, ""),
+            },
+          ]}
+        />
+
+        {plan.supportTier && (
+          <div className="flex items-start gap-2 text-sm">
+            <CheckCircleFilled className="mt-0.5 text-base text-(--ant-color-primary)!" />
+            <span>
+              {SUPPORT_TIER_LABELS[plan.supportTier] ?? plan.supportTier}
+            </span>
+          </div>
+        )}
       </div>
     </Card>
   );

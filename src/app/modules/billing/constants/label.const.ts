@@ -52,6 +52,8 @@ export const BILLING_LABEL = {
   REFUNDED_AMOUNT: "Refunded",
   STORAGE_PACKAGE: "Storage package",
   STORAGE_PACKAGE_NOTE: "Included in plan, shared by all your companies",
+  SYSTEMS_TITLE: "Systems",
+  FEATURES_TITLE: "HRMS features",
   UNKNOWN: "--",
   PAYMENT_INSTRUCTIONS_TITLE: "How to pay",
   PAY: "Pay",
@@ -153,7 +155,27 @@ export const FEATURE_LABELS: Record<string, string> = {
   [FEATURE_KEYS.CLIENTS_AGENCY]: "Clients & cost reports",
   [FEATURE_KEYS.TIMEKEEPING_MOBILE]: "Mobile Attendance (Geofencing)",
   [FEATURE_KEYS.PATROL_APP]: "Patrol & Incident Report App",
+  [FEATURE_KEYS.HRMS_CORE]: "HRMS",
+  [FEATURE_KEYS.PROCUREMENT_CORE]: "Procurement",
+  [FEATURE_KEYS.ACCOUNTING_CORE]: "Accounting",
+  [FEATURE_KEYS.BILLING_CORE]: "Billing",
+  [FEATURE_KEYS.CLIENT_PORTAL_CORE]: "Client Portal",
 };
+
+/** The accordion sections of a plan card; only one is open at a time. */
+export const PLAN_SECTION = {
+  SYSTEMS: "systems",
+  FEATURES: "features",
+} as const;
+
+/** The separate systems a plan can include, in the order plan cards list them. */
+export const SYSTEM_FEATURE_KEYS: string[] = [
+  FEATURE_KEYS.HRMS_CORE,
+  FEATURE_KEYS.PROCUREMENT_CORE,
+  FEATURE_KEYS.ACCOUNTING_CORE,
+  FEATURE_KEYS.BILLING_CORE,
+  FEATURE_KEYS.CLIENT_PORTAL_CORE,
+];
 
 export const LIMIT_LABELS: Record<string, string> = {
   [LIMIT_KEYS.COMPANIES_MAX]: "Companies",

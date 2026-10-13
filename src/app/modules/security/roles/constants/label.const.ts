@@ -22,6 +22,11 @@ const PRODUCT_LABELS: Record<string, string> = {
   clientportal: "Client Portal",
 };
 
+/** A permission's system; blank or missing counts as HRMS. */
+export function permissionProduct(permission: { product?: string }): string {
+  return permission.product || DEFAULT_PERMISSION_PRODUCT;
+}
+
 export function productLabel(product: string): string {
   return (
     PRODUCT_LABELS[product] ??

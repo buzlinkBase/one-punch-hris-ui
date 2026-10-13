@@ -16,7 +16,12 @@ import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { PayNowButton } from "../../components/pay-now-button";
 import { PlanCard } from "../../components/plan-card";
 import { PaymentInstructions } from "../../components/payment-instructions";
-import { BILLING_LABEL, LIMIT_LABELS } from "../../constants/label.const";
+import {
+  BILLING_LABEL,
+  LIMIT_LABELS,
+  PLAN_SECTION,
+  SYSTEM_FEATURE_KEYS,
+} from "../../constants/label.const";
 import {
   useBilling,
   usePlans,
@@ -91,6 +96,13 @@ export default function PlanSelection() {
 
   const [cycle, setCycle] = useState<BillingCycle>(
     () => billing?.billingCycle ?? "Monthly",
+  );
+  // One accordion section open at a time, the same on every card: the one holding the feature
+  // the user was sent here for, else the systems.
+  const [openSection, setOpenSection] = useState<string | undefined>(
+    focusFeature && !SYSTEM_FEATURE_KEYS.includes(focusFeature)
+      ? PLAN_SECTION.FEATURES
+      : PLAN_SECTION.SYSTEMS,
   );
   const [confirming, setConfirming] = useState<PlanResponse | null>(null);
   const [quote, setQuote] = useState<PlanChangeQuoteResponse | null>(null);
@@ -213,6 +225,8 @@ export default function PlanSelection() {
               cycle === billing?.billingCycle
             }
             focusFeature={focusFeature}
+            openSection={openSection}
+            onOpenSectionChange={setOpenSection}
             canChoose={canManage}
             choosing={requestChange.isPending && confirming?.code === plan.code}
             onChoose={setConfirming}

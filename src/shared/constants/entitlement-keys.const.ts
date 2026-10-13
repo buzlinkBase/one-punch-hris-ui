@@ -4,6 +4,7 @@
  * these keys, never a plan's name.
  */
 export const FEATURE_KEYS = {
+  HRMS_CORE: "hrms.core",
   TIMEKEEPING_CORE: "timekeeping.core",
   TIMEKEEPING_BIOMETRIC: "timekeeping.biometric",
   APPLICATIONS_CORE: "applications.core",
