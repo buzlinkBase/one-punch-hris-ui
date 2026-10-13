@@ -1,5 +1,7 @@
 export interface Permission {
   id: string;
+  /** The system the permission belongs to (hrms, procurement, ...). Absent from older API builds = hrms. */
+  product?: string;
   module: string;
   feature: string;
   action: string;
@@ -21,5 +23,7 @@ export interface Role {
   name: string;
   description: string;
   isSystemRole: boolean;
+  /** null = spans systems (Owner, Admin, ... and roles created before systems existed). */
+  product?: string | null;
   rolePermissions: RolePermission[];
 }

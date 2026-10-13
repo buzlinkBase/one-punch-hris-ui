@@ -10,6 +10,7 @@ import {
   Checkbox,
   Divider,
   Empty,
+  Segmented,
   Tooltip,
 } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
@@ -29,7 +30,12 @@ import {
 } from "../../hooks/use-role-queries";
 import { usePermissions } from "@/app/modules/security/permissions/hooks/use-permission-queries";
 import type { Permission } from "../../models/api/response/role-response.model";
-import { ROLE_LABEL } from "../../constants/label.const";
+import {
+  ROLE_LABEL,
+  DEFAULT_PERMISSION_PRODUCT,
+  compareProducts,
+  productLabel,
+} from "../../constants/label.const";
 import { permissionHint } from "../../constants/permission-hints.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -69,6 +75,7 @@ export default function RoleDetail() {
   // whenever `selected` loads or switches to a different role, without fighting the user's own
   // checkbox edits on every re-render in between.
   const [syncedRoleId, setSyncedRoleId] = useState<string | undefined>();
+  const [selectedProduct, setSelectedProduct] = useState<string | undefined>();
 
   const {
     control,
@@ -91,9 +98,30 @@ export default function RoleDetail() {
     }
   }, [selected, isEdit, reset]);
 
+  const products = useMemo(
+    () =>
+      [
+        ...new Set(
+          permissions.map((p) => p.product ?? DEFAULT_PERMISSION_PRODUCT),
+        ),
+      ].sort(compareProducts),
+    [permissions],
+  );
+  const activeProduct =
+    selectedProduct && products.includes(selectedProduct)
+      ? selectedProduct
+      : products[0];
+
+  // Only the active system's permissions are listed; checkedIds spans every system, so switching
+  // the filter never drops a grant and Save Permissions sends them all.
   const groups = useMemo(() => {
     const byModule = new Map<string, Map<string, Permission[]>>();
     for (const permission of permissions) {
+      if (
+        (permission.product ?? DEFAULT_PERMISSION_PRODUCT) !== activeProduct
+      ) {
+        continue;
+      }
       const byFeature = byModule.get(permission.module) ?? new Map();
       const list = byFeature.get(permission.feature) ?? [];
       list.push(permission);
@@ -101,7 +129,7 @@ export default function RoleDetail() {
       byModule.set(permission.module, byFeature);
     }
     return byModule;
-  }, [permissions]);
+  }, [permissions, activeProduct]);
 
   const onSubmit = async (values: RoleFormValues) => {
     if (isEdit && id) {
@@ -212,6 +240,18 @@ export default function RoleDetail() {
           <>
             <Divider />
             <Title level={5}>{ROLE_LABEL.PERMISSIONS}</Title>
+            {products.length > 1 && (
+              <Segmented
+                className="mb-4"
+                aria-label={ROLE_LABEL.SYSTEM}
+                value={activeProduct}
+                onChange={(value) => setSelectedProduct(String(value))}
+                options={products.map((product) => ({
+                  label: productLabel(product),
+                  value: product,
+                }))}
+              />
+            )}
             {groups.size === 0 ? (
               <Empty description="No permissions in the catalog" />
             ) : (

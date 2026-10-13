@@ -18,6 +18,10 @@ export const FEATURE_KEYS = {
   CLIENTS_AGENCY: "clients.agency",
   TIMEKEEPING_MOBILE: "timekeeping.mobile",
   PATROL_APP: "patrol.app",
+  PROCUREMENT_CORE: "procurement.core",
+  ACCOUNTING_CORE: "accounting.core",
+  BILLING_CORE: "billing.core",
+  CLIENT_PORTAL_CORE: "clientportal.core",
 } as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[keyof typeof FEATURE_KEYS];
