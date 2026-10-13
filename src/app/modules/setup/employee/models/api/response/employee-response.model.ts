@@ -41,8 +41,21 @@ export interface EmployeeFixedScheduleDayModel {
   timeShiftId: string;
 }
 
+// Why an employee is paid through payroll without a DTR (see isNoDTRNotRequired below).
+export type NoDtrCategory =
+  | "OWNER_SHAREHOLDER"
+  | "DIRECTOR"
+  | "OFFICER"
+  | "CONSULTANT_RETAINER"
+  | "OTHER";
+
 export interface EmployeeSettingModel {
   id?: string;
+  // Payroll-only employee: included in payroll with no DTR. noDtrEffectiveUntil null = open-ended.
+  isNoDTRNotRequired?: boolean;
+  noDtrCategory?: NoDtrCategory | null;
+  noDtrEffectiveFrom?: string | null;
+  noDtrEffectiveUntil?: string | null;
   isEligibleForOvertime: boolean;
   // Split from a single isEligibleForHolidayPay flag — Regular Holiday pay is legally
   // mandatory regardless of any CBA; Special Non-Working Holiday is "no work, no pay" by

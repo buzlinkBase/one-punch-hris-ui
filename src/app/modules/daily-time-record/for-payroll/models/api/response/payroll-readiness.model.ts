@@ -19,5 +19,7 @@ export interface PayrollReadinessEmployee {
   pendingBatchCodes: string[];
   // Distinct work dates (YYYY-MM-DD) that already have a DTR row in the range, any status.
   savedDates?: string[];
+  // Payroll-only (no DTR) employee: paid from the fixed rate, so the day counts stay 0.
+  isPayrollOnly?: boolean;
   status: PayrollReadinessStatus;
 }

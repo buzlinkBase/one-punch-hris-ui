@@ -106,6 +106,10 @@ export const employeeMapper = {
           response.settings?.isEligibleForLeaveCredits ?? false,
         isEligibleFor13thMonth:
           response.settings?.isEligibleFor13thMonth ?? false,
+        isNoDTRNotRequired: response.settings?.isNoDTRNotRequired ?? false,
+        noDtrCategory: response.settings?.noDtrCategory ?? null,
+        noDtrEffectiveFrom: response.settings?.noDtrEffectiveFrom ?? null,
+        noDtrEffectiveUntil: response.settings?.noDtrEffectiveUntil ?? null,
       },
     };
   },
@@ -141,6 +145,10 @@ export const employeeMapper = {
         isEligibleForNightDifferential: true,
         isEligibleForLeaveCredits: true,
         isEligibleFor13thMonth: true,
+        isNoDTRNotRequired: false,
+        noDtrCategory: null,
+        noDtrEffectiveFrom: null,
+        noDtrEffectiveUntil: null,
       },
     };
   },

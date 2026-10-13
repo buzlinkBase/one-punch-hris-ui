@@ -54,6 +54,14 @@ export const EMPLOYEE_LABEL = {
   RDO_CODE: "RDO Code",
   AGE: "Age",
   REST_DAYS: "Rest Days",
+  NO_DTR: "Payroll only (no DTR)",
+  NO_DTR_HELP:
+    "Paid through payroll without a DTR, e.g. owners, shareholders and officers. They never appear in DTR or absences. Requires a Fixed salary type.",
+  NO_DTR_CATEGORY: "Category",
+  NO_DTR_FROM: "Effective from",
+  NO_DTR_UNTIL: "Effective until",
+  NO_DTR_UNTIL_HELP:
+    "Leave blank for open-ended. A start or end inside a cutoff prorates that cutoff's pay by calendar days.",
   CREATE_TITLE: "Create Employee",
   EDIT_TITLE: "Edit Employee",
 };
@@ -66,6 +74,14 @@ export const MODE_OF_PAYMENT_OPTIONS = [
 export const SALARY_TYPE_OPTIONS = [
   { value: "VARIABLE", label: "Variable" },
   { value: "FIXED", label: "Fixed" },
+];
+
+export const NO_DTR_CATEGORY_OPTIONS = [
+  { value: "OWNER_SHAREHOLDER", label: "Owner / Shareholder" },
+  { value: "DIRECTOR", label: "Director" },
+  { value: "OFFICER", label: "Officer" },
+  { value: "CONSULTANT_RETAINER", label: "Consultant / Retainer" },
+  { value: "OTHER", label: "Other" },
 ];
 
 export const DAILY_RATE_MODE_OPTIONS = [

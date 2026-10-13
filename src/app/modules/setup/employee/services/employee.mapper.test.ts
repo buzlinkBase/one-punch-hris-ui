@@ -59,3 +59,34 @@ describe("employeeMapper.toFormValues statutory rates", () => {
     expect(form.sssRate).toMatchObject({ eE: 0, eR: 0, eC: 0, addOns: 0 });
   });
 });
+
+describe("employeeMapper payroll-only (no DTR) settings", () => {
+  it("loads the flag, category and window from the API", () => {
+    const form = employeeMapper.toFormValues(
+      response({
+        settings: {
+          isNoDTRNotRequired: true,
+          noDtrCategory: "OWNER_SHAREHOLDER",
+          noDtrEffectiveFrom: "2026-01-01",
+          noDtrEffectiveUntil: null,
+        } as EmployeeResponse["settings"],
+      }),
+    );
+    expect(form.settings).toMatchObject({
+      isNoDTRNotRequired: true,
+      noDtrCategory: "OWNER_SHAREHOLDER",
+      noDtrEffectiveFrom: "2026-01-01",
+      noDtrEffectiveUntil: null,
+    });
+  });
+
+  it("defaults to a regular (DTR) employee", () => {
+    expect(employeeMapper.toDefaultValues().settings).toMatchObject({
+      isNoDTRNotRequired: false,
+      noDtrCategory: null,
+    });
+    expect(employeeMapper.toFormValues(response({})).settings).toMatchObject({
+      isNoDTRNotRequired: false,
+    });
+  });
+});

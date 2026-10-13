@@ -71,6 +71,7 @@ import { employeeMapper } from "../../services/employee.mapper";
 import {
   EMPLOYEE_LABEL,
   MODE_OF_PAYMENT_OPTIONS,
+  NO_DTR_CATEGORY_OPTIONS,
   SALARY_TYPE_OPTIONS,
   DAILY_RATE_MODE_OPTIONS,
   FACTOR_DAYS_OPTIONS,
@@ -344,6 +345,17 @@ export default function EmployeeDetail() {
         // optional in the inferred literal type, which CreateEmployee/UpdateEmployee reject.
         isEligibleForOvertime: values.settings?.isEligibleForOvertime ?? true,
         isEligibleFor13thMonth: values.settings?.isEligibleFor13thMonth ?? true,
+        // A payroll-only window means nothing once the flag is off, so it's cleared on save.
+        isNoDTRNotRequired: values.settings?.isNoDTRNotRequired ?? false,
+        noDtrCategory: values.settings?.isNoDTRNotRequired
+          ? (values.settings.noDtrCategory ?? null)
+          : null,
+        noDtrEffectiveFrom: values.settings?.isNoDTRNotRequired
+          ? (values.settings.noDtrEffectiveFrom ?? null)
+          : null,
+        noDtrEffectiveUntil: values.settings?.isNoDTRNotRequired
+          ? (values.settings.noDtrEffectiveUntil ?? null)
+          : null,
         isEligibleForRegularHolidayPay: true,
         isEligibleForSpecialHolidayPay: true,
         isEligibleForNightDifferential: true,
@@ -430,6 +442,10 @@ export default function EmployeeDetail() {
 
   const isSubmitting = isUpdating || isCreating;
 
+  const watchedNoDtr = useWatch({
+    control,
+    name: "settings.isNoDTRNotRequired",
+  });
   const watchedDepartmentId = useWatch({ control, name: "departmentId" });
   const watchedFirstName = useWatch({ control, name: "firstName" });
   const watchedLastName = useWatch({ control, name: "lastName" });
@@ -2256,6 +2272,86 @@ export default function EmployeeDetail() {
                           )}
                         />
                       </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span>{EMPLOYEE_LABEL.NO_DTR}</span>
+                          <Controller
+                            name="settings.isNoDTRNotRequired"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {EMPLOYEE_LABEL.NO_DTR_HELP}
+                        </span>
+                        {errors.settings?.isNoDTRNotRequired && (
+                          <span className="text-xs text-red-500">
+                            {errors.settings.isNoDTRNotRequired.message}
+                          </span>
+                        )}
+                      </div>
+                      {watchedNoDtr && (
+                        <>
+                          <Form.Item
+                            label={EMPLOYEE_LABEL.NO_DTR_CATEGORY}
+                            required
+                            className="mb-0"
+                            validateStatus={
+                              errors.settings?.noDtrCategory ? "error" : ""
+                            }
+                            help={errors.settings?.noDtrCategory?.message}
+                          >
+                            <Controller
+                              name="settings.noDtrCategory"
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  value={field.value ?? undefined}
+                                  options={NO_DTR_CATEGORY_OPTIONS}
+                                  placeholder="Select category"
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            label={EMPLOYEE_LABEL.NO_DTR_FROM}
+                            className="mb-0"
+                          >
+                            <Controller
+                              name="settings.noDtrEffectiveFrom"
+                              control={control}
+                              render={({ field }) =>
+                                datePicker(field.value, field.onChange)
+                              }
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            label={EMPLOYEE_LABEL.NO_DTR_UNTIL}
+                            className="mb-0"
+                            extra={EMPLOYEE_LABEL.NO_DTR_UNTIL_HELP}
+                            validateStatus={
+                              errors.settings?.noDtrEffectiveUntil
+                                ? "error"
+                                : ""
+                            }
+                            help={errors.settings?.noDtrEffectiveUntil?.message}
+                          >
+                            <Controller
+                              name="settings.noDtrEffectiveUntil"
+                              control={control}
+                              render={({ field }) =>
+                                datePicker(field.value, field.onChange)
+                              }
+                            />
+                          </Form.Item>
+                        </>
+                      )}
                     </div>
                   </div>
                 ),

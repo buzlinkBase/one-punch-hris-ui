@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const employeeFormSchema = z.object({
+const employeeFormBaseSchema = z.object({
   // Personal
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -127,8 +127,59 @@ export const employeeFormSchema = z.object({
       isEligibleForNightDifferential: z.boolean(),
       isEligibleForLeaveCredits: z.boolean(),
       isEligibleFor13thMonth: z.boolean(),
+      isNoDTRNotRequired: z.boolean().optional(),
+      noDtrCategory: z
+        .enum([
+          "OWNER_SHAREHOLDER",
+          "DIRECTOR",
+          "OFFICER",
+          "CONSULTANT_RETAINER",
+          "OTHER",
+        ])
+        .nullable()
+        .optional(),
+      noDtrEffectiveFrom: z.string().nullable().optional(),
+      noDtrEffectiveUntil: z.string().nullable().optional(),
     })
     .optional(),
 });
+
+// Payroll-only (no DTR) employees are paid from a Fixed rate and need a category; the window,
+// when both ends are given, must not run backwards.
+const validatePayrollOnly = (
+  values: z.infer<typeof employeeFormBaseSchema>,
+  ctx: z.RefinementCtx,
+) => {
+  const s = values.settings;
+  if (!s?.isNoDTRNotRequired) return;
+  if (values.salaryType !== "FIXED") {
+    ctx.addIssue({
+      code: "custom",
+      path: ["settings", "isNoDTRNotRequired"],
+      message: "Payroll-only employees must have a Fixed salary type",
+    });
+  }
+  if (!s.noDtrCategory) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["settings", "noDtrCategory"],
+      message: "Category is required",
+    });
+  }
+  if (
+    s.noDtrEffectiveFrom &&
+    s.noDtrEffectiveUntil &&
+    s.noDtrEffectiveUntil < s.noDtrEffectiveFrom
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["settings", "noDtrEffectiveUntil"],
+      message: "Effective until must be on or after effective from",
+    });
+  }
+};
+
+export const employeeFormSchema =
+  employeeFormBaseSchema.superRefine(validatePayrollOnly);
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

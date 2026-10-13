@@ -1,6 +1,9 @@
 import dayjs from "dayjs";
 import type { EmployeeResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
-import { isActiveInRange } from "@/shared/utils/employee-active.util";
+import {
+  isActiveInRange,
+  isPayrollOnlyThroughout,
+} from "@/shared/utils/employee-active.util";
 import type { PayrollReadinessEmployee } from "../../for-payroll/models/api/response/payroll-readiness.model";
 import type { DtrEmployeeSummaryResponse } from "../models/api/response/dtr-employee-summary.model";
 
@@ -75,18 +78,27 @@ export function buildCoverageRows(
   to: string,
 ): CoverageRow[] {
   const withDtr = new Set(coverage.map((c) => c.employeeId));
-  const rows: CoverageRow[] = coverage.map((c) => ({
-    employeeId: c.employeeId,
-    employeeNo: c.employeeNo,
-    fullName: c.fullName,
-    payrollGroupId: c.payrollGroupId,
-    clientId: c.clientId,
-    departmentId: c.departmentId,
-    savedDates: (c.savedDates ?? []).map(day),
-    status: coverageStatus(c, from, to),
-  }));
+  // The readiness endpoint also lists payroll-only (no DTR) employees so Payroll Run can pay them;
+  // they have no DTR to generate, so they are not coverage rows.
+  const rows: CoverageRow[] = coverage
+    .filter((c) => !c.isPayrollOnly)
+    .map((c) => ({
+      employeeId: c.employeeId,
+      employeeNo: c.employeeNo,
+      fullName: c.fullName,
+      payrollGroupId: c.payrollGroupId,
+      clientId: c.clientId,
+      departmentId: c.departmentId,
+      savedDates: (c.savedDates ?? []).map(day),
+      status: coverageStatus(c, from, to),
+    }));
   for (const e of employees) {
-    if (withDtr.has(e.id) || !isActiveInRange(e, from, to)) continue;
+    if (
+      withDtr.has(e.id) ||
+      !isActiveInRange(e, from, to) ||
+      isPayrollOnlyThroughout(e, from, to)
+    )
+      continue;
     rows.push({
       employeeId: e.id,
       employeeNo: e.employeeNo,

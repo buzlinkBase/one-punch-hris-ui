@@ -3,7 +3,10 @@ import type {
   PayrollReadinessEmployee,
   PayrollReadinessStatus,
 } from "../models/api/response/payroll-readiness.model";
-import { isActiveInRange } from "@/shared/utils/employee-active.util";
+import {
+  isActiveInRange,
+  isPayrollOnlyInRange,
+} from "@/shared/utils/employee-active.util";
 
 // Readiness plus "NoDtr": an active employee of the group with no DTR day at all in the cutoff --
 // nobody generated their DTR yet, which is just as much a reason they'd be missing from the run.
@@ -72,7 +75,13 @@ export function buildReadinessRows(
 ): ReadinessRow[] {
   const withDtr = new Set(readiness.map((r) => r.employeeId));
   const noDtr: ReadinessRow[] = employees
-    .filter((e) => !withDtr.has(e.id) && isActiveInRange(e, from, to))
+    .filter(
+      (e) =>
+        !withDtr.has(e.id) &&
+        isActiveInRange(e, from, to) &&
+        // Payroll-only employees come back from the server as their own (Ready) rows.
+        !isPayrollOnlyInRange(e, from, to),
+    )
     .map((e) => ({
       employeeId: e.id,
       employeeNo: e.employeeNo,
