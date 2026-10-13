@@ -61,6 +61,7 @@ import {
   getFeaturesForPath,
   getPermissionForPath,
   getRequiredFeatures,
+  withHrmsProduct,
 } from "@/shared/constants/navigation.const";
 import {
   LIMIT_KEYS,
@@ -329,7 +330,9 @@ function buildMenuItems(
 
     const disabled = !hrDbReady && !HR_DB_INDEPENDENT_KEYS.has(item.key);
     // Locked items stay clickable: the page explains what the plan lacks and how to get it.
-    const lock = item.path ? lockFor(getRequiredFeatures(features)) : null;
+    const lock = item.path
+      ? lockFor(withHrmsProduct(item.path, getRequiredFeatures(features)))
+      : null;
 
     // When collapsed, AntD's built-in popup already shows the label text on hover —
     // wrapping in Tooltip creates a nested tooltip that breaks the popup text rendering.
@@ -707,8 +710,12 @@ export default function MainLayout() {
   // The company's subscription: locks menu items and whole pages the plan doesn't include.
   const subscription = useSubscriptionState();
   useSubscriptionBoundaryRefresh();
+  const pageFeatures = getFeaturesForPath(location.pathname);
   const pageLock = subscription.lockFor(
-    getRequiredFeatures(getFeaturesForPath(location.pathname)),
+    withHrmsProduct(
+      pageFeatures.length > 0 ? location.pathname : undefined,
+      getRequiredFeatures(pageFeatures),
+    ),
   );
   const showRestriction = usePlanRestrictionStore((s) => s.show);
 

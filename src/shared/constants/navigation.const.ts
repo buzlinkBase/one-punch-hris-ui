@@ -100,6 +100,25 @@ export function getRequiredFeatures(features: NavFeature[]): FeatureKey[] {
   return features.filter((f): f is FeatureKey => f !== BASE_FEATURE);
 }
 
+/** Billing stays reachable without the HRMS system, so a company can still change its plan. */
+const PRODUCT_GATE_EXEMPT_PATH = "/billing";
+
+/**
+ * Every menu page is part of the HRMS system, so on top of its own features it needs the plan to
+ * include `hrms.core` -- except billing. `features` is what the page already needs
+ * (getRequiredFeatures); `path` is the page, or undefined for a group header (never locked).
+ */
+export function withHrmsProduct(
+  path: string | undefined,
+  features: FeatureKey[],
+): FeatureKey[] {
+  if (!path) return features;
+  const exempt =
+    path === PRODUCT_GATE_EXEMPT_PATH ||
+    path.startsWith(`${PRODUCT_GATE_EXEMPT_PATH}/`);
+  return exempt ? features : [FEATURE_KEYS.HRMS_CORE, ...features];
+}
+
 export const NAVIGATION_ITEMS: NavItem[] = [
   {
     key: "dashboard",

@@ -42,6 +42,16 @@ export const FAQ_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading:
+          "Every menu item shows a lock and pages say they aren't included",
+        body: [
+          "Your company's plan doesn't include the HRMS system (or it was switched off). Every HRMS page is locked, even for the Owner, and the system refuses the actions behind them. Billing stays open so you can review or change the plan.",
+          "Ask your company's owner or billing admin to open Billing and choose a plan that includes HRMS.",
+        ],
+        warning:
+          "Biometric devices keep sending punches while HRMS is off, but the system discards them. Once HRMS is back on, they don't come back automatically, but you can upload those logs manually in Upload Attendance.",
+      },
+      {
         heading: "I don't get notifications",
         body: [
           "Open My Profile and check Notification Preferences. Push must be on for the request types you want in the bell.",

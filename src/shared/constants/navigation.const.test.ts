@@ -5,6 +5,7 @@ import {
   getFeaturesForPath,
   getPermissionForPath,
   getRequiredFeatures,
+  withHrmsProduct,
 } from "./navigation.const";
 import { BASE_FEATURE, FEATURE_KEYS } from "./entitlement-keys.const";
 
@@ -29,6 +30,27 @@ describe("NAVIGATION_ITEMS", () => {
     );
 
     expect(unassigned).toEqual([]);
+  });
+});
+
+describe("withHrmsProduct", () => {
+  it("puts every menu page behind the HRMS system", () => {
+    expect(withHrmsProduct("/setup/employee", [])).toEqual([
+      FEATURE_KEYS.HRMS_CORE,
+    ]);
+    expect(withHrmsProduct("/payroll", [FEATURE_KEYS.PAYROLL_CORE])).toEqual([
+      FEATURE_KEYS.HRMS_CORE,
+      FEATURE_KEYS.PAYROLL_CORE,
+    ]);
+  });
+
+  it("keeps billing reachable so the plan can be changed", () => {
+    expect(withHrmsProduct("/billing", [])).toEqual([]);
+    expect(withHrmsProduct("/billing/plans", [])).toEqual([]);
+  });
+
+  it("never locks a group header", () => {
+    expect(withHrmsProduct(undefined, [])).toEqual([]);
   });
 });
 

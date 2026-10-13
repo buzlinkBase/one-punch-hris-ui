@@ -415,6 +415,14 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           },
         ],
       },
+      {
+        heading: "If your plan doesn't include HRMS",
+        body: [
+          "Devices keep connecting and sending data, but the system acknowledges it and discards it. Nothing is saved. The device clears its own memory, so these punches are not re-sent automatically later.",
+        ],
+        warning:
+          "Punches sent while HRMS is off aren't synced back when you turn HRMS on. Upload the missed logs manually in Upload Attendance.",
+      },
     ],
     related: ["attendance-upload"],
   },
