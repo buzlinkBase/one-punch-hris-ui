@@ -3,7 +3,7 @@ import type { ColumnsType } from "antd/es/table";
 import { DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { OtherIncomeApplicationResponse } from "../../models/api/response/other-income-application-response.model";
-import { FREQUENCY_LABEL } from "../../constants/label.const";
+import { FREQUENCY_LABEL, PAY_MODE_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
@@ -54,6 +54,12 @@ export default function OtherIncomeApplicationTable({
         v ? dayjs(v.replace(/Z$/, "")).format("MMM DD, YYYY") : "—",
     },
     {
+      title: "How Given",
+      dataIndex: "payMode",
+      key: "payMode",
+      render: (v: string) => PAY_MODE_LABEL[v] ?? PAY_MODE_LABEL.FixedSchedule,
+    },
+    {
       title: "Frequency",
       dataIndex: "frequencyOfPayment",
       key: "frequencyOfPayment",
@@ -73,13 +79,6 @@ export default function OtherIncomeApplicationTable({
       key: "isTaxable",
       align: "center",
       render: (v: boolean) => (v ? "Yes" : "No"),
-    },
-    {
-      title: "Prorated",
-      dataIndex: "isProrated",
-      key: "isProrated",
-      align: "center",
-      render: (v: boolean) => (v ? "Yes" : "—"),
     },
     {
       title: "Actions",

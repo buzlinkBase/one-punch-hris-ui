@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { DeductionApplicationResponse } from "../../models/api/response/deduction-application-response.model";
-import { FREQUENCY_LABEL } from "../../constants/label.const";
+import { FREQUENCY_LABEL, PAY_MODE_LABEL } from "../../constants/label.const";
 import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
@@ -77,6 +77,13 @@ export default function DeductionApplicationTable({
       key: "endDate",
       render: (v) =>
         v ? dayjs(v.replace(/Z$/, "")).format("MMM DD, YYYY") : "—",
+    },
+    {
+      title: "How Taken",
+      dataIndex: "payMode",
+      key: "payMode",
+      render: (v?: string) =>
+        PAY_MODE_LABEL[v ?? "FixedSchedule"] ?? PAY_MODE_LABEL.FixedSchedule,
     },
     {
       title: "Frequency",

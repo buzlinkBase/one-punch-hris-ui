@@ -1,3 +1,5 @@
+import type { DeductionRuleFields } from "./create-deduction-application.model";
+
 export interface UpdateDeductionApplicationDetail {
   // Omitted for an installment that isn't stored yet (e.g. after regenerating the schedule).
   id?: string;
@@ -5,9 +7,11 @@ export interface UpdateDeductionApplicationDetail {
   principal: number;
   interest: number;
   amount: number;
+  periodStart?: string;
+  periodEnd?: string;
 }
 
-export interface UpdateDeductionApplication {
+export interface UpdateDeductionApplication extends Partial<DeductionRuleFields> {
   id: string;
   employeeId: string;
   deductionId: string;

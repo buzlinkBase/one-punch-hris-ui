@@ -27,6 +27,7 @@ import type {
   AlphalistEntryResponse,
   Bir2316Response,
 } from "../models/api/response/payroll-reports.model";
+import type { EmployeeScopeFilter } from "../models/api/request/employee-scope-filter.model";
 
 // PayrollReportsController's [Route("api/v{version:apiVersion}/[controller]")] resolves the
 // [controller] token to the literal class name (PayrollReports -> payrollreports) — there is
@@ -41,7 +42,11 @@ const UNIFORM_ALLOWANCE_ENDPOINT = buildApiUrl(
 const RETIREMENT_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "retirement");
 const CASH_BOND_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "cash-bond");
 
-async function get<T>(path: string, params: Record<string, string | number>) {
+// An undefined param is dropped by axios, so optional filters just aren't sent.
+async function get<T>(
+  path: string,
+  params: Record<string, string | number | undefined>,
+) {
   const res = await httpClient.getUnwrapped<ReportEnvelope<T>>(
     `${ENDPOINT}/${path}`,
     { params },
@@ -68,8 +73,8 @@ export const payrollReportsApi = {
     get<LedgerEntryResponse>(`cash-bond/${employeeId}/entries`, { asOf }),
   adjustCashBond: (payload: AdjustCashBondRequest) =>
     httpClient.postUnwrapped<void>(`${CASH_BOND_ENDPOINT}/adjust`, payload),
-  leaveLedger: (year: number) =>
-    get<LeaveCreditsBalanceResponse>("leave-ledger", { year }),
+  leaveLedger: (year: number, scope: EmployeeScopeFilter = {}) =>
+    get<LeaveCreditsBalanceResponse>("leave-ledger", { year, ...scope }),
   leaveEntries: (employeeId: string, leaveId: string, year: number) =>
     get<LedgerEntryResponse>(`leave-ledger/${employeeId}/${leaveId}/entries`, {
       year,

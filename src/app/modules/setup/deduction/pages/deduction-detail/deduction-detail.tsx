@@ -250,6 +250,7 @@ export default function DeductionDetail() {
       deductionTypeId: "",
       status: "ACTIVE",
       allowEmployeeFiling: true,
+      allowAttendanceRules: false,
     },
   });
 
@@ -261,6 +262,7 @@ export default function DeductionDetail() {
         deductionTypeId: selected.deductionTypeId,
         status: selected.status,
         allowEmployeeFiling: selected.allowEmployeeFiling ?? true,
+        allowAttendanceRules: selected.allowAttendanceRules ?? false,
       });
     }
   }, [selected, isEdit, reset]);
@@ -393,6 +395,27 @@ export default function DeductionDetail() {
                 When on, employees can file this in the Employee Portal (e.g.
                 Request a Loan). When off, it&apos;s hidden from the portal and
                 can only be filed by HR.
+              </Text>
+            </Space>
+          </Form.Item>
+
+          <Form.Item label={DEDUCTION_LABEL.ALLOW_ATTENDANCE_RULES}>
+            <Space align="center">
+              <Controller
+                name="allowAttendanceRules"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onChange={field.onChange}
+                    size="small"
+                  />
+                )}
+              />
+              <Text type="secondary" className="text-xs">
+                When on, this deduction can be charged per day worked or only
+                when attendance is met (e.g. meals, transport). Leave off for
+                loans and anything that must be fully repaid.
               </Text>
             </Space>
           </Form.Item>

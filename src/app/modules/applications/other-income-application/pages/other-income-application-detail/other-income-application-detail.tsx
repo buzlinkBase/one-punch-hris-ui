@@ -1,8 +1,8 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Button,
   Card,
-  Checkbox,
   Col,
   DatePicker,
   Divider,
@@ -14,20 +14,23 @@ import {
   Space,
   Table,
   Tag,
-  Tooltip,
   Typography,
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ArrowLeftOutlined,
-  InfoCircleOutlined,
   SaveOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import {
+  Controller,
+  useForm,
+  type Control,
+  type FieldErrors,
+} from "react-hook-form";
 import dayjs from "dayjs";
 import {
   useCreateOtherIncomeApplication,
@@ -40,10 +43,28 @@ import {
   otherIncomeApplicationFormSchema,
   type OtherIncomeApplicationFormValues,
 } from "../../models/forms/other-income-application-form.schema";
+import type { OtherIncomeRuleFields } from "../../models/api/request/create-other-income-application.model";
 import {
+  ALL_DAY_TYPE_BITS,
+  ALL_WEEKDAY_BITS,
   FREQUENCY_OPTIONS,
   OTHER_INCOME_APPLICATION_LABEL,
+  PAY_MODE_OPTIONS,
+  PERIODIC_FREQUENCY_OPTIONS,
+  SKIP_REASON_LABEL,
 } from "../../constants/label.const";
+import {
+  AttendanceRuleFields,
+  type AttendanceRuleFormValues,
+} from "@/shared/components/attendance-rule-fields/attendance-rule-fields";
+import { PayModeSelector } from "@/shared/components/pay-mode-selector/pay-mode-selector";
+import { describeAttendanceRule } from "@/shared/utils/describe-attendance-rule.util";
+import {
+  bitsToMask,
+  generateOtherIncomeSchedule,
+  maskToBits,
+  type OtherIncomeScheduleRow,
+} from "@/shared/utils/other-income-schedule.util";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -51,73 +72,135 @@ import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 
-interface ScheduleRow {
-  // The stored row's id; absent for freshly generated rows, which the API adds as new.
-  id?: string;
-  index: number;
-  date: string;
-  amount: number;
+const ALL_WEEKDAYS_MASK = bitsToMask(ALL_WEEKDAY_BITS);
+const ALL_DAY_TYPES_MASK = bitsToMask(ALL_DAY_TYPE_BITS);
+
+function formatAmount(value: number): string {
+  return (value ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 }
 
-function generateSchedule(
-  startDate: string,
-  endDate: string,
-  frequency: string,
-  amount: number,
-): ScheduleRow[] {
-  if (!startDate || !endDate || !frequency || !amount) return [];
+function toDateOnly(value?: string | null): string {
+  return value?.replace(/Z$/, "").split("T")[0] ?? "";
+}
 
-  const daysMap: Record<string, number> = {
-    Daily: 1,
-    Weekly: 7,
-    SemiMonthly: 15,
-    Monthly: 30,
-  };
+function scheduleColumns(
+  isPeriodic: boolean,
+  hasStatus: boolean,
+): ColumnsType<OtherIncomeScheduleRow> {
+  const columns: ColumnsType<OtherIncomeScheduleRow> = [
+    {
+      title: "#",
+      dataIndex: "index",
+      key: "index",
+      width: 50,
+      align: "center",
+    },
+    {
+      title: isPeriodic ? "Paid On" : "Payment Date",
+      dataIndex: "date",
+      key: "date",
+      width: 140,
+    },
+  ];
 
-  const end = dayjs(endDate);
-  const rows: ScheduleRow[] = [];
-  let current = dayjs(startDate);
-  let index = 1;
-
-  while (current.isBefore(end) || current.isSame(end, "day")) {
-    rows.push({ index, date: current.format("YYYY-MM-DD"), amount });
-
-    if (frequency === "SemiMonthly") {
-      const day = current.date();
-      if (day <= 15) {
-        current = current.endOf("month").startOf("day");
-      } else {
-        current = current.add(1, "month").startOf("month").add(14, "day");
-      }
-    } else {
-      current = current.add(daysMap[frequency] ?? 30, "day");
-    }
-
-    index++;
-    if (index > 500) break; // safety cap
+  if (isPeriodic) {
+    columns.push({
+      title: "Attendance Period",
+      key: "period",
+      render: (_, r) =>
+        r.periodStart && r.periodEnd
+          ? `${r.periodStart} to ${r.periodEnd}`
+          : "—",
+    });
   }
 
-  return rows;
-}
-
-const scheduleColumns: ColumnsType<ScheduleRow> = [
-  {
-    title: "#",
-    dataIndex: "index",
-    key: "index",
-    width: 50,
-    align: "center",
-  },
-  { title: "Payment Date", dataIndex: "date", key: "date", width: 140 },
-  {
+  columns.push({
     title: "Amount",
     dataIndex: "amount",
     key: "amount",
     align: "right",
-    render: (v: number) =>
-      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
-  },
-];
+    render: (v: number) => formatAmount(v),
+  });
+
+  if (hasStatus) {
+    columns.push({
+      title: "Status",
+      key: "status",
+      width: 260,
+      render: (_, r) => {
+        if (!r.id) return <Tag>Not saved</Tag>;
+        if (r.isSkipped) {
+          return (
+            <Tag color="orange">
+              Skipped
+              {r.skipReason
+                ? ` — ${SKIP_REASON_LABEL[r.skipReason] ?? r.skipReason}`
+                : ""}
+            </Tag>
+          );
+        }
+        return r.consumedByPayrollId ? (
+          <Tag color="green">Paid</Tag>
+        ) : (
+          <Tag>Pending</Tag>
+        );
+      },
+    });
+  }
+
+  return columns;
+}
+
+// What the API stores for the rule. A fixed schedule carries no attendance rule at all.
+function buildRuleFields(
+  values: OtherIncomeApplicationFormValues,
+): OtherIncomeRuleFields {
+  if (values.payMode === "FixedSchedule") {
+    return {
+      payMode: values.payMode,
+      attendanceBasis: "None",
+      minHours: null,
+      maxLateMinutes: null,
+      maxUndertimeMinutes: null,
+      applicableDays: ALL_WEEKDAYS_MASK,
+      dayTypes: ALL_DAY_TYPES_MASK,
+      minQualifyingDays: null,
+    };
+  }
+  return {
+    payMode: values.payMode,
+    attendanceBasis: values.attendanceBasis,
+    minHours: values.minHours,
+    maxLateMinutes: values.maxLateMinutes,
+    maxUndertimeMinutes: values.maxUndertimeMinutes,
+    applicableDays: bitsToMask(values.applicableDays),
+    dayTypes: bitsToMask(values.dayTypes),
+    minQualifyingDays:
+      values.payMode === "PeriodicGated" && !values.requireAllDays
+        ? values.minQualifyingDays
+        : null,
+  };
+}
+
+const DEFAULT_VALUES: OtherIncomeApplicationFormValues = {
+  employeeId: "",
+  incomeId: "",
+  encodeDate: dayjs().format("YYYY-MM-DD"),
+  startDate: "",
+  endDate: "",
+  frequencyOfPayment: "SemiMonthly",
+  amount: 0,
+  remarks: "",
+  payMode: "FixedSchedule",
+  attendanceBasis: "None",
+  minHours: null,
+  maxLateMinutes: null,
+  maxUndertimeMinutes: null,
+  applicableDays: ALL_WEEKDAY_BITS,
+  dayTypes: ALL_DAY_TYPE_BITS,
+  requireAllDays: true,
+  minQualifyingDays: null,
+};
 
 export default function OtherIncomeApplicationDetail() {
   const navigate = useNavigate();
@@ -137,64 +220,106 @@ export default function OtherIncomeApplicationDetail() {
   const { mutate: update, isPending: updating } =
     useUpdateOtherIncomeApplication();
 
-  const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
+  const [schedule, setSchedule] = useState<OtherIncomeScheduleRow[]>([]);
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<OtherIncomeApplicationFormValues>({
     resolver: zodResolver(otherIncomeApplicationFormSchema),
-    defaultValues: {
-      employeeId: "",
-      incomeId: "",
-      encodeDate: dayjs().format("YYYY-MM-DD"),
-      startDate: "",
-      endDate: "",
-      frequencyOfPayment: "SemiMonthly",
-      amount: 0,
-      isProrated: false,
-      remarks: "",
-    },
+    defaultValues: DEFAULT_VALUES,
   });
 
   // eslint-disable-next-line react-hooks/incompatible-library
-  const watchedValues = watch([
-    "startDate",
-    "endDate",
-    "frequencyOfPayment",
-    "amount",
-  ]);
+  const values = watch();
+  const isAttendanceMode = values.payMode !== "FixedSchedule";
+  const isPeriodic = values.payMode === "PeriodicGated";
 
   const regenerateSchedule = useCallback(() => {
-    const [startDate, endDate, freq, amount] = watchedValues;
     setSchedule(
-      generateSchedule(startDate ?? "", endDate ?? "", freq ?? "", amount ?? 0),
+      generateOtherIncomeSchedule({
+        payMode: values.payMode,
+        startDate: values.startDate ?? "",
+        endDate: values.endDate ?? "",
+        frequency: values.frequencyOfPayment ?? "",
+        amount: values.amount ?? 0,
+        applicableDays: bitsToMask(values.applicableDays ?? []),
+      }),
     );
-  }, [watchedValues]);
+  }, [
+    values.payMode,
+    values.startDate,
+    values.endDate,
+    values.frequencyOfPayment,
+    values.amount,
+    values.applicableDays,
+  ]);
+
+  // Switching how it is given invalidates the generated rows and picks a frequency that suits it.
+  const handlePayModeChange = (
+    mode: OtherIncomeApplicationFormValues["payMode"],
+  ) => {
+    setValue("payMode", mode, { shouldValidate: true });
+    setSchedule([]);
+    if (mode === "FixedSchedule") {
+      setValue("attendanceBasis", "None");
+      return;
+    }
+    if (values.attendanceBasis === "None") {
+      setValue("attendanceBasis", "Worked");
+    }
+    if (mode === "PerQualifyingDay") {
+      setValue("frequencyOfPayment", "Daily");
+    } else if (!["Weekly", "Monthly"].includes(values.frequencyOfPayment)) {
+      setValue("frequencyOfPayment", "Weekly");
+    }
+  };
 
   useEffect(() => {
     if (existing) {
       reset({
         employeeId: existing.employeeId,
         incomeId: existing.incomeId,
-        encodeDate: existing.encodeDate?.replace(/Z$/, "").split("T")[0] ?? "",
-        startDate: existing.startDate?.replace(/Z$/, "").split("T")[0] ?? "",
-        endDate: existing.endDate?.replace(/Z$/, "").split("T")[0] ?? "",
+        encodeDate: toDateOnly(existing.encodeDate),
+        startDate: toDateOnly(existing.startDate),
+        endDate: toDateOnly(existing.endDate),
         frequencyOfPayment: existing.frequencyOfPayment,
         amount: existing.amount,
-        isProrated: existing.isProrated,
         remarks: existing.remarks ?? "",
+        payMode: (existing.payMode ??
+          "FixedSchedule") as OtherIncomeApplicationFormValues["payMode"],
+        attendanceBasis: (existing.attendanceBasis ??
+          "None") as OtherIncomeApplicationFormValues["attendanceBasis"],
+        minHours: existing.minHours ?? null,
+        maxLateMinutes: existing.maxLateMinutes ?? null,
+        maxUndertimeMinutes: existing.maxUndertimeMinutes ?? null,
+        applicableDays: maskToBits(
+          existing.applicableDays ?? ALL_WEEKDAYS_MASK,
+          ALL_WEEKDAY_BITS,
+        ),
+        dayTypes: maskToBits(
+          existing.dayTypes ?? ALL_DAY_TYPES_MASK,
+          ALL_DAY_TYPE_BITS,
+        ),
+        requireAllDays: existing.minQualifyingDays == null,
+        minQualifyingDays: existing.minQualifyingDays ?? null,
       });
       if (existing.schedule?.length) {
         setSchedule(
           existing.schedule.map((r, i) => ({
             id: r.id,
             index: i + 1,
-            date: r.date?.replace(/Z$/, "").split("T")[0] ?? "",
+            date: toDateOnly(r.date),
             amount: r.amount,
+            periodStart: r.periodStart ? toDateOnly(r.periodStart) : undefined,
+            periodEnd: r.periodEnd ? toDateOnly(r.periodEnd) : undefined,
+            isSkipped: r.isSkipped,
+            skipReason: r.skipReason,
+            consumedByPayrollId: r.consumedByPayrollId,
           })),
         );
       }
@@ -205,6 +330,21 @@ export default function OtherIncomeApplicationDetail() {
     () => schedule.reduce((s, r) => s + r.amount, 0),
     [schedule],
   );
+
+  const summary = describeAttendanceRule({
+    kind: "income",
+    payMode: values.payMode,
+    amount: values.amount,
+    frequency: values.frequencyOfPayment,
+    attendanceBasis: values.attendanceBasis,
+    minHours: values.minHours,
+    maxLateMinutes: values.maxLateMinutes,
+    maxUndertimeMinutes: values.maxUndertimeMinutes,
+    applicableDays: values.applicableDays ?? [],
+    dayTypes: values.dayTypes ?? [],
+    requireAllDays: values.requireAllDays,
+    minQualifyingDays: values.minQualifyingDays,
+  });
 
   const employeeOptions = rawEmployees.map((e) => ({
     value: e.id,
@@ -220,68 +360,69 @@ export default function OtherIncomeApplicationDetail() {
       label: `${i.code} — ${i.name}`,
     }));
 
-  const onSubmit = (values: OtherIncomeApplicationFormValues) => {
+  const onSubmit = (formValues: OtherIncomeApplicationFormValues) => {
     if (!schedule.length) {
       message.warning("Generate the payment schedule first.");
       return;
     }
 
+    const common = {
+      employeeId: formValues.employeeId,
+      incomeId: formValues.incomeId,
+      encodeDate: formValues.encodeDate,
+      startDate: formValues.startDate,
+      endDate: formValues.endDate,
+      // A per-day income is by definition daily, whatever the dropdown last held.
+      frequencyOfPayment:
+        formValues.payMode === "PerQualifyingDay"
+          ? "Daily"
+          : formValues.frequencyOfPayment,
+      amount: formValues.amount,
+      remarks: formValues.remarks ?? "",
+      ...buildRuleFields(formValues),
+    };
+    const callbacks = {
+      onSuccess: () => {
+        message.success("Saved.");
+        navigate({ to: "/applications/other-income" });
+      },
+      onError: () => message.error("Failed to save."),
+    };
+
     if (isEdit && existing) {
       update(
         {
+          ...common,
           id: existing.id,
-          employeeId: values.employeeId,
-          incomeId: values.incomeId,
-          encodeDate: values.encodeDate,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          frequencyOfPayment: values.frequencyOfPayment,
-          amount: values.amount,
-          isProrated: values.isProrated,
-          remarks: values.remarks ?? "",
           schedule: schedule.map((r) => ({
             id: r.id,
             date: r.date,
             amount: r.amount,
+            periodStart: r.periodStart,
+            periodEnd: r.periodEnd,
           })),
         },
-        {
-          onSuccess: () => {
-            message.success("Saved.");
-            navigate({ to: "/applications/other-income" });
-          },
-          onError: () => message.error("Failed to save."),
-        },
+        callbacks,
       );
     } else {
       create(
         {
-          employeeId: values.employeeId,
-          incomeId: values.incomeId,
-          encodeDate: values.encodeDate,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          frequencyOfPayment: values.frequencyOfPayment,
-          amount: values.amount,
-          isProrated: values.isProrated,
-          remarks: values.remarks ?? "",
+          ...common,
           schedule: schedule.map((r) => ({
             date: r.date,
             amount: r.amount,
+            periodStart: r.periodStart,
+            periodEnd: r.periodEnd,
           })),
         },
-        {
-          onSuccess: () => {
-            message.success("Saved.");
-            navigate({ to: "/applications/other-income" });
-          },
-          onError: () => message.error("Failed to save."),
-        },
+        callbacks,
       );
     }
   };
 
   const isSaving = creating || updating;
+  const hasStatus = schedule.some((r) => !!r.id);
+  const totalLabel = isAttendanceMode ? "Maximum" : "Total";
 
   return (
     <div className="content-page">
@@ -378,7 +519,7 @@ export default function OtherIncomeApplicationDetail() {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={6}>
+            <Col xs={24} md={8}>
               <Form.Item
                 label="Encode Date"
                 validateStatus={errors.encodeDate ? "error" : ""}
@@ -390,7 +531,7 @@ export default function OtherIncomeApplicationDetail() {
                   control={control}
                   render={({ field }) => (
                     <DatePicker
-                      style={{ width: "100%" }}
+                      className="w-full"
                       value={field.value ? dayjs(field.value) : null}
                       onChange={(d) =>
                         field.onChange(d?.format("YYYY-MM-DD") ?? "")
@@ -400,7 +541,7 @@ export default function OtherIncomeApplicationDetail() {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={6}>
+            <Col xs={24} md={8}>
               <Form.Item
                 label="Start Date"
                 validateStatus={errors.startDate ? "error" : ""}
@@ -412,7 +553,7 @@ export default function OtherIncomeApplicationDetail() {
                   control={control}
                   render={({ field }) => (
                     <DatePicker
-                      style={{ width: "100%" }}
+                      className="w-full"
                       value={field.value ? dayjs(field.value) : null}
                       onChange={(d) =>
                         field.onChange(d?.format("YYYY-MM-DD") ?? "")
@@ -422,7 +563,7 @@ export default function OtherIncomeApplicationDetail() {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={6}>
+            <Col xs={24} md={8}>
               <Form.Item
                 label="End Date"
                 validateStatus={errors.endDate ? "error" : ""}
@@ -434,7 +575,7 @@ export default function OtherIncomeApplicationDetail() {
                   control={control}
                   render={({ field }) => (
                     <DatePicker
-                      style={{ width: "100%" }}
+                      className="w-full"
                       value={field.value ? dayjs(field.value) : null}
                       onChange={(d) =>
                         field.onChange(d?.format("YYYY-MM-DD") ?? "")
@@ -444,7 +585,22 @@ export default function OtherIncomeApplicationDetail() {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={6}>
+          </Row>
+        </Card>
+
+        <Card title="How is it given?" className="mb-4">
+          <PayModeSelector
+            value={values.payMode}
+            onChange={(mode) =>
+              handlePayModeChange(
+                mode as OtherIncomeApplicationFormValues["payMode"],
+              )
+            }
+            options={PAY_MODE_OPTIONS}
+          />
+
+          <div className="mt-5 grid grid-cols-1 gap-x-4 md:grid-cols-3">
+            {values.payMode !== "PerQualifyingDay" && (
               <Form.Item
                 label="Frequency"
                 validateStatus={errors.frequencyOfPayment ? "error" : ""}
@@ -455,118 +611,117 @@ export default function OtherIncomeApplicationDetail() {
                   name="frequencyOfPayment"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} options={FREQUENCY_OPTIONS} />
-                  )}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                label="Amount per Period"
-                validateStatus={errors.amount ? "error" : ""}
-                help={errors.amount?.message}
-                required
-              >
-                <Controller
-                  name="amount"
-                  control={control}
-                  render={({ field }) => (
-                    <InputNumber
+                    <Select
                       {...field}
-                      min={0}
-                      precision={2}
-                      style={{ width: "100%" }}
-                      addonBefore="₱"
+                      options={
+                        isPeriodic
+                          ? PERIODIC_FREQUENCY_OPTIONS
+                          : FREQUENCY_OPTIONS
+                      }
                     />
                   )}
                 />
               </Form.Item>
-            </Col>
-            <Col xs={24} md={8} className="flex items-end pb-6">
+            )}
+            <Form.Item
+              label={
+                values.payMode === "PerQualifyingDay"
+                  ? "Amount per Day"
+                  : "Amount per Period"
+              }
+              validateStatus={errors.amount ? "error" : ""}
+              help={errors.amount?.message}
+              required
+            >
               <Controller
-                name="isProrated"
+                name="amount"
                 control={control}
                 render={({ field }) => (
-                  <Checkbox
-                    checked={field.value}
-                    onChange={(e) => field.onChange(e.target.checked)}
-                  >
-                    Prorated
-                    <Tooltip
-                      title="Check this if the income should be spread out a little at a time for government contribution purposes, instead of counted all at once in the month it was given. For example, a one-time signing bonus can be divided across several months rather than treated as a big spike in just one. This doesn't change the amounts in the payment schedule below."
-                      overlayStyle={{ maxWidth: 320 }}
-                    >
-                      <InfoCircleOutlined
-                        style={{
-                          color: "#8c8c8c",
-                          fontSize: 13,
-                          marginLeft: 4,
-                        }}
-                      />
-                    </Tooltip>
-                  </Checkbox>
+                  <InputNumber
+                    {...field}
+                    min={0}
+                    precision={2}
+                    className="w-full!"
+                    addonBefore="₱"
+                  />
                 )}
               />
-            </Col>
-            <Col xs={24} md={8} className="flex items-end pb-6">
-              <Button
-                icon={<SyncOutlined />}
-                onClick={regenerateSchedule}
-                style={{ width: "100%" }}
-              >
-                Generate Schedule
-              </Button>
-            </Col>
-            <Col xs={24}>
-              <Form.Item label="Remarks">
-                <Controller
-                  name="remarks"
-                  control={control}
-                  render={({ field }) => <Input.TextArea {...field} rows={2} />}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+            </Form.Item>
+          </div>
+
+          {isAttendanceMode && (
+            <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-white/5">
+              <AttendanceRuleFields
+                control={
+                  control as unknown as Control<AttendanceRuleFormValues>
+                }
+                errors={
+                  errors as unknown as FieldErrors<AttendanceRuleFormValues>
+                }
+                isPeriodic={isPeriodic}
+                requireAllDays={values.requireAllDays}
+              />
+            </div>
+          )}
+
+          <Alert type="info" showIcon className="mb-4" message={summary} />
+
+          <Form.Item label="Remarks">
+            <Controller
+              name="remarks"
+              control={control}
+              render={({ field }) => <Input.TextArea {...field} rows={2} />}
+            />
+          </Form.Item>
+
+          <div className="flex justify-end">
+            <Button icon={<SyncOutlined />} onClick={regenerateSchedule}>
+              Generate Schedule
+            </Button>
+          </div>
         </Card>
 
         {schedule.length > 0 && (
           <Card
             title={
               <span>
-                Payment Schedule
+                {isAttendanceMode ? "Maximum Schedule" : "Payment Schedule"}
                 <span className="ml-4 text-sm font-normal text-gray-500">
                   {schedule.length} payments · Total:{" "}
-                  <strong>
-                    ₱
-                    {(totalAmount ?? 0).toLocaleString("en-PH", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </strong>
+                  <strong>₱{formatAmount(totalAmount)}</strong>
                 </span>
               </span>
             }
           >
-            <div style={{ overflowX: "auto" }}>
+            {isAttendanceMode && (
+              <Alert
+                type="warning"
+                showIcon
+                className="mb-3"
+                message="This is the most the employee can earn. What is actually paid depends on attendance when payroll is generated; rows that don't qualify are skipped."
+              />
+            )}
+            <div className="overflow-x-auto">
               <Table
                 rowKey="index"
                 dataSource={schedule}
-                columns={scheduleColumns}
+                columns={scheduleColumns(isPeriodic, hasStatus)}
                 size="small"
                 pagination={false}
                 summary={(rows) => {
                   const tot = rows.reduce((s, r) => s + r.amount, 0);
                   return (
                     <Table.Summary.Row>
-                      <Table.Summary.Cell index={0} colSpan={2}>
-                        <strong>Total</strong>
+                      <Table.Summary.Cell
+                        index={0}
+                        colSpan={isPeriodic ? 3 : 2}
+                      >
+                        <strong>{totalLabel}</strong>
                       </Table.Summary.Cell>
-                      <Table.Summary.Cell index={2} align="right">
-                        <strong>
-                          {(tot ?? 0).toLocaleString("en-PH", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </strong>
+                      <Table.Summary.Cell index={1} align="right">
+                        <strong>{formatAmount(tot)}</strong>
                       </Table.Summary.Cell>
+                      {hasStatus && <Table.Summary.Cell index={2} />}
                     </Table.Summary.Row>
                   );
                 }}
@@ -577,8 +732,8 @@ export default function OtherIncomeApplicationDetail() {
 
         {schedule.length === 0 && (
           <Divider plain>
-            Fill in Start Date, End Date, Frequency and Amount, then click
-            "Generate Schedule"
+            Fill in Start Date, End Date, Amount and the options above, then
+            click "Generate Schedule"
           </Divider>
         )}
       </Form>

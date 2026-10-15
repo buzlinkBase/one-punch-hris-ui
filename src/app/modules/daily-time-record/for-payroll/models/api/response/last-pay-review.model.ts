@@ -20,7 +20,6 @@ export interface AvailableOtherIncome {
   date: string;
   amount: number;
   isTaxable: boolean;
-  isProrated: boolean;
   notes: string;
 }
 

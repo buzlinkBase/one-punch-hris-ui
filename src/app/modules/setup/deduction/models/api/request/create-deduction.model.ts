@@ -5,4 +5,5 @@ export interface CreateDeduction {
   amount?: number;
   status: string;
   allowEmployeeFiling: boolean;
+  allowAttendanceRules: boolean;
 }

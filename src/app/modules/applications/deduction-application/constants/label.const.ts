@@ -20,6 +20,40 @@ export const FREQUENCY_LABEL: Record<string, string> = {
   Monthly: "Monthly",
 };
 
+// Weekly and monthly are the only frequencies an attendance gate can cover.
+export const PERIODIC_FREQUENCY_OPTIONS = FREQUENCY_OPTIONS.filter((o) =>
+  ["Weekly", "Monthly"].includes(o.value),
+);
+
+export const PAY_MODE_OPTIONS = [
+  {
+    value: "FixedSchedule",
+    label: "Fixed schedule",
+    description: "Taken on set dates. No attendance condition.",
+  },
+  {
+    value: "PerQualifyingDay",
+    label: "Per qualifying day",
+    description:
+      "A daily amount, taken only for each day the employee meets the attendance rule.",
+  },
+  {
+    value: "PeriodicGated",
+    label: "Weekly / monthly with attendance",
+    description:
+      "One amount per week or month, taken only if the attendance rule is met in that period.",
+  },
+];
+
+export const PAY_MODE_LABEL: Record<string, string> = Object.fromEntries(
+  PAY_MODE_OPTIONS.map((o) => [o.value, o.label]),
+);
+
+export const ON_MISS_OPTIONS = [
+  { value: "Skip", label: "Skip it. Never deduct it." },
+  { value: "Defer", label: "Hold it back and deduct it in the next payroll." },
+];
+
 export const PERIODS_PER_YEAR: Record<string, number> = {
   Daily: 365,
   Weekly: 52,

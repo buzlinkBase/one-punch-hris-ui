@@ -5,6 +5,8 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
+import { EmployeeScopeFilters } from "../../components/employee-scope-filters/employee-scope-filters";
+import type { EmployeeScopeFilter } from "../../models/api/request/employee-scope-filter.model";
 import {
   BalanceAdjustModal,
   type BalanceAdjustSubmitValues,
@@ -52,7 +54,10 @@ export default function LeaveLedger() {
   const [year, setYear] = useState(dayjs().year());
   const [messageApi, contextHolder] = message.useMessage();
 
-  const { data = [], isLoading, refetch } = useLeaveLedger(year);
+  // Optional: nothing selected means every employee, as before.
+  const [scope, setScope] = useState<EmployeeScopeFilter>({});
+
+  const { data = [], isLoading, refetch } = useLeaveLedger(year, scope);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
   const leaveTypeFilter = useReportNameFilter(
     employeeFilter.filtered,
@@ -207,6 +212,7 @@ export default function LeaveLedger() {
                 value={leaveTypeFilter.selected}
                 onChange={leaveTypeFilter.setSelected}
               />
+              <EmployeeScopeFilters value={scope} onChange={setScope} />
             </div>
           </Form>
         }

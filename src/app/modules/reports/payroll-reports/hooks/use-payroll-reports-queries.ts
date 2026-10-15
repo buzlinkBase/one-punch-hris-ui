@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { payrollReportsApi } from "../services/payroll-reports.api";
 import type { CostSummaryGroupBy } from "../models/api/response/payroll-reports.model";
+import type { EmployeeScopeFilter } from "../models/api/request/employee-scope-filter.model";
 
 export function useSssRemittance(from: string, to: string) {
   return useQuery({
@@ -83,10 +84,10 @@ export function useAdjustCashBond() {
   });
 }
 
-export function useLeaveLedger(year: number) {
+export function useLeaveLedger(year: number, scope: EmployeeScopeFilter = {}) {
   return useQuery({
-    queryKey: ["payroll-reports", "leave-ledger", year],
-    queryFn: () => payrollReportsApi.leaveLedger(year),
+    queryKey: ["payroll-reports", "leave-ledger", year, scope],
+    queryFn: () => payrollReportsApi.leaveLedger(year, scope),
   });
 }
 

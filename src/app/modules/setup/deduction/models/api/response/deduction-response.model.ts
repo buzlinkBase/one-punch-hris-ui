@@ -6,4 +6,5 @@ export interface DeductionResponse {
   amount: number;
   status: string;
   allowEmployeeFiling: boolean;
+  allowAttendanceRules: boolean;
 }
