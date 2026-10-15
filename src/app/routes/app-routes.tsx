@@ -18,6 +18,7 @@ import AuthLayout from "@/app/layouts/auth-layout";
 import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
 import { communicationRoutes } from "./communication.routes";
+import { clientPortalRoutes } from "./client-portal.routes";
 import { ANALYTICS_PAGES, analyticsRoutes } from "./analytics.routes";
 import { authStorage } from "@/core/auth/auth-storage";
 import {
@@ -578,6 +579,20 @@ const communicationRoute = createRoute({
 const communicationChildRoutes = communicationRoutes.map((route) =>
   createRoute({
     getParentRoute: () => communicationRoute,
+    path: route.path,
+    component: withSuspense(route.component),
+  }),
+);
+
+const clientPortalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "client-portal",
+  component: MainLayout,
+});
+
+const clientPortalChildRoutes = clientPortalRoutes.map((route) =>
+  createRoute({
+    getParentRoute: () => clientPortalRoute,
     path: route.path,
     component: withSuspense(route.component),
   }),
@@ -1632,6 +1647,7 @@ const routeTree = rootRoute.addChildren([
   portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   communicationRoute.addChildren([...communicationChildRoutes]),
+  clientPortalRoute.addChildren([...clientPortalChildRoutes]),
   analyticsRoute.addChildren([analyticsIndexRoute, ...analyticsChildRoutes]),
   timekeepingRoute.addChildren([timekeepingIndexRoute]),
   uploadAttendanceRoute.addChildren([uploadAttendanceIndexRoute]),

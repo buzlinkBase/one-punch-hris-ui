@@ -5,6 +5,7 @@ export const API_PREFIX = {
   adms: import.meta.env.VITE_PREFIX_ADMS,
   tenants: import.meta.env.VITE_PREFIX_TENANTS,
   notifications: import.meta.env.VITE_PREFIX_NOTIFICATIONS,
+  clientPortal: import.meta.env.VITE_PREFIX_CLIENT_PORTAL,
 } as const;
 
 /** Builds `{prefix}/api/{version}/{resource}` for a module's service calls. */
