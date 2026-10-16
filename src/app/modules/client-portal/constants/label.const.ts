@@ -95,6 +95,9 @@ export const CLIENT_PORTAL_LABEL = {
   VERIFICATION_TITLE: "DTR Verification",
   VERIFICATION_SUBTITLE:
     "Verify and lock a period of time logs so the client can review and sign it off. Verified logs can no longer be changed.",
+  SECTIONS_APPLY: "Apply",
+  SECTIONS_RESET: "Reset",
+  SECTIONS_UPDATED: "Portal sections updated.",
 };
 
 /** Portal sections the agency can switch on per client (the Access section is always on). */

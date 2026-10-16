@@ -48,12 +48,19 @@ function ClientDrawer({
   const userAction = usePortalUserAction();
   const [inviteForm] = Form.useForm<{ fullName: string; email: string }>();
 
-  const toggle = async (key: string, enabled: boolean) => {
+  // Switches edit a draft (only what was changed, over the saved values); nothing is saved until Apply.
+  const [edits, setEdits] = useState<Record<string, boolean>>({});
+  const draft: Record<string, boolean> = { ...modules.data, ...edits };
+
+  const dirty = PORTAL_MODULE_OPTIONS.some(
+    (m) => !!draft[m.key] !== !!modules.data?.[m.key],
+  );
+
+  const applyModules = async () => {
     if (!client) return;
-    await setModules.mutateAsync({
-      id: client.id,
-      modules: { [key]: enabled },
-    });
+    await setModules.mutateAsync({ id: client.id, modules: draft });
+    setEdits({});
+    getNotify().success({ message: CLIENT_PORTAL_LABEL.SECTIONS_UPDATED });
   };
 
   const submitInvite = async (values: { fullName: string; email: string }) => {
@@ -166,13 +173,33 @@ function ClientDrawer({
           >
             <span>{m.label}</span>
             <Switch
-              checked={!!modules.data?.[m.key]}
-              loading={modules.isLoading || setModules.isPending}
-              onChange={(checked) => toggle(m.key, checked)}
+              checked={!!draft[m.key]}
+              disabled={modules.isLoading}
+              onChange={(checked) =>
+                setEdits((e) => ({ ...e, [m.key]: checked }))
+              }
             />
           </div>
         ))}
       </div>
+      <PermissionGate permission={CLIENT_PORTAL_PERMISSION.MANAGE}>
+        <div className="mb-6 flex justify-end gap-2">
+          <Button
+            disabled={!dirty || setModules.isPending}
+            onClick={() => setEdits({})}
+          >
+            {CLIENT_PORTAL_LABEL.SECTIONS_RESET}
+          </Button>
+          <Button
+            type="primary"
+            disabled={!dirty}
+            loading={setModules.isPending}
+            onClick={applyModules}
+          >
+            {CLIENT_PORTAL_LABEL.SECTIONS_APPLY}
+          </Button>
+        </div>
+      </PermissionGate>
 
       <Title level={5}>Portal users</Title>
       <Table<PortalClientUser>
