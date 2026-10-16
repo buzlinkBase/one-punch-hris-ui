@@ -1,22 +1,19 @@
 import { useState } from "react";
 import {
   Button,
-  Checkbox,
   Drawer,
   Form,
   Input,
-  Modal,
+  Popconfirm,
   Switch,
   Table,
   Tag,
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PlusOutlined } from "@ant-design/icons";
 import { getNotify } from "@/shared/utils/notify";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import {
-  useCreatePortalClient,
   useInvitePortalUser,
   usePortalClients,
   usePortalModules,
@@ -36,23 +33,6 @@ import type {
 } from "../../models/api/response/client-portal-response.model";
 
 const { Title, Text } = Typography;
-
-interface NewClientForm {
-  code: string;
-  name: string;
-  adminName: string;
-  adminEmail: string;
-  enabledModules: string[];
-}
-
-const DEFAULT_MODULES = [
-  "TimeLogs",
-  "Invoicing",
-  "Payments",
-  "Disputes",
-  "Reports",
-  "NoticeBoard",
-];
 
 function ClientDrawer({
   client,
@@ -113,8 +93,12 @@ function ClientDrawer({
           <Tag>Invited</Tag>
         ) : u.isActive ? (
           <Tag color="green">Active</Tag>
+        ) : u.revokedIndividually ? (
+          // Stays off when the client is switched back on.
+          <Tag color="red">Access revoked</Tag>
         ) : (
-          <Tag>Inactive</Tag>
+          // Only blocked because the whole client is off: switching the client on brings them back.
+          <Tag color="orange">Client suspended</Tag>
         ),
     },
     {
@@ -133,12 +117,29 @@ function ClientDrawer({
               Resend
             </Button>
           ) : (
-            <Button
-              size="small"
-              onClick={() => userAction.mutate({ kind: "reset", userId: u.id })}
-            >
-              Reset access
-            </Button>
+            <>
+              <Button
+                size="small"
+                onClick={() =>
+                  userAction.mutate({ kind: "reset", userId: u.id })
+                }
+              >
+                Reset access
+              </Button>
+              <Popconfirm
+                title="Remove this person from the client?"
+                description="They lose access to this client. Their other clients, if any, are not affected."
+                okText="Remove"
+                okButtonProps={{ danger: true }}
+                onConfirm={() =>
+                  userAction.mutate({ kind: "remove", userId: u.id })
+                }
+              >
+                <Button size="small" danger>
+                  Remove
+                </Button>
+              </Popconfirm>
+            </>
           )}
         </div>
       ),
@@ -212,35 +213,12 @@ function ClientDrawer({
 
 export default function ClientList() {
   const clients = usePortalClients();
-  const create = useCreatePortalClient();
   const setActive = useSetPortalClientActive();
-  const [createOpen, setCreateOpen] = useState(false);
   const [selected, setSelected] = useState<PortalClient | null>(null);
-  const [form] = Form.useForm<NewClientForm>();
-
-  const submit = async (values: NewClientForm) => {
-    await create.mutateAsync({
-      code: values.code,
-      name: values.name,
-      externalId: null,
-      adminEmail: values.adminEmail,
-      adminName: values.adminName,
-      enabledModules: values.enabledModules,
-    });
-    getNotify().success({ message: "Client created and invitation sent." });
-    setCreateOpen(false);
-    form.resetFields();
-  };
 
   const columns: ColumnsType<PortalClient> = [
     { title: "Code", dataIndex: "code", width: 120 },
     { title: "Name", dataIndex: "name" },
-    {
-      title: "Source",
-      key: "source",
-      render: (_, c) =>
-        c.externalId ? <Tag color="blue">Synced</Tag> : <Tag>Manual</Tag>,
-    },
     {
       title: "Portal access",
       key: "active",
@@ -269,22 +247,11 @@ export default function ClientList() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <Title level={3} className="m-0!">
-            {CLIENT_PORTAL_LABEL.CLIENTS_TITLE}
-          </Title>
-          <Text type="secondary">{CLIENT_PORTAL_LABEL.CLIENTS_SUBTITLE}</Text>
-        </div>
-        <PermissionGate permission={CLIENT_PORTAL_PERMISSION.MANAGE}>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateOpen(true)}
-          >
-            New client
-          </Button>
-        </PermissionGate>
+      <div>
+        <Title level={3} className="m-0!">
+          {CLIENT_PORTAL_LABEL.CLIENTS_TITLE}
+        </Title>
+        <Text type="secondary">{CLIENT_PORTAL_LABEL.CLIENTS_SUBTITLE}</Text>
       </div>
 
       <Table<PortalClient>
@@ -297,62 +264,6 @@ export default function ClientList() {
       />
 
       <ClientDrawer client={selected} onClose={() => setSelected(null)} />
-
-      <Modal
-        title="New portal client"
-        open={createOpen}
-        onCancel={() => setCreateOpen(false)}
-        onOk={() => form.submit()}
-        okText="Create and invite"
-        confirmLoading={create.isPending}
-        destroyOnHidden
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={submit}
-          initialValues={{ enabledModules: DEFAULT_MODULES }}
-        >
-          <Form.Item
-            label="Code"
-            name="code"
-            rules={[{ required: true, message: "Enter a short code." }]}
-          >
-            <Input maxLength={40} />
-          </Form.Item>
-          <Form.Item
-            label="Company name"
-            name="name"
-            rules={[{ required: true, message: "Enter the company name." }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Administrator name"
-            name="adminName"
-            rules={[{ required: true, message: "Enter a name." }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Administrator email"
-            name="adminEmail"
-            rules={[
-              { required: true, type: "email", message: "Enter an email." },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item label="Portal sections" name="enabledModules">
-            <Checkbox.Group
-              options={PORTAL_MODULE_OPTIONS.map((m) => ({
-                value: m.key,
-                label: m.label,
-              }))}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 }

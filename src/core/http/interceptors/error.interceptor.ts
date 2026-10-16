@@ -5,6 +5,7 @@ import type {
   ProblemDetails,
 } from "@/shared/types/api-response.model";
 import { useConnectionStore } from "@/core/stores/connection.store";
+import { serviceKeyOf } from "../service-registry";
 import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
 import { queryClient } from "@/core/query-client";
 import { SUBSCRIPTION_PROBLEM_TYPES } from "@/shared/constants/entitlement-keys.const";
@@ -28,14 +29,19 @@ function isConnectivityFailure(error: AxiosError): boolean {
 export function applyErrorInterceptor(instance: AxiosInstance): void {
   instance.interceptors.response.use(
     (response) => {
-      useConnectionStore.getState().setServerUnreachable(false);
+      useConnectionStore
+        .getState()
+        .markReachable(serviceKeyOf(response.config.url));
       return response;
     },
     (error: AxiosError<ErrorResponse>) => {
+      const service = serviceKeyOf(error.config?.url);
       if (isConnectivityFailure(error)) {
-        useConnectionStore.getState().setServerUnreachable(true);
+        useConnectionStore.getState().markUnreachable(service);
         return Promise.reject(error);
       }
+      // Any answer at all, even a 4xx/5xx, means that service is reachable again.
+      if (error.response) useConnectionStore.getState().markReachable(service);
 
       // A subscription refusal (feature not in the plan, limit reached, read-only, locked): the
       // cached entitlements are evidently stale, and the user needs an upgrade prompt rather

@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { UserLinkResponse } from "../models/api/response/user-link-response.model";
-import type { UserResponse } from "../models/api/response/user-response.model";
-import { EMPTY_GUID, classifyUsers } from "./classify-users";
+import type {
+  ClientUserResponse,
+  UserResponse,
+} from "../models/api/response/user-response.model";
+import {
+  EMPTY_GUID,
+  classifyUsers,
+  mergeClientUsers,
+  portalClientRow,
+} from "./classify-users";
 
 const member = (overrides: Partial<UserResponse>): UserResponse => ({
   id: "m-1",
@@ -80,5 +88,84 @@ describe("classifyUsers", () => {
     const [row] = classifyUsers([member({ roles: ["Admin"] })], []);
 
     expect(row.kind).toBe("Other");
+  });
+});
+
+const portalUser = (
+  overrides: Partial<ClientUserResponse>,
+): ClientUserResponse => ({
+  clientEntityId: "c-1",
+  clientName: "Acme Corp",
+  membershipId: "pm-1",
+  userId: "u-9",
+  fullName: "Portal Person",
+  email: "portal@acme.com",
+  status: "Active",
+  ownStatus: "Active",
+  roles: [{ id: "r-1", name: "Client Admin" }],
+  ...overrides,
+});
+
+describe("portalClientRow", () => {
+  it("shows a portal user as a client row tied to its client", () => {
+    const row = portalClientRow(portalUser({}));
+
+    expect(row).toMatchObject({
+      kind: "Client",
+      email: "portal@acme.com",
+      roles: ["Client Admin"],
+      status: "Active",
+      link: { clientId: "c-1", clientName: "Acme Corp" },
+      portal: { clientEntityId: "c-1", membershipId: "pm-1" },
+    });
+  });
+
+  it("gives one person in two clients two distinct rows", () => {
+    const first = portalClientRow(portalUser({ clientEntityId: "c-1" }));
+    const second = portalClientRow(portalUser({ clientEntityId: "c-2" }));
+
+    expect(first.id).not.toBe(second.id);
+  });
+});
+
+describe("mergeClientUsers", () => {
+  const staff = classifyUsers([member({ id: "m-1", userId: "u-1" })], []);
+
+  it("returns the rows untouched when there are no portal users", () => {
+    expect(mergeClientUsers(staff, [])).toBe(staff);
+  });
+
+  it("adds the portal users after the company's own rows", () => {
+    const merged = mergeClientUsers(staff, [portalUser({})]);
+
+    expect(merged.map((row) => row.kind)).toEqual(["Other", "Client"]);
+  });
+
+  it("shows an older client login once, as the portal user", () => {
+    const legacy = classifyUsers(
+      [member({ id: "m-2", userId: "u-9", roles: ["Client"] })],
+      [
+        link({
+          userId: "u-9",
+          type: "Client",
+          clientId: "c-1",
+          clientName: "Acme Corp",
+        }),
+      ],
+    );
+
+    const merged = mergeClientUsers(legacy, [portalUser({})]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].portal?.membershipId).toBe("pm-1");
+  });
+
+  it("keeps an older client login for a different client", () => {
+    const legacy = classifyUsers(
+      [member({ id: "m-2", userId: "u-9", roles: ["Client"] })],
+      [link({ userId: "u-9", type: "Client", clientId: "c-2" })],
+    );
+
+    expect(mergeClientUsers(legacy, [portalUser({})])).toHaveLength(2);
   });
 });

@@ -42,6 +42,12 @@ export function resolveInviteChipStatus(
     );
   }
 
+  // Client logins are invited through the client portal, which refuses anyone who already belongs
+  // (reported per email after sending); there's nothing in the HRIS to pre-check them against.
+  if (entityType === "Client") {
+    return { tone: "ready", message: "Ready to invite", blocked: false };
+  }
+
   const check = lookup?.checks.find((c) => c.email === email);
   const match = lookup?.matches.find((m) => m.email === email);
   if (!check || !match) return blocked("checking", "Checking…");

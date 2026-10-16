@@ -85,7 +85,7 @@ export const CLIENT_PORTAL_PATH = {
 export const CLIENT_PORTAL_LABEL = {
   CLIENTS_TITLE: "Portal Clients",
   CLIENTS_SUBTITLE:
-    "Client companies that can sign in to the client portal. Switch on the sections each one may use and invite its first administrator.",
+    "Client companies come from the HRIS client list and appear here automatically. Switch a client's portal access on or off (every user under it follows) and choose the sections each one may use. Invite a client's first administrator from Security > Users.",
   INTEGRATIONS_TITLE: "Integrations",
   INTEGRATIONS_SUBTITLE:
     "Systems allowed to push time records and invoices into the client portal. Each one signs in with its own API key.",

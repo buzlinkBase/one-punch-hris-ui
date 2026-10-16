@@ -11,6 +11,7 @@ export const USER_LABEL = {
   DEPARTMENT: "Department",
   CLIENT: "Client",
   ALL_CLIENTS: "All clients",
+  EDIT_IN_PORTAL: "Roles are managed in Client Portal > Portal Clients",
   CREATE_TITLE: "Create User",
   EDIT_TITLE: "Edit User",
 };

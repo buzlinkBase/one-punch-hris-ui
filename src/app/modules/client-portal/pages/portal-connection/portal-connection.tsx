@@ -14,6 +14,7 @@ import { getNotify } from "@/shared/utils/notify";
 import {
   usePortalConnection,
   useSavePortalConnection,
+  useSendAllPortalClients,
 } from "../../hooks/use-client-portal-queries";
 import { CLIENT_PORTAL_LABEL } from "../../constants/label.const";
 
@@ -28,6 +29,7 @@ interface ConnectionForm {
 export default function PortalConnection() {
   const connection = usePortalConnection();
   const save = useSavePortalConnection();
+  const sendAll = useSendAllPortalClients();
   const [form] = Form.useForm<ConnectionForm>();
 
   useEffect(() => {
@@ -47,6 +49,13 @@ export default function PortalConnection() {
       apiKey: values.apiKey?.trim() ? values.apiKey.trim() : null,
     });
     getNotify().success({ message: "Connection saved." });
+  };
+
+  const sendAllClients = async () => {
+    const count = await sendAll.mutateAsync();
+    getNotify().success({
+      message: `Sent ${count} ${count === 1 ? "client" : "clients"} to the client portal.`,
+    });
   };
 
   const last = connection.data?.lastSync;
@@ -91,6 +100,25 @@ export default function PortalConnection() {
             Save
           </Button>
         </Form>
+      </Card>
+
+      <Card title="Clients" loading={connection.isLoading}>
+        <div className="flex flex-col gap-3">
+          <Text type="secondary">
+            Clients are sent to the portal when they are created or changed.
+            Send them all once after switching the connection on, or whenever
+            the portal was unavailable.
+          </Text>
+          <div>
+            <Button
+              onClick={sendAllClients}
+              loading={sendAll.isPending}
+              disabled={!connection.data?.enabled}
+            >
+              Send all clients
+            </Button>
+          </div>
+        </div>
       </Card>
 
       <Card title="Last send" loading={connection.isLoading}>

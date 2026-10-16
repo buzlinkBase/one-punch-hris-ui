@@ -2,7 +2,6 @@ import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type {
   AllocationRequest,
-  CreateClientRequest,
   GenerateInvoiceRequest,
   InviteClientAdminRequest,
   PortalConnectionRequest,
@@ -68,12 +67,13 @@ export const clientPortalApi = {
     return httpClient.postUnwrapped(connection(`sync/${dtrBatchId}`));
   },
 
-  listClients(): Promise<PortalClient[]> {
-    return httpClient.getUnwrapped(base("clients"));
+  /** Sends every HRIS client to the portal; answers how many were queued. */
+  sendAllClients(): Promise<number> {
+    return httpClient.postUnwrapped(connection("sync-clients"));
   },
 
-  createClient(request: CreateClientRequest): Promise<PortalClient> {
-    return httpClient.postUnwrapped(base("clients"), request);
+  listClients(): Promise<PortalClient[]> {
+    return httpClient.getUnwrapped(base("clients"));
   },
 
   setClientActive(id: string, active: boolean): Promise<PortalClient> {
@@ -99,17 +99,23 @@ export const clientPortalApi = {
     return httpClient.getUnwrapped(base("users"), { params: { clientId } });
   },
 
+  /** `clientId` is a portal client; leave it null when `request.hrisClient` names the client instead. */
   inviteUser(
-    clientId: string,
+    clientId: string | null,
     request: InviteClientAdminRequest,
   ): Promise<PortalClientUser> {
     return httpClient.postUnwrapped(base("users/invite"), request, {
-      params: { clientId },
+      params: clientId ? { clientId } : undefined,
     });
   },
 
   resendInvite(userId: string): Promise<void> {
     return httpClient.postUnwrapped(base(`users/${userId}/resend-invite`));
+  },
+
+  /** Takes someone who has accepted out of the client altogether. */
+  removeUser(userId: string): Promise<void> {
+    return httpClient.delete(base(`users/${userId}`));
   },
 
   resetAccess(userId: string): Promise<void> {

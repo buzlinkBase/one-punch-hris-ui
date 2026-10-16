@@ -1,10 +1,8 @@
-export interface CreateClientRequest {
+/** A client as HRIS keeps it; the portal's copy carries this same id. */
+export interface HrisClientRef {
+  id: string;
   code: string;
   name: string;
-  externalId: string | null;
-  adminEmail: string;
-  adminName: string;
-  enabledModules: string[] | null;
 }
 
 export interface InviteClientAdminRequest {
@@ -13,6 +11,8 @@ export interface InviteClientAdminRequest {
   roleIds: string[];
   siteIds: string[];
   makeClientAdmin: boolean;
+  /** Invite for an HRIS client the portal may not have yet: the portal creates it first. */
+  hrisClient?: HrisClientRef;
 }
 
 export interface PortalConnectionRequest {

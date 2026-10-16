@@ -4,11 +4,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { problemDetail } from "@/core/auth/guard-error";
+import type { BatchInvitationResult } from "@/app/modules/security/users/models/api/response/batch-invitation-response.model";
 import { clientPortalApi } from "../services/client-portal.api";
 import type {
   AllocationRequest,
-  CreateClientRequest,
   GenerateInvoiceRequest,
+  HrisClientRef,
   InviteClientAdminRequest,
   PortalConnectionRequest,
   RateRequest,
@@ -501,6 +503,17 @@ export function useSavePortalConnection() {
   });
 }
 
+/** Sends every HRIS client to the portal (the portal makes or updates its copy of each by id). */
+export function useSendAllPortalClients() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => clientPortalApi.sendAllClients(),
+    // The portal creates its copies a moment later, so the list is stale either way.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: [...KEY, "clients"] }),
+  });
+}
+
 export function usePortalClients() {
   return useQuery({
     queryKey: [...KEY, "clients"],
@@ -550,16 +563,6 @@ export function usePortalFlags(
   });
 }
 
-export function useCreatePortalClient() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (request: CreateClientRequest) =>
-      clientPortalApi.createClient(request),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: [...KEY, "clients"] }),
-  });
-}
-
 export function useSetPortalClientActive() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -590,6 +593,45 @@ export function useInvitePortalUser() {
   });
 }
 
+/**
+ * Invites several people to one HRIS client as Client Admins, one request each so a refusal
+ * (already a member, a pending invite, ...) only fails that email and is reported with its reason.
+ * The portal creates its copy of the client (same id) on the first invite, so nothing has to be
+ * set up in the portal beforehand.
+ */
+export function useInvitePortalUsers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: {
+      hrisClient: HrisClientRef;
+      recipients: { email: string; fullName: string }[];
+    }): Promise<BatchInvitationResult> => {
+      const result: BatchInvitationResult = { sent: 0, failed: [] };
+      for (const { email, fullName } of v.recipients) {
+        try {
+          await clientPortalApi.inviteUser(null, {
+            email,
+            fullName,
+            roleIds: [],
+            siteIds: [],
+            makeClientAdmin: true,
+            hrisClient: v.hrisClient,
+          });
+          result.sent += 1;
+        } catch (err) {
+          result.failed.push({
+            email,
+            reason: problemDetail(err, "The invitation could not be sent."),
+          });
+        }
+      }
+      return result;
+    },
+    // The first invite may have created the portal's client, so its list is stale too.
+    onSettled: () => queryClient.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
 export function usePortalUserAction() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -597,10 +639,12 @@ export function usePortalUserAction() {
       v:
         | { kind: "resend"; userId: string }
         | { kind: "reset"; userId: string }
+        | { kind: "remove"; userId: string }
         | { kind: "active"; userId: string; active: boolean },
     ): Promise<void> => {
       if (v.kind === "resend") return clientPortalApi.resendInvite(v.userId);
       if (v.kind === "reset") return clientPortalApi.resetAccess(v.userId);
+      if (v.kind === "remove") return clientPortalApi.removeUser(v.userId);
       await clientPortalApi.setUserActive(v.userId, v.active);
     },
     onSuccess: () =>

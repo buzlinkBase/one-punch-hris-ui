@@ -110,7 +110,7 @@ interface Props {
   onSelectionChange?: (ids: string[]) => void;
   onToggleStatus?: (record: UserRow, status: string) => void;
   togglingId?: string | null;
-  onDelete?: (id: string) => void;
+  onDelete?: (record: UserRow) => void;
 }
 
 export default function UserTable({
@@ -297,11 +297,22 @@ export default function UserTable({
       width: 120,
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/security/users/${record.id}` })}
-          />
+          <Tooltip
+            title={record.portal ? USER_LABEL.EDIT_IN_PORTAL : undefined}
+          >
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              aria-label={record.portal ? USER_LABEL.EDIT_IN_PORTAL : "Edit"}
+              onClick={() =>
+                navigate({
+                  to: record.portal
+                    ? "/client-portal/clients"
+                    : `/security/users/${record.id}`,
+                })
+              }
+            />
+          </Tooltip>
           {canViewAudit && hasAccount(record) && (
             <Tooltip title={AUDIT_LABEL.VIEW_ACTIVITY}>
               <Button
@@ -322,9 +333,17 @@ export default function UserTable({
           )}
           {onDelete && !isOwner(record) && (
             <Popconfirm
-              title="Remove this member from the company?"
-              description="This will remove their membership and access from this company."
-              onConfirm={() => onDelete(record.id)}
+              title={
+                record.portal
+                  ? "Remove this user from the client?"
+                  : "Remove this member from the company?"
+              }
+              description={
+                record.portal
+                  ? "They will lose access to this client in the client portal."
+                  : "This will remove their membership and access from this company."
+              }
+              onConfirm={() => onDelete(record)}
               okText="Remove"
               cancelText="Cancel"
             >

@@ -31,9 +31,12 @@ export interface PortalClientUser {
   id: string;
   email: string;
   fullName: string;
+  /** Can use the client right now: false for someone revoked on their own, and for everyone while the client is off. */
   isActive: boolean;
   isClientAdmin: boolean;
   invitePending: boolean;
+  /** Switched off on their own, so they stay off when the client comes back; false when only the client is off. */
+  revokedIndividually: boolean;
   lastLoginAt: string | null;
 }
 
