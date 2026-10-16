@@ -1752,7 +1752,7 @@ export default function EmployeeDetail() {
                                   : (field.value ?? undefined)
                               }
                               onChange={(v) => {
-                                if (v === "custom") {
+                                if (typeof v !== "number") {
                                   setCustomDivisorSelected(true);
                                   return;
                                 }
