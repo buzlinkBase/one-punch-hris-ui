@@ -474,6 +474,13 @@ export default function EmployeeDetail() {
     name: "isSpecialNonWorkingIncluded",
   });
 
+  // Monthly Total Days only: "Custom..." lets the user type any divisor instead of a preset.
+  const [customDivisorSelected, setCustomDivisorSelected] = useState(false);
+  const isCustomDivisor =
+    customDivisorSelected ||
+    (watchedFactorDays != null &&
+      !MONTHLY_TOTAL_DAYS_OPTIONS.some((o) => o.value === watchedFactorDays));
+
   // Applies the Rest Day/Regular Holiday/Special Non-Working conventions baked into a
   // Factor Days denominator to the employee's own 3 inclusion toggles. Reused by the
   // Factor Days selects.
@@ -1628,10 +1635,16 @@ export default function EmployeeDetail() {
                                   }
                                 } else if (newMode === "MonthlyTotalDays") {
                                   const isValid =
+                                    watchedFactorDays != null &&
+                                    watchedFactorDays > 0 &&
+                                    !FACTOR_DAYS_OPTIONS.some(
+                                      (o) => o.value === watchedFactorDays,
+                                    );
+                                  const isPreset =
                                     MONTHLY_TOTAL_DAYS_OPTIONS.some(
                                       (o) => o.value === watchedFactorDays,
                                     );
-                                  if (!isValid) {
+                                  if (!isValid && !isPreset) {
                                     setValue("factorDays", 26);
                                     applyFactorDaysBooleanDefaults(26);
                                   }
@@ -1733,26 +1746,58 @@ export default function EmployeeDetail() {
                           render={({ field }) => (
                             <Select
                               {...field}
-                              value={field.value ?? undefined}
+                              value={
+                                isCustomDivisor
+                                  ? "custom"
+                                  : (field.value ?? undefined)
+                              }
                               onChange={(v) => {
+                                if (v === "custom") {
+                                  setCustomDivisorSelected(true);
+                                  return;
+                                }
+                                setCustomDivisorSelected(false);
                                 field.onChange(v);
                                 applyFactorDaysBooleanDefaults(v);
                               }}
-                              options={MONTHLY_TOTAL_DAYS_OPTIONS.map((o) => ({
-                                value: o.value,
-                                label: o.label,
-                              }))}
+                              options={[
+                                ...MONTHLY_TOTAL_DAYS_OPTIONS.map((o) => ({
+                                  value: o.value,
+                                  label: o.label,
+                                })),
+                                { value: "custom", label: "Custom..." },
+                              ]}
                               placeholder="Select monthly divisor"
                             />
                           )}
                         />
+                        {isCustomDivisor && (
+                          <Controller
+                            name="factorDays"
+                            control={control}
+                            render={({ field }) => (
+                              <InputNumber
+                                className="w-full mt-2"
+                                min={0.01}
+                                step={0.01}
+                                precision={4}
+                                placeholder="Enter custom divisor"
+                                value={field.value ?? null}
+                                onChange={(v) => {
+                                  field.onChange(v);
+                                  applyFactorDaysBooleanDefaults(v);
+                                }}
+                              />
+                            )}
+                          />
+                        )}
                         {watchedFactorDays && (
                           <Text type="secondary" className="text-xs mt-1 block">
-                            {
-                              MONTHLY_TOTAL_DAYS_OPTIONS.find(
-                                (o) => o.value === watchedFactorDays,
-                              )?.description
-                            }
+                            {isCustomDivisor
+                              ? `Daily Rate = Monthly Rate / ${watchedFactorDays}`
+                              : MONTHLY_TOTAL_DAYS_OPTIONS.find(
+                                  (o) => o.value === watchedFactorDays,
+                                )?.description}
                           </Text>
                         )}
                       </Form.Item>

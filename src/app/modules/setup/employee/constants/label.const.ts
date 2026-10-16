@@ -178,6 +178,11 @@ export const FACTOR_DAYS_DEFAULT_FLAGS: Record<number, FactorDaysFlags> = {
     isRegularHolidayIncluded: false,
     isSpecialNonWorkingIncluded: false,
   },
+  24: {
+    isRestDayPaid: false,
+    isRegularHolidayIncluded: false,
+    isSpecialNonWorkingIncluded: false,
+  },
   22: {
     isRestDayPaid: false,
     isRegularHolidayIncluded: false,
@@ -301,6 +306,11 @@ export const MONTHLY_TOTAL_DAYS_OPTIONS: FactorDaysOption[] = [
   {
     value: 26,
     label: "26 Days",
+    description: "Fixed monthly denominator — average working days per month.",
+  },
+  {
+    value: 24,
+    label: "24 Days",
     description: "Fixed monthly denominator — average working days per month.",
   },
   {
