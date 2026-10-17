@@ -107,7 +107,7 @@ export default function BatchInviteModal({
   const { mutate: sendBatch, isPending: sending } = useSendBatchInvitations();
 
   const debouncedEmails = useDebouncedValue(emails, 300);
-  const { data: lookup } = useBatchInviteLookup(
+  const { data: lookup, isPlaceholderData: lookupStale } = useBatchInviteLookup(
     debouncedEmails.filter(isValidEmail),
     entityType,
     clientId,
@@ -128,6 +128,7 @@ export default function BatchInviteModal({
   const canSend =
     ready.length > 0 &&
     blockedCount === 0 &&
+    !lookupStale &&
     Boolean(role) &&
     (entityType === "Employee" || Boolean(clientId)) &&
     !sending;

@@ -1,6 +1,5 @@
 import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
-import type { DtrBatchModel } from "../models/api/response/dtr-batch-response.model";
 import type { PayrollRunRequest } from "../models/api/request/payroll-run-request.model";
 import type { GenerateThirteenthMonthRequest } from "../models/api/request/generate-thirteenth-month-request.model";
 import type { GenerateLastPayRequest } from "../models/api/request/generate-last-pay-request.model";
@@ -20,13 +19,6 @@ const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
 const PAYROLL_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrolls");
 
 export const forPayrollApi = {
-  getBatches(from?: string, to?: string): Promise<DtrBatchModel[]> {
-    return httpClient.getUnwrapped<DtrBatchModel[]>(
-      `${DTR_ENDPOINT}/batch-codes`,
-      { params: { from, to } },
-    );
-  },
-
   postBatch(batchCode: string): Promise<void> {
     return httpClient.post<void>(`${DTR_ENDPOINT}/post`, null, {
       params: { batchCode },

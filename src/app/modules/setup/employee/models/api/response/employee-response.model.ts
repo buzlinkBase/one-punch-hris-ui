@@ -179,6 +179,10 @@ export interface EmployeeResponse {
    * company-wide Fixed Salary Defaults (Company Policy) instead. */
   useEmployeeOverride?: boolean;
   dob?: string | null;
+  /** Employee-controlled opt-in (portal): coworkers are told it's their birthday. */
+  shareBirthday?: boolean;
+  /** Employee-controlled opt-in (portal): show email/contact in the coworker directory. */
+  shareContact?: boolean;
   bloodType?: string;
   modeOfPayment: ModeOfPayment;
   salaryType: SalaryType;

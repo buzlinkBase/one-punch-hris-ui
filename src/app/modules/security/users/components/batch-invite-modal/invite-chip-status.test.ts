@@ -78,6 +78,15 @@ describe("resolveInviteChipStatus", () => {
     ).toBe(true);
   });
 
+  it("is not ready on an employee invite from a leftover client lookup", () => {
+    const status = resolveInviteChipStatus(
+      "jane@site.com",
+      "Employee",
+      lookup({}, { status: "Ok" }),
+    );
+    expect(status).toMatchObject({ tone: "checking", blocked: true });
+  });
+
   it("is ready with the matched employee", () => {
     const status = resolveInviteChipStatus(
       "jane@site.com",

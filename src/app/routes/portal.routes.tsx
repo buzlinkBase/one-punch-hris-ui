@@ -14,6 +14,9 @@ const PortalAnnouncementReader = lazy(
   () =>
     import("@/app/modules/portal/announcements/pages/portal-announcement-reader"),
 );
+const PortalCoworkers = lazy(
+  () => import("@/app/modules/portal/coworkers/pages/portal-coworkers"),
+);
 const PortalPayslips = lazy(
   () => import("@/app/modules/portal/payslips/pages/portal-payslips"),
 );
@@ -84,6 +87,7 @@ export const portalRoutes: SetupRouteConfig[] = [
   { path: "profile/edit", component: PortalProfileEdit },
   { path: "announcements", component: PortalAnnouncements },
   { path: "announcements/$id", component: PortalAnnouncementReader },
+  { path: "coworkers", component: PortalCoworkers },
   { path: "payslips", component: PortalPayslips },
   { path: "dtr", component: PortalDtr },
   { path: "incomplete-punches", component: PortalIncompletePunches },

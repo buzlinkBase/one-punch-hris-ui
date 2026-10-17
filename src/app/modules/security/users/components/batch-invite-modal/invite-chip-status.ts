@@ -87,6 +87,15 @@ export function resolveInviteChipStatus(
     return blocked("conflict", "No employee record has this email.");
   }
 
+  // An employee invite is only ready once the email is matched to an employee. Anything else here
+  // is a lookup left over from the other kind of invite, which hasn't been replaced yet.
+  if (
+    entityType === "Employee" &&
+    (match.status !== "Matched" || !match.employeeId)
+  ) {
+    return blocked("checking", "Checking…");
+  }
+
   return {
     tone: "ready",
     message: match.name ? `Ready to invite ${match.name}` : "Ready to invite",

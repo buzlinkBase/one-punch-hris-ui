@@ -23,13 +23,6 @@ export function usePayrollReadiness(from?: string, to?: string) {
   });
 }
 
-export function useDtrBatches(from?: string, to?: string) {
-  return useQuery({
-    queryKey: [...BATCH_KEY, from, to],
-    queryFn: () => forPayrollApi.getBatches(from, to),
-  });
-}
-
 export function usePostDtrBatch() {
   const queryClient = useQueryClient();
   return useMutation({

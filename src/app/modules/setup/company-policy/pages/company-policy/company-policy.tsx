@@ -71,6 +71,10 @@ function GeneralPolicyTab() {
       requiredTakehomePercentage: 10,
       otNdCalculationMethod: DEFAULT_OT_ND_CALCULATION_METHOD,
       hourlyRateDivisor: DEFAULT_HOURLY_RATE_DIVISOR,
+      coworkerShowNewHires: false,
+      coworkerShowAnniversaries: false,
+      coworkerShowWhosOut: false,
+      coworkerShowDirectory: false,
     },
   });
 
@@ -107,6 +111,10 @@ function GeneralPolicyTab() {
           policy.otNdCalculationMethod ?? DEFAULT_OT_ND_CALCULATION_METHOD,
         hourlyRateDivisor:
           policy.hourlyRateDivisor ?? DEFAULT_HOURLY_RATE_DIVISOR,
+        coworkerShowNewHires: policy.coworkerShowNewHires ?? false,
+        coworkerShowAnniversaries: policy.coworkerShowAnniversaries ?? false,
+        coworkerShowWhosOut: policy.coworkerShowWhosOut ?? false,
+        coworkerShowDirectory: policy.coworkerShowDirectory ?? false,
       });
     }
   }, [policy, reset]);
@@ -453,6 +461,67 @@ function GeneralPolicyTab() {
                     style={{ width: "100%" }}
                     addonAfter="%"
                   />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Portal Coworkers page widgets (birthdays are per-employee opt-in) */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_COWORKERS}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.COWORKER_SHOW_NEW_HIRES}
+              extra={COMPANY_POLICY_LABEL.COWORKER_SHOW_NEW_HIRES_HELP}
+            >
+              <Controller
+                name="coworkerShowNewHires"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.COWORKER_SHOW_ANNIVERSARIES}
+              extra={COMPANY_POLICY_LABEL.COWORKER_SHOW_ANNIVERSARIES_HELP}
+            >
+              <Controller
+                name="coworkerShowAnniversaries"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.COWORKER_SHOW_WHOS_OUT}
+              extra={COMPANY_POLICY_LABEL.COWORKER_SHOW_WHOS_OUT_HELP}
+            >
+              <Controller
+                name="coworkerShowWhosOut"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.COWORKER_SHOW_DIRECTORY}
+              extra={COMPANY_POLICY_LABEL.COWORKER_SHOW_DIRECTORY_HELP}
+            >
+              <Controller
+                name="coworkerShowDirectory"
+                control={control}
+                render={({ field }) => (
+                  <Switch checked={field.value} onChange={field.onChange} />
                 )}
               />
             </Form.Item>

@@ -23,6 +23,10 @@ export const companyPolicyFormSchema = z.object({
     .max(100, "Must be 100 or less"),
   otNdCalculationMethod: z.string().min(1, "Required"),
   hourlyRateDivisor: z.string().min(1, "Required"),
+  coworkerShowNewHires: z.boolean(),
+  coworkerShowAnniversaries: z.boolean(),
+  coworkerShowWhosOut: z.boolean(),
+  coworkerShowDirectory: z.boolean(),
 });
 
 export type CompanyPolicyFormValues = z.infer<typeof companyPolicyFormSchema>;

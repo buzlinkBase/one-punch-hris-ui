@@ -52,6 +52,20 @@ export const COMPANY_POLICY_LABEL = {
   OT_ND_CALCULATION_METHOD: "OT/ND Calculation Method",
   HOURLY_RATE_DIVISOR: "Hourly Rate Divisor",
 
+  SECTION_COWORKERS: "Portal Coworkers Page",
+  COWORKER_SHOW_NEW_HIRES: "Show new hires",
+  COWORKER_SHOW_NEW_HIRES_HELP:
+    "Employees hired in the last 30 days (name, photo, position, department).",
+  COWORKER_SHOW_ANNIVERSARIES: "Show work anniversaries",
+  COWORKER_SHOW_ANNIVERSARIES_HELP:
+    "Milestone years of service only (1, 3, 5, 10... years); the hire date is not shown.",
+  COWORKER_SHOW_WHOS_OUT: "Show who's out today",
+  COWORKER_SHOW_WHOS_OUT_HELP:
+    "Employees on approved leave or travel today. Only 'Out', 'Half day' or 'Away' is shown, never the reason.",
+  COWORKER_SHOW_DIRECTORY: "Show directory and org chart",
+  COWORKER_SHOW_DIRECTORY_HELP:
+    "Name, photo, position, department and branch. Email and contact are shown only for employees who opt in.",
+
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
   TAB_RATE_MULTIPLIERS: "Rate Multipliers",

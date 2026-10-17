@@ -145,6 +145,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/portal/announcements",
       },
       {
+        key: "portal-coworkers",
+        label: "Coworkers",
+        path: "/portal/coworkers",
+      },
+      {
         key: "portal-group-time",
         label: "My Time",
         type: "group",

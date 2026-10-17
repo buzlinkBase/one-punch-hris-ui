@@ -27,9 +27,79 @@ import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-repo
 import type { PortalCreateProfileUpdateRequest } from "../models/api/request/portal-create-profile-update-request.model";
 import type { PortalProfileUpdateRequestResponse } from "../models/api/response/portal-profile-update-request-response.model";
 
+import type { CoworkerBirthdayResponse } from "../models/api/response/coworker-birthday-response.model";
+
+import type {
+  AnniversaryResponse,
+  CoworkerCardResponse,
+  CoworkerSettingsResponse,
+  DirectoryPageResponse,
+  OrgNodeResponse,
+  OutTodayResponse,
+} from "../models/api/response/coworker-response.model";
+
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
 export const meApi = {
+  getCoworkerSettings(): Promise<CoworkerSettingsResponse> {
+    return httpClient.getUnwrapped<CoworkerSettingsResponse>(
+      `${BASE_URL}/coworkers/settings`,
+    );
+  },
+
+  getNewHires(): Promise<CoworkerCardResponse[]> {
+    return httpClient.getUnwrapped<CoworkerCardResponse[]>(
+      `${BASE_URL}/coworkers/new-hires`,
+    );
+  },
+
+  getAnniversaries(): Promise<AnniversaryResponse[]> {
+    return httpClient.getUnwrapped<AnniversaryResponse[]>(
+      `${BASE_URL}/coworkers/anniversaries`,
+    );
+  },
+
+  getOutToday(): Promise<OutTodayResponse[]> {
+    return httpClient.getUnwrapped<OutTodayResponse[]>(
+      `${BASE_URL}/coworkers/out-today`,
+    );
+  },
+
+  getDirectory(params: {
+    q?: string;
+    departmentId?: string;
+    page: number;
+  }): Promise<DirectoryPageResponse> {
+    return httpClient.getUnwrapped<DirectoryPageResponse>(
+      `${BASE_URL}/coworkers/directory`,
+      { params },
+    );
+  },
+
+  getOrgChart(): Promise<OrgNodeResponse[]> {
+    return httpClient.getUnwrapped<OrgNodeResponse[]>(
+      `${BASE_URL}/coworkers/org-chart`,
+    );
+  },
+
+  setContactSharing(share: boolean): Promise<void> {
+    return httpClient.putUnwrapped<void>(`${BASE_URL}/contact-sharing`, {
+      share,
+    });
+  },
+
+  getTodayBirthdays(): Promise<CoworkerBirthdayResponse[]> {
+    return httpClient.getUnwrapped<CoworkerBirthdayResponse[]>(
+      `${BASE_URL}/birthdays/today`,
+    );
+  },
+
+  setBirthdaySharing(share: boolean): Promise<void> {
+    return httpClient.putUnwrapped<void>(`${BASE_URL}/birthday-sharing`, {
+      share,
+    });
+  },
+
   /** 404s when the logged-in user has no linked Employee record — silenced, not an error. */
   async getMyEmployee(): Promise<EmployeeFullResponse | null> {
     try {

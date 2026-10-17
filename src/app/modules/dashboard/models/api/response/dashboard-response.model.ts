@@ -21,11 +21,34 @@ export interface DepartmentHeadcount {
   headcount: number;
 }
 
+export interface DashboardCount {
+  label: string;
+  count: number;
+}
+
+/** Current (not resigned) employees, split three ways. */
+export interface WorkforceMix {
+  employmentStatus: DashboardCount[];
+  branches: DashboardCount[];
+  tenure: DashboardCount[];
+}
+
 export interface UpcomingHoliday {
   id: string;
   name: string;
   date: string;
   type: string;
+}
+
+export interface UpcomingBirthday {
+  id: string;
+  name: string;
+  departmentName: string;
+  month: number;
+  day: number;
+  daysUntil: number;
+  /** Whether the employee opted in to coworkers seeing their birthday. */
+  shareBirthday: boolean;
 }
 
 export type ActivityType =
@@ -65,6 +88,8 @@ export interface DashboardOverview {
   stats: DashboardStats;
   attendanceTrend: AttendanceTrendPoint[];
   departmentHeadcount: DepartmentHeadcount[];
+  workforce: WorkforceMix;
+  upcomingBirthdays: UpcomingBirthday[];
   upcomingHolidays: UpcomingHoliday[];
   recentActivity: RecentActivity[];
   pendingRequests: PendingRequest[];

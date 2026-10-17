@@ -104,6 +104,11 @@ export default function InviteUserModal({
     );
   };
 
+  // An employee is invited at the email on their record, so it can't be changed here, and an
+  // employee without one has to get it on their record first.
+  const emailLocked = Boolean(employeeId);
+  const missingEmail = emailLocked && !employeeEmail?.trim();
+
   const roleOptions = (
     canAssignRole ? [...new Set([...DEFAULT_ROLES, ...roles])] : DEFAULT_ROLES
   ).map((r) => ({ label: r, value: r }));
@@ -116,6 +121,7 @@ export default function InviteUserModal({
       onOk={handleSubmit(onSubmit)}
       okText="Send Invitation"
       confirmLoading={isPending}
+      okButtonProps={{ disabled: missingEmail }}
       destroyOnClose
     >
       {employeeName && (
@@ -133,8 +139,15 @@ export default function InviteUserModal({
       <Form layout="vertical" className="mt-4">
         <Form.Item
           label="Email Address"
-          validateStatus={errors.email ? "error" : ""}
-          help={errors.email?.message}
+          validateStatus={errors.email || missingEmail ? "error" : ""}
+          help={
+            missingEmail
+              ? "This employee has no email on their record. Add one on the employee first."
+              : (errors.email?.message ??
+                (emailLocked
+                  ? "The invitation goes to the email on the employee's record."
+                  : undefined))
+          }
         >
           <Controller
             name="email"
@@ -145,6 +158,7 @@ export default function InviteUserModal({
                 type="email"
                 placeholder="user@example.com"
                 autoComplete="off"
+                readOnly={emailLocked}
               />
             )}
           />

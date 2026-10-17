@@ -1,23 +1,18 @@
-import { useState } from "react";
-import {
-  Avatar,
-  Badge,
-  Card,
-  Input,
-  Skeleton,
-  Tag,
-  Typography,
-  theme,
-} from "antd";
-import { SearchOutlined, UserOutlined } from "@ant-design/icons";
+import { Typography } from "antd";
 import dayjs from "dayjs";
 import { authStorage } from "@/core/auth/auth-storage";
-import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import DtrBatchesCard from "./components/dtr-batches-card/dtr-batches-card";
-import PayrollSnapshotCard from "./components/payroll-snapshot-card/payroll-snapshot-card";
+import StatTiles from "./components/stat-tiles/stat-tiles";
+import AttendanceOverviewCard from "./components/attendance-overview-card/attendance-overview-card";
+import TodayAttendanceCard from "./components/today-attendance-card/today-attendance-card";
+import DepartmentHeadcountCard from "./components/department-headcount-card/department-headcount-card";
+import CountBarCard from "./components/count-bar-card/count-bar-card";
+import RecentActivityCard from "./components/recent-activity-card/recent-activity-card";
 import UpcomingHolidaysCard from "./components/upcoming-holidays-card/upcoming-holidays-card";
+import UpcomingBirthdaysCard from "./components/upcoming-birthdays-card/upcoming-birthdays-card";
 import PendingRequestsCard from "./components/pending-requests-card/pending-requests-card";
+import { DASHBOARD_LABEL } from "./constants/label.const";
 import { useDashboardOverview } from "./hooks/use-dashboard-queries";
+import { spaceWords } from "./utils/space-words";
 
 const { Title, Text } = Typography;
 
@@ -26,172 +21,6 @@ function getGreeting(): string {
   if (h < 12) return "Good morning";
   if (h < 18) return "Good afternoon";
   return "Good evening";
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
-const STATUS_COLOR: Record<string, string> = {
-  Regular: "green",
-  Probationary: "blue",
-  Contract: "orange",
-  Temporary: "orange",
-  Casual: "default",
-  PartTime: "purple",
-  Intern: "cyan",
-  OnLeave: "gold",
-  Suspended: "warning",
-  Terminated: "red",
-  Resigned: "default",
-  Retired: "default",
-  Deceased: "default",
-};
-
-function EmployeeDirectoryCard() {
-  const { token } = theme.useToken();
-  const [search, setSearch] = useState("");
-  const { data: employees = [], isLoading } = useEmployees();
-
-  const q = search.toLowerCase().trim();
-  const filtered = q
-    ? employees.filter(
-        (e) =>
-          e.fullName?.toLowerCase().includes(q) ||
-          e.positionName?.toLowerCase().includes(q) ||
-          e.departmentName?.toLowerCase().includes(q),
-      )
-    : employees;
-
-  return (
-    <Card
-      size="small"
-      title={
-        <span style={{ fontWeight: 600, fontSize: 14 }}>
-          Employee Directory
-          <Tag
-            style={{ marginLeft: 8, fontWeight: 400, fontSize: 11 }}
-            color="default"
-          >
-            {employees.length}
-          </Tag>
-        </span>
-      }
-      style={{ height: "100%" }}
-    >
-      <Input
-        prefix={<SearchOutlined style={{ color: "#9ca3af" }} />}
-        placeholder="Search by name, position, or department…"
-        size="small"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 10 }}
-        allowClear
-      />
-
-      {isLoading ? (
-        <Skeleton active paragraph={{ rows: 5 }} />
-      ) : (
-        <div
-          style={{
-            maxHeight: 260,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-          }}
-        >
-          {filtered.length === 0 ? (
-            <Text
-              type="secondary"
-              style={{
-                fontSize: 12,
-                textAlign: "center",
-                padding: "16px 0",
-                display: "block",
-              }}
-            >
-              No employees found
-            </Text>
-          ) : (
-            filtered.slice(0, 20).map((emp) => (
-              <div
-                key={emp.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "6px 4px",
-                  borderRadius: 6,
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLElement).style.background =
-                    token.colorFillQuaternary)
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLElement).style.background =
-                    "transparent")
-                }
-              >
-                <Avatar
-                  size={32}
-                  icon={emp.fullName ? undefined : <UserOutlined />}
-                  style={{ background: "#1DA081", flexShrink: 0, fontSize: 12 }}
-                >
-                  {emp.fullName ? getInitials(emp.fullName) : null}
-                </Avatar>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {emp.fullName ?? "—"}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: token.colorTextTertiary,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {emp.positionName ?? emp.departmentName ?? "—"}
-                  </div>
-                </div>
-                {emp.employmentStatus && (
-                  <Badge
-                    color={STATUS_COLOR[emp.employmentStatus] ?? "default"}
-                    text={
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: token.colorTextSecondary,
-                        }}
-                      >
-                        {emp.employmentStatus}
-                      </span>
-                    }
-                  />
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </Card>
-  );
 }
 
 export default function Dashboard() {
@@ -205,33 +34,73 @@ export default function Dashboard() {
     <div className="content-page">
       {/* Greeting */}
       <div className="mb-6">
-        <Title level={4} style={{ margin: 0 }}>
+        <Title level={4} className="m-0!">
           {getGreeting()}, {firstName}
         </Title>
-        <Text type="secondary" style={{ fontSize: 13 }}>
+        <Text type="secondary" className="text-[13px]">
           {today}
         </Text>
       </div>
 
-      {/* Timekeeping + Payroll snapshot */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 items-start mb-4">
-        <DtrBatchesCard />
-        {/* PayrollsController.Get is gated behind Payroll Summary:View — hide the card rather
-            than let it 403 for callers (most non-Admin roles by default) who don't hold it. */}
-        {authStorage.hasAnyPermission("Payroll Summary:View") && (
-          <PayrollSnapshotCard />
-        )}
+      {/* The dashboard's own report: today, the last 7 days and who works here now -- not the
+          Analytics pages' monthly history. */}
+      <div className="mb-4">
+        <StatTiles stats={data?.stats} loading={isLoading} />
       </div>
 
-      {/* Bottom row: directory, holidays, pending */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <EmployeeDirectoryCard />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <div className="lg:col-span-2">
+          <AttendanceOverviewCard
+            data={data?.attendanceTrend ?? []}
+            loading={isLoading}
+          />
+        </div>
+        <TodayAttendanceCard stats={data?.stats} loading={isLoading} />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        <DepartmentHeadcountCard
+          data={data?.departmentHeadcount ?? []}
+          loading={isLoading}
+        />
+        <CountBarCard
+          title={DASHBOARD_LABEL.BRANCH_HEADCOUNT}
+          data={data?.workforce?.branches ?? []}
+          loading={isLoading}
+          horizontal
+        />
+        <CountBarCard
+          title={DASHBOARD_LABEL.EMPLOYMENT_STATUS}
+          data={data?.workforce?.employmentStatus ?? []}
+          loading={isLoading}
+          formatLabel={spaceWords}
+          horizontal
+        />
+        <CountBarCard
+          title={DASHBOARD_LABEL.TENURE}
+          data={data?.workforce?.tenure ?? []}
+          loading={isLoading}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         <UpcomingHolidaysCard
           data={data?.upcomingHolidays ?? []}
           loading={isLoading}
         />
+        <UpcomingBirthdaysCard
+          data={data?.upcomingBirthdays ?? []}
+          loading={isLoading}
+        />
         <PendingRequestsCard
           data={data?.pendingRequests ?? []}
+          loading={isLoading}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <RecentActivityCard
+          data={data?.recentActivity ?? []}
           loading={isLoading}
         />
       </div>
