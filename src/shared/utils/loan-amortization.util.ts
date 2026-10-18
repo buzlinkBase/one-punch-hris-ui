@@ -85,6 +85,24 @@ export function generateLoanBreakdown(
   return rows;
 }
 
+// After a payment was hand-edited or removed: each row keeps its interest, its principal becomes
+// whatever of the payment is left over, and the running balance is rebuilt from the loan principal.
+// A locked row (already used by payroll) keeps its stored principal: the API refuses any change.
+export function recomputeLoanBalances<T extends LoanBreakdownRow>(
+  rows: T[],
+  principal: number,
+  isLocked: (row: T) => boolean = () => false,
+): T[] {
+  let balance = principal;
+  return rows.map((r) => {
+    const principalPart = isLocked(r)
+      ? r.principal
+      : +Math.max(0, r.amount - r.interest).toFixed(4);
+    balance = Math.max(0, balance - principalPart);
+    return { ...r, principal: principalPart, balance: +balance.toFixed(4) };
+  });
+}
+
 export const loanBreakdownColumns: ColumnsType<LoanBreakdownRow> = [
   {
     title: "#",

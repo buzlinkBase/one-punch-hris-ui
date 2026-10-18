@@ -18,11 +18,7 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
+import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -69,6 +65,20 @@ import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import {
+  ScheduleRowActions,
+  type ScheduleRowHandlers,
+} from "@/shared/components/schedule-row-actions/schedule-row-actions";
+import {
+  ScheduleRowEditModal,
+  type ScheduleRowEditValue,
+} from "@/shared/components/schedule-row-edit-modal/schedule-row-edit-modal";
+import { GenerateScheduleButton } from "@/shared/components/generate-schedule-button/generate-schedule-button";
+import {
+  removeRowAt,
+  sortAndRenumber,
+  updateRowAt,
+} from "@/shared/utils/schedule-edit.util";
 
 const { Title } = Typography;
 
@@ -86,6 +96,7 @@ function toDateOnly(value?: string | null): string {
 function scheduleColumns(
   isPeriodic: boolean,
   hasStatus: boolean,
+  actions: ScheduleRowHandlers<OtherIncomeScheduleRow> | null,
 ): ColumnsType<OtherIncomeScheduleRow> {
   const columns: ColumnsType<OtherIncomeScheduleRow> = [
     {
@@ -145,6 +156,22 @@ function scheduleColumns(
           <Tag>Pending</Tag>
         );
       },
+    });
+  }
+
+  if (actions) {
+    columns.push({
+      title: "Actions",
+      key: "actions",
+      width: 100,
+      align: "center",
+      render: (_, r) => (
+        <ScheduleRowActions
+          locked={!!r.consumedByPayrollId}
+          onEdit={() => actions.onEdit(r)}
+          onRemove={() => actions.onRemove(r)}
+        />
+      ),
     });
   }
 
@@ -221,6 +248,11 @@ export default function OtherIncomeApplicationDetail() {
     useUpdateOtherIncomeApplication();
 
   const [schedule, setSchedule] = useState<OtherIncomeScheduleRow[]>([]);
+  const [editingRow, setEditingRow] = useState<OtherIncomeScheduleRow | null>(
+    null,
+  );
+  // Rows were moved, re-priced or removed by hand since the last generate/load.
+  const [scheduleEdited, setScheduleEdited] = useState(false);
 
   const {
     control,
@@ -250,6 +282,7 @@ export default function OtherIncomeApplicationDetail() {
         applicableDays: bitsToMask(values.applicableDays ?? []),
       }),
     );
+    setScheduleEdited(false);
   }, [
     values.payMode,
     values.startDate,
@@ -265,6 +298,7 @@ export default function OtherIncomeApplicationDetail() {
   ) => {
     setValue("payMode", mode, { shouldValidate: true });
     setSchedule([]);
+    setScheduleEdited(false);
     if (mode === "FixedSchedule") {
       setValue("attendanceBasis", "None");
       return;
@@ -330,6 +364,36 @@ export default function OtherIncomeApplicationDetail() {
     () => schedule.reduce((s, r) => s + r.amount, 0),
     [schedule],
   );
+
+  const takenDates = useMemo(
+    () =>
+      schedule.filter((r) => r.index !== editingRow?.index).map((r) => r.date),
+    [schedule, editingRow],
+  );
+
+  const applyRowEdit = ({ date, amount }: ScheduleRowEditValue) => {
+    if (!editingRow) return;
+    const key = editingRow.index;
+    setSchedule((rows) =>
+      sortAndRenumber(
+        updateRowAt(rows, "index", key, { date, amount }),
+        "index",
+      ),
+    );
+    setScheduleEdited(true);
+    setEditingRow(null);
+  };
+
+  const removeRow = (row: OtherIncomeScheduleRow) => {
+    setSchedule((rows) =>
+      sortAndRenumber(removeRowAt(rows, "index", row.index), "index"),
+    );
+    setScheduleEdited(true);
+  };
+
+  // Only someone allowed to save the record may reshape its schedule.
+  const rowActions: ScheduleRowHandlers<OtherIncomeScheduleRow> | null =
+    readOnly ? null : { onEdit: setEditingRow, onRemove: removeRow };
 
   const summary = describeAttendanceRule({
     kind: "income",
@@ -675,9 +739,10 @@ export default function OtherIncomeApplicationDetail() {
           </Form.Item>
 
           <div className="flex justify-end">
-            <Button icon={<SyncOutlined />} onClick={regenerateSchedule}>
-              Generate Schedule
-            </Button>
+            <GenerateScheduleButton
+              hasManualChanges={scheduleEdited}
+              onGenerate={regenerateSchedule}
+            />
           </div>
         </Card>
 
@@ -705,7 +770,7 @@ export default function OtherIncomeApplicationDetail() {
               <Table
                 rowKey="index"
                 dataSource={schedule}
-                columns={scheduleColumns(isPeriodic, hasStatus)}
+                columns={scheduleColumns(isPeriodic, hasStatus, rowActions)}
                 size="small"
                 pagination={false}
                 summary={(rows) => {
@@ -722,6 +787,7 @@ export default function OtherIncomeApplicationDetail() {
                         <strong>{formatAmount(tot)}</strong>
                       </Table.Summary.Cell>
                       {hasStatus && <Table.Summary.Cell index={2} />}
+                      {rowActions && <Table.Summary.Cell index={3} />}
                     </Table.Summary.Row>
                   );
                 }}
@@ -737,6 +803,15 @@ export default function OtherIncomeApplicationDetail() {
           </Divider>
         )}
       </Form>
+
+      <ScheduleRowEditModal
+        row={editingRow}
+        minDate={values.startDate || undefined}
+        maxDate={values.endDate || undefined}
+        takenDates={takenDates}
+        onSave={applyRowEdit}
+        onCancel={() => setEditingRow(null)}
+      />
     </div>
   );
 }

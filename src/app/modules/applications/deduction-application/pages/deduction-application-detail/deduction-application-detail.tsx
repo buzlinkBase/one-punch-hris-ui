@@ -18,11 +18,7 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import {
-  ArrowLeftOutlined,
-  SaveOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
+import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -77,8 +73,23 @@ import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import {
   generateLoanBreakdown,
   loanBreakdownColumns,
+  recomputeLoanBalances,
   type LoanBreakdownRow,
 } from "@/shared/utils/loan-amortization.util";
+import {
+  ScheduleRowActions,
+  type ScheduleRowHandlers,
+} from "@/shared/components/schedule-row-actions/schedule-row-actions";
+import {
+  ScheduleRowEditModal,
+  type ScheduleRowEditValue,
+} from "@/shared/components/schedule-row-edit-modal/schedule-row-edit-modal";
+import { GenerateScheduleButton } from "@/shared/components/generate-schedule-button/generate-schedule-button";
+import {
+  removeRowAt,
+  sortAndRenumber,
+  updateRowAt,
+} from "@/shared/utils/schedule-edit.util";
 
 const { Title } = Typography;
 
@@ -105,11 +116,35 @@ function toDateOnly(value?: string | null): string {
   return value?.replace(/Z$/, "").split("T")[0] ?? "";
 }
 
+// Payroll has already deducted, skipped or held back this row, so it can't be changed or removed.
+function isLockedRow(r: BreakdownRow): boolean {
+  return !!r.stored && (r.status === "Paid" || !!r.isSkipped || !!r.isDeferred);
+}
+
+function actionsColumn(
+  actions: ScheduleRowHandlers<BreakdownRow>,
+): ColumnsType<BreakdownRow>[number] {
+  return {
+    title: "Actions",
+    key: "actions",
+    width: 100,
+    align: "center",
+    render: (_, r) => (
+      <ScheduleRowActions
+        locked={isLockedRow(r)}
+        onEdit={() => actions.onEdit(r)}
+        onRemove={() => actions.onRemove(r)}
+      />
+    ),
+  };
+}
+
 // Columns of an attendance-based schedule: no principal / interest / running balance, but the
 // attendance window of a periodic row and how payroll has treated each one so far.
 function attendanceColumns(
   isPeriodic: boolean,
   hasStatus: boolean,
+  actions: ScheduleRowHandlers<BreakdownRow> | null,
 ): ColumnsType<BreakdownRow> {
   const columns: ColumnsType<BreakdownRow> = [
     {
@@ -163,6 +198,7 @@ function attendanceColumns(
       },
     });
   }
+  if (actions) columns.push(actionsColumn(actions));
   return columns;
 }
 
@@ -243,6 +279,9 @@ export default function DeductionApplicationDetail() {
     useUpdateDeductionApplication();
 
   const [breakdown, setBreakdown] = useState<BreakdownRow[]>([]);
+  const [editingRow, setEditingRow] = useState<BreakdownRow | null>(null);
+  // Rows were moved, re-priced or removed by hand since the last generate/load.
+  const [scheduleEdited, setScheduleEdited] = useState(false);
 
   const {
     control,
@@ -268,6 +307,7 @@ export default function DeductionApplicationDetail() {
   const attendanceAllowed = selectedDeduction?.allowAttendanceRules === true;
 
   const regenerateBreakdown = useCallback(() => {
+    setScheduleEdited(false);
     if (values.payMode === "FixedSchedule") {
       setBreakdown(
         generateLoanBreakdown(
@@ -318,6 +358,7 @@ export default function DeductionApplicationDetail() {
   ) => {
     setValue("payMode", mode, { shouldValidate: true });
     setBreakdown([]);
+    setScheduleEdited(false);
     if (mode === "FixedSchedule") {
       setValue("attendanceBasis", "None");
       return;
@@ -397,6 +438,49 @@ export default function DeductionApplicationDetail() {
     [breakdown],
   );
 
+  const takenDates = useMemo(
+    () =>
+      breakdown
+        .filter((r) => r.period !== editingRow?.period)
+        .map((r) => r.date),
+    [breakdown, editingRow],
+  );
+
+  // Keeps the rows in date order, numbered 1..n; an amortization also re-derives principal and
+  // the running balance, since a payment's amount may have changed.
+  const reshape = (rows: BreakdownRow[]) => {
+    const ordered = sortAndRenumber(rows, "period");
+    return isAttendanceMode
+      ? ordered
+      : recomputeLoanBalances(ordered, values.totalPrincipal ?? 0, isLockedRow);
+  };
+
+  const applyRowEdit = ({ date, amount }: ScheduleRowEditValue) => {
+    if (!editingRow) return;
+    const key = editingRow.period;
+    // A flat (attendance) charge is all principal.
+    const patch = isAttendanceMode
+      ? { date, amount, principal: amount }
+      : { date, amount };
+    setBreakdown((rows) => reshape(updateRowAt(rows, "period", key, patch)));
+    setScheduleEdited(true);
+    setEditingRow(null);
+  };
+
+  const removeRow = (row: BreakdownRow) => {
+    setBreakdown((rows) => reshape(removeRowAt(rows, "period", row.period)));
+    setScheduleEdited(true);
+  };
+
+  // Only someone allowed to save the record may reshape its schedule.
+  const rowActions: ScheduleRowHandlers<BreakdownRow> | null = readOnly
+    ? null
+    : { onEdit: setEditingRow, onRemove: removeRow };
+
+  const fixedColumns: ColumnsType<BreakdownRow> = rowActions
+    ? [...loanBreakdownColumns, actionsColumn(rowActions)]
+    : loanBreakdownColumns;
+
   // A fixed schedule ends on its last installment; an attendance one ends on the chosen date.
   const endDate = isAttendanceMode
     ? values.endDate
@@ -455,8 +539,9 @@ export default function DeductionApplicationDetail() {
           ? "Daily"
           : formValues.frequencyOfPayment,
       // Terms, principal and interest are amortization concepts; for a flat charge they just
-      // describe the generated rows (no interest, the most it can take is the total).
-      terms: attendance ? breakdown.length : formValues.terms,
+      // describe the generated rows (no interest, the most it can take is the total). Rows may
+      // have been removed by hand, so the term count always follows the schedule.
+      terms: breakdown.length,
       totalPrincipal: attendance
         ? +totalAmount.toFixed(4)
         : formValues.totalPrincipal,
@@ -896,9 +981,10 @@ export default function DeductionApplicationDetail() {
               </Form.Item>
             </Col>
             <Col xs={24} className="flex justify-end">
-              <Button icon={<SyncOutlined />} onClick={regenerateBreakdown}>
-                Generate Schedule
-              </Button>
+              <GenerateScheduleButton
+                hasManualChanges={scheduleEdited}
+                onGenerate={regenerateBreakdown}
+              />
             </Col>
           </Row>
         </Card>
@@ -931,7 +1017,7 @@ export default function DeductionApplicationDetail() {
                 <Table
                   rowKey="period"
                   dataSource={breakdown}
-                  columns={attendanceColumns(isPeriodic, hasStatus)}
+                  columns={attendanceColumns(isPeriodic, hasStatus, rowActions)}
                   size="small"
                   pagination={false}
                   summary={(rows) => (
@@ -948,6 +1034,7 @@ export default function DeductionApplicationDetail() {
                         </strong>
                       </Table.Summary.Cell>
                       {hasStatus && <Table.Summary.Cell index={2} />}
+                      {rowActions && <Table.Summary.Cell index={3} />}
                     </Table.Summary.Row>
                   )}
                 />
@@ -955,7 +1042,7 @@ export default function DeductionApplicationDetail() {
                 <Table
                   rowKey="period"
                   dataSource={breakdown}
-                  columns={loanBreakdownColumns}
+                  columns={fixedColumns}
                   size="small"
                   pagination={false}
                   summary={(rows) => {
@@ -983,6 +1070,7 @@ export default function DeductionApplicationDetail() {
                           <strong>{formatAmount(totPayment)}</strong>
                         </Table.Summary.Cell>
                         <Table.Summary.Cell index={5} />
+                        {rowActions && <Table.Summary.Cell index={6} />}
                       </Table.Summary.Row>
                     );
                   }}
@@ -1000,6 +1088,15 @@ export default function DeductionApplicationDetail() {
           </Divider>
         )}
       </Form>
+
+      <ScheduleRowEditModal
+        row={editingRow}
+        minDate={values.startDate || undefined}
+        maxDate={isAttendanceMode ? values.endDate || undefined : undefined}
+        takenDates={takenDates}
+        onSave={applyRowEdit}
+        onCancel={() => setEditingRow(null)}
+      />
 
       {isEdit && existing && (
         <Card size="small" title="Approval Progress" className="mt-4">
