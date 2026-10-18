@@ -80,7 +80,7 @@ export default function UserDetail() {
       // affected session before any roles-changed refresh could race it and hand back a fresh
       // token to a member who's being revoked in the very same action.
       if (selectedStatus !== selected?.status) {
-        await updateStatus({ membershipId: id, status: selectedStatus });
+        await updateStatus({ row: { id }, status: selectedStatus });
       }
 
       if (JSON.stringify(selectedRoles) !== JSON.stringify(selected?.roles)) {

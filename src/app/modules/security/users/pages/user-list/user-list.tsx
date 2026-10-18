@@ -64,7 +64,7 @@ interface BulkActionConfig {
   danger?: boolean;
   /** Past tense for the result notification, e.g. "Revoked 3 user(s)." */
   done: string;
-  run: (ids: string[]) => Promise<BulkResult>;
+  run: (rows: UserRow[]) => Promise<BulkResult>;
 }
 
 export default function UserList() {
@@ -108,14 +108,16 @@ export default function UserList() {
     });
   };
 
-  const handleRemoveMembership = (membershipId: string) => {
+  const handleRemoveMembership = (row: UserRow) => {
     removeMembership(
-      { membershipId },
+      { row },
       {
         onSuccess: () => {
           notification.success({
             message: "Member removed",
-            description: "This member has been removed from the company.",
+            description: row.portal
+              ? "This user has been removed from the client."
+              : "This member has been removed from the company.",
             placement: "topRight",
           });
         },
@@ -132,7 +134,7 @@ export default function UserList() {
 
   const handleToggleStatus = (record: UserRow, status: string) => {
     updateStatus(
-      { membershipId: record.id, status },
+      { row: record, status },
       {
         onSuccess: () => {
           notification.success({
@@ -165,12 +167,14 @@ export default function UserList() {
     setSelectedIds([]);
   };
 
+  const selectedRows = visibleRows.filter((row) => selected.includes(row.id));
+
   const bulkActions: Record<BulkAction, BulkActionConfig> = {
     activate: {
       title: USER_BULK_LABEL.CONFIRM_ACTIVATE,
       okText: USER_BULK_LABEL.ACTIVATE,
       done: "Activated",
-      run: (ids) => bulkUpdateStatus({ membershipIds: ids, status: "Active" }),
+      run: (rows) => bulkUpdateStatus({ rows, status: "Active" }),
     },
     revoke: {
       title: USER_BULK_LABEL.CONFIRM_REVOKE,
@@ -178,7 +182,7 @@ export default function UserList() {
       okText: USER_BULK_LABEL.REVOKE,
       danger: true,
       done: "Revoked",
-      run: (ids) => bulkUpdateStatus({ membershipIds: ids, status: "Revoked" }),
+      run: (rows) => bulkUpdateStatus({ rows, status: "Revoked" }),
     },
     remove: {
       title: USER_BULK_LABEL.CONFIRM_REMOVE,
@@ -186,20 +190,20 @@ export default function UserList() {
       okText: USER_BULK_LABEL.REMOVE,
       danger: true,
       done: "Removed",
-      run: (ids) => bulkRemove({ membershipIds: ids }),
+      run: (rows) => bulkRemove({ rows }),
     },
   };
 
   const runBulk = (action: BulkAction) => {
-    const ids = selected;
+    const rows = selectedRows;
     const config = bulkActions[action];
     modal.confirm({
-      title: config.title(ids.length),
+      title: config.title(rows.length),
       content: config.content,
       okText: config.okText,
       okButtonProps: { danger: config.danger },
       cancelText: "Cancel",
-      onOk: async () => reportBulk(config.done, await config.run(ids)),
+      onOk: async () => reportBulk(config.done, await config.run(rows)),
     });
   };
 
@@ -288,7 +292,7 @@ export default function UserList() {
         selectedIds={selected}
         onSelectionChange={setSelectedIds}
         onToggleStatus={handleToggleStatus}
-        togglingId={updatingStatus ? statusVariables?.membershipId : null}
+        togglingId={updatingStatus ? statusVariables?.row.id : null}
         onDelete={handleRemoveMembership}
       />
 

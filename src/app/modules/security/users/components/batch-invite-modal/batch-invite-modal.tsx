@@ -18,6 +18,7 @@ import { isValidEmail } from "@/shared/components/email-chip-input/parse-email-l
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 import { useGrantableRoles } from "@/app/modules/security/roles/hooks/use-role-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { useInvitePortalUsers } from "@/app/modules/client-portal/hooks/use-client-portal-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import type { ProblemDetails } from "@/shared/types/api-response.model";
 import {
@@ -36,8 +37,12 @@ const { Text } = Typography;
 
 const DEFAULT_ROLE: Record<InviteEntityType, string> = {
   Employee: "Employee",
-  Client: "Client",
+  // Client logins are invited through the client portal; the first people invited to a client run it.
+  Client: "Client Admin",
 };
+
+// "jane.doe@site.com" -> "jane.doe": the portal wants a name and an invite only carries the email.
+const nameFromEmail = (email: string) => email.split("@")[0];
 
 const defaultValues = (
   entityType: InviteEntityType,
@@ -104,13 +109,16 @@ export default function BatchInviteModal({
   const canAssignRole = useHasPermission("Users:AssignRole");
   const { data: roles = [], isLoading: loadingRoles } = useGrantableRoles();
   const { data: clients = [], isLoading: loadingClients } = useClients();
-  const { mutate: sendBatch, isPending: sending } = useSendBatchInvitations();
+  const { mutate: sendBatch, isPending: sendingBatch } =
+    useSendBatchInvitations();
+  const { mutate: sendToPortal, isPending: sendingToPortal } =
+    useInvitePortalUsers();
+  const sending = sendingBatch || sendingToPortal;
 
   const debouncedEmails = useDebouncedValue(emails, 300);
   const { data: lookup, isPlaceholderData: lookupStale } = useBatchInviteLookup(
     debouncedEmails.filter(isValidEmail),
     entityType,
-    clientId,
   );
 
   const statuses = useMemo(
@@ -184,46 +192,63 @@ export default function BatchInviteModal({
   };
 
   const sendInvitations = (values: BatchInviteFormValues) => {
+    const handlers = {
+      onSuccess: (result: BatchInvitationResult) => {
+        if (result.failed.length === 0) {
+          notification.success({
+            message: `Successfully sent ${result.sent} invitation(s).`,
+            placement: "topRight",
+          });
+          close();
+        } else {
+          setSummary(result);
+        }
+      },
+      onError: (err: unknown) =>
+        notification.error({
+          message: "Invitations not sent",
+          description: errorMessage(err),
+          placement: "topRight",
+        }),
+    };
+
+    if (values.entityType === "Client") {
+      // The HRIS client is the source of truth: the portal creates its copy (same id) on this
+      // invite if it doesn't have one yet, so nothing has to be set up there first.
+      const hrisClient = clients.find((c) => c.id === values.clientId);
+      if (!hrisClient) return;
+      sendToPortal(
+        {
+          hrisClient: {
+            id: hrisClient.id,
+            code: hrisClient.code,
+            name: hrisClient.name,
+          },
+          recipients: ready.map((email) => ({
+            email,
+            fullName: nameFromEmail(email),
+          })),
+        },
+        handlers,
+      );
+      return;
+    }
+
     const recipients = ready.map((email) => {
       const status = statuses.get(email);
-      return {
-        email,
-        entityId:
-          values.entityType === "Employee" ? status?.employeeId : undefined,
-        name: status?.name,
-      };
+      return { email, entityId: status?.employeeId, name: status?.name };
     });
     idempotencyKey.current ??= crypto.randomUUID();
     sendBatch(
       {
         payload: {
           entityType: values.entityType,
-          clientId:
-            values.entityType === "Client" ? values.clientId : undefined,
           role: canAssignRole ? values.role : DEFAULT_ROLE[values.entityType],
           recipients,
         },
         idempotencyKey: idempotencyKey.current,
       },
-      {
-        onSuccess: (result) => {
-          if (result.failed.length === 0) {
-            notification.success({
-              message: `Successfully sent ${result.sent} invitation(s).`,
-              placement: "topRight",
-            });
-            close();
-          } else {
-            setSummary(result);
-          }
-        },
-        onError: (err) =>
-          notification.error({
-            message: "Invitations not sent",
-            description: errorMessage(err),
-            placement: "topRight",
-          }),
-      },
+      handlers,
     );
   };
 
@@ -244,8 +269,10 @@ export default function BatchInviteModal({
 
   // The default role is always offered: anyone who may invite may give it.
   const defaultRole = DEFAULT_ROLE[entityType];
+  // Client logins always join as Client Admin, so there's no role to pick for them.
+  const rolePickable = canAssignRole && entityType === "Employee";
   const roleOptions = (
-    canAssignRole ? [...new Set([defaultRole, ...roles])] : [defaultRole]
+    rolePickable ? [...new Set([defaultRole, ...roles])] : [defaultRole]
   ).map((r) => ({ label: r, value: r }));
   const clientOptions = clients.map((c) => ({
     label: `${c.code} - ${c.name}`,
@@ -363,9 +390,11 @@ export default function BatchInviteModal({
               validateStatus={errors.role ? "error" : ""}
               help={errors.role?.message}
               extra={
-                canAssignRole
-                  ? "Every person in this batch gets this role."
-                  : `Invitations use the default role (${defaultRole}). Roles can be changed later from the Users page by someone allowed to.`
+                entityType === "Client"
+                  ? "Client logins join the client portal as Client Admin. Roles can be changed there later."
+                  : canAssignRole
+                    ? "Every person in this batch gets this role."
+                    : `Invitations use the default role (${defaultRole}). Roles can be changed later from the Users page by someone allowed to.`
               }
             >
               <Controller
@@ -374,11 +403,11 @@ export default function BatchInviteModal({
                 render={({ field }) => (
                   <Select
                     {...field}
-                    value={canAssignRole ? field.value : defaultRole}
+                    value={rolePickable ? field.value : defaultRole}
                     placeholder="Select a role"
                     options={roleOptions}
-                    loading={canAssignRole && loadingRoles}
-                    disabled={!canAssignRole || sending}
+                    loading={rolePickable && loadingRoles}
+                    disabled={!rolePickable || sending}
                   />
                 )}
               />

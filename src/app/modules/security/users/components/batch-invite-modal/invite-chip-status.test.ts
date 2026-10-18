@@ -52,10 +52,19 @@ describe("resolveInviteChipStatus", () => {
     expect(
       resolveInviteChipStatus(
         "jane@site.com",
-        "Client",
+        "Employee",
         lookup({}, { status: "EmployeeEmail" }),
       ).message,
     ).toContain("already registered as an active Employee");
+  });
+
+  it("needs no lookup for a client login, only a valid email", () => {
+    expect(
+      resolveInviteChipStatus("jane@site.com", "Client", undefined),
+    ).toMatchObject({ tone: "ready", blocked: false });
+    expect(
+      resolveInviteChipStatus("invalid-email", "Client", undefined).blocked,
+    ).toBe(true);
   });
 
   it("blocks an active pending invite, with its date", () => {

@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons";
 import { queryClient } from "@/core/query-client";
 import { useConnectionStore } from "@/core/stores/connection.store";
+import { unreachableMessage } from "@/core/http/service-registry";
 
 // Auto-retry cadence while the server looks unreachable — quiet background refetches of
 // whatever queries are currently on screen, so the banner clears itself the moment the
@@ -15,7 +16,8 @@ const AUTO_RETRY_MS = 8000;
 
 export function ConnectionStatusBanner() {
   const isOffline = useConnectionStore((s) => s.isOffline);
-  const isServerUnreachable = useConnectionStore((s) => s.isServerUnreachable);
+  const unreachableServices = useConnectionStore((s) => s.unreachableServices);
+  const isServerUnreachable = unreachableServices.length > 0;
   const setOffline = useConnectionStore((s) => s.setOffline);
   const [isRetrying, setIsRetrying] = useState(false);
 
@@ -71,7 +73,7 @@ export function ConnectionStatusBanner() {
             <span>
               {isOffline
                 ? "You're offline — check your internet connection."
-                : "Can't reach the server. We'll keep retrying automatically."}
+                : `${unreachableMessage(unreachableServices)} We'll keep retrying automatically.`}
             </span>
             {!isOffline && (
               <Button

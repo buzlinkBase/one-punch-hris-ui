@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Card, Form, Input, Button, Typography, notification } from "antd";
+import {
+  Card,
+  Collapse,
+  Form,
+  Input,
+  Button,
+  Typography,
+  notification,
+} from "antd";
 import { ArrowLeftOutlined, BankOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
@@ -12,9 +20,76 @@ import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import { authStorage } from "@/core/auth/auth-storage";
 import { tenantHub } from "@/core/signalr/tenant-hub.connection";
 import { TENANT_FAILED_STATUSES } from "@/core/signalr/tenant-hub.types";
+import type { CreateTenantRequest } from "@/app/modules/auth/login/models/api/request/create-tenant-request.model";
+import { COMPANY_POLICY_LABEL } from "@/app/modules/setup/company-policy/constants/label.const";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 
 const { Title, Text } = Typography;
+
+type OptionalFieldName = Exclude<keyof CreateTenantFormValues, "tenantName">;
+
+interface OptionalField {
+  name: OptionalFieldName;
+  label: string;
+  placeholder?: string;
+  wide?: boolean;
+}
+
+const L = COMPANY_POLICY_LABEL;
+
+const OPTIONAL_SECTIONS: {
+  key: string;
+  title: string;
+  fields: OptionalField[];
+}[] = [
+  {
+    key: "details",
+    title: "Company details",
+    fields: [
+      { name: "tin", label: L.TIN, placeholder: "e.g. 000-000-000-000" },
+      { name: "rdoCode", label: L.RDO_CODE, placeholder: "e.g. 044" },
+      {
+        name: "address",
+        label: L.ADDRESS,
+        placeholder: "Company address",
+        wide: true,
+      },
+      { name: "contact", label: L.CONTACT, placeholder: "Contact number" },
+      { name: "email", label: L.EMAIL, placeholder: "company@example.com" },
+    ],
+  },
+  {
+    key: "government",
+    title: "Government registration",
+    fields: [
+      { name: "sssNumber", label: L.SSS_NUMBER },
+      { name: "philHealthNumber", label: L.PHILHEALTH_NUMBER },
+      { name: "pagIbigNumber", label: L.PAGIBIG_NUMBER },
+      {
+        name: "authorizedSignatoryName",
+        label: L.AUTHORIZED_SIGNATORY_NAME,
+      },
+      {
+        name: "authorizedSignatoryTitle",
+        label: L.AUTHORIZED_SIGNATORY_TITLE,
+      },
+    ],
+  },
+];
+
+// Blank optional fields are dropped so the server only receives what the user actually entered.
+const toRequest = (values: CreateTenantFormValues): CreateTenantRequest => {
+  const request: CreateTenantRequest = {
+    tenantName: values.tenantName.trim(),
+  };
+  for (const section of OPTIONAL_SECTIONS) {
+    for (const { name } of section.fields) {
+      const value = values[name]?.trim();
+      if (value) request[name] = value;
+    }
+  }
+  return request;
+};
 
 export default function CreateTenant() {
   const navigate = useNavigate();
@@ -128,7 +203,7 @@ export default function CreateTenant() {
 
   const onSubmit = async (values: CreateTenantFormValues) => {
     try {
-      const result = await authApi.createTenant(values);
+      const result = await authApi.createTenant(toRequest(values));
       const claims = authStorage.getTenantClaims(result.accessToken);
       const currentUser = authStorage.getUser()!;
 
@@ -228,7 +303,12 @@ export default function CreateTenant() {
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item
-          label="Company Name"
+          label={
+            <span>
+              Company Name <Text type="secondary">(Required)</Text>
+            </span>
+          }
+          required
           validateStatus={errors.tenantName ? "error" : ""}
           help={errors.tenantName?.message}
           className="login-form-item"
@@ -246,6 +326,55 @@ export default function CreateTenant() {
             )}
           />
         </Form.Item>
+
+        <Text type="secondary" className="mb-3 block text-xs">
+          Only the company name is required. Fill in what you have now — you can
+          add or change the rest anytime in Company Settings.
+        </Text>
+
+        <Collapse
+          ghost
+          className="mb-4"
+          items={OPTIONAL_SECTIONS.map((section) => ({
+            key: section.key,
+            label: (
+              <span>
+                {section.title} <Text type="secondary">(Optional)</Text>
+              </span>
+            ),
+            forceRender: true,
+            children: (
+              <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+                {section.fields.map((f) => (
+                  <Form.Item
+                    key={f.name}
+                    label={
+                      <span>
+                        {f.label} <Text type="secondary">(Optional)</Text>
+                      </span>
+                    }
+                    validateStatus={errors[f.name] ? "error" : ""}
+                    help={errors[f.name]?.message}
+                    className={f.wide ? "sm:col-span-2" : undefined}
+                  >
+                    <Controller
+                      name={f.name}
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          placeholder={f.placeholder}
+                          disabled={provisioning}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                ))}
+              </div>
+            ),
+          }))}
+        />
 
         <Form.Item className="mb-0!">
           <Button
