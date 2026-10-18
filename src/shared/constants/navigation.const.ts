@@ -853,7 +853,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
   {
     key: "client-portal",
     feature: FEATURE_KEYS.CLIENT_PORTAL_CORE,
-    label: "Client Portal",
+    label: "Client Services",
     children: [
       {
         key: "client-portal-clients",
