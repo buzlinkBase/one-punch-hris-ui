@@ -241,6 +241,49 @@ export const STORAGE_LABEL = {
   BANNER_ADMIN_HINT:
     "Ask your company's owner or billing admin to add storage.",
   PAID_HINT: "Your extra storage is active now.",
+  FREE_UP: "Free up space",
+};
+
+export const STORAGE_MANAGER_LABEL = {
+  TITLE: "Manage storage",
+  SUBTITLE:
+    "See what fills this company's file storage and delete files you no longer need, so you use the storage you already have before adding more. Only the files are deleted: the records they belong to stay.",
+  OTHER_COMPANIES:
+    "Storage is shared by all your companies. To clean up another company, switch to it first.",
+  THIS_COMPANY: "This company",
+  CATEGORY: "Category",
+  YEAR: "Year",
+  FILES: "Files",
+  SIZE: "Size",
+  VIEW_FILES: "View files",
+  DELETE_YEAR: "Delete",
+  EMPTY: "This company has no stored files.",
+  UNUSED_HINT:
+    "Unused files belong to no record (for example an upload whose form was never saved). Deleting them changes nothing else.",
+  FILE_NAME: "File",
+  RECORD: "Belongs to",
+  STORED: "Stored",
+  LOCKED: "Decided record",
+  LOCKED_TIP:
+    "This file belongs to a record that is already decided, such as an approved application.",
+  PROCESSING: "Saving",
+  PROCESSING_TIP:
+    "Uploaded moments ago and not yet saved to a record. It can be deleted after a day if it's never saved.",
+  OPEN: "Open",
+  DELETE_SELECTED: "Delete selected",
+  DELETE_TITLE: "Delete files",
+  DELETE_SUMMARY: "{files} will be deleted, freeing {size}.",
+  DELETE_PERMANENT:
+    "Deleted files can't be recovered. The records they belong to stay, without these files.",
+  DELETE_LOCKED:
+    "{count} of these files belong to records that are already decided (for example approved applications). Type {word} to delete them too.",
+  DELETE_CONFIRM: "Delete files",
+  DELETED: "{files} deleted, {size} freed.",
+  DELETE_FAILED_SOME:
+    "{count} files couldn't be deleted. They'll show up under Unused files; try again later.",
+  NOTHING_TO_DELETE: "There are no files to delete here.",
+  NO_PERMISSION_HINT:
+    "You can see what uses storage. Ask your company's owner or an admin to delete files.",
 };
 
 export const SUPPORT_TIER_LABELS: Record<string, string> = {

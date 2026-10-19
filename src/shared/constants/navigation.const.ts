@@ -983,6 +983,13 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/billing",
         permission: "Billing:View",
       },
+      {
+        key: "security-storage",
+        feature: BASE_FEATURE,
+        label: "Storage",
+        path: "/billing/storage",
+        permission: ["Storage:View", "Storage:Manage"],
+      },
     ],
   },
 ];

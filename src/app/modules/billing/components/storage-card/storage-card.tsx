@@ -13,14 +13,17 @@ import {
   Tooltip,
   theme,
 } from "antd";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { ClearOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
+import { useNavigate } from "@tanstack/react-router";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { BILLING_LABEL, STORAGE_LABEL } from "../../constants/label.const";
 import {
   useRequestStorageReduction,
   useStorage,
   useWithdrawStorageReduction,
 } from "../../hooks/use-subscription-queries";
+import { STORAGE_PERMISSION } from "../../hooks/use-subscription-state";
 import type {
   StorageAddOnResponse,
   StorageSummaryResponse,
@@ -59,6 +62,11 @@ export function StorageCard({
   const [buying, setBuying] = useState(false);
   const [reducing, setReducing] = useState<StorageAddOnResponse | null>(null);
   const withdraw = useWithdrawStorageReduction();
+  const navigate = useNavigate();
+  const canFreeUp = useHasPermission(
+    STORAGE_PERMISSION.VIEW,
+    STORAGE_PERMISSION.MANAGE,
+  );
 
   if (isLoading || !summary) {
     return (
@@ -150,20 +158,31 @@ export function StorageCard({
     <Card
       title={STORAGE_LABEL.TITLE}
       extra={
-        canBuy && (
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusCircleOutlined />}
-            className="shadow-md!"
-            disabled={!summary.canPurchase}
-            onClick={() => setBuying(true)}
-          >
-            {summary.level === "Normal"
-              ? STORAGE_LABEL.BUY
-              : STORAGE_LABEL.UPGRADE}
-          </Button>
-        )
+        <div className="flex flex-wrap justify-end gap-2">
+          {canFreeUp && (
+            <Button
+              size="large"
+              icon={<ClearOutlined />}
+              onClick={() => navigate({ to: "/billing/storage" })}
+            >
+              {STORAGE_LABEL.FREE_UP}
+            </Button>
+          )}
+          {canBuy && (
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusCircleOutlined />}
+              className="shadow-md!"
+              disabled={!summary.canPurchase}
+              onClick={() => setBuying(true)}
+            >
+              {summary.level === "Normal"
+                ? STORAGE_LABEL.BUY
+                : STORAGE_LABEL.UPGRADE}
+            </Button>
+          )}
+        </div>
       }
     >
       <p className="mt-0 text-sm text-(--ant-color-text-secondary)">

@@ -10,6 +10,12 @@ export const BILLING_PERMISSION = {
   MANAGE: "Billing:Manage",
 } as const;
 
+/** Billing > Storage: View sees what fills the company's storage, Manage deletes files. Admin has both by default. */
+export const STORAGE_PERMISSION = {
+  VIEW: "Storage:View",
+  MANAGE: "Storage:Manage",
+} as const;
+
 /**
  * The current company's subscription as the UI needs it: its entitlements, whether it's
  * read-only, what locks a given set of features, and whether this person may manage billing

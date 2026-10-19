@@ -1333,6 +1333,9 @@ const PlanSelection = lazy(
 const PaymentResult = lazy(
   () => import("@/app/modules/billing/pages/payment-result"),
 );
+const StorageManager = lazy(
+  () => import("@/app/modules/billing/pages/storage-manager"),
+);
 const AuditDetail = lazy(
   () => import("@/app/modules/security/audit/pages/audit-detail"),
 );
@@ -1591,6 +1594,13 @@ const billingPaymentRoute = createRoute({
   component: withSuspense(PaymentResult),
 });
 
+// What fills the company's file storage, and deleting files to free space (Storage:View).
+const billingStorageRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "storage",
+  component: withSuspense(StorageManager),
+});
+
 const enrollBiometricsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "enroll-biometrics",
@@ -1738,6 +1748,7 @@ const routeTree = rootRoute.addChildren([
     billingIndexRoute,
     billingPlansRoute,
     billingPaymentRoute,
+    billingStorageRoute,
   ]),
   leaveApplicationRoute.addChildren([
     leaveApplicationIndexRoute,
