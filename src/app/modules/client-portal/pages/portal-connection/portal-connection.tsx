@@ -59,6 +59,14 @@ export default function PortalConnection() {
   };
 
   const last = connection.data?.lastSync;
+  const removal = last?.operation === "Remove";
+
+  const statusTag = () => {
+    if (!last) return null;
+    if (last.waiting) return <Tag color="blue">Waiting for the portal</Tag>;
+    if (!last.succeeded) return <Tag color="red">Needs attention</Tag>;
+    return <Tag color="green">{removal ? "Removed" : "Sent"}</Tag>;
+  };
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">
@@ -90,8 +98,8 @@ export default function PortalConnection() {
             name="apiKey"
             extra={
               connection.data?.hasApiKey
-                ? "A key is saved. Leave this empty to keep it, or paste a new key to replace it."
-                : "Create an integration under Integrations, then paste its key here."
+                ? "A key is saved. Leave this empty to keep it, or paste a new key to replace it. Time records do not use it; it is only for the company name and logo."
+                : "Create an integration under Integrations, then paste its key here. Time records do not use it; it is only for the company name and logo."
             }
           >
             <Input.Password autoComplete="off" placeholder="cpk_…" />
@@ -125,22 +133,23 @@ export default function PortalConnection() {
         {last ? (
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              {last.succeeded ? (
-                <Tag color="green">Sent</Tag>
-              ) : (
-                <Tag color="red">Needs attention</Tag>
-              )}
+              {statusTag()}
               <Text>
                 Batch {last.batchCode} ·{" "}
                 {dayjs(last.atUtc).format("MMM D, YYYY h:mm A")}
               </Text>
             </div>
             <Text type="secondary">
-              {last.accepted} of {last.records} time records accepted
-              {last.rejected > 0 ? `, ${last.rejected} refused` : ""}.
+              {last.waiting && last.partsReceived === 0
+                ? `${last.records} time records sent.`
+                : `${last.accepted} of ${last.records} time records ${removal ? "removed" : "accepted"}${last.rejected > 0 ? `, ${last.rejected} refused` : ""}.`}
             </Text>
             {last.message && (
-              <Alert type="warning" showIcon message={last.message} />
+              <Alert
+                type={last.waiting || last.succeeded ? "info" : "warning"}
+                showIcon
+                message={last.message}
+              />
             )}
             {last.errors && last.errors.length > 0 && (
               <ul className="m-0 pl-4">
@@ -153,7 +162,8 @@ export default function PortalConnection() {
         ) : (
           <Text type="secondary">
             Nothing has been sent yet. Time records are sent when a DTR batch is
-            approved.
+            approved, sent again when a punch they use is edited or deleted, and
+            removed when the batch is unposted or deleted.
           </Text>
         )}
       </Card>

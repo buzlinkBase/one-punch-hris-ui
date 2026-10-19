@@ -92,6 +92,12 @@ export interface PortalSyncSummary {
   succeeded: boolean;
   message: string | null;
   errors: PortalRowError[] | null;
+  /** "Upsert" (rows sent) or "Remove" (rows deleted/unposted in HRIS); null on summaries saved before removals existed. */
+  operation: "Upsert" | "Remove" | null;
+  /** Handed to the message bus; the portal hasn't answered every part yet. */
+  waiting: boolean;
+  partsReceived: number;
+  parts: number;
 }
 
 /** This company's connection to the portal (served by hrms-api; the API key is never returned). */
