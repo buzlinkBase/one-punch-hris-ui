@@ -58,6 +58,14 @@ export const BILLING_LABEL = {
   PAYMENT_INSTRUCTIONS_TITLE: "How to pay",
   PAY: "Pay",
   PAY_LATER: "Pay later",
+  UPGRADE_CREDIT_HINT:
+    "The unused days of your current plan are credited, and the new plan starts today.",
+  UPGRADE_CREDIT_NOTE:
+    "The unused days of your current plan will be taken off the price.",
+  UPGRADE_CREDIT_LINE: "Credit for {days} unused days",
+  UPGRADE_SUBTOTAL: "Subtotal",
+  UPGRADE_APPLIED:
+    "You're now on {plan}. Your unused credit covers it until {date}.",
   PAY_ONLINE_HINT:
     "Pay online -- your plan is activated as soon as the payment goes through.",
   PAY_OTHER_WAYS: "Or pay by bank transfer:",
@@ -85,6 +93,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   ShopeePay: "ShopeePay",
   OnlineBanking: "Online banking",
   BillEase: "BillEase",
+  Credit: "Unused-time credit",
 };
 
 /** The return screen after the payment page (/billing/payment). */

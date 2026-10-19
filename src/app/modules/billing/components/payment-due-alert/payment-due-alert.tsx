@@ -45,7 +45,7 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
       description={
         <div className="flex flex-col gap-3">
           {due &&
-            (due.addOnsAmount > 0 && dueAmounts ? (
+            ((due.addOnsAmount > 0 || due.creditAmount > 0) && dueAmounts ? (
               <div className="max-w-md space-y-1 font-medium">
                 <div className="flex justify-between gap-6">
                   <span>
@@ -53,12 +53,27 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
                   </span>
                   <span>{formatMoney(dueAmounts.plan, billing.currency)}</span>
                 </div>
-                <div className="flex justify-between gap-6">
-                  <span>{STORAGE_LABEL.ADD_ONS_LINE}</span>
-                  <span>
-                    {formatMoney(dueAmounts.addOns, billing.currency)}
-                  </span>
-                </div>
+                {dueAmounts.addOns > 0 && (
+                  <div className="flex justify-between gap-6">
+                    <span>{STORAGE_LABEL.ADD_ONS_LINE}</span>
+                    <span>
+                      {formatMoney(dueAmounts.addOns, billing.currency)}
+                    </span>
+                  </div>
+                )}
+                {dueAmounts.credit > 0 && (
+                  <div className="flex justify-between gap-6 text-(--ant-color-success)">
+                    <span>
+                      {BILLING_LABEL.UPGRADE_CREDIT_LINE.replace(
+                        "{days}",
+                        String(due.unusedDays),
+                      )}
+                    </span>
+                    <span>
+                      {formatMoney(-dueAmounts.credit, billing.currency)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between gap-6 border-t border-(--ant-color-border-secondary) pt-1 font-semibold">
                   <span>{STORAGE_LABEL.TOTAL_LINE}</span>
                   <span>{formatMoney(dueAmounts.total, billing.currency)}</span>

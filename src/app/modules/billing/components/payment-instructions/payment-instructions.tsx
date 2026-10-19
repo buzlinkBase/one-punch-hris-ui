@@ -24,6 +24,7 @@ export function PaymentInstructions({
   payOnline = false,
 }: PaymentInstructionsProps) {
   const atPeriodEnd = quote.timing === "AtPeriodEnd";
+  const hasCredit = !atPeriodEnd && quote.creditAmount > 0;
 
   return (
     <div className="flex flex-col gap-3">
@@ -31,6 +32,23 @@ export function PaymentInstructions({
         <Descriptions.Item label="Plan">
           {quote.planName} ({quote.billingCycle.toLowerCase()})
         </Descriptions.Item>
+        {hasCredit && (
+          <>
+            <Descriptions.Item label={BILLING_LABEL.UPGRADE_SUBTOTAL}>
+              {formatMoney(quote.subtotal, quote.currency)}
+            </Descriptions.Item>
+            <Descriptions.Item
+              label={BILLING_LABEL.UPGRADE_CREDIT_LINE.replace(
+                "{days}",
+                String(quote.unusedDays),
+              )}
+            >
+              <span className="text-(--ant-color-success)">
+                {formatMoney(-quote.creditAmount, quote.currency)}
+              </span>
+            </Descriptions.Item>
+          </>
+        )}
         <Descriptions.Item label="Amount">
           {formatMoney(quote.amountDue, quote.currency)}{" "}
           <span className="text-(--ant-color-text-secondary)">
@@ -52,6 +70,9 @@ export function PaymentInstructions({
         </p>
       ) : (
         <>
+          {hasCredit && (
+            <p className="m-0">{BILLING_LABEL.UPGRADE_CREDIT_HINT}</p>
+          )}
           {payOnline && (
             <>
               <p className="m-0">{BILLING_LABEL.PAY_ONLINE_HINT}</p>

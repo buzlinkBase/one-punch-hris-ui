@@ -7,6 +7,7 @@ import {
   Skeleton,
   Space,
   Typography,
+  message,
 } from "antd";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
@@ -138,6 +139,18 @@ export default function PlanSelection() {
         billingCycle: cycle,
       });
       setConfirming(null);
+      if (result.appliedImmediately) {
+        // The unused time paid for the whole period: there's nothing to pay.
+        const applied = BILLING_LABEL.UPGRADE_APPLIED.replace(
+          "{plan}",
+          result.planName,
+        );
+        message.success(
+          applied.replace("{date}", formatManilaDate(result.periodEndUtc)),
+        );
+        void navigate({ to: "/billing" });
+        return;
+      }
       setQuote(result);
     } catch (err) {
       setConfirming(null);
@@ -261,6 +274,9 @@ export default function PlanSelection() {
             {startsAtPeriodEnd(confirming)
               ? `It starts when your current period ends, on ${formatManilaDate(snapshot?.currentPeriodEndUtc)}.`
               : "It starts once your payment is confirmed."}
+            {isPaidActive &&
+              !startsAtPeriodEnd(confirming) &&
+              ` ${BILLING_LABEL.UPGRADE_CREDIT_NOTE}`}
           </p>
         )}
       </Modal>

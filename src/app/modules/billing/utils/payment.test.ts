@@ -19,6 +19,8 @@ const due: PaymentDueResponse = {
   amount: 4999,
   reason: "PlanChange",
   addOnsAmount: 0,
+  creditAmount: 0,
+  unusedDays: 0,
 };
 
 function checkout(overrides: Partial<CheckoutResponse> = {}): CheckoutResponse {
@@ -64,19 +66,46 @@ describe("describeDue", () => {
   it("stays quiet about storage when there is none", () => {
     expect(describeDue(due, "PHP")).not.toContain("storage");
   });
+
+  it("says how much an upgrade's credit took off", () => {
+    const text = describeDue(
+      { ...due, amount: 7418.87, creditAmount: 2580.13, unusedDays: 16 },
+      "PHP",
+    );
+    expect(text).toContain("7,418.87");
+    expect(text).toContain("after");
+    expect(text).toContain("2,580.13 credit");
+  });
+
+  it("stays quiet about credit when there is none", () => {
+    expect(describeDue(due, "PHP")).not.toContain("credit");
+  });
 });
 
 describe("paymentDueAmounts", () => {
   it("splits a plan renewal into plan, storage and total amounts", () => {
     expect(
       paymentDueAmounts({ ...due, amount: 5799, addOnsAmount: 800 }),
-    ).toEqual({ plan: 4999, addOns: 800, total: 5799 });
+    ).toEqual({ plan: 4999, addOns: 800, credit: 0, total: 5799 });
+  });
+
+  it("shows an upgrade's plan at its full price, with the credit apart", () => {
+    expect(
+      paymentDueAmounts({
+        ...due,
+        amount: 8218.87,
+        addOnsAmount: 800,
+        creditAmount: 2580.13,
+        unusedDays: 16,
+      }),
+    ).toEqual({ plan: 9999, addOns: 800, credit: 2580.13, total: 8218.87 });
   });
 
   it("keeps the full amount as the plan charge when there are no add-ons", () => {
     expect(paymentDueAmounts(due)).toEqual({
       plan: 4999,
       addOns: 0,
+      credit: 0,
       total: 4999,
     });
   });

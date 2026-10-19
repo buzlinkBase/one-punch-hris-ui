@@ -81,7 +81,11 @@ export interface PendingChangeResponse {
   billingCycle: BillingCycle;
   timing: PlanChangeTiming;
   effectiveAtUtc: string | null;
+  /** An upgrade waiting for payment: net of `creditAmount`. */
   amountDue: number;
+  /** An upgrade's credit for the unused days of the running period. */
+  creditAmount: number;
+  unusedDays: number;
 }
 
 export interface CompanyUsageResponse {
@@ -93,7 +97,7 @@ export interface CompanyUsageResponse {
   max: Record<string, number | null>;
 }
 
-/** TenantApi PaymentMethod -- the last five only come from online checkout. */
+/** TenantApi PaymentMethod -- QrPh to BillEase only come from online checkout; Credit is an upgrade the unused time paid for. */
 export type PaymentMethod =
   | "BankTransfer"
   | "Cash"
@@ -106,7 +110,8 @@ export type PaymentMethod =
   | "GrabPay"
   | "ShopeePay"
   | "OnlineBanking"
-  | "BillEase";
+  | "BillEase"
+  | "Credit";
 
 export interface PaymentResponse {
   id: string;
@@ -129,6 +134,8 @@ export interface PaymentResponse {
   refundedAmount: number;
   /** Point-in-time itemized amounts; null for payments made before itemization was recorded. */
   lineItems: PaymentLineItemResponse[] | null;
+  /** The unused time of the previous plan put towards this period on an upgrade. */
+  creditAmount: number;
 }
 
 export interface PaymentLineItemResponse {
@@ -180,11 +187,14 @@ export interface PaymentDueResponse {
   planCode: string;
   planName: string;
   billingCycle: BillingCycle;
-  /** The whole charge: the plan's price plus `addOnsAmount`. */
+  /** The whole charge: the plan's price plus `addOnsAmount`, less `creditAmount`. */
   amount: number;
   reason: PaymentDueReason;
   /** The part of `amount` that renews the company's paid storage blocks. */
   addOnsAmount: number;
+  /** An upgrade's credit for the unused days of the running period, already taken off `amount`. */
+  creditAmount: number;
+  unusedDays: number;
 }
 
 /** POST subscriptions/checkout: the payment page to send the browser to. */
@@ -219,9 +229,20 @@ export interface PlanChangeQuoteResponse {
   billingCycle: BillingCycle;
   timing: PlanChangeTiming;
   effectiveAtUtc: string | null;
+  /** What's left to pay: `subtotal` less `creditAmount`. */
   amountDue: number;
   currency: string;
   pricesIncludeVat: boolean;
+  /** The plan's full-period price plus `addOnsAmount`. */
+  subtotal: number;
+  addOnsAmount: number;
+  /** An upgrade's credit for the unused days of the period already paid for. */
+  creditAmount: number;
+  unusedDays: number;
+  /** The credit covered the whole price: the plan was switched right away. */
+  appliedImmediately: boolean;
+  /** When the new plan's first period ends once paid (extra days from leftover credit included). */
+  periodEndUtc: string | null;
 }
 
 /** One limit a downgrade would exceed (409 plan-limit-reached). */

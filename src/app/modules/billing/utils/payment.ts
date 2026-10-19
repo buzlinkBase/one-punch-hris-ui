@@ -11,26 +11,41 @@ export function cycleLabel(cycle: BillingCycle): string {
   return cycle === "Annual" ? BILLING_LABEL.ANNUAL : BILLING_LABEL.MONTHLY;
 }
 
-/** "Payroll (Monthly): ₱4,999.00", or "...: ₱5,799.00 (includes ₱800.00 storage)" */
+/**
+ * "Payroll (Monthly): ₱4,999.00", "...: ₱5,799.00 (includes ₱800.00 storage)", or for an upgrade
+ * "Premium (Monthly): ₱7,418.87 (after ₱2,580.13 credit)"
+ */
 export function describeDue(due: PaymentDueResponse, currency: string): string {
-  const storage =
+  const notes = [
     due.addOnsAmount > 0
-      ? ` (includes ${formatMoney(due.addOnsAmount, currency)} storage)`
-      : "";
-  return `${due.planName} (${cycleLabel(due.billingCycle)}): ${formatMoney(due.amount, currency)}${storage}`;
+      ? `includes ${formatMoney(due.addOnsAmount, currency)} storage`
+      : null,
+    due.creditAmount > 0
+      ? `after ${formatMoney(due.creditAmount, currency)} credit`
+      : null,
+  ].filter((note): note is string => note !== null);
+  const suffix = notes.length > 0 ? ` (${notes.join(", ")})` : "";
+  return `${due.planName} (${cycleLabel(due.billingCycle)}): ${formatMoney(due.amount, currency)}${suffix}`;
 }
 
 /** Splits the combined plan-period charge into the amounts shown before checkout. */
 export function paymentDueAmounts(due: PaymentDueResponse): {
   plan: number;
   addOns: number;
+  credit: number;
   total: number;
 } {
   return {
-    plan: due.amount - due.addOnsAmount,
+    plan: roundMoney(due.amount + due.creditAmount - due.addOnsAmount),
     addOns: due.addOnsAmount,
+    credit: due.creditAmount,
     total: due.amount,
   };
+}
+
+/** Centavos: sums of two-decimal amounts can pick up floating-point noise. */
+function roundMoney(amount: number): number {
+  return Math.round(amount * 100) / 100;
 }
 
 /** "Payroll (Monthly): ₱4,999.00 via GCash"; a storage purchase has no cycle: "2 x 50 GB storage block: ₱400.00" */
