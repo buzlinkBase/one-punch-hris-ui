@@ -124,9 +124,9 @@ export interface PaymentResponse {
   billingCycle: BillingCycle;
   periodStartUtc: string;
   periodEndUtc: string;
-  /** "Storage" for blocks bought mid-period. */
-  kind: "Plan" | "Storage";
-  /** Storage payments: what was bought, e.g. "2 x 50 GB Storage". */
+  /** "Storage" for blocks bought, "StorageRenewal" for a storage period -- billed apart from the plan. */
+  kind: "Plan" | "Storage" | "StorageRenewal";
+  /** Storage payments: what was paid for, e.g. "2 x 50 GB Storage". */
   description: string | null;
   /** "Refunded" / "Cancelled" for a voided payment that stays in the history; "Paid" otherwise. */
   status: PaymentStatus;
@@ -178,6 +178,46 @@ export interface BillingResponse {
   paymentDue: PaymentDueResponse | null;
   /** Whether online payment (PayMongo) is set up on the server. */
   onlinePaymentEnabled: boolean;
+  /** Auto renews that are on (or being set up), one per target at most. */
+  autoRenew: AutoRenewResponse[];
+}
+
+/** What an auto renew pays for: the plan, or the storage blocks (billed apart from the plan). */
+export type AutoRenewTarget = "Plan" | "Storage";
+
+export type AutoRenewStatus = "Pending" | "Active" | "PastDue" | "Canceled";
+
+/** An auto renew: PayMongo charges the saved card or Maya account every cycle (TenantApi AutoRenewView). */
+export interface AutoRenewResponse {
+  target: AutoRenewTarget;
+  status: AutoRenewStatus;
+  billingCycle: BillingCycle;
+  /** "Visa •••• 4242", "Maya" -- never more of the card than that. */
+  paymentMethodLabel: string | null;
+  activatedAtUtc: string | null;
+  nextChargeAtUtc: string | null;
+  lastFailureAtUtc: string | null;
+  lastFailureReason: string | null;
+  canceledAtUtc: string | null;
+  cancelReason: string | null;
+}
+
+/** POST subscriptions/auto-renew: the first payment to complete, which saves the card or Maya account. */
+export interface AutoRenewStartedResponse {
+  checkoutId: string;
+  amount: number;
+  currency: string;
+  billingCycle: BillingCycle;
+  /** For handing card details straight to PayMongo from the browser; null: card isn't offered. */
+  publicKey: string | null;
+}
+
+/** POST subscriptions/auto-renew/{checkoutId}/confirm. */
+export interface AutoRenewConfirmedResponse {
+  checkoutId: string;
+  /** Where the payer authorizes the payment (3-D Secure, the Maya app); null when it's already done. */
+  redirectUrl: string | null;
+  status: CheckoutStatus;
 }
 
 /** Why a payment is due: a chosen plan, the next period, or a lapsed plan coming back. */
@@ -187,11 +227,9 @@ export interface PaymentDueResponse {
   planCode: string;
   planName: string;
   billingCycle: BillingCycle;
-  /** The whole charge: the plan's price plus `addOnsAmount`, less `creditAmount`. */
+  /** The whole charge: the plan's price less `creditAmount`. Storage is billed on its own. */
   amount: number;
   reason: PaymentDueReason;
-  /** The part of `amount` that renews the company's paid storage blocks. */
-  addOnsAmount: number;
   /** An upgrade's credit for the unused days of the running period, already taken off `amount`. */
   creditAmount: number;
   unusedDays: number;
@@ -205,15 +243,18 @@ export interface CheckoutStartedResponse {
 
 export type CheckoutStatus = "Open" | "Paid" | "Expired" | "Failed";
 
-/** What a checkout buys: a period of a plan, or blocks of extra storage. */
-export type CheckoutKind = "Plan" | "StorageAddOn";
+/** What a checkout buys: a period of a plan, blocks of extra storage, or a storage period. */
+export type CheckoutKind = "Plan" | "StorageAddOn" | "StorageRenewal";
 
 /** GET subscriptions/checkout/{id}: where an online payment stands. */
 export interface CheckoutResponse {
   id: string;
   status: CheckoutStatus;
   kind: CheckoutKind;
-  /** The plan's name, or for a storage checkout what was bought ("2 x 50 GB storage block"). */
+  /**
+   * The plan's name, or for a storage checkout what was paid for ("2 x 50 GB storage block",
+   * "Storage renewal (monthly), 2 blocks").
+   */
   planName: string;
   billingCycle: BillingCycle;
   amount: number;
@@ -221,6 +262,8 @@ export interface CheckoutResponse {
   createdAtUtc: string;
   paidAtUtc: string | null;
   paymentMethod: PaymentMethod | null;
+  /** It paid the first invoice of an auto renew: once paid, it renews by itself. */
+  autoRenew: boolean;
 }
 
 export interface PlanChangeQuoteResponse {
@@ -233,9 +276,8 @@ export interface PlanChangeQuoteResponse {
   amountDue: number;
   currency: string;
   pricesIncludeVat: boolean;
-  /** The plan's full-period price plus `addOnsAmount`. */
+  /** The plan's full-period price. */
   subtotal: number;
-  addOnsAmount: number;
   /** An upgrade's credit for the unused days of the period already paid for. */
   creditAmount: number;
   unusedDays: number;

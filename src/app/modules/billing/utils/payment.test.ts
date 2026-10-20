@@ -18,7 +18,6 @@ const due: PaymentDueResponse = {
   billingCycle: "Monthly",
   amount: 4999,
   reason: "PlanChange",
-  addOnsAmount: 0,
   creditAmount: 0,
   unusedDays: 0,
 };
@@ -53,17 +52,7 @@ describe("describeDue", () => {
     expect(text).toContain("4,999.00");
   });
 
-  it("says how much of a renewal is storage", () => {
-    const text = describeDue(
-      { ...due, amount: 5799, addOnsAmount: 800 },
-      "PHP",
-    );
-    expect(text).toContain("5,799.00");
-    expect(text).toContain("includes");
-    expect(text).toContain("800.00 storage");
-  });
-
-  it("stays quiet about storage when there is none", () => {
+  it("never mentions storage -- it is billed on its own", () => {
     expect(describeDue(due, "PHP")).not.toContain("storage");
   });
 
@@ -83,28 +72,20 @@ describe("describeDue", () => {
 });
 
 describe("paymentDueAmounts", () => {
-  it("splits a plan renewal into plan, storage and total amounts", () => {
-    expect(
-      paymentDueAmounts({ ...due, amount: 5799, addOnsAmount: 800 }),
-    ).toEqual({ plan: 4999, addOns: 800, credit: 0, total: 5799 });
-  });
-
   it("shows an upgrade's plan at its full price, with the credit apart", () => {
     expect(
       paymentDueAmounts({
         ...due,
-        amount: 8218.87,
-        addOnsAmount: 800,
+        amount: 7418.87,
         creditAmount: 2580.13,
         unusedDays: 16,
       }),
-    ).toEqual({ plan: 9999, addOns: 800, credit: 2580.13, total: 8218.87 });
+    ).toEqual({ plan: 9999, credit: 2580.13, total: 7418.87 });
   });
 
-  it("keeps the full amount as the plan charge when there are no add-ons", () => {
+  it("keeps the full amount as the plan charge when there is no credit", () => {
     expect(paymentDueAmounts(due)).toEqual({
       plan: 4999,
-      addOns: 0,
       credit: 0,
       total: 4999,
     });
@@ -132,6 +113,18 @@ describe("describeCheckout", () => {
       }),
     );
     expect(text).toMatch(/^2 x 50 GB storage block: .*400\.00 via GCash$/);
+  });
+
+  it("describes a storage renewal by its own name, which already says the cycle", () => {
+    const text = describeCheckout(
+      checkout({
+        kind: "StorageRenewal",
+        planName: "Storage renewal (monthly), 2 blocks",
+        billingCycle: "Monthly",
+        amount: 800,
+      }),
+    );
+    expect(text).toMatch(/^Storage renewal \(monthly\), 2 blocks: .*800\.00$/);
   });
 
   it("uses readable names for online methods", () => {

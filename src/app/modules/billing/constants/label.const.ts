@@ -204,7 +204,7 @@ export const LIMIT_SHORT_LABELS: Record<string, string> = {
 export const STORAGE_LABEL = {
   TITLE: "Storage",
   SUBTITLE:
-    "File storage for your account, shared by all your companies: your plan's capacity plus any storage blocks you add.",
+    "File storage for your account, shared by all your companies: your plan's capacity plus any storage blocks you add. Storage blocks are billed separately from your plan, on their own monthly or annual cycle.",
   BY_COMPANY: "Used by company",
   BASE_PLAN: "Plan storage",
   ADD_ONS: "Storage add-ons",
@@ -214,33 +214,52 @@ export const STORAGE_LABEL = {
   FULL_TITLE: "Storage is full",
   BUY: "Add storage",
   REDUCE_TIP:
-    "Keep fewer blocks. Nothing changes today: you keep the storage you paid for until this period ends.",
+    "Keep fewer blocks. Nothing changes today: you keep the storage you paid for until your storage renewal date.",
   UNKNOWN_USAGE: "Usage can't be shown right now.",
   FREE_GRANT: "Included at no charge",
   REDUCE: "Reduce",
   WITHDRAW_REDUCTION: "Keep these blocks",
-  BILLING_SUMMARY: "Billing",
-  PLAN_LINE: "Plan",
+  BILLING_SUMMARY: "Storage billing",
+  STORAGE_BILL_LINE: "{amount} {cycle}, renews on {date}",
   ADD_ONS_LINE: "Storage add-ons",
   TOTAL_LINE: "Total",
+  STATUS_ACTIVE: "Storage is paid until {date}, billed {cycle}.",
+  STATUS_ENDING:
+    "Your extra storage ends on {date}. After that your storage goes back to what your plan includes.",
+  STATUS_PAST_DUE:
+    "Your storage payment is overdue. Your extra storage stays available until {date}. After that, your storage goes back to what your plan includes.",
+  STATUS_LAPSED:
+    "Your extra storage has ended because it wasn't paid, so your storage is back to what your plan includes. Nothing was deleted. Pay to get it back.",
+  RENEWAL_DUE: "Storage renewal: {amount} for {cycle} billing, until {date}.",
+  PAY_RENEWAL: "Pay storage",
+  PAY_RENEWAL_UNAVAILABLE:
+    "Online payment isn't available yet. Please contact billing to pay for storage.",
+  CYCLE_SWITCH: "Switch to {cycle} billing",
+  CYCLE_PENDING: "Switches to {cycle} billing on {date}.",
+  CYCLE_KEEP: "Keep {cycle} billing",
+  CYCLE_SWITCH_CONFIRM:
+    "From your next storage renewal on {date}, your storage blocks will be billed {cycle}.",
   BUY_TITLE: "Add storage",
   BUY_BLOCK: "Storage block",
   BUY_QUANTITY: "Number of blocks",
+  BUY_CYCLE: "Storage billing",
   BUY_PRORATED: "Due today (prorated)",
+  BUY_FULL_PERIOD: "Due today",
   BUY_PRORATED_HINT:
-    "You pay only for the days left in your current billing period. From your next renewal the blocks are billed with your plan, at the monthly or annual block price to match your billing cycle.",
-  BUY_NEW_RECURRING: "Storage add-ons from your next renewal",
+    "You pay only for the days left until your storage renews. After that, all your blocks renew together on your storage billing cycle, separately from your plan.",
+  BUY_FULL_PERIOD_HINT:
+    "Storage is billed separately from your plan. This starts your storage billing today, on the cycle you choose.",
+  BUY_NEW_RECURRING: "Storage add-ons from your next storage renewal",
   UNIT_COST: "Unit cost",
   CYCLE_TOTAL_MONTHLY: "Monthly",
   CYCLE_TOTAL_ANNUAL: "Yearly",
   BUY_NEW_LIMIT: "Your storage after payment",
   BUY_CONFIRM: "Pay",
-  BUY_UNAVAILABLE:
-    "Storage can be added once your plan is paid and running. Choose or renew a plan first.",
+  BUY_UNAVAILABLE: "Storage can't be added right now.",
   NO_OFFERINGS: "No storage blocks are available to your account right now.",
   REDUCE_TITLE: "Reduce storage blocks",
   REDUCE_HINT:
-    "The change takes effect at the end of your current billing period. Until then you keep the storage you paid for.",
+    "The change takes effect on your storage renewal date. Until then you keep the storage you paid for.",
   REDUCE_OVER_LIMIT:
     "You're using more than your storage will be after the reduction. Free up space before your renewal date, or uploads will be blocked.",
   REDUCE_PENDING: "Reduces to {blocks} on {date}",
@@ -251,6 +270,44 @@ export const STORAGE_LABEL = {
     "Ask your company's owner or billing admin to add storage.",
   PAID_HINT: "Your extra storage is active now.",
   FREE_UP: "Free up space",
+};
+
+export const AUTO_RENEW_LABEL = {
+  PAY_BUTTON: "Pay and renew automatically",
+  MODAL_TITLE: "Pay and turn on auto renew",
+  INTRO:
+    "Pay {amount} now. After that we'll charge the same card or Maya account automatically every {cycle} until you turn auto renew off.",
+  INTRO_STORAGE_NOTE: "Storage renews on its own, separately from your plan.",
+  METHOD: "Pay with",
+  METHOD_CARD: "Card",
+  METHOD_MAYA: "Maya",
+  CARD_NAME: "Name on card",
+  CARD_NUMBER: "Card number",
+  CARD_EXPIRY: "Expiry (MM/YY)",
+  CARD_CVC: "CVC",
+  CARD_SAFE:
+    "Your card details go straight to PayMongo, our payment provider. We never see or store them -- only the card type and last 4 digits.",
+  MAYA_HINT:
+    "You'll be taken to Maya to approve the payment and allow future automatic payments.",
+  CARD_UNAVAILABLE: "Card payment isn't available right now. Choose Maya.",
+  INVALID_CARD: "Check your card number, expiry and CVC.",
+  CONFIRM: "Pay {amount}",
+  ON: "Auto renew is on: we charge your {method} automatically.",
+  ON_WITH_DATE:
+    "Auto renew is on: we'll charge your {method} automatically on {date}.",
+  FAILED:
+    "We couldn't charge your {method}. We'll try again over the next few days -- or pay now to avoid an interruption.",
+  PENDING:
+    "Auto renew is waiting for its first payment. Finish paying to turn it on.",
+  SAVED_METHOD: "saved payment method",
+  TURN_OFF: "Turn off auto renew",
+  TURN_OFF_CONFIRM:
+    "Nothing more will be charged automatically. Your paid period runs to its end; after that you pay by hand.",
+  RENEWS_AUTOMATICALLY:
+    "Your plan renews automatically on {date} with your {method}.",
+  STORAGE_RENEWS_AUTOMATICALLY:
+    "Your storage renews automatically on {date} with your {method}.",
+  PAID_HINT: " Auto renew is on: the next periods are charged automatically.",
 };
 
 export const STORAGE_MANAGER_LABEL = {

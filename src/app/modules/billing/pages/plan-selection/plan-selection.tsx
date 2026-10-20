@@ -15,6 +15,7 @@ import { LIMIT_KEYS } from "@/shared/constants/entitlement-keys.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { PayNowButton } from "../../components/pay-now-button";
+import { AutoRenewPayButton } from "../../components/auto-renew-pay-button";
 import { PlanCard } from "../../components/plan-card";
 import { PaymentInstructions } from "../../components/payment-instructions";
 import {
@@ -290,6 +291,12 @@ export default function PlanSelection() {
               <Button onClick={() => navigate({ to: "/billing" })}>
                 {BILLING_LABEL.PAY_LATER}
               </Button>
+              <AutoRenewPayButton
+                start={{ target: "Plan" }}
+                amount={quote.amountDue}
+                currency={quote.currency}
+                cycle={quote.billingCycle}
+              />
               <PayNowButton
                 amount={quote.amountDue}
                 currency={quote.currency}

@@ -1,4 +1,5 @@
-import { BILLING_LABEL } from "../constants/label.const";
+import { BILLING_LABEL, STORAGE_LABEL } from "../constants/label.const";
+import { formatManilaDate } from "./format";
 import type {
   StorageLevel,
   StorageOfferingResponse,
@@ -91,20 +92,71 @@ export function exceedsLimit(
   return usedMb !== null && limitMb !== null && usedMb > limitMb;
 }
 
-/** The line items behind "Base plan + Storage add-ons = Total", per the account's billing cycle. */
-export function cycleBreakdown(
-  summary: Pick<StorageSummaryResponse, "planPrice" | "addOnsTotal">,
-): { plan: number; addOns: number; total: number } {
-  return {
-    plan: summary.planPrice,
-    addOns: summary.addOnsTotal,
-    total: summary.planPrice + summary.addOnsTotal,
-  };
-}
-
 /** "/ month" or "/ year", for an amount billed once per cycle. */
 export function perCycle(cycle: BillingCycle): string {
   return cycle === "Annual" ? BILLING_LABEL.PER_YEAR : BILLING_LABEL.PER_MONTH;
+}
+
+/** "monthly" / "annual", for a sentence. */
+export function cycleWord(cycle: BillingCycle): string {
+  return cycle === "Annual" ? "annual" : "monthly";
+}
+
+/** The cycle storage would switch to. */
+export function otherCycle(cycle: BillingCycle): BillingCycle {
+  return cycle === "Annual" ? "Monthly" : "Annual";
+}
+
+export interface StorageStanding {
+  type: "info" | "warning" | "error";
+  message: string;
+}
+
+/**
+ * Where storage's own billing period stands, as one line for the Billing page -- independent of the
+ * plan: paid until its due date, ending (every paid block given up), past due with the grace end, or
+ * lapsed. Null before any storage is bought, or when there's nothing paid to bill.
+ */
+export function storageStanding(
+  summary: Pick<
+    StorageSummaryResponse,
+    | "status"
+    | "periodEndUtc"
+    | "graceEndsAtUtc"
+    | "billingCycle"
+    | "cancelAtPeriodEnd"
+    | "addOnsTotal"
+  >,
+): StorageStanding | null {
+  const fill = (template: string, date: string | null) =>
+    template
+      .replace("{date}", formatManilaDate(date))
+      .replace("{cycle}", cycleWord(summary.billingCycle));
+
+  switch (summary.status) {
+    case "PastDue":
+      return {
+        type: "warning",
+        message: fill(STORAGE_LABEL.STATUS_PAST_DUE, summary.graceEndsAtUtc),
+      };
+    case "Lapsed":
+      return summary.addOnsTotal > 0
+        ? { type: "error", message: STORAGE_LABEL.STATUS_LAPSED }
+        : null;
+    case "Active":
+      if (summary.addOnsTotal <= 0) return null;
+      return summary.cancelAtPeriodEnd
+        ? {
+            type: "warning",
+            message: fill(STORAGE_LABEL.STATUS_ENDING, summary.periodEndUtc),
+          }
+        : {
+            type: "info",
+            message: fill(STORAGE_LABEL.STATUS_ACTIVE, summary.periodEndUtc),
+          };
+    default:
+      return null;
+  }
 }
 
 /** One block's price for the cycle the account is billed on (monthly or annual). */

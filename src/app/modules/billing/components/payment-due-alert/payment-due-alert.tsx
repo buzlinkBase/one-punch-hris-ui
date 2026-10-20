@@ -13,6 +13,9 @@ import {
   paymentDueAmounts,
 } from "../../utils/payment";
 import { PayNowButton } from "../pay-now-button";
+import { AutoRenewPayButton } from "../auto-renew-pay-button";
+import { AutoRenewStatus } from "../auto-renew-status";
+import { autoRenewOf, isCharging } from "../../utils/auto-renew";
 
 interface PaymentDueAlertProps {
   billing: BillingResponse;
@@ -31,6 +34,18 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
   const isUpcomingRenewal =
     due?.reason === "Renewal" && billing.entitlements.status === "Active";
   const dueAmounts = due ? paymentDueAmounts(due) : null;
+  const planAutoRenew = autoRenewOf(billing.autoRenew, "Plan");
+
+  // Auto renew pays the renewal by itself: say so instead of asking for a payment.
+  if (due?.reason === "Renewal" && planAutoRenew && isCharging(planAutoRenew)) {
+    return (
+      <AutoRenewStatus
+        className="mt-4"
+        autoRenew={planAutoRenew}
+        canManage={canPay}
+      />
+    );
+  }
 
   return (
     <Alert
@@ -45,7 +60,7 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
       description={
         <div className="flex flex-col gap-3">
           {due &&
-            ((due.addOnsAmount > 0 || due.creditAmount > 0) && dueAmounts ? (
+            (due.creditAmount > 0 && dueAmounts ? (
               <div className="max-w-md space-y-1 font-medium">
                 <div className="flex justify-between gap-6">
                   <span>
@@ -53,27 +68,17 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
                   </span>
                   <span>{formatMoney(dueAmounts.plan, billing.currency)}</span>
                 </div>
-                {dueAmounts.addOns > 0 && (
-                  <div className="flex justify-between gap-6">
-                    <span>{STORAGE_LABEL.ADD_ONS_LINE}</span>
-                    <span>
-                      {formatMoney(dueAmounts.addOns, billing.currency)}
-                    </span>
-                  </div>
-                )}
-                {dueAmounts.credit > 0 && (
-                  <div className="flex justify-between gap-6 text-(--ant-color-success)">
-                    <span>
-                      {BILLING_LABEL.UPGRADE_CREDIT_LINE.replace(
-                        "{days}",
-                        String(due.unusedDays),
-                      )}
-                    </span>
-                    <span>
-                      {formatMoney(-dueAmounts.credit, billing.currency)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex justify-between gap-6 text-(--ant-color-success)">
+                  <span>
+                    {BILLING_LABEL.UPGRADE_CREDIT_LINE.replace(
+                      "{days}",
+                      String(due.unusedDays),
+                    )}
+                  </span>
+                  <span>
+                    {formatMoney(-dueAmounts.credit, billing.currency)}
+                  </span>
+                </div>
                 <div className="flex justify-between gap-6 border-t border-(--ant-color-border-secondary) pt-1 font-semibold">
                   <span>{STORAGE_LABEL.TOTAL_LINE}</span>
                   <span>{formatMoney(dueAmounts.total, billing.currency)}</span>
@@ -87,10 +92,16 @@ export function PaymentDueAlert({ billing, canPay }: PaymentDueAlertProps) {
           {payable && (
             <>
               <span>{BILLING_LABEL.PAY_ONLINE_HINT}</span>
-              <div>
+              <div className="flex flex-wrap gap-2">
                 <PayNowButton
                   amount={payable.amount}
                   currency={billing.currency}
+                />
+                <AutoRenewPayButton
+                  start={{ target: "Plan" }}
+                  amount={payable.amount}
+                  currency={billing.currency}
+                  cycle={payable.billingCycle}
                 />
               </div>
               <span className="text-(--ant-color-text-secondary)">

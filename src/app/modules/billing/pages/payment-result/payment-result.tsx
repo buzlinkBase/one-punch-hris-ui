@@ -4,6 +4,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   PAYMENT_RESULT_LABEL,
   STORAGE_LABEL,
+  AUTO_RENEW_LABEL,
 } from "../../constants/label.const";
 import {
   useCheckout,
@@ -76,10 +77,10 @@ export default function PaymentResult() {
           status="success"
           title={PAYMENT_RESULT_LABEL.PAID}
           subTitle={`${summary}${
-            checkout?.kind === "StorageAddOn"
+            checkout && checkout.kind !== "Plan"
               ? STORAGE_LABEL.PAID_HINT
               : PAYMENT_RESULT_LABEL.PAID_HINT
-          }`}
+          }${checkout?.autoRenew ? AUTO_RENEW_LABEL.PAID_HINT : ""}`}
           extra={toBilling}
         />
       )}

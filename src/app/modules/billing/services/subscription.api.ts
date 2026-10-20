@@ -2,6 +2,11 @@ import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { PlanChangeRequest } from "../models/api/request/plan-change-request.model";
 import type {
+  ConfirmAutoRenewRequest,
+  StartAutoRenewRequest,
+} from "../models/api/request/auto-renew-request.model";
+import type {
+  StorageCycleRequest,
   StoragePurchaseRequest,
   StorageReductionRequest,
 } from "../models/api/request/storage-request.model";
@@ -11,6 +16,9 @@ import type {
   StorageSummaryResponse,
 } from "../models/api/response/storage-response.model";
 import type {
+  AutoRenewConfirmedResponse,
+  AutoRenewStartedResponse,
+  AutoRenewTarget,
   BillingResponse,
   CheckoutResponse,
   CheckoutStartedResponse,
@@ -104,6 +112,48 @@ export const subscriptionApi = {
       `${ENDPOINT}/storage/checkout`,
       payload,
     );
+  },
+
+  /** Turns auto renew on by paying what's due now; returns the payment to complete -- needs Billing:Manage. */
+  startAutoRenew(
+    payload: StartAutoRenewRequest,
+  ): Promise<AutoRenewStartedResponse> {
+    return httpClient.postUnwrapped<AutoRenewStartedResponse>(
+      `${ENDPOINT}/auto-renew`,
+      payload,
+    );
+  },
+
+  /** Pays auto renew's first invoice with a PayMongo card token or Maya. */
+  confirmAutoRenew(
+    checkoutId: string,
+    payload: ConfirmAutoRenewRequest,
+  ): Promise<AutoRenewConfirmedResponse> {
+    return httpClient.postUnwrapped<AutoRenewConfirmedResponse>(
+      `${ENDPOINT}/auto-renew/${checkoutId}/confirm`,
+      payload,
+    );
+  },
+
+  turnOffAutoRenew(target: AutoRenewTarget): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/auto-renew/${target}`);
+  },
+
+  /** Opens the payment gateway's page for the storage renewal now due -- needs Billing:Manage. */
+  startStorageRenewalCheckout(): Promise<CheckoutStartedResponse> {
+    return httpClient.postUnwrapped<CheckoutStartedResponse>(
+      `${ENDPOINT}/storage/renewal/checkout`,
+      {},
+    );
+  },
+
+  /** Switch storage to monthly or annual billing from its next renewal. */
+  changeStorageCycle(payload: StorageCycleRequest): Promise<void> {
+    return httpClient.post<void>(`${ENDPOINT}/storage/cycle`, payload);
+  },
+
+  withdrawStorageCycleChange(): Promise<void> {
+    return httpClient.delete<void>(`${ENDPOINT}/storage/cycle`);
   },
 
   requestStorageReduction(payload: StorageReductionRequest): Promise<void> {

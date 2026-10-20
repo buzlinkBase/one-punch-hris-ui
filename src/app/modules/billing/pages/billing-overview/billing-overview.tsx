@@ -36,6 +36,8 @@ import type {
   PaymentResponse,
 } from "../../models/api/response/subscription-response.model";
 import { formatManilaDate, formatMoney } from "../../utils/format";
+import { autoRenewOf, isCharging } from "../../utils/auto-renew";
+import { AutoRenewStatus } from "../../components/auto-renew-status";
 
 const { Title } = Typography;
 
@@ -89,7 +91,7 @@ const PAYMENT_COLUMNS: ColumnsType<PaymentResponse> = [
     title: "For",
     key: "for",
     render: (_, row) => {
-      if (row.kind === "Storage") {
+      if (row.kind === "Storage" || row.kind === "StorageRenewal") {
         return (
           <span>
             <Tag color="purple">{BILLING_LABEL.STORAGE_PAYMENT}</Tag>{" "}
@@ -271,6 +273,7 @@ export default function BillingOverview() {
   const pending = billing.pendingChange;
   // How to pay: something is due (a chosen plan, a renewal, a comeback), or the account has to
   // pay to continue.
+  const planAutoRenew = autoRenewOf(billing.autoRenew, "Plan");
   const awaitingPayment =
     !!billing.paymentDue ||
     pending?.timing === "OnPayment" ||
@@ -368,6 +371,19 @@ export default function BillingOverview() {
           {awaitingPayment && (
             <PaymentDueAlert billing={billing} canPay={canManage} />
           )}
+
+          {planAutoRenew &&
+            !(
+              awaitingPayment &&
+              billing.paymentDue?.reason === "Renewal" &&
+              isCharging(planAutoRenew)
+            ) && (
+              <AutoRenewStatus
+                className="mt-4"
+                autoRenew={planAutoRenew}
+                canManage={canManage}
+              />
+            )}
 
           {canManage && status === "Active" && (
             <Space className="mt-4">

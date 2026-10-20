@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   blockPrice,
   blocksToMb,
-  cycleBreakdown,
+  cycleWord,
   describeBlocks,
   exceedsLimit,
   formatStorage,
   gaugePercent,
   limitAfterReduction,
+  otherCycle,
   perCycle,
   storageBannerKind,
   storageHeadline,
+  storageStanding,
 } from "./storage";
 
 describe("formatStorage", () => {
@@ -113,13 +115,54 @@ describe("blocks", () => {
     expect(describeBlocks(1, 51200)).toBe("1 x 50 GB block");
     expect(describeBlocks(2, 51200)).toBe("2 x 50 GB blocks");
   });
+});
 
-  it("adds the plan and the storage add-ons into one total per billing cycle", () => {
-    expect(cycleBreakdown({ planPrice: 2500, addOnsTotal: 800 })).toEqual({
-      plan: 2500,
-      addOns: 800,
-      total: 3300,
+describe("storage's own billing", () => {
+  const paid = {
+    status: "Active" as const,
+    periodEndUtc: "2026-11-20T00:00:00Z",
+    graceEndsAtUtc: null,
+    billingCycle: "Monthly" as const,
+    cancelAtPeriodEnd: false,
+    addOnsTotal: 800,
+  };
+
+  it("says when paid storage is due, on its own cycle", () => {
+    const standing = storageStanding(paid);
+    expect(standing?.type).toBe("info");
+    expect(standing?.message).toContain("Nov");
+    expect(standing?.message).toContain("monthly");
+  });
+
+  it("warns when every paid block is being given up", () => {
+    expect(storageStanding({ ...paid, cancelAtPeriodEnd: true })?.type).toBe(
+      "warning",
+    );
+  });
+
+  it("warns past due with the grace end, and errors once lapsed", () => {
+    const pastDue = storageStanding({
+      ...paid,
+      status: "PastDue",
+      graceEndsAtUtc: "2026-11-27T00:00:00Z",
     });
+    expect(pastDue?.type).toBe("warning");
+    expect(pastDue?.message).toContain("27");
+    expect(storageStanding({ ...paid, status: "Lapsed" })?.type).toBe("error");
+  });
+
+  it("says nothing before storage is bought, or with only free storage", () => {
+    expect(storageStanding({ ...paid, status: null })).toBeNull();
+    expect(storageStanding({ ...paid, addOnsTotal: 0 })).toBeNull();
+    expect(
+      storageStanding({ ...paid, status: "Lapsed", addOnsTotal: 0 }),
+    ).toBeNull();
+  });
+
+  it("names the cycles for switching", () => {
+    expect(cycleWord("Annual")).toBe("annual");
+    expect(otherCycle("Monthly")).toBe("Annual");
+    expect(otherCycle("Annual")).toBe("Monthly");
   });
 });
 

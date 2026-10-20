@@ -12,32 +12,25 @@ export function cycleLabel(cycle: BillingCycle): string {
 }
 
 /**
- * "Payroll (Monthly): ₱4,999.00", "...: ₱5,799.00 (includes ₱800.00 storage)", or for an upgrade
- * "Premium (Monthly): ₱7,418.87 (after ₱2,580.13 credit)"
+ * "Payroll (Monthly): ₱4,999.00", or for an upgrade "Premium (Monthly): ₱7,418.87 (after ₱2,580.13
+ * credit)". The plan alone -- storage is billed on its own cycle.
  */
 export function describeDue(due: PaymentDueResponse, currency: string): string {
-  const notes = [
-    due.addOnsAmount > 0
-      ? `includes ${formatMoney(due.addOnsAmount, currency)} storage`
-      : null,
+  const suffix =
     due.creditAmount > 0
-      ? `after ${formatMoney(due.creditAmount, currency)} credit`
-      : null,
-  ].filter((note): note is string => note !== null);
-  const suffix = notes.length > 0 ? ` (${notes.join(", ")})` : "";
+      ? ` (after ${formatMoney(due.creditAmount, currency)} credit)`
+      : "";
   return `${due.planName} (${cycleLabel(due.billingCycle)}): ${formatMoney(due.amount, currency)}${suffix}`;
 }
 
-/** Splits the combined plan-period charge into the amounts shown before checkout. */
+/** Splits an upgrade's charge into the plan's full price and the credit taken off it. */
 export function paymentDueAmounts(due: PaymentDueResponse): {
   plan: number;
-  addOns: number;
   credit: number;
   total: number;
 } {
   return {
-    plan: roundMoney(due.amount + due.creditAmount - due.addOnsAmount),
-    addOns: due.addOnsAmount,
+    plan: roundMoney(due.amount + due.creditAmount),
     credit: due.creditAmount,
     total: due.amount,
   };
@@ -48,15 +41,18 @@ function roundMoney(amount: number): number {
   return Math.round(amount * 100) / 100;
 }
 
-/** "Payroll (Monthly): ₱4,999.00 via GCash"; a storage purchase has no cycle: "2 x 50 GB storage block: ₱400.00" */
+/**
+ * "Payroll (Monthly): ₱4,999.00 via GCash"; storage already names what was paid for:
+ * "2 x 50 GB storage block: ₱400.00", "Storage renewal (monthly), 2 blocks: ₱800.00"
+ */
 export function describeCheckout(checkout: CheckoutResponse): string {
   const method = checkout.paymentMethod
     ? ` via ${PAYMENT_METHOD_LABELS[checkout.paymentMethod]}`
     : "";
   const what =
-    checkout.kind === "StorageAddOn"
-      ? checkout.planName
-      : `${checkout.planName} (${cycleLabel(checkout.billingCycle)})`;
+    checkout.kind === "Plan"
+      ? `${checkout.planName} (${cycleLabel(checkout.billingCycle)})`
+      : checkout.planName;
   return `${what}: ${formatMoney(checkout.amount, checkout.currency)}${method}`;
 }
 

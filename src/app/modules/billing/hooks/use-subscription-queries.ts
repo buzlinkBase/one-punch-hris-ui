@@ -5,6 +5,14 @@ import { useAuthUser } from "@/core/auth/use-auth-user";
 import { subscriptionApi } from "../services/subscription.api";
 import type { PlanChangeRequest } from "../models/api/request/plan-change-request.model";
 import type {
+  AutoRenewPaymentMethod,
+  CardDetails,
+  StartAutoRenewRequest,
+} from "../models/api/request/auto-renew-request.model";
+import type { AutoRenewTarget } from "../models/api/response/subscription-response.model";
+import { tokenizeCard } from "../services/paymongo-card.api";
+import type {
+  StorageCycleRequest,
   StoragePurchaseRequest,
   StorageReductionRequest,
 } from "../models/api/request/storage-request.model";
@@ -115,7 +123,10 @@ export function useStorageStatus(enabled = true) {
   });
 }
 
-/** Prices more blocks (prorated). Nothing changes until it's paid, so it doesn't refresh anything. */
+/**
+ * Prices more blocks: prorated to the storage due date, or a full storage period when none is
+ * running. Nothing changes until it's paid, so it doesn't refresh anything.
+ */
 export function useQuoteStorage() {
   return useMutation({
     mutationFn: (payload: StoragePurchaseRequest) =>
@@ -130,6 +141,68 @@ export function useStartStorageCheckout() {
       subscriptionApi.startStorageCheckout(payload),
     onSuccess: ({ checkoutUrl }) => window.location.assign(checkoutUrl),
   });
+}
+
+interface PayWithAutoRenewArgs {
+  start: StartAutoRenewRequest;
+  method: AutoRenewPaymentMethod;
+  /** Card only: typed details, tokenized by PayMongo in the browser before anything is set up. */
+  card?: CardDetails;
+}
+
+/**
+ * Pay what's due and turn auto renew on: auto renew is set up (which returns PayMongo's publishable
+ * key), the card is tokenized by PayMongo in the browser, and the first payment is confirmed with that
+ * token. A retry after a card typo simply replaces the unpaid setup. The browser then leaves for the
+ * authorization page (3-D Secure, the Maya app) -- or, when none is needed, goes straight to the
+ * payment return screen.
+ */
+export function usePayWithAutoRenew() {
+  return useMutation({
+    mutationFn: async ({ start, method, card }: PayWithAutoRenewArgs) => {
+      let paymentMethodId: string | undefined;
+      const started = await subscriptionApi.startAutoRenew(start);
+      if (method === "card") {
+        if (!card || !started.publicKey)
+          throw new Error("Card payment isn't available. Choose Maya.");
+        paymentMethodId = await tokenizeCard(started.publicKey, card);
+      }
+      return subscriptionApi.confirmAutoRenew(started.checkoutId, {
+        method,
+        paymentMethodId,
+      });
+    },
+    onSuccess: ({ checkoutId, redirectUrl }) =>
+      window.location.assign(
+        redirectUrl ?? `/billing/payment?checkout=${checkoutId}`,
+      ),
+  });
+}
+
+export function useTurnOffAutoRenew() {
+  return useSubscriptionMutation((target: AutoRenewTarget) =>
+    subscriptionApi.turnOffAutoRenew(target),
+  );
+}
+
+/** Pay online for the storage renewal now due: opens the gateway's payment page. */
+export function useStartStorageRenewalCheckout() {
+  return useMutation({
+    mutationFn: () => subscriptionApi.startStorageRenewalCheckout(),
+    onSuccess: ({ checkoutUrl }) => window.location.assign(checkoutUrl),
+  });
+}
+
+export function useChangeStorageCycle() {
+  return useSubscriptionMutation((payload: StorageCycleRequest) =>
+    subscriptionApi.changeStorageCycle(payload),
+  );
+}
+
+export function useWithdrawStorageCycleChange() {
+  return useSubscriptionMutation(() =>
+    subscriptionApi.withdrawStorageCycleChange(),
+  );
 }
 
 export function useRequestStorageReduction() {
