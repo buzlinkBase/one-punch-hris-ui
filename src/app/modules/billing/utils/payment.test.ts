@@ -34,6 +34,7 @@ function checkout(overrides: Partial<CheckoutResponse> = {}): CheckoutResponse {
     createdAtUtc: "2026-10-08T00:00:00Z",
     paidAtUtc: null,
     paymentMethod: null,
+    autoRenew: false,
     ...overrides,
   };
 }

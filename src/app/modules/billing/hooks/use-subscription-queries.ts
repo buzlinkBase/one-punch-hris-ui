@@ -200,7 +200,7 @@ export function useChangeStorageCycle() {
 }
 
 export function useWithdrawStorageCycleChange() {
-  return useSubscriptionMutation(() =>
+  return useSubscriptionMutation<void, void>(() =>
     subscriptionApi.withdrawStorageCycleChange(),
   );
 }
