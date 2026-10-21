@@ -15,7 +15,6 @@ import { DeleteOutlined, FileOutlined, InboxOutlined } from "@ant-design/icons";
 import { UPLOAD_ATTENDANCE_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUploadAttendanceLog } from "../../hooks/use-upload-attendance-queries";
-import { uploadErrorMessage } from "../../services/upload-error-message";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
@@ -110,8 +109,8 @@ export default function UploadAttendanceList() {
       setFileList([]);
       setRemarks("");
       messageApi.success("Attendance log uploaded successfully.");
-    } catch (error) {
-      messageApi.error(uploadErrorMessage(error));
+    } catch {
+      messageApi.error("Upload failed. Please try again.");
     }
   };
 

@@ -4,10 +4,6 @@ import type { UploadAttendanceRequest } from "../models/api/request/upload-atten
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "attendance/upload-att-log");
 
-// A device export can hold thousands of punches -- the global 30s request timeout is too short
-// for an import, so this one call gets its own.
-const UPLOAD_TIMEOUT_MS = 300_000;
-
 export const uploadAttendanceApi = {
   async upload(data: UploadAttendanceRequest): Promise<void> {
     const formData = new FormData();
@@ -23,7 +19,6 @@ export const uploadAttendanceApi = {
     // header before sending, so the browser can append the correct boundary value.
     await axiosInstance.post(ENDPOINT, formData, {
       headers: { "Content-Type": "multipart/form-data" },
-      timeout: UPLOAD_TIMEOUT_MS,
     });
   },
 };
