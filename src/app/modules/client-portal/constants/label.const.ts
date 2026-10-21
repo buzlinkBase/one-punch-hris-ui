@@ -29,7 +29,75 @@ export const BILLING_PATH = {
   invoice: (id: string) => `/client-portal/invoices/${id}`,
   PAYMENTS: "/client-portal/payments",
   SETUP: "/client-portal/billing-setup",
+  FORMATS: "/client-portal/billing-formats",
+  RUNS: "/client-portal/billing-runs",
 } as const;
+
+export const BILLING_FORMAT_LABEL = {
+  FORMATS_TITLE: "Billing Formats",
+  FORMATS_SUBTITLE:
+    "How each kind of client is billed: the pricing method, agency fee and taxes, and what the billing packet contains (sections, columns, signatures). One format can serve many clients.",
+  BUILT_IN_HELP:
+    "Built-in formats are ready to use in a client's billing arrangements and can't be changed. To bill a client differently, copy one and edit the copy.",
+  BUILT_IN_TAG: "Built-in",
+  BUILT_IN_READ_ONLY:
+    "This is a built-in format and can't be changed. To use different settings, copy it from the formats list and edit the copy.",
+  RUNS_TITLE: "Billing Runs",
+  RUNS_SUBTITLE:
+    "Bill a client for a period: every billing arrangement of the client becomes its own draft invoice, all under one reference number. Preview first to see the amounts and anything that blocks billing.",
+  ARRANGEMENTS_TITLE: "Billing arrangements",
+  ARRANGEMENTS_HELP:
+    "The ways this client is billed each cycle (for example regular posting, a sub-area, augmentation, holiday premium). Each one uses a billing format and has billing lines with their own headcount and rates.",
+};
+
+export const PRICING_METHOD_OPTIONS: { value: string; label: string }[] = [
+  {
+    value: "ContractDeduction",
+    label: "Contract rate, less hours not rendered",
+  },
+  { value: "RequiredVsActual", label: "Required vs actual hours" },
+  { value: "DailyActual", label: "Daily rate x days worked" },
+  { value: "HourlyActual", label: "Hourly rate x hours worked" },
+  { value: "Fixed", label: "Fixed amount per cutoff" },
+  { value: "HolidayPremium", label: "Holiday premium" },
+];
+
+export const PRICING_METHOD_LABEL: Record<string, string> = Object.fromEntries(
+  PRICING_METHOD_OPTIONS.map((o) => [o.value, o.label]),
+);
+
+export const RATE_BASIS_OPTIONS = [
+  { value: "MonthlyPerHead", label: "Per month (per head)" },
+  { value: "DailyPerHead", label: "Per day (per head)" },
+  { value: "Hourly", label: "Per hour" },
+];
+
+export const AGENCY_FEE_MODE_OPTIONS = [
+  { value: "PercentOfBase", label: "Percent of the personnel amount" },
+  { value: "FixedPerHeadMonthly", label: "Fixed amount per head per month" },
+  { value: "None", label: "No agency fee" },
+];
+
+export const TAX_BASE_OPTIONS = [
+  { value: "AgencyFee", label: "Agency fee only" },
+  { value: "Total", label: "Personnel amount + agency fee" },
+  { value: "None", label: "Not charged" },
+];
+
+export const ROUNDING_OPTIONS = [
+  { value: "FullPrecision", label: "Full precision, round only the totals" },
+  { value: "RoundEachStep", label: "Round every line, fee and tax" },
+  { value: "RoundUnitRates", label: "Round the per-day fee and VAT first" },
+];
+
+export const ATTACHMENT_CATEGORY_OPTIONS = [
+  { value: "SignedDtr", label: "Signed DTR" },
+  { value: "OvertimeRequest", label: "Overtime request form" },
+  { value: "MissedLogForm", label: "Missed log form" },
+  { value: "OfficialInvoice", label: "Official sales invoice" },
+  { value: "Annex", label: "Annex" },
+  { value: "Other", label: "Other" },
+];
 
 export const BILLING_LABEL = {
   INVOICES_TITLE: "Invoices",

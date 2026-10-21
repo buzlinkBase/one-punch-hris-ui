@@ -21,6 +21,7 @@ import type {
   BillingProfile,
   CheckStatus,
   DeliveryMode,
+  DisputeResolution,
   PortalModuleSwitches,
 } from "../models/api/response/client-portal-response.model";
 
@@ -430,11 +431,17 @@ export const useResolveDispute = () =>
       accept: boolean;
       outcome: string;
       creditSubtotal: number | null;
+      resolution?: DisputeResolution;
+      amount?: number | null;
+      arrangementId?: string | null;
     }) =>
       clientPortalApi.resolveDispute(v.id, {
         accept: v.accept,
         outcome: v.outcome,
         creditSubtotal: v.creditSubtotal,
+        resolution: v.resolution,
+        amount: v.amount,
+        arrangementId: v.arrangementId,
       }),
   );
 

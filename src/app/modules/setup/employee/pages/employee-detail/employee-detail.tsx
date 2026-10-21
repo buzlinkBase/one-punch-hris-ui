@@ -111,6 +111,7 @@ import QuickAddBranchModal from "../../components/quick-add-branch-modal";
 import QuickAddPositionModal from "../../components/quick-add-position-modal";
 import QuickAddTimeShiftModal from "../../components/quick-add-time-shift-modal";
 import EmployeeDependentsTab from "../../components/employee-dependents-tab";
+import { EmployeeDeployments } from "@/app/modules/setup/deployment/components/employee-deployments";
 import EmployeeEducationTab from "../../components/employee-education-tab";
 import EmployeeFixedScheduleTab from "../../components/employee-fixed-schedule-tab";
 import { useEmployeeFixedSchedule } from "@/app/modules/change-schedule/fixed-schedule/hooks/use-employee-fixed-schedule-queries";
@@ -2410,6 +2411,16 @@ export default function EmployeeDetail() {
                       value={fixedSchedule}
                       onChange={setFixedSchedule}
                     />
+                  </div>
+                ),
+              },
+              {
+                key: "deployments",
+                label: "Deployments",
+                disabled: !isEdit,
+                children: (
+                  <div className="pt-4">
+                    <EmployeeDeployments employeeId={id} />
                   </div>
                 ),
               },

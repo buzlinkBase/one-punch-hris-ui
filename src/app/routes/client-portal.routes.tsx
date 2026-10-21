@@ -23,6 +23,12 @@ const PaymentList = lazy(
 const BillingSetup = lazy(
   () => import("@/app/modules/client-portal/pages/billing-setup"),
 );
+const BillingFormats = lazy(
+  () => import("@/app/modules/client-portal/pages/billing-formats"),
+);
+const BillingRuns = lazy(
+  () => import("@/app/modules/client-portal/pages/billing-runs"),
+);
 const BillingReports = lazy(
   () => import("@/app/modules/client-portal/pages/billing-reports"),
 );
@@ -47,6 +53,9 @@ const ServiceScorecard = lazy(
 const PortalConnection = lazy(
   () => import("@/app/modules/client-portal/pages/portal-connection"),
 );
+const LiveMonitoring = lazy(
+  () => import("@/app/modules/client-portal/pages/live-monitoring"),
+);
 
 // Children of /client-portal -- gated through the nav entries (see getPermissionForPath).
 export const clientPortalRoutes: SetupRouteConfig[] = [
@@ -58,6 +67,8 @@ export const clientPortalRoutes: SetupRouteConfig[] = [
   { path: "invoices/$id", component: InvoiceDetail },
   { path: "payments", component: PaymentList },
   { path: "billing-setup", component: BillingSetup },
+  { path: "billing-formats", component: BillingFormats },
+  { path: "billing-runs", component: BillingRuns },
   { path: "reports", component: BillingReports },
   { path: "disputes", component: DisputeList },
   { path: "statements", component: Statements },
@@ -65,4 +76,5 @@ export const clientPortalRoutes: SetupRouteConfig[] = [
   { path: "notices", component: NoticeBoard },
   { path: "manpower", component: ManpowerRequests },
   { path: "scorecard", component: ServiceScorecard },
+  { path: "live", component: LiveMonitoring },
 ];

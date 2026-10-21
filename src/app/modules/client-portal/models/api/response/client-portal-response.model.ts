@@ -186,6 +186,8 @@ export interface InvoiceLine {
   unitRate: number;
   amount: number;
   reason: string | null;
+  /** For invoices priced with a billing format: the billing line it belongs to. */
+  groupKey: string | null;
 }
 
 export interface InvoiceDelivery {
@@ -344,7 +346,22 @@ export interface DisputeSummary {
   createdAt: string;
   resolvedAt: string | null;
   outcome: string | null;
+  /** The agency's answer is due by this day; null for disputes raised before response times existed. */
+  dueBy: string | null;
+  overdue: boolean;
+  ageDays: number;
+  resolution: DisputeResolution | null;
+  /** The disputed time log ("Juan Dela Cruz, Oct 1, 2026, Day"), when the dispute is about one guard on one day. */
+  timeLogLabel: string | null;
 }
+
+export type DisputeResolution =
+  | "Declined"
+  | "NoChange"
+  | "CreditMemo"
+  | "DebitMemo"
+  | "NextCycleAdjustment"
+  | "VoidAndRebill";
 
 export interface DisputeComment {
   id: string;
@@ -360,6 +377,7 @@ export interface DisputeDetail {
   resolvedBy: string | null;
   memoId: string | null;
   comments: DisputeComment[];
+  adjustmentId: string | null;
 }
 
 export interface StatementLine {
@@ -507,6 +525,14 @@ export interface InvoiceDetail {
   lines: InvoiceLine[];
   deliveries: InvoiceDelivery[];
   payments: PaymentSummary[];
+  /** Set for invoices made by a billing run from a client arrangement. */
+  referenceNo: string | null;
+  billingRunId: string | null;
+  arrangementId: string | null;
+  arrangementName: string | null;
+  /** The arrangement's number series is typed by staff (BIR booklet), so the number must be entered before approval. */
+  manualNumber: boolean;
+  attachments: number;
 }
 
 export interface InvoicePage {

@@ -32,6 +32,7 @@ import {
   peso,
 } from "../../constants/label.const";
 import type {
+  DisputeResolution,
   DisputeStatus,
   DisputeSummary,
 } from "../../models/api/response/client-portal-response.model";
@@ -44,6 +45,48 @@ const STATUS_TAG: Record<DisputeStatus, { color: string; label: string }> = {
   Resolved: { color: "green", label: "Resolved" },
   Declined: { color: "default", label: "Declined" },
 };
+
+const RESOLUTION_OPTIONS: { value: DisputeResolution; label: string }[] = [
+  { value: "NoChange", label: "Accept, no change in amount" },
+  { value: "CreditMemo", label: "Accept, credit memo now" },
+  { value: "DebitMemo", label: "Accept, debit memo now" },
+  {
+    value: "NextCycleAdjustment",
+    label: "Accept, adjust in the next billing",
+  },
+  { value: "VoidAndRebill", label: "Accept, void the invoice and bill again" },
+  { value: "Declined", label: "Decline" },
+];
+
+const RESOLUTION_LABEL: Record<string, string> = Object.fromEntries(
+  RESOLUTION_OPTIONS.map((o) => [o.value, o.label]),
+);
+
+/** Changing what the client owes now needs the Approve permission. */
+const NEEDS_APPROVAL: DisputeResolution[] = [
+  "CreditMemo",
+  "DebitMemo",
+  "VoidAndRebill",
+];
+
+interface ResolveForm {
+  resolution: DisputeResolution;
+  outcome: string;
+  amount?: number;
+  direction: "credit" | "charge";
+}
+
+function DueTag({ dispute }: { dispute: DisputeSummary }) {
+  if (dispute.overdue) {
+    return <Tag color="red">Overdue · {dispute.ageDays} days</Tag>;
+  }
+  if (!dispute.dueBy) return null;
+  return (
+    <Text type="secondary" className="text-xs">
+      Answer by {dayjs(dispute.dueBy).format("MMM D")}
+    </Text>
+  );
+}
 
 function DisputeDrawer({
   id,
@@ -58,12 +101,13 @@ function DisputeDrawer({
   const review = useReviewDispute();
   const resolve = useResolveDispute();
   const [commentText, setCommentText] = useState("");
-  const [form] = Form.useForm<{
-    decision: "accept" | "decline";
-    outcome: string;
-    creditSubtotal?: number;
-  }>();
-  const decision = Form.useWatch("decision", form);
+  const [form] = Form.useForm<ResolveForm>();
+  const resolution = Form.useWatch("resolution", form);
+  const declining = resolution === "Declined";
+  const withAmount =
+    resolution === "CreditMemo" ||
+    resolution === "DebitMemo" ||
+    resolution === "NextCycleAdjustment";
 
   const d = dispute.data;
   const closed =
@@ -75,18 +119,20 @@ function DisputeDrawer({
     setCommentText("");
   };
 
-  const submitResolution = async (values: {
-    decision: "accept" | "decline";
-    outcome: string;
-    creditSubtotal?: number;
-  }) => {
+  const submitResolution = async (values: ResolveForm) => {
     if (!id) return;
+    const amount =
+      values.resolution === "NextCycleAdjustment" &&
+      values.direction === "credit"
+        ? -(values.amount ?? 0)
+        : (values.amount ?? null);
     await resolve.mutateAsync({
       id,
-      accept: values.decision === "accept",
+      accept: values.resolution !== "Declined",
       outcome: values.outcome,
-      creditSubtotal:
-        values.decision === "accept" ? (values.creditSubtotal ?? null) : null,
+      creditSubtotal: null,
+      resolution: values.resolution,
+      amount,
     });
     getNotify().success({
       message: "Dispute closed. The client was notified in the thread.",
@@ -110,6 +156,7 @@ function DisputeDrawer({
             </Tag>
             <Text>{d.summary.clientName}</Text>
             <Text strong>{peso(d.summary.disputedAmount)}</Text>
+            {!closed && <DueTag dispute={d.summary} />}
             <Button
               size="small"
               onClick={() =>
@@ -127,6 +174,9 @@ function DisputeDrawer({
             </Text>
             {d.lineDescription && (
               <div className="text-sm">About: {d.lineDescription}</div>
+            )}
+            {d.summary.timeLogLabel && (
+              <div className="text-sm">Time log: {d.summary.timeLogLabel}</div>
             )}
             <div className="mt-1">{d.summary.reason}</div>
           </div>
@@ -184,42 +234,66 @@ function DisputeDrawer({
                   form={form}
                   layout="vertical"
                   onFinish={submitResolution}
-                  initialValues={{ decision: "accept" }}
+                  initialValues={{
+                    resolution: "NoChange",
+                    direction: "credit",
+                  }}
                 >
-                  <Form.Item name="decision">
-                    <Radio.Group
-                      options={[
-                        { value: "accept", label: "Accept" },
-                        { value: "decline", label: "Decline" },
-                      ]}
-                    />
+                  <Form.Item label="Outcome" name="resolution">
+                    <Select options={RESOLUTION_OPTIONS} />
                   </Form.Item>
-                  {decision !== "decline" && (
+                  {resolution === "NextCycleAdjustment" && (
+                    <Form.Item name="direction">
+                      <Radio.Group
+                        options={[
+                          { value: "credit", label: "Credit the client" },
+                          { value: "charge", label: "Charge the client" },
+                        ]}
+                      />
+                    </Form.Item>
+                  )}
+                  {withAmount && (
                     <Form.Item
-                      label="Credit to the client (before VAT)"
-                      name="creditSubtotal"
-                      extra="Leave empty if you will void and re-issue the invoice instead."
+                      label="Amount"
+                      name="amount"
+                      rules={[
+                        {
+                          required: true,
+                          type: "number",
+                          min: 0.01,
+                          message: "Enter the amount.",
+                        },
+                      ]}
+                      extra="Before VAT. For invoices from a billing run, enter the amount for personnel: the agency fee and VAT follow the client's billing format."
                     >
                       <InputNumber className="w-full" min={0} precision={2} />
                     </Form.Item>
                   )}
+                  {resolution === "VoidAndRebill" && (
+                    <Alert
+                      type="warning"
+                      showIcon
+                      className="mb-3"
+                      message="The invoice is voided now. Prepare the corrected one from Billing Runs for the same period; it will record that it replaces this one."
+                    />
+                  )}
                   <Form.Item
                     label={
-                      decision === "decline"
+                      declining
                         ? "Why it is declined (shown to the client)"
-                        : "What was done"
+                        : "What was done (shown to the client)"
                     }
                     name="outcome"
                     rules={[{ required: true, min: 3, message: "Required." }]}
                   >
                     <Input.TextArea rows={2} maxLength={2000} />
                   </Form.Item>
-                  {decision !== "decline" && (
+                  {resolution && NEEDS_APPROVAL.includes(resolution) && (
                     <Alert
                       type="info"
                       showIcon
                       className="mb-3"
-                      message="A credit changes what the client owes, so it needs the Approve permission."
+                      message="This changes what the client owes now, so it needs the Approve permission."
                     />
                   )}
                   <Button
@@ -227,9 +301,7 @@ function DisputeDrawer({
                     htmlType="submit"
                     loading={resolve.isPending}
                   >
-                    {decision === "decline"
-                      ? "Decline dispute"
-                      : "Accept and close"}
+                    {declining ? "Decline dispute" : "Close dispute"}
                   </Button>
                 </Form>
               </div>
@@ -240,7 +312,11 @@ function DisputeDrawer({
             <Alert
               type={d.summary.status === "Resolved" ? "success" : "info"}
               showIcon
-              message={`${d.summary.status} by ${d.resolvedBy}`}
+              message={`${
+                d.summary.resolution
+                  ? RESOLUTION_LABEL[d.summary.resolution]
+                  : d.summary.status
+              } (${d.resolvedBy})`}
               description={d.summary.outcome}
             />
           )}
@@ -277,6 +353,16 @@ export default function DisputeList() {
       title: "Raised",
       key: "raised",
       render: (_, d) => dayjs(d.createdAt).format("MMM D, YYYY"),
+    },
+    {
+      title: tab === "active" ? "Answer due" : "Outcome",
+      key: "due",
+      render: (_, d) =>
+        tab === "active" ? (
+          <DueTag dispute={d} />
+        ) : d.resolution ? (
+          RESOLUTION_LABEL[d.resolution]
+        ) : null,
     },
     {
       title: "Status",

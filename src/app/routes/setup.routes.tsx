@@ -94,6 +94,9 @@ const ClientList = lazy(
 const ClientDetail = lazy(
   () => import("@/app/modules/setup/client/pages/client-detail"),
 );
+const DeploymentBoard = lazy(
+  () => import("@/app/modules/setup/deployment/pages/deployment-board"),
+);
 
 const SectionList = lazy(
   () => import("@/app/modules/setup/section/pages/section-list"),
@@ -259,6 +262,7 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "client", component: ClientList },
   { path: "client/create", component: ClientDetail },
   { path: "client/$id", component: ClientDetail },
+  { path: "deployment", component: DeploymentBoard },
 
   { path: "section", component: SectionList },
   { path: "section/create", component: SectionDetail },

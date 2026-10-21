@@ -495,6 +495,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/setup/client",
           },
           {
+            key: "setup-deployment",
+            feature: FEATURE_KEYS.CLIENTS_AGENCY,
+            label: "Deployment",
+            path: "/setup/deployment",
+          },
+          {
             key: "setup-employee",
             label: "Employee",
             path: "/setup/employee",
@@ -861,6 +867,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     label: "Client Services",
     children: [
       {
+        key: "client-portal-live",
+        label: "Live Monitoring",
+        path: "/client-portal/live",
+        permission: "clientportal:Operations:View",
+      },
+      {
         key: "client-portal-clients",
         label: "Portal Clients",
         path: "/client-portal/clients",
@@ -876,6 +888,18 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         key: "client-portal-billing-setup",
         label: "Billing Setup",
         path: "/client-portal/billing-setup",
+        permission: "clientportal:Billing:View",
+      },
+      {
+        key: "client-portal-billing-formats",
+        label: "Billing Formats",
+        path: "/client-portal/billing-formats",
+        permission: "clientportal:Billing:View",
+      },
+      {
+        key: "client-portal-billing-runs",
+        label: "Billing Runs",
+        path: "/client-portal/billing-runs",
         permission: "clientportal:Billing:View",
       },
       {

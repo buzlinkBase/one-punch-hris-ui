@@ -19,6 +19,8 @@ import type { ColumnsType } from "antd/es/table";
 import {
   ArrowLeftOutlined,
   DownloadOutlined,
+  FileExcelOutlined,
+  FilePdfOutlined,
   PrinterOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -35,7 +37,9 @@ import {
   useSetInvoiceDelivery,
   useVoidInvoice,
 } from "../../hooks/use-client-portal-queries";
+import { useSetInvoiceNumber } from "../../hooks/use-billing-format-queries";
 import { clientPortalApi } from "../../services/client-portal.api";
+import { billingFormatApi } from "../../services/billing-format.api";
 import {
   BILLING_PATH,
   BILLING_PERMISSION,
@@ -43,7 +47,9 @@ import {
   peso,
 } from "../../constants/label.const";
 import { openBlobInNewTab, saveBlob } from "../../utils/open-blob";
+import { downloadBillingDocument } from "../../utils/billing-document-excel";
 import { InvoiceExtras } from "./invoice-extras";
+import { InvoiceAttachments } from "./invoice-attachments";
 import type {
   DeliveryMode,
   InvoiceDelivery,
@@ -65,7 +71,11 @@ export default function InvoiceDetail() {
   const setDelivery = useSetInvoiceDelivery();
   const addAdjustment = useAddAdjustment();
   const removeAdjustment = useRemoveAdjustment();
+  const setNumber = useSetInvoiceNumber();
 
+  const [numberOpen, setNumberOpen] = useState(false);
+  const [numberForm] = Form.useForm<{ number: string }>();
+  const [excelLoading, setExcelLoading] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [resendOpen, setResendOpen] = useState(false);
@@ -109,6 +119,19 @@ export default function InvoiceDetail() {
     const blob = await clientPortalApi.fetchBlob(path);
     if (kind === "tab") openBlobInNewTab(blob, type);
     else saveBlob(blob, fileName);
+  };
+
+  const downloadExcel = async () => {
+    setExcelLoading(true);
+    try {
+      const packet = await billingFormatApi.invoiceDocument(id);
+      const name = [invoice.referenceNo, summary.number ?? "draft"]
+        .filter(Boolean)
+        .join("-");
+      downloadBillingDocument(packet, `billing-${name}.xlsx`);
+    } finally {
+      setExcelLoading(false);
+    }
   };
 
   const lineColumns: ColumnsType<InvoiceLine> = [
@@ -219,14 +242,44 @@ export default function InvoiceDetail() {
           {summary.number ?? "Draft invoice"}
         </Title>
         <Tag color={tag.color}>{tag.label}</Tag>
-        <Button
-          icon={<PrinterOutlined />}
-          onClick={() =>
-            openFile(`invoices/${id}/print`, "tab", "invoice.html", "text/html")
-          }
-        >
-          View / print
-        </Button>
+        {invoice.arrangementId ? (
+          <>
+            <Button
+              icon={<FilePdfOutlined />}
+              onClick={() =>
+                openFile(
+                  `invoices/${id}/packet.pdf`,
+                  "tab",
+                  "billing.pdf",
+                  "application/pdf",
+                )
+              }
+            >
+              Billing packet
+            </Button>
+            <Button
+              icon={<FileExcelOutlined />}
+              loading={excelLoading}
+              onClick={downloadExcel}
+            >
+              Excel
+            </Button>
+          </>
+        ) : (
+          <Button
+            icon={<PrinterOutlined />}
+            onClick={() =>
+              openFile(
+                `invoices/${id}/print`,
+                "tab",
+                "invoice.html",
+                "text/html",
+              )
+            }
+          >
+            View / print
+          </Button>
+        )}
         {summary.hasFile && (
           <Button
             icon={<DownloadOutlined />}
@@ -263,6 +316,20 @@ export default function InvoiceDetail() {
         <Text strong className="mr-2">
           Next step
         </Text>
+        {invoice.manualNumber && editable && (
+          <PermissionGate permission={BILLING_PERMISSION.MANAGE}>
+            <Button
+              onClick={() => {
+                numberForm.setFieldsValue({ number: summary.number ?? "" });
+                setNumberOpen(true);
+              }}
+            >
+              {summary.number
+                ? "Change invoice number"
+                : "Enter invoice number"}
+            </Button>
+          </PermissionGate>
+        )}
         {summary.status === "Draft" && (
           <PermissionGate permission={BILLING_PERMISSION.MANAGE}>
             <Button
@@ -346,6 +413,20 @@ export default function InvoiceDetail() {
           column={{ xs: 1, sm: 2, md: 3 }}
           items={[
             { key: "client", label: "Client", children: summary.clientName },
+            ...(invoice.arrangementId
+              ? [
+                  {
+                    key: "arrangement",
+                    label: "Arrangement",
+                    children: invoice.arrangementName ?? "—",
+                  },
+                  {
+                    key: "reference",
+                    label: "Reference no.",
+                    children: invoice.referenceNo ?? "—",
+                  },
+                ]
+              : []),
             { key: "source", label: "Source", children: summary.source },
             {
               key: "period",
@@ -504,6 +585,8 @@ export default function InvoiceDetail() {
         />
       </div>
 
+      <InvoiceAttachments invoiceId={id} status={summary.status} />
+
       {invoice.deliveries.length > 0 && (
         <div className="rounded-lg bg-white p-4">
           <Title level={5}>Delivery history</Title>
@@ -622,6 +705,37 @@ export default function InvoiceDetail() {
             ]}
           >
             <Input.TextArea rows={2} maxLength={500} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Invoice number"
+        open={numberOpen}
+        okText="Save"
+        confirmLoading={setNumber.isPending}
+        onCancel={() => setNumberOpen(false)}
+        onOk={() => numberForm.submit()}
+        destroyOnHidden
+      >
+        <Form
+          form={numberForm}
+          layout="vertical"
+          onFinish={async (values) => {
+            await run(
+              () => setNumber.mutateAsync({ id, number: values.number.trim() }),
+              "Invoice number saved.",
+            );
+            setNumberOpen(false);
+          }}
+        >
+          <Form.Item
+            label="Number"
+            name="number"
+            rules={[{ required: true, message: "Enter the number." }]}
+            extra="This arrangement's invoices are numbered by hand, for example from a BIR-registered booklet."
+          >
+            <Input maxLength={60} />
           </Form.Item>
         </Form>
       </Modal>

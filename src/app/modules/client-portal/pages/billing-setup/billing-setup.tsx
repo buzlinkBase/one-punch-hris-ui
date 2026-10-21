@@ -36,6 +36,7 @@ import type {
   ContractRate,
   PortalSite,
 } from "../../models/api/response/client-portal-response.model";
+import { ArrangementsPanel } from "./arrangements-panel";
 
 const { Title, Text } = Typography;
 const DATE = "YYYY-MM-DD";
@@ -358,6 +359,8 @@ export default function BillingSetup() {
               scroll={{ x: "max-content" }}
             />
           </Card>
+
+          <ArrangementsPanel clientId={clientId} sites={sites} />
         </>
       )}
 

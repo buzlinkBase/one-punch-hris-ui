@@ -22,6 +22,7 @@ import type {
   CollectionsReport,
   ContractRate,
   DisputeDetail,
+  DisputeResolution,
   DisputeSummary,
   GuardDocument,
   GuardVaultRow,
@@ -349,7 +350,14 @@ export const clientPortalApi = {
 
   resolveDispute(
     id: string,
-    body: { accept: boolean; outcome: string; creditSubtotal: number | null },
+    body: {
+      accept: boolean;
+      outcome: string;
+      creditSubtotal: number | null;
+      resolution?: DisputeResolution;
+      amount?: number | null;
+      arrangementId?: string | null;
+    },
   ): Promise<DisputeDetail> {
     return httpClient.postUnwrapped(base(`disputes/${id}/resolve`), body);
   },
