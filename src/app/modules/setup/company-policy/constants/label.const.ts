@@ -18,6 +18,57 @@ export const COMPANY_POLICY_LABEL = {
   AUTHORIZED_SIGNATORY_NAME: "Authorized Signatory Name",
   AUTHORIZED_SIGNATORY_TITLE: "Authorized Signatory Title",
   SECTION_AGENCY_REGISTRATION: "Government Agency Registration",
+  REGISTERED_NAME: "Registered Business Name",
+  WEBSITE: "Website",
+  ADDRESS_LINE: "Street / Address Line",
+  SECTION_ADDRESS: "Address",
+  BARANGAY: "Barangay",
+  CITY: "City / Municipality",
+  PROVINCE: "Province",
+  ZIP_CODE: "ZIP Code",
+  COUNTRY: "Country",
+  SECTION_CONTACTS: "Contacts",
+  SECONDARY_PHONE: "Secondary Phone",
+  HR_CONTACT_NAME: "HR Contact Name",
+  HR_CONTACT_EMAIL: "HR Contact Email",
+  HR_CONTACT_PHONE: "HR Contact Phone",
+  PAYROLL_CONTACT_NAME: "Payroll Contact Name",
+  PAYROLL_CONTACT_EMAIL: "Payroll Contact Email",
+  PAYROLL_CONTACT_PHONE: "Payroll Contact Phone",
+  SECTION_EMPLOYEE_ID: "Employee ID Numbering",
+  EMPLOYEE_ID_MODE: "Employee numbers",
+  EMPLOYEE_ID_MODE_HELP:
+    "Off keeps the Employee No. a free-text field. Auto fills in the next number when a new employee is added; you can still type your own.",
+  EMPLOYEE_ID_PREFIX: "Prefix (optional)",
+  EMPLOYEE_ID_PADDING: "Number length",
+  EMPLOYEE_ID_INCLUDE_YEAR: "Include the year (e.g. 2026-0001)",
+  EMPLOYEE_ID_NEXT: "Next number",
+  SECTION_BIR: "BIR & Registration",
+  EMPLOYER_TYPE: "Employer Type",
+  IS_WITHHOLDING_AGENT: "Registered as a withholding agent",
+  ATC_CODE: "ATC Code",
+  TIN_BRANCH_CODE: "TIN Branch Code",
+  SSS_BRANCH_CODE: "SSS Branch Code",
+  PHILHEALTH_BRANCH_CODE: "PhilHealth Branch Code",
+  PAGIBIG_BRANCH_CODE: "Pag-IBIG Branch Code",
+  SEC_DTI_NUMBER: "SEC / DTI Registration No.",
+  REGISTRATION_DATE: "Registration Date",
+  BUSINESS_PERMIT_NO: "Business Permit No.",
+  BUSINESS_PERMIT_EXPIRY: "Business Permit Expiry",
+  SECTION_PAYSLIP: "Payslip",
+  SHOW_LETTERHEAD: "Print the company logo at the top of payslips",
+  SHOW_LETTERHEAD_HELP:
+    "Uses the logo uploaded under Company Profile. Without a logo, the payslip header stays text only.",
+  PAYSLIP_FOOTER: "Payslip Footer Note",
+  PAYSLIP_FOOTER_HELP:
+    "Printed at the bottom of every payslip, e.g. “This is a system-generated payslip and requires no signature.”",
+  SECTION_REGIONAL: "Regional Defaults",
+  TIME_ZONE: "Time Zone",
+  TIME_ZONE_HELP:
+    "Fixed: the whole system, including scheduled jobs, runs on Philippine time.",
+  CURRENCY: "Currency",
+  REST_DAYS: "Weekly Rest Days",
+  REST_DAYS_HELP: "The company's usual day(s) off.",
 
   SECTION_OVERTIME: "Overtime",
   SECTION_LATE: "Late Policy",
@@ -72,6 +123,61 @@ export const COMPANY_POLICY_LABEL = {
   TAB_ATTACHMENTS: "Attachments",
   TAB_PAYROLL_SETTINGS: "Payroll Settings",
 };
+
+// The product is for the Philippines, so these each offer the one regional value for now; the
+// fields stay editable-looking so more can be added without touching the page.
+export const DEFAULT_COUNTRY = "Philippines";
+export const DEFAULT_TIME_ZONE = "Asia/Manila";
+export const DEFAULT_CURRENCY = "PHP";
+export const DEFAULT_REST_DAYS = ["Sunday"];
+
+export const COUNTRY_OPTIONS = [
+  { value: DEFAULT_COUNTRY, label: "Philippines" },
+];
+export const TIME_ZONE_OPTIONS = [
+  { value: DEFAULT_TIME_ZONE, label: "Philippine Time (Asia/Manila, UTC+8)" },
+];
+export const CURRENCY_OPTIONS = [
+  { value: DEFAULT_CURRENCY, label: "Philippine Peso (PHP)" },
+];
+
+export const EMPLOYEE_ID_MODE_OPTIONS = [
+  { value: "Off", label: "Off (free text)" },
+  { value: "Auto", label: "Auto-generate" },
+];
+
+export const DEFAULT_EMPLOYEE_ID_PADDING = 4;
+
+// Mirrors hrms-api EmployeeIdSettings.Format, for the live example only.
+export const formatEmployeeId = (
+  prefix: string,
+  padding: number,
+  includeYear: boolean,
+  number: number,
+  year = new Date().getFullYear(),
+) => {
+  const digits = String(number).padStart(padding, "0");
+  // The prefix is optional: no prefix gives plain 0001 (or 2026-0001 with the year).
+  return [prefix.trim(), includeYear ? String(year) : "", digits]
+    .filter(Boolean)
+    .join("-");
+};
+
+export const EMPLOYER_TYPE_OPTIONS = [
+  { value: "private", label: "Private company" },
+  { value: "government", label: "Government agency" },
+  { value: "household", label: "Household employer (Kasambahay)" },
+];
+
+export const WEEKDAY_OPTIONS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+].map((day) => ({ value: day, label: day }));
 
 export const OT_INCLUSION_OPTIONS = [
   {

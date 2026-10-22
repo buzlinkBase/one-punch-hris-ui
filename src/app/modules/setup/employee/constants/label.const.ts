@@ -1,6 +1,9 @@
 export const EMPLOYEE_LABEL = {
   TITLE: "Employee",
   EMPLOYEE_NO: "Employee No.",
+  EMPLOYEE_NO_AUTO_PLACEHOLDER: "Auto-generated on save",
+  EMPLOYEE_NO_AUTO_HELP:
+    "Leave blank to use the next number, or type your own. Numbering is set in Company Settings.",
   BIO_ID: "Bio ID",
   FIRST_NAME: "First Name",
   LAST_NAME: "Last Name",

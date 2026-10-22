@@ -101,6 +101,8 @@ import { useFlexiTimeShifts } from "@/app/modules/setup/time-shift/flexi/hooks/u
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useSections } from "@/app/modules/setup/section/hooks/use-section-queries";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
+import { useCompanyInfo } from "@/app/modules/setup/company-policy/hooks/use-company-info-queries";
+import { DEFAULT_REST_DAYS } from "@/app/modules/setup/company-policy/constants/label.const";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
 import QuickAddPayrollGroupModal from "../../components/quick-add-payroll-group-modal";
 import QuickAddDepartmentModal from "../../components/quick-add-department-modal";
@@ -267,12 +269,18 @@ export default function EmployeeDetail() {
     handleSubmit,
     reset,
     setValue,
+    getValues,
     setFocus,
     formState: { errors },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema) as Resolver<EmployeeFormValues>,
     defaultValues: employeeMapper.toDefaultValues(),
   });
+
+  // Company settings: automatic employee numbers, and the default rest day(s) for a new employee.
+  const { data: company } = useCompanyInfo();
+  const autoNumbering = company?.employeeIdMode === "Auto";
+  const restDaysDefaulted = useRef(false);
 
   const selectedBranchId = useWatch({ control, name: "branchId" });
   const selectedAreaId = useWatch({ control, name: "areaId" });
@@ -329,6 +337,19 @@ export default function EmployeeDetail() {
       }
     }
   }, [isEdit, location.state, setValue]);
+
+  // A new employee starts with the company's usual rest day(s) (Company Settings > Regional
+  // Defaults), once, and only if nothing has been ticked yet. Editing an employee never touches it.
+  useEffect(() => {
+    if (isEdit || !company || restDaysDefaulted.current) return;
+    restDaysDefaulted.current = true;
+    const days = company.workWeekRestDays
+      ? company.workWeekRestDays.split(",").filter(Boolean)
+      : DEFAULT_REST_DAYS;
+    if ((getValues("restDays") ?? []).length === 0) {
+      setValue("restDays", days);
+    }
+  }, [isEdit, company, getValues, setValue]);
 
   const onSubmit = async (values: EmployeeFormValues) => {
     const selectedDays = values.restDays ?? [];
@@ -1063,11 +1084,27 @@ export default function EmployeeDetail() {
                 forceRender: true,
                 children: (
                   <div className={formGridClass} style={{ paddingTop: 16 }}>
-                    <Form.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.EMPLOYEE_NO}
+                      extra={
+                        autoNumbering
+                          ? EMPLOYEE_LABEL.EMPLOYEE_NO_AUTO_HELP
+                          : undefined
+                      }
+                    >
                       <Controller
                         name="employeeNo"
                         control={control}
-                        render={({ field }) => <Input {...field} />}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            placeholder={
+                              autoNumbering && !isEdit
+                                ? EMPLOYEE_LABEL.EMPLOYEE_NO_AUTO_PLACEHOLDER
+                                : undefined
+                            }
+                          />
+                        )}
                       />
                     </Form.Item>
 

@@ -11,7 +11,11 @@ export const companyInfoApi = {
   },
 
   update(data: UpdateCompanyInfo): Promise<void> {
-    return httpClient.put<void>(ENDPOINT, data);
+    // The page shows the server's reason itself (e.g. which setting is invalid), so the generic
+    // error toast is skipped to avoid two competing notifications.
+    return httpClient.put<void>(ENDPOINT, data, {
+      _skipErrorNotification: true,
+    });
   },
 
   /** Stores (or replaces) the logo; resolves to a link to show it. */

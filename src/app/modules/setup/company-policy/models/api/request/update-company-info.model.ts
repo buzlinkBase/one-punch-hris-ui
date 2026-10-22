@@ -11,4 +11,44 @@ export interface UpdateCompanyInfo {
   pagIbigNumber?: string;
   authorizedSignatoryName?: string;
   authorizedSignatoryTitle?: string;
+  industryCode?: string;
+  subIndustryCode?: string;
+  businessType?: string;
+  companySize?: string;
+  registeredName?: string;
+  website?: string;
+  barangay?: string;
+  city?: string;
+  province?: string;
+  zipCode?: string;
+  country?: string;
+  secondaryPhone?: string;
+  hrContactName?: string;
+  hrContactEmail?: string;
+  hrContactPhone?: string;
+  payrollContactName?: string;
+  payrollContactEmail?: string;
+  payrollContactPhone?: string;
+  employerType?: string;
+  isWithholdingAgent?: boolean;
+  atcCode?: string;
+  tinBranchCode?: string;
+  sssBranchCode?: string;
+  philHealthBranchCode?: string;
+  pagIbigBranchCode?: string;
+  secDtiNumber?: string;
+  /** ISO date; null clears it. */
+  registrationDate?: string | null;
+  businessPermitNo?: string;
+  businessPermitExpiry?: string | null;
+  payslipFooter?: string;
+  showLetterhead?: boolean;
+  employeeIdMode?: string;
+  employeeIdPrefix?: string;
+  employeeIdPadding?: number;
+  employeeIdIncludeYear?: boolean;
+  timeZone?: string;
+  currency?: string;
+  /** Comma-separated weekday names, e.g. "Saturday,Sunday". */
+  workWeekRestDays?: string;
 }

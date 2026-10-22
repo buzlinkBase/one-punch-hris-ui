@@ -98,6 +98,30 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Company Info: company name, address, TIN, RDO code, SSS / PhilHealth / Pag-IBIG employer numbers and the authorized signatory. These print on government forms and reports.",
           },
           {
+            text: "Business Classification (Company Info): pick your Industry, then an optional Sub-industry (the list only shows the ones under your industry), plus your Business Type and Company Size. All optional; changing the industry clears the sub-industry.",
+          },
+          {
+            text: "Address (Company Info): enter the street or building line, then barangay, city or municipality, province and ZIP. Country is Philippines. Older companies that typed the whole address on the first line can leave it as is.",
+          },
+          {
+            text: "Contacts (Company Info): a secondary phone, plus separate HR and Payroll contacts (name, email, phone). Also add the registered business name and website under the company profile.",
+          },
+          {
+            text: "BIR & Registration (Company Info): employer type, whether you are a registered withholding agent, ATC code, branch codes for TIN / SSS / PhilHealth / Pag-IBIG, SEC or DTI number, registration date, and business permit number and expiry date. The expiry date is only recorded for now; there is no reminder yet.",
+          },
+          {
+            text: "Employee ID Numbering (Company Info): Off (the default) keeps Employee No. as free text. Choose Auto-generate, then set an optional prefix (for example EMP; leave it blank for plain 0001, 0002 ...), the number length and whether to include the year, and each new employee gets the next number (EMP-0001, EMP-0002 ...), including employees added by import. You can still type your own number; it must not be used by another employee. Existing numbers are never changed.",
+          },
+          {
+            text: 'Payslip (Company Info): tick "Print the company logo at the top of payslips" to show your uploaded logo beside the company name (on by default; no logo, no change). The Payslip Footer Note is a short line printed at the bottom of every payslip, such as a system-generated or no-signature-required notice.',
+          },
+          {
+            text: "Registered Business Name (Company Info): printed as the employer's Registered Name on the BIR 2316 and the monthly remittance returns. Everywhere else, including payslips, your Company Name is used.",
+          },
+          {
+            text: "Regional Defaults (Company Info): time zone, currency and the weekly rest days. These are pre-filled for the Philippines (Asia/Manila, PHP, Sunday off) and are saved with the company. The time zone is fixed: the system and its daily jobs run on Philippine time. The weekly rest days are the default Rest Day for each new employee.",
+          },
+          {
             text: "Company Logo (top of Company Info): click Upload, choose a PNG, JPG or WebP, adjust the crop and click Use image. It's saved right away and resized automatically.",
           },
           {

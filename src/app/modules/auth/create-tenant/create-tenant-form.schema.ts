@@ -14,6 +14,12 @@ export const createTenantFormSchema = z.object({
   pagIbigNumber: z.string().optional(),
   authorizedSignatoryName: z.string().optional(),
   authorizedSignatoryTitle: z.string().optional(),
+  industryCode: z.string().optional(),
+  subIndustryCode: z.string().optional(),
+  businessType: z.string().optional(),
+  companySize: z.string().optional(),
+  acquisitionSource: z.string().optional(),
+  acquisitionSourceOther: z.string().max(200).optional(),
 });
 
 export type CreateTenantFormValues = z.infer<typeof createTenantFormSchema>;

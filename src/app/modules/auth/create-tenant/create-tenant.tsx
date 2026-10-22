@@ -5,12 +5,13 @@ import {
   Form,
   Input,
   Button,
+  Select,
   Typography,
   notification,
 } from "antd";
 import { ArrowLeftOutlined, BankOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createTenantFormSchema,
@@ -23,10 +24,29 @@ import { TENANT_FAILED_STATUSES } from "@/core/signalr/tenant-hub.types";
 import type { CreateTenantRequest } from "@/app/modules/auth/login/models/api/request/create-tenant-request.model";
 import { COMPANY_POLICY_LABEL } from "@/app/modules/setup/company-policy/constants/label.const";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
+import { CompanyClassificationFields } from "@/shared/components/company-classification-fields/company-classification-fields";
+import {
+  ACQUISITION_OTHER_SOURCE,
+  ACQUISITION_SOURCE_OPTIONS,
+  CLASSIFICATION_LABEL,
+} from "@/shared/industry/constants/classification.const";
 
 const { Title, Text } = Typography;
 
-type OptionalFieldName = Exclude<keyof CreateTenantFormValues, "tenantName">;
+// Picked from dropdowns (the classification section below) rather than typed.
+const CLASSIFICATION_FIELDS = [
+  "industryCode",
+  "subIndustryCode",
+  "businessType",
+  "companySize",
+  "acquisitionSource",
+  "acquisitionSourceOther",
+] as const;
+
+type OptionalFieldName = Exclude<
+  keyof CreateTenantFormValues,
+  "tenantName" | (typeof CLASSIFICATION_FIELDS)[number]
+>;
 
 interface OptionalField {
   name: OptionalFieldName;
@@ -88,6 +108,14 @@ const toRequest = (values: CreateTenantFormValues): CreateTenantRequest => {
       if (value) request[name] = value;
     }
   }
+  for (const name of CLASSIFICATION_FIELDS) {
+    const value = values[name]?.trim();
+    if (value) request[name] = value;
+  }
+  // The free-text answer only means something alongside "Other".
+  if (request.acquisitionSource !== ACQUISITION_OTHER_SOURCE) {
+    delete request.acquisitionSourceOther;
+  }
   return request;
 };
 
@@ -107,10 +135,27 @@ export default function CreateTenant() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateTenantFormValues>({
     resolver: zodResolver(createTenantFormSchema),
     defaultValues: { tenantName: "" },
+  });
+  const [
+    industryCode,
+    subIndustryCode,
+    businessType,
+    companySize,
+    acquisitionSource,
+  ] = useWatch({
+    control,
+    name: [
+      "industryCode",
+      "subIndustryCode",
+      "businessType",
+      "companySize",
+      "acquisitionSource",
+    ],
   });
 
   // Shared tail of both a fresh submission and resuming an interrupted one: wait for
@@ -269,6 +314,108 @@ export default function CreateTenant() {
     }
   };
 
+  const sectionItems = OPTIONAL_SECTIONS.map((section) => ({
+    key: section.key,
+    label: (
+      <span>
+        {section.title} <Text type="secondary">(Optional)</Text>
+      </span>
+    ),
+    forceRender: true,
+    children: (
+      <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+        {section.fields.map((f) => (
+          <Form.Item
+            key={f.name}
+            label={
+              <span>
+                {f.label} <Text type="secondary">(Optional)</Text>
+              </span>
+            }
+            validateStatus={errors[f.name] ? "error" : ""}
+            help={errors[f.name]?.message}
+            className={f.wide ? "sm:col-span-2" : undefined}
+          >
+            <Controller
+              name={f.name}
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  placeholder={f.placeholder}
+                  disabled={provisioning}
+                />
+              )}
+            />
+          </Form.Item>
+        ))}
+      </div>
+    ),
+  }));
+
+  const classificationItem = {
+    key: "classification",
+    label: (
+      <span>
+        {CLASSIFICATION_LABEL.SECTION_CLASSIFICATION}{" "}
+        <Text type="secondary">(Optional)</Text>
+      </span>
+    ),
+    forceRender: true,
+    children: (
+      <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
+        <CompanyClassificationFields
+          value={{ industryCode, subIndustryCode, businessType, companySize }}
+          onChange={(next) => {
+            setValue("industryCode", next.industryCode ?? "");
+            setValue("subIndustryCode", next.subIndustryCode ?? "");
+            setValue("businessType", next.businessType ?? "");
+            setValue("companySize", next.companySize ?? "");
+          }}
+          disabled={provisioning}
+        />
+        <Form.Item
+          label={CLASSIFICATION_LABEL.HOW_DID_YOU_HEAR}
+          className="sm:col-span-2"
+        >
+          <Select
+            allowClear
+            disabled={provisioning}
+            placeholder="Select one"
+            options={ACQUISITION_SOURCE_OPTIONS}
+            value={acquisitionSource || undefined}
+            onChange={(source) => {
+              setValue("acquisitionSource", source ?? "");
+              if (source !== ACQUISITION_OTHER_SOURCE) {
+                setValue("acquisitionSourceOther", "");
+              }
+            }}
+          />
+        </Form.Item>
+        {acquisitionSource === ACQUISITION_OTHER_SOURCE && (
+          <Form.Item
+            label={CLASSIFICATION_LABEL.HOW_DID_YOU_HEAR_OTHER}
+            className="sm:col-span-2"
+          >
+            <Controller
+              name="acquisitionSourceOther"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  maxLength={200}
+                  disabled={provisioning}
+                />
+              )}
+            />
+          </Form.Item>
+        )}
+      </div>
+    ),
+  };
+
   return (
     <Card className="auth-card login-card border-0">
       {hasExistingTenants && (
@@ -335,45 +482,11 @@ export default function CreateTenant() {
         <Collapse
           ghost
           className="mb-4"
-          items={OPTIONAL_SECTIONS.map((section) => ({
-            key: section.key,
-            label: (
-              <span>
-                {section.title} <Text type="secondary">(Optional)</Text>
-              </span>
-            ),
-            forceRender: true,
-            children: (
-              <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-                {section.fields.map((f) => (
-                  <Form.Item
-                    key={f.name}
-                    label={
-                      <span>
-                        {f.label} <Text type="secondary">(Optional)</Text>
-                      </span>
-                    }
-                    validateStatus={errors[f.name] ? "error" : ""}
-                    help={errors[f.name]?.message}
-                    className={f.wide ? "sm:col-span-2" : undefined}
-                  >
-                    <Controller
-                      name={f.name}
-                      control={control}
-                      render={({ field }) => (
-                        <Input
-                          {...field}
-                          value={field.value ?? ""}
-                          placeholder={f.placeholder}
-                          disabled={provisioning}
-                        />
-                      )}
-                    />
-                  </Form.Item>
-                ))}
-              </div>
-            ),
-          }))}
+          items={[
+            ...sectionItems.slice(0, 1),
+            classificationItem,
+            ...sectionItems.slice(1),
+          ]}
         />
 
         <Form.Item className="mb-0!">

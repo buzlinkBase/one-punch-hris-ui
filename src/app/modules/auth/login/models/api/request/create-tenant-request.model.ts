@@ -10,4 +10,10 @@ export interface CreateTenantRequest {
   pagIbigNumber?: string;
   authorizedSignatoryName?: string;
   authorizedSignatoryTitle?: string;
+  industryCode?: string;
+  subIndustryCode?: string;
+  businessType?: string;
+  companySize?: string;
+  acquisitionSource?: string;
+  acquisitionSourceOther?: string;
 }
