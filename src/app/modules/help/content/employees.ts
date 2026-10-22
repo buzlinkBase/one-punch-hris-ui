@@ -95,6 +95,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
       "/portal/leave-credits",
       "/portal/thirteenth-month",
       "/portal/cash-bond",
+      "/portal/uniform-allowance",
     ],
     sections: [
       {
@@ -113,6 +114,13 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: {
               label: "My 13th Month Pay",
               to: "/portal/thirteenth-month",
+            },
+          },
+          {
+            text: "My Uniform Allowance: your balance, when the next credit lands, and why a month was skipped (for example, too few present days).",
+            link: {
+              label: "My Uniform Allowance",
+              to: "/portal/uniform-allowance",
             },
           },
         ],

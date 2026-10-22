@@ -40,6 +40,7 @@ import {
   OT_ELIGIBILITY_OPTIONS,
 } from "@/app/modules/setup/company-policy/constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import UniformAllowancePolicyTab from "../uniform-allowance-policy-tab/uniform-allowance-policy-tab";
 
 const { Text } = Typography;
 
@@ -59,25 +60,11 @@ const ALL_RATE_OVERRIDE_TYPES = [
   ...OT_OVERRIDE_RATE_KEYS,
 ];
 
-// Setup > Client > Settings > Allowances — Retirement and Uniform Allowance are directly-
-// targetable fields on Client itself (see Client.cs) rather than an open-ended catalog, since
-// there are only ever these two and each has its own fixed, non-generic behavior: Retirement
-// (a days/year rate, not a peso amount) is computed and accumulated every payroll run into a
-// RetirementFund balance; Uniform Allowance accrues as a balance since HireDate in a later
-// phase. Backed by the same full-record useClient/useUpdateClient pipeline the General Info tab
-// in client-detail.tsx uses, so this tab loads and saves the whole Client record rather than a
-// separate child-table resource.
-const UNIFORM_ALLOWANCE_BASIS_OPTIONS: {
-  value: "TenureMonths" | "PresentDays";
-  label: string;
-}[] = [
-  { value: "TenureMonths", label: "Tenure — months since hire date" },
-  {
-    value: "PresentDays",
-    label:
-      "Present Days — count of present days (holidays and rest days included)",
-  },
-];
+// Setup > Client > Settings > Allowances — Retirement is a directly-targetable field on Client
+// itself (see Client.cs): a days/year rate computed and accumulated every payroll run into a
+// RetirementFund balance. Backed by the same full-record useClient/useUpdateClient pipeline the
+// General Info tab in client-detail.tsx uses, so this tab loads and saves the whole Client record.
+// Uniform allowance has its own tab (UniformAllowancePolicyTab): effective-dated policy versions.
 
 function AllowancesTab({
   clientId,
@@ -92,40 +79,24 @@ function AllowancesTab({
   const [retirementDaysPerYear, setRetirementDaysPerYear] = useState<
     number | null
   >(null);
-  const [uniformAllowance, setUniformAllowance] = useState<number | null>(null);
-  const [uniformAllowanceBasis, setUniformAllowanceBasis] = useState<
-    "TenureMonths" | "PresentDays"
-  >("TenureMonths");
 
   useEffect(() => {
     if (selected) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRetirementDaysPerYear(selected.retirementDaysPerYear ?? null);
-      setUniformAllowance(selected.uniformAllowance ?? null);
-      setUniformAllowanceBasis(
-        selected.uniformAllowanceBasis ?? "TenureMonths",
-      );
     }
   }, [selected]);
 
   const isDirty =
     !!selected &&
-    (retirementDaysPerYear !== (selected.retirementDaysPerYear ?? null) ||
-      uniformAllowance !== (selected.uniformAllowance ?? null) ||
-      uniformAllowanceBasis !==
-        (selected.uniformAllowanceBasis ?? "TenureMonths"));
+    retirementDaysPerYear !== (selected.retirementDaysPerYear ?? null);
 
   const handleSave = async () => {
     if (!selected) return;
     // Client's PUT endpoint round-trips the full record, not a partial patch -- spread the
-    // currently-loaded record so identity fields (code/name/email/...) are carried through
-    // unchanged rather than omitted.
-    await update({
-      ...selected,
-      retirementDaysPerYear,
-      uniformAllowance,
-      uniformAllowanceBasis,
-    });
+    // currently-loaded record so identity fields (code/name/email/...) and the legacy uniform
+    // allowance columns are carried through unchanged rather than omitted.
+    await update({ ...selected, retirementDaysPerYear });
   };
 
   return (
@@ -142,31 +113,10 @@ function AllowancesTab({
             onChange={setRetirementDaysPerYear}
           />
         </div>
-        <div>
-          <div className="text-sm font-medium mb-1">
-            Uniform Allowance (per month)
-          </div>
-          <Space.Compact className="w-full">
-            <InputNumber
-              className="w-1/2"
-              min={0}
-              precision={2}
-              placeholder="Not given"
-              value={uniformAllowance}
-              onChange={setUniformAllowance}
-            />
-            <Select<"TenureMonths" | "PresentDays">
-              className="w-1/2"
-              options={UNIFORM_ALLOWANCE_BASIS_OPTIONS}
-              value={uniformAllowanceBasis}
-              onChange={setUniformAllowanceBasis}
-            />
-          </Space.Compact>
-        </div>
         <Alert
           type="info"
           showIcon
-          message="Leave an amount blank if this client doesn't give that allowance."
+          message="Leave it blank if this client doesn't give a retirement allowance. Uniform allowance has its own tab."
         />
         <div className="flex justify-end gap-2">
           <Button onClick={onClose}>Cancel</Button>
@@ -263,11 +213,13 @@ export default function ClientSettingsModal({
   const isLoading = isLoadingPolicy || isLoadingOverrides || isLoadingGlobal;
   const isPending = isPolicyPending || isRatesPending;
 
-  // The Allowances tab saves itself independently (see AllowancesTab.handleSave) rather than
-  // through this modal's own onSubmit/Save button — it has no otEligibility/rates form fields
-  // to submit. Showing the outer footer's Save on top of that tab's own Save button is exactly
-  // the "two Save buttons" bug this tracks -- hide the outer footer while that tab is active.
+  // The Allowances and Uniform Allowance tabs save themselves independently rather than through
+  // this modal's own onSubmit/Save button — they have no otEligibility/rates form fields to
+  // submit. Showing the outer footer's Save on top of a tab's own Save button is exactly the
+  // "two Save buttons" bug this tracks -- hide the outer footer while either tab is active.
   const [activeTabKey, setActiveTabKey] = useState("policy");
+  const selfSavingTab =
+    activeTabKey === "benefits" || activeTabKey === "uniform";
 
   const onSubmit = async (policyValues: ClientPolicyFormValues) => {
     const rateEntries = ALL_RATE_OVERRIDE_TYPES.filter(
@@ -293,9 +245,10 @@ export default function ClientSettingsModal({
       open={!!clientId}
       onCancel={onClose}
       destroyOnClose
-      width={640}
+      // The uniform allowance policy form needs room for its two-column cards.
+      width={activeTabKey === "uniform" ? 960 : 640}
       footer={
-        activeTabKey === "benefits" ? null : (
+        selfSavingTab ? null : (
           <Space>
             <Button onClick={onClose}>Cancel</Button>
             <PermissionGate permission="Workforce Setup:Edit">
@@ -508,6 +461,11 @@ export default function ClientSettingsModal({
               children: (
                 <AllowancesTab clientId={clientId ?? ""} onClose={onClose} />
               ),
+            },
+            {
+              key: "uniform",
+              label: "Uniform Allowance",
+              children: <UniformAllowancePolicyTab clientId={clientId ?? ""} />,
             },
           ]}
         />

@@ -544,6 +544,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         tips: [
           "Choose the period and filters, then print (opens a PDF in a new tab) or export to Excel.",
           "Government forms use the details in Company Settings › Company Info. Fill those in first.",
+          "Uniform Allowance rules are set per client (Clients › gear icon › Uniform Allowance). The ledger's Credit Log shows every credit and every skipped one with the reason; an employee's Credit schedule shows their next credits.",
         ],
       },
     ],

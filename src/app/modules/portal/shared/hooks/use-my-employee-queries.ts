@@ -515,6 +515,13 @@ export function useMyCashBond() {
   });
 }
 
+export function useMyUniformAllowance() {
+  return useQuery({
+    queryKey: ["me", "uniform-allowance"],
+    queryFn: () => meApi.getMyUniformAllowance(),
+  });
+}
+
 export function useMy13thMonth(year: number) {
   return useQuery({
     queryKey: ["me", "13th-month", year],

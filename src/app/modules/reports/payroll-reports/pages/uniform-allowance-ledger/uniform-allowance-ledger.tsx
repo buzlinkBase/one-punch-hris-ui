@@ -8,12 +8,14 @@ import {
   Modal,
   Select,
   Space,
+  Switch,
   Table,
+  Tag,
   Tooltip,
   Typography,
   message,
 } from "antd";
-import { PlusOutlined, SendOutlined } from "@ant-design/icons";
+import { HistoryOutlined, PlusOutlined, SendOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
@@ -39,6 +41,10 @@ import type { FundLedgerSummaryResponse } from "../../models/api/response/payrol
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { authStorage } from "@/core/auth/auth-storage";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
+import { useUniformAllowanceSchedule } from "@/app/modules/setup/client/hooks/use-uniform-allowance-policy-queries";
+import { UniformScheduleView } from "../../components/uniform-schedule-view/uniform-schedule-view";
+import { UniformCreditLogDrawer } from "../../components/uniform-credit-log-drawer/uniform-credit-log-drawer";
 
 const { Text } = Typography;
 
@@ -50,7 +56,16 @@ const EXPORT = fundSummaryExport(LABELS);
 
 export default function UniformAllowanceLedger() {
   const [asOf, setAsOf] = useState(dayjs().format("YYYY-MM-DD"));
-  const { data = [], isLoading, refetch } = useUniformAllowanceLedger(asOf);
+  const [clientId, setClientId] = useState<string | undefined>();
+  // Separated employees still holding a balance -- due with their last pay.
+  const [separatedOnly, setSeparatedOnly] = useState(false);
+  const [creditLogOpen, setCreditLogOpen] = useState(false);
+  const { data: clients = [] } = useClients();
+  const {
+    data = [],
+    isLoading,
+    refetch,
+  } = useUniformAllowanceLedger(asOf, clientId, separatedOnly);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   // The row whose ledger details are open; its Adjust lives inside the drawer.
@@ -59,9 +74,29 @@ export default function UniformAllowanceLedger() {
   );
   const { data: entries = [], isFetching: entriesLoading } =
     useUniformAllowanceEntries(viewing?.employeeId, asOf);
+  const { data: schedule, isFetching: scheduleLoading } =
+    useUniformAllowanceSchedule(viewing?.employeeId);
   // Keeps the drawer's balance current after an adjustment refetches the list.
   const viewingRow =
     data.find((r) => r.employeeId === viewing?.employeeId) ?? viewing;
+  // Separated employees are flagged beside their name -- their balance is due with last pay.
+  const columns = buildFundSummaryColumns(LABELS, setViewing).map((c) =>
+    c.key === "name"
+      ? {
+          ...c,
+          render: (_: unknown, r: FundLedgerSummaryResponse) => (
+            <span>
+              {r.fullName}
+              {r.separatedOn && (
+                <Tag color="orange" className="ml-2">
+                  Separated {dayjs(r.separatedOn).format("MMM D, YYYY")}
+                </Tag>
+              )}
+            </span>
+          ),
+        }
+      : c,
+  );
 
   // "add" = toolbar entry with an employee picker (e.g. seeding an opening balance for someone
   // adopting this system mid-year); a target = the viewed employee.
@@ -158,7 +193,7 @@ export default function UniformAllowanceLedger() {
         subtitle={PAYROLL_REPORTS_LABEL.UNIFORM_ALLOWANCE_SUBTITLE}
         data={employeeFilter.filtered}
         loading={isLoading}
-        columns={buildFundSummaryColumns(LABELS, setViewing)}
+        columns={columns}
         onRefresh={() => refetch()}
         rowKey={(r) => r.employeeId}
         exportFileName={`uniform-allowance-ledger-${asOf}`}
@@ -166,6 +201,13 @@ export default function UniformAllowanceLedger() {
         exportRows={EXPORT.rows}
         extraActions={
           <Space>
+            <Tooltip title="Credit log — every credit and skip, with the reason">
+              <Button
+                icon={<HistoryOutlined />}
+                aria-label="Uniform allowance credit log"
+                onClick={() => setCreditLogOpen(true)}
+              />
+            </Tooltip>
             <PermissionGate permission="Payroll Reports:Edit">
               <Tooltip title="Add entry (e.g. opening balance)">
                 <Button
@@ -206,6 +248,20 @@ export default function UniformAllowanceLedger() {
                 value={employeeFilter.selected}
                 onChange={employeeFilter.setSelected}
               />
+              <Form.Item label="Client" className="mb-0 w-56">
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="All clients"
+                  value={clientId}
+                  onChange={setClientId}
+                  options={clients.map((c) => ({ value: c.id, label: c.name }))}
+                />
+              </Form.Item>
+              <Form.Item label="Separated with balance" className="mb-0">
+                <Switch checked={separatedOnly} onChange={setSeparatedOnly} />
+              </Form.Item>
             </div>
           </Form>
         }
@@ -219,6 +275,16 @@ export default function UniformAllowanceLedger() {
         balance={viewingRow?.balance ?? 0}
         entries={entries}
         loading={entriesLoading}
+        extraTab={{
+          key: "schedule",
+          label: "Credit schedule",
+          content: (
+            <UniformScheduleView
+              schedule={schedule}
+              loading={scheduleLoading}
+            />
+          ),
+        }}
         onAdjust={() =>
           viewingRow &&
           setAdjustModal({
@@ -227,6 +293,11 @@ export default function UniformAllowanceLedger() {
             balance: viewingRow.balance,
           })
         }
+      />
+
+      <UniformCreditLogDrawer
+        open={creditLogOpen}
+        onClose={() => setCreditLogOpen(false)}
       />
 
       <BalanceAdjustModal

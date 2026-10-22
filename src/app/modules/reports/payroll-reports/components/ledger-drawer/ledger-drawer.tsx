@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button, Drawer, Table, Tag } from "antd";
+import { Button, Drawer, Table, Tabs, Tag } from "antd";
 import { EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -24,6 +24,7 @@ const ENTRY_TYPE_COLOR: Record<string, string> = {
   Release: "green",
   Deduction: "red",
   Expiry: "red",
+  Forfeiture: "red",
   Reserved: "gold",
   Released: "cyan",
   Reversal: "cyan",
@@ -78,6 +79,8 @@ interface Props {
   loading: boolean;
   /** Opens the +/− adjust modal for this employee; hidden without Payroll Reports:Edit. */
   onAdjust: () => void;
+  /** A second tab beside the entries, e.g. Uniform Allowance's credit schedule. */
+  extraTab?: { key: string; label: string; content: ReactNode };
 }
 
 // "View ledger" details for one employee: every signed movement, oldest first, with the balance
@@ -92,7 +95,21 @@ export function LedgerDrawer({
   entries,
   loading,
   onAdjust,
+  extraTab,
 }: Props) {
+  const entriesTable = (
+    <Table
+      size="small"
+      rowKey={(r, i) => `${r.entryDate}-${r.entryType}-${i}`}
+      columns={buildColumns(amountLabel)}
+      dataSource={entries}
+      loading={loading}
+      pagination={false}
+      scroll={{ x: 600 }}
+      locale={{ emptyText: "No entries yet" }}
+    />
+  );
+
   return (
     <Drawer
       title={title}
@@ -113,16 +130,20 @@ export function LedgerDrawer({
         <span className="text-sm text-gray-500">{balanceLabel}</span>
         <span className="text-xl font-semibold">{fmt(balance)}</span>
       </div>
-      <Table
-        size="small"
-        rowKey={(r, i) => `${r.entryDate}-${r.entryType}-${i}`}
-        columns={buildColumns(amountLabel)}
-        dataSource={entries}
-        loading={loading}
-        pagination={false}
-        scroll={{ x: 600 }}
-        locale={{ emptyText: "No entries yet" }}
-      />
+      {extraTab ? (
+        <Tabs
+          items={[
+            { key: "entries", label: "Entries", children: entriesTable },
+            {
+              key: extraTab.key,
+              label: extraTab.label,
+              children: extraTab.content,
+            },
+          ]}
+        />
+      ) : (
+        entriesTable
+      )}
     </Drawer>
   );
 }

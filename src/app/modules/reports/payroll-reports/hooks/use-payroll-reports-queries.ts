@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { payrollReportsApi } from "../services/payroll-reports.api";
 import type { CostSummaryGroupBy } from "../models/api/response/payroll-reports.model";
 import type { EmployeeScopeFilter } from "../models/api/request/employee-scope-filter.model";
@@ -145,10 +150,25 @@ export function useAdjustRetirement() {
   });
 }
 
-export function useUniformAllowanceLedger(asOf: string) {
+export function useUniformAllowanceLedger(
+  asOf: string,
+  clientId?: string,
+  separatedWithBalance?: boolean,
+) {
   return useQuery({
-    queryKey: ["payroll-reports", "uniform-allowance-ledger", asOf],
-    queryFn: () => payrollReportsApi.uniformAllowanceLedger(asOf),
+    queryKey: [
+      "payroll-reports",
+      "uniform-allowance-ledger",
+      asOf,
+      clientId,
+      separatedWithBalance,
+    ],
+    queryFn: () =>
+      payrollReportsApi.uniformAllowanceLedger(
+        asOf,
+        clientId,
+        separatedWithBalance,
+      ),
   });
 }
 
@@ -169,14 +189,23 @@ export function useUniformAllowanceEntries(
   });
 }
 
+// The ledger list and an open employee's credit schedule (its balance) both change.
+function invalidateUniformAllowance(queryClient: QueryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: ["payroll-reports", "uniform-allowance-ledger"],
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["payroll-reports", "uniform-allowance-schedule"],
+    }),
+  ]);
+}
+
 export function useAdjustUniformAllowance() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: payrollReportsApi.adjustUniformAllowance,
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["payroll-reports", "uniform-allowance-ledger"],
-      }),
+    onSuccess: () => invalidateUniformAllowance(queryClient),
   });
 }
 
@@ -192,10 +221,7 @@ export function useReleaseUniformAllowance() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: payrollReportsApi.releaseUniformAllowance,
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["payroll-reports", "uniform-allowance-ledger"],
-      }),
+    onSuccess: () => invalidateUniformAllowance(queryClient),
   });
 }
 

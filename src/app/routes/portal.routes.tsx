@@ -77,6 +77,10 @@ const PortalLoanApplicationCreate = lazy(
 const PortalCashBond = lazy(
   () => import("@/app/modules/portal/cash-bond/pages/portal-cash-bond"),
 );
+const PortalUniformAllowance = lazy(
+  () =>
+    import("@/app/modules/portal/uniform-allowance/pages/portal-uniform-allowance"),
+);
 const PortalThirteenthMonth = lazy(
   () =>
     import("@/app/modules/portal/thirteenth-month/pages/portal-thirteenth-month"),
@@ -132,5 +136,6 @@ export const portalRoutes: SetupRouteConfig[] = [
     component: PortalLoanApplicationCreate,
   },
   { path: "cash-bond", component: PortalCashBond },
+  { path: "uniform-allowance", component: PortalUniformAllowance },
   { path: "thirteenth-month", component: PortalThirteenthMonth },
 ];

@@ -160,6 +160,8 @@ export interface FundLedgerSummaryResponse {
   balance: number;
   entryCount: number;
   lastEntryDate: string | null;
+  /** Uniform Allowance only: when the employee separated, if they have. */
+  separatedOn?: string | null;
 }
 
 export interface AdjustRetirementRequest {

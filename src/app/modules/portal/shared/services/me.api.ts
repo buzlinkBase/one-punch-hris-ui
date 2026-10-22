@@ -23,6 +23,7 @@ import type { CreateDeductionApplication } from "@/app/modules/applications/dedu
 import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
 import type { UpdateDeductionApplication } from "@/app/modules/applications/deduction-application/models/api/request/update-deduction-application.model";
 import type { MyCashBondModel } from "@/app/modules/portal/cash-bond/models/api/response/portal-cash-bond-response.model";
+import type { MyUniformAllowance } from "@/app/modules/setup/client/models/api/response/uniform-allowance-policy.model";
 import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
 import type { PortalCreateProfileUpdateRequest } from "../models/api/request/portal-create-profile-update-request.model";
 import type { PortalProfileUpdateRequestResponse } from "../models/api/response/portal-profile-update-request-response.model";
@@ -350,6 +351,13 @@ export const meApi = {
   // self-filed, so there's no create/withdraw counterpart here the way Loans have.
   getMyCashBond(): Promise<MyCashBondModel> {
     return httpClient.getUnwrapped<MyCashBondModel>(`${BASE_URL}/cash-bond`);
+  },
+
+  // Read-only — balance, movements, recent credit decisions and the next credit dates.
+  getMyUniformAllowance(): Promise<MyUniformAllowance> {
+    return httpClient.getUnwrapped<MyUniformAllowance>(
+      `${BASE_URL}/uniform-allowance`,
+    );
   },
 
   getMyProfileUpdateRequests(): Promise<PortalProfileUpdateRequestResponse[]> {

@@ -87,8 +87,16 @@ export const payrollReportsApi = {
     }),
   adjustRetirement: (payload: AdjustRetirementRequest) =>
     httpClient.postUnwrapped<void>(`${RETIREMENT_ENDPOINT}/adjust`, payload),
-  uniformAllowanceLedger: (asOf: string) =>
-    get<FundLedgerSummaryResponse>("uniform-allowance-ledger", { asOf }),
+  uniformAllowanceLedger: (
+    asOf: string,
+    clientId?: string,
+    separatedWithBalance?: boolean,
+  ) =>
+    get<FundLedgerSummaryResponse>("uniform-allowance-ledger", {
+      asOf,
+      clientId,
+      separatedWithBalance: separatedWithBalance ? "true" : undefined,
+    }),
   uniformAllowanceEntries: (employeeId: string, asOf: string) =>
     get<LedgerEntryResponse>(`uniform-allowance-ledger/${employeeId}/entries`, {
       asOf,

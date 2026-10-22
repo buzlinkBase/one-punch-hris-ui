@@ -205,6 +205,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             label: "My Cash Bond",
             path: "/portal/cash-bond",
           },
+          {
+            key: "portal-uniform-allowance",
+            feature: FEATURE_KEYS.PAYROLL_LOANS_INCOME,
+            label: "My Uniform Allowance",
+            path: "/portal/uniform-allowance",
+          },
         ],
       },
       {
