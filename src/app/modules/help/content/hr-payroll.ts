@@ -137,6 +137,27 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "Delete a whole upload",
+        steps: [
+          {
+            text: "In Upload History, use the delete action on a batch to remove every log that file brought in. It needs the Upload Attendance: Delete permission.",
+          },
+          {
+            text: "Regenerate the DTR for the affected days so the change is applied.",
+          },
+        ],
+      },
+      {
+        heading: "Edit or remove a single log",
+        body: [
+          "Open an employee's day from the DTR and choose Attendance Logs. Manual, file-uploaded and synced logs can be edited or removed there, each needing its own permission (Attendance Manual Entry, Upload Attendance or Sync Attendance: Edit / Delete). Biometric and mobile punches can't be changed. Every change asks for a reason.",
+          "For uploaded and synced logs the original is kept. Restore puts the log back as the file or device had it, and a re-upload or device re-sync won't bring a removed log back.",
+        ],
+        tips: [
+          "After any change, regenerate the DTR for that day to apply it to the hours.",
+        ],
+      },
+      {
         heading: "Unregistered employees",
         steps: [
           {
@@ -273,6 +294,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           "Days that already have saved DTR are skipped automatically, so you can generate again for the whole group to fill in only the missing days.",
           "Use Export to download the DTR as CSV or Excel for checking.",
           "Wrong numbers usually mean a missing punch, an unapproved request or the wrong shift. Fix it, generate again and save again.",
+          "Employees set to Payroll only (no DTR) don't appear here; they are paid through payroll without time records.",
         ],
       },
       {
@@ -495,6 +517,20 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           {
             text: "Once approved, these are included automatically in the payroll run for their scheduled period.",
           },
+        ],
+      },
+      {
+        heading: "Paying only when attendance is met",
+        body: [
+          "On an Other Income application, choose How it is given: Fixed schedule (paid on set dates, no condition), Per qualifying day (a daily amount for each day the employee meets the rule) or Weekly / monthly with attendance (one payment per week or month, only if the rule is met in that period).",
+          "The attendance rule sets what counts as present (Worked, or Worked or on paid leave), the minimum hours, the weekdays and day types it applies to, and how much lateness or undertime is allowed. A weekly or monthly rule can also require a minimum number of qualifying days.",
+          "A payment payroll didn't make is marked skipped with the reason, such as No posted DTR, Did not work, Below minimum hours or Late beyond the limit.",
+        ],
+      },
+      {
+        heading: "Fix a schedule row",
+        body: [
+          "Rows in an Other Income or loan schedule can be edited from the application, for example to change a date or amount, or regenerated. Rows already paid are locked.",
         ],
       },
     ],

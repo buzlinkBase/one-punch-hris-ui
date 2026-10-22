@@ -62,6 +62,13 @@ export const ANALYTICS_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "Dashboard and drill-down",
+        body: [
+          "The Dashboard shows today's attendance, headcount by department, branch and project site, length of service, pending requests, upcoming holidays and birthdays, DTR batches and a payroll snapshot.",
+          "Click a figure on the Dashboard or on an Analytics page to open the list behind it, already filtered, such as the employees in a department or the pending leave requests. You only see figures that open screens your role can view and your plan includes.",
+        ],
+      },
+      {
         heading: "How the numbers are counted",
         body: [
           "Only approved work counts: draft or declined DTR batches and payroll runs are left out. Payroll is counted by the month each pay period ends; requests by the date they were filed.",

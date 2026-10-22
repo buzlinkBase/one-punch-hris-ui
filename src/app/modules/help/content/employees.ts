@@ -32,6 +32,14 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             text: "My Applications: file and track leave, overtime, official business, pass slips and loans.",
             link: { label: "Leave", to: "/portal/leave-applications" },
           },
+          {
+            text: "Announcements: notices from your company. Some ask you to acknowledge; an urgent one must be acknowledged before you continue.",
+            link: { label: "Announcements", to: "/portal/announcements" },
+          },
+          {
+            text: "Coworkers: Today (who is in, on leave or celebrating a birthday), the Directory and the Org Chart.",
+            link: { label: "Coworkers", to: "/portal/coworkers" },
+          },
         ],
       },
     ],
@@ -160,6 +168,12 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
         ],
         tips: [
           "For leave, check My Leave Credits first so you know how many paid days you have left.",
+        ],
+      },
+      {
+        heading: "Attach a document",
+        body: [
+          "If your company allows it, leave, pass slip and official business forms have an attachment field, for example for a medical certificate. Add up to 5 images or PDFs, each up to 5 MB.",
         ],
       },
       {

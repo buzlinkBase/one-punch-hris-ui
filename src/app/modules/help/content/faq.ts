@@ -52,6 +52,18 @@ export const FAQ_ARTICLES: HelpArticle[] = [
           "Biometric devices keep sending punches while HRMS is off, but the system discards them. Once HRMS is back on, they don't come back automatically, but you can upload those logs manually in Upload Attendance.",
       },
       {
+        heading: "My changes aren't saving and a banner says read-only",
+        body: [
+          "Your company's trial ended or a payment is overdue, so it is in read-only mode. You can still view and export your data. Ask your company's owner or billing admin to open Billing and pay or renew.",
+        ],
+      },
+      {
+        heading: "I can't upload a photo or file",
+        body: [
+          "Your company's storage may be full. An owner or admin can free space or add storage in Security › Storage. Files can be PNG, JPG, WebP or PDF up to 5 MB, and the feature must have attachments switched on in Company Settings.",
+        ],
+      },
+      {
         heading: "I don't get notifications",
         body: [
           "Open My Profile and check Notification Preferences. Push must be on for the request types you want in the bell.",

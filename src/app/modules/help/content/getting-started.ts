@@ -153,7 +153,7 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
       {
         heading: "The menu",
         body: [
-          "The left menu is grouped by area: My Portal, Time Keeping, Change Schedule, DTR Generation, Payroll Generation, Applications, Setup, Reports and Security. You only see the areas your role can use. If you expect a screen and can't find it, ask your admin to check your role.",
+          "The left menu is grouped by area: My Portal, Time Keeping, Change Schedule, DTR Generation, Payroll Generation, Applications, Setup, Reports, Communication, Client Services and Security (which also holds Billing and Storage). The Dashboard and Analytics figures are clickable and open the list behind them. You only see the areas your role can use. If you expect a screen and can't find it, ask your admin to check your role.",
         ],
       },
       {
