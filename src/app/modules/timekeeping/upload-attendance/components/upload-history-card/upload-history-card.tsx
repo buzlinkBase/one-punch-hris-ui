@@ -18,7 +18,8 @@ const DATE_FORMAT = "YYYY-MM-DD";
 /**
  * Past attendance file uploads with a log in the chosen dates. Deleting one removes all of its
  * logs and the saved originals of any that were edited or removed, so the file can be
- * re-imported from scratch.
+ * re-imported from scratch. An upload whose logs a saved DTR already covers can't be deleted
+ * until that DTR is.
  */
 export default function UploadHistoryCard() {
   const [range, setRange] = useState({
@@ -40,7 +41,7 @@ export default function UploadHistoryCard() {
         description: "Regenerate the DTR for the affected days to apply it.",
       });
     } catch {
-      getNotify().error({ message: "Failed to delete the upload." });
+      // The error interceptor already shows the server's reason (e.g. a saved DTR covers it).
     } finally {
       setDeletingBatch(null);
     }

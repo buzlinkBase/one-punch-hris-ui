@@ -11,4 +11,6 @@ export interface UploadBatchResponse {
   lastLog: string | null;
   // Logs of this upload a user edited or removed (saved originals).
   changedCount: number;
+  // Saved DTR batches covering this upload's logs; while any is listed the upload can't be deleted.
+  savedDtrBatches: string[];
 }

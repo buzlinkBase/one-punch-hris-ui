@@ -18,6 +18,12 @@ const formatTime = (v: string | null) =>
 const formatDay = (v: string | null) =>
   v ? dayjs(v).format("MMM DD, YYYY") : "—";
 
+// A saved DTR built from the upload's logs has to be deleted before the upload can be.
+const savedDtrMessage = (batches: string[]) =>
+  batches.length === 1
+    ? `Saved in DTR batch ${batches[0]}. Delete that saved DTR first.`
+    : `Saved in DTR batches ${batches.join(", ")}. Delete those saved DTRs first.`;
+
 export default function UploadBatchTable({
   data,
   loading,
@@ -90,32 +96,45 @@ export default function UploadBatchTable({
             key: "actions",
             width: 60,
             fixed: "right" as const,
-            render: (_: unknown, record: UploadBatchResponse) => (
-              <Popconfirm
-                title="Delete this upload?"
-                description={
-                  <div className="max-w-72">
-                    Deletes all {record.logCount} log(s) from this upload and
-                    their saved originals. Re-uploading the file will import
-                    them again.
-                  </div>
-                }
-                onConfirm={() => onDelete(record.batchCode)}
-                okText="Delete"
-                cancelText="Cancel"
-                okButtonProps={{ danger: true }}
-              >
-                <Tooltip title="Delete upload">
-                  <Button
-                    type="text"
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    loading={deletingBatch === record.batchCode}
-                  />
+            render: (_: unknown, record: UploadBatchResponse) =>
+              record.savedDtrBatches.length > 0 ? (
+                <Tooltip title={savedDtrMessage(record.savedDtrBatches)}>
+                  <span>
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      disabled
+                      icon={<DeleteOutlined />}
+                    />
+                  </span>
                 </Tooltip>
-              </Popconfirm>
-            ),
+              ) : (
+                <Popconfirm
+                  title="Delete this upload?"
+                  description={
+                    <div className="max-w-72">
+                      Deletes all {record.logCount} log(s) from this upload and
+                      their saved originals. Re-uploading the file will import
+                      them again.
+                    </div>
+                  }
+                  onConfirm={() => onDelete(record.batchCode)}
+                  okText="Delete"
+                  cancelText="Cancel"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Tooltip title="Delete upload">
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      loading={deletingBatch === record.batchCode}
+                    />
+                  </Tooltip>
+                </Popconfirm>
+              ),
           },
         ]
       : []),
