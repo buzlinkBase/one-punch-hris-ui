@@ -587,7 +587,9 @@ export default function DtrAttendanceLogsModal({
           )}
         </div>
       }
-      width={760}
+      // Wide enough on desktop for every column (time, source, location, remarks, actions)
+      // without side-scrolling; full width on phones.
+      width={{ xs: "100%", md: "92%", xl: 1280 }}
       destroyOnClose
     >
       <Table<AttendanceEntryResponse>
