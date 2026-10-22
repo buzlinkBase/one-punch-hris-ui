@@ -34,6 +34,7 @@ import { PermissionGate } from "@/shared/components/permission-gate/permission-g
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
 import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
+import { useApplicationDrill } from "@/shared/drilldown/use-screen-drill";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
@@ -67,7 +68,9 @@ export default function ProfileUpdateRequestList() {
   const resolveEmployeeName = (employeeId: string) =>
     rawEmployees.find((e) => e.id === employeeId)?.fullName ?? undefined;
 
-  const approval = useApprovalTabs(requests);
+  // A Dashboard or Analytics figure can open this list on a tab (it has no date filter).
+  const drill = useApplicationDrill();
+  const approval = useApprovalTabs(requests, drill.tab);
 
   const columns: ColumnsType<EmployeeProfileUpdateRequestResponse> = [
     {

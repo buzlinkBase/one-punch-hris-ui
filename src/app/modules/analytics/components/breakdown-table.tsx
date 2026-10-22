@@ -4,14 +4,22 @@ import type {
   AnalyticsRow,
 } from "../models/analytics.model";
 import { formatValue } from "../utils/analytics-format";
+import { drillProps } from "@/shared/drilldown/drill-props";
+import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 
 interface BreakdownTableProps {
   breakdown?: AnalyticsBreakdown;
   loading?: boolean;
+  /** What clicking a row opens; rows without an action stay plain. */
+  rowAction?: (row: AnalyticsRow) => DrillAction;
 }
 
 /** One breakdown (by department, by approver ...) as a sortable table. */
-export function BreakdownTable({ breakdown, loading }: BreakdownTableProps) {
+export function BreakdownTable({
+  breakdown,
+  loading,
+  rowAction,
+}: BreakdownTableProps) {
   return (
     <Card
       size="small"
@@ -30,7 +38,14 @@ export function BreakdownTable({ breakdown, loading }: BreakdownTableProps) {
       ) : (
         <Table<AnalyticsRow>
           size="small"
-          rowKey="label"
+          // Two rows can share a label (two departments named alike); the key tells them apart.
+          rowKey={(row) => row.key ?? row.label}
+          onRow={(row) => {
+            const action = rowAction?.(row);
+            return action
+              ? { ...drillProps(action), className: "cursor-pointer" }
+              : {};
+          }}
           pagination={
             breakdown.rows.length > 10 ? { pageSize: 10, size: "small" } : false
           }

@@ -15,12 +15,16 @@ import type {
   PendingRequestType,
 } from "../../models/api/response/dashboard-response.model";
 import { DASHBOARD_LABEL } from "../../constants/label.const";
+import { DRILL_ROW_CLASS, drillProps } from "@/shared/drilldown/drill-props";
+import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 
 const { Title, Text } = Typography;
 
 interface PendingRequestsCardProps {
   data: PendingRequest[];
   loading?: boolean;
+  /** What clicking a request opens; requests without an action stay plain. */
+  drillAction?: (request: PendingRequest) => DrillAction;
 }
 
 const REQUEST_TYPE_LABEL: Record<PendingRequestType, string> = {
@@ -56,6 +60,7 @@ const REQUEST_TYPE_COLOR: Record<PendingRequestType, string> = {
 export default function PendingRequestsCard({
   data,
   loading,
+  drillAction,
 }: PendingRequestsCardProps) {
   const { token } = theme.useToken();
   return (
@@ -71,10 +76,12 @@ export default function PendingRequestsCard({
         <div className="flex flex-col gap-3">
           {data.map((req) => {
             const color = REQUEST_TYPE_COLOR[req.type] ?? "#8C8C8C";
+            const action = drillAction?.(req);
             return (
               <div
                 key={req.id}
-                className="flex items-center justify-between gap-3"
+                className={`flex items-center justify-between gap-3 ${action ? `-mx-1 px-1 ${DRILL_ROW_CLASS}` : ""}`}
+                {...drillProps(action)}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <div

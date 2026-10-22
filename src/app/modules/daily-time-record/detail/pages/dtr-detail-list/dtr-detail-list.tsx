@@ -45,6 +45,7 @@ import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useDtrDrill } from "@/shared/drilldown/use-screen-drill";
 
 const { Title } = Typography;
 
@@ -82,15 +83,17 @@ const EMPTY_FILTER: DtrDetailFilter = {};
 
 export default function DtrDetailList() {
   const [filtersOpen, setFiltersOpen] = useState(true);
+  // A Dashboard or Analytics figure opens this page on its own range and scope, already generated.
+  const drill = useDtrDrill();
   const [pending, setPending] = useState<DtrDetailFilter>(
-    currentSemiMonthlyRange,
+    () => drill ?? currentSemiMonthlyRange(),
   );
   const [committedFilter, setCommittedFilter] =
     useState<DtrDetailFilter | null>(null);
+  // Until the user generates or clears it themselves.
+  const [showDrill, setShowDrill] = useState(drill !== null);
   const [generateKey, setGenerateKey] = useState(0);
   const [messageApi, contextHolder] = message.useMessage();
-
-  const hasGenerated = committedFilter !== null;
 
   const { data: departments = [] } = useDepartments();
   const { data: clients = [] } = useClients();
@@ -135,11 +138,20 @@ export default function DtrDetailList() {
   const effectivePayrollGroupId =
     pending.payrollGroupId ?? payrollGroups[0]?.id;
 
+  // The drilled DTR waits for the payroll groups, since generating needs one.
+  const drillGroupId = drill?.payrollGroupId ?? payrollGroups[0]?.id;
+  const drilledFilter =
+    showDrill && drill && drillGroupId
+      ? { ...drill, payrollGroupId: drillGroupId }
+      : null;
+  const activeFilter = committedFilter ?? drilledFilter;
+  const hasGenerated = activeFilter !== null;
+
   const {
     data: records = [],
     isLoading,
     refetch,
-  } = useDtrDetailRecords(committedFilter ?? EMPTY_FILTER, {
+  } = useDtrDetailRecords(activeFilter ?? EMPTY_FILTER, {
     enabled: hasGenerated,
     generateKey,
   });
@@ -185,12 +197,14 @@ export default function DtrDetailList() {
       return;
     }
     setCommittedFilter({ ...pending, payrollGroupId: effectivePayrollGroupId });
+    setShowDrill(false);
     setGenerateKey((k) => k + 1);
   };
 
   const handleClear = () => {
     setPending(currentSemiMonthlyRange());
     setCommittedFilter(null);
+    setShowDrill(false);
   };
 
   // ── Export ──────────────────────────────────────────────────────────────────
@@ -452,8 +466,8 @@ export default function DtrDetailList() {
         data={records}
         loading={isLoading}
         onChanged={() => refetch()}
-        dateFrom={committedFilter?.fromDate}
-        dateTo={committedFilter?.toDate}
+        dateFrom={activeFilter?.fromDate}
+        dateTo={activeFilter?.toDate}
       />
 
       <DtrPostModal

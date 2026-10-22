@@ -15,6 +15,7 @@ import { DEDUCTION_APPLICATION_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
 import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
+import { useApplicationDrill } from "@/shared/drilldown/use-screen-drill";
 
 const { Title } = Typography;
 
@@ -61,7 +62,9 @@ export default function DeductionApplicationList() {
     if (!employeeFilter) return applications;
     return applications.filter((a) => a.employeeId === employeeFilter);
   }, [applications, employeeFilter]);
-  const approval = useApprovalTabs(filtered);
+  // A Dashboard or Analytics figure can open this list on a tab (it has no date filter).
+  const drill = useApplicationDrill();
+  const approval = useApprovalTabs(filtered, drill.tab);
 
   return (
     <div className="content-page">

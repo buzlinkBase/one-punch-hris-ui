@@ -9,7 +9,10 @@ export interface DashboardStats {
 }
 
 export interface AttendanceTrendPoint {
+  /** Short weekday ("Mon"), for the axis. */
   date: string;
+  /** The day itself, `YYYY-MM-DD`. */
+  workDate?: string;
   present: number;
   late: number;
   absent: number;
@@ -24,6 +27,11 @@ export interface DepartmentHeadcount {
 export interface DashboardCount {
   label: string;
   count: number;
+  /**
+   * What the bar filters by when drilled into: a branch/site id, an employment status or a
+   * tenure band code ("1-3", "10-"). Null when there's nothing to filter by ("No branch").
+   */
+  key?: string | null;
 }
 
 /** Current (not resigned) employees, split by status, branch, project site and tenure. */

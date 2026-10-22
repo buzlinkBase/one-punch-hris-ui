@@ -6,6 +6,7 @@ import type {
 } from "../models/analytics.model";
 import { formatValue } from "../utils/analytics-format";
 import { formatPeriod } from "../utils/analytics-filter";
+import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import { TrendChart, type TrendChartKind } from "./charts/trend-chart";
 
 interface ChartCardProps {
@@ -15,6 +16,8 @@ interface ChartCardProps {
   series: AnalyticsSeries[];
   loading?: boolean;
   className?: string;
+  /** What clicking a month opens, per series. */
+  pointAction?: (period: string, seriesKey: string) => DrillAction;
 }
 
 type View = "chart" | "table";
@@ -27,6 +30,7 @@ export function ChartCard({
   series,
   loading,
   className,
+  pointAction,
 }: ChartCardProps) {
   const [view, setView] = useState<View>("chart");
   const isEmpty =
@@ -58,7 +62,12 @@ export function ChartCard({
           description="No data for this period"
         />
       ) : view === "chart" ? (
-        <TrendChart kind={kind} points={points} series={series} />
+        <TrendChart
+          kind={kind}
+          points={points}
+          series={series}
+          pointAction={pointAction}
+        />
       ) : (
         <Table
           size="small"

@@ -11,12 +11,14 @@ export const isPendingApproval = (status?: string | null) =>
 /**
  * Splits an application list into "pending" (ForApproval) and "processed" rows and remembers
  * which tab is showing. Apply it after the page's own filters so the tab counts match them.
- * Pair with the ApprovalTabs component.
+ * Pair with the ApprovalTabs component. `initialTab` (default "pending") is where the page
+ * opens, e.g. on "processed" when a Dashboard figure about approved leave drills into it.
  */
 export function useApprovalTabs<T extends { approvalStatus?: string | null }>(
   rows: T[],
+  initialTab: ApprovalTab = "pending",
 ) {
-  const [tab, setTab] = useState<ApprovalTab>("pending");
+  const [tab, setTab] = useState<ApprovalTab>(initialTab);
   const { pending, processed } = useMemo(() => {
     const pendingRows: T[] = [];
     const processedRows: T[] = [];

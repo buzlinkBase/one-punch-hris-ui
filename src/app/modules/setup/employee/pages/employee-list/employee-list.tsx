@@ -30,6 +30,7 @@ import EmployeeOpeningBalanceModal from "../../components/employee-opening-balan
 import type { EmployeeResponse } from "../../models/api/response/employee-response.model";
 import type { EmployeeImportPreviewRow } from "../../models/api/response/employee-import-preview-response.model";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useEmployeeDrill } from "@/shared/drilldown/use-screen-drill";
 
 const { Title } = Typography;
 
@@ -38,6 +39,15 @@ const { Search } = Input;
 export default function EmployeeList() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // A Dashboard or Analytics figure opens this list on its own filters, replacing whatever it last
+  // showed. Applied once, before the store is read below, so the first search is the drilled one.
+  const drill = useEmployeeDrill();
+  useState(() => {
+    if (!drill) return;
+    const view = useEmployeeListViewStore.getState();
+    view.setQuery((current) => ({ ...clearedQuery(current), ...drill }));
+    view.setSearchText("");
+  });
   // Single source of truth for the table: page, size, sort, keyword and every column filter.
   // Paging/sorting/filtering all run on the server (GET employees/list). Held in a store so that
   // editing an employee and coming back (which remounts this page) refreshes the same search the

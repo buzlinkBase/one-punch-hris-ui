@@ -45,6 +45,11 @@ export interface AnalyticsColumn {
 export interface AnalyticsRow {
   label: string;
   values: Record<string, number>;
+  /**
+   * What the row filters by when drilled into -- an id, an enum name or a band code, depending on
+   * the breakdown. Null when there's nothing to drill into.
+   */
+  key?: string | null;
 }
 
 export interface AnalyticsBreakdown {

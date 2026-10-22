@@ -15,6 +15,8 @@ import type {
 } from "../../models/analytics.model";
 import { formatAxisValue, formatValue } from "../../utils/analytics-format";
 import { formatPeriod } from "../../utils/analytics-filter";
+import { DRILL_HINT } from "@/shared/drilldown/drill-props";
+import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import { useChartTheme } from "./chart-theme";
 
 /** line: a trend. bar: side-by-side values per month. stacked: parts that add up to a total. */
@@ -25,6 +27,8 @@ interface TrendChartProps {
   points: AnalyticsPoint[];
   /** In color order. All share one unit -- one chart, one axis. */
   series: AnalyticsSeries[];
+  /** What clicking a month opens, per series; months without an action stay plain. */
+  pointAction?: (period: string, seriesKey: string) => DrillAction;
 }
 
 /** A series' color key -- an SVG fill, since the color is data rather than a style. */
@@ -48,6 +52,7 @@ interface ChartTooltipProps {
   label?: unknown;
   series: AnalyticsSeries[];
   showTotal: boolean;
+  showHint: boolean;
 }
 
 function ChartTooltip({
@@ -56,6 +61,7 @@ function ChartTooltip({
   label,
   series,
   showTotal,
+  showHint,
 }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   const unit = series[0]?.unit ?? "Count";
@@ -86,13 +92,39 @@ function ChartTooltip({
           </span>
         </div>
       )}
+      {showHint && (
+        <div className="mt-1 text-(--ant-color-text-tertiary)">
+          {DRILL_HINT}
+        </div>
+      )}
     </div>
   );
 }
 
+/** recharts' click state: the hovered point's index, as a string or number. */
+interface ChartClickState {
+  activeTooltipIndex?: number | string | null;
+}
+
 /** A monthly trend with the house marks: 2px lines, 8px dots, 4px rounded bar ends, a legend for 2+ series. */
-export function TrendChart({ kind, points, series }: TrendChartProps) {
+export function TrendChart({
+  kind,
+  points,
+  series,
+  pointAction,
+}: TrendChartProps) {
   const chart = useChartTheme();
+  // Actions per month and series, in the chart's order.
+  const actions = points.map((p) =>
+    series.map((s) => pointAction?.(p.period, s.key)),
+  );
+  const canDrill = actions.some((row) => row.some(Boolean));
+  // A line has no bar to click: the month under the pointer opens its first series' list.
+  const openMonth = (state: ChartClickState) => {
+    const index = Number(state.activeTooltipIndex);
+    if (!Number.isInteger(index)) return;
+    actions[index]?.find(Boolean)?.();
+  };
   const unit = series[0]?.unit ?? "Count";
   const data = points.map((p) => ({
     period: formatPeriod(p.period),
@@ -129,6 +161,7 @@ export function TrendChart({ kind, points, series }: TrendChartProps) {
             label={props.label}
             series={series}
             showTotal={kind === "stacked"}
+            showHint={canDrill}
           />
         )}
       />
@@ -148,12 +181,13 @@ export function TrendChart({ kind, points, series }: TrendChartProps) {
           ))}
         </ul>
       )}
-      <div className="h-64 w-full">
+      <div className={`h-64 w-full ${canDrill ? "cursor-pointer" : ""}`}>
         <ResponsiveContainer width="100%" height="100%">
           {kind === "line" ? (
             <LineChart
               data={data}
               margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
+              onClick={canDrill ? openMonth : undefined}
             >
               {axes}
               {series.map((s, i) => (
@@ -192,6 +226,9 @@ export function TrendChart({ kind, points, series }: TrendChartProps) {
                     radius={isTop ? [4, 4, 0, 0] : 0}
                     maxBarSize={36}
                     isAnimationActive={false}
+                    onClick={(_: unknown, index: number) =>
+                      actions[index]?.[i]?.()
+                    }
                   />
                 );
               })}

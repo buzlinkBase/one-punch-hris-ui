@@ -2,6 +2,36 @@ import {
   AnalyticsPage,
   type AnalyticsPageConfig,
 } from "../components/analytics-page";
+import {
+  dtrForEmployee,
+  dtrForPeriod,
+  dtrForRange,
+  type AnalyticsDrill,
+} from "../utils/analytics-drill";
+
+const SERIES_KEYS = [
+  "attendanceRate",
+  "lateHours",
+  "undertimeHours",
+  "absences",
+  "overtimeHours",
+] as const;
+
+// Every figure comes from the DTR, so each opens the DTR for the same slice.
+const DRILL: AnalyticsDrill = {
+  breakdowns: {
+    department: (row, filter) =>
+      row.key ? dtrForRange(filter, { departmentId: row.key }) : null,
+    mostLate: dtrForEmployee,
+    mostAbsent: dtrForEmployee,
+  },
+  kpis: Object.fromEntries(
+    SERIES_KEYS.map((key) => [key, dtrForRange] as const),
+  ),
+  series: Object.fromEntries(
+    SERIES_KEYS.map((key) => [key, dtrForPeriod] as const),
+  ),
+};
 
 const CONFIG: AnalyticsPageConfig = {
   area: "attendance",
@@ -25,6 +55,7 @@ const CONFIG: AnalyticsPageConfig = {
     },
     { title: "Absences", kind: "bar", series: ["absences"] },
   ],
+  drill: DRILL,
 };
 
 export default function AttendanceAnalytics() {

@@ -3,12 +3,15 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { useChartTheme } from "@/app/modules/analytics/components/charts/chart-theme";
+import { DRILL_HINT } from "@/shared/drilldown/drill-props";
+import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import type { DashboardCount } from "../../models/api/response/dashboard-response.model";
 
 const { Title } = Typography;
@@ -21,6 +24,8 @@ interface CountBarCardProps {
   horizontal?: boolean;
   /** Turns an API label ("PartTime") into what people read ("Part Time"). */
   formatLabel?: (label: string) => string;
+  /** What clicking a bar opens; bars without an action stay plain. */
+  drillAction?: (row: DashboardCount) => DrillAction;
 }
 
 /** A titled bar chart of a few labelled counts. */
@@ -30,13 +35,23 @@ export default function CountBarCard({
   loading,
   horizontal,
   formatLabel = (l) => l,
+  drillAction,
 }: CountBarCardProps) {
   const chart = useChartTheme();
   const rows = data.map((d) => ({
     label: formatLabel(d.label),
     count: d.count,
+    action: drillAction?.(d),
   }));
   const isEmpty = rows.every((r) => r.count === 0);
+  const open = (_: unknown, index: number) => rows[index]?.action?.();
+  // One Cell per bar, so only the bars that open something get a pointer.
+  const cells = rows.map((r, i) => (
+    <Cell
+      key={`${r.label}-${i}`}
+      className={r.action ? "cursor-pointer" : undefined}
+    />
+  ));
 
   const tooltip = (
     <Tooltip
@@ -50,6 +65,11 @@ export default function CountBarCard({
             <span className="font-semibold tabular-nums">
               {Number(payload[0].value ?? 0).toLocaleString()}
             </span>
+            {payload[0].payload.action && (
+              <div className="mt-1 text-(--ant-color-text-tertiary)">
+                {DRILL_HINT}
+              </div>
+            )}
           </div>
         ) : null
       }
@@ -97,7 +117,10 @@ export default function CountBarCard({
                   radius={[0, 4, 4, 0]}
                   maxBarSize={22}
                   isAnimationActive={false}
-                />
+                  onClick={open}
+                >
+                  {cells}
+                </Bar>
               </BarChart>
             ) : (
               <BarChart
@@ -126,7 +149,10 @@ export default function CountBarCard({
                   radius={[4, 4, 0, 0]}
                   maxBarSize={40}
                   isAnimationActive={false}
-                />
+                  onClick={open}
+                >
+                  {cells}
+                </Bar>
               </BarChart>
             )}
           </ResponsiveContainer>

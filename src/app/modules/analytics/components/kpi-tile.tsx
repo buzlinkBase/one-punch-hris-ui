@@ -4,6 +4,8 @@ import {
   ArrowUpOutlined,
   MinusOutlined,
 } from "@ant-design/icons";
+import { DRILL_CLASS, drillProps } from "@/shared/drilldown/drill-props";
+import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import type { AnalyticsKpi } from "../models/analytics.model";
 import {
   formatValue,
@@ -25,10 +27,12 @@ interface KpiTileProps {
   kpi?: AnalyticsKpi;
   direction?: KpiDirection;
   loading?: boolean;
+  /** What clicking the tile opens; without one it stays plain. */
+  action?: DrillAction;
 }
 
 /** One headline figure with its change against the previous period (arrow + text, never color alone). */
-export function KpiTile({ kpi, direction, loading }: KpiTileProps) {
+export function KpiTile({ kpi, direction, loading, action }: KpiTileProps) {
   if (loading || !kpi) {
     return (
       <Card size="small" className="h-full">
@@ -46,7 +50,11 @@ export function KpiTile({ kpi, direction, loading }: KpiTileProps) {
         : MinusOutlined;
 
   return (
-    <Card size="small" className="h-full">
+    <Card
+      size="small"
+      className={`h-full ${action ? DRILL_CLASS : ""}`}
+      {...drillProps(action)}
+    >
       <div className="text-xs text-(--ant-color-text-secondary)">
         {kpi.label}
       </div>

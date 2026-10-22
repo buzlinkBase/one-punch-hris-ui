@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Card, Skeleton, Typography, theme } from "antd";
 import type { AttendanceTrendPoint } from "../../models/api/response/dashboard-response.model";
 import { DASHBOARD_LABEL } from "../../constants/label.const";
+import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 
 const { Title, Text } = Typography;
 
 interface AttendanceOverviewCardProps {
   data: AttendanceTrendPoint[];
   loading?: boolean;
+  /** What clicking a day opens; days without an action stay plain. */
+  drillAction?: (point: AttendanceTrendPoint) => DrillAction;
 }
 
 const SERIES = [
@@ -38,6 +41,7 @@ function niceMax(max: number): number {
 export default function AttendanceOverviewCard({
   data,
   loading,
+  drillAction,
 }: AttendanceOverviewCardProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const { token } = theme.useToken();
@@ -70,6 +74,8 @@ export default function AttendanceOverviewCard({
       : 0;
 
   const hovered = hoveredIdx !== null ? data[hoveredIdx] : null;
+  const actions = data.map((point) => drillAction?.(point));
+  const canDrill = actions.some(Boolean);
 
   return (
     <Card size="small" className="h-full">
@@ -236,7 +242,8 @@ export default function AttendanceOverviewCard({
                       width={zoneW}
                       height={IH}
                       fill="transparent"
-                      style={{ cursor: "default" }}
+                      className={actions[i] ? "cursor-pointer" : undefined}
+                      onClick={actions[i]}
                       onMouseEnter={() => setHoveredIdx(i)}
                       onMouseLeave={() => setHoveredIdx(null)}
                     />
@@ -299,7 +306,9 @@ export default function AttendanceOverviewCard({
                 className="text-[11px]"
                 style={{ color: token.colorTextQuaternary }}
               >
-                Hover a date to see breakdown
+                {canDrill
+                  ? "Hover a date to see breakdown, click it to open that day's DTR"
+                  : "Hover a date to see breakdown"}
               </span>
             )}
           </div>

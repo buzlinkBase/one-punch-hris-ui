@@ -4,6 +4,7 @@ import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { authStorage } from "@/core/auth/auth-storage";
+import { useDrillDown } from "@/shared/drilldown/use-drill-down";
 import { downloadMultiSheetExcel } from "@/shared/utils/export.utils";
 import type {
   AnalyticsArea,
@@ -14,6 +15,7 @@ import { useAnalytics } from "../hooks/use-analytics-queries";
 import { filterFromSearch, filterToSearch } from "../utils/analytics-filter";
 import type { KpiDirection } from "../utils/analytics-format";
 import { buildAnalyticsSheets } from "../utils/analytics-export";
+import type { AnalyticsDrill } from "../utils/analytics-drill";
 import type { TrendChartKind } from "./charts/trend-chart";
 import { AnalyticsFilters } from "./analytics-filters";
 import { KpiTile } from "./kpi-tile";
@@ -40,6 +42,8 @@ export interface AnalyticsPageConfig {
   charts: AnalyticsChartConfig[];
   /** Shown above the figures, e.g. how a number is counted. */
   note?: string;
+  /** Where the figures drill into; figures it leaves out stay plain. */
+  drill?: AnalyticsDrill;
 }
 
 const KPI_SKELETONS = 5;
@@ -63,6 +67,18 @@ export function AnalyticsPage({ config }: { config: AnalyticsPageConfig }) {
 
   const setFilter = (next: AnalyticsFilter) =>
     navigate({ to: pathname, search: filterToSearch(next), replace: true });
+
+  // Figures open the list behind them -- only for screens this person may open. Drills use the
+  // range the figures actually cover, which the API may have shortened.
+  const { action } = useDrillDown();
+  const drill = config.drill;
+  const covered: AnalyticsFilter = data
+    ? { ...filter, from: data.from, to: data.to }
+    : filter;
+  const pointAction = drill?.series
+    ? (period: string, seriesKey: string) =>
+        action(drill.series?.[seriesKey]?.(period, covered))
+    : undefined;
 
   const canExport = authStorage.hasAnyPermission(config.exportPermission);
   const exportExcel = () => {
@@ -145,6 +161,7 @@ export function AnalyticsPage({ config }: { config: AnalyticsPageConfig }) {
                 key={kpi.key}
                 kpi={kpi}
                 direction={config.kpiDirections?.[kpi.key]}
+                action={action(drill?.kpis?.[kpi.key]?.(covered))}
               />
             ))}
       </div>
@@ -158,6 +175,7 @@ export function AnalyticsPage({ config }: { config: AnalyticsPageConfig }) {
             points={data?.series ?? []}
             series={pickSeries(data?.seriesDefinitions ?? [], chart.series)}
             loading={isLoading}
+            pointAction={pointAction}
             className={
               // A lone last chart takes the full row.
               i === config.charts.length - 1 && i % 2 === 0
@@ -170,7 +188,14 @@ export function AnalyticsPage({ config }: { config: AnalyticsPageConfig }) {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {(data?.breakdowns ?? []).map((b) => (
-          <BreakdownTable key={b.key} breakdown={b} loading={isLoading} />
+          <BreakdownTable
+            key={b.key}
+            breakdown={b}
+            loading={isLoading}
+            rowAction={(row) =>
+              action(drill?.breakdowns?.[b.key]?.(row, covered))
+            }
+          />
         ))}
       </div>
     </div>
