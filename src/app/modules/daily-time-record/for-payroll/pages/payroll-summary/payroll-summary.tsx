@@ -6,6 +6,7 @@ import {
   Dropdown,
   Empty,
   Row,
+  Segmented,
   Select,
   Space,
   Statistic,
@@ -204,6 +205,16 @@ export default function PayrollSummary() {
     [allResults, filter],
   );
 
+  // Deductions tab only: most employees have nothing deducted, so default to hiding them.
+  const [deductionsView, setDeductionsView] = useState<"with" | "all">("with");
+  const deductionRows = useMemo(
+    () =>
+      deductionsView === "with"
+        ? results.filter((r) => r.totalDeductions > 0)
+        : results,
+    [results, deductionsView],
+  );
+
   // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
   // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
   // Standard, Additive -> Hours Breakdown), so the printed itemization always matches how the
@@ -275,8 +286,8 @@ export default function PayrollSummary() {
     })}`;
 
   const handleExportDeductions = () => {
-    if (!results.length || !selectedBatch) return;
-    const deductions = buildDeductionsSheet(results);
+    if (!deductionRows.length || !selectedBatch) return;
+    const deductions = buildDeductionsSheet(deductionRows);
     downloadMultiSheetExcel(
       [
         {
@@ -588,13 +599,23 @@ export default function PayrollSummary() {
           onChange={setActiveTab}
           tabBarExtraContent={
             activeTab === "deductions" ? (
-              <Button
-                icon={<DownloadOutlined />}
-                disabled={!results.length}
-                onClick={handleExportDeductions}
-              >
-                Export Excel
-              </Button>
+              <div className="flex items-center gap-2">
+                <Segmented
+                  value={deductionsView}
+                  onChange={setDeductionsView}
+                  options={[
+                    { label: "With deductions", value: "with" },
+                    { label: "All employees", value: "all" },
+                  ]}
+                />
+                <Button
+                  icon={<DownloadOutlined />}
+                  disabled={!deductionRows.length}
+                  onClick={handleExportDeductions}
+                >
+                  Export Excel
+                </Button>
+              </div>
             ) : null
           }
           items={[
@@ -615,8 +636,8 @@ export default function PayrollSummary() {
               label: "Deductions",
               children: (
                 <Table
-                  dataSource={results}
-                  columns={deductionsColumns(results)}
+                  dataSource={deductionRows}
+                  columns={deductionsColumns(deductionRows)}
                   bordered
                   {...tableProps}
                 />

@@ -246,7 +246,7 @@ export default function ClientSettingsModal({
       onCancel={onClose}
       destroyOnClose
       // The uniform allowance policy form needs room for its two-column cards.
-      width={activeTabKey === "uniform" ? 960 : 640}
+      width={960}
       footer={
         selfSavingTab ? null : (
           <Space>

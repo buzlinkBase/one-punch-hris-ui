@@ -419,7 +419,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Switch between tabs to see earnings, hours, holidays, deductions and employer contributions.",
           },
           {
-            text: "The Deductions tab lists every deduction per employee (contributions, tax, each loan and other deduction, late, under time, absent). Use Export Excel on that tab to download it.",
+            text: "The Deductions tab lists every deduction per employee (contributions, tax, each loan and other deduction, late, under time, absent). By default it shows only employees who have deductions; switch to All employees to include everyone. Use Export Excel on that tab to download what is shown.",
           },
           {
             text: "Print the summary or individual payslips. They open as a PDF in a new tab.",
