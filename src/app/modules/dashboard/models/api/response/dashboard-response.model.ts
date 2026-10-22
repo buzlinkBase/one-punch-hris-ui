@@ -26,10 +26,11 @@ export interface DashboardCount {
   count: number;
 }
 
-/** Current (not resigned) employees, split three ways. */
+/** Current (not resigned) employees, split by status, branch, project site and tenure. */
 export interface WorkforceMix {
   employmentStatus: DashboardCount[];
   branches: DashboardCount[];
+  sites: DashboardCount[];
   tenure: DashboardCount[];
 }
 

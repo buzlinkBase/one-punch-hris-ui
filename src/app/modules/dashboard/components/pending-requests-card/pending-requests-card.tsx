@@ -9,7 +9,7 @@ import {
   GlobalOutlined,
   MinusCircleOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
+import { toPh } from "@/shared/utils/ph-time.util";
 import type {
   PendingRequest,
   PendingRequestType,
@@ -92,7 +92,7 @@ export default function PendingRequestsCard({
                     </p>
                     <Text type="secondary" className="text-xs">
                       {REQUEST_TYPE_LABEL[req.type]} ·{" "}
-                      {dayjs(req.submittedAt).format("MMM D")}
+                      {toPh(req.submittedAt).format("MMM D")}
                     </Text>
                   </div>
                 </div>

@@ -15,6 +15,7 @@ export const DASHBOARD_LABEL = {
   TODAY_ATTENDANCE: "Today's Attendance",
   EMPLOYMENT_STATUS: "Employment Status",
   BRANCH_HEADCOUNT: "Headcount by Branch",
+  SITE_HEADCOUNT: "Headcount by Project Site",
   TENURE: "Length of Service",
   ATTENDANCE_OVERVIEW: "Attendance Overview",
   ATTENDANCE_OVERVIEW_SUBTITLE: "Last 7 days",

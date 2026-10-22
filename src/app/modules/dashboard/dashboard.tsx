@@ -1,6 +1,6 @@
 import { Typography } from "antd";
-import dayjs from "dayjs";
 import { authStorage } from "@/core/auth/auth-storage";
+import { phNow } from "@/shared/utils/ph-time.util";
 import StatTiles from "./components/stat-tiles/stat-tiles";
 import AttendanceOverviewCard from "./components/attendance-overview-card/attendance-overview-card";
 import TodayAttendanceCard from "./components/today-attendance-card/today-attendance-card";
@@ -17,7 +17,7 @@ import { spaceWords } from "./utils/space-words";
 const { Title, Text } = Typography;
 
 function getGreeting(): string {
-  const h = new Date().getHours();
+  const h = phNow().hour();
   if (h < 12) return "Good morning";
   if (h < 18) return "Good afternoon";
   return "Good evening";
@@ -28,7 +28,7 @@ export default function Dashboard() {
 
   const user = authStorage.getUser();
   const firstName = user?.name?.split(" ")[0] ?? "there";
-  const today = dayjs().format("dddd, MMMM D, YYYY");
+  const today = phNow().format("dddd, MMMM D, YYYY");
 
   return (
     <div className="content-page">
@@ -58,7 +58,7 @@ export default function Dashboard() {
         <TodayAttendanceCard stats={data?.stats} loading={isLoading} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <DepartmentHeadcountCard
           data={data?.departmentHeadcount ?? []}
           loading={isLoading}
@@ -69,6 +69,15 @@ export default function Dashboard() {
           loading={isLoading}
           horizontal
         />
+        <CountBarCard
+          title={DASHBOARD_LABEL.SITE_HEADCOUNT}
+          data={data?.workforce?.sites ?? []}
+          loading={isLoading}
+          horizontal
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <CountBarCard
           title={DASHBOARD_LABEL.EMPLOYMENT_STATUS}
           data={data?.workforce?.employmentStatus ?? []}

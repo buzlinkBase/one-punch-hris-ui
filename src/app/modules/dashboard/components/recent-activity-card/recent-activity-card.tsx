@@ -14,6 +14,7 @@ import type {
   RecentActivity,
 } from "../../models/api/response/dashboard-response.model";
 import { DASHBOARD_LABEL } from "../../constants/label.const";
+import { toPh } from "@/shared/utils/ph-time.util";
 
 dayjs.extend(relativeTime);
 
@@ -77,7 +78,7 @@ export default function RecentActivityCard({
                   </span>
                 </p>
                 <Text type="secondary" className="text-xs">
-                  {dayjs(activity.timestamp).fromNow()}
+                  {toPh(activity.timestamp).fromNow()}
                 </Text>
               </div>
             </div>
