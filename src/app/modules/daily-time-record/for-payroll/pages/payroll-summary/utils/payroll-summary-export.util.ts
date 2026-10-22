@@ -437,6 +437,64 @@ const withBreakdownColumns = (
 export const buildPayrollSheet = (results: PayrollRunResult[]): ExportSheet =>
   withBreakdownColumns(PAYROLL_HEADERS, buildPayrollRows(results), results);
 
+// The Deductions tab in one sheet: same order as the screen, a column per loan / other-deduction
+// type (types vary by run, so headers come from `results`) before each group's total.
+export const buildDeductionsSheet = (
+  results: PayrollRunResult[],
+): ExportSheet => {
+  const groups = [
+    { label: "Loans", spec: loansBreakdown },
+    { label: "Other Deductions", spec: otherDeductionsBreakdown },
+  ].map(({ label, spec }) => {
+    const types = breakdownTypes(results, spec);
+    const adj = hasBreakdownRemainder(results, spec);
+    return {
+      headers: [
+        ...types.map((t) => t.label),
+        ...(adj ? [`${label} Adj.`] : []),
+        `${label} Total`,
+      ],
+      values: (r: PayrollRunResult) => [
+        ...types.map((t) => num(breakdownAmount(r, spec, t.itemId))),
+        ...(adj ? [num(breakdownRemainder(r, spec))] : []),
+        num(spec.total(r)),
+      ],
+    };
+  });
+  const [loans, other] = groups;
+
+  return {
+    headers: [
+      "Employee",
+      "SSS",
+      "PhilHealth",
+      "Pag-IBIG",
+      "W-Tax",
+      "Cash Bond",
+      ...loans.headers,
+      ...other.headers,
+      "Late",
+      "Under Time",
+      "Absent",
+      "Total Deductions",
+    ],
+    rows: results.map((r) => [
+      r.fullName,
+      num(r.sssContribution),
+      num(r.philHealthContribution),
+      num(r.pagIbigContribution),
+      num(r.withholdingTax),
+      num(r.cashBondDeduction),
+      ...loans.values(r),
+      ...other.values(r),
+      num(r.lateAmount),
+      num(r.underTimeAmount),
+      num(r.salaryType === "FIXED" ? r.absencesAmount : 0),
+      num(r.totalDeductions),
+    ]),
+  };
+};
+
 export const buildExportSheet = (results: PayrollRunResult[]): ExportSheet =>
   withBreakdownColumns(EXPORT_HEADERS, buildExportRows(results), results);
 

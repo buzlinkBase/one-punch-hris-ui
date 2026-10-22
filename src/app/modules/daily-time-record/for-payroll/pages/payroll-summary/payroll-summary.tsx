@@ -61,12 +61,14 @@ import {
   payrollColumns,
   type ExpandableGroup,
 } from "./columns/payroll.columns";
+import { deductionsColumns } from "./columns/deductions.columns";
 import { hoursColumns } from "./columns/hours.columns";
 import { erColumns } from "./columns/employer-contributions.columns";
 import {
   EXCEL_AMOUNT_FORMAT,
   buildExportSheet,
   buildPayrollSheet,
+  buildDeductionsSheet,
   ER_HEADERS,
   buildErRows,
   HOURS_HEADERS,
@@ -106,6 +108,7 @@ export default function PayrollSummary() {
   // Defaults to Approved so the report reads clean day-to-day — switch to All/For Approval/
   // Declined to inspect a pending or declined run's figures from this page.
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Approved");
+  const [activeTab, setActiveTab] = useState("payroll");
 
   // Narrows the batch selector below -- defaults to last month through this month, same as
   // the Saved Payroll Runs tab, so the dropdown isn't a long scroll through every run ever made
@@ -261,17 +264,35 @@ export default function PayrollSummary() {
     }
   };
 
-  const handleExport = (format: "csv" | "excel") => {
-    if (!results.length || !selectedBatch) return;
-    // Built from `results`, so the files hold exactly the filtered rows on screen; the name
-    // carries the applied filters.
-    const filterSuffix = buildFilterFileSuffix({
+  // Export files are built from `results`, so they hold exactly the filtered rows on screen; the
+  // name carries the period and the applied filters.
+  const buildExportSuffix = (batch: NonNullable<typeof selectedBatch>) =>
+    `${batch.payPeriodStart}_${batch.payPeriodEnd}${buildFilterFileSuffix({
       status: statusFilter,
       clientCode: clients.find((c) => c.id === clientFilter)?.code,
       payrollGroupCode: payrollGroups.find((p) => p.id === payrollGroupFilter)
         ?.code,
-    });
-    const suffix = `${selectedBatch.payPeriodStart}_${selectedBatch.payPeriodEnd}${filterSuffix}`;
+    })}`;
+
+  const handleExportDeductions = () => {
+    if (!results.length || !selectedBatch) return;
+    const deductions = buildDeductionsSheet(results);
+    downloadMultiSheetExcel(
+      [
+        {
+          name: "Deductions",
+          headers: deductions.headers,
+          rows: deductions.rows,
+          numberFormat: EXCEL_AMOUNT_FORMAT,
+        },
+      ],
+      `deductions-${buildExportSuffix(selectedBatch)}.xlsx`,
+    );
+  };
+
+  const handleExport = (format: "csv" | "excel") => {
+    if (!results.length || !selectedBatch) return;
+    const suffix = buildExportSuffix(selectedBatch);
     if (format === "csv") {
       const csv = buildExportSheet(results);
       triggerDownload(
@@ -282,12 +303,19 @@ export default function PayrollSummary() {
       // One worksheet per tab, matching what's on screen exactly (Payroll with its Loans /
       // Other Deductions / Other Income groups unfolded).
       const payroll = buildPayrollSheet(results);
+      const deductions = buildDeductionsSheet(results);
       downloadMultiSheetExcel(
         [
           {
             name: "Payroll",
             headers: payroll.headers,
             rows: payroll.rows,
+            numberFormat: EXCEL_AMOUNT_FORMAT,
+          },
+          {
+            name: "Deductions",
+            headers: deductions.headers,
+            rows: deductions.rows,
             numberFormat: EXCEL_AMOUNT_FORMAT,
           },
           {
@@ -556,6 +584,19 @@ export default function PayrollSummary() {
 
       <Card>
         <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          tabBarExtraContent={
+            activeTab === "deductions" ? (
+              <Button
+                icon={<DownloadOutlined />}
+                disabled={!results.length}
+                onClick={handleExportDeductions}
+              >
+                Export Excel
+              </Button>
+            ) : null
+          }
           items={[
             {
               key: "payroll",
@@ -564,6 +605,18 @@ export default function PayrollSummary() {
                 <Table
                   dataSource={results}
                   columns={payrollTableColumns}
+                  bordered
+                  {...tableProps}
+                />
+              ),
+            },
+            {
+              key: "deductions",
+              label: "Deductions",
+              children: (
+                <Table
+                  dataSource={results}
+                  columns={deductionsColumns(results)}
                   bordered
                   {...tableProps}
                 />
