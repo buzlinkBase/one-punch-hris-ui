@@ -5,6 +5,7 @@ import type { EmployeeFilter } from "../models/api/request/employee-filter.model
 import type { CreateAttendanceEntry } from "../models/api/request/create-attendance-entry.model";
 import type { UpdateAttendanceEntry } from "../models/api/request/update-attendance-entry.model";
 import type { AttendanceEntryResponse } from "../models/api/response/attendance-entry-response.model";
+import type { RemovedAttendanceLog } from "../models/api/response/removed-attendance-log.model";
 import type { EmployeeFilterResponse } from "../models/api/response/employee-filter-response.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "attendance");
@@ -25,6 +26,27 @@ interface ServerAttendanceRecord {
   area: string | null;
   logRemarks: string | null;
   editRemarks: string | null;
+  originalLogId?: string | null;
+  originalWorkDateTime?: string | null;
+}
+
+interface ShiftFilter {
+  employeeId: string;
+  workDate: string;
+  timeShiftId?: string | null;
+  actualStart?: string | null;
+  actualEnd?: string | null;
+}
+
+function shiftParams(filter: ShiftFilter): Record<string, string> {
+  const params: Record<string, string> = {
+    employeeId: filter.employeeId,
+    workDate: filter.workDate,
+  };
+  if (filter.timeShiftId) params.timeShiftId = filter.timeShiftId;
+  if (filter.actualStart) params.actualStart = filter.actualStart;
+  if (filter.actualEnd) params.actualEnd = filter.actualEnd;
+  return params;
 }
 
 function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
@@ -39,6 +61,8 @@ function mapRecord(r: ServerAttendanceRecord): AttendanceEntryResponse {
     client: r.client ?? null,
     area: r.area ?? null,
     remarks: r.editRemarks || r.logRemarks || null,
+    originalLogId: r.originalLogId ?? null,
+    originalTimeLog: r.originalWorkDateTime ?? null,
   };
 }
 
@@ -48,26 +72,31 @@ export const attendanceEntryApi = {
   // either or both can legitimately be missing (no attendance at all that day, or an
   // incomplete pair with only a clock-in or clock-out). The backend falls back to the whole
   // work date in that case — see AttendanceController.GetShiftAttendance.
-  async getShiftAttendanceLogs(filter: {
-    employeeId: string;
-    workDate: string;
-    timeShiftId?: string | null;
-    actualStart?: string | null;
-    actualEnd?: string | null;
-  }): Promise<AttendanceEntryResponse[]> {
-    const params: Record<string, string> = {
-      employeeId: filter.employeeId,
-      workDate: filter.workDate,
-    };
-    if (filter.timeShiftId) params.timeShiftId = filter.timeShiftId;
-    if (filter.actualStart) params.actualStart = filter.actualStart;
-    if (filter.actualEnd) params.actualEnd = filter.actualEnd;
-
+  async getShiftAttendanceLogs(
+    filter: ShiftFilter,
+  ): Promise<AttendanceEntryResponse[]> {
     const raw = await httpClient.getUnwrapped<ServerAttendanceRecord[]>(
       `${ENDPOINT}/dtr-view-att-by-shift`,
-      { params },
+      { params: shiftParams(filter) },
     );
     return raw.map(mapRecord);
+  },
+
+  // Removed uploaded/synced logs in the same shift window, whose originals can be restored.
+  async getRemovedShiftLogs(
+    filter: ShiftFilter,
+  ): Promise<RemovedAttendanceLog[]> {
+    return httpClient.getUnwrapped<RemovedAttendanceLog[]>(
+      `${ENDPOINT}/dtr-view-removed-by-shift`,
+      { params: shiftParams(filter) },
+    );
+  },
+
+  // Puts an edited or removed uploaded/synced log back the way the file/device had it.
+  async restoreOriginal(originalLogId: string): Promise<void> {
+    await httpClient.post<void>(
+      `${ENDPOINT}/originals/${originalLogId}/restore`,
+    );
   },
 
   async getAll(
@@ -89,8 +118,12 @@ export const attendanceEntryApi = {
     await httpClient.put<void>(ENDPOINT, payload);
   },
 
-  async remove(id: string): Promise<void> {
-    await httpClient.delete<void>(`${ENDPOINT}/${id}`, { data: id });
+  // reason is kept with a removed uploaded/synced log's original.
+  async remove(id: string, reason?: string): Promise<void> {
+    await httpClient.delete<void>(`${ENDPOINT}/${id}`, {
+      data: id,
+      params: reason ? { reason } : undefined,
+    });
   },
 
   async deleteBatch(batchCode: string): Promise<void> {

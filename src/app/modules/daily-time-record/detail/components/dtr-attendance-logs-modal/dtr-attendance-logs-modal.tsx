@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Button,
+  Collapse,
   DatePicker,
   Form,
   Input,
@@ -20,15 +21,20 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
+  RollbackOutlined,
 } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import type { ColumnsType } from "antd/es/table";
 import {
   useCreateAttendanceEntries,
-  useDeleteAttendanceEntryLog,
+  useRemoveAttendanceLog,
+  useRemovedShiftLogs,
+  useRestoreOriginalLog,
   useShiftAttendanceLogs,
   useUpdateAttendanceEntry,
 } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { useAttendanceLogActions } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-log-actions";
+import { ORIGINAL_KEPT_SOURCES } from "@/app/modules/timekeeping/attendance-entry/constants/attendance-log-permissions.const";
 import { getNotify } from "@/shared/utils/notify";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
@@ -38,6 +44,7 @@ import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries"
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import type { AttendanceEntryResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/attendance-entry-response.model";
+import type { RemovedAttendanceLog } from "@/app/modules/timekeeping/attendance-entry/models/api/response/removed-attendance-log.model";
 
 interface NewLogLocation {
   branchId: string | null;
@@ -83,14 +90,16 @@ export default function DtrAttendanceLogsModal({
 }: Props) {
   const shiftLabel = describeShift(shiftName, shiftStartTime, shiftEndTime);
   const { token } = theme.useToken();
-  // Same permissions the attendance endpoints enforce (AttendanceController).
+  // Same permissions the attendance endpoints enforce (AttendanceController). Editing and
+  // removing need the permission for the log's own source (manual, uploaded, synced).
   const canViewLogs = useHasPermission("Attendance Manual Entry:View");
-  const canEditLogs = useHasPermission("Attendance Manual Entry:Edit");
-  const canDeleteLogs = useHasPermission("Attendance Manual Entry:Delete");
+  const actionsFor = useAttendanceLogActions();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<Dayjs | null>(null);
   const [editingRemarks, setEditingRemarks] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [removeReason, setRemoveReason] = useState("");
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [fetchKey, setFetchKey] = useState(0);
   const prevOpen = useRef(false);
 
@@ -128,9 +137,19 @@ export default function DtrAttendanceLogsModal({
     },
   );
 
+  const { data: removedLogs = [], isFetching: isFetchingRemoved } =
+    useRemovedShiftLogs(
+      { employeeId, workDate, timeShiftId },
+      {
+        enabled: open && canViewLogs && !!employeeId && !!workDate,
+        searchKey: fetchKey,
+      },
+    );
+
   const { mutateAsync: updateEntry, isPending: isSaving } =
     useUpdateAttendanceEntry();
-  const { mutateAsync: deleteEntry } = useDeleteAttendanceEntryLog();
+  const { mutateAsync: removeEntry } = useRemoveAttendanceLog();
+  const { mutateAsync: restoreOriginal } = useRestoreOriginalLog();
   const { mutateAsync: createEntries, isPending: isAdding } =
     useCreateAttendanceEntries();
 
@@ -244,13 +263,30 @@ export default function DtrAttendanceLogsModal({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await deleteEntry(id);
-      getNotify().success({ message: "Attendance log deleted." });
+      await removeEntry({ id, reason: removeReason.trim() || undefined });
+      getNotify().success({ message: "Attendance log removed." });
       refetch();
     } catch {
-      getNotify().error({ message: "Failed to delete attendance log." });
+      getNotify().error({ message: "Failed to remove attendance log." });
     } finally {
       setDeletingId(null);
+      setRemoveReason("");
+    }
+  };
+
+  const handleRestore = async (originalLogId: string) => {
+    setRestoringId(originalLogId);
+    try {
+      await restoreOriginal(originalLogId);
+      getNotify().success({
+        message: "Original attendance log restored.",
+        description: "Regenerate the DTR to apply it to this day's hours.",
+      });
+      refetch();
+    } catch {
+      getNotify().error({ message: "Failed to restore the original log." });
+    } finally {
+      setRestoringId(null);
     }
   };
 
@@ -273,7 +309,20 @@ export default function DtrAttendanceLogsModal({
             />
           );
         }
-        return v ? dayjs(v).format("YYYY-MM-DD HH:mm:ss") : "—";
+        const time = v ? dayjs(v).format("YYYY-MM-DD HH:mm:ss") : "—";
+        if (!record.originalTimeLog) return time;
+        return (
+          <Space size={4}>
+            {time}
+            <Tooltip
+              title={`Original: ${dayjs(record.originalTimeLog).format("YYYY-MM-DD HH:mm")}`}
+            >
+              <Tag color="gold" className="me-0!">
+                Edited
+              </Tag>
+            </Tooltip>
+          </Space>
+        );
       },
     },
     {
@@ -341,11 +390,11 @@ export default function DtrAttendanceLogsModal({
     {
       title: "",
       key: "actions",
-      width: 110,
+      width: 130,
       fixed: "right",
       render: (_, record) => {
-        if (record.logSource !== "MANUAL") return null;
-        if (!canEditLogs && !canDeleteLogs) return null;
+        const { canEdit, canDelete } = actionsFor(record.logSource);
+        if (!canEdit && !canDelete) return null;
 
         if (editingId === record.id) {
           return (
@@ -370,9 +419,12 @@ export default function DtrAttendanceLogsModal({
           );
         }
 
+        const originalLogId = record.originalLogId;
+        const originalTimeLog = record.originalTimeLog;
+        const keepsOriginal = ORIGINAL_KEPT_SOURCES.includes(record.logSource);
         return (
           <Space size={4}>
-            {canEditLogs && (
+            {canEdit && (
               <Button
                 type="text"
                 size="small"
@@ -380,12 +432,53 @@ export default function DtrAttendanceLogsModal({
                 onClick={() => startEdit(record)}
               />
             )}
-            {canDeleteLogs && (
+            {canEdit && originalLogId && originalTimeLog && (
               <Popconfirm
-                title="Delete this attendance log?"
+                title="Restore the original time?"
+                description={`Puts back ${dayjs(originalTimeLog).format("YYYY-MM-DD HH:mm")}, as the file/device had it.`}
+                onConfirm={() => handleRestore(originalLogId)}
+                okText="Restore"
+                cancelText="Cancel"
+              >
+                <Tooltip title="Restore original">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<RollbackOutlined />}
+                    loading={restoringId === originalLogId}
+                  />
+                </Tooltip>
+              </Popconfirm>
+            )}
+            {canDelete && (
+              <Popconfirm
+                title="Remove this attendance log?"
+                description={
+                  keepsOriginal ? (
+                    <div className="flex max-w-72 flex-col gap-2">
+                      <span>
+                        The original is kept and can be restored. A re-upload or
+                        device re-sync won&apos;t bring it back.
+                      </span>
+                      <Input
+                        size="small"
+                        placeholder="Reason (required)"
+                        value={removeReason}
+                        onChange={(e) => setRemoveReason(e.target.value)}
+                      />
+                    </div>
+                  ) : undefined
+                }
+                onOpenChange={(isOpen) => {
+                  if (isOpen) setRemoveReason("");
+                }}
                 onConfirm={() => handleDelete(record.id)}
-                okText="Yes"
-                cancelText="No"
+                okText="Remove"
+                cancelText="Cancel"
+                okButtonProps={{
+                  danger: true,
+                  disabled: keepsOriginal && !removeReason.trim(),
+                }}
               >
                 <Button
                   type="text"
@@ -399,6 +492,66 @@ export default function DtrAttendanceLogsModal({
           </Space>
         );
       },
+    },
+  ];
+
+  const removedColumns: ColumnsType<RemovedAttendanceLog> = [
+    {
+      title: "Time Log",
+      dataIndex: "workDateTime",
+      key: "workDateTime",
+      width: 170,
+      render: (v: string) => dayjs(v).format("YYYY-MM-DD HH:mm:ss"),
+    },
+    {
+      title: "Log Source",
+      dataIndex: "logSource",
+      key: "logSource",
+      width: 110,
+      render: (v: string) => <Tag>{v}</Tag>,
+    },
+    {
+      title: "Reason",
+      dataIndex: "reason",
+      key: "reason",
+      render: (v: string) => v || "—",
+    },
+    {
+      title: "Removed",
+      key: "removed",
+      render: (_, record) => (
+        <div className="flex flex-col">
+          <span>{record.removedBy || "—"}</span>
+          <span className="text-xs text-gray-500">
+            {dayjs(record.removedAt).format("YYYY-MM-DD HH:mm")}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: "",
+      key: "actions",
+      width: 50,
+      fixed: "right",
+      render: (_, record) =>
+        actionsFor(record.logSource).canDelete ? (
+          <Popconfirm
+            title="Restore this attendance log?"
+            description="Puts the log back as the file/device had it."
+            onConfirm={() => handleRestore(record.id)}
+            okText="Restore"
+            cancelText="Cancel"
+          >
+            <Tooltip title="Restore">
+              <Button
+                type="text"
+                size="small"
+                icon={<RollbackOutlined />}
+                loading={restoringId === record.id}
+              />
+            </Tooltip>
+          </Popconfirm>
+        ) : null,
     },
   ];
 
@@ -451,6 +604,29 @@ export default function DtrAttendanceLogsModal({
             : "You don't have permission to view attendance logs (Attendance Manual Entry: View).",
         }}
       />
+      {removedLogs.length > 0 && (
+        <Collapse
+          size="small"
+          className="mt-3"
+          items={[
+            {
+              key: "removed",
+              label: `Removed logs (${removedLogs.length})`,
+              children: (
+                <Table<RemovedAttendanceLog>
+                  rowKey="id"
+                  columns={removedColumns}
+                  dataSource={removedLogs}
+                  loading={isFetchingRemoved}
+                  size="small"
+                  pagination={false}
+                  scroll={{ x: "max-content" }}
+                />
+              ),
+            },
+          ]}
+        />
+      )}
       <PermissionGate permission="Attendance Manual Entry:Edit">
         {adding ? (
           <Form layout="vertical" className="mt-3">

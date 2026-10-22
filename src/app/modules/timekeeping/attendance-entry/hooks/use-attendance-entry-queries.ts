@@ -28,6 +28,23 @@ export function useShiftAttendanceLogs(
   });
 }
 
+// Removed uploaded/synced logs of the same shift, whose originals can be restored.
+export function useRemovedShiftLogs(
+  filter: Parameters<typeof attendanceEntryApi.getRemovedShiftLogs>[0],
+  options: { enabled?: boolean; searchKey?: number } = {},
+) {
+  return useQuery({
+    queryKey: [
+      ...QUERY_KEY,
+      "dtr-view-removed-by-shift",
+      filter,
+      options.searchKey ?? 0,
+    ],
+    queryFn: () => attendanceEntryApi.getRemovedShiftLogs(filter),
+    enabled: options.enabled ?? true,
+  });
+}
+
 export function useAttendanceEntryRecords(
   filter: AttendanceEntryFilter = {},
   options: { enabled?: boolean; searchKey?: number } = {},
@@ -77,6 +94,31 @@ export function useDeleteAttendanceEntryLog() {
 
   return useMutation({
     mutationFn: (id: string) => attendanceEntryApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+// Removes one log of any source; reason is kept with a removed uploaded/synced log's original.
+export function useRemoveAttendanceLog() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      attendanceEntryApi.remove(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useRestoreOriginalLog() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (originalLogId: string) =>
+      attendanceEntryApi.restoreOriginal(originalLogId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

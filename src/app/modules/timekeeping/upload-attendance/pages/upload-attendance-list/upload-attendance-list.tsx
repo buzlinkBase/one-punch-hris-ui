@@ -19,6 +19,7 @@ import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
+import UploadHistoryCard from "../../components/upload-history-card";
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
@@ -281,6 +282,10 @@ export default function UploadAttendanceList() {
           </div>
         </div>
       </Card>
+
+      <PermissionGate permission="Upload Attendance:View">
+        <UploadHistoryCard />
+      </PermissionGate>
     </div>
   );
 }

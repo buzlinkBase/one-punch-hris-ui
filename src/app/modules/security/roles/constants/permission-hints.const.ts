@@ -7,6 +7,23 @@ export const PERMISSION_HINTS: Record<string, Record<string, string>> = {
     AssignRole:
       "Choose a role other than the default (Employee / Client) when inviting. Only roles whose permissions the user holds themselves can be given.",
   },
+  "Attendance Manual Entry": {
+    Edit: "Add and edit manually entered attendance logs.",
+    Delete: "Delete manually entered attendance logs and manual entry batches.",
+  },
+  "Upload Attendance": {
+    View: "See the Upload Attendance page and its Upload History.",
+    Edit: "Upload attendance files, and edit file-uploaded logs from the DTR's Attendance Logs. An edited log's original is kept, can be restored, and a re-upload won't add it back.",
+    Delete:
+      "Remove file-uploaded logs (the original is kept and can be restored), and delete a whole upload from Upload History.",
+  },
+  "Sync Attendance": {
+    "": "Attendance logs synced from biometric devices.",
+    View: "Reserved for a synced-logs screen.",
+    Edit: "Edit synced logs from the DTR's Attendance Logs. The original is kept, can be restored, and a device re-sync won't add it back.",
+    Delete:
+      "Remove synced logs. The original is kept and can be restored, and a device re-sync won't add it back.",
+  },
   "Confidential Records": {
     "": "Employees marked Confidential (for example, executives) are hidden from everyone, Admins included, except the Owner and roles given one of these. Choose the one that matches what the role needs to see.",
     Access:
