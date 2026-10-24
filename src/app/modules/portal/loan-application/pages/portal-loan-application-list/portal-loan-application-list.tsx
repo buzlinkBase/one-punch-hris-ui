@@ -13,6 +13,7 @@ import { FREQUENCY_LABEL } from "@/app/modules/applications/deduction-applicatio
 import type { DeductionApplicationResponse } from "@/app/modules/applications/deduction-application/models/api/response/deduction-application-response.model";
 import {
   loanBreakdownColumns,
+  withRunningBalance,
   type LoanBreakdownRow,
 } from "@/shared/utils/loan-amortization.util";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
@@ -155,14 +156,16 @@ export default function PortalLoanApplicationList() {
                   size="small"
                   pagination={false}
                   columns={loanBreakdownColumns}
-                  dataSource={(record.breakdown ?? []).map((b, i) => ({
-                    period: i + 1,
-                    date: b.date?.replace(/Z$/, "").split("T")[0] ?? "",
-                    principal: b.principal,
-                    interest: b.interest,
-                    amount: b.amount,
-                    balance: b.balance,
-                  }))}
+                  dataSource={withRunningBalance(
+                    (record.breakdown ?? []).map((b, i) => ({
+                      period: i + 1,
+                      date: b.date?.replace(/Z$/, "").split("T")[0] ?? "",
+                      principal: b.principal,
+                      interest: b.interest,
+                      amount: b.amount,
+                      balance: b.balance,
+                    })),
+                  )}
                 />
               ),
             }}

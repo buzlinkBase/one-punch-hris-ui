@@ -38,6 +38,7 @@ import { isActiveStatus } from "@/shared/utils/status.util";
 import {
   generateLoanBreakdown,
   loanBreakdownColumns,
+  withRunningBalance,
   type LoanBreakdownRow,
 } from "@/shared/utils/loan-amortization.util";
 
@@ -113,15 +114,17 @@ export default function PortalLoanApplicationCreate() {
       remarks: record.remarks ?? "",
     });
     setBreakdown(
-      (record.breakdown ?? []).map((r, i) => ({
-        id: r.id,
-        period: i + 1,
-        date: r.date?.replace(/Z$/, "").split("T")[0] ?? "",
-        principal: r.principal,
-        interest: r.interest,
-        amount: r.amount,
-        balance: r.balance,
-      })),
+      withRunningBalance(
+        (record.breakdown ?? []).map((r, i) => ({
+          id: r.id,
+          period: i + 1,
+          date: r.date?.replace(/Z$/, "").split("T")[0] ?? "",
+          principal: r.principal,
+          interest: r.interest,
+          amount: r.amount,
+          balance: r.balance,
+        })),
+      ),
     );
   }, [record, reset]);
 

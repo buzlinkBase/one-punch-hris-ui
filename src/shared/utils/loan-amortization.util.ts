@@ -103,6 +103,19 @@ export function recomputeLoanBalances<T extends LoanBreakdownRow>(
   });
 }
 
+// A stored installment's own `balance` is what is still owed on that one payment (its amount until
+// payroll takes it, then 0), not a running balance. For display, rebuild the running balance: what
+// remains of the whole schedule after each payment.
+export function withRunningBalance<
+  T extends { amount: number; balance: number },
+>(rows: T[]): T[] {
+  let remaining = rows.reduce((sum, r) => sum + r.amount, 0);
+  return rows.map((r) => {
+    remaining = Math.max(0, remaining - r.amount);
+    return { ...r, balance: +remaining.toFixed(4) };
+  });
+}
+
 export const loanBreakdownColumns: ColumnsType<LoanBreakdownRow> = [
   {
     title: "#",

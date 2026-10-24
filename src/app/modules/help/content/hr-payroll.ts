@@ -569,7 +569,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             link: { label: "BIR 1601-C", to: "/payroll/reports/bir-1601c" },
           },
           {
-            text: "Payroll: Disbursement, Deduction Ledger, Cash Bond, Leave Ledger, Retirement and Uniform Allowance Ledgers, Reimbursements, Cost Summary, YTD Summary and 13th Month Pay.",
+            text: "Payroll: Disbursement, Deduction Ledger (grouped by employee, with each deduction's balance and a running total), Cash Bond, Leave Ledger, Retirement and Uniform Allowance Ledgers, Reimbursements, Cost Summary, YTD Summary and 13th Month Pay.",
             link: {
               label: "Disbursement",
               to: "/payroll/reports/bank-disbursement",

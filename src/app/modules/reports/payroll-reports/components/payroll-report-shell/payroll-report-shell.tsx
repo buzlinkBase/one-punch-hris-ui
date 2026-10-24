@@ -11,7 +11,10 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import type { TableRowSelection } from "antd/es/table/interface";
+import type {
+  ExpandableConfig,
+  TableRowSelection,
+} from "antd/es/table/interface";
 import type { MenuProps } from "antd";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -49,6 +52,10 @@ interface PayrollReportShellProps<T> {
   filterValidationMessage?: string;
   /** Enables checkbox row selection (e.g. a batch action like Uniform Allowance's Release). */
   rowSelection?: TableRowSelection<T>;
+  /** Controls nested (`children`) rows, e.g. to expand every group at once. */
+  expandable?: ExpandableConfig<T>;
+  /** Shown between the filters and the table, e.g. a row of totals. */
+  summary?: ReactNode;
 }
 
 export function PayrollReportShell<T extends object>({
@@ -67,6 +74,8 @@ export function PayrollReportShell<T extends object>({
   notice,
   filterValidationMessage,
   rowSelection,
+  expandable,
+  summary,
 }: PayrollReportShellProps<T>) {
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -148,6 +157,8 @@ export function PayrollReportShell<T extends object>({
         </Card>
       )}
 
+      {summary}
+
       <Card>
         {filterValidationMessage ? (
           <Empty description={filterValidationMessage} />
@@ -161,6 +172,7 @@ export function PayrollReportShell<T extends object>({
             scroll={{ x: "max-content" }}
             pagination={{ pageSize: 50, showSizeChanger: false }}
             rowSelection={rowSelection}
+            expandable={expandable}
           />
         )}
       </Card>

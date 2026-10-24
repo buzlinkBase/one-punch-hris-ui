@@ -1,16 +1,47 @@
-import { useState } from "react";
-import { DatePicker, Form } from "antd";
+import { useMemo, useState } from "react";
+import { Button, Card, Col, DatePicker, Form, Row, Statistic, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useDeductionLedger } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
-import type { DeductionLedgerResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
+import {
+  buildDeductionGroups,
+  flattenDeductionGroups,
+  type DeductionLedgerGroup,
+  type DeductionLedgerLine,
+} from "./deduction-ledger.util";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+
+const fmtDate = (v: string) => (v ? dayjs(v).format("MMM DD, YYYY") : "—");
+
+// Groups never expand on their own past this many employees, so a long list stays scannable.
+const AUTO_EXPAND_LIMIT = 5;
+
+type LedgerRow =
+  | {
+      key: string;
+      kind: "group";
+      group: DeductionLedgerGroup;
+      children: LedgerRow[];
+    }
+  | { key: string; kind: "line"; line: DeductionLedgerLine };
+
+const toRows = (groups: DeductionLedgerGroup[]): LedgerRow[] =>
+  groups.map((group) => ({
+    key: group.key,
+    kind: "group",
+    group,
+    children: group.children.map((line) => ({
+      key: line.key,
+      kind: "line",
+      line,
+    })),
+  }));
 
 const EXPORT_HEADERS = [
   "Employee No",
@@ -21,11 +52,14 @@ const EXPORT_HEADERS = [
   "Interest Rate",
   "Start Date",
   "End Date",
-  "Current Balance",
+  "Balance",
+  "Running Balance",
 ];
 
-const toRows = (records: DeductionLedgerResponse[]) =>
-  records.map((r) => [
+const exportRows = (rows: LedgerRow[]) =>
+  flattenDeductionGroups(
+    rows.flatMap((r) => (r.kind === "group" ? [r.group] : [])),
+  ).map((r) => [
     r.employeeNo,
     r.fullName,
     r.deductionTypeName,
@@ -35,62 +69,83 @@ const toRows = (records: DeductionLedgerResponse[]) =>
     r.startDate,
     r.endDate,
     fmt(r.currentBalance),
+    fmt(r.runningBalance),
   ]);
 
-const columns: ColumnsType<DeductionLedgerResponse> = [
+const columns: ColumnsType<LedgerRow> = [
   {
-    title: "Employee No",
-    dataIndex: "employeeNo",
-    key: "no",
-    width: 120,
-    fixed: "left",
-  },
-  { title: "Full Name", dataIndex: "fullName", key: "name", width: 180 },
-  {
-    title: "Deduction Type",
-    dataIndex: "deductionTypeName",
-    key: "type",
-    width: 160,
-  },
-  {
-    title: "Deduction Name",
-    dataIndex: "deductionName",
-    key: "deductionName",
-    width: 160,
+    title: "Employee / Deduction",
+    key: "name",
+    width: 280,
+    render: (_, row) =>
+      row.kind === "group" ? (
+        <div>
+          <span className="font-semibold">{row.group.fullName}</span>
+          <Tag className="ml-2">
+            {row.group.children.length}{" "}
+            {row.group.children.length === 1 ? "deduction" : "deductions"}
+          </Tag>
+          {row.group.employeeNo && (
+            <div className="text-xs text-gray-500">{row.group.employeeNo}</div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <span>{row.line.deductionName}</span>
+          <div className="text-xs text-gray-500">
+            {row.line.deductionTypeName}
+          </div>
+        </div>
+      ),
   },
   {
     title: "Principal",
-    dataIndex: "totalPrincipal",
     key: "principal",
     align: "right",
-    render: fmt,
+    render: (_, row) =>
+      row.kind === "line" ? fmt(row.line.totalPrincipal) : "",
   },
   {
     title: "Interest %",
-    dataIndex: "interestRate",
     key: "interest",
     align: "right",
-    render: fmt,
+    render: (_, row) => (row.kind === "line" ? fmt(row.line.interestRate) : ""),
   },
   {
-    title: "Start Date",
-    dataIndex: "startDate",
-    key: "start",
-    render: (v: string) => (v ? dayjs(v).format("MMM DD, YYYY") : "—"),
+    title: "Period",
+    key: "period",
+    render: (_, row) => {
+      const [start, end] =
+        row.kind === "group"
+          ? [row.group.startDate, row.group.endDate]
+          : [row.line.startDate, row.line.endDate];
+      return (
+        <span className="whitespace-nowrap text-gray-600">
+          {fmtDate(start)} – {fmtDate(end)}
+        </span>
+      );
+    },
   },
   {
-    title: "End Date",
-    dataIndex: "endDate",
-    key: "end",
-    render: (v: string) => (v ? dayjs(v).format("MMM DD, YYYY") : "—"),
-  },
-  {
-    title: "Current Balance",
-    dataIndex: "currentBalance",
+    title: "Balance",
     key: "balance",
     align: "right",
+    render: (_, row) =>
+      row.kind === "group" ? (
+        <strong>{fmt(row.group.total)}</strong>
+      ) : (
+        fmt(row.line.currentBalance)
+      ),
+  },
+  {
+    title: "Running Balance",
+    key: "running",
+    align: "right",
     fixed: "right",
-    render: (v: number) => <strong>{fmt(v)}</strong>,
+    render: (_, row) =>
+      row.kind === "line" ? (
+        <span className="text-gray-600">{fmt(row.line.runningBalance)}</span>
+      ) : null,
   },
 ];
 
@@ -107,24 +162,69 @@ export default function DeductionLedger() {
     (r) => r.deductionName,
   );
 
+  const groups = useMemo(
+    () => buildDeductionGroups(deductionNameFilter.filtered),
+    [deductionNameFilter.filtered],
+  );
+  const rows = useMemo(() => toRows(groups), [groups]);
+
+  // null = follow the default (open small result sets, keep long ones collapsed).
+  const [expanded, setExpanded] = useState<string[] | null>(null);
+  const expandedKeys =
+    expanded ??
+    (groups.length <= AUTO_EXPAND_LIMIT ? groups.map((g) => g.key) : []);
+  const allExpanded = expandedKeys.length === groups.length;
+
+  const totalOutstanding = groups.reduce((sum, g) => sum + g.total, 0);
+  const deductionCount = groups.reduce((sum, g) => sum + g.children.length, 0);
+
   return (
-    <PayrollReportShell
+    <PayrollReportShell<LedgerRow>
       title={PAYROLL_REPORTS_LABEL.DEDUCTION_TITLE}
       subtitle={PAYROLL_REPORTS_LABEL.DEDUCTION_SUBTITLE}
-      data={deductionNameFilter.filtered}
+      data={rows}
       loading={isLoading}
       columns={columns}
       onRefresh={() => refetch()}
-      rowKey={(r) => `${r.employeeId}-${r.deductionId}`}
+      rowKey={(r) => r.key}
       exportFileName="deduction-ledger"
       exportHeaders={EXPORT_HEADERS}
-      exportRows={toRows}
+      exportRows={exportRows}
+      expandable={{
+        expandedRowKeys: expandedKeys,
+        onExpandedRowsChange: (keys) => setExpanded(keys.map(String)),
+      }}
+      summary={
+        <Row gutter={[16, 16]} className="mb-4">
+          <Col xs={24} sm={8}>
+            <Card size="small">
+              <Statistic
+                title="Employees with balances"
+                value={groups.length}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card size="small">
+              <Statistic title="Open deductions" value={deductionCount} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card size="small">
+              <Statistic
+                title="Total outstanding"
+                value={fmt(totalOutstanding)}
+              />
+            </Card>
+          </Col>
+        </Row>
+      }
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
-            <Form.Item label="As Of" className="mb-0" style={{ maxWidth: 220 }}>
+            <Form.Item label="As Of" className="mb-0 w-55">
               <DatePicker
-                style={{ width: "100%" }}
+                className="w-full"
                 value={dayjs(asOf)}
                 allowClear={false}
                 onChange={(date) => date && setAsOf(date.format("YYYY-MM-DD"))}
@@ -148,6 +248,14 @@ export default function DeductionLedger() {
               value={deductionNameFilter.selected}
               onChange={deductionNameFilter.setSelected}
             />
+            <Button
+              onClick={() =>
+                setExpanded(allExpanded ? [] : groups.map((g) => g.key))
+              }
+              disabled={groups.length === 0}
+            >
+              {allExpanded ? "Collapse all" : "Expand all"}
+            </Button>
           </div>
         </Form>
       }

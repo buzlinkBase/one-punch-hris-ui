@@ -25,7 +25,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "My Daily Time Record", to: "/portal/dtr" },
           },
           {
-            text: "My Pay & Benefits: payslips, leave credits, 13th month pay and cash bond.",
+            text: "My Pay & Benefits: payslips, leave credits, 13th month pay, deductions and cash bond.",
             link: { label: "My Pay Slips", to: "/portal/payslips" },
           },
           {
@@ -104,11 +104,16 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
       "/portal/thirteenth-month",
       "/portal/cash-bond",
       "/portal/uniform-allowance",
+      "/portal/deductions",
     ],
     sections: [
       {
         heading: "Steps",
         steps: [
+          {
+            text: "My Deductions: your active loans and deductions with the balance left. Tap a deduction's name to open its ledger: every installment, what is paid, what is next and the running balance. Fully paid or pending loans are not listed.",
+            link: { label: "My Deductions", to: "/portal/deductions" },
+          },
           {
             text: "My Pay Slips: pick a period and open the payslip. Print opens it as a PDF in a new tab.",
             link: { label: "My Pay Slips", to: "/portal/payslips" },

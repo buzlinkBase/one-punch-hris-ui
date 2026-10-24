@@ -74,6 +74,7 @@ import {
   generateLoanBreakdown,
   loanBreakdownColumns,
   recomputeLoanBalances,
+  withRunningBalance,
   type LoanBreakdownRow,
 } from "@/shared/utils/loan-amortization.util";
 import {
@@ -412,22 +413,26 @@ export default function DeductionApplicationDetail() {
       });
       if (existing.breakdown?.length) {
         setBreakdown(
-          existing.breakdown.map((r, i) => ({
-            id: r.id,
-            period: i + 1,
-            date: toDateOnly(r.date),
-            principal: r.principal,
-            interest: r.interest,
-            amount: r.amount,
-            balance: r.balance,
-            periodStart: r.periodStart ? toDateOnly(r.periodStart) : undefined,
-            periodEnd: r.periodEnd ? toDateOnly(r.periodEnd) : undefined,
-            stored: true,
-            status: r.status,
-            isSkipped: r.isSkipped,
-            isDeferred: r.isDeferred,
-            skipReason: r.skipReason,
-          })),
+          withRunningBalance(
+            existing.breakdown.map((r, i) => ({
+              id: r.id,
+              period: i + 1,
+              date: toDateOnly(r.date),
+              principal: r.principal,
+              interest: r.interest,
+              amount: r.amount,
+              balance: r.balance,
+              periodStart: r.periodStart
+                ? toDateOnly(r.periodStart)
+                : undefined,
+              periodEnd: r.periodEnd ? toDateOnly(r.periodEnd) : undefined,
+              stored: true,
+              status: r.status,
+              isSkipped: r.isSkipped,
+              isDeferred: r.isDeferred,
+              skipReason: r.skipReason,
+            })),
+          ),
         );
       }
     }

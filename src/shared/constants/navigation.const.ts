@@ -200,6 +200,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/portal/thirteenth-month",
           },
           {
+            key: "portal-deductions",
+            feature: FEATURE_KEYS.PAYROLL_LOANS_INCOME,
+            label: "My Deductions",
+            path: "/portal/deductions",
+          },
+          {
             key: "portal-cash-bond",
             feature: FEATURE_KEYS.PAYROLL_LOANS_INCOME,
             label: "My Cash Bond",
