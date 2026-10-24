@@ -191,6 +191,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         ],
         tips: [
           "Create Branches before Project Sites, since each project site belongs to a branch.",
+          "If you serve clients at specific sites, open the client under Setup › Client and pick its Project Sites. A site can belong to one client, and this is optional: leave it empty if you don't split clients by site.",
         ],
       },
     ],

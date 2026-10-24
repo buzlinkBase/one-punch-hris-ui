@@ -6,6 +6,7 @@ import {
   useDeleteWorkRotation,
 } from "@/app/modules/change-schedule/work-rotation/hooks/use-work-rotation-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
+import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import type { ScheduleSource } from "../models/api/response/roster-response.model";
 
 export interface AssignTarget {
@@ -15,6 +16,7 @@ export interface AssignTarget {
   currentShiftId: string | null;
   overrideId: string | null;
   scheduleSource: ScheduleSource | null;
+  currentAreaId: string | null;
 }
 
 interface Resource {
@@ -30,6 +32,7 @@ export function useShiftAssignment(resources: Resource[]) {
   const [messageApi, contextHolder] = message.useMessage();
   const [assignTarget, setAssignTarget] = useState<AssignTarget | null>(null);
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
+  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
 
   const { mutateAsync: createWorkRotation, isPending: isAssigning } =
     useCreateWorkRotation();
@@ -46,12 +49,19 @@ export function useShiftAssignment(resources: Resource[]) {
         : s.shiftName,
   }));
 
+  const { data: areas = [] } = useOperationAreas();
+  const areaOptions = areas.map((a) => ({
+    value: a.id,
+    label: `${a.code} - ${a.name}`,
+  }));
+
   const openAssignModal = (
     employeeId: string,
     date: string,
     currentShiftId: string | null,
     overrideId: string | null,
     scheduleSource: ScheduleSource | null,
+    currentAreaId: string | null = null,
   ) => {
     const employeeName =
       resources.find((r) => r.id === employeeId)?.name ?? employeeId;
@@ -62,8 +72,10 @@ export function useShiftAssignment(resources: Resource[]) {
       currentShiftId,
       overrideId,
       scheduleSource,
+      currentAreaId,
     });
     setSelectedShiftId(currentShiftId);
+    setSelectedAreaId(currentAreaId);
   };
 
   const closeAssignModal = () => setAssignTarget(null);
@@ -75,6 +87,7 @@ export function useShiftAssignment(resources: Resource[]) {
         employeeIds: [assignTarget.employeeId],
         timeShiftId: selectedShiftId,
         payrollDates: [assignTarget.date],
+        operationAreaId: selectedAreaId,
       });
       messageApi.success("Shift assigned.");
       setAssignTarget(null);
@@ -105,6 +118,9 @@ export function useShiftAssignment(resources: Resource[]) {
     assignTarget,
     selectedShiftId,
     setSelectedShiftId,
+    selectedAreaId,
+    setSelectedAreaId,
+    areaOptions,
     openAssignModal,
     closeAssignModal,
     handleAssign,

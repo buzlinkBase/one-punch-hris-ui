@@ -1,6 +1,9 @@
 import { Button, Modal, Select, Space, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
-import { SCHEDULE_SOURCE_LABEL } from "../../constants/label.const";
+import {
+  ROSTER_LABEL,
+  SCHEDULE_SOURCE_LABEL,
+} from "../../constants/label.const";
 import type { AssignTarget } from "../../hooks/use-shift-assignment";
 
 interface Props {
@@ -9,6 +12,9 @@ interface Props {
   onSelectShift: (shiftId: string) => void;
   timeShiftOptions: { value: string; label: string }[];
   isLoadingShifts: boolean;
+  selectedAreaId: string | null;
+  onSelectArea: (areaId: string | null) => void;
+  areaOptions: { value: string; label: string }[];
   isAssigning: boolean;
   isRemoving: boolean;
   onAssign: () => void;
@@ -26,6 +32,9 @@ export default function AssignShiftModal({
   onSelectShift,
   timeShiftOptions,
   isLoadingShifts,
+  selectedAreaId,
+  onSelectArea,
+  areaOptions,
   isAssigning,
   isRemoving,
   onAssign,
@@ -99,9 +108,25 @@ export default function AssignShiftModal({
             .includes(input.toLowerCase())
         }
       />
+      <div className="mt-3 mb-1 text-sm">{ROSTER_LABEL.AREA}</div>
+      <Select
+        className="w-full"
+        showSearch
+        allowClear
+        placeholder={ROSTER_LABEL.AREA_PLACEHOLDER}
+        options={areaOptions}
+        value={selectedAreaId ?? undefined}
+        onChange={(v: string | undefined) => onSelectArea(v ?? null)}
+        filterOption={(input, option) =>
+          String(option?.label ?? "")
+            .toLowerCase()
+            .includes(input.toLowerCase())
+        }
+      />
       <p className="text-xs text-gray-400 mt-2">
         Assigning here always creates a Work Rotation Plan override for this
-        exact date, regardless of the current source.
+        exact date, regardless of the current source. With a project site
+        picked, attendance on this day is recorded under that site.
       </p>
     </Modal>
   );

@@ -9,8 +9,11 @@ export const ROSTER_LABEL = {
   SHIFT_END: "Shift End",
   REST_DAY: "Rest Day",
   SCHEDULE_SOURCE: "Schedule Source",
+  AREA: "Project Site",
+  AREA_PLACEHOLDER: "Employee's own project site",
   FILTER_DEPARTMENT: "Department",
   FILTER_EMPLOYEE: "Employee",
+  FILTER_AREA: "Project Site",
 };
 
 export const SCHEDULE_SOURCE_LABEL: Record<

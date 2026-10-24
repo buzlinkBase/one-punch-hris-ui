@@ -306,6 +306,7 @@ function CreateForm() {
   // Step 2 — time shift + specific payroll dates
   const [timeShiftId, setTimeShiftId] = useState<string | null>(null);
   const [payrollDates, setPayrollDates] = useState<string[]>([]);
+  const [scheduledAreaId, setScheduledAreaId] = useState<string | null>(null);
 
   // Work Rotation:Create is unscoped (matches today's behavior for everyone who already has it,
   // or has neither permission — see WorkSchedulePlansController.ValidateTeamScopeAsync on the
@@ -375,6 +376,15 @@ function CreateForm() {
       value: a.id,
       label: `${a.code} - ${a.name}`,
     }));
+  // Where the selected employees report on the chosen dates — any site, not just the
+  // Step 1 branch filter.
+  const scheduledAreaOptions = areas.map((a) => ({
+    value: a.id,
+    label: `${a.code} - ${a.name}`,
+  }));
+  const selectedScheduledArea = scheduledAreaId
+    ? scheduledAreaOptions.find((a) => a.value === scheduledAreaId)
+    : null;
 
   const hasSearched = isTeamScoped
     ? !!myEmployee?.id
@@ -524,6 +534,7 @@ function CreateForm() {
         employeeIds: [...selectedIds],
         timeShiftId,
         payrollDates,
+        operationAreaId: scheduledAreaId,
       });
       getNotify().success({
         message: "Work Rotation Saved",
@@ -728,27 +739,48 @@ function CreateForm() {
       >
         <Form layout="vertical">
           <div className="form-grid-2">
-            <Form.Item
-              label={WORK_ROTATION_LABEL.USE_TIME_SHIFT}
-              required
-              className="mb-3"
-            >
-              <Select
-                showSearch
-                allowClear
-                loading={isTimeShiftLoading}
-                placeholder="Select time shift"
-                options={timeShiftOptions}
-                value={timeShiftId ?? undefined}
-                onChange={(v: string | undefined) => setTimeShiftId(v ?? null)}
-                filterOption={(input, option) =>
-                  String(option?.label ?? "")
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-                style={{ width: "100%" }}
-              />
-            </Form.Item>
+            <div>
+              <Form.Item
+                label={WORK_ROTATION_LABEL.USE_TIME_SHIFT}
+                required
+                className="mb-3"
+              >
+                <Select
+                  showSearch
+                  allowClear
+                  loading={isTimeShiftLoading}
+                  placeholder="Select time shift"
+                  options={timeShiftOptions}
+                  value={timeShiftId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setTimeShiftId(v ?? null)
+                  }
+                  filterOption={(input, option) =>
+                    String(option?.label ?? "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item
+                label={WORK_ROTATION_LABEL.AREA}
+                extra={WORK_ROTATION_LABEL.AREA_HINT}
+                className="mb-3"
+              >
+                <Select
+                  placeholder={WORK_ROTATION_LABEL.AREA_PLACEHOLDER}
+                  options={scheduledAreaOptions}
+                  value={scheduledAreaId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    setScheduledAreaId(v ?? null)
+                  }
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                  className="w-full"
+                />
+              </Form.Item>
+            </div>
 
             <Form.Item label="Payroll Dates" required className="mb-3">
               <div style={{ overflowX: "auto" }}>
@@ -764,7 +796,7 @@ function CreateForm() {
             <Alert
               type="info"
               showIcon
-              message={`Will apply to ${selectedIds.size} employee${selectedIds.size !== 1 ? "s" : ""} — ${selectedTimeShift?.label ?? timeShiftId} on ${payrollDates.length} date${payrollDates.length !== 1 ? "s" : ""}`}
+              message={`Will apply to ${selectedIds.size} employee${selectedIds.size !== 1 ? "s" : ""} — ${selectedTimeShift?.label ?? timeShiftId} on ${payrollDates.length} date${payrollDates.length !== 1 ? "s" : ""}${selectedScheduledArea ? ` at ${selectedScheduledArea.label}` : ""}`}
             />
           )}
         </Form>

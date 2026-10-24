@@ -254,6 +254,30 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           "These can require approval. Approve them before you calculate the DTR for that period.",
         ],
       },
+      {
+        heading: "Send someone to another project site for the day",
+        steps: [
+          {
+            text: "In Work Rotation Plan, pick the employees, the time shift and the dates, then choose a Project Site in Step 2.",
+            link: {
+              label: "Work Rotation Plan",
+              to: "/change-schedule/work-rotation",
+            },
+          },
+          {
+            text: "Or in the Rostering view, click a day and choose a Project Site in the Assign Shift window. The site shows next to the shift on the roster.",
+          },
+          {
+            text: "When the employee works that day, the DTR is recorded under the scheduled project site (and its branch and client), even if they clocked in on a device registered to another site.",
+          },
+        ],
+        tips: [
+          "Leave Project Site blank to keep the employee's own site.",
+          "Client billing follows the scheduled site, so the day is billed to the client that owns it.",
+          "The attendance log itself keeps the site of the device or upload, so you can still see where the punch came from.",
+          "Recalculate the DTR after changing a site on a date that's already calculated.",
+        ],
+      },
     ],
     related: ["dtr-calculate"],
   },

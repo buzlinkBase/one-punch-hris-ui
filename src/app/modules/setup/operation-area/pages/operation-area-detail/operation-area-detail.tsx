@@ -204,6 +204,19 @@ export default function OperationAreaDetail() {
                 />
               </Form.Item>
 
+              {isEdit && (
+                <Form.Item
+                  label={OPERATION_AREA_LABEL.CLIENT}
+                  extra="Optional. Tag project sites to a client from Setup > Client."
+                >
+                  <Input
+                    disabled
+                    value={selected?.clientName ?? ""}
+                    placeholder="Not tagged to a client"
+                  />
+                </Form.Item>
+              )}
+
               <Form.Item
                 label={OPERATION_AREA_LABEL.ADDRESS}
                 validateStatus={errors.address ? "error" : ""}

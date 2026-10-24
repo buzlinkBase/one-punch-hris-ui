@@ -28,6 +28,13 @@ interface DayCell {
 }
 
 function dayLabel(r: RosterResponse): { text: string; color: string } {
+  const label = shiftLabel(r);
+  return r.areaName
+    ? { ...label, text: `${label.text} · ${r.areaName}` }
+    : label;
+}
+
+function shiftLabel(r: RosterResponse): { text: string; color: string } {
   if (r.isRestDay) {
     const hasShift = r.shiftId && r.shiftStart && r.shiftEnd;
     return {
@@ -67,6 +74,9 @@ export default function RosterMonthCalendar({ data, fromDate, toDate }: Props) {
     assignTarget,
     selectedShiftId,
     setSelectedShiftId,
+    selectedAreaId,
+    setSelectedAreaId,
+    areaOptions,
     openAssignModal,
     closeAssignModal,
     handleAssign,
@@ -164,6 +174,7 @@ export default function RosterMonthCalendar({ data, fromDate, toDate }: Props) {
                             r.shiftId,
                             r.overrideId,
                             r.scheduleSource,
+                            r.areaId,
                           )
                         }
                         className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-left hover:bg-(--ant-color-fill-tertiary)"
@@ -250,6 +261,9 @@ export default function RosterMonthCalendar({ data, fromDate, toDate }: Props) {
         onSelectShift={setSelectedShiftId}
         timeShiftOptions={timeShiftOptions}
         isLoadingShifts={isLoadingShifts}
+        selectedAreaId={selectedAreaId}
+        onSelectArea={setSelectedAreaId}
+        areaOptions={areaOptions}
         isAssigning={isAssigning}
         isRemoving={isRemoving}
         onAssign={handleAssign}

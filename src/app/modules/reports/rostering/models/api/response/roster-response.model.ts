@@ -14,4 +14,7 @@ export interface RosterResponse {
   shiftStart: string | null;
   shiftEnd: string | null;
   isRestDay: boolean;
+  /** Project site tagged on the Work Rotation override; null = the employee's own site. */
+  areaId: string | null;
+  areaName: string | null;
 }

@@ -8,6 +8,10 @@ export const CLIENT_LABEL = {
   ADDRESS: "Address",
   LOGO: "Company Logo",
   CONTACT_PERSON: "Contact Person",
+  AREAS: "Project Sites",
+  AREAS_PLACEHOLDER: "Optional - tag the sites this client is served at",
+  AREAS_HELP:
+    "A site can belong to one client. Leave empty if you don't split clients by site.",
   CREATE_TITLE: "Create Client",
   EDIT_TITLE: "Edit Client",
   TAB_GENERAL: "General Information",

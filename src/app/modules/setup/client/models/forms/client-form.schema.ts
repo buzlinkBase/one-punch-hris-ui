@@ -8,6 +8,7 @@ export const clientFormSchema = z.object({
   phone: z.string(),
   address: z.string(),
   contactPerson: z.string(),
+  areaIds: z.array(z.string()),
 });
 
 export type ClientFormValues = z.infer<typeof clientFormSchema>;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Input, Tooltip } from "antd";
+import { Table, Button, Space, Popconfirm, Input, Tooltip, Tag } from "antd";
 import {
   SearchOutlined,
   EditOutlined,
@@ -32,6 +32,7 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
   const { widths, handleResize } = useResizableColumns({
     code: 120,
     name: 200,
+    areas: 240,
     status: 120,
   });
 
@@ -65,6 +66,24 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
           width: widths.name,
           onResize: (w: number) => handleResize("name", w),
         }) as object,
+    },
+    {
+      title: CLIENT_LABEL.AREAS,
+      key: "areas",
+      width: widths.areas,
+      onHeaderCell: () =>
+        ({
+          width: widths.areas,
+          onResize: (w: number) => handleResize("areas", w),
+        }) as object,
+      render: (_: unknown, record: ClientResponse) =>
+        record.areaNames?.length ? (
+          <div className="flex flex-wrap gap-1">
+            {record.areaNames.map((name) => (
+              <Tag key={name}>{name}</Tag>
+            ))}
+          </div>
+        ) : null,
     },
     {
       title: CLIENT_LABEL.STATUS,

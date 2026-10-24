@@ -32,6 +32,7 @@ import {
 import type { RosterFilter } from "../../models/api/request/roster-filter.model";
 import type { RosterResponse } from "../../models/api/response/roster-response.model";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
+import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import {
   buildFlatCsv,
@@ -60,6 +61,7 @@ const ROSTER_HEADERS = [
   "Shift",
   "Shift Start",
   "Shift End",
+  "Project Site",
   "Schedule Source",
   "Rest Day",
 ];
@@ -73,6 +75,7 @@ function toRosterRows(records: RosterResponse[]): string[][] {
     r.shiftName,
     r.shiftStart ? dayjs(r.shiftStart).format("hh:mm A") : "",
     r.shiftEnd ? dayjs(r.shiftEnd).format("hh:mm A") : "",
+    r.areaName ?? "",
     SCHEDULE_SOURCE_LABEL[r.scheduleSource]?.label ?? r.scheduleSource,
     r.isRestDay ? "Yes" : "No",
   ]);
@@ -97,6 +100,7 @@ export default function RosterList({ embedded = false }: Props) {
     filter.fromDate && filter.toDate ? "date" : null,
     filter.departmentId,
     filter.employeeId,
+    filter.operationAreaId,
   ].filter(Boolean).length;
 
   const { data: records = [], isLoading } = useRosterRecords(
@@ -104,6 +108,7 @@ export default function RosterList({ embedded = false }: Props) {
     searchNonce,
   );
   const { data: departments = [] } = useDepartments();
+  const { data: areas = [] } = useOperationAreas();
   const { data: employees = [] } = useEmployeeFilter(
     pending.departmentId ? { departmentId: pending.departmentId } : {},
   );
@@ -111,6 +116,10 @@ export default function RosterList({ embedded = false }: Props) {
   const departmentOptions = departments.map((d) => ({
     value: d.id,
     label: d.name,
+  }));
+  const areaOptions = areas.map((a) => ({
+    value: a.id,
+    label: `${a.code} - ${a.name}`,
   }));
   const employeeOptions = employees.map((e) => ({
     value: e.id,
@@ -238,6 +247,20 @@ export default function RosterList({ embedded = false }: Props) {
                     setPending((f) => ({ ...f, employeeId: val }))
                   }
                   style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item label={ROSTER_LABEL.FILTER_AREA} className="mb-0">
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="All Project Sites"
+                  options={areaOptions}
+                  value={pending.operationAreaId}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, operationAreaId: val }))
+                  }
+                  className="w-full"
                 />
               </Form.Item>
             </div>

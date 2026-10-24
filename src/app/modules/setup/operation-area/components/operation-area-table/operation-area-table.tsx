@@ -27,6 +27,7 @@ export default function OperationAreaTable({ data, loading, onDelete }: Props) {
     code: 120,
     name: 200,
     branch: 160,
+    client: 160,
     address: 200,
     boundary: 120,
     status: 120,
@@ -75,6 +76,19 @@ export default function OperationAreaTable({ data, loading, onDelete }: Props) {
         }) as object,
       render: (v: string | null | undefined) =>
         v ?? <Tag color="default">Unassigned</Tag>,
+    },
+    {
+      title: OPERATION_AREA_LABEL.CLIENT,
+      dataIndex: "clientName",
+      key: "client",
+      width: widths.client,
+      onHeaderCell: () =>
+        ({
+          width: widths.client,
+          onResize: (w: number) => handleResize("client", w),
+        }) as object,
+      render: (v: string | null | undefined) =>
+        v ?? <Tag color="default">None</Tag>,
     },
     {
       title: OPERATION_AREA_LABEL.ADDRESS,

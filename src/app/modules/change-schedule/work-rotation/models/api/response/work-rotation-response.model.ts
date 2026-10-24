@@ -6,4 +6,6 @@ export interface WorkRotationResponse {
   batchCode?: string;
   fullName?: string;
   shiftName?: string;
+  operationAreaId?: string | null;
+  areaName?: string | null;
 }

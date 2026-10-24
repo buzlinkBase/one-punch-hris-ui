@@ -11,4 +11,6 @@ export interface ClientResponse {
   retirementDaysPerYear: number | null;
   uniformAllowance: number | null;
   uniformAllowanceBasis: "TenureMonths" | "PresentDays";
+  areaIds?: string[];
+  areaNames?: string[];
 }

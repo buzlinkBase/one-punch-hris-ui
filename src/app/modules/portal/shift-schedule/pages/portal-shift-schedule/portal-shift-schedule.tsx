@@ -69,6 +69,17 @@ export default function PortalShiftSchedule() {
     },
     { title: "Shift", dataIndex: "shiftName", key: "shift" },
     { title: "Time", key: "time", render: (_, r) => shiftTime(r) },
+    {
+      // A rotation day can send the employee to another project site.
+      title: "Project Site",
+      key: "area",
+      render: (_, r) =>
+        r.areaName ? (
+          <Tag color="purple">{r.areaName}</Tag>
+        ) : (
+          employee?.areaName || "—"
+        ),
+    },
   ];
 
   return (

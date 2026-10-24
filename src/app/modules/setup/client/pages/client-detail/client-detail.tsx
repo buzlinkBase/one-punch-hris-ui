@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Form,
   Input,
@@ -26,6 +26,7 @@ import {
   useUploadClientLogo,
   useRemoveClientLogo,
 } from "../../hooks/use-client-queries";
+import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { ImageUpload } from "@/shared/components/image-upload/image-upload";
 import { authStorage } from "@/core/auth/auth-storage";
 import { CLIENT_LABEL } from "../../constants/label.const";
@@ -52,6 +53,15 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
   const { mutateAsync: update, isPending: isUpdating } = useUpdateClient();
   const { mutateAsync: uploadLogo } = useUploadClientLogo();
   const { mutateAsync: removeLogo } = useRemoveClientLogo();
+  const { data: areas = [], isLoading: areasLoading } = useOperationAreas();
+  // A site belongs to one client, so only offer the untagged ones and this client's own.
+  const areaOptions = useMemo(
+    () =>
+      areas
+        .filter((a) => !a.clientId || a.clientId === id)
+        .map((a) => ({ value: a.id, label: `${a.code} - ${a.name}` })),
+    [areas, id],
+  );
   // A new client's logo waits here until the record exists.
   const [pendingLogo, setPendingLogo] = useState<File | null>(null);
   // Local override of the saved logo ("" = removed); undefined shows what the server has.
@@ -77,6 +87,7 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
       phone: "",
       address: "",
       contactPerson: "",
+      areaIds: [],
     },
   });
 
@@ -90,6 +101,7 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
         phone: selected.phone,
         address: selected.address,
         contactPerson: selected.contactPerson,
+        areaIds: selected.areaIds ?? [],
       });
     }
   }, [selected, isEdit, reset]);
@@ -242,6 +254,30 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
           name="address"
           control={control}
           render={({ field }) => <Input.TextArea {...field} rows={2} />}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label={CLIENT_LABEL.AREAS}
+        extra={CLIENT_LABEL.AREAS_HELP}
+        validateStatus={errors.areaIds ? "error" : ""}
+        help={errors.areaIds?.message}
+      >
+        <Controller
+          name="areaIds"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              mode="multiple"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              loading={areasLoading}
+              options={areaOptions}
+              placeholder={CLIENT_LABEL.AREAS_PLACEHOLDER}
+            />
+          )}
         />
       </Form.Item>
 

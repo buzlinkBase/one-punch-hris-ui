@@ -4,6 +4,8 @@ import type { CreateClient } from "../models/api/request/create-client.model";
 import type { UpdateClient } from "../models/api/request/update-client.model";
 
 const QUERY_KEY = ["clients"];
+// Project sites carry their client, so tagging or deleting a client makes that list stale.
+const AREA_QUERY_KEY = ["operation-areas"];
 
 export function useClients() {
   return useQuery({
@@ -26,6 +28,7 @@ export function useCreateClient() {
     mutationFn: (data: CreateClient) => clientApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: AREA_QUERY_KEY });
     },
   });
 }
@@ -37,6 +40,7 @@ export function useUpdateClient() {
     onSuccess: (updated) => {
       queryClient.setQueryData([...QUERY_KEY, updated.id], updated);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: AREA_QUERY_KEY });
     },
   });
 }
@@ -68,6 +72,7 @@ export function useDeleteClient() {
     mutationFn: (id: string) => clientApi.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: AREA_QUERY_KEY });
     },
   });
 }

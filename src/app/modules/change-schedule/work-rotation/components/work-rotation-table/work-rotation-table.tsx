@@ -19,6 +19,7 @@ export default function WorkRotationTable({ data, loading, onDelete }: Props) {
     payrollDate: 120,
     fullName: 150,
     shiftName: 150,
+    areaName: 150,
   });
 
   const columns: ColumnsType<WorkRotationResponse> = [
@@ -53,6 +54,18 @@ export default function WorkRotationTable({ data, loading, onDelete }: Props) {
         ({
           width: widths.shiftName,
           onResize: (w: number) => handleResize("shiftName", w),
+        }) as object,
+    },
+    {
+      title: WORK_ROTATION_LABEL.AREA,
+      dataIndex: "areaName",
+      key: "areaName",
+      width: widths.areaName,
+      render: (value?: string | null) => value || "—",
+      onHeaderCell: () =>
+        ({
+          width: widths.areaName,
+          onResize: (w: number) => handleResize("areaName", w),
         }) as object,
     },
     {

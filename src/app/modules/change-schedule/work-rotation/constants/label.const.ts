@@ -7,6 +7,10 @@ export const WORK_ROTATION_LABEL = {
   USE_TIME_SHIFT: "Use Time Shift",
   PAYROLL_DATE: "Payroll Date",
   CLIENT: "Client",
+  AREA: "Project Site",
+  AREA_PLACEHOLDER: "Employee's own project site",
+  AREA_HINT:
+    "Optional. Attendance on these dates is recorded under this project site instead of the employee's own.",
   // Filters
   FILTER_PAYROLL_GROUP: "Payroll Group",
   FILTER_EMPLOYEE: "Employee",
