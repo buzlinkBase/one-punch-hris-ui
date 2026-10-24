@@ -29,11 +29,20 @@ export interface DirectoryPageResponse {
   total: number;
 }
 
+export type OrgNodeKind = "company" | "department" | "section" | "employee";
+
+/** One box in the org chart: the company, a department, a section or a person. */
 export interface OrgNodeResponse {
   id: string;
-  fullName: string;
+  kind: OrgNodeKind;
+  name: string;
+  /** People only. */
   positionName: string;
-  reports: OrgNodeResponse[];
+  /** People only; higher is more senior. */
+  level: number;
+  /** People in this node, itself included for a person; the whole unit for a unit. */
+  headCount: number;
+  children: OrgNodeResponse[];
 }
 
 /** Which Coworkers widgets the company switched on. */

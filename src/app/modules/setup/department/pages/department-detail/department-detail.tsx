@@ -12,9 +12,11 @@ import {
   useDepartment,
   useCreateDepartment,
   useUpdateDepartment,
+  useDepartments,
 } from "../../hooks/use-department-queries";
 import { DEPARTMENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
@@ -31,6 +33,12 @@ export default function DepartmentDetail() {
   const { data: selected } = useDepartment(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateDepartment();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateDepartment();
+  const { data: departments = [] } = useDepartments();
+
+  // A department can't sit under itself; the server also rejects loops through its sub-departments.
+  const parentOptions = departments
+    .filter((d) => d.id !== id)
+    .map((d) => ({ value: d.id, label: `${d.code} - ${d.name}` }));
 
   const {
     control,
@@ -39,7 +47,13 @@ export default function DepartmentDetail() {
     formState: { errors },
   } = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
-    defaultValues: { code: "", name: "", status: "Active" },
+    defaultValues: {
+      code: "",
+      name: "",
+      parentDepartmentId: null,
+      headId: null,
+      status: "Active",
+    },
   });
 
   useEffect(() => {
@@ -47,6 +61,8 @@ export default function DepartmentDetail() {
       reset({
         code: selected.code,
         name: selected.name,
+        parentDepartmentId: selected.parentDepartmentId ?? null,
+        headId: selected.headId ?? null,
         status: selected.status,
       });
     }
@@ -108,6 +124,40 @@ export default function DepartmentDetail() {
               name="name"
               control={control}
               render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+          <Form.Item label={DEPARTMENT_LABEL.PARENT}>
+            <Controller
+              name="parentDepartmentId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value ?? undefined}
+                  onChange={(v) => field.onChange(v ?? null)}
+                  options={parentOptions}
+                  allowClear
+                  showSearch={{
+                    filterOption: (input, option) =>
+                      String(option?.label ?? "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase()),
+                  }}
+                  placeholder="None (top-level department)"
+                />
+              )}
+            />
+          </Form.Item>
+          <Form.Item label={DEPARTMENT_LABEL.HEAD}>
+            <Controller
+              name="headId"
+              control={control}
+              render={({ field }) => (
+                <EmployeeSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select who leads this department"
+                />
+              )}
             />
           </Form.Item>
           <Form.Item

@@ -1,28 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Empty, Input, Skeleton, message } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
+import {
+  Background,
+  Controls,
+  MiniMap,
+  ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import {
   useMyEmployee,
   useOrgChart,
 } from "../../../shared/hooks/use-my-employee-queries";
-import OrgNode from "./org-node";
+import { OrgPersonNode, OrgUnitNode } from "./org-node";
+import { buildFlow, layoutFlow } from "./org-chart-layout";
 import {
   allParentIds,
   ancestorsOf,
   expandedToDepth,
   filterOrgTree,
-  orgNodeDomId,
 } from "./org-chart-utils";
 
-export default function OrgChartTab() {
+const NODE_TYPES = { unit: OrgUnitNode, person: OrgPersonNode };
+
+function OrgChartCanvas() {
   const { data, isLoading } = useOrgChart(true);
   const { data: me } = useMyEmployee();
+  const { fitView } = useReactFlow();
   const roots = useMemo(() => data ?? [], [data]);
 
   const [search, setSearch] = useState("");
   // null until the user touches expand/collapse, so the default follows the loaded data.
   const [manual, setManual] = useState<Set<string> | null>(null);
-  // A fresh object per click, so "Find me" scrolls again even for the same person.
+  // A fresh object per click, so "Find me" re-centers even for the same person.
   const [focus, setFocus] = useState<{ id: string }>();
 
   const { tree, matchedIds } = useMemo(
@@ -37,16 +49,32 @@ export default function OrgChartTab() {
     [searching, tree, manual, roots],
   );
 
-  const update = (change: (current: Set<string>) => void) => {
-    const next = new Set(manual ?? expandedToDepth(roots));
-    change(next);
-    setManual(next);
-  };
+  const update = useCallback(
+    (change: (current: Set<string>) => void) => {
+      const next = new Set(manual ?? expandedToDepth(roots));
+      change(next);
+      setManual(next);
+    },
+    [manual, roots],
+  );
 
-  const toggle = (id: string) =>
-    update((s) => {
-      if (!s.delete(id)) s.add(id);
+  const toggle = useCallback(
+    (id: string) =>
+      update((s) => {
+        if (!s.delete(id)) s.add(id);
+      }),
+    [update],
+  );
+
+  const flow = useMemo(() => {
+    const built = buildFlow(tree, {
+      expanded,
+      matchedIds,
+      meId: me?.id,
+      onToggle: toggle,
     });
+    return { nodes: layoutFlow(built.nodes, built.edges), edges: built.edges };
+  }, [tree, expanded, matchedIds, me?.id, toggle]);
 
   const findMe = () => {
     const path = me?.id ? ancestorsOf(roots, me.id) : null;
@@ -59,13 +87,16 @@ export default function OrgChartTab() {
     setFocus({ id: me.id });
   };
 
-  // Runs after the render that opened the ancestors, so the node exists in the DOM.
+  // Runs after the render that opened the ancestors, so the node exists in the chart.
   useEffect(() => {
     if (!focus) return;
-    document
-      .getElementById(orgNodeDomId(focus.id))
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [focus]);
+    fitView({ nodes: [{ id: focus.id }], duration: 400, maxZoom: 1.2 });
+  }, [focus, fitView]);
+
+  // Re-frame the chart when the search narrows or widens what is shown.
+  useEffect(() => {
+    if (searching) fitView({ duration: 300 });
+  }, [searching, tree, fitView]);
 
   if (isLoading) return <Skeleton active paragraph={{ rows: 6 }} />;
   if (roots.length === 0) return <Empty description="No org chart yet" />;
@@ -76,7 +107,7 @@ export default function OrgChartTab() {
         <Input
           allowClear
           prefix={<SearchOutlined />}
-          placeholder="Search by name or position"
+          placeholder="Search by name, position, department or section"
           className="sm:max-w-sm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -100,19 +131,31 @@ export default function OrgChartTab() {
       {tree.length === 0 ? (
         <Empty description="No one matches your search" />
       ) : (
-        <ul className="m-0 flex flex-col gap-2 p-0">
-          {tree.map((root) => (
-            <OrgNode
-              key={root.id}
-              node={root}
-              expanded={expanded}
-              matchedIds={matchedIds}
-              meId={me?.id}
-              onToggle={toggle}
-            />
-          ))}
-        </ul>
+        <div className="h-[70vh] min-h-105 overflow-hidden rounded-lg border border-solid border-(--border-subtle)">
+          <ReactFlow
+            nodes={flow.nodes}
+            edges={flow.edges}
+            nodeTypes={NODE_TYPES}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            fitView
+            minZoom={0.1}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background />
+            <Controls showInteractive={false} />
+            <MiniMap pannable zoomable />
+          </ReactFlow>
+        </div>
       )}
     </div>
+  );
+}
+
+export default function OrgChartTab() {
+  return (
+    <ReactFlowProvider>
+      <OrgChartCanvas />
+    </ReactFlowProvider>
   );
 }

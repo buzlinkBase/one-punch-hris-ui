@@ -1,16 +1,9 @@
 import type { OrgNodeResponse } from "../../../shared/models/api/response/coworker-response.model";
 
-/** How many levels start expanded. */
-export const DEFAULT_EXPANDED_DEPTH = 2;
+/** How many levels start expanded (company = 1, so this opens company and departments). */
+export const DEFAULT_EXPANDED_DEPTH = 3;
 
-export const orgNodeDomId = (id: string) => `org-node-${id}`;
-
-/** Everyone below `node`, not just direct reports. */
-export function countDescendants(node: OrgNodeResponse): number {
-  return node.reports.reduce((sum, r) => sum + 1 + countDescendants(r), 0);
-}
-
-/** Ids of every node that has reports and sits above `depth` levels (roots are level 1). */
+/** Ids of every node that has children and sits above `depth` levels (roots are level 1). */
 export function expandedToDepth(
   nodes: OrgNodeResponse[],
   depth = DEFAULT_EXPANDED_DEPTH,
@@ -19,27 +12,27 @@ export function expandedToDepth(
   const ids = new Set<string>();
   if (level >= depth) return ids;
   for (const node of nodes) {
-    if (node.reports.length === 0) continue;
+    if (node.children.length === 0) continue;
     ids.add(node.id);
-    expandedToDepth(node.reports, depth, level + 1).forEach((id) =>
+    expandedToDepth(node.children, depth, level + 1).forEach((id) =>
       ids.add(id),
     );
   }
   return ids;
 }
 
-/** Ids of every node that has reports, i.e. everything "Expand all" opens. */
+/** Ids of every node that has children, i.e. everything "Expand all" opens. */
 export function allParentIds(nodes: OrgNodeResponse[]): Set<string> {
   const ids = new Set<string>();
   for (const node of nodes) {
-    if (node.reports.length === 0) continue;
+    if (node.children.length === 0) continue;
     ids.add(node.id);
-    allParentIds(node.reports).forEach((id) => ids.add(id));
+    allParentIds(node.children).forEach((id) => ids.add(id));
   }
   return ids;
 }
 
-/** Ids of the managers above `targetId` (nearest last), or null if the person isn't in the chart. */
+/** Ids of the boxes above `targetId` (nearest last), or null if it isn't in the chart. */
 export function ancestorsOf(
   nodes: OrgNodeResponse[],
   targetId: string,
@@ -47,18 +40,19 @@ export function ancestorsOf(
 ): string[] | null {
   for (const node of nodes) {
     if (node.id === targetId) return trail;
-    const found = ancestorsOf(node.reports, targetId, [...trail, node.id]);
+    const found = ancestorsOf(node.children, targetId, [...trail, node.id]);
     if (found) return found;
   }
   return null;
 }
 
 const matches = (node: OrgNodeResponse, term: string) =>
-  `${node.fullName} ${node.positionName}`.toLowerCase().includes(term);
+  `${node.name} ${node.positionName}`.toLowerCase().includes(term);
 
 /**
- * Keeps only the people matching `term` (name or position) plus the managers above them, so a
- * match is always shown in context. `matchedIds` is who actually matched, for highlighting.
+ * Keeps what matches `term` (name or position) plus the boxes above it, so a match is always
+ * shown in context. A matching department or section keeps everything under it.
+ * `matchedIds` is what actually matched, for highlighting.
  */
 export function filterOrgTree(
   nodes: OrgNodeResponse[],
@@ -70,10 +64,11 @@ export function filterOrgTree(
 
   const prune = (list: OrgNodeResponse[]): OrgNodeResponse[] =>
     list.flatMap((node) => {
-      const reports = prune(node.reports);
       const self = matches(node, needle);
       if (self) matchedIds.add(node.id);
-      return self || reports.length > 0 ? [{ ...node, reports }] : [];
+      if (self && node.kind !== "employee") return [node];
+      const children = prune(node.children);
+      return self || children.length > 0 ? [{ ...node, children }] : [];
     });
 
   return { tree: prune(nodes), matchedIds };

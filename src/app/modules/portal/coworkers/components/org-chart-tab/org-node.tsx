@@ -1,100 +1,134 @@
 import { Avatar, Tag, Typography } from "antd";
-import { DownOutlined, RightOutlined } from "@ant-design/icons";
-import type { OrgNodeResponse } from "../../../shared/models/api/response/coworker-response.model";
-import { countDescendants, initialsOf, orgNodeDomId } from "./org-chart-utils";
+import {
+  ApartmentOutlined,
+  BankOutlined,
+  DownOutlined,
+  RightOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
+import type { OrgFlowNode } from "./org-chart-layout";
+import { initialsOf } from "./org-chart-utils";
 
 const { Text } = Typography;
 
-interface OrgNodeProps {
-  node: OrgNodeResponse;
-  expanded: ReadonlySet<string>;
-  /** People who matched the search, drawn with the brand outline. */
-  matchedIds: ReadonlySet<string>;
-  meId?: string;
-  onToggle: (id: string) => void;
+const UNIT_ICON = {
+  company: BankOutlined,
+  department: ApartmentOutlined,
+  section: TeamOutlined,
+  employee: TeamOutlined,
+} as const;
+
+function Handles() {
+  return (
+    <>
+      <Handle type="target" position={Position.Top} className="opacity-0!" />
+      <Handle type="source" position={Position.Bottom} className="opacity-0!" />
+    </>
+  );
 }
 
-/** One person in the reporting tree, with their reports nested (and connected) beneath. */
-export default function OrgNode({
-  node,
-  expanded,
-  matchedIds,
-  meId,
+function ToggleButton({
+  id,
+  label,
+  isOpen,
   onToggle,
-}: OrgNodeProps) {
-  const hasReports = node.reports.length > 0;
-  const isOpen = hasReports && expanded.has(node.id);
-  const isMe = node.id === meId;
-  const isMatch = matchedIds.has(node.id);
-  const total = hasReports ? countDescendants(node) : 0;
-
+}: {
+  id: string;
+  label: string;
+  isOpen: boolean;
+  onToggle: (id: string) => void;
+}) {
   const Chevron = isOpen ? DownOutlined : RightOutlined;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(id)}
+      aria-expanded={isOpen}
+      aria-label={`${isOpen ? "Collapse" : "Expand"} ${label}`}
+      className="nodrag nopan flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-xs text-(--text-secondary) hover:bg-(--bg-hover)"
+    >
+      <Chevron />
+    </button>
+  );
+}
+
+/** A company, department or section box. */
+export function OrgUnitNode({ data }: NodeProps<OrgFlowNode>) {
+  const { node, isOpen, isMatch, onToggle } = data;
+  const Icon = UNIT_ICON[node.kind];
+  const hasChildren = node.children.length > 0;
 
   return (
-    <li className="list-none">
-      <div
-        id={orgNodeDomId(node.id)}
-        className={`flex items-center gap-3 rounded-lg border bg-(--bg-surface) p-2 pr-3 transition-colors ${
-          isMe || isMatch
-            ? "border-(--primary) bg-(--primary-soft)"
-            : "border-(--border-subtle)"
-        }`}
-      >
-        {hasReports ? (
-          <button
-            type="button"
-            onClick={() => onToggle(node.id)}
-            aria-expanded={isOpen}
-            aria-label={`${isOpen ? "Collapse" : "Expand"} ${node.fullName}'s team`}
-            className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-xs text-(--text-secondary) hover:bg-(--bg-hover)"
-          >
-            <Chevron />
-          </button>
-        ) : (
-          <span className="h-6 w-6 shrink-0" aria-hidden />
-        )}
+    <div
+      className={`flex h-16 w-55 items-center gap-2 rounded-lg border-2 border-solid px-2 ${
+        isMatch
+          ? "border-(--primary) bg-(--primary-soft)"
+          : "border-(--border-chip) bg-(--bg-surface)"
+      }`}
+    >
+      <Handles />
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-(--primary-soft) text-(--primary)">
+        <Icon />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="m-0 truncate font-semibold">{node.name}</p>
+        <Text type="secondary" className="block truncate text-xs">
+          {node.headCount} {node.headCount === 1 ? "person" : "people"}
+        </Text>
+      </div>
+      {hasChildren && (
+        <ToggleButton
+          id={node.id}
+          label={node.name}
+          isOpen={isOpen}
+          onToggle={onToggle}
+        />
+      )}
+    </div>
+  );
+}
 
-        <Avatar size={36} className="shrink-0 bg-(--primary)!">
-          {initialsOf(node.fullName)}
-        </Avatar>
+/** One person; their reports hang beneath and can be collapsed. */
+export function OrgPersonNode({ data }: NodeProps<OrgFlowNode>) {
+  const { node, isOpen, isMe, isMatch, onToggle } = data;
+  const hasReports = node.children.length > 0;
 
-        <div className="min-w-0 flex-1">
-          <p className="m-0 truncate font-medium">
-            {node.fullName}
-            {isMe && (
-              <Tag color="green" className="ml-2">
-                You
-              </Tag>
-            )}
-          </p>
-          {node.positionName && (
-            <Text type="secondary" className="block truncate text-xs">
-              {node.positionName}
-            </Text>
+  return (
+    <div
+      className={`flex h-18 w-55 items-center gap-2 rounded-lg border border-solid px-2 ${
+        isMe || isMatch
+          ? "border-(--primary) bg-(--primary-soft)"
+          : "border-(--border-subtle) bg-(--bg-surface)"
+      }`}
+    >
+      <Handles />
+      <Avatar size={36} className="shrink-0 bg-(--primary)!">
+        {initialsOf(node.name)}
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <p className="m-0 truncate font-medium">
+          {node.name}
+          {isMe && (
+            <Tag color="green" className="ml-2">
+              You
+            </Tag>
           )}
-        </div>
-
-        {hasReports && (
-          <Tag className="m-0 shrink-0">
-            {total} {total === 1 ? "person" : "people"}
-          </Tag>
+        </p>
+        {node.positionName && (
+          <Text type="secondary" className="block truncate text-xs">
+            {node.positionName}
+          </Text>
         )}
       </div>
-
-      {isOpen && (
-        <ul className="m-0 mt-2 ml-5 flex flex-col gap-2 border-0 border-l-2 border-solid border-(--border-chip) p-0 pl-4">
-          {node.reports.map((child) => (
-            <OrgNode
-              key={child.id}
-              node={child}
-              expanded={expanded}
-              matchedIds={matchedIds}
-              meId={meId}
-              onToggle={onToggle}
-            />
-          ))}
-        </ul>
+      {hasReports && (
+        <ToggleButton
+          id={node.id}
+          label={`${node.name}'s team`}
+          isOpen={isOpen}
+          onToggle={onToggle}
+        />
       )}
-    </li>
+    </div>
   );
 }

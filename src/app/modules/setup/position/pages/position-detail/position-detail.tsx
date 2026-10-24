@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Form, Input, Button, Select, Typography, Space, Tag } from "antd";
+import {
+  Form,
+  Input,
+  InputNumber,
+  Button,
+  Select,
+  Typography,
+  Space,
+  Tag,
+} from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { useForm, Controller, type Resolver } from "react-hook-form";
@@ -39,7 +48,7 @@ export default function PositionDetail() {
     formState: { errors },
   } = useForm<PositionFormValues>({
     resolver: zodResolver(positionFormSchema) as Resolver<PositionFormValues>,
-    defaultValues: { code: "", name: "", rate: 0, status: "ACTIVE" },
+    defaultValues: { code: "", name: "", rate: 0, level: 0, status: "ACTIVE" },
   });
 
   useEffect(() => {
@@ -48,6 +57,7 @@ export default function PositionDetail() {
         code: selected.code,
         name: selected.name,
         rate: 0,
+        level: selected.level ?? 0,
         status: selected.status,
       });
     }
@@ -105,6 +115,26 @@ export default function PositionDetail() {
               name="name"
               control={control}
               render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={POSITION_LABEL.LEVEL}
+            extra={POSITION_LABEL.LEVEL_HINT}
+            validateStatus={errors.level ? "error" : ""}
+            help={errors.level?.message}
+          >
+            <Controller
+              name="level"
+              control={control}
+              render={({ field }) => (
+                <InputNumber
+                  {...field}
+                  min={0}
+                  precision={0}
+                  className="w-full"
+                />
+              )}
             />
           </Form.Item>
 

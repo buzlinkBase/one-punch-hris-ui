@@ -37,7 +37,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "Announcements", to: "/portal/announcements" },
           },
           {
-            text: "Coworkers: Today (birthdays from a week ahead, new teammates hired in the last 7 days, work anniversaries and who is out), the Directory (search by name or position, filter by department, email or call coworkers who shared their contact details) and the Org Chart (expand or collapse teams, search, or use Find me to jump to your own spot).",
+            text: "Coworkers: Today (birthdays from a week ahead, new teammates hired in the last 7 days, work anniversaries and who is out), the Directory (search by name or position, filter by department, email or call coworkers who shared their contact details) and the Org Chart (a tree of the company, its departments and sections, and who reports to whom, with pan and zoom, collapsible branches, search, and Find me to jump to your own spot).",
             link: { label: "Coworkers", to: "/portal/coworkers" },
           },
         ],

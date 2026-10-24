@@ -171,6 +171,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         body: [
           "Payroll Group: employees paid together on the same cutoff schedule. You generate the DTR and payroll one payroll group at a time.",
           'Department, Section and Position: where someone sits in the organization. These also drive approval workflows (e.g. "the applicant\'s department head").',
+          "Org chart: these also build the chart under My Portal › Coworkers. Give a department a Parent Department to nest it (e.g. a division) and a Department Head, give a section a Section Head, and set each position's Level (a higher number sits higher in its department). Employees who report to a manager in the same department or section appear under that manager.",
           "Branch and Project Site: where someone works. Attendance uploads are tagged to a branch, and a project site belongs to a branch.",
         ],
       },
