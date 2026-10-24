@@ -32,6 +32,7 @@ import {
 import type { RosterFilter } from "../../models/api/request/roster-filter.model";
 import type { RosterResponse } from "../../models/api/response/roster-response.model";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import {
@@ -102,6 +103,7 @@ export default function RosterList({ embedded = false }: Props) {
     filter.fromDate && filter.toDate ? "date" : null,
     filter.departmentId,
     filter.employeeId,
+    filter.clientId,
     filter.operationAreaId,
   ].filter(Boolean).length;
 
@@ -111,6 +113,7 @@ export default function RosterList({ embedded = false }: Props) {
   );
   const { data: departments = [] } = useDepartments();
   const { data: areas = [] } = useOperationAreas();
+  const { data: clients = [] } = useClients();
   const { data: employees = [] } = useEmployeeFilter(
     pending.departmentId ? { departmentId: pending.departmentId } : {},
   );
@@ -123,6 +126,10 @@ export default function RosterList({ embedded = false }: Props) {
     value: a.id,
     label: `${a.code} - ${a.name}`,
   }));
+  const clientOptions = clients
+    .filter((c) => !c.status || c.status.toUpperCase() === "ACTIVE")
+    .map((c) => ({ value: c.id, label: c.name }))
+    .sort((a, b) => a.label.localeCompare(b.label));
   const employeeOptions = employees.map((e) => ({
     value: e.id,
     label: e.name ?? e.id,
@@ -249,6 +256,20 @@ export default function RosterList({ embedded = false }: Props) {
                     setPending((f) => ({ ...f, employeeId: val }))
                   }
                   style={{ width: "100%" }}
+                />
+              </Form.Item>
+              <Form.Item label={ROSTER_LABEL.FILTER_CLIENT} className="mb-0">
+                <Select
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="All Clients"
+                  options={clientOptions}
+                  value={pending.clientId}
+                  onChange={(val) =>
+                    setPending((f) => ({ ...f, clientId: val }))
+                  }
+                  className="w-full"
                 />
               </Form.Item>
               <Form.Item label={ROSTER_LABEL.FILTER_AREA} className="mb-0">

@@ -19,6 +19,7 @@ export const ROSTER_LABEL = {
     "Showing this client's sites and the sites that aren't tied to any client.",
   FILTER_DEPARTMENT: "Department",
   FILTER_EMPLOYEE: "Employee",
+  FILTER_CLIENT: "Client",
   FILTER_AREA: "Project Site",
 };
 
