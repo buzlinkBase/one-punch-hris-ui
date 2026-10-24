@@ -12,8 +12,11 @@ const BATCH_LIST_ENDPOINT = buildApiUrl(
 );
 
 export const dtrSummaryApi = {
-  getBatchCodes(): Promise<BatchesModel[]> {
-    return httpClient.getUnwrapped<BatchesModel[]>(BATCH_LIST_ENDPOINT);
+  // A missing from/to is open-ended server-side -- callers pass the range they want listed.
+  getBatchCodes(from?: string, to?: string): Promise<BatchesModel[]> {
+    return httpClient.getUnwrapped<BatchesModel[]>(BATCH_LIST_ENDPOINT, {
+      params: { from, to },
+    });
   },
 
   getByBatchCode(batchCode: string): Promise<DtrDetailResponse[]> {

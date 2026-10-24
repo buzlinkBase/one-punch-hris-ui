@@ -88,7 +88,7 @@ export const dtrDetailApi = {
     );
   },
 
-  // from/to default server-side to today minus 5 months / plus 1 month when omitted.
+  // A missing from/to is open-ended server-side -- callers pass the range they want listed.
   getBatchCodes(from?: string, to?: string): Promise<BatchesModel[]> {
     return httpClient.getUnwrapped<BatchesModel[]>(BATCH_LIST_ENDPOINT, {
       params: { from, to },

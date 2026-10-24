@@ -4,10 +4,10 @@ import type { BatchesModel } from "../models/api/response/batches.model";
 
 const QUERY_KEY = ["daily-time-record", "summary"];
 
-export function useDtrBatchCodes() {
+export function useDtrBatchCodes(from?: string, to?: string) {
   return useQuery<BatchesModel[]>({
-    queryKey: [...QUERY_KEY, "batch-codes"],
-    queryFn: () => dtrSummaryApi.getBatchCodes(),
+    queryKey: [...QUERY_KEY, "batch-codes", from, to],
+    queryFn: () => dtrSummaryApi.getBatchCodes(from, to),
     staleTime: 30_000,
   });
 }

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Table, theme } from "antd";
+import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { DtrSummaryResponse } from "../../models/api/response/dtr-summary-response.model";
 import { ResizableTitle } from "@/shared/components/resizable-title";
@@ -14,11 +14,12 @@ interface Props {
 const R = "right" as const;
 
 const groupHeader = (): object => ({
-  style: { fontWeight: 600 },
+  className: "font-semibold",
 });
 
+const EMPTY_CELL = <span className="text-gray-300 select-none">—</span>;
+
 export default function DtrSummaryTable({ data, loading }: Props) {
-  const { token } = theme.useToken();
   const { widths, handleResize } = useResizableColumns({
     fullName: 260,
     lateHours: 70,
@@ -99,11 +100,9 @@ export default function DtrSummaryTable({ data, loading }: Props) {
     align: "right" as const,
     children:
       v === 0 ? (
-        <span style={{ color: token.colorTextDisabled, userSelect: "none" }}>
-          —
-        </span>
+        EMPTY_CELL
       ) : (
-        <span style={{ fontWeight: 600 }}>{formatSummaryNumber(key, v)}</span>
+        <span className="font-semibold">{formatSummaryNumber(key, v)}</span>
       ),
   });
 
@@ -124,16 +123,9 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       }) as object,
     render: (v: number | null | undefined) => {
       const n = v ?? 0;
-      if (n === 0)
-        return (
-          <span style={{ color: token.colorTextDisabled, userSelect: "none" }}>
-            —
-          </span>
-        );
+      if (n === 0) return EMPTY_CELL;
       return (
-        <span style={{ fontWeight: 500 }}>
-          {formatSummaryNumber(dataIndex, n)}
-        </span>
+        <span className="font-medium">{formatSummaryNumber(dataIndex, n)}</span>
       );
     },
   });
@@ -143,6 +135,8 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       title: "Employee",
       dataIndex: "fullName",
       key: "fullName",
+      fixed: "left",
+      sorter: (a, b) => (a.fullName ?? "").localeCompare(b.fullName ?? ""),
       width: widths.fullName ?? 260,
       onHeaderCell: () =>
         ({
@@ -268,7 +262,12 @@ export default function DtrSummaryTable({ data, loading }: Props) {
       columns={columns}
       size="small"
       loading={loading}
-      pagination={{ pageSize: 20 }}
+      pagination={{
+        pageSize: 20,
+        showSizeChanger: true,
+        pageSizeOptions: [20, 50, 100],
+        showTotal: (total) => `${total} employees`,
+      }}
       scroll={{ x: "max-content" }}
       bordered
       sticky
@@ -279,7 +278,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           : () => (
               <Table.Summary fixed="bottom">
                 <Table.Summary.Row>
-                  <Table.Summary.Cell index={0}>
+                  <Table.Summary.Cell index={0} className="font-semibold">
                     <strong>Total</strong>
                   </Table.Summary.Cell>
                   {Object.entries(totals).map(([key, v], i) => (

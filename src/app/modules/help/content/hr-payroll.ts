@@ -304,6 +304,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "The Saved DTR tab lists saved batches and their status: For Approval, Approved, Declined or Cancelled.",
           },
           {
+            text: "Narrow the list with the quick date buttons (Current cutoff, This month, Last month...), the search box, and the Status, Payroll Group and Stage filters. Click Clear filters to start over.",
+          },
+          {
             text: "Approvers use the Approve / Decline actions on the row. History shows who did what.",
           },
           {
@@ -327,11 +330,11 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Steps",
         steps: [
           {
-            text: "Open DTR Summary, choose the DTR batch and click Search.",
+            text: "Open DTR Summary and choose the DTR batch. The summary loads right away. Use the arrows to move to the older or newer batch, and the search box to find an employee. The batch list shows last month to this month by default; use the quick date buttons, the date range or the Payroll Group filter to narrow it, or widen it (e.g. This year) to open older batches.",
             link: { label: "DTR Summary", to: "/daily-time-record/summary" },
           },
           {
-            text: "Review totals per employee (late, undertime, absences, regular, rest day and holiday hours) and click Export if needed.",
+            text: "Review totals per employee (late, undertime, absences, regular, rest day and holiday hours) and click Export if needed. The card above the table shows the batch's period, payroll group, status and overall totals.",
           },
         ],
         tips: [
@@ -387,6 +390,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         steps: [
           {
             text: "The Saved Payroll Runs tab lists each run with its period, payout date, run type, employees and status.",
+          },
+          {
+            text: "Narrow the list with the quick date buttons (Current cutoff, This month, Last month...), the search box, and the Status and Run Type filters. Click Clear filters to start over.",
           },
           {
             text: "Approvers use Approve / Decline on the row. View in Payroll Summary opens the run's details.",
