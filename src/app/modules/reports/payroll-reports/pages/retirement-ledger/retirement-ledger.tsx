@@ -3,6 +3,7 @@ import { Button, DatePicker, Form, Space, Tooltip, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import {
   BalanceAdjustModal,
@@ -28,8 +29,9 @@ const LABELS = { added: "Accrued", deducted: "Paid Out" };
 const EXPORT = fundSummaryExport(LABELS);
 
 export default function RetirementLedger() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [asOf, setAsOf] = useState(dayjs().format("YYYY-MM-DD"));
-  const { data = [], isLoading, refetch } = useRetirementLedger(asOf);
+  const { data = [], isLoading, refetch } = useRetirementLedger(asOf, clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   // The row whose ledger details are open; its Adjust lives inside the drawer.
@@ -75,6 +77,7 @@ export default function RetirementLedger() {
         exportFileName={`retirement-ledger-${asOf}`}
         exportHeaders={EXPORT.headers}
         exportRows={EXPORT.rows}
+        totals={EXPORT.totals}
         extraActions={
           <Space>
             <PermissionGate permission="Payroll Reports:Edit">
@@ -101,6 +104,7 @@ export default function RetirementLedger() {
                   }
                 />
               </Form.Item>
+              <ClientFilter value={clientId} onChange={setClientId} />
               <ReportNameFilter
                 label="Employee"
                 options={employeeFilter.options}

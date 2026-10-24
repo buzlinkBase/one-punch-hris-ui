@@ -70,7 +70,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             link: { label: "Payroll Summary", to: "/payroll/summary" },
           },
           {
-            text: "9. Produce remittances and reports: SSS, PhilHealth, Pag-IBIG, BIR and bank disbursement.",
+            text: "9. Produce remittances and reports: SSS, PhilHealth, Pag-IBIG, BIR and disbursement.",
             link: {
               label: "SSS Remittance",
               to: "/payroll/reports/sss-remittance",
@@ -582,6 +582,8 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         ],
         tips: [
           "Choose the period and filters, then print (opens a PDF in a new tab) or export to Excel.",
+          "Report tables show a Total row for amount columns, and Excel/CSV exports end with a TOTAL row. Exported amounts are real numbers, so you can sort and sum them in Excel.",
+          "Most reports have a Client filter. Pick a client to see only that client's employees, or clear it for everyone. Prints, exports and upload files follow the same filter.",
           "Government forms use the details in Company Settings › Company Info. Fill those in first.",
           "Uniform Allowance rules are set per client (Clients › gear icon › Uniform Allowance). The ledger's Credit Log shows every credit and every skipped one with the reason; an employee's Credit schedule shows their next credits.",
         ],

@@ -199,6 +199,7 @@ export default function UniformAllowanceLedger() {
         exportFileName={`uniform-allowance-ledger-${asOf}`}
         exportHeaders={EXPORT.headers}
         exportRows={EXPORT.rows}
+        totals={EXPORT.totals}
         extraActions={
           <Space>
             <Tooltip title="Credit log — every credit and skip, with the reason">

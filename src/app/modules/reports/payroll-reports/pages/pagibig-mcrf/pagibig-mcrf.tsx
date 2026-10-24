@@ -4,6 +4,7 @@ import { FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { usePagIbigRemittance } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -34,9 +35,9 @@ const toRows = (records: ContributionRemittanceResponse[]) =>
     r.employeeNo,
     r.fullName,
     r.govIdNumber,
-    fmt(r.employeeShare),
-    fmt(r.employerShare),
-    fmt(r.totalContribution),
+    r.employeeShare,
+    r.employerShare,
+    r.totalContribution,
   ]);
 
 const columns: ColumnsType<ContributionRemittanceResponse> = [
@@ -79,6 +80,7 @@ const columns: ColumnsType<ContributionRemittanceResponse> = [
 ];
 
 export default function PagIbigMcrf() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
     dayjs().endOf("month").format("YYYY-MM-DD"),
@@ -87,7 +89,7 @@ export default function PagIbigMcrf() {
     data = [],
     isLoading,
     refetch,
-  } = usePagIbigRemittance(range[0], range[1]);
+  } = usePagIbigRemittance(range[0], range[1], clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
@@ -102,6 +104,10 @@ export default function PagIbigMcrf() {
       exportFileName="pagibig-mcrf-preview"
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: ["employeeShare", "employerShare", "totalContribution"],
+        exportHeaders: ["EE Share", "ER Share", "Total"],
+      }}
       notice={
         <Alert
           type="warning"
@@ -119,6 +125,7 @@ export default function PagIbigMcrf() {
                 openPdfInNewTab(payrollReportsApi.urls.pagIbigMcrfPrint, {
                   from: range[0],
                   to: range[1],
+                  clientId,
                 })
               }
             >
@@ -129,7 +136,7 @@ export default function PagIbigMcrf() {
               onClick={() =>
                 downloadBlobFile(
                   payrollReportsApi.urls.pagIbigMcrfExport,
-                  { from: range[0], to: range[1] },
+                  { from: range[0], to: range[1], clientId },
                   `pagibig-mcrf-${range[0]}-${range[1]}.csv`,
                 )
               }
@@ -159,6 +166,7 @@ export default function PagIbigMcrf() {
                 }}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

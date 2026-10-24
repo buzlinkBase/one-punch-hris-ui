@@ -705,13 +705,13 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/reports/tardiness",
         permission: "Attendance Reports:View",
       },
-      {
-        key: "reports-rostering",
-        feature: FEATURE_KEYS.TIMEKEEPING_CORE,
-        label: "Rostering",
-        path: "/reports/rostering",
-        permission: "Attendance Reports:View",
-      },
+      // {
+      //   key: "reports-rostering",
+      //   feature: FEATURE_KEYS.TIMEKEEPING_CORE,
+      //   label: "Rostering",
+      //   path: "/reports/rostering",
+      //   permission: "Attendance Reports:View",
+      // },
       {
         key: "payroll-reports-sss",
         feature: FEATURE_KEYS.REPORTS_STATUTORY,

@@ -8,7 +8,7 @@ import { message } from "antd";
  */
 export async function openPdfInNewTab(
   url: string,
-  params?: Record<string, string | number>,
+  params?: Record<string, string | number | undefined>,
 ) {
   const printTab = window.open("about:blank", "_blank");
   try {
@@ -30,7 +30,7 @@ export async function openPdfInNewTab(
  */
 export async function downloadBlobFile(
   url: string,
-  params: Record<string, string | number> | undefined,
+  params: Record<string, string | number | undefined> | undefined,
   filename: string,
 ) {
   try {

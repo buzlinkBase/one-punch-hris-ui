@@ -3,6 +3,7 @@ import { DatePicker, Form } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useYtdSummary } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -34,19 +35,19 @@ const toRows = (records: YtdPayrollSummaryResponse[]) =>
   records.map((r) => [
     r.employeeNo,
     r.fullName,
-    fmt(r.totalBasicPay),
-    fmt(r.totalOvertimePay),
-    fmt(r.totalHolidayPay),
-    fmt(r.totalAllowances),
-    fmt(r.totalOtherIncome),
-    fmt(r.totalGrossIncome),
-    fmt(r.totalSSS),
-    fmt(r.totalPhilHealth),
-    fmt(r.totalPagIbig),
-    fmt(r.totalWithholdingTax),
-    fmt(r.totalOtherDeductions),
-    fmt(r.totalDeductions),
-    fmt(r.totalNetPay),
+    r.totalBasicPay,
+    r.totalOvertimePay,
+    r.totalHolidayPay,
+    r.totalAllowances,
+    r.totalOtherIncome,
+    r.totalGrossIncome,
+    r.totalSSS,
+    r.totalPhilHealth,
+    r.totalPagIbig,
+    r.totalWithholdingTax,
+    r.totalOtherDeductions,
+    r.totalDeductions,
+    r.totalNetPay,
   ]);
 
 const columns: ColumnsType<YtdPayrollSummaryResponse> = [
@@ -153,8 +154,9 @@ const columns: ColumnsType<YtdPayrollSummaryResponse> = [
 ];
 
 export default function YtdSummary() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [year, setYear] = useState(dayjs().year());
-  const { data = [], isLoading, refetch } = useYtdSummary(year);
+  const { data = [], isLoading, refetch } = useYtdSummary(year, clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
@@ -169,6 +171,38 @@ export default function YtdSummary() {
       exportFileName={`ytd-summary-${year}`}
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: [
+          "totalBasicPay",
+          "totalOvertimePay",
+          "totalHolidayPay",
+          "totalAllowances",
+          "totalOtherIncome",
+          "totalGrossIncome",
+          "totalSSS",
+          "totalPhilHealth",
+          "totalPagIbig",
+          "totalWithholdingTax",
+          "totalOtherDeductions",
+          "totalDeductions",
+          "totalNetPay",
+        ],
+        exportHeaders: [
+          "Basic Pay",
+          "Overtime",
+          "Holiday Pay",
+          "Allowances",
+          "Other Income",
+          "Gross Income",
+          "SSS",
+          "PhilHealth",
+          "Pag-IBIG",
+          "Withholding Tax",
+          "Other Deductions",
+          "Total Deductions",
+          "Net Pay",
+        ],
+      }}
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
@@ -181,6 +215,7 @@ export default function YtdSummary() {
                 onChange={(date) => date && setYear(date.year())}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

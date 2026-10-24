@@ -28,7 +28,7 @@ import {
 // Amounts and hours are real numbers (rounded to 2 decimals, like the screen), not formatted
 // text, so they sum and sort in Excel; the Excel sheets apply "#,##0.00" for display.
 const num = (n?: number | null) => Math.round((n ?? 0) * 100) / 100;
-export const EXCEL_AMOUNT_FORMAT = "#,##0.00";
+export { EXCEL_AMOUNT_FORMAT } from "@/shared/utils/export.utils";
 
 export const EXPORT_HEADERS = [
   "Employee",

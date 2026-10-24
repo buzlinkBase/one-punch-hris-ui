@@ -3,6 +3,7 @@ import { Form } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useWtaxRemittance } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -31,7 +32,7 @@ const toRows = (records: ContributionRemittanceResponse[]) =>
     r.payrollFrom,
     r.payrollTo,
     r.payrollDate,
-    fmt(r.totalContribution),
+    r.totalContribution,
   ]);
 
 const columns: ColumnsType<ContributionRemittanceResponse> = [
@@ -61,6 +62,7 @@ const columns: ColumnsType<ContributionRemittanceResponse> = [
 ];
 
 export default function WTaxRemittance() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
     dayjs().endOf("month").format("YYYY-MM-DD"),
@@ -69,7 +71,7 @@ export default function WTaxRemittance() {
     data = [],
     isLoading,
     refetch,
-  } = useWtaxRemittance(range[0], range[1]);
+  } = useWtaxRemittance(range[0], range[1], clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
@@ -84,6 +86,10 @@ export default function WTaxRemittance() {
       exportFileName="wtax-remittance"
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: ["totalContribution"],
+        exportHeaders: ["Withholding Tax"],
+      }}
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
@@ -104,6 +110,7 @@ export default function WTaxRemittance() {
                 }}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}
