@@ -26,6 +26,14 @@ import {
 
 const { Title } = Typography;
 
+/** Numeric columns summed into a trailing "Total" row of the export. */
+export interface ReportTotals<T> {
+  /** Numeric fields of the record to sum. */
+  fields: (keyof T)[];
+  /** Export header of each field, in the same order as `fields`. */
+  exportHeaders: string[];
+}
+
 interface PayrollReportShellProps<T> {
   title: string;
   subtitle: string;
@@ -37,7 +45,11 @@ interface PayrollReportShellProps<T> {
   rowKey?: (record: T, index?: number) => string;
   exportFileName: string;
   exportHeaders: string[];
-  exportRows: (data: T[]) => string[][];
+  exportRows: (data: T[]) => (string | number)[][];
+  /** Appends a "Total" row summing these fields to the export. */
+  totals?: ReportTotals<T>;
+  /** Export headers whose Excel cells are whole numbers rather than amounts. */
+  exportIntegerHeaders?: string[];
   /** Extra buttons (e.g. "Preview PDF", "Download File") rendered next to Export. */
   extraActions?: ReactNode;
   /** Notice banner shown above the filters — e.g. a compliance caveat for government file exports. */
@@ -70,6 +82,8 @@ export function PayrollReportShell<T extends object>({
   exportFileName,
   exportHeaders,
   exportRows,
+  totals,
+  exportIntegerHeaders,
   extraActions,
   notice,
   filterValidationMessage,
@@ -89,6 +103,19 @@ export function PayrollReportShell<T extends object>({
       return;
     }
     const rows = exportRows(data);
+    if (totals) {
+      const totalRow: (string | number)[] = exportHeaders.map(() => "");
+      totalRow[0] = "Total";
+      totals.fields.forEach((field, i) => {
+        const col = exportHeaders.indexOf(totals.exportHeaders[i]);
+        if (col < 0) return;
+        totalRow[col] = data.reduce(
+          (sum, r) => sum + (Number(r[field]) || 0),
+          0,
+        );
+      });
+      rows.push(totalRow);
+    }
     const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
       triggerDownload(
@@ -96,7 +123,13 @@ export function PayrollReportShell<T extends object>({
         `${exportFileName}-${date}.csv`,
       );
     } else {
-      downloadExcel(exportHeaders, rows, `${exportFileName}-${date}.xlsx`);
+      downloadExcel(
+        exportHeaders,
+        rows,
+        `${exportFileName}-${date}.xlsx`,
+        undefined,
+        exportIntegerHeaders,
+      );
     }
   };
 
