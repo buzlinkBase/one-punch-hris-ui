@@ -4,5 +4,6 @@ export interface SectionResponse {
   departmentName?: string;
   code: string;
   name: string;
+  headId?: string | null;
   status: string;
 }

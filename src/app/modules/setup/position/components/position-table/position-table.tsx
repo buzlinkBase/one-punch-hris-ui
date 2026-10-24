@@ -26,6 +26,7 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
   const { widths, handleResize } = useResizableColumns({
     code: 120,
     name: 200,
+    level: 100,
     status: 120,
   });
 
@@ -58,6 +59,17 @@ export default function PositionTable({ data, loading, onDelete }: Props) {
         ({
           width: widths.name,
           onResize: (w: number) => handleResize("name", w),
+        }) as object,
+    },
+    {
+      title: POSITION_LABEL.LEVEL,
+      dataIndex: "level",
+      key: "level",
+      width: widths.level,
+      onHeaderCell: () =>
+        ({
+          width: widths.level,
+          onResize: (w: number) => handleResize("level", w),
         }) as object,
     },
     {

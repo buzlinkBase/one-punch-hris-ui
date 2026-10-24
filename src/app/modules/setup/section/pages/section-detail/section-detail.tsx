@@ -17,6 +17,7 @@ import { useDepartments } from "@/app/modules/setup/department/hooks/use-departm
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { SECTION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
@@ -51,13 +52,20 @@ export default function SectionDetail() {
     formState: { errors },
   } = useForm<SectionFormValues>({
     resolver: zodResolver(sectionFormSchema),
-    defaultValues: { departmentId: null, code: "", name: "", status: "ACTIVE" },
+    defaultValues: {
+      departmentId: null,
+      headId: null,
+      code: "",
+      name: "",
+      status: "ACTIVE",
+    },
   });
 
   useEffect(() => {
     if (isEdit && selected) {
       reset({
         departmentId: selected.departmentId ?? null,
+        headId: selected.headId ?? null,
         code: selected.code,
         name: selected.name,
         status: selected.status,
@@ -148,6 +156,20 @@ export default function SectionDetail() {
               name="name"
               control={control}
               render={({ field }) => <Input {...field} />}
+            />
+          </Form.Item>
+
+          <Form.Item label={SECTION_LABEL.HEAD}>
+            <Controller
+              name="headId"
+              control={control}
+              render={({ field }) => (
+                <EmployeeSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select who leads this section"
+                />
+              )}
             />
           </Form.Item>
 
