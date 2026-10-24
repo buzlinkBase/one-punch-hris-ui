@@ -37,7 +37,7 @@ function canOpen(path: string): boolean {
 export function resolveFallbackLanding(): string {
   if (authStorage.isEmployeeOnly()) {
     return authStorage.hasPermission(PORTAL_PERMISSION)
-      ? "/portal/profile"
+      ? "/portal/dashboard"
       : PERMISSION_FREE_LANDING;
   }
   return (

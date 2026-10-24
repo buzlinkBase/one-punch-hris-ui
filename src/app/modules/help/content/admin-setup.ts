@@ -128,7 +128,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Attendance & Payroll Policy: overtime rules (OT Inclusion, OT Eligibility), late policy (half-day and whole-day thresholds), night differential, how many manual attendance entries a day are allowed, holiday rules, when SSS/PhilHealth/Pag-IBIG and withholding tax are credited across months, minimum take-home pay, the OT/ND calculation method, and which payroll run takes the deductions when an employee is paid by several clients in one cutoff.",
           },
           {
-            text: "Payroll Settings: fiscal year start and end month, the 13th month and bonuses non-taxable ceiling, year-end tax annualization, and which of My 13th Month Pay, My Cash Bond and My Uniform Allowance appear in My Portal (all on by default; turn one off to hide it from every employee).",
+            text: "Payroll Settings: fiscal year start and end month, the 13th month and bonuses non-taxable ceiling, year-end tax annualization, and which pages appear in My Portal: Announcements, Coworkers, the time and attendance pages, My Pay Slips, My Leave Credits, My 13th Month Pay, My Deductions, My Cash Bond, My Uniform Allowance and the Leave, Overtime, Official Business, Pass Slip and Loan application pages (all on by default; turn one off to hide its menu item and page from every employee). My Dashboard and My Profile are always available.",
           },
           {
             text: "Rate Multipliers: premium rates for overtime, rest days, holidays and night differential.",

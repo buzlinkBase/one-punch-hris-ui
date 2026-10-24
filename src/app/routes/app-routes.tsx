@@ -42,8 +42,8 @@ const Profile = lazy(
   () => import("@/app/modules/account/profile/pages/profile/profile"),
 );
 const HelpCenter = lazy(() => import("@/app/modules/help/pages/help-center"));
-const PortalProfile = lazy(
-  () => import("@/app/modules/portal/profile/pages/portal-profile"),
+const PortalDashboard = lazy(
+  () => import("@/app/modules/portal/dashboard/pages/portal-dashboard"),
 );
 const DepartmentList = lazy(
   () => import("@/app/modules/setup/department/pages/department-list"),
@@ -559,7 +559,7 @@ const portalRoute = createRoute({
 const portalIndexRoute = createRoute({
   getParentRoute: () => portalRoute,
   path: "/",
-  component: withSuspense(PortalProfile),
+  component: withSuspense(PortalDashboard),
 });
 
 const portalChildRoutes = portalRoutes.map((route) =>

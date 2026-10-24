@@ -101,6 +101,30 @@ export function useAdjustCashBond() {
   });
 }
 
+export function useCashBondRateHistory(employeeId: string | undefined) {
+  return useQuery({
+    queryKey: ["payroll-reports", "cash-bond", "rate-history", employeeId],
+    queryFn: () => payrollReportsApi.cashBondRateHistory(employeeId!),
+    enabled: !!employeeId,
+  });
+}
+
+// The new rate shows in this report, in the employee's My Cash Bond (rate per payroll) and in
+// the employee record, and applies from the next payroll run.
+export function useChangeCashBondRate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: payrollReportsApi.changeCashBondRate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["payroll-reports", "cash-bond"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["me", "cash-bond"] });
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+  });
+}
+
 export function useLeaveLedger(year: number, scope: EmployeeScopeFilter = {}) {
   return useQuery({
     queryKey: ["payroll-reports", "leave-ledger", year, scope],

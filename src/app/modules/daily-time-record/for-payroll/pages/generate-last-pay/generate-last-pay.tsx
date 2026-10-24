@@ -123,6 +123,7 @@ export default function GenerateLastPay() {
   const [includeThirteenthMonth, setIncludeThirteenthMonth] = useState(true);
   const [includeLeaveConversion, setIncludeLeaveConversion] = useState(true);
   const [includeRetirementPayout, setIncludeRetirementPayout] = useState(true);
+  const [includeCashBondRefund, setIncludeCashBondRefund] = useState(true);
   const [selectedAdjustmentIds, setSelectedAdjustmentIds] = useState<string[]>(
     [],
   );
@@ -178,6 +179,7 @@ export default function GenerateLastPay() {
         includeThirteenthMonth,
         includeLeaveConversion,
         includeRetirementPayout,
+        includeCashBondRefund,
         salaryAdjustmentIds: selectedAdjustmentIds,
         otherIncomeScheduleIds: selectedOtherIncomeIds,
       });
@@ -350,6 +352,13 @@ export default function GenerateLastPay() {
       render: (v?: number) => fmt(v ?? 0),
     },
     {
+      title: "Cash Bond Refund",
+      dataIndex: "cashBondRefund",
+      key: "cashBondRefund",
+      align: "right",
+      render: (v?: number) => fmt(v ?? 0),
+    },
+    {
       title: "Net Pay",
       dataIndex: "netPay",
       key: "net",
@@ -425,6 +434,13 @@ export default function GenerateLastPay() {
       title: "Retirement Payout",
       dataIndex: "retirementPayout",
       key: "retirementPayout",
+      align: "right",
+      render: (v?: number) => fmt(v ?? 0),
+    },
+    {
+      title: "Cash Bond Refund",
+      dataIndex: "cashBondRefund",
+      key: "cashBondRefund",
       align: "right",
       render: (v?: number) => fmt(v ?? 0),
     },
@@ -540,7 +556,7 @@ export default function GenerateLastPay() {
               className="mb-4"
               type="info"
               showIcon
-              message="Cash bond on file — refund not automatic"
+              message="Cash bond on file"
               description={
                 <>
                   <ul className="mb-0 pl-4">
@@ -556,8 +572,9 @@ export default function GenerateLastPay() {
                     ))}
                   </ul>
                   <div className="mt-2">
-                    For reference only — this is not added to Net Pay. Decide
-                    the refund manually as part of clearance.
+                    {includeCashBondRefund
+                      ? "These amounts are refunded in this Last Pay, added to Net Pay and not taxed. Untick the cash bond refund below to withhold them, for example while clearance is pending."
+                      : "The cash bond refund is switched off, so these amounts stay on file and are not added to Net Pay."}
                   </div>
                 </>
               }
@@ -586,6 +603,15 @@ export default function GenerateLastPay() {
             >
               Include retirement fund payout{" "}
               <Tooltip title="Cashes out the employee's full accrued Retirement Fund balance. Non-taxable — added directly to Net Pay, not Gross. The balance is debited only once this run is posted.">
+                <InfoCircleOutlined className="text-(--ant-color-text-tertiary)" />
+              </Tooltip>
+            </Checkbox>
+            <Checkbox
+              checked={includeCashBondRefund}
+              onChange={(e) => setIncludeCashBondRefund(e.target.checked)}
+            >
+              Include cash bond refund{" "}
+              <Tooltip title="Pays back the cash bond collected so far (deductions plus opening balance entries, less anything already refunded). Non-taxable — added directly to Net Pay, not Gross.">
                 <InfoCircleOutlined className="text-(--ant-color-text-tertiary)" />
               </Tooltip>
             </Checkbox>

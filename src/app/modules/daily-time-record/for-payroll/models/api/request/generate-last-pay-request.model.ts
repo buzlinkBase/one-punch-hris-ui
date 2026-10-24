@@ -11,6 +11,9 @@ export interface GenerateLastPayRequest {
   // Cashes out the employee's current Retirement Fund balance -- non-taxable, added straight
   // to Net Pay (not Gross). See backend LastPayRunPayload.IncludeRetirementPayout.
   includeRetirementPayout?: boolean;
+  // Pays back the cash bond collected so far -- non-taxable, added straight to Net Pay. See
+  // backend LastPayRunPayload.IncludeCashBondRefund.
+  includeCashBondRefund?: boolean;
   salaryAdjustmentIds?: string[];
   otherIncomeScheduleIds?: string[];
 }

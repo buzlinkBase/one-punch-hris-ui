@@ -47,12 +47,64 @@ const DEFAULTS: PayrollSettingsFormValues = {
   portalShowThirteenthMonth: true,
   portalShowCashBond: true,
   portalShowUniformAllowance: true,
+  portalShowAnnouncements: true,
+  portalShowCoworkers: true,
+  portalShowDtr: true,
+  portalShowIncompletePunches: true,
+  portalShowRawAttendance: true,
+  portalShowShiftSchedule: true,
+  portalShowPayslips: true,
+  portalShowLeaveCredits: true,
+  portalShowDeductions: true,
+  portalShowLeaveApplications: true,
+  portalShowOvertime: true,
+  portalShowOfficialBusiness: true,
+  portalShowPassSlip: true,
+  portalShowLoanApplications: true,
 };
 
-const PORTAL_PAGE_SWITCHES = [
-  { name: "portalShowThirteenthMonth", label: "My 13th Month Pay" },
-  { name: "portalShowCashBond", label: "My Cash Bond" },
-  { name: "portalShowUniformAllowance", label: "My Uniform Allowance" },
+// Grouped like the My Portal menu. My Dashboard and My Profile are always available.
+const PORTAL_PAGE_GROUPS = [
+  {
+    title: "General",
+    switches: [
+      { name: "portalShowAnnouncements", label: "Announcements" },
+      { name: "portalShowCoworkers", label: "Coworkers" },
+    ],
+  },
+  {
+    title: "Time & Attendance",
+    switches: [
+      { name: "portalShowDtr", label: "My Daily Time Record" },
+      { name: "portalShowIncompletePunches", label: "My Incomplete Punches" },
+      { name: "portalShowRawAttendance", label: "My Raw Attendance" },
+      { name: "portalShowShiftSchedule", label: "My Shift Schedule" },
+    ],
+  },
+  {
+    title: "My Pay & Benefits",
+    switches: [
+      { name: "portalShowPayslips", label: "My Pay Slips" },
+      { name: "portalShowLeaveCredits", label: "My Leave Credits" },
+      { name: "portalShowThirteenthMonth", label: "My 13th Month Pay" },
+      { name: "portalShowDeductions", label: "My Deductions" },
+      { name: "portalShowCashBond", label: "My Cash Bond" },
+      { name: "portalShowUniformAllowance", label: "My Uniform Allowance" },
+    ],
+  },
+  {
+    title: "Applications",
+    switches: [
+      { name: "portalShowLeaveApplications", label: "Leave Applications" },
+      { name: "portalShowOvertime", label: "Overtime Applications" },
+      {
+        name: "portalShowOfficialBusiness",
+        label: "Official Business Applications",
+      },
+      { name: "portalShowPassSlip", label: "Pass Slip Applications" },
+      { name: "portalShowLoanApplications", label: "Loan Applications" },
+    ],
+  },
 ] as const;
 
 export default function PayrollSettingsTab() {
@@ -72,16 +124,8 @@ export default function PayrollSettingsTab() {
 
   useEffect(() => {
     if (data) {
-      reset({
-        id: data.id,
-        fiscalYearStartMonth: data.fiscalYearStartMonth,
-        thirteenthMonthExemptionCeiling: data.thirteenthMonthExemptionCeiling,
-        largeTaxCollectionWarningMultiplier:
-          data.largeTaxCollectionWarningMultiplier,
-        portalShowThirteenthMonth: data.portalShowThirteenthMonth,
-        portalShowCashBond: data.portalShowCashBond,
-        portalShowUniformAllowance: data.portalShowUniformAllowance,
-      });
+      // The response carries exactly the form's fields.
+      reset({ ...DEFAULTS, ...data });
     }
   }, [data, reset]);
 
@@ -252,27 +296,33 @@ export default function PayrollSettingsTab() {
       <Card size="small" title="Employee Portal (My Portal)" className="mb-4">
         <div className="flex flex-col gap-1 mb-4">
           <Text type="secondary" className="text-sm">
-            Turn a page on to make it available in My Portal under My Pay &
-            Benefits. Turn it off to hide it from every employee.
+            Turn a page on to make it available in My Portal. Turn it off to
+            hide it from every employee in your company, including its menu item
+            and its page. My Dashboard and My Profile are always available.
           </Text>
         </div>
 
-        <div className="flex flex-col gap-3">
-          {PORTAL_PAGE_SWITCHES.map(({ name, label }) => (
-            <div key={name} className="flex items-center justify-between">
-              <Text>{label}</Text>
-              <Controller
-                name={name}
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onChange={field.onChange}
-                    checkedChildren="On"
-                    unCheckedChildren="Off"
+        <div className="flex flex-col gap-4">
+          {PORTAL_PAGE_GROUPS.map(({ title, switches }) => (
+            <div key={title} className="flex flex-col gap-3">
+              <Text strong>{title}</Text>
+              {switches.map(({ name, label }) => (
+                <div key={name} className="flex items-center justify-between">
+                  <Text>{label}</Text>
+                  <Controller
+                    name={name}
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onChange={field.onChange}
+                        checkedChildren="On"
+                        unCheckedChildren="Off"
+                      />
+                    )}
                   />
-                )}
-              />
+                </div>
+              ))}
             </div>
           ))}
         </div>

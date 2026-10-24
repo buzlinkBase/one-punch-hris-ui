@@ -92,6 +92,18 @@ export default function PortalCashBond() {
                     />
                   </Card>
                 </Col>
+                {(data?.refunded ?? 0) > 0 && (
+                  <Col>
+                    <Card size="small">
+                      <Statistic
+                        title="Refunded in Last Pay"
+                        value={data?.refunded ?? 0}
+                        precision={2}
+                        prefix="₱"
+                      />
+                    </Card>
+                  </Col>
+                )}
               </Row>
               {adjustments.length > 0 && (
                 <div className="mb-4">
@@ -105,7 +117,7 @@ export default function PortalCashBond() {
                   />
                 </div>
               )}
-              <Title level={5}>Payroll Deductions</Title>
+              <Title level={5}>Payroll Deductions & Refund</Title>
               <Table<MyCashBondRun>
                 rowKey="payrollId"
                 loading={isLoading}
@@ -116,8 +128,9 @@ export default function PortalCashBond() {
             </>
           )}
           <Text type="secondary" className="text-xs">
-            Refunds, if any, are handled manually by HR as part of clearance —
-            they are not automatically added to your pay.
+            Your cash bond is paid back in your Last Pay when you separate,
+            unless HR holds it pending clearance. A refund shows as a negative
+            amount above.
           </Text>
         </Card>
       </div>

@@ -22,6 +22,7 @@ const ENTRY_TYPE_COLOR: Record<string, string> = {
   DtrCorrection: "orange",
   Payout: "green",
   Release: "green",
+  Refund: "green",
   Deduction: "red",
   Expiry: "red",
   Forfeiture: "red",

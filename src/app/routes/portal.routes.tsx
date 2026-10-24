@@ -3,85 +3,8 @@ import { PortalFeatureGate } from "@/app/modules/portal/shared/components/portal
 import type { PortalVisibilityKey } from "@/app/modules/portal/shared/models/api/response/portal-visibility-response.model";
 import type { SetupRouteConfig } from "./setup.routes";
 
-const PortalProfile = lazy(
-  () => import("@/app/modules/portal/profile/pages/portal-profile"),
-);
-const PortalProfileEdit = lazy(
-  () => import("@/app/modules/portal/profile/pages/portal-profile-edit"),
-);
-const PortalAnnouncements = lazy(
-  () => import("@/app/modules/portal/announcements/pages/portal-announcements"),
-);
-const PortalAnnouncementReader = lazy(
-  () =>
-    import("@/app/modules/portal/announcements/pages/portal-announcement-reader"),
-);
-const PortalCoworkers = lazy(
-  () => import("@/app/modules/portal/coworkers/pages/portal-coworkers"),
-);
-const PortalPayslips = lazy(
-  () => import("@/app/modules/portal/payslips/pages/portal-payslips"),
-);
-const PortalDtr = lazy(
-  () => import("@/app/modules/portal/dtr/pages/portal-dtr"),
-);
-const PortalIncompletePunches = lazy(
-  () =>
-    import("@/app/modules/portal/incomplete-punches/pages/portal-incomplete-punches"),
-);
-const PortalRawAttendance = lazy(
-  () =>
-    import("@/app/modules/portal/raw-attendance/pages/portal-raw-attendance"),
-);
-const PortalShiftSchedule = lazy(
-  () =>
-    import("@/app/modules/portal/shift-schedule/pages/portal-shift-schedule"),
-);
-const PortalLeaveCredits = lazy(
-  () => import("@/app/modules/portal/leave-credits/pages/portal-leave-credits"),
-);
-const PortalLeaveApplicationList = lazy(
-  () =>
-    import("@/app/modules/portal/leave-application/pages/portal-leave-application-list"),
-);
-const PortalLeaveApplicationCreate = lazy(
-  () =>
-    import("@/app/modules/portal/leave-application/pages/portal-leave-application-create"),
-);
-const PortalOvertimeList = lazy(
-  () => import("@/app/modules/portal/overtime/pages/portal-overtime-list"),
-);
-const PortalOvertimeCreate = lazy(
-  () => import("@/app/modules/portal/overtime/pages/portal-overtime-create"),
-);
-const PortalOfficialBusinessList = lazy(
-  () =>
-    import("@/app/modules/portal/official-business/pages/portal-official-business-list"),
-);
-const PortalOfficialBusinessCreate = lazy(
-  () =>
-    import("@/app/modules/portal/official-business/pages/portal-official-business-create"),
-);
-const PortalPassSlipList = lazy(
-  () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-list"),
-);
-const PortalPassSlipCreate = lazy(
-  () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-create"),
-);
-const PortalLoanApplicationList = lazy(
-  () =>
-    import("@/app/modules/portal/loan-application/pages/portal-loan-application-list"),
-);
-const PortalLoanApplicationCreate = lazy(
-  () =>
-    import("@/app/modules/portal/loan-application/pages/portal-loan-application-create"),
-);
-const PortalDeductions = lazy(
-  () => import("@/app/modules/portal/deductions/pages/portal-deductions"),
-);
-
 // Pages the company can switch off in Company Settings > Payroll Settings -- a direct URL to one
-// that's off redirects to the profile (see PortalFeatureGate).
+// that's off redirects to the dashboard (see PortalFeatureGate). Dashboard and profile are always on.
 const gatedPage = (
   load: () => Promise<{ default: ComponentType }>,
   feature: PortalVisibilityKey,
@@ -97,6 +20,105 @@ const gatedPage = (
     };
   });
 
+const PortalDashboard = lazy(
+  () => import("@/app/modules/portal/dashboard/pages/portal-dashboard"),
+);
+const PortalProfile = lazy(
+  () => import("@/app/modules/portal/profile/pages/portal-profile"),
+);
+const PortalProfileEdit = lazy(
+  () => import("@/app/modules/portal/profile/pages/portal-profile-edit"),
+);
+const PortalAnnouncements = gatedPage(
+  () => import("@/app/modules/portal/announcements/pages/portal-announcements"),
+  "showAnnouncements",
+);
+const PortalAnnouncementReader = gatedPage(
+  () =>
+    import("@/app/modules/portal/announcements/pages/portal-announcement-reader"),
+  "showAnnouncements",
+);
+const PortalCoworkers = gatedPage(
+  () => import("@/app/modules/portal/coworkers/pages/portal-coworkers"),
+  "showCoworkers",
+);
+const PortalPayslips = gatedPage(
+  () => import("@/app/modules/portal/payslips/pages/portal-payslips"),
+  "showPayslips",
+);
+const PortalDtr = gatedPage(
+  () => import("@/app/modules/portal/dtr/pages/portal-dtr"),
+  "showDtr",
+);
+const PortalIncompletePunches = gatedPage(
+  () =>
+    import("@/app/modules/portal/incomplete-punches/pages/portal-incomplete-punches"),
+  "showIncompletePunches",
+);
+const PortalRawAttendance = gatedPage(
+  () =>
+    import("@/app/modules/portal/raw-attendance/pages/portal-raw-attendance"),
+  "showRawAttendance",
+);
+const PortalShiftSchedule = gatedPage(
+  () =>
+    import("@/app/modules/portal/shift-schedule/pages/portal-shift-schedule"),
+  "showShiftSchedule",
+);
+const PortalLeaveCredits = gatedPage(
+  () => import("@/app/modules/portal/leave-credits/pages/portal-leave-credits"),
+  "showLeaveCredits",
+);
+const PortalLeaveApplicationList = gatedPage(
+  () =>
+    import("@/app/modules/portal/leave-application/pages/portal-leave-application-list"),
+  "showLeaveApplications",
+);
+const PortalLeaveApplicationCreate = gatedPage(
+  () =>
+    import("@/app/modules/portal/leave-application/pages/portal-leave-application-create"),
+  "showLeaveApplications",
+);
+const PortalOvertimeList = gatedPage(
+  () => import("@/app/modules/portal/overtime/pages/portal-overtime-list"),
+  "showOvertime",
+);
+const PortalOvertimeCreate = gatedPage(
+  () => import("@/app/modules/portal/overtime/pages/portal-overtime-create"),
+  "showOvertime",
+);
+const PortalOfficialBusinessList = gatedPage(
+  () =>
+    import("@/app/modules/portal/official-business/pages/portal-official-business-list"),
+  "showOfficialBusiness",
+);
+const PortalOfficialBusinessCreate = gatedPage(
+  () =>
+    import("@/app/modules/portal/official-business/pages/portal-official-business-create"),
+  "showOfficialBusiness",
+);
+const PortalPassSlipList = gatedPage(
+  () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-list"),
+  "showPassSlip",
+);
+const PortalPassSlipCreate = gatedPage(
+  () => import("@/app/modules/portal/pass-slip/pages/portal-pass-slip-create"),
+  "showPassSlip",
+);
+const PortalLoanApplicationList = gatedPage(
+  () =>
+    import("@/app/modules/portal/loan-application/pages/portal-loan-application-list"),
+  "showLoanApplications",
+);
+const PortalLoanApplicationCreate = gatedPage(
+  () =>
+    import("@/app/modules/portal/loan-application/pages/portal-loan-application-create"),
+  "showLoanApplications",
+);
+const PortalDeductions = gatedPage(
+  () => import("@/app/modules/portal/deductions/pages/portal-deductions"),
+  "showDeductions",
+);
 const PortalCashBond = gatedPage(
   () => import("@/app/modules/portal/cash-bond/pages/portal-cash-bond"),
   "showCashBond",
@@ -113,6 +135,7 @@ const PortalThirteenthMonth = gatedPage(
 );
 
 export const portalRoutes: SetupRouteConfig[] = [
+  { path: "dashboard", component: PortalDashboard },
   { path: "profile", component: PortalProfile },
   { path: "profile/edit", component: PortalProfileEdit },
   { path: "announcements", component: PortalAnnouncements },

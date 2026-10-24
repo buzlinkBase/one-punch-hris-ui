@@ -11,11 +11,15 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
     summary:
       "Your profile, time records, payslips and leave credits, all in one place.",
     permission: PORTAL,
-    paths: ["/portal/profile"],
+    paths: ["/portal/profile", "/portal/dashboard"],
     sections: [
       {
         heading: "What's in My Portal",
         steps: [
+          {
+            text: "My Dashboard: your remaining leaves, 13th month pay, cash bond, upcoming schedule, incomplete logs this month, loan balance, pending requests and latest announcements at a glance. Click a card to open its full page.",
+            link: { label: "My Dashboard", to: "/portal/dashboard" },
+          },
           {
             text: "My Profile: your personal and employment details. To change something, submit a profile update request. HR approves it before it changes.",
             link: { label: "My Profile", to: "/portal/profile" },
@@ -123,7 +127,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "My Leave Credits", to: "/portal/leave-credits" },
           },
           {
-            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts. Your company can hide these (and My Uniform Allowance) from My Portal, so you may not see all of them.",
+            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts. Your company can hide any My Portal page except My Dashboard and My Profile (for example these two, My Uniform Allowance, My Pay Slips or the application pages), so you may not see all of them.",
             link: {
               label: "My 13th Month Pay",
               to: "/portal/thirteenth-month",

@@ -6,6 +6,7 @@ export interface MyCashBondRun {
   payrollId: string;
   payPeriodStart: string;
   payPeriodEnd: string;
+  /** Deducted on the run; negative when the run is a Last Pay that refunded the cash bond. */
   amount: number;
 }
 
@@ -20,6 +21,8 @@ export interface MyCashBondModel {
   cashBondRate: number;
   /** Payroll runs plus HR entries. */
   totalCollected: number;
+  /** Paid back through Last Pay, already taken off totalCollected. */
+  refunded: number;
   runs: MyCashBondRun[];
   adjustments: MyCashBondAdjustment[];
 }

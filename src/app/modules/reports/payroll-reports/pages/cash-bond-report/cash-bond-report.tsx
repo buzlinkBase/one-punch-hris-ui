@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, DatePicker, Form, Space, Tooltip, message } from "antd";
-import { EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
@@ -13,9 +13,16 @@ import {
 } from "../../components/balance-adjust-modal/balance-adjust-modal";
 import { LedgerDrawer } from "../../components/ledger-drawer/ledger-drawer";
 import {
+  CashBondRateModal,
+  type CashBondRateSubmitValues,
+  type CashBondRateTarget,
+} from "../../components/cash-bond-rate-modal/cash-bond-rate-modal";
+import { CashBondRateHistory } from "../../components/cash-bond-rate-history/cash-bond-rate-history";
+import {
   useAdjustCashBond,
   useCashBondEntries,
   useCashBondReport,
+  useChangeCashBondRate,
 } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { CashBondReportResponse } from "../../models/api/response/payroll-reports.model";
@@ -31,6 +38,7 @@ const EXPORT_HEADERS = [
   "Cash Bond Rate",
   "Beginning / Adjustments",
   "From Payroll",
+  "Refunded",
   "Total Collected",
   "Payroll Runs",
 ];
@@ -42,6 +50,7 @@ const toRows = (records: CashBondReportResponse[]) =>
     r.cashBondRate,
     r.adjustments,
     r.collectedFromPayroll,
+    r.refunded,
     r.totalCollected,
     r.payrollRunsCount,
   ]);
@@ -79,6 +88,17 @@ const columns: ColumnsType<CashBondReportResponse> = [
     key: "fromPayroll",
     align: "right",
     render: fmt,
+  },
+  {
+    title: (
+      <Tooltip title="Paid back to the employee in their Last Pay">
+        Refunded
+      </Tooltip>
+    ),
+    dataIndex: "refunded",
+    key: "refunded",
+    align: "right",
+    render: (v: number) => (v !== 0 ? fmt(v) : ""),
   },
   {
     title: "Total Collected",
@@ -130,23 +150,62 @@ export default function CashBondReport() {
     }
   };
 
+  // The employee whose per-run rate is being edited (applies from the next payroll run).
+  const [rateTarget, setRateTarget] = useState<CashBondRateTarget | null>(null);
+  const { mutateAsync: changeRate, isPending: isChangingRate } =
+    useChangeCashBondRate();
+
+  const openRateModal = (r: CashBondReportResponse) =>
+    setRateTarget({
+      employeeId: r.employeeId,
+      employeeName: r.fullName,
+      currentRate: r.cashBondRate,
+    });
+
+  const handleRateSubmit = async (values: CashBondRateSubmitValues) => {
+    try {
+      const change = await changeRate(values);
+      message.success(
+        change
+          ? "Cash bond rate updated. It applies from the next payroll."
+          : "The rate is unchanged.",
+      );
+      setRateTarget(null);
+    } catch {
+      // The request error is already shown by the HTTP client.
+    }
+  };
+
   const displayColumns: ColumnsType<CashBondReportResponse> = [
     ...columns,
     {
       title: "",
       key: "view",
-      width: 48,
+      width: 88,
       fixed: "right",
       render: (_, r) => (
-        <Tooltip title="View ledger">
-          <Button
-            size="small"
-            type="text"
-            icon={<EyeOutlined />}
-            aria-label="View cash bond ledger"
-            onClick={() => setViewing(r)}
-          />
-        </Tooltip>
+        <Space size={0}>
+          <PermissionGate permission="Payroll Reports:Edit">
+            <Tooltip title="Edit rate (applies from the next payroll)">
+              <Button
+                size="small"
+                type="text"
+                icon={<EditOutlined />}
+                aria-label="Edit cash bond rate"
+                onClick={() => openRateModal(r)}
+              />
+            </Tooltip>
+          </PermissionGate>
+          <Tooltip title="View ledger">
+            <Button
+              size="small"
+              type="text"
+              icon={<EyeOutlined />}
+              aria-label="View cash bond ledger"
+              onClick={() => setViewing(r)}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
@@ -165,10 +224,16 @@ export default function CashBondReport() {
         exportHeaders={EXPORT_HEADERS}
         exportRows={toRows}
         totals={{
-          fields: ["adjustments", "collectedFromPayroll", "totalCollected"],
+          fields: [
+            "adjustments",
+            "collectedFromPayroll",
+            "refunded",
+            "totalCollected",
+          ],
           exportHeaders: [
             "Beginning / Adjustments",
             "From Payroll",
+            "Refunded",
             "Total Collected",
           ],
         }}
@@ -227,6 +292,19 @@ export default function CashBondReport() {
             balance: viewingRow.totalCollected,
           })
         }
+        extraTab={{
+          key: "rate-history",
+          label: "Rate history",
+          content: <CashBondRateHistory employeeId={viewing?.employeeId} />,
+        }}
+      />
+
+      <CashBondRateModal
+        open={rateTarget !== null}
+        onClose={() => setRateTarget(null)}
+        target={rateTarget}
+        onSubmit={handleRateSubmit}
+        isSubmitting={isChangingRate}
       />
 
       <BalanceAdjustModal

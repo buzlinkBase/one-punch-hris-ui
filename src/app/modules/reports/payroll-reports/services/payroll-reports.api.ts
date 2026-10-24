@@ -7,6 +7,8 @@ import type {
   DeductionLedgerResponse,
   CashBondReportResponse,
   AdjustCashBondRequest,
+  CashBondRateChangeResponse,
+  ChangeCashBondRateRequest,
   LeaveCreditsBalanceResponse,
   LedgerEntryResponse,
   FundLedgerSummaryResponse,
@@ -93,6 +95,15 @@ export const payrollReportsApi = {
     get<LedgerEntryResponse>(`cash-bond/${employeeId}/entries`, { asOf }),
   adjustCashBond: (payload: AdjustCashBondRequest) =>
     httpClient.postUnwrapped<void>(`${CASH_BOND_ENDPOINT}/adjust`, payload),
+  cashBondRateHistory: (employeeId: string) =>
+    httpClient.getUnwrapped<CashBondRateChangeResponse[]>(
+      `${CASH_BOND_ENDPOINT}/${employeeId}/rate-history`,
+    ),
+  changeCashBondRate: (payload: ChangeCashBondRateRequest) =>
+    httpClient.putUnwrapped<CashBondRateChangeResponse | null>(
+      `${CASH_BOND_ENDPOINT}/rate`,
+      payload,
+    ),
   leaveLedger: (year: number, scope: EmployeeScopeFilter = {}) =>
     get<LeaveCreditsBalanceResponse>("leave-ledger", { year, ...scope }),
   leaveEntries: (employeeId: string, leaveId: string, year: number) =>

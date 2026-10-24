@@ -135,6 +135,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     permission: "Employee Self-Service Portal:View",
     children: [
       {
+        key: "portal-dashboard",
+        label: "My Dashboard",
+        path: "/portal/dashboard",
+      },
+      {
         key: "portal-profile",
         label: "My Profile",
         path: "/portal/profile",

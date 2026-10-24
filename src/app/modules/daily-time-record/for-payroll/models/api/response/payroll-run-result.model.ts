@@ -206,6 +206,10 @@ export interface PayrollRunResult {
   // out at separation, non-taxable (added to netPay below, never to grossIncome). See backend
   // LastPayRunPayload.IncludeRetirementPayout.
   retirementPayout?: number;
+  // Last Pay > Include cash bond refund -- the cash bond collected so far, paid back at
+  // separation, non-taxable (added to netPay below, never to grossIncome). See backend
+  // LastPayRunPayload.IncludeCashBondRefund.
+  cashBondRefund?: number;
   // Attendance
   // Backend Payroll/PayrollSummaryLine.AbsencesAmount -- the name must match the API exactly.
   absencesAmount: number;

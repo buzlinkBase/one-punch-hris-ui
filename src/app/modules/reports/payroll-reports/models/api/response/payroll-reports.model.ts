@@ -57,9 +57,29 @@ export interface CashBondReportResponse {
   /** Net of manual entries, e.g. the opening balance from before this system. */
   adjustments: number;
   collectedFromPayroll: number;
-  /** adjustments + collectedFromPayroll */
+  /** Paid back through Last Pay, already taken off totalCollected. */
+  refunded: number;
+  /** adjustments + collectedFromPayroll - refunded */
   totalCollected: number;
   payrollRunsCount: number;
+}
+
+// One entry of an employee's cash bond rate history -- see hrms-api's CashBondRateChange. A
+// history only: it never moves the collected total.
+export interface CashBondRateChangeResponse {
+  id: string;
+  changedAt: string;
+  oldRate: number;
+  newRate: number;
+  reason: string;
+}
+
+// Cash Bond Tracking "Edit rate" -- see hrms-api's CashBondController.ChangeRate. The new rate
+// applies from the next payroll run.
+export interface ChangeCashBondRateRequest {
+  employeeId: string;
+  newRate: number;
+  reason: string;
 }
 
 // Cash Bond Tracking "Add entry" / "Adjust" -- see hrms-api's CashBondController.Adjust.

@@ -71,7 +71,7 @@ describe("resolveFallbackLanding", () => {
 
   it("sends an Employee-only member with portal access to the portal", () => {
     signInAs(["Employee"], ["Employee Self-Service Portal:View"]);
-    expect(resolveFallbackLanding()).toBe("/portal/profile");
+    expect(resolveFallbackLanding()).toBe("/portal/dashboard");
   });
 
   // The post-accept hang: an Employee-only invitee whose permissions hadn't resolved used to

@@ -28,7 +28,7 @@ export function PortalFeatureGate({
   }
 
   if (data && !data[feature]) {
-    return <Navigate to="/portal/profile" replace />;
+    return <Navigate to="/portal/dashboard" replace />;
   }
 
   return <>{children}</>;

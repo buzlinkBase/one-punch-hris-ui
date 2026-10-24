@@ -9,6 +9,20 @@ export const PORTAL_NAV_VISIBILITY_KEYS: Record<string, PortalVisibilityKey> = {
   "portal-thirteenth-month": "showThirteenthMonth",
   "portal-cash-bond": "showCashBond",
   "portal-uniform-allowance": "showUniformAllowance",
+  "portal-announcements": "showAnnouncements",
+  "portal-coworkers": "showCoworkers",
+  "portal-dtr": "showDtr",
+  "portal-incomplete-punches": "showIncompletePunches",
+  "portal-raw-attendance": "showRawAttendance",
+  "portal-shift-schedule": "showShiftSchedule",
+  "portal-payslips": "showPayslips",
+  "portal-leave-credits": "showLeaveCredits",
+  "portal-deductions": "showDeductions",
+  "portal-leave-applications": "showLeaveApplications",
+  "portal-overtime": "showOvertime",
+  "portal-official-business": "showOfficialBusiness",
+  "portal-pass-slip": "showPassSlip",
+  "portal-loan-applications": "showLoanApplications",
 };
 
 /**

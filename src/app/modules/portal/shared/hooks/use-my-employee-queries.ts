@@ -187,12 +187,15 @@ export function useMyDtrDetail(params: { from?: string; to?: string }) {
   });
 }
 
-export function useMyIncompletePunches(params: { from?: string; to?: string }) {
+export function useMyIncompletePunches(
+  params: { from?: string; to?: string },
+  enabled = true,
+) {
   return useQuery({
     queryKey: ["me", "incomplete-punches", params],
     queryFn: () =>
       meApi.getMyIncompletePunches({ from: params.from!, to: params.to! }),
-    enabled: !!params.from && !!params.to,
+    enabled: enabled && !!params.from && !!params.to,
   });
 }
 
@@ -205,24 +208,27 @@ export function useMyRawAttendance(params: { from?: string; to?: string }) {
   });
 }
 
-export function useMySchedule(from: string, to: string) {
+export function useMySchedule(from: string, to: string, enabled = true) {
   return useQuery({
     queryKey: ["me", "schedule", from, to],
     queryFn: () => meApi.getMySchedule({ from, to }),
+    enabled,
   });
 }
 
-export function useMyLeaveCredits(year?: number) {
+export function useMyLeaveCredits(year?: number, enabled = true) {
   return useQuery({
     queryKey: ["me", "leave-credits", year],
     queryFn: () => meApi.getMyLeaveCredits(year),
+    enabled,
   });
 }
 
-export function useMyLeaveApplications() {
+export function useMyLeaveApplications(enabled = true) {
   return useQuery({
     queryKey: ["me", "leave-applications"],
     queryFn: () => meApi.getMyLeaveApplications(),
+    enabled,
   });
 }
 
@@ -263,10 +269,11 @@ export function useWithdrawMyLeaveApplication() {
   });
 }
 
-export function useMyOvertimeApplications() {
+export function useMyOvertimeApplications(enabled = true) {
   return useQuery({
     queryKey: ["me", "overtime-applications"],
     queryFn: () => meApi.getMyOvertimeApplications(),
+    enabled,
   });
 }
 
@@ -316,10 +323,11 @@ export function useWithdrawMyOvertimeApplication() {
   });
 }
 
-export function useMyTravelOrderApplications() {
+export function useMyTravelOrderApplications(enabled = true) {
   return useQuery({
     queryKey: ["me", "travel-order-applications"],
     queryFn: () => meApi.getMyTravelOrderApplications(),
+    enabled,
   });
 }
 
@@ -369,10 +377,11 @@ export function useWithdrawMyTravelOrderApplication() {
   });
 }
 
-export function useMyPassSlipApplications() {
+export function useMyPassSlipApplications(enabled = true) {
   return useQuery({
     queryKey: ["me", "pass-slip-applications"],
     queryFn: () => meApi.getMyPassSlipApplications(),
+    enabled,
   });
 }
 
@@ -446,10 +455,11 @@ export function useWithdrawMyChangeRestDayRequest() {
   });
 }
 
-export function useMyLoanApplications() {
+export function useMyLoanApplications(enabled = true) {
   return useQuery({
     queryKey: ["me", "loan-applications"],
     queryFn: () => meApi.getMyLoanApplications(),
+    enabled,
   });
 }
 
@@ -520,10 +530,11 @@ export function useWithdrawMyProfileUpdateRequest() {
   });
 }
 
-export function useMyCashBond() {
+export function useMyCashBond(enabled = true) {
   return useQuery({
     queryKey: ["me", "cash-bond"],
     queryFn: () => meApi.getMyCashBond(),
+    enabled,
   });
 }
 
@@ -534,9 +545,10 @@ export function useMyUniformAllowance() {
   });
 }
 
-export function useMy13thMonth(year: number) {
+export function useMy13thMonth(year: number, enabled = true) {
   return useQuery({
     queryKey: ["me", "13th-month", year],
     queryFn: () => meApi.getMy13thMonth(year),
+    enabled,
   });
 }

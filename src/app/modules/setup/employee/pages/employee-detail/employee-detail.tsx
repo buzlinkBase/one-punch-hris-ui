@@ -1888,7 +1888,10 @@ export default function EmployeeDetail() {
                       />
                     </Form.Item>
 
-                    <Form.Item label={EMPLOYEE_LABEL.CASH_BOND}>
+                    <Form.Item
+                      label={EMPLOYEE_LABEL.CASH_BOND}
+                      extra="Deducted every payroll. A change applies from the next payroll run and is kept in the cash bond rate history."
+                    >
                       <Controller
                         name="cashBond"
                         control={control}
