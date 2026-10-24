@@ -10,7 +10,7 @@ export const PAYROLL_REPORTS_LABEL = {
     "Employee and employer Pag-IBIG (HDMF) contributions for the selected period.",
   WTAX_TITLE: "BIR Withholding Tax",
   WTAX_SUBTITLE: "Withholding tax posted per employee for the selected period.",
-  BANK_TITLE: "Bank Disbursement",
+  BANK_TITLE: "Disbursement",
   BANK_SUBTITLE:
     "Net pay by employee, bank, and account number for the selected payroll period.",
   DEDUCTION_TITLE: "Deduction Ledger",

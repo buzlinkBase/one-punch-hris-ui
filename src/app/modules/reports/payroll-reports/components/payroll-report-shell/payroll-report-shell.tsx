@@ -23,6 +23,35 @@ import {
 
 const { Title } = Typography;
 
+const fmt = (n: number) =>
+  n.toLocaleString("en-PH", { minimumFractionDigits: 2 });
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Which amount columns a report totals — on screen (record fields) and in its export (headers). */
+export interface ReportTotals<T> {
+  fields: (keyof T & string)[];
+  exportHeaders: string[];
+}
+
+// "TOTAL" in the first column, the numeric sum under each totalled header, blank elsewhere.
+function buildTotalRow<T>(
+  rows: (string | number)[][],
+  headers: string[],
+  totals: ReportTotals<T>,
+): (string | number)[] {
+  return headers.map((header, i) => {
+    if (totals.exportHeaders.includes(header)) {
+      return round2(
+        rows.reduce((s, row) => {
+          const value = row[i];
+          return s + (typeof value === "number" ? value : 0);
+        }, 0),
+      );
+    }
+    return i === 0 ? "TOTAL" : "";
+  });
+}
+
 interface PayrollReportShellProps<T> {
   title: string;
   subtitle: string;
@@ -34,7 +63,12 @@ interface PayrollReportShellProps<T> {
   rowKey?: (record: T, index?: number) => string;
   exportFileName: string;
   exportHeaders: string[];
-  exportRows: (data: T[]) => string[][];
+  /** Amounts should be raw numbers, not formatted text, so they stay numeric in Excel/CSV. */
+  exportRows: (data: T[]) => (string | number)[][];
+  /** Adds a Total row under the table and as the last row of the CSV/Excel export. */
+  totals?: ReportTotals<T>;
+  /** Export headers of count columns (shown without decimals in Excel, never totalled). */
+  exportIntegerHeaders?: string[];
   /** Extra buttons (e.g. "Preview PDF", "Download File") rendered next to Export. */
   extraActions?: ReactNode;
   /** Notice banner shown above the filters — e.g. a compliance caveat for government file exports. */
@@ -63,6 +97,8 @@ export function PayrollReportShell<T extends object>({
   exportFileName,
   exportHeaders,
   exportRows,
+  totals,
+  exportIntegerHeaders,
   extraActions,
   notice,
   filterValidationMessage,
@@ -80,6 +116,7 @@ export function PayrollReportShell<T extends object>({
       return;
     }
     const rows = exportRows(data);
+    if (totals) rows.push(buildTotalRow(rows, exportHeaders, totals));
     const date = dayjs().format("YYYYMMDD");
     if (format === "csv") {
       triggerDownload(
@@ -87,8 +124,56 @@ export function PayrollReportShell<T extends object>({
         `${exportFileName}-${date}.csv`,
       );
     } else {
-      downloadExcel(exportHeaders, rows, `${exportFileName}-${date}.xlsx`);
+      downloadExcel(
+        exportHeaders,
+        rows,
+        `${exportFileName}-${date}.xlsx`,
+        undefined,
+        exportIntegerHeaders,
+      );
     }
+  };
+
+  const renderSummary = () => {
+    if (!totals || !data.length) return undefined;
+    const offset = rowSelection ? 1 : 0;
+    return (
+      <Table.Summary fixed>
+        <Table.Summary.Row>
+          {rowSelection && <Table.Summary.Cell index={0} />}
+          {columns.map((col, i) => {
+            const dataIndex = (col as { dataIndex?: unknown }).dataIndex;
+            const field = typeof dataIndex === "string" ? dataIndex : "";
+            const isTotal = (totals.fields as string[]).includes(field);
+            const sum = isTotal
+              ? round2(
+                  data.reduce(
+                    (s, r) =>
+                      s +
+                      (Number(
+                        (r as unknown as Record<string, unknown>)[field],
+                      ) || 0),
+                    0,
+                  ),
+                )
+              : 0;
+            return (
+              <Table.Summary.Cell
+                key={col.key ?? i}
+                index={i + offset}
+                align={isTotal ? "right" : undefined}
+              >
+                {i === 0 ? (
+                  <strong>Total</strong>
+                ) : isTotal ? (
+                  <strong>{fmt(sum)}</strong>
+                ) : null}
+              </Table.Summary.Cell>
+            );
+          })}
+        </Table.Summary.Row>
+      </Table.Summary>
+    );
   };
 
   const exportMenu: MenuProps["items"] = [
@@ -161,6 +246,7 @@ export function PayrollReportShell<T extends object>({
             scroll={{ x: "max-content" }}
             pagination={{ pageSize: 50, showSizeChanger: false }}
             rowSelection={rowSelection}
+            summary={renderSummary}
           />
         )}
       </Card>

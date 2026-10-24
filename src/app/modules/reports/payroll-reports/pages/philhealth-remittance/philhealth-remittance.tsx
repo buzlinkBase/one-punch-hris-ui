@@ -3,6 +3,7 @@ import { Form } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { usePhilHealthRemittance } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -33,9 +34,9 @@ const toRows = (records: ContributionRemittanceResponse[]) =>
     r.payrollFrom,
     r.payrollTo,
     r.payrollDate,
-    fmt(r.employeeShare),
-    fmt(r.employerShare),
-    fmt(r.totalContribution),
+    r.employeeShare,
+    r.employerShare,
+    r.totalContribution,
   ]);
 
 const columns: ColumnsType<ContributionRemittanceResponse> = [
@@ -84,6 +85,7 @@ const columns: ColumnsType<ContributionRemittanceResponse> = [
 ];
 
 export default function PhilHealthRemittance() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
     dayjs().endOf("month").format("YYYY-MM-DD"),
@@ -92,7 +94,7 @@ export default function PhilHealthRemittance() {
     data = [],
     isLoading,
     refetch,
-  } = usePhilHealthRemittance(range[0], range[1]);
+  } = usePhilHealthRemittance(range[0], range[1], clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
@@ -107,6 +109,10 @@ export default function PhilHealthRemittance() {
       exportFileName="philhealth-remittance"
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: ["employeeShare", "employerShare", "totalContribution"],
+        exportHeaders: ["EE Share", "ER Share", "Total"],
+      }}
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
@@ -127,6 +133,7 @@ export default function PhilHealthRemittance() {
                 }}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

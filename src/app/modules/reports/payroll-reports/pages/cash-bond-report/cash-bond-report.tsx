@@ -4,6 +4,7 @@ import { EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import {
   BalanceAdjustModal,
@@ -38,11 +39,11 @@ const toRows = (records: CashBondReportResponse[]) =>
   records.map((r) => [
     r.employeeNo,
     r.fullName,
-    fmt(r.cashBondRate),
-    fmt(r.adjustments),
-    fmt(r.collectedFromPayroll),
-    fmt(r.totalCollected),
-    String(r.payrollRunsCount),
+    r.cashBondRate,
+    r.adjustments,
+    r.collectedFromPayroll,
+    r.totalCollected,
+    r.payrollRunsCount,
   ]);
 
 const columns: ColumnsType<CashBondReportResponse> = [
@@ -95,8 +96,9 @@ const columns: ColumnsType<CashBondReportResponse> = [
 ];
 
 export default function CashBondReport() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [asOf, setAsOf] = useState(dayjs().format("YYYY-MM-DD"));
-  const { data = [], isLoading, refetch } = useCashBondReport(asOf);
+  const { data = [], isLoading, refetch } = useCashBondReport(asOf, clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   // The row whose ledger details are open; its Adjust lives inside the drawer.
@@ -162,6 +164,15 @@ export default function CashBondReport() {
         exportFileName="cash-bond-tracking"
         exportHeaders={EXPORT_HEADERS}
         exportRows={toRows}
+        totals={{
+          fields: ["adjustments", "collectedFromPayroll", "totalCollected"],
+          exportHeaders: [
+            "Beginning / Adjustments",
+            "From Payroll",
+            "Total Collected",
+          ],
+        }}
+        exportIntegerHeaders={["Payroll Runs"]}
         extraActions={
           <Space>
             <PermissionGate permission="Payroll Reports:Edit">
@@ -188,6 +199,7 @@ export default function CashBondReport() {
                   }
                 />
               </Form.Item>
+              <ClientFilter value={clientId} onChange={setClientId} />
               <ReportNameFilter
                 label="Employee"
                 options={employeeFilter.options}

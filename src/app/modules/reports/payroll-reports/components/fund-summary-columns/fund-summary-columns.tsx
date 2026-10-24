@@ -3,6 +3,7 @@ import { EyeOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { FundLedgerSummaryResponse } from "../../models/api/response/payroll-reports.model";
+import type { ReportTotals } from "../payroll-report-shell/payroll-report-shell";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
@@ -87,13 +88,17 @@ export function fundSummaryExport(labels: Labels) {
       "Balance",
       "Last Entry",
     ],
+    totals: {
+      fields: ["totalAdded", "totalDeducted", "balance"],
+      exportHeaders: [labels.added, labels.deducted, "Balance"],
+    } satisfies ReportTotals<FundLedgerSummaryResponse>,
     rows: (records: FundLedgerSummaryResponse[]) =>
       records.map((r) => [
         r.employeeNo,
         r.fullName,
-        fmt(r.totalAdded),
-        fmt(r.totalDeducted),
-        fmt(r.balance),
+        r.totalAdded,
+        r.totalDeducted,
+        r.balance,
         r.lastEntryDate ?? "",
       ]),
   };
