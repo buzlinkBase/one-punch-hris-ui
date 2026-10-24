@@ -30,6 +30,8 @@ import type { PortalProfileUpdateRequestResponse } from "../models/api/response/
 
 import type { CoworkerBirthdayResponse } from "../models/api/response/coworker-birthday-response.model";
 
+import type { PortalVisibilityResponse } from "../models/api/response/portal-visibility-response.model";
+
 import type {
   AnniversaryResponse,
   CoworkerCardResponse,
@@ -42,6 +44,12 @@ import type {
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
 
 export const meApi = {
+  getPortalVisibility(): Promise<PortalVisibilityResponse> {
+    return httpClient.getUnwrapped<PortalVisibilityResponse>(
+      `${BASE_URL}/portal-visibility`,
+    );
+  },
+
   getCoworkerSettings(): Promise<CoworkerSettingsResponse> {
     return httpClient.getUnwrapped<CoworkerSettingsResponse>(
       `${BASE_URL}/coworkers/settings`,
@@ -89,9 +97,9 @@ export const meApi = {
     });
   },
 
-  getTodayBirthdays(): Promise<CoworkerBirthdayResponse[]> {
+  getUpcomingBirthdays(): Promise<CoworkerBirthdayResponse[]> {
     return httpClient.getUnwrapped<CoworkerBirthdayResponse[]>(
-      `${BASE_URL}/birthdays/today`,
+      `${BASE_URL}/birthdays/upcoming`,
     );
   },
 

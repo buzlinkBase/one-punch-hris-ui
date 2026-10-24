@@ -23,11 +23,23 @@ export function useMyEmployee() {
   });
 }
 
-/** Opted-in coworkers whose birthday is today. */
-export function useTodayBirthdays() {
+export const PORTAL_VISIBILITY_QUERY_KEY = ["me", "portal-visibility"];
+
+/** Which optional My Pay & Benefits pages the company switched on (default: all on). */
+export function usePortalVisibility(enabled = true) {
   return useQuery({
-    queryKey: ["me", "birthdays", "today"],
-    queryFn: () => meApi.getTodayBirthdays(),
+    queryKey: PORTAL_VISIBILITY_QUERY_KEY,
+    queryFn: () => meApi.getPortalVisibility(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Opted-in coworkers whose birthday is today or within the next 7 days. */
+export function useUpcomingBirthdays() {
+  return useQuery({
+    queryKey: ["me", "birthdays", "upcoming"],
+    queryFn: () => meApi.getUpcomingBirthdays(),
     staleTime: 10 * 60 * 1000,
   });
 }

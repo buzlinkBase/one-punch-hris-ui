@@ -128,7 +128,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Attendance & Payroll Policy: overtime rules (OT Inclusion, OT Eligibility), late policy (half-day and whole-day thresholds), night differential, how many manual attendance entries a day are allowed, holiday rules, when SSS/PhilHealth/Pag-IBIG and withholding tax are credited across months, minimum take-home pay, and the OT/ND calculation method.",
           },
           {
-            text: "Payroll Settings: fiscal year start and end month, the 13th month and bonuses non-taxable ceiling, and year-end tax annualization.",
+            text: "Payroll Settings: fiscal year start and end month, the 13th month and bonuses non-taxable ceiling, year-end tax annualization, and which of My 13th Month Pay, My Cash Bond and My Uniform Allowance appear in My Portal (all on by default; turn one off to hide it from every employee).",
           },
           {
             text: "Rate Multipliers: premium rates for overtime, rest days, holidays and night differential.",

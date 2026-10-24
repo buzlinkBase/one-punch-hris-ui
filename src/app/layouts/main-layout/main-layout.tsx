@@ -77,6 +77,7 @@ import { useThemeStore } from "@/core/stores/theme.store";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
 import { resolveFallbackLanding } from "@/core/auth/tenant-routing";
 import { filterNavByPermission } from "./filter-nav-by-permission";
+import { filterNavByPortalVisibility } from "./filter-nav-by-portal-visibility";
 import { ConfidentialDataNotice } from "@/shared/components/confidential-data-notice/confidential-data-notice";
 import { confidentialNoticeFor } from "@/shared/components/confidential-data-notice/confidential-notice-paths";
 import { useAuthUser } from "@/core/auth/use-auth-user";
@@ -98,7 +99,10 @@ import {
   useMyUnreadAnnouncementCount,
 } from "@/app/modules/portal/announcements/hooks/use-my-announcement-queries";
 import { AcknowledgementGate } from "@/app/modules/portal/announcements/components/acknowledgement-gate/acknowledgement-gate";
-import { useMyEmployee } from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
+import {
+  useMyEmployee,
+  usePortalVisibility,
+} from "@/app/modules/portal/shared/hooks/use-my-employee-queries";
 import ProvisioningScreen from "./provisioning-screen";
 import { useSubscriptionState } from "@/app/modules/billing/hooks/use-subscription-state";
 import { useSubscriptionBoundaryRefresh } from "@/app/modules/billing/hooks/use-subscription-boundary-refresh";
@@ -690,18 +694,26 @@ export default function MainLayout() {
   // returning the pre-change nav until the next reload, even though filterNavByPermission reads
   // the new roles/permissions from authStorage.
   const authUser = useAuthUser();
+  // Company Settings > Payroll Settings can switch off 13th Month / Cash Bond / Uniform Allowance.
+  const { data: portalVisibility } = usePortalVisibility(!!myEmployee);
   const navItems = useMemo(() => {
     if (!authUser) return [];
     if (authStorage.isEmployeeOnly()) {
-      return filterNavByPermission(
-        NAVIGATION_ITEMS.filter((item) => item.key === "nav-portal"),
+      return filterNavByPortalVisibility(
+        filterNavByPermission(
+          NAVIGATION_ITEMS.filter((item) => item.key === "nav-portal"),
+        ),
+        portalVisibility,
       );
     }
     const base = myEmployee
       ? NAVIGATION_ITEMS
       : NAVIGATION_ITEMS.filter((item) => item.key !== "nav-portal");
-    return filterNavByPermission(base);
-  }, [authUser, myEmployee]);
+    return filterNavByPortalVisibility(
+      filterNavByPermission(base),
+      portalVisibility,
+    );
+  }, [authUser, myEmployee, portalVisibility]);
 
   useEffect(() => {
     const requiredPermission = getPermissionForPath(location.pathname);

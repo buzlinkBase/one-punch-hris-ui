@@ -1,4 +1,6 @@
-import { lazy } from "react";
+import { lazy, type ComponentType } from "react";
+import { PortalFeatureGate } from "@/app/modules/portal/shared/components/portal-feature-gate/portal-feature-gate";
+import type { PortalVisibilityKey } from "@/app/modules/portal/shared/models/api/response/portal-visibility-response.model";
 import type { SetupRouteConfig } from "./setup.routes";
 
 const PortalProfile = lazy(
@@ -74,19 +76,40 @@ const PortalLoanApplicationCreate = lazy(
   () =>
     import("@/app/modules/portal/loan-application/pages/portal-loan-application-create"),
 );
-const PortalCashBond = lazy(
-  () => import("@/app/modules/portal/cash-bond/pages/portal-cash-bond"),
-);
 const PortalDeductions = lazy(
   () => import("@/app/modules/portal/deductions/pages/portal-deductions"),
 );
-const PortalUniformAllowance = lazy(
+
+// Pages the company can switch off in Company Settings > Payroll Settings -- a direct URL to one
+// that's off redirects to the profile (see PortalFeatureGate).
+const gatedPage = (
+  load: () => Promise<{ default: ComponentType }>,
+  feature: PortalVisibilityKey,
+) =>
+  lazy(async () => {
+    const { default: Page } = await load();
+    return {
+      default: () => (
+        <PortalFeatureGate feature={feature}>
+          <Page />
+        </PortalFeatureGate>
+      ),
+    };
+  });
+
+const PortalCashBond = gatedPage(
+  () => import("@/app/modules/portal/cash-bond/pages/portal-cash-bond"),
+  "showCashBond",
+);
+const PortalUniformAllowance = gatedPage(
   () =>
     import("@/app/modules/portal/uniform-allowance/pages/portal-uniform-allowance"),
+  "showUniformAllowance",
 );
-const PortalThirteenthMonth = lazy(
+const PortalThirteenthMonth = gatedPage(
   () =>
     import("@/app/modules/portal/thirteenth-month/pages/portal-thirteenth-month"),
+  "showThirteenthMonth",
 );
 
 export const portalRoutes: SetupRouteConfig[] = [

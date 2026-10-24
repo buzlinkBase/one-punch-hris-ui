@@ -37,7 +37,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "Announcements", to: "/portal/announcements" },
           },
           {
-            text: "Coworkers: Today (who is in, on leave or celebrating a birthday), the Directory and the Org Chart.",
+            text: "Coworkers: Today (birthdays from a week ahead, new teammates hired in the last 7 days, work anniversaries and who is out), the Directory (search by name or position, filter by department, email or call coworkers who shared their contact details) and the Org Chart (expand or collapse teams, search, or use Find me to jump to your own spot).",
             link: { label: "Coworkers", to: "/portal/coworkers" },
           },
         ],
@@ -123,7 +123,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "My Leave Credits", to: "/portal/leave-credits" },
           },
           {
-            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts.",
+            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts. Your company can hide these (and My Uniform Allowance) from My Portal, so you may not see all of them.",
             link: {
               label: "My 13th Month Pay",
               to: "/portal/thirteenth-month",

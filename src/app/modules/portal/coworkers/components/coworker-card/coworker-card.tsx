@@ -22,7 +22,7 @@ export default function CoworkerCard({
   badge,
 }: CoworkerCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-200 p-3">
+    <div className="flex items-center gap-3 rounded-lg border border-(--border-subtle) bg-(--bg-surface) p-3 transition-colors hover:border-(--primary) hover:bg-(--bg-hover)">
       <Avatar
         size={48}
         src={imageUrl || undefined}

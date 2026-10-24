@@ -106,7 +106,7 @@ export const COMPANY_POLICY_LABEL = {
   SECTION_COWORKERS: "Portal Coworkers Page",
   COWORKER_SHOW_NEW_HIRES: "Show new hires",
   COWORKER_SHOW_NEW_HIRES_HELP:
-    "Employees hired in the last 30 days (name, photo, position, department).",
+    "Employees hired in the last 7 days (name, photo, position, department).",
   COWORKER_SHOW_ANNIVERSARIES: "Show work anniversaries",
   COWORKER_SHOW_ANNIVERSARIES_HELP:
     "Milestone years of service only (1, 3, 5, 10... years); the hire date is not shown.",

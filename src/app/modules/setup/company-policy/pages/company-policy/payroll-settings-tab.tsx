@@ -7,6 +7,7 @@ import {
   Card,
   Typography,
   Space,
+  Switch,
   Alert,
   message,
 } from "antd";
@@ -43,7 +44,16 @@ const DEFAULTS: PayrollSettingsFormValues = {
   fiscalYearStartMonth: 1,
   thirteenthMonthExemptionCeiling: 90000,
   largeTaxCollectionWarningMultiplier: 1,
+  portalShowThirteenthMonth: true,
+  portalShowCashBond: true,
+  portalShowUniformAllowance: true,
 };
+
+const PORTAL_PAGE_SWITCHES = [
+  { name: "portalShowThirteenthMonth", label: "My 13th Month Pay" },
+  { name: "portalShowCashBond", label: "My Cash Bond" },
+  { name: "portalShowUniformAllowance", label: "My Uniform Allowance" },
+] as const;
 
 export default function PayrollSettingsTab() {
   const { data, isLoading } = usePayrollSettings();
@@ -68,6 +78,9 @@ export default function PayrollSettingsTab() {
         thirteenthMonthExemptionCeiling: data.thirteenthMonthExemptionCeiling,
         largeTaxCollectionWarningMultiplier:
           data.largeTaxCollectionWarningMultiplier,
+        portalShowThirteenthMonth: data.portalShowThirteenthMonth,
+        portalShowCashBond: data.portalShowCashBond,
+        portalShowUniformAllowance: data.portalShowUniformAllowance,
       });
     }
   }, [data, reset]);
@@ -233,6 +246,36 @@ export default function PayrollSettingsTab() {
             )}
           />
         </Form.Item>
+      </Card>
+
+      {/* Employee Portal visibility */}
+      <Card size="small" title="Employee Portal (My Portal)" className="mb-4">
+        <div className="flex flex-col gap-1 mb-4">
+          <Text type="secondary" className="text-sm">
+            Turn a page on to make it available in My Portal under My Pay &
+            Benefits. Turn it off to hide it from every employee.
+          </Text>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {PORTAL_PAGE_SWITCHES.map(({ name, label }) => (
+            <div key={name} className="flex items-center justify-between">
+              <Text>{label}</Text>
+              <Controller
+                name={name}
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onChange={field.onChange}
+                    checkedChildren="On"
+                    unCheckedChildren="Off"
+                  />
+                )}
+              />
+            </div>
+          ))}
+        </div>
       </Card>
 
       <div className="form-action-footer">

@@ -10,12 +10,13 @@ import {
   useMyEmployee,
   useNewHires,
   useOutToday,
-  useTodayBirthdays,
+  useUpcomingBirthdays,
 } from "../../../shared/hooks/use-my-employee-queries";
 import type { CoworkerSettingsResponse } from "../../../shared/models/api/response/coworker-response.model";
 import BirthdayGreetingBanner from "../../../shared/components/birthday-greeting-banner";
 import CoworkerCard, { joinSubtitle } from "../coworker-card";
 import CoworkerSection from "../coworker-section";
+import { birthdayWhen } from "./birthday-when";
 
 interface TodayTabProps {
   settings: CoworkerSettingsResponse;
@@ -33,7 +34,7 @@ function anniversaryBadge(years: number, daysUntil: number) {
 export default function TodayTab({ settings }: TodayTabProps) {
   const { data: employee } = useMyEmployee();
   const { data: celebrants = [], isLoading: birthdaysLoading } =
-    useTodayBirthdays();
+    useUpcomingBirthdays();
   const { data: newHires = [], isLoading: hiresLoading } = useNewHires(
     settings.showNewHires,
   );
@@ -51,11 +52,11 @@ export default function TodayTab({ settings }: TodayTabProps) {
       />
 
       <CoworkerSection
-        title="Today's birthdays"
+        title="Birthdays this week"
         icon={<GiftOutlined />}
         loading={birthdaysLoading}
         isEmpty={celebrants.length === 0}
-        emptyText="No coworker birthdays to celebrate today"
+        emptyText="No coworker birthdays in the next 7 days"
       >
         {celebrants.map((c) => (
           <CoworkerCard
@@ -63,6 +64,11 @@ export default function TodayTab({ settings }: TodayTabProps) {
             name={c.fullName}
             imageUrl={c.profileImg}
             subtitle={joinSubtitle(c.positionName, c.departmentName)}
+            badge={
+              <Tag color={c.daysUntil === 0 ? "gold" : "default"}>
+                {birthdayWhen(c.daysUntil)}
+              </Tag>
+            }
           />
         ))}
       </CoworkerSection>
@@ -93,7 +99,7 @@ export default function TodayTab({ settings }: TodayTabProps) {
           icon={<SmileOutlined />}
           loading={hiresLoading}
           isEmpty={newHires.length === 0}
-          emptyText="No new hires in the last 30 days"
+          emptyText="No new hires in the last 7 days"
         >
           {newHires.map((h) => (
             <CoworkerCard
