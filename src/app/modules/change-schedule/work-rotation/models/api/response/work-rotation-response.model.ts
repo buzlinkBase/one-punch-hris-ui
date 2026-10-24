@@ -8,4 +8,6 @@ export interface WorkRotationResponse {
   shiftName?: string;
   operationAreaId?: string | null;
   areaName?: string | null;
+  clientId?: string | null;
+  clientName?: string | null;
 }

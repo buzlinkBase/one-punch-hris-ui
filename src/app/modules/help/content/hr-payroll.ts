@@ -258,7 +258,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Send someone to another project site for the day",
         steps: [
           {
-            text: "In Work Rotation Plan, pick the employees, the time shift and the dates, then choose a Project Site in Step 2.",
+            text: "In Work Rotation Plan, find the employees in Step 1 (filter by branch, department, client, payroll group, project site, or pick specific employees), then choose the time shift, dates, Client and Project Site in Step 2.",
             link: {
               label: "Work Rotation Plan",
               to: "/change-schedule/work-rotation",
@@ -272,10 +272,36 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           },
         ],
         tips: [
+          "Pick the Client first, then the Project Site. The site list narrows to that client's sites plus the sites that aren't tied to any client, so you can still send someone to a shared site for a specific client. The client you pick is used for that day's attendance, billing and payroll, ahead of the site's own client.",
+          "Picking a project site that belongs to a client fills the Client in for you. You can also leave Project Site blank and set only the client.",
+          "Changing the Client clears the Project Site if it belongs to a different client.",
           "Leave Project Site blank to keep the employee's own site.",
           "Client billing follows the scheduled site, so the day is billed to the client that owns it.",
           "The attendance log itself keeps the site of the device or upload, so you can still see where the punch came from.",
           "Recalculate the DTR after changing a site on a date that's already calculated.",
+        ],
+      },
+      {
+        heading: "Change or remove one entry",
+        steps: [
+          {
+            text: "In Work Rotation Plan, open the Entries tab. Each employee is one row showing how many entries they have and the dates they cover; open the row to see every date, then click the pencil icon on the entry. (Under Batches, expand a batch to find the same icons.)",
+            link: {
+              label: "Work Rotation Plan",
+              to: "/change-schedule/work-rotation",
+            },
+          },
+          {
+            text: "Change the time shift, the payroll date or the Project Site, then click Update. The employee can't be changed. To move the entry to someone else, delete it and add a new one.",
+          },
+          {
+            text: "Click the trash icon to remove the entry.",
+          },
+        ],
+        tips: [
+          "An employee has one entry per date. If you move an entry onto a date that already has another one, you'll be told and nothing changes. Delete the other entry first.",
+          "The Time Shift column shows the shift of that entry, not the employee's usual shift.",
+          "Recalculate the DTR for any date you changed that's already calculated.",
         ],
       },
     ],
@@ -328,7 +354,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "The Saved DTR tab lists saved batches and their status: For Approval, Approved, Declined or Cancelled.",
           },
           {
-            text: "Narrow the list with the quick date buttons (Current cutoff, This month, Last month...), the search box, and the Status, Payroll Group and Stage filters. Click Clear filters to start over.",
+            text: "The list opens on the current cutoff. Change it with the quick date buttons (Current cutoff, This month, Last month...) or the date range, and narrow it with the search box and the Status, Payroll Group and Stage filters. Click Clear filters to start over.",
           },
           {
             text: "Approvers use the Approve / Decline actions on the row. History shows who did what.",
@@ -410,13 +436,56 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "Employees paid by several clients",
+        steps: [
+          {
+            text: "If your guards or relievers work for more than one client in the same cutoff, run payroll once per client: pick the client in the Clients filter, then Preview and Save. Each run pays only the days worked for that client, and each run can have its own payout date.",
+          },
+          {
+            text: "In Company Settings, under Attendance & Payroll Policy, choose which payroll run takes the deductions. Government contributions, tax, loans and other income are then taken in only one run per employee per cutoff. The employee's other runs pay earnings only.",
+            link: { label: "Company Settings", to: "/setup/company-policy" },
+          },
+          {
+            text: "In the preview, the Deductions column shows Taken here or Earnings only for each employee. Hover the tag to see why. Use the switch to take an employee's deductions in this run instead, and the preview recalculates.",
+          },
+        ],
+        tips: [
+          "Under an employee's name, Also shows any other client they worked for in the cutoff. Orange means some of those days are not in a saved run yet.",
+          "A warning icon next to Taken here means the employee also worked for other clients that no run has paid yet. Their contributions and tax are worked out from what has been paid so far, so run the other clients first for the most accurate figures.",
+          "If another saved run already takes an employee's deductions for the cutoff, the switch is locked. Delete that run first to move them.",
+          "With the rule set to Only runs where I choose the employee, nobody is deducted until you switch them on in one of their runs.",
+          "Leaving the setting on Every run takes deductions keeps the original behaviour: each run deducts.",
+        ],
+      },
+      {
+        heading: "Check who has been deducted: Cutoff Tracker",
+        steps: [
+          {
+            text: "Open the Cutoff Tracker tab and set the cutoff dates. Each employee shows the days worked for every client and whether a saved run has taken their deductions.",
+          },
+          {
+            text: "Paid, no deductions yet means some of their days are already in a saved run but no run takes their contributions, tax, loans or other income. Open the run that should take them, switch Deductions on and save again.",
+          },
+          {
+            text: "Waiting for a run means nothing has been paid yet. Deductions taken shows which client's run took them and its pay date.",
+          },
+          {
+            text: "Click Statement on an employee to see every run that paid them in the cutoff, with each run's pay date, status and deductions, and one total for gross, deductions and net pay.",
+          },
+        ],
+        tips: [
+          "The tracker opens on employees who worked for more than one client. Turn that switch off to see everyone.",
+          "It only has something to show once a rule is chosen under Company Settings. With Every run takes deductions, it says so.",
+        ],
+      },
+      {
         heading: "Saved Payroll Runs",
         steps: [
           {
             text: "The Saved Payroll Runs tab lists each run with its period, payout date, run type, employees and status.",
           },
           {
-            text: "Narrow the list with the quick date buttons (Current cutoff, This month, Last month...), the search box, and the Status and Run Type filters. Click Clear filters to start over.",
+            text: "The list opens on the current cutoff. Change it with the quick date buttons (Current cutoff, This month, Last month...) or the date range, and narrow it with the search box and the Status and Run Type filters. Click Clear filters to start over.",
           },
           {
             text: "Approvers use Approve / Decline on the row. View in Payroll Summary opens the run's details.",

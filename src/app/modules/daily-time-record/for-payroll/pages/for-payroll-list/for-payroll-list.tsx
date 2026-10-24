@@ -1,6 +1,7 @@
 import { Tabs, Typography } from "antd";
 import ForPayrollGenerateTab from "./for-payroll-generate-tab";
 import PayrollBatchesTab from "../../components/payroll-batches-tab";
+import CutoffTrackerTab from "../../components/cutoff-tracker-tab";
 
 const { Title } = Typography;
 
@@ -14,6 +15,11 @@ const TAB_ITEMS = [
     key: "batches",
     label: "Saved Payroll Runs",
     children: <PayrollBatchesTab />,
+  },
+  {
+    key: "tracker",
+    label: "Cutoff Tracker",
+    children: <CutoffTrackerTab />,
   },
 ];
 

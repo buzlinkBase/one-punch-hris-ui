@@ -51,12 +51,13 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
-import { getLastMonthToCurrentRange } from "@/shared/utils/cutoff.util";
+import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
 
 const { Text } = Typography;
 
+// Opens on the current cutoff; the quick ranges and date picker reach older runs.
 const defaultRange = (): [string, string] => {
-  const { fromDate, toDate } = getLastMonthToCurrentRange();
+  const { fromDate, toDate } = getSemiMonthlyCutoff();
   return [fromDate, toDate];
 };
 

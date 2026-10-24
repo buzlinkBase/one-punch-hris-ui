@@ -14,6 +14,15 @@ import type {
 } from "../models/api/response/last-pay-review.model";
 import type { PayrollBatchListModel } from "../models/api/response/payroll-batch-list.model";
 import type { PayrollReadinessEmployee } from "../models/api/response/payroll-readiness.model";
+import type { CutoffTrackerResult } from "../models/api/response/cutoff-tracker.model";
+import type { CutoffStatement } from "../models/api/response/cutoff-statement.model";
+
+export interface PayrollReadinessResult {
+  rows: PayrollReadinessEmployee[];
+  // True when payroll runs per client by the client each day was worked for, so the rows are
+  // already narrowed to the chosen clients and must not be narrowed again by the employee's tag.
+  dayClientMode: boolean;
+}
 
 const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
 const PAYROLL_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrolls");
@@ -33,17 +42,52 @@ export const forPayrollApi = {
 
   // Who in the cutoff can be paid now (approved / pending / already-paid DTR days per employee),
   // listed on the Payroll Run screen before anything is previewed. Group optional = every group.
+  // clientIds only narrows when the company runs payroll per client by the client each day was
+  // worked for (dayClientMode in the response); otherwise the screen narrows by the employee's tag.
   getReadiness(params: {
     from: string;
     to: string;
     payrollGroupId?: string;
-  }): Promise<PayrollReadinessEmployee[]> {
+    clientIds?: string[];
+  }): Promise<PayrollReadinessResult> {
     return httpClient
       .getUnwrapped<{
         data: PayrollReadinessEmployee[];
         total: number;
-      }>(`${PAYROLL_ENDPOINT}/readiness`, { params })
-      .then((res) => res.data ?? []);
+        dayClientMode?: boolean;
+      }>(`${PAYROLL_ENDPOINT}/readiness`, {
+        params,
+        paramsSerializer: { indexes: null },
+      })
+      .then((res) => ({
+        rows: res.data ?? [],
+        dayClientMode: res.dayClientMode ?? false,
+      }));
+  },
+
+  // Per employee: days worked for each client in the cutoff and which saved run carries their
+  // deductions. Empty (with mode "EveryRun") when the company doesn't gate deductions.
+  getCutoffTracker(params: {
+    from: string;
+    to: string;
+    payrollGroupId?: string;
+  }): Promise<CutoffTrackerResult> {
+    return httpClient.getUnwrapped<CutoffTrackerResult>(
+      `${PAYROLL_ENDPOINT}/cutoff-tracker`,
+      { params },
+    );
+  },
+
+  // One employee's regular runs for a cutoff (a reliever is paid by several), with totals.
+  getCutoffStatement(params: {
+    employeeId: string;
+    from: string;
+    to: string;
+  }): Promise<CutoffStatement> {
+    return httpClient.getUnwrapped<CutoffStatement>(
+      `${PAYROLL_ENDPOINT}/cutoff-statement`,
+      { params },
+    );
   },
 
   calculate(payload: PayrollRunRequest): Promise<PayrollRunResponse> {

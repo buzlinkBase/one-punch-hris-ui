@@ -17,4 +17,7 @@ export interface RosterResponse {
   /** Project site tagged on the Work Rotation override; null = the employee's own site. */
   areaId: string | null;
   areaName: string | null;
+  /** Client picked directly on the Work Rotation override (wins over the site's client); null = none picked. */
+  clientId: string | null;
+  clientName: string | null;
 }

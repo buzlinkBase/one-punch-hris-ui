@@ -23,6 +23,22 @@ export interface PayrollRunResult {
   // Free-text identity for the whole run, captured once at Generate time — see
   // PayrollRunRequest.remarks.
   remarks?: string | null;
+  // False on an earnings-only run of an employee whose deductions another run takes (company
+  // policy: which payroll run takes the deductions). Absent/true everywhere else.
+  isDeductionCarrier?: boolean;
+  // Why the run decided that, e.g. "PrimaryClient", "MostDays", "ClaimedElsewhere". Only set on a
+  // Calculate/Generate response, and only when that company policy is on.
+  deductionCarrierReason?: string | null;
+  // On a run that takes this employee's deductions: days they worked for OTHER clients in the same
+  // cutoff that no run has paid yet. Those earnings are not in this run's contribution / tax base.
+  otherUnpaidDays?: number;
+  // Other clients the employee worked for in the same cutoff (not paid by this run) -- the preview's
+  // "also worked at" chips. unpaidDays 0 = every one of those days is already in a saved run.
+  otherClients?: {
+    clientId: string | null;
+    workedDays: number;
+    unpaidDays: number;
+  }[];
   // "Regular" (DTR-cutoff-driven, the default) vs "ThirteenthMonth" (a lump-sum annual
   // payout — see GenerateThirteenthMonthRequest) vs "LastPay" (a separated employee's
   // final settlement — see GenerateLastPayRequest) vs "YearEndAdjustment" (BIR annualization

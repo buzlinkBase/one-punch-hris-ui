@@ -29,9 +29,9 @@ interface DayCell {
 
 function dayLabel(r: RosterResponse): { text: string; color: string } {
   const label = shiftLabel(r);
-  return r.areaName
-    ? { ...label, text: `${label.text} · ${r.areaName}` }
-    : label;
+  // After the shift: the project site and, when one was picked directly, the client.
+  const where = [r.areaName, r.clientName].filter(Boolean).join(" · ");
+  return where ? { ...label, text: `${label.text} · ${where}` } : label;
 }
 
 function shiftLabel(r: RosterResponse): { text: string; color: string } {
@@ -76,7 +76,11 @@ export default function RosterMonthCalendar({ data, fromDate, toDate }: Props) {
     setSelectedShiftId,
     selectedAreaId,
     setSelectedAreaId,
-    areaOptions,
+    sites,
+    selectedClientId,
+    setSelectedClientId,
+    clientOptions,
+    clientNameOf,
     openAssignModal,
     closeAssignModal,
     handleAssign,
@@ -175,6 +179,7 @@ export default function RosterMonthCalendar({ data, fromDate, toDate }: Props) {
                             r.overrideId,
                             r.scheduleSource,
                             r.areaId,
+                            r.clientId,
                           )
                         }
                         className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-left hover:bg-(--ant-color-fill-tertiary)"
@@ -263,7 +268,11 @@ export default function RosterMonthCalendar({ data, fromDate, toDate }: Props) {
         isLoadingShifts={isLoadingShifts}
         selectedAreaId={selectedAreaId}
         onSelectArea={setSelectedAreaId}
-        areaOptions={areaOptions}
+        sites={sites}
+        selectedClientId={selectedClientId}
+        onSelectClient={setSelectedClientId}
+        clientOptions={clientOptions}
+        clientNameOf={clientNameOf}
         isAssigning={isAssigning}
         isRemoving={isRemoving}
         onAssign={handleAssign}

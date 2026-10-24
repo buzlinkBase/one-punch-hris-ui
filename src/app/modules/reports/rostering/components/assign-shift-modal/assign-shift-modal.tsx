@@ -5,6 +5,13 @@ import {
   SCHEDULE_SOURCE_LABEL,
 } from "../../constants/label.const";
 import type { AssignTarget } from "../../hooks/use-shift-assignment";
+import {
+  clientAfterSiteChange,
+  clientSiteMismatch,
+  siteAfterClientChange,
+  siteOptionGroups,
+  type SiteLite,
+} from "@/app/modules/change-schedule/work-rotation/utils/site-client-options.util";
 
 interface Props {
   assignTarget: AssignTarget | null;
@@ -14,7 +21,12 @@ interface Props {
   isLoadingShifts: boolean;
   selectedAreaId: string | null;
   onSelectArea: (areaId: string | null) => void;
-  areaOptions: { value: string; label: string }[];
+  /** Every project site with the client it belongs to (if any) -- the site list narrows by client. */
+  sites: SiteLite[];
+  selectedClientId: string | null;
+  onSelectClient: (clientId: string | null) => void;
+  clientOptions: { value: string; label: string }[];
+  clientNameOf: (clientId: string) => string;
   isAssigning: boolean;
   isRemoving: boolean;
   onAssign: () => void;
@@ -34,13 +46,40 @@ export default function AssignShiftModal({
   isLoadingShifts,
   selectedAreaId,
   onSelectArea,
-  areaOptions,
+  sites,
+  selectedClientId,
+  onSelectClient,
+  clientOptions,
+  clientNameOf,
   isAssigning,
   isRemoving,
   onAssign,
   onRemove,
   onCancel,
 }: Props) {
+  // Client first, then the sites under it. The site list shows that client's sites plus the ones
+  // not tied to any client; picking a site that belongs to a client fills the client in.
+  const siteGroups = siteOptionGroups(
+    sites,
+    selectedClientId,
+    clientNameOf,
+    selectedAreaId,
+  );
+  const changeClient = (clientId: string | null) => {
+    onSelectClient(clientId);
+    onSelectArea(siteAfterClientChange(sites, clientId, selectedAreaId));
+  };
+  const changeSite = (siteId: string | null) => {
+    onSelectArea(siteId);
+    onSelectClient(clientAfterSiteChange(sites, siteId, selectedClientId));
+  };
+  // Only an entry saved before the two pickers narrowed each other can still disagree.
+  const mismatchedSite = clientSiteMismatch(
+    sites,
+    selectedClientId,
+    selectedAreaId,
+  );
+
   return (
     <Modal
       title={
@@ -108,21 +147,47 @@ export default function AssignShiftModal({
             .includes(input.toLowerCase())
         }
       />
-      <div className="mt-3 mb-1 text-sm">{ROSTER_LABEL.AREA}</div>
+      <div className="mt-3 mb-1 text-sm">{ROSTER_LABEL.CLIENT}</div>
       <Select
         className="w-full"
         showSearch
         allowClear
-        placeholder={ROSTER_LABEL.AREA_PLACEHOLDER}
-        options={areaOptions}
-        value={selectedAreaId ?? undefined}
-        onChange={(v: string | undefined) => onSelectArea(v ?? null)}
+        placeholder={ROSTER_LABEL.CLIENT_PLACEHOLDER}
+        options={clientOptions}
+        value={selectedClientId ?? undefined}
+        onChange={(v: string | undefined) => changeClient(v ?? null)}
         filterOption={(input, option) =>
           String(option?.label ?? "")
             .toLowerCase()
             .includes(input.toLowerCase())
         }
       />
+      <p className="text-xs text-gray-400 mt-1">{ROSTER_LABEL.CLIENT_HINT}</p>
+      <div className="mt-3 mb-1 text-sm">{ROSTER_LABEL.AREA}</div>
+      <Select
+        className="w-full"
+        showSearch
+        allowClear
+        placeholder={ROSTER_LABEL.AREA_PLACEHOLDER}
+        options={siteGroups}
+        value={selectedAreaId ?? undefined}
+        onChange={(v: string | undefined) => changeSite(v ?? null)}
+        filterOption={(input, option) =>
+          String(option?.label ?? "")
+            .toLowerCase()
+            .includes(input.toLowerCase())
+        }
+      />
+      {selectedClientId && (
+        <p className="text-xs text-gray-400 mt-1">
+          {ROSTER_LABEL.AREA_FILTERED_HINT}
+        </p>
+      )}
+      {mismatchedSite && (
+        <p className="text-xs text-amber-600 mt-1">
+          {`This project site belongs to ${mismatchedSite.clientName ?? "another client"}. The client you picked is used for this day instead.`}
+        </p>
+      )}
       <p className="text-xs text-gray-400 mt-2">
         Assigning here always creates a Work Rotation Plan override for this
         exact date, regardless of the current source. With a project site

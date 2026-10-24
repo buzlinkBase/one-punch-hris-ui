@@ -294,6 +294,7 @@ export const buildExportRows = (results: PayrollRunResult[]) =>
 export const PAYROLL_HEADERS = [
   "Employee",
   "Status",
+  "Deductions",
   "Salary Type",
   "Daily Rate",
   "Period Start",
@@ -334,10 +335,16 @@ export const PAYROLL_HEADERS = [
   "Absent",
   "Net Pay",
 ];
+// Whether this run takes the employee's deductions: "Earnings only" when another run of the cutoff
+// does (company policy "which payroll run takes the deductions"), "Taken here" otherwise.
+const deductionsLabel = (r: PayrollRunResult) =>
+  r.isDeductionCarrier === false ? "Earnings only" : "Taken here";
+
 export const buildPayrollRows = (results: PayrollRunResult[]) =>
   results.map((r) => [
     r.fullName,
     r.id ? (r.isPosted ? "Posted" : "Draft") : "",
+    deductionsLabel(r),
     r.salaryType === "FIXED" ? "Fixed" : "Variable",
     num(r.dailyRate),
     r.payPeriodStart ? dayjs(r.payPeriodStart).format("YYYY-MM-DD") : "",

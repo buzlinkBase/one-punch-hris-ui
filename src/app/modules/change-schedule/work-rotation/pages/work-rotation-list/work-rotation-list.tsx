@@ -8,6 +8,7 @@ import {
   Table,
   Tabs,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
 import type { TableColumnsType } from "antd";
@@ -15,6 +16,7 @@ import {
   ArrowRightOutlined,
   ClearOutlined,
   DeleteOutlined,
+  EditOutlined,
   PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
@@ -37,6 +39,16 @@ import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
+
+interface EmployeeGroup {
+  employeeId: string;
+  fullName: string;
+  entries: WorkRotationResponse[];
+  count: number;
+  shiftNames: string[];
+  fromDate: string;
+  toDate: string;
+}
 
 interface BatchGroup {
   batchCode: string;
@@ -75,6 +87,9 @@ export default function WorkRotationList() {
   const [committed, setCommitted] =
     useState<WorkRotationFilter>(DEFAULT_FILTER);
   const [searchKey, setSearchKey] = useState(0);
+  // Employees the user folded shut; everyone else is shown expanded, so a fresh search opens with
+  // every employee's dates visible.
+  const [collapsedEmployees, setCollapsedEmployees] = useState<string[]>([]);
 
   const {
     data: records = [],
@@ -94,11 +109,12 @@ export default function WorkRotationList() {
 
   const { widths: entryWidths, handleResize: entryResize } =
     useResizableColumns({
-      employeeName: 180,
       batchCode: 160,
       timeShiftName: 200,
       payrollDate: 130,
-      actions: 80,
+      areaName: 170,
+      clientName: 170,
+      actions: 90,
     });
 
   const { widths: batchWidths, handleResize: batchResize } =
@@ -109,6 +125,29 @@ export default function WorkRotationList() {
       dateRange: 240,
       actions: 140,
     });
+
+  // Entries grouped by employee, in the order the server returns them (name, then date).
+  const employeeGroups = useMemo<EmployeeGroup[]>(() => {
+    const map = new Map<string, WorkRotationResponse[]>();
+    for (const r of records) {
+      if (!map.has(r.employeeId)) map.set(r.employeeId, []);
+      map.get(r.employeeId)!.push(r);
+    }
+    return Array.from(map.entries()).map(([employeeId, entries]) => {
+      const dates = entries.map((e) => e.payrollDate).sort();
+      return {
+        employeeId,
+        fullName: entries[0].fullName ?? employeeId,
+        entries,
+        count: entries.length,
+        shiftNames: [
+          ...new Set(entries.map((e) => e.shiftName ?? "").filter(Boolean)),
+        ],
+        fromDate: dates[0],
+        toDate: dates[dates.length - 1],
+      };
+    });
+  }, [records]);
 
   const batchGroups = useMemo<BatchGroup[]>(() => {
     const map = new Map<string, WorkRotationResponse[]>();
@@ -133,6 +172,7 @@ export default function WorkRotationList() {
   }, [records]);
 
   const handleSearch = () => {
+    setCollapsedEmployees([]);
     setCommitted({ ...pending });
     setSearchKey((k) => k + 1);
   };
@@ -159,18 +199,95 @@ export default function WorkRotationList() {
   const isTableLoading =
     isLoading || isFetching || isDeletingEntry || isDeletingBatch;
 
-  const entryColumns: TableColumnsType<WorkRotationResponse> = [
+  // Edit and Delete for one entry, in both the Entries tab and a batch's expanded rows. Edit opens
+  // the edit page (shift, payroll date, project site); there is no separate Edit permission, so it
+  // follows Create: Work Rotation:Create, or ManageOwnTeam for a supervisor's own team.
+  const entryActions = (record: WorkRotationResponse) => (
+    <Space size={0}>
+      <PermissionGate
+        permission={["Work Rotation:Create", "Work Rotation:ManageOwnTeam"]}
+      >
+        <Tooltip title="Edit">
+          <Button
+            type="text"
+            size="small"
+            aria-label="Edit entry"
+            icon={<EditOutlined />}
+            onClick={() =>
+              navigate({ to: `/change-schedule/work-rotation/${record.id}` })
+            }
+          />
+        </Tooltip>
+      </PermissionGate>
+      <PermissionGate permission="Work Rotation:Delete">
+        <Popconfirm
+          title="Delete this entry?"
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+          onConfirm={() => handleDeleteEntry(record.id)}
+        >
+          <Tooltip title="Delete">
+            <Button
+              type="text"
+              danger
+              size="small"
+              aria-label="Delete entry"
+              icon={<DeleteOutlined />}
+              loading={isDeletingEntry}
+            />
+          </Tooltip>
+        </Popconfirm>
+      </PermissionGate>
+    </Space>
+  );
+
+  // One row per employee; each expands to that employee's dated entries (entryColumns below).
+  const employeeColumns: TableColumnsType<EmployeeGroup> = [
     {
       title: WORK_ROTATION_LABEL.EMPLOYEE,
       dataIndex: "fullName",
       key: "fullName",
-      width: entryWidths.employeeName,
-      onHeaderCell: () =>
-        ({
-          width: entryWidths.employeeName,
-          onResize: (w: number) => entryResize("employeeName", w),
-        }) as object,
+      render: (name: string) => <Text strong>{name}</Text>,
     },
+    {
+      title: "Entries",
+      dataIndex: "count",
+      key: "count",
+      width: 100,
+      render: (count: number) => <Tag color="default">{count}</Tag>,
+    },
+    {
+      title: "Date Range",
+      key: "dateRange",
+      width: 240,
+      render: (_: unknown, row: EmployeeGroup) => (
+        <Text type="secondary">
+          {row.fromDate}
+          {row.fromDate !== row.toDate && (
+            <>
+              <ArrowRightOutlined className="mx-1.5 text-[11px] text-(--primary)" />
+              {row.toDate}
+            </>
+          )}
+        </Text>
+      ),
+    },
+    {
+      title: WORK_ROTATION_LABEL.TIME_SHIFT,
+      dataIndex: "shiftNames",
+      key: "shiftNames",
+      render: (names: string[]) => (
+        <Space size={4} wrap>
+          {names.map((n) => (
+            <Tag key={n}>{n.split(" - ")[0]}</Tag>
+          ))}
+        </Space>
+      ),
+    },
+  ];
+
+  const entryColumns: TableColumnsType<WorkRotationResponse> = [
     {
       title: "Batch",
       dataIndex: "batchCode",
@@ -206,6 +323,30 @@ export default function WorkRotationList() {
         }) as object,
     },
     {
+      title: WORK_ROTATION_LABEL.AREA,
+      dataIndex: "areaName",
+      key: "areaName",
+      width: entryWidths.areaName,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.areaName,
+          onResize: (w: number) => entryResize("areaName", w),
+        }) as object,
+      render: (v?: string | null) => v || "—",
+    },
+    {
+      title: WORK_ROTATION_LABEL.CLIENT,
+      dataIndex: "clientName",
+      key: "clientName",
+      width: entryWidths.clientName,
+      onHeaderCell: () =>
+        ({
+          width: entryWidths.clientName,
+          onResize: (w: number) => entryResize("clientName", w),
+        }) as object,
+      render: (v?: string | null) => v || "—",
+    },
+    {
       title: "",
       key: "actions",
       width: entryWidths.actions,
@@ -214,21 +355,8 @@ export default function WorkRotationList() {
           width: entryWidths.actions,
           onResize: (w: number) => entryResize("actions", w),
         }) as object,
-      render: (_: unknown, record: WorkRotationResponse) => (
-        <PermissionGate permission="Work Rotation:Delete">
-          <Popconfirm
-            title="Delete this entry?"
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-            cancelText="Cancel"
-            onConfirm={() => handleDeleteEntry(record.id)}
-          >
-            <Button type="link" danger size="small" loading={isDeletingEntry}>
-              Delete
-            </Button>
-          </Popconfirm>
-        </PermissionGate>
-      ),
+      render: (_: unknown, record: WorkRotationResponse) =>
+        entryActions(record),
     },
   ];
 
@@ -246,22 +374,9 @@ export default function WorkRotationList() {
     {
       title: "",
       key: "action",
-      width: 80,
-      render: (_: unknown, record: WorkRotationResponse) => (
-        <PermissionGate permission="Work Rotation:Delete">
-          <Popconfirm
-            title="Delete this entry?"
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-            cancelText="Cancel"
-            onConfirm={() => handleDeleteEntry(record.id)}
-          >
-            <Button type="link" danger size="small" loading={isDeletingEntry}>
-              Delete
-            </Button>
-          </Popconfirm>
-        </PermissionGate>
-      ),
+      width: 90,
+      render: (_: unknown, record: WorkRotationResponse) =>
+        entryActions(record),
     },
   ];
 
@@ -457,20 +572,45 @@ export default function WorkRotationList() {
                       key: "entries",
                       label: WORK_ROTATION_LABEL.TAB_ENTRIES,
                       children: (
-                        <Table<WorkRotationResponse>
-                          rowKey="id"
-                          dataSource={records}
-                          columns={entryColumns}
+                        <Table<EmployeeGroup>
+                          rowKey="employeeId"
+                          dataSource={employeeGroups}
+                          columns={employeeColumns}
                           loading={isTableLoading}
                           size="small"
                           pagination={{
-                            pageSize: 15,
+                            pageSize: 10,
                             size: "small",
                             showSizeChanger: false,
                           }}
                           scroll={{ x: "max-content" }}
                           sticky
-                          components={{ header: { cell: ResizableTitle } }}
+                          expandable={{
+                            expandedRowKeys: employeeGroups
+                              .map((g) => g.employeeId)
+                              .filter((id) => !collapsedEmployees.includes(id)),
+                            onExpand: (expanded, group) =>
+                              setCollapsedEmployees((prev) =>
+                                expanded
+                                  ? prev.filter((id) => id !== group.employeeId)
+                                  : [...prev, group.employeeId],
+                              ),
+                            expandedRowRender: (group) => (
+                              <div className="pl-8 py-2">
+                                <Table<WorkRotationResponse>
+                                  rowKey="id"
+                                  dataSource={group.entries}
+                                  columns={entryColumns}
+                                  pagination={false}
+                                  size="small"
+                                  scroll={{ x: "max-content" }}
+                                  components={{
+                                    header: { cell: ResizableTitle },
+                                  }}
+                                />
+                              </div>
+                            ),
+                          }}
                           locale={{
                             emptyText:
                               "No records found for the selected filters.",

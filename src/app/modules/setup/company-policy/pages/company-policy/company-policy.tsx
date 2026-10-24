@@ -30,6 +30,8 @@ import {
   DEFAULT_OT_ND_CALCULATION_METHOD,
   HOURLY_RATE_DIVISOR_OPTIONS,
   DEFAULT_HOURLY_RATE_DIVISOR,
+  DEDUCTION_CARRIER_MODE_OPTIONS,
+  DEFAULT_DEDUCTION_CARRIER_MODE,
   HOLIDAY_TIME_BASIS_OPTIONS,
   CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
@@ -71,6 +73,7 @@ function GeneralPolicyTab() {
       requiredTakehomePercentage: 10,
       otNdCalculationMethod: DEFAULT_OT_ND_CALCULATION_METHOD,
       hourlyRateDivisor: DEFAULT_HOURLY_RATE_DIVISOR,
+      deductionCarrierMode: DEFAULT_DEDUCTION_CARRIER_MODE,
       coworkerShowNewHires: false,
       coworkerShowAnniversaries: false,
       coworkerShowWhosOut: false,
@@ -111,6 +114,8 @@ function GeneralPolicyTab() {
           policy.otNdCalculationMethod ?? DEFAULT_OT_ND_CALCULATION_METHOD,
         hourlyRateDivisor:
           policy.hourlyRateDivisor ?? DEFAULT_HOURLY_RATE_DIVISOR,
+        deductionCarrierMode:
+          policy.deductionCarrierMode ?? DEFAULT_DEDUCTION_CARRIER_MODE,
         coworkerShowNewHires: policy.coworkerShowNewHires ?? false,
         coworkerShowAnniversaries: policy.coworkerShowAnniversaries ?? false,
         coworkerShowWhosOut: policy.coworkerShowWhosOut ?? false,
@@ -237,6 +242,35 @@ function GeneralPolicyTab() {
                     {...field}
                     options={HOURLY_RATE_DIVISOR_OPTIONS}
                     placeholder="Select hourly rate divisor"
+                  />
+                )}
+              />
+            </Form.Item>
+          </div>
+        </Card>
+
+        {/* Employees paid by several clients */}
+        <Card
+          title={COMPANY_POLICY_LABEL.SECTION_DEDUCTION_CARRIER}
+          loading={isLoading}
+          size="small"
+        >
+          <div className="form-grid-2">
+            <Form.Item
+              label={COMPANY_POLICY_LABEL.DEDUCTION_CARRIER_MODE}
+              validateStatus={errors.deductionCarrierMode ? "error" : ""}
+              help={errors.deductionCarrierMode?.message}
+              extra={COMPANY_POLICY_LABEL.DEDUCTION_CARRIER_MODE_HELP}
+              className="sm:col-span-2"
+            >
+              <Controller
+                name="deductionCarrierMode"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    options={DEDUCTION_CARRIER_MODE_OPTIONS}
+                    placeholder="Select which run takes the deductions"
                   />
                 )}
               />

@@ -80,6 +80,7 @@ export const COMPANY_POLICY_LABEL = {
   SECTION_MINIMUM_TAKEHOME: "Minimum Take-Home Pay",
   SECTION_OT_ND_CALCULATION: "OT/ND Calculation Method",
   SECTION_HOURLY_RATE: "Hourly Rate",
+  SECTION_DEDUCTION_CARRIER: "Employees Paid by Several Clients",
 
   OT_INCLUSION: "OT Inclusion",
   OT_ELIGIBILITY: "OT Eligibility",
@@ -102,6 +103,9 @@ export const COMPANY_POLICY_LABEL = {
   REQUIRED_TAKEHOME_PERCENTAGE: "Minimum Take-Home (% of Gross Income)",
   OT_ND_CALCULATION_METHOD: "OT/ND Calculation Method",
   HOURLY_RATE_DIVISOR: "Hourly Rate Divisor",
+  DEDUCTION_CARRIER_MODE: "Which Payroll Run Takes the Deductions",
+  DEDUCTION_CARRIER_MODE_HELP:
+    "When payroll is run per client, an employee who worked for several clients in one cutoff is paid by several runs. Government contributions, tax, loans and other income are taken in only one of them, and the other runs pay earnings only. Applies to payroll generated after saving.",
 
   SECTION_COWORKERS: "Portal Coworkers Page",
   COWORKER_SHOW_NEW_HIRES: "Show new hires",
@@ -259,6 +263,34 @@ export const HOURLY_RATE_DIVISOR_OPTIONS = [
   {
     value: "ShiftMaxWorkingHours",
     label: "Shift's max working hours (Daily Rate ÷ shift hours)",
+  },
+];
+
+// Which of an employee's payroll runs in one deduction period (a cutoff of their own payroll group)
+// takes the deductions and general other income (hrms-api DeductionCarrierMode). EveryRun keeps the
+// original behaviour: every run deducts.
+export const DEFAULT_DEDUCTION_CARRIER_MODE = "EveryRun";
+
+export const DEDUCTION_CARRIER_MODE_OPTIONS = [
+  {
+    value: "EveryRun",
+    label: "Every run takes deductions (default)",
+  },
+  {
+    value: "PrimaryClient",
+    label: "The run of the employee's own client",
+  },
+  {
+    value: "MostDays",
+    label: "The run of the client worked the most days",
+  },
+  {
+    value: "FirstRunGenerated",
+    label: "Whichever run is generated first",
+  },
+  {
+    value: "Manual",
+    label: "Only runs where I choose the employee",
   },
 ];
 

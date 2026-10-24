@@ -24,6 +24,7 @@ export default function RosterTable({ data, loading }: Props) {
     shiftStart: 120,
     shiftEnd: 120,
     areaName: 150,
+    clientName: 170,
     scheduleSource: 170,
     isRestDay: 100,
   });
@@ -62,6 +63,10 @@ export default function RosterTable({ data, loading }: Props) {
     },
     {
       ...col("areaName", ROSTER_LABEL.AREA, 150),
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      ...col("clientName", ROSTER_LABEL.CLIENT, 170),
       render: (v: string | null) => v ?? "—",
     },
     {

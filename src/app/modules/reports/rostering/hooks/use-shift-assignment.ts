@@ -7,6 +7,7 @@ import {
 } from "@/app/modules/change-schedule/work-rotation/hooks/use-work-rotation-queries";
 import { useFixedTimeShifts } from "@/app/modules/setup/time-shift/fixed/hooks/use-fixed-time-shift-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import type { ScheduleSource } from "../models/api/response/roster-response.model";
 
 export interface AssignTarget {
@@ -17,6 +18,7 @@ export interface AssignTarget {
   overrideId: string | null;
   scheduleSource: ScheduleSource | null;
   currentAreaId: string | null;
+  currentClientId: string | null;
 }
 
 interface Resource {
@@ -33,6 +35,7 @@ export function useShiftAssignment(resources: Resource[]) {
   const [assignTarget, setAssignTarget] = useState<AssignTarget | null>(null);
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   const { mutateAsync: createWorkRotation, isPending: isAssigning } =
     useCreateWorkRotation();
@@ -50,10 +53,22 @@ export function useShiftAssignment(resources: Resource[]) {
   }));
 
   const { data: areas = [] } = useOperationAreas();
-  const areaOptions = areas.map((a) => ({
-    value: a.id,
-    label: `${a.code} - ${a.name}`,
+  const { data: clients = [] } = useClients();
+  const clientOptions = clients.map((c) => ({
+    value: c.id,
+    label: `${c.code} - ${c.name}`,
   }));
+  // Every project site with the client it belongs to, so the Assign Shift window can narrow the
+  // sites by the client picked (and fill the client in from a site).
+  const sites = areas.map((a) => ({
+    id: a.id,
+    code: a.code,
+    name: a.name,
+    clientId: a.clientId ?? null,
+    clientName: a.clientName ?? null,
+  }));
+  const clientNameOf = (clientId: string) =>
+    clients.find((c) => c.id === clientId)?.name ?? "this client";
 
   const openAssignModal = (
     employeeId: string,
@@ -62,6 +77,7 @@ export function useShiftAssignment(resources: Resource[]) {
     overrideId: string | null,
     scheduleSource: ScheduleSource | null,
     currentAreaId: string | null = null,
+    currentClientId: string | null = null,
   ) => {
     const employeeName =
       resources.find((r) => r.id === employeeId)?.name ?? employeeId;
@@ -73,9 +89,11 @@ export function useShiftAssignment(resources: Resource[]) {
       overrideId,
       scheduleSource,
       currentAreaId,
+      currentClientId,
     });
     setSelectedShiftId(currentShiftId);
     setSelectedAreaId(currentAreaId);
+    setSelectedClientId(currentClientId);
   };
 
   const closeAssignModal = () => setAssignTarget(null);
@@ -88,6 +106,7 @@ export function useShiftAssignment(resources: Resource[]) {
         timeShiftId: selectedShiftId,
         payrollDates: [assignTarget.date],
         operationAreaId: selectedAreaId,
+        clientId: selectedClientId,
       });
       messageApi.success("Shift assigned.");
       setAssignTarget(null);
@@ -120,7 +139,11 @@ export function useShiftAssignment(resources: Resource[]) {
     setSelectedShiftId,
     selectedAreaId,
     setSelectedAreaId,
-    areaOptions,
+    sites,
+    selectedClientId,
+    setSelectedClientId,
+    clientOptions,
+    clientNameOf,
     openAssignModal,
     closeAssignModal,
     handleAssign,

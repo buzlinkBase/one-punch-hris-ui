@@ -6,6 +6,8 @@ export const workRotationMapper = {
     return {
       timeShiftId: response.timeShiftId,
       payrollDate: response.payrollDate,
+      operationAreaId: response.operationAreaId ?? null,
+      clientId: response.clientId ?? null,
     };
   },
 };

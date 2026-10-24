@@ -54,6 +54,7 @@ describe("payroll summary export rows", () => {
       const textHeaders = new Set([
         "Employee",
         "Status",
+        "Deductions",
         "Salary Type",
         "Period Start",
         "Period End",
@@ -136,6 +137,15 @@ describe("payroll summary export rows", () => {
       expect(rows[0][headers.indexOf("Loans Adj.")]).toBe(500);
       expect(rows[0][headers.indexOf("Other Deductions Adj.")]).toBe(300);
     });
+  });
+
+  it("labels whether a run takes the employee's deductions", () => {
+    const deductions = (r: typeof row) =>
+      buildPayrollRows([r])[0][PAYROLL_HEADERS.indexOf("Deductions")];
+    expect(deductions(row)).toBe("Taken here");
+    expect(deductions({ ...row, isDeductionCarrier: false })).toBe(
+      "Earnings only",
+    );
   });
 
   it("rounds to 2 decimals and keeps the derived figures", () => {

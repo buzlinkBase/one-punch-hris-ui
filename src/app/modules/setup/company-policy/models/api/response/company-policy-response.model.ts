@@ -18,6 +18,7 @@ export interface CompanyPolicyResponse {
   requiredTakehomePercentage: number;
   otNdCalculationMethod: string;
   hourlyRateDivisor: string;
+  deductionCarrierMode: string;
   coworkerShowNewHires: boolean;
   coworkerShowAnniversaries: boolean;
   coworkerShowWhosOut: boolean;

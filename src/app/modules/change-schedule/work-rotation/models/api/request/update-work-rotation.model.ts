@@ -3,4 +3,7 @@ export interface UpdateWorkRotation {
   employeeId: string;
   timeShiftId: string;
   payrollDate: string;
+  // Project site the employee reports to that day; null = their own site.
+  operationAreaId?: string | null;
+  clientId?: string | null;
 }

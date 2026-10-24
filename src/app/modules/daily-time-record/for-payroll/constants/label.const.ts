@@ -33,6 +33,29 @@ export const PAYROLL_TYPE_LABEL: Record<string, string> = {
   YearEndAdjustment: "Year-End Adjustment",
 };
 
+// Why a run does or doesn't take an employee's deductions (hrms-api DeductionCarrierResolver
+// reasons) -- shown as a tooltip on the preview's Deductions column. Only present when the company
+// policy "which payroll run takes the deductions" is on.
+export const DEDUCTION_REASON_TEXT: Record<string, string> = {
+  PrimaryClient: "This run pays the employee's own client.",
+  MostDays: "The employee worked the most days for this client.",
+  FirstRun: "This is the first run generated for the cutoff.",
+  NoDays: "The employee has no worked days to rank, so this run takes it.",
+  ChosenByOperator: "You chose to take the deductions in this run.",
+  SkippedByOperator: "You chose to skip the deductions in this run.",
+  NotChosen:
+    "Deductions are only taken where you choose. Switch this on to take them here.",
+  ClaimedElsewhere:
+    "Another saved run already takes this employee's deductions for this cutoff.",
+};
+
+export const deductionReasonText = (reason: string): string => {
+  // "PrimaryClientNotWorked:MostDays" -- their own client wasn't worked, so the busiest client decides.
+  if (reason.startsWith("PrimaryClientNotWorked"))
+    return "The employee didn't work their own client this cutoff, so the client they worked the most days for takes it.";
+  return DEDUCTION_REASON_TEXT[reason] ?? reason;
+};
+
 export const FOR_PAYROLL_LABEL = {
   TITLE: "For Payroll",
   BIO_ID: "BioId",

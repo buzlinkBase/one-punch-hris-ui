@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import {
   Alert,
   App,
@@ -20,7 +21,7 @@ import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
@@ -48,10 +49,17 @@ import {
   type WorkRotationFormValues,
 } from "../../models/forms/work-rotation-form.schema";
 import { workRotationMapper } from "../../services/work-rotation.mapper";
+import {
+  clientAfterSiteChange,
+  clientSiteMismatch,
+  siteAfterClientChange,
+  siteOptionGroups,
+} from "../../utils/site-client-options.util";
 import { WORK_ROTATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
+import type { ErrorResponse } from "@/shared/types/api-response.model";
 
 const { Title, Text } = Typography;
 
@@ -296,6 +304,13 @@ function CreateForm() {
   const [clientId, setClientId] = useState<string | null>(null);
   const [payrollGroupId, setPayrollGroupId] = useState<string | null>(null);
   const [operationAreaId, setOperationAreaId] = useState<string | null>(null);
+  // Optional: narrow the search to specific employees. The server's employee filter has no
+  // employee id, so this is applied to its result -- the other filters still decide who is
+  // searched, and an empty pick means everyone they return.
+  const [pickedEmployeeIds, setPickedEmployeeIds] = useState<string[]>([]);
+  const [committedEmployeeIds, setCommittedEmployeeIds] = useState<string[]>(
+    [],
+  );
   const [committedFilter, setCommittedFilter] = useState<Record<
     string,
     string | null | undefined
@@ -307,6 +322,9 @@ function CreateForm() {
   const [timeShiftId, setTimeShiftId] = useState<string | null>(null);
   const [payrollDates, setPayrollDates] = useState<string[]>([]);
   const [scheduledAreaId, setScheduledAreaId] = useState<string | null>(null);
+  const [scheduledClientId, setScheduledClientId] = useState<string | null>(
+    null,
+  );
 
   // Work Rotation:Create is unscoped (matches today's behavior for everyone who already has it,
   // or has neither permission — see WorkSchedulePlansController.ValidateTeamScopeAsync on the
@@ -338,6 +356,10 @@ function CreateForm() {
       },
     );
 
+  // Every employee, to pick from in the Employee filter (the list is only fetched for the picker;
+  // the search above still decides who appears in the table).
+  const { data: allEmployees = [], isLoading: isAllEmployeesLoading } =
+    useEmployeeFilter({}, { enabled: !isTeamScoped });
   const { data: departments = [] } = useDepartments();
   const { data: clients = [] } = useClients();
   const { data: payrollGroups = [] } = usePayrollGroups();
@@ -370,6 +392,10 @@ function CreateForm() {
     label: `${c.code} - ${c.name}`,
   }));
   const payrollGroupOptions = toPayrollGroupOptions(payrollGroups);
+  const employeeOptions = allEmployees.map((e) => ({
+    value: e.id,
+    label: e.name ?? e.id,
+  }));
   const areaOptions = areas
     .filter((a) => !branchId || a.branchId === branchId)
     .map((a) => ({
@@ -378,13 +404,42 @@ function CreateForm() {
     }));
   // Where the selected employees report on the chosen dates — any site, not just the
   // Step 1 branch filter.
-  const scheduledAreaOptions = areas.map((a) => ({
-    value: a.id,
-    label: `${a.code} - ${a.name}`,
-  }));
   const selectedScheduledArea = scheduledAreaId
-    ? scheduledAreaOptions.find((a) => a.value === scheduledAreaId)
+    ? areas.find((a) => a.id === scheduledAreaId)
+    : undefined;
+  // Client first, then the sites under it: the site list narrows to the chosen client's sites plus
+  // the ones not tied to any client, and a site that belongs to a client fills the client in.
+  const scheduledClientOptions = clients.map((c) => ({
+    value: c.id,
+    label: `${c.code} - ${c.name}`,
+  }));
+  const selectedScheduledClient = scheduledClientId
+    ? scheduledClientOptions.find((c) => c.value === scheduledClientId)
     : null;
+  // Only an entry saved before the pickers narrowed each other can still disagree.
+  const scheduledClientMismatch = clientSiteMismatch(
+    areas,
+    scheduledClientId,
+    scheduledAreaId,
+  );
+  const clientNameOf = (id: string) =>
+    clients.find((c) => c.id === id)?.name ?? "this client";
+  const scheduledSiteGroups = siteOptionGroups(
+    areas,
+    scheduledClientId,
+    clientNameOf,
+    scheduledAreaId,
+  );
+  const changeScheduledClient = (clientId: string | null) => {
+    setScheduledClientId(clientId);
+    setScheduledAreaId(siteAfterClientChange(areas, clientId, scheduledAreaId));
+  };
+  const changeScheduledSite = (siteId: string | null) => {
+    setScheduledAreaId(siteId);
+    setScheduledClientId(
+      clientAfterSiteChange(areas, siteId, scheduledClientId),
+    );
+  };
 
   const hasSearched = isTeamScoped
     ? !!myEmployee?.id
@@ -393,7 +448,11 @@ function CreateForm() {
   // full employee list under an equivalent key, so `employees` can be
   // populated even while this query is disabled. Only show rows once the
   // user has actually clicked Search.
-  const visibleEmployees = hasSearched ? employees : [];
+  const visibleEmployees = hasSearched
+    ? committedEmployeeIds.length
+      ? employees.filter((e) => committedEmployeeIds.includes(e.id))
+      : employees
+    : [];
   const selectedCount = selectedIds.size;
   const allChecked =
     visibleEmployees.length > 0 &&
@@ -414,6 +473,7 @@ function CreateForm() {
       payrollGroupId,
       operationAreaId,
     });
+    setCommittedEmployeeIds(pickedEmployeeIds);
     setSearchKey((k) => k + 1);
   };
 
@@ -535,6 +595,7 @@ function CreateForm() {
         timeShiftId,
         payrollDates,
         operationAreaId: scheduledAreaId,
+        clientId: scheduledClientId,
       });
       getNotify().success({
         message: "Work Rotation Saved",
@@ -662,12 +723,25 @@ function CreateForm() {
                   allowClear
                 />
               </Form.Item>
-              <Form.Item label="&nbsp;" className="mb-0">
+              <Form.Item label="Employee" className="mb-0">
+                <Select
+                  mode="multiple"
+                  placeholder="All employees"
+                  options={employeeOptions}
+                  value={pickedEmployeeIds}
+                  onChange={setPickedEmployeeIds}
+                  loading={isAllEmployeesLoading}
+                  maxTagCount="responsive"
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                />
+              </Form.Item>
+              <Form.Item className="mb-0 col-span-full">
                 <Button
                   type="primary"
                   icon={<SearchOutlined />}
                   onClick={handleSearch}
-                  style={{ width: "100%" }}
+                  className="w-full sm:w-auto"
                 >
                   Search Employees
                 </Button>
@@ -764,16 +838,43 @@ function CreateForm() {
                 />
               </Form.Item>
               <Form.Item
+                label={WORK_ROTATION_LABEL.CLIENT}
+                extra={WORK_ROTATION_LABEL.CLIENT_HINT}
+                className="mb-3"
+              >
+                <Select
+                  placeholder={WORK_ROTATION_LABEL.CLIENT_PLACEHOLDER}
+                  options={scheduledClientOptions}
+                  value={scheduledClientId ?? undefined}
+                  onChange={(v: string | undefined) =>
+                    changeScheduledClient(v ?? null)
+                  }
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                  className="w-full"
+                />
+              </Form.Item>
+              <Form.Item
                 label={WORK_ROTATION_LABEL.AREA}
-                extra={WORK_ROTATION_LABEL.AREA_HINT}
+                extra={
+                  scheduledClientId
+                    ? WORK_ROTATION_LABEL.AREA_FILTERED_HINT
+                    : WORK_ROTATION_LABEL.AREA_HINT
+                }
+                validateStatus={scheduledClientMismatch ? "warning" : ""}
+                help={
+                  scheduledClientMismatch
+                    ? `This project site belongs to ${scheduledClientMismatch.clientName ?? "another client"}. The client you pick is used instead.`
+                    : undefined
+                }
                 className="mb-3"
               >
                 <Select
                   placeholder={WORK_ROTATION_LABEL.AREA_PLACEHOLDER}
-                  options={scheduledAreaOptions}
+                  options={scheduledSiteGroups}
                   value={scheduledAreaId ?? undefined}
                   onChange={(v: string | undefined) =>
-                    setScheduledAreaId(v ?? null)
+                    changeScheduledSite(v ?? null)
                   }
                   showSearch={{ filterOption: filterByLabel }}
                   allowClear
@@ -796,7 +897,7 @@ function CreateForm() {
             <Alert
               type="info"
               showIcon
-              message={`Will apply to ${selectedIds.size} employee${selectedIds.size !== 1 ? "s" : ""} — ${selectedTimeShift?.label ?? timeShiftId} on ${payrollDates.length} date${payrollDates.length !== 1 ? "s" : ""}${selectedScheduledArea ? ` at ${selectedScheduledArea.label}` : ""}`}
+              message={`Will apply to ${selectedIds.size} employee${selectedIds.size !== 1 ? "s" : ""} — ${selectedTimeShift?.label ?? timeShiftId} on ${payrollDates.length} date${payrollDates.length !== 1 ? "s" : ""}${selectedScheduledArea ? ` at ${selectedScheduledArea.code} - ${selectedScheduledArea.name}` : ""}${selectedScheduledClient ? ` for ${selectedScheduledClient.label}` : ""}`}
             />
           )}
         </Form>
@@ -832,15 +933,52 @@ function EditForm({ id }: { id: string }) {
     useUpdateWorkRotation();
   const { options: timeShiftOptions, isLoading: isTimeShiftLoading } =
     useTimeShiftOptions();
+  const { data: areas = [] } = useOperationAreas();
+  const { data: clients = [] } = useClients();
+  const clientOptions = clients.map((c) => ({
+    value: c.id,
+    label: `${c.code} - ${c.name}`,
+  }));
+  const clientNameOf = (clientId: string) =>
+    clients.find((c) => c.id === clientId)?.name ?? "this client";
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<WorkRotationFormValues>({
     resolver: zodResolver(workRotationFormSchema),
   });
+
+  // Client first, then the sites under it: the site list narrows to the chosen client's sites plus
+  // the ones not tied to any client, and a site that belongs to a client fills the client in.
+  const watchedAreaId = useWatch({ control, name: "operationAreaId" }) ?? null;
+  const watchedClientId = useWatch({ control, name: "clientId" }) ?? null;
+  const siteGroups = siteOptionGroups(
+    areas,
+    watchedClientId,
+    clientNameOf,
+    watchedAreaId,
+  );
+  const changeClient = (clientId: string | null) => {
+    setValue("clientId", clientId);
+    setValue(
+      "operationAreaId",
+      siteAfterClientChange(areas, clientId, watchedAreaId),
+    );
+  };
+  const changeSite = (siteId: string | null) => {
+    setValue("operationAreaId", siteId);
+    setValue("clientId", clientAfterSiteChange(areas, siteId, watchedClientId));
+  };
+  // Only an entry saved before the pickers narrowed each other can still disagree.
+  const mismatchedSite = clientSiteMismatch(
+    areas,
+    watchedClientId,
+    watchedAreaId,
+  );
 
   useEffect(() => {
     if (selected) {
@@ -856,16 +994,23 @@ function EditForm({ id }: { id: string }) {
         employeeId: selected.employeeId,
         timeShiftId: values.timeShiftId,
         payrollDate: values.payrollDate,
+        operationAreaId: values.operationAreaId ?? null,
+        clientId: values.clientId ?? null,
       });
       getNotify().success({
         message: "Work Rotation Updated",
         description: "Record has been updated successfully.",
       });
       navigate({ to: "/change-schedule/work-rotation" });
-    } catch {
+    } catch (err) {
+      // The server explains a clash with another entry on the chosen date; show that, not a
+      // generic failure.
+      const detail = axios.isAxiosError(err)
+        ? (err.response?.data as ErrorResponse | undefined)?.data?.detail
+        : undefined;
       getNotify().error({
         message: "Update Failed",
-        description: "Failed to update the record. Please try again.",
+        description: detail ?? "Failed to update the record. Please try again.",
       });
     }
   };
@@ -904,8 +1049,17 @@ function EditForm({ id }: { id: string }) {
               <Descriptions.Item label={WORK_ROTATION_LABEL.EMPLOYEE}>
                 {selected.fullName}
               </Descriptions.Item>
+              <Descriptions.Item label={WORK_ROTATION_LABEL.PAYROLL_DATE}>
+                {selected.payrollDate}
+              </Descriptions.Item>
               <Descriptions.Item label={WORK_ROTATION_LABEL.TIME_SHIFT}>
                 {selected.shiftName}
+              </Descriptions.Item>
+              <Descriptions.Item label={WORK_ROTATION_LABEL.AREA}>
+                {selected.areaName || "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label={WORK_ROTATION_LABEL.CLIENT}>
+                {selected.clientName || "—"}
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -960,6 +1114,48 @@ function EditForm({ id }: { id: string }) {
                       }
                     />
                   )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={WORK_ROTATION_LABEL.CLIENT}
+                extra={WORK_ROTATION_LABEL.CLIENT_HINT}
+                className="sm:col-span-2"
+              >
+                <Select
+                  placeholder={WORK_ROTATION_LABEL.CLIENT_PLACEHOLDER}
+                  options={clientOptions}
+                  value={watchedClientId ?? undefined}
+                  onChange={(v: string | undefined) => changeClient(v ?? null)}
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                  className="w-full"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={WORK_ROTATION_LABEL.AREA}
+                extra={
+                  watchedClientId
+                    ? WORK_ROTATION_LABEL.AREA_FILTERED_HINT
+                    : WORK_ROTATION_LABEL.AREA_HINT
+                }
+                validateStatus={mismatchedSite ? "warning" : ""}
+                help={
+                  mismatchedSite
+                    ? `This project site belongs to ${mismatchedSite.clientName ?? "another client"}. The client you pick is used instead.`
+                    : undefined
+                }
+                className="sm:col-span-2"
+              >
+                <Select
+                  placeholder={WORK_ROTATION_LABEL.AREA_PLACEHOLDER}
+                  options={siteGroups}
+                  value={watchedAreaId ?? undefined}
+                  onChange={(v: string | undefined) => changeSite(v ?? null)}
+                  showSearch={{ filterOption: filterByLabel }}
+                  allowClear
+                  className="w-full"
                 />
               </Form.Item>
             </div>

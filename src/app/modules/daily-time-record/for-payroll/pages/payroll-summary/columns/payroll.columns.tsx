@@ -1,4 +1,4 @@
-import { Button, Tooltip, Typography } from "antd";
+import { Button, Tag, Tooltip, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { DownOutlined, RightOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -310,6 +310,24 @@ const deductionColumns = (ctx: ColumnContext): Column[] => [
   money("Absent", "abs", (r) => r.absencesAmount),
 ];
 
+// Setup > Company Policy > "which payroll run takes the deductions": a run that pays an employee
+// earnings only (another run of the same cutoff takes their contributions, tax, loans and other
+// income). Shown only when some row in the list is such a run, so it never appears for companies
+// that don't use the rule.
+const carrierColumn: Column = {
+  title: "Deductions",
+  key: "carrier",
+  width: 130,
+  render: (_, r) =>
+    r.isDeductionCarrier === false ? (
+      <Tooltip title="Another run of this cutoff takes this employee's government contributions, tax, loans and other income. This run pays earnings only.">
+        <Tag>Earnings only</Tag>
+      </Tooltip>
+    ) : (
+      <Tag color="green">Taken here</Tag>
+    ),
+};
+
 export interface PayrollColumnsOptions extends ColumnContext {
   onPrint: (r: PayrollRunResult) => void;
 }
@@ -321,6 +339,9 @@ export const payrollColumns = ({
   ...ctx
 }: PayrollColumnsOptions): ColumnsType<PayrollRunResult> => [
   ...identityColumns,
+  ...(ctx.results.some((r) => r.isDeductionCarrier === false)
+    ? [carrierColumn]
+    : []),
   {
     title: "Earnings",
     key: "earnings",

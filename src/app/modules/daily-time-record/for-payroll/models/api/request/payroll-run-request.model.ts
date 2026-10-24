@@ -9,6 +9,11 @@ export interface PayrollRunRequest {
   // Narrow the group by the employee's own client / department tags (not the DTR's).
   clientIds?: string[];
   departmentIds?: string[];
+  // Employees this run must / must not take deductions for, whatever the company's "which payroll
+  // run takes the deductions" rule would decide. A skip beats a carry; neither can override a
+  // cutoff another run has already taken.
+  carryDeductionEmployeeIds?: string[];
+  skipDeductionEmployeeIds?: string[];
   // Legacy batch mode — only used when no cutoff fields are sent.
   batchCodes?: string[];
   payDate?: string | null;

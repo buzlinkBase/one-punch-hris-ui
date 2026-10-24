@@ -12,13 +12,63 @@ const PAYROLL_BATCHES_KEY = ["payroll-batches"];
 // run pays/releases them, so every such mutation below invalidates it.
 const READINESS_KEY = ["payroll-readiness"];
 
-export function usePayrollReadiness(from?: string, to?: string) {
+export function usePayrollReadiness(
+  from?: string,
+  to?: string,
+  clientIds: string[] = [],
+) {
   return useQuery({
-    queryKey: [...READINESS_KEY, from, to],
-    queryFn: () => forPayrollApi.getReadiness({ from: from!, to: to! }),
+    queryKey: [...READINESS_KEY, from, to, clientIds],
+    queryFn: () =>
+      forPayrollApi.getReadiness({
+        from: from!,
+        to: to!,
+        clientIds: clientIds.length ? clientIds : undefined,
+      }),
     enabled: !!from && !!to,
     // DTR approvals happen on other screens (and by other people) without touching this key,
     // so always refetch on mount/focus rather than trusting the 5-minute default.
+    staleTime: 0,
+  });
+}
+
+// Which saved run carries each employee's deductions for a cutoff. Runs are saved and deleted on
+// other tabs, so it always refetches when the tab opens (staleTime 0) rather than being invalidated.
+const CUTOFF_TRACKER_KEY = ["payroll-cutoff-tracker"];
+
+export function useCutoffTracker(
+  from?: string,
+  to?: string,
+  payrollGroupId?: string | null,
+) {
+  return useQuery({
+    queryKey: [...CUTOFF_TRACKER_KEY, from, to, payrollGroupId ?? null],
+    queryFn: () =>
+      forPayrollApi.getCutoffTracker({
+        from: from!,
+        to: to!,
+        payrollGroupId: payrollGroupId ?? undefined,
+      }),
+    enabled: !!from && !!to,
+    staleTime: 0,
+  });
+}
+
+// One employee's runs for a cutoff, fetched only while their statement is open.
+export function useCutoffStatement(
+  employeeId?: string,
+  from?: string,
+  to?: string,
+) {
+  return useQuery({
+    queryKey: ["payroll-cutoff-statement", employeeId, from, to],
+    queryFn: () =>
+      forPayrollApi.getCutoffStatement({
+        employeeId: employeeId!,
+        from: from!,
+        to: to!,
+      }),
+    enabled: !!employeeId && !!from && !!to,
     staleTime: 0,
   });
 }

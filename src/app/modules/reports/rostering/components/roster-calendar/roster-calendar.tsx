@@ -46,12 +46,18 @@ function withAreaHtml(text: string, areaName: string | null) {
   return withArea(text, areaName && escapeHtml(areaName));
 }
 
+// What a day shows after the shift: its project site and, when one was picked directly, its client.
+function siteLabel(r: RosterResponse): string | null {
+  return [r.areaName, r.clientName].filter(Boolean).join(" · ") || null;
+}
+
 interface EventTags {
   shiftId: string | null;
   isRestDay: boolean;
   overrideId: string | null;
   scheduleSource: ScheduleSource;
   areaId: string | null;
+  clientId: string | null;
 }
 
 interface Props {
@@ -101,7 +107,11 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
     setSelectedShiftId,
     selectedAreaId,
     setSelectedAreaId,
-    areaOptions,
+    sites,
+    selectedClientId,
+    setSelectedClientId,
+    clientOptions,
+    clientNameOf,
     openAssignModal,
     closeAssignModal,
     handleAssign,
@@ -135,7 +145,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
           html: hasShift
             ? eventCardHtml(
                 "Rest Day",
-                withAreaHtml(`${r.shiftName} · ${timeRange}`, r.areaName),
+                withAreaHtml(`${r.shiftName} · ${timeRange}`, siteLabel(r)),
               )
             : undefined,
           backColor: REST_DAY_COLOR,
@@ -143,7 +153,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
           toolTip: hasShift
             ? withArea(
                 `Rest Day — underlying shift: ${r.shiftName} (${timeRange})`,
-                r.areaName,
+                siteLabel(r),
               )
             : "Rest Day",
           tags: {
@@ -155,6 +165,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
             overrideId: r.overrideId,
             scheduleSource: r.scheduleSource,
             areaId: r.areaId,
+            clientId: r.clientId,
           } satisfies EventTags,
         };
       }
@@ -166,12 +177,15 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
           start: r.shiftStart,
           end: r.shiftEnd,
           text: r.shiftName,
-          html: eventCardHtml(r.shiftName, withAreaHtml(timeRange, r.areaName)),
+          html: eventCardHtml(
+            r.shiftName,
+            withAreaHtml(timeRange, siteLabel(r)),
+          ),
           backColor: SHIFT_COLOR,
           fontColor: "#ffffff",
           toolTip: withArea(
             `${r.shiftName} (${timeRange}) — ${SCHEDULE_SOURCE_LABEL[r.scheduleSource]?.label ?? r.scheduleSource}`,
-            r.areaName,
+            siteLabel(r),
           ),
           tags: {
             shiftId: r.shiftId,
@@ -179,6 +193,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
             overrideId: r.overrideId,
             scheduleSource: r.scheduleSource,
             areaId: r.areaId,
+            clientId: r.clientId,
           } satisfies EventTags,
         };
       }
@@ -196,6 +211,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
           overrideId: null,
           scheduleSource: r.scheduleSource,
           areaId: null,
+          clientId: null,
         } satisfies EventTags,
       };
     });
@@ -311,6 +327,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
               tags.overrideId,
               tags.scheduleSource,
               tags.areaId,
+              tags.clientId,
             );
           }}
           onTimeRangeSelected={(args) => {
@@ -366,8 +383,9 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
                 employeeIds: [String(args.newResource)],
                 timeShiftId: tags.shiftId,
                 payrollDates: [args.newStart.toString("yyyy-MM-dd")],
-                // The moved shift keeps its project site.
+                // The moved shift keeps its project site and its client.
                 operationAreaId: tags.areaId,
+                clientId: tags.clientId,
               });
               messageApi.success("Shift reassigned.");
             } catch {
@@ -387,7 +405,11 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         isLoadingShifts={isLoadingShifts}
         selectedAreaId={selectedAreaId}
         onSelectArea={setSelectedAreaId}
-        areaOptions={areaOptions}
+        sites={sites}
+        selectedClientId={selectedClientId}
+        onSelectClient={setSelectedClientId}
+        clientOptions={clientOptions}
+        clientNameOf={clientNameOf}
         isAssigning={isAssigning}
         isRemoving={isRemoving}
         onAssign={handleAssign}

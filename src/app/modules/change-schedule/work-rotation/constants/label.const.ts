@@ -11,6 +11,11 @@ export const WORK_ROTATION_LABEL = {
   AREA_PLACEHOLDER: "Employee's own project site",
   AREA_HINT:
     "Optional. Attendance on these dates is recorded under this project site instead of the employee's own.",
+  CLIENT_PLACEHOLDER: "Follow the project site or the employee's own client",
+  CLIENT_HINT:
+    "Optional. The client these dates are for, used for attendance, billing and payroll. The project sites narrow to this client's, and a site that belongs to a client fills it in for you.",
+  AREA_FILTERED_HINT:
+    "Showing this client's sites and the sites that aren't tied to any client.",
   // Filters
   FILTER_PAYROLL_GROUP: "Payroll Group",
   FILTER_EMPLOYEE: "Employee",

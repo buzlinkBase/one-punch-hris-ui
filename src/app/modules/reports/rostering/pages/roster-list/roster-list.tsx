@@ -62,6 +62,7 @@ const ROSTER_HEADERS = [
   "Shift Start",
   "Shift End",
   "Project Site",
+  "Client",
   "Schedule Source",
   "Rest Day",
 ];
@@ -76,6 +77,7 @@ function toRosterRows(records: RosterResponse[]): string[][] {
     r.shiftStart ? dayjs(r.shiftStart).format("hh:mm A") : "",
     r.shiftEnd ? dayjs(r.shiftEnd).format("hh:mm A") : "",
     r.areaName ?? "",
+    r.clientName ?? "",
     SCHEDULE_SOURCE_LABEL[r.scheduleSource]?.label ?? r.scheduleSource,
     r.isRestDay ? "Yes" : "No",
   ]);

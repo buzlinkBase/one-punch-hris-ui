@@ -8,6 +8,7 @@ import {
   Select,
   Space,
   Statistic,
+  Switch,
   Table,
   Tag,
   Tooltip,
@@ -21,6 +22,7 @@ import {
   PlayCircleOutlined,
   ReloadOutlined,
   SaveOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import axios from "axios";
@@ -50,6 +52,7 @@ import TimeHourPayResultsModal from "../../components/time-hour-pay-results-moda
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
+import { deductionReasonText } from "../../constants/label.const";
 import PayrollReadinessOverview from "../../components/payroll-readiness-overview";
 import PayrollReadinessTable from "../../components/payroll-readiness-table";
 import {
@@ -138,6 +141,13 @@ export default function ForPayrollGenerateTab() {
   // changed, which means "everyone Ready" (and keeps following the list as it refetches).
   const [pickedIds, setPickedIds] = useState<string[] | null>(null);
   const [results, setResults] = useState<PayrollRunResult[] | null>(null);
+  // The shown results were saved (not a preview), so their Deductions switches no longer apply.
+  const [resultsSaved, setResultsSaved] = useState(false);
+  // Per-employee choice of whether THIS run takes the deductions, overriding the company rule:
+  // true = take them here, false = leave them to another run. Employees not listed follow the rule.
+  const [deductionOverrides, setDeductionOverrides] = useState<
+    Record<string, boolean>
+  >({});
   const [notReady, setNotReady] = useState<PayrollNotReadyEmployee[]>([]);
   const [payDate, setPayDate] = useState<string | null>(null);
   const [postModalOpen, setPostModalOpen] = useState(false);
@@ -163,12 +173,14 @@ export default function ForPayrollGenerateTab() {
     () => clients.map((c) => ({ value: c.id, label: c.name })),
     [clients],
   );
+  const clientNameOf = (id?: string | null) =>
+    (id && clients.find((c) => c.id === id)?.name) || "No client";
   const departmentOptions = useMemo(
     () => departments.map((d) => ({ value: d.id, label: d.name })),
     [departments],
   );
-  // Client / department narrowing, from the employee's own tags. Applies to both the employee
-  // list and the server's readiness rows (which carry the same tags).
+  // Client / department narrowing, from the employee's own tags. Applies to the employee list and,
+  // normally, the server's readiness rows (which carry the same tags).
   const matchesNarrowing = (e: {
     clientId?: string | null;
     departmentId?: string | null;
@@ -177,25 +189,42 @@ export default function ForPayrollGenerateTab() {
       (!!e.clientId && clientIds.includes(e.clientId))) &&
     (departmentIds.length === 0 ||
       (!!e.departmentId && departmentIds.includes(e.departmentId)));
+  const matchesDepartment = (e: { departmentId?: string | null }) =>
+    departmentIds.length === 0 ||
+    (!!e.departmentId && departmentIds.includes(e.departmentId));
 
   const {
-    data: readiness = [],
+    data: readinessData,
     isFetching: readinessLoading,
     refetch: refetchReadiness,
-  } = usePayrollReadiness(dateRange?.[0], dateRange?.[1]);
+  } = usePayrollReadiness(dateRange?.[0], dateRange?.[1], clientIds);
+  const readiness = useMemo(() => readinessData?.rows ?? [], [readinessData]);
+  // When payroll runs per client by the client each day was worked for, the server already
+  // narrowed the rows to the chosen clients: a reliever whose own client is another one still
+  // belongs here, so their client tag must not filter them out again.
+  const dayClientMode = readinessData?.dayClientMode ?? false;
   // Every group's rows for the cutoff (overview tiles), then the selected group's (table).
   const allReadinessRows = useMemo(
     () =>
       dateRange
         ? buildReadinessRows(
-            readiness.filter(matchesNarrowing),
+            readiness.filter(
+              dayClientMode ? matchesDepartment : matchesNarrowing,
+            ),
             allEmployees.filter(matchesNarrowing),
             dateRange[0],
             dateRange[1],
           )
         : [],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [readiness, allEmployees, dateRange, clientIds, departmentIds],
+    [
+      readiness,
+      dayClientMode,
+      allEmployees,
+      dateRange,
+      clientIds,
+      departmentIds,
+    ],
   );
   const groupRows = useMemo(
     () => allReadinessRows.filter((r) => r.payrollGroupId === payrollGroupId),
@@ -228,38 +257,65 @@ export default function ForPayrollGenerateTab() {
   // to "everyone Ready".
   const clearResults = () => {
     setResults(null);
+    setResultsSaved(false);
+    setDeductionOverrides({});
     setNotReady([]);
     setPickedIds(null);
   };
 
-  const buildPayload = (remarks?: string) => ({
-    fromDate: dateRange?.[0],
-    toDate: dateRange?.[1],
-    payrollGroupId,
-    employeeIds,
-    clientIds: clientIds.length ? clientIds : undefined,
-    departmentIds: departmentIds.length ? departmentIds : undefined,
-    payDate,
-    remarks,
-  });
+  const buildPayload = (
+    remarks?: string,
+    overrides: Record<string, boolean> = deductionOverrides,
+  ) => {
+    // Only people in this run matter; a choice for someone no longer selected is dropped.
+    const chosen = employeeIds.filter((id) => id in overrides);
+    const carry = chosen.filter((id) => overrides[id]);
+    const skip = chosen.filter((id) => !overrides[id]);
+    return {
+      fromDate: dateRange?.[0],
+      toDate: dateRange?.[1],
+      payrollGroupId,
+      employeeIds,
+      clientIds: clientIds.length ? clientIds : undefined,
+      departmentIds: departmentIds.length ? departmentIds : undefined,
+      carryDeductionEmployeeIds: carry.length ? carry : undefined,
+      skipDeductionEmployeeIds: skip.length ? skip : undefined,
+      payDate,
+      remarks,
+    };
+  };
 
-  const runPayroll = () => {
+  const runPayroll = (
+    overrides: Record<string, boolean> = deductionOverrides,
+    quiet = false,
+  ) => {
     if (!canRun) return;
-    calculate(buildPayload(), {
+    calculate(buildPayload(undefined, overrides), {
       onSuccess: (res) => {
         setResults(res.data);
+        setResultsSaved(false);
         setNotReady(res.notReady ?? []);
-        message.success(`Preview: ${res.total} employee(s) calculated.`);
+        if (!quiet)
+          message.success(`Preview: ${res.total} employee(s) calculated.`);
       },
       onError: (err) =>
         message.error(getErrorDetail(err, "Payroll calculation failed.")),
     });
   };
 
+  // Switching an employee's deductions on/off for this run re-previews so the totals, net pay and
+  // every other employee's reason ("taken in another run") reflect the choice.
+  const toggleDeductions = (employeeId: string, takeHere: boolean) => {
+    const next = { ...deductionOverrides, [employeeId]: takeHere };
+    setDeductionOverrides(next);
+    runPayroll(next, true);
+  };
+
   const handleConfirmGenerate = (remarks: string) => {
     generate(buildPayload(remarks), {
       onSuccess: (res) => {
         setResults(res.data);
+        setResultsSaved(true);
         setNotReady([]);
         setPickedIds(null);
         setPostModalOpen(false);
@@ -270,6 +326,59 @@ export default function ForPayrollGenerateTab() {
       onError: (err) =>
         message.error(getErrorDetail(err, "Payroll generation failed.")),
     });
+  };
+
+  // The company policy "which payroll run takes the deductions" is on, so each row says whether this
+  // run takes that employee's deductions or pays earnings only (another run takes them).
+  const showCarrier = !!results?.some((r) => r.deductionCarrierReason);
+  const earningsOnlyCount =
+    results?.filter((r) => r.isDeductionCarrier === false).length ?? 0;
+  // Columns before the first earnings band: view, employee, [deductions], salary type, daily rate.
+  const leadColumns = showCarrier ? 5 : 4;
+
+  const deductionsColumn: ColumnsType<PayrollRunResult>[number] = {
+    title: "Deductions",
+    key: "deductionCarrier",
+    width: 170,
+    render: (_, r) => {
+      if (!r.deductionCarrierReason) return null;
+      const takesHere = r.isDeductionCarrier !== false;
+      const takenElsewhere = r.deductionCarrierReason === "ClaimedElsewhere";
+      return (
+        <Space size={6}>
+          <Tooltip title={deductionReasonText(r.deductionCarrierReason)}>
+            <Tag color={takesHere ? "green" : "default"} className="m-0">
+              {takesHere ? "Taken here" : "Earnings only"}
+            </Tag>
+          </Tooltip>
+          <Tooltip
+            title={
+              takenElsewhere
+                ? deductionReasonText("ClaimedElsewhere")
+                : resultsSaved
+                  ? "This run is saved. Delete it to change where deductions are taken."
+                  : takesHere
+                    ? "Leave this employee's deductions to another run"
+                    : "Take this employee's deductions in this run"
+            }
+          >
+            <Switch
+              size="small"
+              checked={takesHere}
+              disabled={takenElsewhere || resultsSaved || calculating}
+              onChange={(checked) => toggleDeductions(r.employeeId, checked)}
+            />
+          </Tooltip>
+          {takesHere && !!r.otherUnpaidDays && (
+            <Tooltip
+              title={`${r.otherUnpaidDays} day(s) worked for other clients this cutoff are not paid yet, so they are not counted in this run's contributions and tax. Run those clients first, or accept the difference.`}
+            >
+              <WarningOutlined className="text-amber-500" />
+            </Tooltip>
+          )}
+        </Space>
+      );
+    },
   };
 
   const resultColumns: ColumnsType<PayrollRunResult> = [
@@ -293,8 +402,36 @@ export default function ForPayrollGenerateTab() {
       title: "Employee",
       dataIndex: "fullName",
       key: "fullName",
-      width: 180,
+      width: 220,
+      render: (name: string, r) => (
+        <div className="flex flex-col gap-1">
+          <span>{name}</span>
+          {!!r.otherClients?.length && (
+            <div className="flex flex-wrap gap-y-1">
+              {r.otherClients.map((c) => (
+                <Tooltip
+                  key={c.clientId ?? "none"}
+                  title={
+                    c.unpaidDays > 0
+                      ? `Also worked ${c.workedDays} day(s) for this client this cutoff. ${c.unpaidDays} are not in any saved run yet.`
+                      : `Also worked ${c.workedDays} day(s) for this client this cutoff. All are already in a saved run.`
+                  }
+                >
+                  <Tag
+                    color={c.unpaidDays > 0 ? "orange" : "default"}
+                    className="text-xs"
+                  >
+                    Also: {clientNameOf(c.clientId)} · {c.workedDays}d
+                    {c.unpaidDays > 0 ? ` (${c.unpaidDays} to run)` : " (run)"}
+                  </Tag>
+                </Tooltip>
+              ))}
+            </div>
+          )}
+        </div>
+      ),
     },
+    ...(showCarrier ? [deductionsColumn] : []),
     {
       title: "Salary Type",
       dataIndex: "salaryType",
@@ -619,7 +756,7 @@ export default function ForPayrollGenerateTab() {
               <Tooltip title={!canRun ? runHint : ""}>
                 <Button
                   icon={<PlayCircleOutlined />}
-                  onClick={runPayroll}
+                  onClick={() => runPayroll()}
                   loading={calculating}
                   disabled={!canRun}
                 >
@@ -767,6 +904,18 @@ export default function ForPayrollGenerateTab() {
             </div>
           }
         >
+          {showCarrier && (
+            <Alert
+              type="info"
+              showIcon
+              className="mb-3"
+              message={
+                earningsOnlyCount > 0
+                  ? `${earningsOnlyCount} employee(s) are paid earnings only in this run. Their government contributions, tax, loans and other income are taken in one run per cutoff.`
+                  : "Every employee in this run has their deductions taken here. Government contributions, tax, loans and other income are taken in one run per cutoff."
+              }
+            />
+          )}
           <div style={{ overflowX: "auto" }}>
             <Table
               rowKey="employeeId"
@@ -832,15 +981,22 @@ export default function ForPayrollGenerateTab() {
                 ];
                 return (
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={0} colSpan={4}>
+                    <Table.Summary.Cell index={0} colSpan={leadColumns}>
                       <strong>Total</strong>
                     </Table.Summary.Cell>
                     {cells.map((val, i) => (
-                      <Table.Summary.Cell key={i} index={i + 4} align="right">
+                      <Table.Summary.Cell
+                        key={i}
+                        index={i + leadColumns}
+                        align="right"
+                      >
                         <strong>{fmt(val)}</strong>
                       </Table.Summary.Cell>
                     ))}
-                    <Table.Summary.Cell index={cells.length + 4} align="right">
+                    <Table.Summary.Cell
+                      index={cells.length + leadColumns}
+                      align="right"
+                    >
                       <Text strong style={{ color: token.colorPrimary }}>
                         {fmt(totals.net)}
                       </Text>
