@@ -3,6 +3,7 @@ import { Form, Select } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { useCostSummary } from "../../hooks/use-payroll-reports-queries";
 import type {
   CostSummaryGroupBy,
@@ -33,12 +34,12 @@ const EXPORT_HEADERS = [
 const toRows = (records: CostSummaryResponse[]) =>
   records.map((r) => [
     r.groupName,
-    String(r.employeeCount),
-    fmt(r.totalBasicPay),
-    fmt(r.totalGrossIncome),
-    fmt(r.totalDeductions),
-    fmt(r.employerContributionsCost),
-    fmt(r.totalNetPay),
+    r.employeeCount,
+    r.totalBasicPay,
+    r.totalGrossIncome,
+    r.totalDeductions,
+    r.employerContributionsCost,
+    r.totalNetPay,
   ]);
 
 const columns: ColumnsType<CostSummaryResponse> = [
@@ -95,6 +96,7 @@ const columns: ColumnsType<CostSummaryResponse> = [
 ];
 
 export default function CostSummary() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
     dayjs().endOf("month").format("YYYY-MM-DD"),
@@ -104,7 +106,7 @@ export default function CostSummary() {
     data = [],
     isLoading,
     refetch,
-  } = useCostSummary(range[0], range[1], groupBy);
+  } = useCostSummary(range[0], range[1], groupBy, clientId);
 
   return (
     <PayrollReportShell
@@ -118,6 +120,23 @@ export default function CostSummary() {
       exportFileName={`cost-summary-${groupBy}`}
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: [
+          "totalBasicPay",
+          "totalGrossIncome",
+          "totalDeductions",
+          "employerContributionsCost",
+          "totalNetPay",
+        ],
+        exportHeaders: [
+          "Total Basic Pay",
+          "Total Gross Income",
+          "Total Deductions",
+          "Employer Contributions Cost",
+          "Total Net Pay",
+        ],
+      }}
+      exportIntegerHeaders={["Employee Count"]}
       filters={
         <Form layout="vertical">
           <div
@@ -137,6 +156,7 @@ export default function CostSummary() {
                 }}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <Form.Item label="Group By" className="mb-0">
               <Select
                 options={GROUP_BY_OPTIONS}

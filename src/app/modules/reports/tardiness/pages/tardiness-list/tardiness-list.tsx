@@ -48,6 +48,7 @@ import {
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { ClientFilter } from "@/app/modules/reports/payroll-reports/components/client-filter/client-filter";
 
 const { Title } = Typography;
 
@@ -97,6 +98,7 @@ export default function TardinessList() {
 
   const activeFilterCount = [
     filter.fromDate && filter.toDate ? "date" : null,
+    filter.clientId,
     filter.departmentId,
     filter.employeeId,
     filter.payrollGroupId,
@@ -196,6 +198,10 @@ export default function TardinessList() {
                   }
                 />
               </Form.Item>
+              <ClientFilter
+                value={pending.clientId}
+                onChange={(val) => setPending((f) => ({ ...f, clientId: val }))}
+              />
               <Form.Item
                 label={TARDINESS_LABEL.FILTER_DEPARTMENT}
                 className="mb-0"

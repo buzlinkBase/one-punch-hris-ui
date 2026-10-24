@@ -8,52 +8,64 @@ import { payrollReportsApi } from "../services/payroll-reports.api";
 import type { CostSummaryGroupBy } from "../models/api/response/payroll-reports.model";
 import type { EmployeeScopeFilter } from "../models/api/request/employee-scope-filter.model";
 
-export function useSssRemittance(from: string, to: string) {
+export function useSssRemittance(from: string, to: string, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "sss-remittance", from, to],
-    queryFn: () => payrollReportsApi.sssRemittance(from, to),
+    queryKey: ["payroll-reports", "sss-remittance", from, to, clientId],
+    queryFn: () => payrollReportsApi.sssRemittance(from, to, clientId),
   });
 }
 
-export function usePhilHealthRemittance(from: string, to: string) {
+export function usePhilHealthRemittance(
+  from: string,
+  to: string,
+  clientId?: string,
+) {
   return useQuery({
-    queryKey: ["payroll-reports", "philhealth-remittance", from, to],
-    queryFn: () => payrollReportsApi.philHealthRemittance(from, to),
+    queryKey: ["payroll-reports", "philhealth-remittance", from, to, clientId],
+    queryFn: () => payrollReportsApi.philHealthRemittance(from, to, clientId),
   });
 }
 
-export function usePagIbigRemittance(from: string, to: string) {
+export function usePagIbigRemittance(
+  from: string,
+  to: string,
+  clientId?: string,
+) {
   return useQuery({
-    queryKey: ["payroll-reports", "pagibig-remittance", from, to],
-    queryFn: () => payrollReportsApi.pagIbigRemittance(from, to),
+    queryKey: ["payroll-reports", "pagibig-remittance", from, to, clientId],
+    queryFn: () => payrollReportsApi.pagIbigRemittance(from, to, clientId),
   });
 }
 
-export function useWtaxRemittance(from: string, to: string) {
+export function useWtaxRemittance(from: string, to: string, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "wtax-remittance", from, to],
-    queryFn: () => payrollReportsApi.wtaxRemittance(from, to),
+    queryKey: ["payroll-reports", "wtax-remittance", from, to, clientId],
+    queryFn: () => payrollReportsApi.wtaxRemittance(from, to, clientId),
   });
 }
 
-export function useBankDisbursement(from: string, to: string) {
+export function useBankDisbursement(
+  from: string,
+  to: string,
+  clientId?: string,
+) {
   return useQuery({
-    queryKey: ["payroll-reports", "bank-disbursement", from, to],
-    queryFn: () => payrollReportsApi.bankDisbursement(from, to),
+    queryKey: ["payroll-reports", "bank-disbursement", from, to, clientId],
+    queryFn: () => payrollReportsApi.bankDisbursement(from, to, clientId),
   });
 }
 
-export function useDeductionLedger(asOf: string) {
+export function useDeductionLedger(asOf: string, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "deduction-ledger", asOf],
-    queryFn: () => payrollReportsApi.deductionLedger(asOf),
+    queryKey: ["payroll-reports", "deduction-ledger", asOf, clientId],
+    queryFn: () => payrollReportsApi.deductionLedger(asOf, clientId),
   });
 }
 
-export function useCashBondReport(asOf: string) {
+export function useCashBondReport(asOf: string, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "cash-bond", asOf],
-    queryFn: () => payrollReportsApi.cashBondReport(asOf),
+    queryKey: ["payroll-reports", "cash-bond", asOf, clientId],
+    queryFn: () => payrollReportsApi.cashBondReport(asOf, clientId),
   });
 }
 
@@ -115,10 +127,10 @@ export function useLeaveEntries(
   });
 }
 
-export function useRetirementLedger(asOf: string) {
+export function useRetirementLedger(asOf: string, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "retirement-ledger", asOf],
-    queryFn: () => payrollReportsApi.retirementLedger(asOf),
+    queryKey: ["payroll-reports", "retirement-ledger", asOf, clientId],
+    queryFn: () => payrollReportsApi.retirementLedger(asOf, clientId),
   });
 }
 
@@ -225,10 +237,14 @@ export function useReleaseUniformAllowance() {
   });
 }
 
-export function useReimbursementList(from: string, to: string) {
+export function useReimbursementList(
+  from: string,
+  to: string,
+  clientId?: string,
+) {
   return useQuery({
-    queryKey: ["payroll-reports", "reimbursement-list", from, to],
-    queryFn: () => payrollReportsApi.reimbursementList(from, to),
+    queryKey: ["payroll-reports", "reimbursement-list", from, to, clientId],
+    queryFn: () => payrollReportsApi.reimbursementList(from, to, clientId),
   });
 }
 
@@ -247,24 +263,25 @@ export function useCostSummary(
   from: string,
   to: string,
   groupBy: CostSummaryGroupBy,
+  clientId?: string,
 ) {
   return useQuery({
-    queryKey: ["payroll-reports", "cost-summary", from, to, groupBy],
-    queryFn: () => payrollReportsApi.costSummary(from, to, groupBy),
+    queryKey: ["payroll-reports", "cost-summary", from, to, groupBy, clientId],
+    queryFn: () => payrollReportsApi.costSummary(from, to, groupBy, clientId),
   });
 }
 
-export function useYtdSummary(year: number) {
+export function useYtdSummary(year: number, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "ytd-summary", year],
-    queryFn: () => payrollReportsApi.ytdSummary(year),
+    queryKey: ["payroll-reports", "ytd-summary", year, clientId],
+    queryFn: () => payrollReportsApi.ytdSummary(year, clientId),
   });
 }
 
-export function useThirteenthMonth(year: number) {
+export function useThirteenthMonth(year: number, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "13th-month-pay", year],
-    queryFn: () => payrollReportsApi.thirteenthMonth(year),
+    queryKey: ["payroll-reports", "13th-month-pay", year, clientId],
+    queryFn: () => payrollReportsApi.thirteenthMonth(year, clientId),
   });
 }
 
@@ -272,18 +289,24 @@ export function useMonthlyRemittanceReturn(
   from: string,
   to: string,
   amendedReturn: boolean,
+  clientId?: string,
 ) {
   return useQuery({
-    queryKey: ["payroll-reports", "1601c", from, to, amendedReturn],
+    queryKey: ["payroll-reports", "1601c", from, to, amendedReturn, clientId],
     queryFn: () =>
-      payrollReportsApi.monthlyRemittanceReturn(from, to, amendedReturn),
+      payrollReportsApi.monthlyRemittanceReturn(
+        from,
+        to,
+        amendedReturn,
+        clientId,
+      ),
   });
 }
 
-export function useAlphalist(year: number) {
+export function useAlphalist(year: number, clientId?: string) {
   return useQuery({
-    queryKey: ["payroll-reports", "alphalist", year],
-    queryFn: () => payrollReportsApi.alphalist(year),
+    queryKey: ["payroll-reports", "alphalist", year, clientId],
+    queryFn: () => payrollReportsApi.alphalist(year, clientId),
   });
 }
 

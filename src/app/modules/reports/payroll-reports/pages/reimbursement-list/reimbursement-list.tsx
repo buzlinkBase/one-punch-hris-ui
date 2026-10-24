@@ -3,6 +3,7 @@ import { Button, DatePicker, Form, Input, Modal, Space, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useReimbursementList } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -40,7 +41,7 @@ const toRows = (records: ReimbursementListResponse[]) =>
     r.leaveDescription,
     `${r.leaveDateFrom} - ${r.leaveDateTo}`,
     r.releasePayrollDate ?? "",
-    fmt(r.governmentAmount),
+    r.governmentAmount,
     r.status,
     r.filedDate ?? "",
     r.receivedDate ?? "",
@@ -55,6 +56,7 @@ interface PendingAction {
 }
 
 export default function ReimbursementList() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
     dayjs().endOf("month").format("YYYY-MM-DD"),
@@ -63,7 +65,7 @@ export default function ReimbursementList() {
     data = [],
     isLoading,
     refetch,
-  } = useReimbursementList(range[0], range[1]);
+  } = useReimbursementList(range[0], range[1], clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
   const { mutateAsync: updateStatus, isPending } =
     useUpdateReimbursementStatus();
@@ -208,6 +210,10 @@ export default function ReimbursementList() {
         exportFileName="reimbursement-list"
         exportHeaders={EXPORT_HEADERS}
         exportRows={toRows}
+        totals={{
+          fields: ["governmentAmount"],
+          exportHeaders: ["Government Amount"],
+        }}
         filters={
           <Form layout="vertical">
             <div className="flex items-end gap-4 flex-wrap">
@@ -228,6 +234,7 @@ export default function ReimbursementList() {
                   }}
                 />
               </Form.Item>
+              <ClientFilter value={clientId} onChange={setClientId} />
               <ReportNameFilter
                 label="Employee"
                 options={employeeFilter.options}

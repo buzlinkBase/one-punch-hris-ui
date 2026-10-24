@@ -4,6 +4,7 @@ import { FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useAlphalist } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -38,14 +39,14 @@ const toRows = (records: AlphalistEntryResponse[]) =>
     r.employeeNo,
     r.fullName,
     r.tin,
-    fmt(r.grossCompensation),
-    fmt(r.nonTaxableCompensation),
-    fmt(r.taxableCompensation),
-    fmt(r.thirteenthMonthPay),
-    fmt(r.totalSSS),
-    fmt(r.totalPhilHealth),
-    fmt(r.totalPagIbig),
-    fmt(r.totalTaxWithheld),
+    r.grossCompensation,
+    r.nonTaxableCompensation,
+    r.taxableCompensation,
+    r.thirteenthMonthPay,
+    r.totalSSS,
+    r.totalPhilHealth,
+    r.totalPagIbig,
+    r.totalTaxWithheld,
   ]);
 
 const columns: ColumnsType<AlphalistEntryResponse> = [
@@ -97,8 +98,9 @@ const columns: ColumnsType<AlphalistEntryResponse> = [
 ];
 
 export default function BirAlphalist() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [year, setYear] = useState(dayjs().year());
-  const { data = [], isLoading, refetch } = useAlphalist(year);
+  const { data = [], isLoading, refetch } = useAlphalist(year, clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
@@ -113,6 +115,28 @@ export default function BirAlphalist() {
       exportFileName="bir-alphalist"
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: [
+          "grossCompensation",
+          "nonTaxableCompensation",
+          "taxableCompensation",
+          "thirteenthMonthPay",
+          "totalSSS",
+          "totalPhilHealth",
+          "totalPagIbig",
+          "totalTaxWithheld",
+        ],
+        exportHeaders: [
+          "Gross Compensation",
+          "Non-Taxable",
+          "Taxable",
+          "13th Month Pay",
+          "SSS",
+          "PhilHealth",
+          "Pag-IBIG",
+          "Tax Withheld",
+        ],
+      }}
       notice={
         <Alert
           type="warning"
@@ -129,6 +153,7 @@ export default function BirAlphalist() {
               onClick={() =>
                 openPdfInNewTab(payrollReportsApi.urls.alphalistPrint, {
                   year,
+                  clientId,
                 })
               }
             >
@@ -139,7 +164,7 @@ export default function BirAlphalist() {
               onClick={() =>
                 downloadBlobFile(
                   payrollReportsApi.urls.alphalistExport,
-                  { year },
+                  { year, clientId },
                   `bir-alphalist-${year}.csv`,
                 )
               }
@@ -161,6 +186,7 @@ export default function BirAlphalist() {
                 onChange={(date) => date && setYear(date.year())}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

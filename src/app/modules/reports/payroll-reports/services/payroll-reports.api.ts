@@ -55,20 +55,40 @@ async function get<T>(
 }
 
 export const payrollReportsApi = {
-  sssRemittance: (from: string, to: string) =>
-    get<ContributionRemittanceResponse>("sss-remittance", { from, to }),
-  philHealthRemittance: (from: string, to: string) =>
-    get<ContributionRemittanceResponse>("philhealth-remittance", { from, to }),
-  pagIbigRemittance: (from: string, to: string) =>
-    get<ContributionRemittanceResponse>("pagibig-remittance", { from, to }),
-  wtaxRemittance: (from: string, to: string) =>
-    get<ContributionRemittanceResponse>("wtax-remittance", { from, to }),
-  bankDisbursement: (from: string, to: string) =>
-    get<BankDisbursementResponse>("bank-disbursement", { from, to }),
-  deductionLedger: (asOf: string) =>
-    get<DeductionLedgerResponse>("deduction-ledger", { asOf }),
-  cashBondReport: (asOf: string) =>
-    get<CashBondReportResponse>("cash-bond", { asOf }),
+  sssRemittance: (from: string, to: string, clientId?: string) =>
+    get<ContributionRemittanceResponse>("sss-remittance", {
+      from,
+      to,
+      clientId,
+    }),
+  philHealthRemittance: (from: string, to: string, clientId?: string) =>
+    get<ContributionRemittanceResponse>("philhealth-remittance", {
+      from,
+      to,
+      clientId,
+    }),
+  pagIbigRemittance: (from: string, to: string, clientId?: string) =>
+    get<ContributionRemittanceResponse>("pagibig-remittance", {
+      from,
+      to,
+      clientId,
+    }),
+  wtaxRemittance: (from: string, to: string, clientId?: string) =>
+    get<ContributionRemittanceResponse>("wtax-remittance", {
+      from,
+      to,
+      clientId,
+    }),
+  bankDisbursement: (from: string, to: string, clientId?: string) =>
+    get<BankDisbursementResponse>("bank-disbursement", {
+      from,
+      to,
+      clientId,
+    }),
+  deductionLedger: (asOf: string, clientId?: string) =>
+    get<DeductionLedgerResponse>("deduction-ledger", { asOf, clientId }),
+  cashBondReport: (asOf: string, clientId?: string) =>
+    get<CashBondReportResponse>("cash-bond", { asOf, clientId }),
   cashBondEntries: (employeeId: string, asOf: string) =>
     get<LedgerEntryResponse>(`cash-bond/${employeeId}/entries`, { asOf }),
   adjustCashBond: (payload: AdjustCashBondRequest) =>
@@ -79,8 +99,8 @@ export const payrollReportsApi = {
     get<LedgerEntryResponse>(`leave-ledger/${employeeId}/${leaveId}/entries`, {
       year,
     }),
-  retirementLedger: (asOf: string) =>
-    get<FundLedgerSummaryResponse>("retirement-ledger", { asOf }),
+  retirementLedger: (asOf: string, clientId?: string) =>
+    get<FundLedgerSummaryResponse>("retirement-ledger", { asOf, clientId }),
   retirementEntries: (employeeId: string, asOf: string) =>
     get<LedgerEntryResponse>(`retirement-ledger/${employeeId}/entries`, {
       asOf,
@@ -122,25 +142,35 @@ export const payrollReportsApi = {
         { params: { employeeIds }, paramsSerializer: { indexes: null } },
       )
       .then((res) => res ?? []),
-  reimbursementList: (from: string, to: string) =>
-    get<ReimbursementListResponse>("reimbursement-list", { from, to }),
+  reimbursementList: (from: string, to: string, clientId?: string) =>
+    get<ReimbursementListResponse>("reimbursement-list", {
+      from,
+      to,
+      clientId,
+    }),
   adjustLeaveCredits: (payload: AdjustLeaveCreditsRequest) =>
     httpClient.postUnwrapped<AdjustLeaveCreditsResponse>(
       `${LEAVES_ENDPOINT}/credits/adjust`,
       payload,
     ),
-  costSummary: (from: string, to: string, groupBy: CostSummaryGroupBy) =>
-    get<CostSummaryResponse>("cost-summary", { from, to, groupBy }),
-  ytdSummary: (year: number) =>
-    get<YtdPayrollSummaryResponse>("ytd-summary", { year }),
-  thirteenthMonth: (year: number) =>
-    get<ThirteenthMonthResponse>("13th-month-pay", { year }),
+  costSummary: (
+    from: string,
+    to: string,
+    groupBy: CostSummaryGroupBy,
+    clientId?: string,
+  ) =>
+    get<CostSummaryResponse>("cost-summary", { from, to, groupBy, clientId }),
+  ytdSummary: (year: number, clientId?: string) =>
+    get<YtdPayrollSummaryResponse>("ytd-summary", { year, clientId }),
+  thirteenthMonth: (year: number, clientId?: string) =>
+    get<ThirteenthMonthResponse>("13th-month-pay", { year, clientId }),
   // Distinct from the generic get<T>() helper — this endpoint's envelope carries a `summary`
   // object alongside `data` (the per-employee drill-down rows), not just a flat array.
   async monthlyRemittanceReturn(
     from: string,
     to: string,
     amendedReturn: boolean,
+    clientId?: string,
   ): Promise<{
     employees: MonthlyRemittanceReturnEmployeeResponse[];
     summary: MonthlyRemittanceReturnResponse;
@@ -148,11 +178,11 @@ export const payrollReportsApi = {
     const res = await httpClient.getUnwrapped<{
       data: MonthlyRemittanceReturnEmployeeResponse[];
       summary: MonthlyRemittanceReturnResponse;
-    }>(`${ENDPOINT}/1601c`, { params: { from, to, amendedReturn } });
+    }>(`${ENDPOINT}/1601c`, { params: { from, to, amendedReturn, clientId } });
     return { employees: res?.data ?? [], summary: res.summary };
   },
-  alphalist: (year: number) =>
-    get<AlphalistEntryResponse>("alphalist", { year }),
+  alphalist: (year: number, clientId?: string) =>
+    get<AlphalistEntryResponse>("alphalist", { year, clientId }),
   bir2316: (employeeId: string, year: number) =>
     get<Bir2316Response>("2316", { employeeId, year }),
   // URL builders for the /print (PDF, opened in a new tab) and /export (raw file download)

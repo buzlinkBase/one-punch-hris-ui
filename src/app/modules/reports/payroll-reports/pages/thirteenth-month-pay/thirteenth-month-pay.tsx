@@ -4,6 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import { PrinterOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useThirteenthMonth } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -61,11 +62,11 @@ const toRows = (records: ThirteenthMonthResponse[]) =>
   records.map((r) => [
     r.employeeNo,
     r.fullName,
-    fmt(r.totalBasicPayForYear),
-    fmt(r.totalSpecialBonusesForYear),
-    fmt(r.thirteenthMonthPay),
+    r.totalBasicPayForYear,
+    r.totalSpecialBonusesForYear,
+    r.thirteenthMonthPay,
     STATUS_LABEL[r.status],
-    r.netPay != null ? fmt(r.netPay) : "—",
+    r.netPay ?? "",
   ]);
 
 const columns: ColumnsType<ThirteenthMonthResponse> = [
@@ -142,8 +143,9 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
 ];
 
 export default function ThirteenthMonthPay() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [year, setYear] = useState(dayjs().year());
-  const { data = [], isLoading, refetch } = useThirteenthMonth(year);
+  const { data = [], isLoading, refetch } = useThirteenthMonth(year, clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   const handlePrintList = async () => {
@@ -157,7 +159,7 @@ export default function ThirteenthMonthPay() {
         // PayrollReportsController's route resolves to "payrollreports" (no hyphen) — see
         // payroll-reports.api.ts's ENDPOINT comment for why.
         `${buildApiUrl(API_PREFIX.hrms, "payrollreports")}/13th-month-pay/print`,
-        { params: { year }, responseType: "blob" },
+        { params: { year, clientId }, responseType: "blob" },
       );
       const url = URL.createObjectURL(blob);
       if (printTab) printTab.location.href = url;
@@ -179,6 +181,20 @@ export default function ThirteenthMonthPay() {
       exportFileName={`13th-month-pay-${year}`}
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: [
+          "totalBasicPayForYear",
+          "totalSpecialBonusesForYear",
+          "thirteenthMonthPay",
+          "netPay",
+        ],
+        exportHeaders: [
+          "Total Basic Pay (Year)",
+          "Special Bonuses (Year)",
+          "13th Month Pay",
+          "Net Pay",
+        ],
+      }}
       extraActions={
         <Button
           icon={<PrinterOutlined />}
@@ -200,6 +216,7 @@ export default function ThirteenthMonthPay() {
                 onChange={(date) => date && setYear(date.year())}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

@@ -3,6 +3,7 @@ import { Form, Select, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useBankDisbursement } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -50,7 +51,7 @@ const toBankRows = (records: BankDisbursementResponse[]) =>
     r.bankNo,
     r.payPeriodStart,
     r.payPeriodEnd,
-    fmt(r.netPay),
+    r.netPay,
   ]);
 
 const toCashRows = (records: BankDisbursementResponse[]) =>
@@ -59,7 +60,7 @@ const toCashRows = (records: BankDisbursementResponse[]) =>
     r.fullName,
     r.payPeriodStart,
     r.payPeriodEnd,
-    fmt(r.netPay),
+    r.netPay,
     "",
   ]);
 
@@ -126,6 +127,7 @@ const cashColumns: ColumnsType<BankDisbursementResponse> = [
 ];
 
 export default function BankDisbursement() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [mode, setMode] = useState<ModeFilter>("All");
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
@@ -135,7 +137,7 @@ export default function BankDisbursement() {
     data = [],
     isLoading,
     refetch,
-  } = useBankDisbursement(range[0], range[1]);
+  } = useBankDisbursement(range[0], range[1], clientId);
   const byMode = data.filter((r) => mode === "All" || r.modeOfPayment === mode);
   const isCash = mode === "Cash";
   const employeeFilter = useReportNameFilter(byMode, (r) => r.fullName);
@@ -156,6 +158,7 @@ export default function BankDisbursement() {
       exportFileName={isCash ? "cash-disbursement" : "bank-disbursement"}
       exportHeaders={isCash ? CASH_EXPORT_HEADERS : BANK_EXPORT_HEADERS}
       exportRows={isCash ? toCashRows : toBankRows}
+      totals={{ fields: ["netPay"], exportHeaders: ["Net Pay"] }}
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
@@ -184,6 +187,7 @@ export default function BankDisbursement() {
                 onChange={setMode}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

@@ -4,6 +4,7 @@ import { FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useSssRemittance } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -34,9 +35,9 @@ const toRows = (records: ContributionRemittanceResponse[]) =>
     r.employeeNo,
     r.fullName,
     r.govIdNumber,
-    fmt(r.employeeShare),
-    fmt(r.employerShare),
-    fmt(r.totalContribution),
+    r.employeeShare,
+    r.employerShare,
+    r.totalContribution,
   ]);
 
 const columns: ColumnsType<ContributionRemittanceResponse> = [
@@ -74,6 +75,7 @@ const columns: ColumnsType<ContributionRemittanceResponse> = [
 ];
 
 export default function SssR3() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
     dayjs().endOf("month").format("YYYY-MM-DD"),
@@ -82,7 +84,7 @@ export default function SssR3() {
     data = [],
     isLoading,
     refetch,
-  } = useSssRemittance(range[0], range[1]);
+  } = useSssRemittance(range[0], range[1], clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
 
   return (
@@ -97,6 +99,10 @@ export default function SssR3() {
       exportFileName="sss-r3-preview"
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: ["employeeShare", "employerShare", "totalContribution"],
+        exportHeaders: ["EE Share", "ER Share", "Total"],
+      }}
       notice={
         <Alert
           type="warning"
@@ -114,6 +120,7 @@ export default function SssR3() {
                 openPdfInNewTab(payrollReportsApi.urls.sssR3Print, {
                   from: range[0],
                   to: range[1],
+                  clientId,
                 })
               }
             >
@@ -124,7 +131,7 @@ export default function SssR3() {
               onClick={() =>
                 downloadBlobFile(
                   payrollReportsApi.urls.sssR3Export,
-                  { from: range[0], to: range[1] },
+                  { from: range[0], to: range[1], clientId },
                   `sss-r3-${range[0]}-${range[1]}.csv`,
                 )
               }
@@ -154,6 +161,7 @@ export default function SssR3() {
                 }}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

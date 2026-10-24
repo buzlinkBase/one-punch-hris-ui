@@ -3,6 +3,7 @@ import { DatePicker, Form } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useDeductionLedger } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -30,11 +31,11 @@ const toRows = (records: DeductionLedgerResponse[]) =>
     r.fullName,
     r.deductionTypeName,
     r.deductionName,
-    fmt(r.totalPrincipal),
-    fmt(r.interestRate),
+    r.totalPrincipal,
+    r.interestRate,
     r.startDate,
     r.endDate,
-    fmt(r.currentBalance),
+    r.currentBalance,
   ]);
 
 const columns: ColumnsType<DeductionLedgerResponse> = [
@@ -95,8 +96,9 @@ const columns: ColumnsType<DeductionLedgerResponse> = [
 ];
 
 export default function DeductionLedger() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [asOf, setAsOf] = useState(dayjs().format("YYYY-MM-DD"));
-  const { data = [], isLoading, refetch } = useDeductionLedger(asOf);
+  const { data = [], isLoading, refetch } = useDeductionLedger(asOf, clientId);
   const employeeFilter = useReportNameFilter(data, (r) => r.fullName);
   const deductionTypeFilter = useReportNameFilter(
     employeeFilter.filtered,
@@ -119,6 +121,10 @@ export default function DeductionLedger() {
       exportFileName="deduction-ledger"
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: ["totalPrincipal", "currentBalance"],
+        exportHeaders: ["Total Principal", "Current Balance"],
+      }}
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
@@ -130,6 +136,7 @@ export default function DeductionLedger() {
                 onChange={(date) => date && setAsOf(date.format("YYYY-MM-DD"))}
               />
             </Form.Item>
+            <ClientFilter value={clientId} onChange={setClientId} />
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

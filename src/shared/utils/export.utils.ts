@@ -21,13 +21,25 @@ export interface ExcelSheet {
   rows: (string | number)[][];
   /** Optional Excel display format for every numeric cell (e.g. "#,##0.00"); the value stays a number. */
   numberFormat?: string;
+  /** Headers of count columns (e.g. "Employees"): numeric, but shown without decimals. */
+  integerHeaders?: string[];
 }
 
-function applyNumberFormat(ws: XLSX.WorkSheet, format: string): void {
+export const EXCEL_AMOUNT_FORMAT = "#,##0.00";
+const EXCEL_INTEGER_FORMAT = "0";
+
+export function applyNumberFormat(
+  ws: XLSX.WorkSheet,
+  format: string,
+  headers: string[],
+  integerHeaders: string[] = [],
+): void {
   for (const [address, value] of Object.entries(ws)) {
     if (address.startsWith("!")) continue;
     const cell = value as XLSX.CellObject;
-    if (cell.t === "n") cell.z = format;
+    if (cell.t !== "n") continue;
+    const header = headers[XLSX.utils.decode_cell(address).c];
+    cell.z = integerHeaders.includes(header) ? EXCEL_INTEGER_FORMAT : format;
   }
 }
 
@@ -39,7 +51,13 @@ export function downloadMultiSheetExcel(
   const wb = XLSX.utils.book_new();
   for (const sheet of sheets) {
     const ws = XLSX.utils.aoa_to_sheet([sheet.headers, ...sheet.rows]);
-    if (sheet.numberFormat) applyNumberFormat(ws, sheet.numberFormat);
+    if (sheet.numberFormat)
+      applyNumberFormat(
+        ws,
+        sheet.numberFormat,
+        sheet.headers,
+        sheet.integerHeaders,
+      );
     // Excel worksheet names: max 31 chars, and : \ / ? * [ ] aren't allowed.
     const safeName = sheet.name.replace(/[:\\/?*[\]]/g, "").slice(0, 31);
     XLSX.utils.book_append_sheet(wb, ws, safeName);
@@ -47,14 +65,27 @@ export function downloadMultiSheetExcel(
   XLSX.writeFile(wb, filename);
 }
 
-/** Single-sheet convenience wrapper over downloadMultiSheetExcel. */
+/** Single-sheet convenience wrapper over downloadMultiSheetExcel. Numbers in rows become numeric
+ * cells (formatted "#,##0.00"); strings stay text. */
 export function downloadExcel(
   headers: string[],
-  rows: string[][],
+  rows: (string | number)[][],
   filename: string,
   sheetName = "Sheet1",
+  integerHeaders?: string[],
 ): void {
-  downloadMultiSheetExcel([{ name: sheetName, headers, rows }], filename);
+  downloadMultiSheetExcel(
+    [
+      {
+        name: sheetName,
+        headers,
+        rows,
+        numberFormat: EXCEL_AMOUNT_FORMAT,
+        integerHeaders,
+      },
+    ],
+    filename,
+  );
 }
 
 export interface GroupedExcelLeafCol<T> {

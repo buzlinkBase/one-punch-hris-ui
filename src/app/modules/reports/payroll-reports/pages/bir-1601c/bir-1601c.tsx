@@ -16,6 +16,7 @@ import { FilePdfOutlined, WarningOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
+import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
 import { useMonthlyRemittanceReturn } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
@@ -48,12 +49,12 @@ const toRows = (records: MonthlyRemittanceReturnEmployeeResponse[]) =>
     r.employeeNo,
     r.fullName,
     r.atcCode,
-    fmt(r.grossCompensation),
-    fmt(r.statutoryMinimumWage),
-    fmt(r.mwePremiumPay),
-    fmt(r.otherNonTaxable),
-    fmt(r.taxableCompensation),
-    fmt(r.taxWithheld),
+    r.grossCompensation,
+    r.statutoryMinimumWage,
+    r.mwePremiumPay,
+    r.otherNonTaxable,
+    r.taxableCompensation,
+    r.taxWithheld,
   ]);
 
 const columns: ColumnsType<MonthlyRemittanceReturnEmployeeResponse> = [
@@ -255,6 +256,7 @@ function RemittanceMatrix({
 }
 
 export default function Bir1601C() {
+  const [clientId, setClientId] = useState<string | undefined>();
   const [month, setMonth] = useState(dayjs().startOf("month"));
   const [amendedReturn, setAmendedReturn] = useState(false);
   const [drillDownLine, setDrillDownLine] = useState<LineDef | null>(null);
@@ -268,6 +270,7 @@ export default function Bir1601C() {
     range[0],
     range[1],
     amendedReturn,
+    clientId,
   );
 
   const employees = useMemo(() => data?.employees ?? [], [data]);
@@ -302,6 +305,24 @@ export default function Bir1601C() {
         exportFileName="bir-1601c"
         exportHeaders={EXPORT_HEADERS}
         exportRows={toRows}
+        totals={{
+          fields: [
+            "grossCompensation",
+            "statutoryMinimumWage",
+            "mwePremiumPay",
+            "otherNonTaxable",
+            "taxableCompensation",
+            "taxWithheld",
+          ],
+          exportHeaders: [
+            "Gross Compensation",
+            "Line 16A",
+            "Line 16B",
+            "Line 16C",
+            "Taxable Compensation",
+            "Tax Withheld",
+          ],
+        }}
         notice={
           <>
             <Alert
@@ -328,6 +349,7 @@ export default function Bir1601C() {
                     from: range[0],
                     to: range[1],
                     amendedReturn: amendedReturn ? "true" : "false",
+                    clientId,
                   },
                 )
               }
@@ -357,6 +379,7 @@ export default function Bir1601C() {
               <Form.Item label="Amended Return" className="mb-0">
                 <Switch checked={amendedReturn} onChange={setAmendedReturn} />
               </Form.Item>
+              <ClientFilter value={clientId} onChange={setClientId} />
               <ReportNameFilter
                 label="Employee"
                 options={employeeFilter.options}
