@@ -25,6 +25,7 @@ type ExistingAccountView =
   | { phase: "attempting" }
   | { phase: "needsSignIn" }
   | { phase: "emailMismatch"; sessionEmail: string | null }
+  | { phase: "revoked"; message: string }
   | { phase: "error"; message: string };
 
 function resolveExistingAccountView(
@@ -44,10 +45,12 @@ function resolveExistingAccountView(
       sessionEmail: authStorage.getUser()?.email ?? null,
     };
   }
-  return {
-    phase: "error",
-    message: problemDetail(error, "Failed to accept invitation."),
-  };
+  const message = problemDetail(error, "Failed to accept invitation.");
+  // An admin revoked or removed the invite after it was sent.
+  if (guardCode(error) === "INVITATION_REVOKED") {
+    return { phase: "revoked", message };
+  }
+  return { phase: "error", message };
 }
 
 export default function AcceptInvitation() {
@@ -151,6 +154,20 @@ export default function AcceptInvitation() {
           </Button>
           <div className="text-center mt-3">
             <Link to="/dashboard">Go to dashboard instead</Link>
+          </div>
+        </InvitationStatusCard>
+      );
+
+    case "revoked":
+      return (
+        <InvitationStatusCard
+          icon={<WarningOutlined />}
+          title="Invitation no longer valid"
+          subtitle={view.message}
+          danger
+        >
+          <div className="text-center mt-3">
+            <Link to="/dashboard">Go to dashboard</Link>
           </div>
         </InvitationStatusCard>
       );

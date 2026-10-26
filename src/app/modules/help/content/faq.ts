@@ -38,7 +38,7 @@ export const FAQ_ARTICLES: HelpArticle[] = [
       {
         heading: "My invitation link doesn't work",
         body: [
-          "Invitation links expire after 7 days and only work for the email they were sent to. Ask whoever invited you to send a new one.",
+          "Invitation links expire after 7 days and only work for the email they were sent to. A link also stops working if your admin revokes or removes the invitation before you accept it. Ask whoever invited you to send a new one.",
         ],
       },
       {
