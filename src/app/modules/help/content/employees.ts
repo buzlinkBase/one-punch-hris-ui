@@ -30,7 +30,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
           },
           {
             text: "My Pay & Benefits: payslips, leave credits, 13th month pay, deductions and cash bond.",
-            link: { label: "My Pay Slips", to: "/portal/payslips" },
+            link: { label: "My Payslips", to: "/portal/payslips" },
           },
           {
             text: "My Applications: file and track leave, overtime, official business, pass slips and loans.",
@@ -72,7 +72,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "My Daily Time Record", to: "/portal/dtr" },
           },
           {
-            text: "My Incomplete Logs: days with a missing time-in or time-out. Use File Pass Slip there if you were out on company business.",
+            text: "My Incomplete Logs: days with a missing time-in or time-out. Use New Pass Slip there if you were out on company business.",
             link: {
               label: "My Incomplete Logs",
               to: "/portal/incomplete-punches",
@@ -119,15 +119,15 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "My Deductions", to: "/portal/deductions" },
           },
           {
-            text: "My Pay Slips: pick a period and open the payslip. Print opens it as a PDF in a new tab.",
-            link: { label: "My Pay Slips", to: "/portal/payslips" },
+            text: "My Payslips: pick a period and open the payslip. Print opens it as a PDF in a new tab.",
+            link: { label: "My Payslips", to: "/portal/payslips" },
           },
           {
             text: "My Leave Credits: your remaining balance for each leave type.",
             link: { label: "My Leave Credits", to: "/portal/leave-credits" },
           },
           {
-            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts. Your company can hide any My Portal page except My Dashboard and My Profile (for example these two, My Uniform Allowance, My Pay Slips or the application pages), so you may not see all of them.",
+            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts. Your company can hide any My Portal page except My Dashboard and My Profile (for example these two, My Uniform Allowance, My Payslips or the application pages), so you may not see all of them.",
             link: {
               label: "My 13th Month Pay",
               to: "/portal/thirteenth-month",
@@ -169,7 +169,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "Leave", to: "/portal/leave-applications" },
           },
           {
-            text: "Click the file button: File Leave Application, File Overtime Application, File Official Business, File Pass Slip or Request Loan.",
+            text: "Click the file button: New Leave Request, New Overtime Request, New Official Business, New Pass Slip or Request Loan.",
           },
           {
             text: "Fill in the dates, times and reason, then click Submit Application.",

@@ -329,7 +329,7 @@ export interface DtrPayResult {
   specialOTPay: number;
   specialNDPay: number;
   specialNDOTPay: number;
-  // Rest + Legal Day
+  // Rest + Regular Holiday
   restLegalPay: number;
   restLegalOTPay: number;
   restLegalNDPay: number;

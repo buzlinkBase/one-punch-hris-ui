@@ -146,13 +146,17 @@ const holidayTotal = (title: string): Column => ({
 // The 7 holiday categories, mirroring PayslipDocument.cs. Each category total includes its own
 // OT/ND/NDOT pay (already counted in the OT/ND columns), so they don't add up to Holiday.
 const holidayCategoryColumns: Column[] = [
-  money("Legal (Unworked)", "legalUnworked", (r) => r.legalHolidayUnworkedPay),
-  money("Legal Duty (Worked)", "holidayDuty", holidayDuty),
-  money("RD + Legal", "restLegal", restLegalTotal),
+  money(
+    "Reg Hol (Unworked)",
+    "legalUnworked",
+    (r) => r.legalHolidayUnworkedPay,
+  ),
+  money("Reg Hol Duty (Worked)", "holidayDuty", holidayDuty),
+  money("RD + Reg Hol", "restLegal", restLegalTotal),
   money("Special", "special", specialTotal),
   money("RD + Special", "restSpecial", restSpecialTotal),
-  money("Double Legal", "doubleLegal", doubleLegalTotal),
-  money("RD + Double Legal", "restDoubleLegal", restDoubleLegalTotal),
+  money("Double Reg Hol", "doubleLegal", doubleLegalTotal),
+  money("RD + Double Reg Hol", "restDoubleLegal", restDoubleLegalTotal),
 ];
 
 const holidayColumn = ({ expanded, onToggle }: ColumnContext): Column =>

@@ -72,7 +72,7 @@ const CONFIG: AnalyticsPageConfig = {
   note: "Covers leave, overtime, official business, pass slip, loan and profile update requests, by the date they were filed. Leave days count approved leave only.",
   charts: [
     {
-      title: "Requests filed by type",
+      title: "Requests submitted by type",
       kind: "stacked",
       series: REQUEST_KINDS,
     },

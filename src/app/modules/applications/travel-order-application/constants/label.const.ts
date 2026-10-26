@@ -1,8 +1,8 @@
 export const TRAVEL_ORDER_LABEL = {
   TITLE: "Official Business / Travel Orders",
   EMPLOYEE: "Employee",
-  START_DATE: "Date From",
-  END_DATE: "Date To",
+  START_DATE: "From",
+  END_DATE: "To",
   TIME_ENTRY_MODE: "Time Entry",
   TIME_SHIFT: "Time Shift (optional basis)",
   START_TIME: "Start Time",
@@ -15,9 +15,9 @@ export const TRAVEL_ORDER_LABEL = {
   REMARKS: "Remarks",
   STATUS: "Status",
   DAYS: "No. of Days",
-  APPLICATION_DATE: "Filed On",
+  APPLICATION_DATE: "Date Submitted",
   REFERENCE: "Reference No.",
-  CREATE_TITLE: "File Official Business / Travel Order",
+  CREATE_TITLE: "New Official Business / Travel Order",
   EDIT_TITLE: "Edit Official Business / Travel Order",
 };
 

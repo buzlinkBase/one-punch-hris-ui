@@ -64,7 +64,7 @@ export default function CleanRowTable({ data, loading }: Props) {
         }) as object,
     },
     {
-      title: "Emp No",
+      title: "Employee No.",
       dataIndex: "empNo",
       key: "empNo",
       width: widths.empNo,

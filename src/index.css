@@ -289,7 +289,7 @@ body {
 
 .header-grid {
   @apply w-full grid gap-4 items-center;
-  grid-template-columns: minmax(220px, 1fr) minmax(220px, 360px);
+  grid-template-columns: minmax(160px, 1fr) auto;
 }
 
 .header-context {
@@ -318,6 +318,15 @@ body {
   color: var(--text-muted);
 }
 
+.header-crumb-link {
+  @apply cursor-pointer border-0 bg-transparent p-0 font-[inherit] tracking-[inherit] uppercase;
+  color: inherit;
+}
+
+.header-crumb-link:hover {
+  color: var(--primary);
+}
+
 .header-context-title {
   @apply mt-0.5 text-[19px] leading-tight font-bold whitespace-normal;
   color: #224d44;
@@ -329,13 +338,45 @@ body {
 }
 
 .header-search-wrap {
-  @apply min-w-[180px] flex gap-3 items-center;
+  @apply min-w-0 flex gap-3 items-center justify-end;
 }
 
-.header-search .ant-select-selector {
-  border-radius: 999px !important;
-  border-color: var(--border-chip) !important;
-  background: var(--bg-chip) !important;
+.header-search {
+  @apply inline-flex h-[34px] w-48 min-w-0 shrink cursor-pointer leading-none items-center gap-2 whitespace-nowrap rounded-full px-3 text-[13px];
+  border: 1px solid var(--border-chip);
+  background: var(--bg-chip);
+  color: var(--text-muted);
+}
+
+.header-search:hover {
+  border-color: #bfe6d9;
+}
+
+.header-search span {
+  @apply min-w-0 flex-1 truncate text-left;
+}
+
+.header-search kbd {
+  @apply shrink-0 rounded px-1.5 py-0.5 font-sans text-[10px] leading-none font-semibold;
+  border: 1px solid var(--border-chip);
+}
+
+.header-search-icon {
+  display: none;
+}
+
+.header-more-trigger {
+  display: none;
+}
+
+.header-pin-trigger {
+  @apply inline-flex shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-1 text-base;
+  color: var(--text-muted);
+}
+
+.header-pin-trigger:hover,
+.header-pin-trigger[aria-pressed="true"] {
+  color: var(--ant-color-warning);
 }
 
 /* ─── Main layout ────────────────────────────────────── */
@@ -455,6 +496,10 @@ html::-webkit-scrollbar-track {
 
 .form-grid-1 {
   @apply grid grid-cols-1 gap-x-4;
+}
+
+.form-grid-1 > * {
+  grid-column: 1 / -1;
 }
 
 .form-grid-2 {
@@ -754,6 +799,14 @@ textarea:-webkit-autofill:focus {
     display: none !important;
   }
 
+  .header-search-icon {
+    display: inline-flex;
+  }
+
+  .header-more-trigger {
+    display: inline-flex;
+  }
+
   .header-context-subtitle {
     display: none;
   }
@@ -799,6 +852,41 @@ textarea:-webkit-autofill:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Tighter, easier-to-swipe tab bars for the short view-switch tabs that remain. */
+  .ant-tabs .ant-tabs-tab {
+    padding-block: 10px;
+  }
+
+  .ant-tabs .ant-tabs-tab + .ant-tabs-tab {
+    margin-inline-start: 20px;
+  }
+
+  /* No frozen columns on phones: a pinned column eats a large share of a narrow screen, so every
+     table scrolls as one piece. antd pins cells with an inline position, hence !important. */
+  .ant-table-wrapper .ant-table-cell-fix-start,
+  .ant-table-wrapper .ant-table-cell-fix-end,
+  .ant-table-wrapper .ant-table-cell-fix-left,
+  .ant-table-wrapper .ant-table-cell-fix-right,
+  .ant-table-wrapper .ant-table-cell-fix-sticky {
+    position: static !important;
+  }
+
+  .ant-table-wrapper .ant-table-cell-fix-start::after,
+  .ant-table-wrapper .ant-table-cell-fix-end::after,
+  .ant-table-wrapper .ant-table-cell-fix-left::after,
+  .ant-table-wrapper .ant-table-cell-fix-right::after,
+  .ant-table-wrapper .ant-table-cell-fix-start-shadow::after,
+  .ant-table-wrapper .ant-table-cell-fix-end-shadow::after {
+    display: none !important;
+  }
+
+  /* A field marked col-span-2 in what is now a one-column grid would make the browser add an
+     implicit second column, squeezing the following fields into a ~24px sliver. */
+  .form-grid-2.form-grid-2 > *,
+  .form-grid-3.form-grid-3 > * {
+    grid-column: 1 / -1;
+  }
+
   /* Toolbar row: wrap title + buttons on narrow screens */
   .page-toolbar-row {
     flex-wrap: wrap;
@@ -822,5 +910,35 @@ textarea:-webkit-autofill:focus {
 
   .form-action-footer-row .ant-btn {
     @apply flex-1;
+  }
+}
+
+/* ─── Accessibility ──────────────────────────────────── */
+.skip-link {
+  @apply fixed left-3 top-3 z-[2000] -translate-y-16 rounded-md px-4 py-2 text-sm font-semibold text-white no-underline;
+  background: var(--primary);
+}
+
+.skip-link:focus {
+  @apply translate-y-0;
+}
+
+#main-content:focus {
+  outline: none;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

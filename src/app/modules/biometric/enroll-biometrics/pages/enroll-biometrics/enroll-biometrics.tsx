@@ -20,7 +20,7 @@ import {
   Typography,
   message,
 } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { DeleteOutlined, ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { Dayjs } from "dayjs";
 import { useDevices } from "@/app/modules/biometric/manage-devices/hooks/use-device-queries";
@@ -56,6 +56,7 @@ import {
   useDeleteEmployeesBulk,
 } from "../../hooks/use-commands-queries";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { IconAction } from "@/shared/components/icon-action/icon-action";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
@@ -135,9 +136,14 @@ function PendingCommandsSection({ sn }: { sn: string }) {
             okText="Remove"
             cancelText="Cancel"
           >
-            <Button type="link" danger size="small" loading={removing}>
-              Delete
-            </Button>
+            <span>
+              <IconAction
+                title="Delete"
+                danger
+                icon={<DeleteOutlined />}
+                loading={removing}
+              />
+            </span>
           </Popconfirm>
         </PermissionGate>
       ),

@@ -39,10 +39,11 @@ export default function SelectTenant() {
     } catch (err) {
       const description = axios.isAxiosError(err)
         ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ?? "Failed to select tenant. Please try again.")
+            ?.errorMessage ??
+          "Couldn't switch to this company. Please try again.")
         : "An unexpected error occurred.";
       notification.error({
-        message: "Selection failed",
+        message: "Couldn't switch company",
         description,
         placement: "topRight",
       });

@@ -2,9 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { attendanceEntryApi } from "../services/attendance-entry.api";
 import type { AttendanceEntryFilter } from "../models/api/request/attendance-entry-filter.model";
 import type { CreateAttendanceEntry } from "../models/api/request/create-attendance-entry.model";
+import { RAW_LOGS_QUERY_KEY } from "@/app/modules/timekeeping/raw-logs/hooks/use-raw-logs-queries";
 import type { UpdateAttendanceEntry } from "../models/api/request/update-attendance-entry.model";
 
 export const QUERY_KEY = ["timekeeping", "attendance-entry"];
+
+// A log edited or removed here also changes the Attendance Logs report.
+function invalidateLogViews(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  queryClient.invalidateQueries({ queryKey: RAW_LOGS_QUERY_KEY });
+}
 
 export function useShiftAttendanceLogs(
   filter: {
@@ -73,7 +80,7 @@ export function useCreateAttendanceEntries() {
     mutationFn: (entries: CreateAttendanceEntry[]) =>
       attendanceEntryApi.create(entries),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLogViews(queryClient);
     },
   });
 }
@@ -84,7 +91,7 @@ export function useUpdateAttendanceEntry() {
     mutationFn: (payload: UpdateAttendanceEntry) =>
       attendanceEntryApi.update(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLogViews(queryClient);
     },
   });
 }
@@ -95,7 +102,7 @@ export function useDeleteAttendanceEntryLog() {
   return useMutation({
     mutationFn: (id: string) => attendanceEntryApi.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLogViews(queryClient);
     },
   });
 }
@@ -108,7 +115,7 @@ export function useRemoveAttendanceLog() {
     mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
       attendanceEntryApi.remove(id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLogViews(queryClient);
     },
   });
 }
@@ -120,7 +127,7 @@ export function useRestoreOriginalLog() {
     mutationFn: (originalLogId: string) =>
       attendanceEntryApi.restoreOriginal(originalLogId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLogViews(queryClient);
     },
   });
 }
@@ -132,7 +139,7 @@ export function useDeleteAttendanceBatch() {
     mutationFn: (batchCode: string) =>
       attendanceEntryApi.deleteBatch(batchCode),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLogViews(queryClient);
     },
   });
 }

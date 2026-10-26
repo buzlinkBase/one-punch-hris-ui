@@ -364,7 +364,7 @@ export default function PortalLeaveApplicationCreate() {
     <PortalApplicationShell
       mode={pageMode}
       titles={{
-        create: "File Leave Application",
+        create: "New Leave Request",
         edit: "Edit Leave Application",
         view: "View Leave Application",
       }}

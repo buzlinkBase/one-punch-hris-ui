@@ -5,6 +5,6 @@ export const UNDERTIME_LABEL = {
   UT_MINUTES: "Undertime Override (min)",
   REMARKS: "Reason",
   STATUS: "Status",
-  CREATE_TITLE: "File Undertime Application",
+  CREATE_TITLE: "New Undertime Request",
   EDIT_TITLE: "Edit Undertime Application",
 };

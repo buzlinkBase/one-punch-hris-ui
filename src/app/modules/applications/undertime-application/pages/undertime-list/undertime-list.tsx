@@ -73,7 +73,7 @@ export default function UndertimeList() {
               icon={<PlusOutlined />}
               onClick={() => navigate({ to: "/applications/undertime/create" })}
             >
-              File Undertime
+              New Undertime
             </Button>
           </Space>
         </div>

@@ -58,10 +58,10 @@ export const deductionReasonText = (reason: string): string => {
 
 export const FOR_PAYROLL_LABEL = {
   TITLE: "For Payroll",
-  BIO_ID: "BioId",
+  BIO_ID: "Bio ID",
   EMPLOYEE: "Employee",
   LATE: "Late",
-  UNDER_TIME: "Under Time",
+  UNDER_TIME: "Undertime",
   REG_NET: "Reg. Net",
   NET_OVERTIME: "Net Overtime",
   ND: "ND",

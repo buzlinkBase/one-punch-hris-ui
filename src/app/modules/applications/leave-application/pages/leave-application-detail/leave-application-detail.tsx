@@ -27,6 +27,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
@@ -222,7 +223,7 @@ export default function LeaveApplicationDetail() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<LeaveApplicationFormValues>({
     resolver: zodResolver(leaveApplicationFormSchema),
     defaultValues: {
@@ -247,6 +248,7 @@ export default function LeaveApplicationDetail() {
       supportingDocumentUrl: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const mode = useWatch({ control, name: "mode" });
   const partialMode = useWatch({ control, name: "partialMode" });
@@ -508,6 +510,7 @@ export default function LeaveApplicationDetail() {
       await add({ ...basePayload, attachmentIds: staged.stagedIds });
       void staged.refresh();
     }
+    allowNavigation();
     navigate({ to: "/applications/leave" });
   };
 

@@ -265,7 +265,7 @@ export default function Employee201Document({
             right={["Client / Site", data.clientName]}
           />
           <TwoColRow
-            left={["Operation Area", data.areaName]}
+            left={["Project Site", data.areaName]}
             right={["Hiring Entity", data.hiringEntity]}
           />
           <TwoColRow

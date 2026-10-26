@@ -19,6 +19,7 @@ import {
   ClearOutlined,
   DeleteOutlined,
   DownloadOutlined,
+  EditOutlined,
   PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
@@ -28,6 +29,7 @@ import AttendanceEntryTable from "../../components/attendance-entry-table";
 import EditAttendanceEntryModal from "../../components/edit-attendance-entry-modal";
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { IconAction } from "@/shared/components/icon-action/icon-action";
 import {
   useEmployeeFilter,
   useAttendanceEntryRecords,
@@ -94,7 +96,7 @@ export default function AttendanceEntryList() {
     useResizableColumns({
       employeeName: 150,
       timeLog: 200,
-      action: 80,
+      action: 90,
     });
 
   const { widths: batchWidths, handleResize: batchResize } =
@@ -102,7 +104,7 @@ export default function AttendanceEntryList() {
       batchCode: 150,
       count: 80,
       dateRange: 300,
-      actions: 148,
+      actions: 90,
     });
 
   const batchGroups = useMemo<BatchGroup[]>(() => {
@@ -220,18 +222,27 @@ export default function AttendanceEntryList() {
           onResize: (w: number) => entryResize("action", w),
         }) as object,
       render: (_: unknown, record: AttendanceEntryResponse) => (
-        <PermissionGate permission="Attendance Manual Entry:Delete">
-          <Popconfirm
-            title="Delete this time log?"
-            okText="Yes"
-            cancelText="No"
-            onConfirm={() => handleDeleteEntry(record.id)}
-          >
-            <Button type="link" danger size="small">
-              Delete
-            </Button>
-          </Popconfirm>
-        </PermissionGate>
+        <Space size={4}>
+          <PermissionGate permission="Attendance Manual Entry:Edit">
+            <IconAction
+              title="Edit"
+              icon={<EditOutlined />}
+              onClick={() => setEditingRecord(record)}
+            />
+          </PermissionGate>
+          <PermissionGate permission="Attendance Manual Entry:Delete">
+            <Popconfirm
+              title="Delete this time log?"
+              okText="Yes"
+              cancelText="No"
+              onConfirm={() => handleDeleteEntry(record.id)}
+            >
+              <span>
+                <IconAction title="Delete" danger icon={<DeleteOutlined />} />
+              </span>
+            </Popconfirm>
+          </PermissionGate>
+        </Space>
       ),
     },
   ];
@@ -297,14 +308,14 @@ export default function AttendanceEntryList() {
             cancelText="Cancel"
             onConfirm={() => handleDeleteBatch(row.batchCode)}
           >
-            <Button
-              danger
-              size="small"
-              icon={<DeleteOutlined />}
-              loading={isDeletingBatch}
-            >
-              Delete Batch
-            </Button>
+            <span>
+              <IconAction
+                title="Delete batch"
+                danger
+                icon={<DeleteOutlined />}
+                loading={isDeletingBatch}
+              />
+            </span>
           </Popconfirm>
         </PermissionGate>
       ),

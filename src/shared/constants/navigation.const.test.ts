@@ -80,7 +80,7 @@ describe("getFeaturesForPath", () => {
   });
 
   it("accumulates a group's feature onto its pages", () => {
-    // My Pay Slips needs the portal itself and payroll.
+    // My Payslips needs the portal itself and payroll.
     expect(getFeaturesForPath("/portal/payslips")).toEqual([
       FEATURE_KEYS.PORTAL_SELF_SERVICE,
       FEATURE_KEYS.PAYROLL_CORE,

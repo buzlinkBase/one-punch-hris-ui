@@ -186,7 +186,7 @@ export default function IncompletePunchesList() {
 
   const fixedColumns: ColumnsType<CleanAttendanceLogColumnar> = [
     {
-      title: "Emp No",
+      title: "Employee No.",
       dataIndex: "empNo",
       key: "empNo",
       width: widths.empNo,

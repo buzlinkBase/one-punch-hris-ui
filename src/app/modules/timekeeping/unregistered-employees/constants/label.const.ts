@@ -1,5 +1,5 @@
 export const UNREGISTER_EMPLOYEE_LABEL = {
-  TITLE: "Employee Tagging",
+  TITLE: "Unregistered Employees",
   SUBTITLE:
     "Attendance logs with Bio IDs not yet linked to any employee record.",
   DATE_RANGE: "Date Range",

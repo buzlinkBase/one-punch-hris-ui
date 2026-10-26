@@ -254,7 +254,7 @@ export default function HolidayDetail() {
             <Form.Item label={HOLIDAY_LABEL.WORK_TYPE}>
               {isLegal ? (
                 <Alert
-                  message="Legal holidays are always non-working."
+                  message="Regular holidays are always non-working."
                   type="info"
                   showIcon
                   className="py-1"

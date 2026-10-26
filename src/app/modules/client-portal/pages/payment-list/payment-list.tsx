@@ -299,7 +299,7 @@ export default function PaymentList() {
               }}
             />
           </Form.Item>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item
               label="Amount received"
               name="amount"
@@ -329,7 +329,7 @@ export default function PaymentList() {
             />
           </Form.Item>
           {formMethod === "Check" && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Form.Item
                 label="Check no."
                 name="checkNumber"

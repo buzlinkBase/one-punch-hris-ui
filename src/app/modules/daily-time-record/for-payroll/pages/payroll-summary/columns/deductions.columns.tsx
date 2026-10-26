@@ -76,7 +76,7 @@ export const deductionsColumns = (
     results,
   ),
   money("Late", "late", (r) => r.lateAmount),
-  money("Under Time", "ut", (r) => r.underTimeAmount),
+  money("Undertime", "ut", (r) => r.underTimeAmount),
   // Variable-rate employees aren't paid for absent days to begin with, so nothing is deducted.
   money("Absent", "abs", (r) =>
     r.salaryType === "FIXED" ? r.absencesAmount : 0,

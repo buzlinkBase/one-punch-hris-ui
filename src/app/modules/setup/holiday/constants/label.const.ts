@@ -9,14 +9,14 @@ export const HOLIDAY_LABEL = {
   MONTH: "Month",
   WEEK_OF_MONTH: "Week of Month",
   DAY_OF_WEEK: "Day of Week",
-  AREA: "Site (Localized)",
+  AREA: "Project Site (location-specific)",
   STATUS: "Status",
   CREATE_TITLE: "Create Holiday",
   EDIT_TITLE: "Edit Holiday",
 };
 
 export const HOLIDAY_TYPE_OPTIONS = [
-  { value: "LEGAL", label: "Legal Holiday" },
+  { value: "LEGAL", label: "Regular Holiday" },
   { value: "SPECIAL", label: "Special Holiday" },
 ];
 

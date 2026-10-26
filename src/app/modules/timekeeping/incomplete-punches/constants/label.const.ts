@@ -3,15 +3,15 @@ export const INCOMPLETE_PUNCHES_LABEL = {
   SUBTITLE: "Review and manage incomplete time punch records.",
 
   // Filter labels
-  FROM_DATE: "From Date",
-  TO_DATE: "To Date",
+  FROM_DATE: "From",
+  TO_DATE: "To",
   DEPARTMENT: "Department",
   CLIENT: "Client",
   EMPLOYEE: "Employee",
   PAYROLL_GROUP: "Payroll Group",
 
   // Column headers
-  EMPLOYEE_NO: "Emp No",
+  EMPLOYEE_NO: "Employee No.",
   EMPLOYEE_NAME: "Employee Name",
   DEPARTMENT_COL: "Department",
   PAYROLL_DATE: "Payroll Date",

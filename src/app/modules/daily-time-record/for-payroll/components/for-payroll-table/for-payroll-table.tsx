@@ -112,7 +112,7 @@ export default function ForPayrollTable({ data, loading }: Props) {
           title: "Holiday",
           children: [
             {
-              title: "Legal",
+              title: "Regular",
               children: [
                 col(FOR_PAYROLL_LABEL.LH, "lh", 70),
                 col(FOR_PAYROLL_LABEL.LH_OT, "lhOt", 80),

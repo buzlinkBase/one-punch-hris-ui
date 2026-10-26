@@ -47,7 +47,7 @@ export default function PortalOvertimeList() {
     },
     { title: "Remarks", dataIndex: "remarks" },
     {
-      title: "Filed On",
+      title: "Date Submitted",
       dataIndex: "createdAt",
       render: (v?: string) => (v ? dayjs(v).format("MMM D, YYYY") : "—"),
     },
@@ -96,7 +96,7 @@ export default function PortalOvertimeList() {
             icon={<PlusOutlined />}
             onClick={() => navigate({ to: "/portal/overtime/create" })}
           >
-            File Overtime Application
+            New Overtime Request
           </Button>
         </div>
       </div>

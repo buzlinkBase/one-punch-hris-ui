@@ -34,13 +34,13 @@ const ACTIONS = [
   },
   {
     key: "file-leave",
-    label: "File Leave",
+    label: "Request Leave",
     icon: <CalendarOutlined />,
     to: "/applications/leave/create",
   },
   {
     key: "file-overtime",
-    label: "File Overtime",
+    label: "Request Overtime",
     icon: <ClockCircleOutlined />,
     to: "/applications/overtime/create",
   },

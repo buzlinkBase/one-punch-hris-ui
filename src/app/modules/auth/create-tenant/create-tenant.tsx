@@ -124,7 +124,7 @@ export default function CreateTenant() {
   // A tenant stuck in "Provisioning" isn't a dashboard the user can actually go back to yet --
   // only count tenants that have actually finished setup, so a dormant/in-flight request left
   // over from an interrupted creation doesn't wrongly make this look like a "New Company"
-  // (rather than first-time "Create Your Organization") screen with a Back-to-dashboard link
+  // (rather than first-time "Create Your Company") screen with a Back-to-dashboard link
   // that leads nowhere useful.
   const usableTenants = authStorage
     .getTenants()
@@ -307,7 +307,7 @@ export default function CreateTenant() {
     } catch {
       setProvisioning(false);
       notification.error({
-        message: "Creation failed",
+        message: "Couldn't create company",
         description: "Failed to create company. Please try again.",
         placement: "topRight",
       });
@@ -437,7 +437,7 @@ export default function CreateTenant() {
         </div>
         <Text className="login-kicker">One Punch HRIS</Text>
         <Title level={3} className="login-title">
-          {hasExistingTenants ? "New Company" : "Create Your Organization"}
+          {hasExistingTenants ? "New Company" : "Create Your Company"}
         </Title>
         <Text className="login-subtitle">
           {provisioning
@@ -502,7 +502,7 @@ export default function CreateTenant() {
               ? "Setting up company…"
               : hasExistingTenants
                 ? "Create Company"
-                : "Create Organization"}
+                : "Create Company"}
           </Button>
         </Form.Item>
       </Form>

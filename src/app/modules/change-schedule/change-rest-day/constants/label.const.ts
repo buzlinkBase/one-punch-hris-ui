@@ -10,6 +10,6 @@ export const CHANGE_REST_DAY_LABEL = {
   NEW_DATE: "New Day-Off Date",
   // Filters
   FILTER_EMPLOYEE: "Employee",
-  FILTER_FROM_DATE: "Date From",
-  FILTER_TO_DATE: "Date To",
+  FILTER_FROM_DATE: "From",
+  FILTER_TO_DATE: "To",
 };

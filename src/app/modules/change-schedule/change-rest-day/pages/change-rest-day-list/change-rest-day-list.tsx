@@ -13,7 +13,9 @@ import {
 import type { TableColumnsType } from "antd";
 import {
   ArrowRightOutlined,
+  CheckOutlined,
   ClearOutlined,
+  CloseOutlined,
   DeleteOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -39,6 +41,7 @@ import { getNotify } from "@/shared/utils/notify";
 import type { ChangeRestDayFilter } from "../../models/api/request/change-rest-day-filter.model";
 import type { ChangeRestDayResponse } from "../../models/api/response/change-rest-day-response.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { IconAction } from "@/shared/components/icon-action/icon-action";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
 import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
@@ -257,25 +260,21 @@ export default function ChangeRestDayList() {
         <Space size={4}>
           {record.approvalStatus === "ForApproval" && (
             <PermissionGate permission="Change Rest Day:Approve">
-              <Button
-                type="link"
-                size="small"
+              <IconAction
+                title="Approve"
+                icon={<CheckOutlined />}
                 onClick={() =>
                   handleApprove(record.employeeId, record.batchCode)
                 }
-              >
-                Approve
-              </Button>
-              <Button
-                type="link"
+              />
+              <IconAction
+                title="Decline"
                 danger
-                size="small"
+                icon={<CloseOutlined />}
                 onClick={() =>
                   handleDecline(record.employeeId, record.batchCode)
                 }
-              >
-                Decline
-              </Button>
+              />
             </PermissionGate>
           )}
           <PermissionGate permission="Change Rest Day:Delete">
@@ -288,9 +287,14 @@ export default function ChangeRestDayList() {
                 handleDeleteEmployee(record.employeeId, record.batchCode)
               }
             >
-              <Button type="link" danger size="small" loading={isDeletingEntry}>
-                Delete
-              </Button>
+              <span>
+                <IconAction
+                  title="Delete"
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={isDeletingEntry}
+                />
+              </span>
             </Popconfirm>
           </PermissionGate>
         </Space>
@@ -337,9 +341,14 @@ export default function ChangeRestDayList() {
               handleDeleteEmployee(record.employeeId, record.batchCode)
             }
           >
-            <Button type="link" danger size="small" loading={isDeletingEntry}>
-              Delete
-            </Button>
+            <span>
+              <IconAction
+                title="Delete"
+                danger
+                icon={<DeleteOutlined />}
+                loading={isDeletingEntry}
+              />
+            </span>
           </Popconfirm>
         </PermissionGate>
       ),

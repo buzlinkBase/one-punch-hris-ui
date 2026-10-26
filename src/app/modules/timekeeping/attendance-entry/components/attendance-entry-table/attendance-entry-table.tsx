@@ -1,13 +1,6 @@
 import React from "react";
-import {
-  Button,
-  Popconfirm,
-  Space,
-  Table,
-  Tag,
-  Tooltip,
-  Typography,
-} from "antd";
+import { Popconfirm, Space, Table, Tag, Tooltip, Typography } from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { AttendanceEntryResponse } from "../../models/api/response/attendance-entry-response.model";
@@ -15,6 +8,7 @@ import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { IconAction } from "@/shared/components/icon-action/icon-action";
 
 interface Props {
   data: AttendanceEntryResponse[];
@@ -36,7 +30,7 @@ export default function AttendanceEntryTable({
     timeLog: 180,
     batchCode: 200,
     remarks: 220,
-    actions: 140,
+    actions: 90,
   });
 
   const columns: ColumnsType<AttendanceEntryResponse> = [
@@ -104,6 +98,7 @@ export default function AttendanceEntryTable({
     {
       title: "Actions",
       key: "actions",
+      fixed: "right",
       width: widths.actions,
       onHeaderCell: () =>
         ({
@@ -111,12 +106,14 @@ export default function AttendanceEntryTable({
           onResize: (w: number) => handleResize("actions", w),
         }) as object,
       render: (_, record) => (
-        <Space>
+        <Space size={4}>
           {onEdit && (
             <PermissionGate permission="Attendance Manual Entry:Edit">
-              <Button type="link" size="small" onClick={() => onEdit(record)}>
-                Edit
-              </Button>
+              <IconAction
+                title="Edit"
+                icon={<EditOutlined />}
+                onClick={() => onEdit(record)}
+              />
             </PermissionGate>
           )}
           {onDelete && (
@@ -127,9 +124,9 @@ export default function AttendanceEntryTable({
                 cancelText="No"
                 onConfirm={() => onDelete(record.id)}
               >
-                <Button type="link" danger size="small">
-                  Delete
-                </Button>
+                <span>
+                  <IconAction title="Delete" danger icon={<DeleteOutlined />} />
+                </span>
               </Popconfirm>
             </PermissionGate>
           )}

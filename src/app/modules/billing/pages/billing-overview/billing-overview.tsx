@@ -335,7 +335,7 @@ export default function BillingOverview() {
               </Descriptions.Item>
             )}
             {billing.purgeAfterUtc && (
-              <Descriptions.Item label="Data kept until">
+              <Descriptions.Item label="Records kept until">
                 {formatManilaDate(billing.purgeAfterUtc)}
               </Descriptions.Item>
             )}

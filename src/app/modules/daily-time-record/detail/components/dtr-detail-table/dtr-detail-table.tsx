@@ -209,7 +209,8 @@ export default function DtrDetailTable({
         }) as object,
       render: (v: string, record) => {
         const notEligible =
-          v?.includes("Legal Holiday") && record.holCount === 0;
+          (v?.includes("Legal Holiday") || v?.includes("Regular Holiday")) &&
+          record.holCount === 0;
         return notEligible ? (
           <Tooltip title="Not eligible for holiday pay (no qualifying day before the holiday)">
             <span style={{ color: token.colorError }}>{v}</span>
@@ -348,7 +349,7 @@ export default function DtrDetailTable({
           ],
         },
         {
-          title: "Legal Holiday",
+          title: "Regular Holiday",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "legalHolHours", 75),
@@ -366,7 +367,7 @@ export default function DtrDetailTable({
           ],
         },
         {
-          title: "Rest + Legal Day",
+          title: "Rest + Regular Holiday",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "restLegalDayHours", 75),
@@ -384,7 +385,7 @@ export default function DtrDetailTable({
           ],
         },
         {
-          title: "Double Legal Holiday",
+          title: "Double Regular Holiday",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "doubleLegalHours", 75),
@@ -393,7 +394,7 @@ export default function DtrDetailTable({
           ],
         },
         {
-          title: "Rest + Double Legal",
+          title: "Rest + Double Reg Hol",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "restDoubleLegalHours", 75),

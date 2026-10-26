@@ -189,7 +189,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
           {
             key: "portal-payslips",
             feature: FEATURE_KEYS.PAYROLL_CORE,
-            label: "My Pay Slips",
+            label: "My Payslips",
             path: "/portal/payslips",
           },
           {
@@ -266,7 +266,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
   {
     key: "nav-dtr",
     feature: FEATURE_KEYS.TIMEKEEPING_CORE,
-    label: "Time Keeping",
+    label: "Timekeeping",
     type: "group",
     children: [
       {
@@ -302,7 +302,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ],
   },
   // Promoted to its own top-level group — schedule adjustments feed directly
-  // into DTR calculation, so they sit right after Time Keeping.
+  // into DTR calculation, so they sit right after Timekeeping.
   {
     key: "change-schedule",
     feature: FEATURE_KEYS.TIMEKEEPING_CORE,
@@ -331,11 +331,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
   {
     key: "daily-time-record",
     feature: FEATURE_KEYS.TIMEKEEPING_CORE,
-    label: "DTR Generation",
+    label: "DTR Processing",
     children: [
       {
         key: "daily-time-record-master",
-        label: "Calculate Daily Time Record",
+        label: "Process DTR",
         path: "/daily-time-record/master",
         permission: "DTR Master:View",
       },
@@ -350,7 +350,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
   {
     key: "nav-payroll",
     feature: FEATURE_KEYS.PAYROLL_CORE,
-    label: "Payroll Generation",
+    label: "Payroll Processing",
     type: "group",
     children: [
       {

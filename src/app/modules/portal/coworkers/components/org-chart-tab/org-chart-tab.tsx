@@ -10,6 +10,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 import {
   useMyEmployee,
   useOrgChart,
@@ -29,6 +30,7 @@ function OrgChartCanvas() {
   const { data, isLoading } = useOrgChart(true);
   const { data: me } = useMyEmployee();
   const { fitView } = useReactFlow();
+  const isMobile = useIsMobile();
   const roots = useMemo(() => data ?? [], [data]);
 
   const [search, setSearch] = useState("");
@@ -131,7 +133,7 @@ function OrgChartCanvas() {
       {tree.length === 0 ? (
         <Empty description="No one matches your search" />
       ) : (
-        <div className="h-[70vh] min-h-105 overflow-hidden rounded-lg border border-solid border-(--border-subtle)">
+        <div className="h-[60dvh] min-h-80 overflow-hidden rounded-lg border border-solid border-(--border-subtle) md:h-[70vh] md:min-h-105">
           <ReactFlow
             nodes={flow.nodes}
             edges={flow.edges}
@@ -143,8 +145,12 @@ function OrgChartCanvas() {
             proOptions={{ hideAttribution: true }}
           >
             <Background />
-            <Controls showInteractive={false} />
-            <MiniMap pannable zoomable />
+            {/* Top-left on phones: the bottom edge can sit below the visible screen. */}
+            <Controls
+              showInteractive={false}
+              position={isMobile ? "top-left" : "bottom-left"}
+            />
+            {!isMobile && <MiniMap pannable zoomable />}
           </ReactFlow>
         </div>
       )}

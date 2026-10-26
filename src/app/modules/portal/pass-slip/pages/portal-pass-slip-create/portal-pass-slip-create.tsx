@@ -180,7 +180,7 @@ export default function PortalPassSlipCreate() {
     <PortalApplicationShell
       mode={mode}
       titles={{
-        create: "File Pass Slip",
+        create: "New Pass Slip",
         edit: "Edit Pass Slip",
         view: "View Pass Slip",
       }}

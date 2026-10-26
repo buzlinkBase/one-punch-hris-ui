@@ -399,7 +399,7 @@ export default function BillingSetup() {
           >
             <Input maxLength={60} />
           </Form.Item>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item label="Rate is" name="unit">
               <Select options={RATE_UNIT_OPTIONS} />
             </Form.Item>

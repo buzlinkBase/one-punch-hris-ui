@@ -7,6 +7,6 @@ export const OVERTIME_APPLICATION_LABEL = {
   REMARKS: "Reason / Remarks",
   STATUS: "Status",
   OT_MINUTES: "OT Hours",
-  CREATE_TITLE: "File Overtime Application",
+  CREATE_TITLE: "New Overtime Request",
   EDIT_TITLE: "Edit Overtime Application",
 };

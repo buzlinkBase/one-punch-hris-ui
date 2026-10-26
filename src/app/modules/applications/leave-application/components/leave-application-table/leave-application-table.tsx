@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Table, Button, Space, Popconfirm, Tag, Tooltip } from "antd";
+import { Button, Space, Tag, Tooltip } from "antd";
 import {
   DeleteOutlined,
   CheckOutlined,
@@ -18,22 +18,11 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
-
-const STATUS_COLOR: Record<string, string> = {
-  ForApproval: "warning",
-  Approved: "success",
-  Cancelled: "default",
-  Declined: "error",
-  Withdrawn: "default",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  ForApproval: "For Approval",
-  Approved: "Approved",
-  Cancelled: "Cancelled",
-  Declined: "Declined",
-  Withdrawn: "Withdrawn",
-};
+import { StatusTag } from "@/shared/components/status-tag/status-tag";
+import { ConfirmAction } from "@/shared/components/confirm-action/confirm-action";
+import { ResponsiveTable } from "@/shared/components/responsive-table/responsive-table";
+import { tableEmptyLocale } from "@/shared/components/app-empty/table-empty-locale";
+import { useTablePagination } from "@/shared/hooks/use-table-pagination";
 
 interface Props {
   data: LeaveApplicationResponse[];
@@ -57,6 +46,7 @@ export default function LeaveApplicationTable({
   actionLoading,
 }: Props) {
   const navigate = useNavigate();
+  const { pagination } = useTablePagination();
   const canEdit = useHasPermission("Leave:Edit");
   const [actionTarget, setActionTarget] = useState<{
     record: LeaveApplicationResponse;
@@ -197,11 +187,7 @@ export default function LeaveApplicationTable({
           width: widths.status,
           onResize: (w: number) => handleResize("status", w),
         }) as object,
-      render: (val: string) => (
-        <Tag color={STATUS_COLOR[val] ?? "default"}>
-          {STATUS_LABEL[val] ?? val}
-        </Tag>
-      ),
+      render: (val: string) => <StatusTag status={val} />,
     },
     {
       title: "Actions",
@@ -212,22 +198,32 @@ export default function LeaveApplicationTable({
         <Space>
           {onApprove && record.approvalStatus === "ForApproval" && (
             <PermissionGate permission="Leave:Approve">
-              <Button
-                type="text"
-                icon={<CheckOutlined />}
-                style={{ color: "#52c41a" }}
-                onClick={() => setActionTarget({ record, action: "Approved" })}
-              />
+              <Tooltip title="Approve">
+                <Button
+                  type="text"
+                  aria-label="Approve"
+                  className="text-green-600!"
+                  icon={<CheckOutlined />}
+                  onClick={() =>
+                    setActionTarget({ record, action: "Approved" })
+                  }
+                />
+              </Tooltip>
             </PermissionGate>
           )}
           {onDecline && record.approvalStatus === "ForApproval" && (
             <PermissionGate permission="Leave:Approve">
-              <Button
-                type="text"
-                danger
-                icon={<CloseOutlined />}
-                onClick={() => setActionTarget({ record, action: "Declined" })}
-              />
+              <Tooltip title="Decline">
+                <Button
+                  type="text"
+                  danger
+                  aria-label="Decline"
+                  icon={<CloseOutlined />}
+                  onClick={() =>
+                    setActionTarget({ record, action: "Declined" })
+                  }
+                />
+              </Tooltip>
             </PermissionGate>
           )}
           <RecordOpenAction
@@ -236,15 +232,21 @@ export default function LeaveApplicationTable({
           />
           {onDelete && (
             <PermissionGate permission="Leave:Delete">
-              <Popconfirm
-                title="Delete this leave application?"
+              <ConfirmAction
+                subject="leave application"
+                name={empMap.get(record.employeeId)}
+                consequence="Its approval history is removed too."
                 onConfirm={() => onDelete(record.id)}
-                okText="Delete"
-                okButtonProps={{ danger: true }}
-                cancelText="Cancel"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
-              </Popconfirm>
+                <Tooltip title="Delete">
+                  <Button
+                    type="text"
+                    danger
+                    aria-label="Delete"
+                    icon={<DeleteOutlined />}
+                  />
+                </Tooltip>
+              </ConfirmAction>
             </PermissionGate>
           )}
         </Space>
@@ -254,13 +256,14 @@ export default function LeaveApplicationTable({
 
   return (
     <>
-      <Table
+      <ResponsiveTable
         rowKey="id"
         dataSource={data}
         columns={columns}
         size="small"
         loading={loading}
-        pagination={{ pageSize: 15 }}
+        pagination={pagination}
+        locale={tableEmptyLocale("No leave applications found")}
         scroll={{ x: "max-content" }}
         sticky
         components={{ header: { cell: ResizableTitle } }}

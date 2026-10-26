@@ -339,7 +339,7 @@ export default function InvoiceList() {
           >
             <Input maxLength={60} />
           </Form.Item>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item
               label="Invoice date"
               name="invoiceDate"
@@ -362,7 +362,7 @@ export default function InvoiceList() {
           >
             <MobileRangePicker allowClear={false} />
           </Form.Item>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item
               label="Amount before VAT"
               name="subtotal"

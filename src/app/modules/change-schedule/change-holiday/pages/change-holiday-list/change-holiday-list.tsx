@@ -33,6 +33,7 @@ import { getNotify } from "@/shared/utils/notify";
 import type { ChangeHolidayFilter } from "../../models/api/request/change-holiday-filter.model";
 import type { ChangeHolidayResponse } from "../../models/api/response/change-holiday-response.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { IconAction } from "@/shared/components/icon-action/icon-action";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
@@ -239,9 +240,14 @@ export default function ChangeHolidayList() {
               handleDeleteEmployee(record.employeeId, record.batchCode)
             }
           >
-            <Button type="link" danger size="small" loading={isDeletingEntry}>
-              Delete
-            </Button>
+            <span>
+              <IconAction
+                title="Delete"
+                danger
+                icon={<DeleteOutlined />}
+                loading={isDeletingEntry}
+              />
+            </span>
           </Popconfirm>
         </PermissionGate>
       ),
@@ -287,9 +293,14 @@ export default function ChangeHolidayList() {
               handleDeleteEmployee(record.employeeId, record.batchCode)
             }
           >
-            <Button type="link" danger size="small" loading={isDeletingEntry}>
-              Delete
-            </Button>
+            <span>
+              <IconAction
+                title="Delete"
+                danger
+                icon={<DeleteOutlined />}
+                loading={isDeletingEntry}
+              />
+            </span>
           </Popconfirm>
         </PermissionGate>
       ),

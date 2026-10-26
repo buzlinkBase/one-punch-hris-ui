@@ -251,7 +251,7 @@ export default function LeaveApplicationBatch() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              File Leave
+              New Leave
             </Title>
             <p className="page-toolbar-subtitle">
               File leave for one or more employees with the same duration and

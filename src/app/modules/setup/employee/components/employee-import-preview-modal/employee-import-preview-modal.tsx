@@ -50,7 +50,7 @@ function buildColumns(
     { title: "Row #", dataIndex: "rowNumber", width: 70, fixed: "left" },
     // Same order and header text as the columns of wwwroot/Templates/employee_template.xlsx
     // (row 2), so each preview column can be matched to its Excel column at a glance.
-    { title: "BioId", dataIndex: "bioId", width: 90 },
+    { title: "Bio ID", dataIndex: "bioId", width: 90 },
     { title: "Branch Code", dataIndex: "branchCode", width: 110 },
     { title: "FirstName", dataIndex: "firstName", width: 120 },
     { title: "MiddleName", dataIndex: "middleName", width: 120 },

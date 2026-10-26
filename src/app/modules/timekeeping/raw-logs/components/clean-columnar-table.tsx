@@ -100,7 +100,7 @@ export default function CleanColumnarTable({
         }) as object,
     },
     {
-      title: "Emp No",
+      title: "Employee No.",
       dataIndex: "empNo",
       key: "empNo",
       width: widths.empNo,

@@ -8,8 +8,6 @@ import {
   Select,
   Space,
   Switch,
-  Tabs,
-  Typography,
   notification,
 } from "antd";
 import { useForm, Controller, useWatch } from "react-hook-form";
@@ -35,12 +33,13 @@ import {
   HOLIDAY_TIME_BASIS_OPTIONS,
   CROSS_MONTH_STATUTORY_CREDIT_POLICY_OPTIONS,
 } from "../../constants/label.const";
+import { PageHeader } from "@/shared/components/page-header/page-header";
+import type { SectionNavGroup } from "@/shared/components/section-nav/section-nav";
+import { SectionTabs } from "@/shared/components/section-nav/section-tabs";
 import CompanyInfoTab from "./company-info-tab";
 import RateMultipliersTab from "./rate-multipliers-tab";
 import PayrollSettingsTab from "./payroll-settings-tab";
 import AttachmentsTab from "./attachments-tab";
-
-const { Title } = Typography;
 
 function GeneralPolicyTab() {
   const { data: policy, isLoading } = useCompanyPolicy();
@@ -622,55 +621,59 @@ function GeneralPolicyTab() {
   );
 }
 
+const POLICY_SECTION_GROUPS: SectionNavGroup[] = [
+  {
+    title: "Company",
+    items: [
+      { key: "company-info", label: COMPANY_POLICY_LABEL.TAB_COMPANY_INFO },
+      { key: "attachments", label: COMPANY_POLICY_LABEL.TAB_ATTACHMENTS },
+    ],
+  },
+  {
+    title: "Policies",
+    items: [
+      { key: "general", label: COMPANY_POLICY_LABEL.TAB_GENERAL },
+      {
+        key: "payroll-settings",
+        label: COMPANY_POLICY_LABEL.TAB_PAYROLL_SETTINGS,
+      },
+      {
+        key: "rate-multipliers",
+        label: COMPANY_POLICY_LABEL.TAB_RATE_MULTIPLIERS,
+      },
+    ],
+  },
+];
+
+const POLICY_PANES = {
+  "company-info": <CompanyInfoTab />,
+  attachments: <AttachmentsTab />,
+  general: <GeneralPolicyTab />,
+  "payroll-settings": <PayrollSettingsTab />,
+  "rate-multipliers": <RateMultipliersTab />,
+};
+
+// Each section is its own form, so the editable ones stay mounted and keep unsaved edits when
+// you switch away. Attachments is a live list and mounts only while open.
+const POLICY_KEEP_MOUNTED = [
+  "company-info",
+  "general",
+  "payroll-settings",
+  "rate-multipliers",
+];
+
 export default function CompanyPolicy() {
   return (
     <div className="content-page">
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              {COMPANY_POLICY_LABEL.TITLE}
-            </Title>
-            <p className="page-toolbar-subtitle">
-              {COMPANY_POLICY_LABEL.SUBTITLE}
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={COMPANY_POLICY_LABEL.TITLE}
+        subtitle={COMPANY_POLICY_LABEL.SUBTITLE}
+      />
 
-      <Tabs
-        type="card"
-        items={[
-          {
-            key: "company-info",
-            label: COMPANY_POLICY_LABEL.TAB_COMPANY_INFO,
-            forceRender: true,
-            children: <CompanyInfoTab />,
-          },
-          {
-            key: "general",
-            label: COMPANY_POLICY_LABEL.TAB_GENERAL,
-            forceRender: true,
-            children: <GeneralPolicyTab />,
-          },
-          {
-            key: "payroll-settings",
-            label: COMPANY_POLICY_LABEL.TAB_PAYROLL_SETTINGS,
-            forceRender: true,
-            children: <PayrollSettingsTab />,
-          },
-          {
-            key: "rate-multipliers",
-            label: COMPANY_POLICY_LABEL.TAB_RATE_MULTIPLIERS,
-            forceRender: true,
-            children: <RateMultipliersTab />,
-          },
-          {
-            key: "attachments",
-            label: COMPANY_POLICY_LABEL.TAB_ATTACHMENTS,
-            children: <AttachmentsTab />,
-          },
-        ]}
+      <SectionTabs
+        groups={POLICY_SECTION_GROUPS}
+        panes={POLICY_PANES}
+        keepMounted={POLICY_KEEP_MOUNTED}
       />
     </div>
   );

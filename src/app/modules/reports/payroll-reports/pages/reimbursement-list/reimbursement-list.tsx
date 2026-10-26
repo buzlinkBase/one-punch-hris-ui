@@ -21,6 +21,12 @@ const STATUS_COLOR: Record<ReimbursementListResponse["status"], string> = {
   Reimbursed: "success",
 };
 
+const STATUS_LABEL: Record<ReimbursementListResponse["status"], string> = {
+  NotFiled: "Not Submitted",
+  Filed: "Submitted",
+  Reimbursed: "Reimbursed",
+};
+
 const EXPORT_HEADERS = [
   "Employee No",
   "Full Name",
@@ -29,7 +35,7 @@ const EXPORT_HEADERS = [
   "Release Payroll Date",
   "Government Amount",
   "Status",
-  "Filed Date",
+  "Date Submitted",
   "Received Date",
   "Reference No",
 ];
@@ -147,11 +153,11 @@ export default function ReimbursementList() {
       key: "status",
       width: 120,
       render: (v: ReimbursementListResponse["status"]) => (
-        <Tag color={STATUS_COLOR[v]}>{v === "NotFiled" ? "Not Filed" : v}</Tag>
+        <Tag color={STATUS_COLOR[v]}>{STATUS_LABEL[v]}</Tag>
       ),
     },
     {
-      title: "Filed",
+      title: "Date Submitted",
       dataIndex: "filedDate",
       key: "filed",
       width: 110,
@@ -180,7 +186,7 @@ export default function ReimbursementList() {
         <Space size={4}>
           {r.status === "NotFiled" && (
             <Button size="small" onClick={() => openAction(r, "Filed")}>
-              Mark Filed
+              Mark as Submitted
             </Button>
           )}
           {r.status === "Filed" && (
@@ -250,20 +256,24 @@ export default function ReimbursementList() {
         open={!!pending}
         title={
           pending?.targetStatus === "Filed"
-            ? "Mark Reimbursement Claim as Filed"
+            ? "Mark Reimbursement Claim as Submitted"
             : "Mark Reimbursement as Received"
         }
         onCancel={() => setPending(null)}
         onOk={confirmAction}
         confirmLoading={isPending}
         okText={
-          pending?.targetStatus === "Filed" ? "Mark Filed" : "Mark Reimbursed"
+          pending?.targetStatus === "Filed"
+            ? "Mark as Submitted"
+            : "Mark Reimbursed"
         }
       >
         <Form layout="vertical">
           <Form.Item
             label={
-              pending?.targetStatus === "Filed" ? "Date Filed" : "Date Received"
+              pending?.targetStatus === "Filed"
+                ? "Date Submitted"
+                : "Date Received"
             }
           >
             <DatePicker

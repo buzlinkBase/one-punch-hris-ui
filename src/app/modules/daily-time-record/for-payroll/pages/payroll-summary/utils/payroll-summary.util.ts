@@ -12,7 +12,7 @@ export const fmtH = (n: number) => fmt(n) + " h";
 
 // Holiday-category totals, mirroring PayslipDocument.cs's formulas exactly — each folds
 // its own base + OT + ND + NDOT tiers into one figure; "Holiday Duty" excludes the
-// unworked portion of Legal Holiday pay, and "Double Legal" folds in the rest-day variant.
+// unworked portion of Regular Holiday pay, and "Double Reg Hol" folds in the rest-day variant.
 // Shared by payroll.columns.tsx and payroll-summary-export.util.ts.
 export function holidayDuty(r: PayrollRunResult) {
   return (

@@ -18,6 +18,6 @@ export const CHANGE_HOLIDAY_LABEL = {
   REPLACEMENT_DATE: "Replacement Date",
   // Filters
   FILTER_EMPLOYEE: "Employee",
-  FILTER_FROM_DATE: "Date From",
-  FILTER_TO_DATE: "Date To",
+  FILTER_FROM_DATE: "From",
+  FILTER_TO_DATE: "To",
 };

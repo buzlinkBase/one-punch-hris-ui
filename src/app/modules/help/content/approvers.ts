@@ -37,7 +37,7 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
         heading: "Approve or decline",
         steps: [
           {
-            text: "Open the application list (e.g. Applications › Leave). The For Approval tab shows what's still waiting.",
+            text: "Open the application list (e.g. Applications › Leave). The Pending tab shows what's still waiting.",
             link: { label: "Leave", to: "/applications/leave" },
           },
           {
@@ -75,9 +75,9 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
         heading: "DTR batches",
         steps: [
           {
-            text: "Open Calculate Daily Time Record › Saved DTR.",
+            text: "Open Process DTR › Saved DTR.",
             link: {
-              label: "Calculate Daily Time Record",
+              label: "Process DTR",
               to: "/daily-time-record/master",
             },
           },

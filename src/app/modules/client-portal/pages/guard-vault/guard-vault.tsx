@@ -347,7 +347,7 @@ export default function GuardVault() {
           <Form.Item label="Number" name="number">
             <Input maxLength={100} />
           </Form.Item>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item label="Issued" name="issuedOn">
               <DatePicker className="w-full" />
             </Form.Item>

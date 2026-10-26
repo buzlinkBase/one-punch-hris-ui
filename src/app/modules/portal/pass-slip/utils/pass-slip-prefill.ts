@@ -2,8 +2,8 @@ import dayjs from "dayjs";
 import type { PortalPassSlipEntryValues } from "../models/forms/portal-pass-slip-form.schema";
 
 /**
- * Search params the File Pass Slip form reads to prefill a new filing -- e.g. from My
- * Incomplete Logs' "File Pass Slip" action (see buildPassSlipPrefill).
+ * Search params the New Pass Slip form reads to prefill a new filing -- e.g. from My
+ * Incomplete Logs' "New Pass Slip" action (see buildPassSlipPrefill).
  */
 export interface PassSlipPrefillSearch {
   date?: string;

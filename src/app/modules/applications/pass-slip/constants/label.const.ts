@@ -2,7 +2,7 @@ export const PASS_SLIP_LABEL = {
   MODULE: "Pass Slip Application",
   TITLE: "Pass Slip Applications",
   SUBTITLE: "File and manage employee pass slip requests.",
-  CREATE: "File Pass Slip",
+  CREATE: "New Pass Slip",
 };
 
 export const APPROVAL_STATUS_COLOR: Record<string, string> = {

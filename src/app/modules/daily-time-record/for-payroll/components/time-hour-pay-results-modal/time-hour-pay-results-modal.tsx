@@ -36,8 +36,8 @@ interface Group {
 }
 
 // Mirrors dtr-detail-table.tsx's Hours Breakdown, group for group and in the same order
-// (Regular / Rest Day / Legal Holiday / Special Holiday / Rest+Legal Day / Rest+Special Day
-// / Double Legal Holiday / Rest+Double Legal, each Amt/OT/ND/ND-OT) — amounts instead of
+// (Regular / Rest Day / Regular Holiday / Special Holiday / Rest+Legal Day / Rest+Special Day
+// / Double Regular Holiday / Rest+Double Legal, each Amt/OT/ND/ND-OT) — amounts instead of
 // hours. No Official Business group here: DTRPayModel has no OB amount field (OB is
 // hours/informational only, no separate pay component).
 const GROUPS: Group[] = [
@@ -60,7 +60,7 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    title: "Legal Holiday",
+    title: "Regular Holiday",
     cols: [
       { title: "Amt", key: "legalPay", pick: (r) => r.legalPay },
       { title: "OT", key: "legalOTPay", pick: (r) => r.legalOTPay },
@@ -78,7 +78,7 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    title: "Rest + Legal Day",
+    title: "Rest + Regular Holiday",
     cols: [
       { title: "Amt", key: "restLegalPay", pick: (r) => r.restLegalPay },
       { title: "OT", key: "restLegalOTPay", pick: (r) => r.restLegalOTPay },
@@ -104,7 +104,7 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    title: "Double Legal Holiday",
+    title: "Double Regular Holiday",
     cols: [
       { title: "Amt", key: "doubleLegalPay", pick: (r) => r.doubleLegalPay },
       { title: "OT", key: "doubleLegalOTPay", pick: (r) => r.doubleLegalOTPay },
@@ -117,7 +117,7 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    title: "Rest + Double Legal",
+    title: "Rest + Double Reg Hol",
     cols: [
       {
         title: "Amt",

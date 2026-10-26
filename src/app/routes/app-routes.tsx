@@ -5,7 +5,6 @@ import {
   type LazyExoticComponent,
 } from "react";
 import {
-  Navigate,
   Outlet,
   createRootRoute,
   createRoute,
@@ -28,6 +27,7 @@ import {
 import { getPermissionForPath } from "@/shared/constants/navigation.const";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
 import { RouteErrorFallback } from "./route-error-fallback";
+import { NotFoundPage } from "./not-found-page";
 
 const Login = lazy(() => import("@/app/modules/auth/login/login"));
 const Register = lazy(() => import("@/app/modules/auth/register"));
@@ -364,13 +364,14 @@ const rootRoute = createRootRoute({
     if (
       authStorage.isEmployeeOnly() &&
       !location.pathname.startsWith("/portal") &&
-      location.pathname !== "/profile"
+      location.pathname !== "/profile" &&
+      location.pathname !== "/notifications"
     ) {
       throw redirect({ to: fallback });
     }
   },
   component: () => <Outlet />,
-  notFoundComponent: () => <Navigate to="/login" replace />,
+  notFoundComponent: NotFoundPage,
 });
 
 const rootIndexRoute = createRoute({
@@ -516,6 +517,23 @@ const dashboardIndexRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: "/",
   component: withSuspense(Dashboard),
+});
+
+const Notifications = lazy(
+  () =>
+    import("@/app/modules/account/notifications/pages/notifications/notifications"),
+);
+
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "notifications",
+  component: MainLayout,
+});
+
+const notificationsIndexRoute = createRoute({
+  getParentRoute: () => notificationsRoute,
+  path: "/",
+  component: withSuspense(Notifications),
 });
 
 const profileRoute = createRoute({
@@ -1653,6 +1671,7 @@ const routeTree = rootRoute.addChildren([
   acceptInviteRoute.addChildren([acceptInviteIndexRoute]),
   dashboardRoute.addChildren([dashboardIndexRoute]),
   profileRoute.addChildren([profileIndexRoute]),
+  notificationsRoute.addChildren([notificationsIndexRoute]),
   helpRoute.addChildren([helpIndexRoute, helpArticleRoute]),
   portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),

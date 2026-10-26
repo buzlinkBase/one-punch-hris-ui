@@ -84,7 +84,7 @@ const PORTAL_PAGE_GROUPS = [
   {
     title: "My Pay & Benefits",
     switches: [
-      { name: "portalShowPayslips", label: "My Pay Slips" },
+      { name: "portalShowPayslips", label: "My Payslips" },
       { name: "portalShowLeaveCredits", label: "My Leave Credits" },
       { name: "portalShowThirteenthMonth", label: "My 13th Month Pay" },
       { name: "portalShowDeductions", label: "My Deductions" },
@@ -159,7 +159,7 @@ export default function PayrollSettingsTab() {
           </Text>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Form.Item
             label="Fiscal Year Start Month"
             validateStatus={errors.fiscalYearStartMonth ? "error" : ""}

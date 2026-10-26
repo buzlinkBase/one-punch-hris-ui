@@ -7,7 +7,6 @@ import {
   Skeleton,
   Space,
   Switch,
-  Tabs,
   Typography,
 } from "antd";
 import { EditOutlined } from "@ant-design/icons";
@@ -19,11 +18,31 @@ import {
   useSetBirthdaySharing,
   useSetContactSharing,
 } from "../../../shared/hooks/use-my-employee-queries";
+import type { SectionNavGroup } from "@/shared/components/section-nav/section-nav";
+import { SectionTabs } from "@/shared/components/section-nav/section-tabs";
 import BirthdayGreetingBanner from "../../../shared/components/birthday-greeting-banner";
 import { formatFullName } from "@/app/modules/setup/employee/utils/format-full-name";
 import { EMPLOYEE_LABEL } from "@/app/modules/setup/employee/constants/label.const";
 
 const { Title, Text } = Typography;
+
+const PROFILE_SECTION_GROUPS: SectionNavGroup[] = [
+  {
+    title: "Profile",
+    items: [{ key: "personal", label: "Personal Information" }],
+  },
+  {
+    title: "Job",
+    items: [{ key: "employment", label: "Employment Details" }],
+  },
+  {
+    title: "Pay",
+    items: [
+      { key: "compensation", label: "Compensation" },
+      { key: "government-ids", label: "Government IDs" },
+    ],
+  },
+];
 
 function formatDate(value?: string | null) {
   return value ? dayjs(value).format("MMMM D, YYYY") : "—";
@@ -85,7 +104,7 @@ export default function PortalProfile() {
               firstName={employee.firstName}
               dob={employee.dob}
             />
-            <Card size="small" className="mb-3">
+            <Card size="small">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="m-0 font-medium">Birthday greetings</p>
@@ -117,160 +136,131 @@ export default function PortalProfile() {
                 />
               </div>
             </Card>
-            <Card>
-              <Tabs
-                type="card"
-                items={[
-                  {
-                    key: "personal",
-                    label: "Personal Information",
-                    children: (
-                      <Descriptions
-                        bordered
-                        column={{ xs: 1, sm: 1, md: 2 }}
-                        size="small"
-                      >
-                        <Descriptions.Item label="Full Name" span={2}>
-                          {formatFullName(employee)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
-                          {employee.employeeNo}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.GENDER}>
-                          {employee.gender || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.CIVIL_STATUS}>
-                          {employee.civilStatus || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.DOB}>
-                          {formatDate(employee.dob)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.BLOOD_TYPE}>
-                          {employee.bloodType || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.EMAIL}>
-                          {employee.email || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.CONTACT}>
-                          {employee.contact || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item
-                          label={EMPLOYEE_LABEL.ADDRESS1}
-                          span={2}
-                        >
-                          {employee.address1 || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item
-                          label={EMPLOYEE_LABEL.ADDRESS2}
-                          span={2}
-                        >
-                          {employee.address2 || "—"}
-                        </Descriptions.Item>
-                      </Descriptions>
-                    ),
-                  },
-                  {
-                    key: "employment",
-                    label: "Employment Details",
-                    children: (
-                      <Descriptions
-                        bordered
-                        column={{ xs: 1, sm: 1, md: 2 }}
-                        size="small"
-                      >
-                        <Descriptions.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
-                          {employee.departmentName || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.POSITION}>
-                          {employee.positionName || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.BRANCH}>
-                          {employee.branchName || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.AREA}>
-                          {employee.areaName || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.CLIENT}>
-                          {employee.clientName || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
-                          {employee.timeShiftName || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.JOB_LEVEL}>
-                          {employee.jobLevel || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item
-                          label={EMPLOYEE_LABEL.EMPLOYMENT_STATUS}
-                        >
-                          {employee.employmentStatus}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.HIRE_DATE}>
-                          {formatDate(employee.hireDate)}
-                        </Descriptions.Item>
-                        <Descriptions.Item
-                          label={EMPLOYEE_LABEL.DATE_REGISTERED}
-                        >
-                          {formatDate(employee.dateRegistered)}
-                        </Descriptions.Item>
-                      </Descriptions>
-                    ),
-                  },
-                  {
-                    key: "compensation",
-                    label: "Compensation",
-                    children: (
-                      <Descriptions
-                        bordered
-                        column={{ xs: 1, sm: 1, md: 2 }}
-                        size="small"
-                      >
-                        <Descriptions.Item label={EMPLOYEE_LABEL.SALARY_TYPE}>
-                          {employee.salaryType}
-                        </Descriptions.Item>
-                        <Descriptions.Item
-                          label={EMPLOYEE_LABEL.MODE_OF_PAYMENT}
-                        >
-                          {employee.modeOfPayment}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.BANK_NAME}>
-                          {employee.bankName || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.BANK_NO}>
-                          {employee.bankNo || "—"}
-                        </Descriptions.Item>
-                      </Descriptions>
-                    ),
-                  },
-                  {
-                    key: "government-ids",
-                    label: "Government IDs",
-                    children: (
-                      <Descriptions
-                        bordered
-                        column={{ xs: 1, sm: 1, md: 2 }}
-                        size="small"
-                      >
-                        <Descriptions.Item label={EMPLOYEE_LABEL.SSS_NO}>
-                          {employee.sssNo || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.PHIC_NO}>
-                          {employee.phicNo || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.HDMF_NO}>
-                          {employee.hdmfNo || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.TIN}>
-                          {employee.tin || "—"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={EMPLOYEE_LABEL.RDO_CODE}>
-                          {employee.rdoCode || "—"}
-                        </Descriptions.Item>
-                      </Descriptions>
-                    ),
-                  },
-                ]}
-              />
-            </Card>
+            <SectionTabs
+              className="mt-4"
+              groups={PROFILE_SECTION_GROUPS}
+              panes={{
+                personal: (
+                  <Descriptions
+                    bordered
+                    column={{ xs: 1, sm: 1, md: 2 }}
+                    size="small"
+                  >
+                    <Descriptions.Item label="Full Name" span={2}>
+                      {formatFullName(employee)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.EMPLOYEE_NO}>
+                      {employee.employeeNo}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.GENDER}>
+                      {employee.gender || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.CIVIL_STATUS}>
+                      {employee.civilStatus || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.DOB}>
+                      {formatDate(employee.dob)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.BLOOD_TYPE}>
+                      {employee.bloodType || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.EMAIL}>
+                      {employee.email || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.CONTACT}>
+                      {employee.contact || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.ADDRESS1} span={2}>
+                      {employee.address1 || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.ADDRESS2} span={2}>
+                      {employee.address2 || "—"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                ),
+                employment: (
+                  <Descriptions
+                    bordered
+                    column={{ xs: 1, sm: 1, md: 2 }}
+                    size="small"
+                  >
+                    <Descriptions.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
+                      {employee.departmentName || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.POSITION}>
+                      {employee.positionName || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.BRANCH}>
+                      {employee.branchName || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.AREA}>
+                      {employee.areaName || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.CLIENT}>
+                      {employee.clientName || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
+                      {employee.timeShiftName || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.JOB_LEVEL}>
+                      {employee.jobLevel || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.EMPLOYMENT_STATUS}>
+                      {employee.employmentStatus}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.HIRE_DATE}>
+                      {formatDate(employee.hireDate)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.DATE_REGISTERED}>
+                      {formatDate(employee.dateRegistered)}
+                    </Descriptions.Item>
+                  </Descriptions>
+                ),
+                compensation: (
+                  <Descriptions
+                    bordered
+                    column={{ xs: 1, sm: 1, md: 2 }}
+                    size="small"
+                  >
+                    <Descriptions.Item label={EMPLOYEE_LABEL.SALARY_TYPE}>
+                      {employee.salaryType}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.MODE_OF_PAYMENT}>
+                      {employee.modeOfPayment}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.BANK_NAME}>
+                      {employee.bankName || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.BANK_NO}>
+                      {employee.bankNo || "—"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                ),
+                "government-ids": (
+                  <Descriptions
+                    bordered
+                    column={{ xs: 1, sm: 1, md: 2 }}
+                    size="small"
+                  >
+                    <Descriptions.Item label={EMPLOYEE_LABEL.SSS_NO}>
+                      {employee.sssNo || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.PHIC_NO}>
+                      {employee.phicNo || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.HDMF_NO}>
+                      {employee.hdmfNo || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.TIN}>
+                      {employee.tin || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={EMPLOYEE_LABEL.RDO_CODE}>
+                      {employee.rdoCode || "—"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                ),
+              }}
+            />
           </>
         )}
       </div>

@@ -8,6 +8,9 @@ interface Props {
   data: UploadBatchResponse[];
   loading?: boolean;
   canDelete: boolean;
+  /** Click the Changed count to see which logs were edited or removed. */
+  canViewChanges?: boolean;
+  onViewChanges?: (batchCode: string) => void;
   deletingBatch: string | null;
   onDelete: (batchCode: string) => void;
 }
@@ -28,6 +31,8 @@ export default function UploadBatchTable({
   data,
   loading,
   canDelete,
+  canViewChanges = false,
+  onViewChanges,
   deletingBatch,
   onDelete,
 }: Props) {
@@ -80,10 +85,36 @@ export default function UploadBatchTable({
       dataIndex: "changedCount",
       key: "changedCount",
       width: 100,
-      render: (v: number) =>
+      render: (v: number, record) =>
         v > 0 ? (
-          <Tooltip title="Logs of this upload that were edited or removed. Their originals are kept until the upload is deleted.">
-            <Tag color="gold">{v}</Tag>
+          <Tooltip
+            title={`Logs of this upload that were edited or removed. Their originals are kept until the upload is deleted.${
+              canViewChanges ? " Click to see them." : ""
+            }`}
+          >
+            <Tag
+              color="gold"
+              className={canViewChanges ? "cursor-pointer" : undefined}
+              role={canViewChanges ? "button" : undefined}
+              tabIndex={canViewChanges ? 0 : undefined}
+              onClick={
+                canViewChanges
+                  ? () => onViewChanges?.(record.batchCode)
+                  : undefined
+              }
+              onKeyDown={
+                canViewChanges
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onViewChanges?.(record.batchCode);
+                      }
+                    }
+                  : undefined
+              }
+            >
+              {v}
+            </Tag>
           </Tooltip>
         ) : (
           "—"

@@ -27,6 +27,14 @@ export function useUploadBatches(
   });
 }
 
+export function useUploadBatchChanges(batchCode: string | null) {
+  return useQuery({
+    queryKey: [...BATCHES_QUERY_KEY, "changes", batchCode],
+    queryFn: () => uploadAttendanceApi.getBatchChanges(batchCode as string),
+    enabled: batchCode !== null,
+  });
+}
+
 export function useDeleteUploadBatch() {
   const queryClient = useQueryClient();
   return useMutation({

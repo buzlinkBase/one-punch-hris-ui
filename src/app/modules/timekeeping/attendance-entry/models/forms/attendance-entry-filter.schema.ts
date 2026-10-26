@@ -13,7 +13,7 @@ export const attendanceEntryFilterSchema = z
     },
     {
       path: ["toDate"],
-      message: "To Date must be greater than or equal to Date From",
+      message: "To date must be on or after From date",
     },
   );
 

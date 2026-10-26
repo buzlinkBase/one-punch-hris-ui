@@ -30,7 +30,7 @@ function useCommandMutation<TVar>(
       queryClient.invalidateQueries({ queryKey: COMMANDS_KEY });
     },
     onError: () => {
-      message.error("Command failed. Please try again.");
+      message.error("Request failed. Please try again.");
     },
   });
 }
@@ -40,11 +40,11 @@ export function useDeleteCommand() {
   return useMutation({
     mutationFn: (id: string) => commandsApi.deleteCommand(id),
     onSuccess: () => {
-      message.success("Command removed from queue");
+      message.success("Request removed from queue");
       queryClient.invalidateQueries({ queryKey: COMMANDS_KEY });
     },
     onError: () => {
-      message.error("Failed to delete command");
+      message.error("Failed to remove request");
     },
   });
 }
@@ -53,7 +53,7 @@ export function useEnrollFingerprint() {
   return useCommandMutation(
     ({ sn, payload }: { sn: string; payload: EnrollFPPayload }) =>
       commandsApi.enrollFingerprint(sn, payload),
-    "Fingerprint enrollment command queued",
+    "Fingerprint enrollment request sent",
   );
 }
 
@@ -61,7 +61,7 @@ export function useEnrollFace() {
   return useCommandMutation(
     ({ sn, payload }: { sn: string; payload: EnrollFacePayload }) =>
       commandsApi.enrollFace(sn, payload),
-    "Face enrollment command queued",
+    "Face enrollment request sent",
   );
 }
 
@@ -69,7 +69,7 @@ export function useSyncEmployees() {
   return useCommandMutation(
     ({ sn, payload }: { sn: string; payload: SetEmployeeCommandPayload[] }) =>
       commandsApi.syncEmployees(sn, payload),
-    "Sync employees command queued",
+    "Sync employees request sent",
   );
 }
 
@@ -77,7 +77,7 @@ export function useSyncBiometric() {
   return useCommandMutation(
     ({ sn, payload }: { sn: string; payload: SyncBioPayload[] }) =>
       commandsApi.syncBiometric(sn, payload),
-    "Sync biometrics command queued",
+    "Sync biometrics request sent",
   );
 }
 
@@ -85,21 +85,21 @@ export function useSyncFace() {
   return useCommandMutation(
     ({ sn, payload }: { sn: string; payload: SyncBioPayload[] }) =>
       commandsApi.syncFace(sn, payload),
-    "Sync face templates command queued",
+    "Sync face templates request sent",
   );
 }
 
 export function useReboot() {
   return useCommandMutation(
     (sn: string) => commandsApi.reboot(sn),
-    "Reboot command queued",
+    "Reboot request sent",
   );
 }
 
 export function useClearLogs() {
   return useCommandMutation(
     (sn: string) => commandsApi.clearLogs(sn),
-    "Clear logs command queued",
+    "Clear logs request sent",
   );
 }
 
@@ -107,7 +107,7 @@ export function useSetTime() {
   return useCommandMutation(
     ({ sn, autoServerTime }: { sn: string; autoServerTime: boolean }) =>
       commandsApi.setTime(sn, autoServerTime),
-    "Set time command queued",
+    "Set time request sent",
   );
 }
 
@@ -115,21 +115,21 @@ export function useEnableAttendance() {
   return useCommandMutation(
     ({ sn, enable }: { sn: string; enable: number }) =>
       commandsApi.enableAttendance(sn, enable),
-    "Attendance command queued",
+    "Attendance request sent",
   );
 }
 
 export function useClearAdmin() {
   return useCommandMutation(
     (sn: string) => commandsApi.clearAdmin(sn),
-    "Clear admin command queued",
+    "Clear admin request sent",
   );
 }
 
 export function usePullAttendance() {
   return useCommandMutation(
     (payload: PullAttPayload) => commandsApi.pullAttendance(payload),
-    "Pull attendance command queued",
+    "Pull attendance request sent",
   );
 }
 
@@ -137,7 +137,7 @@ export function useQueryTemplates() {
   return useCommandMutation(
     ({ sn, pin, fid }: { sn: string; pin?: string; fid?: number }) =>
       commandsApi.queryTemplates(sn, pin, fid),
-    "Query templates command queued",
+    "Query templates request sent",
   );
 }
 
@@ -157,7 +157,7 @@ export function useQueryTemplatesBulk() {
         pins.map((pin) => commandsApi.queryTemplates(sn, pin, fid)),
       ).then(() => undefined),
     onSuccess: () => {
-      message.success("Query templates commands queued");
+      message.success("Query templates requests sent");
       queryClient.invalidateQueries({ queryKey: COMMANDS_KEY });
     },
     onError: () => {
@@ -169,7 +169,7 @@ export function useQueryTemplatesBulk() {
 export function useRegistryReset() {
   return useCommandMutation(
     (sn: string) => commandsApi.registryReset(sn),
-    "Registry reset command queued",
+    "Registry reset request sent",
   );
 }
 
@@ -179,7 +179,7 @@ export function useDeleteEmployeesBulk() {
     mutationFn: ({ sn, bioIds }: { sn: string; bioIds: number[] }) =>
       commandsApi.deleteEmployee(sn, bioIds),
     onSuccess: () => {
-      message.success("Delete employee commands queued");
+      message.success("Delete employee requests sent");
       queryClient.invalidateQueries({ queryKey: COMMANDS_KEY });
     },
     onError: () => {

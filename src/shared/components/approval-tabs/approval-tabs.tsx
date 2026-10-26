@@ -6,18 +6,18 @@ interface Props {
   onChange: (tab: ApprovalTab) => void;
   pendingCount: number;
   processedCount: number;
-  /** "For Approval" on approver screens; e.g. "Pending" on the employee portal. */
+  /** Defaults to "Pending"; screens may override, e.g. "For Approval". */
   pendingLabel?: string;
 }
 
-// Tab bar for an application list: waiting on approval vs. already processed
+// Tab bar for an application list: waiting on approval vs. already decided
 // (approved / declined / cancelled / withdrawn). State comes from useApprovalTabs.
 export function ApprovalTabs({
   value,
   onChange,
   pendingCount,
   processedCount,
-  pendingLabel = "For Approval",
+  pendingLabel = "Pending",
 }: Props) {
   return (
     <Tabs
@@ -26,7 +26,7 @@ export function ApprovalTabs({
       onChange={(key) => onChange(key as ApprovalTab)}
       items={[
         { key: "pending", label: `${pendingLabel} (${pendingCount})` },
-        { key: "processed", label: `Processed (${processedCount})` },
+        { key: "processed", label: `History (${processedCount})` },
       ]}
     />
   );

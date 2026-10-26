@@ -4,8 +4,12 @@ import dayjs from "dayjs";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { getNotify } from "@/shared/utils/notify";
-import { DELETE_UPLOAD_BATCH_PERMISSION } from "@/app/modules/timekeeping/attendance-entry/constants/attendance-log-permissions.const";
+import {
+  DELETE_UPLOAD_BATCH_PERMISSION,
+  VIEW_UPLOAD_BATCH_PERMISSION,
+} from "@/app/modules/timekeeping/attendance-entry/constants/attendance-log-permissions.const";
 import UploadBatchTable from "../upload-batch-table";
+import UploadBatchChangesModal from "../upload-batch-changes-modal";
 import {
   useDeleteUploadBatch,
   useUploadBatches,
@@ -27,7 +31,9 @@ export default function UploadHistoryCard() {
     toDate: dayjs().format(DATE_FORMAT),
   });
   const [deletingBatch, setDeletingBatch] = useState<string | null>(null);
+  const [changesBatch, setChangesBatch] = useState<string | null>(null);
   const canDelete = useHasPermission(DELETE_UPLOAD_BATCH_PERMISSION);
+  const canViewChanges = useHasPermission(VIEW_UPLOAD_BATCH_PERMISSION);
 
   const { data: batches = [], isFetching } = useUploadBatches(range);
   const { mutateAsync: deleteBatch } = useDeleteUploadBatch();
@@ -72,8 +78,14 @@ export default function UploadHistoryCard() {
         data={batches}
         loading={isFetching}
         canDelete={canDelete}
+        canViewChanges={canViewChanges}
+        onViewChanges={setChangesBatch}
         deletingBatch={deletingBatch}
         onDelete={handleDelete}
+      />
+      <UploadBatchChangesModal
+        batchCode={changesBatch}
+        onClose={() => setChangesBatch(null)}
       />
     </Card>
   );

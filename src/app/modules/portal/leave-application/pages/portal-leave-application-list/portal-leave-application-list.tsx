@@ -51,7 +51,7 @@ export default function PortalLeaveApplicationList() {
     },
     { title: "Pay Type", dataIndex: "payType" },
     {
-      title: "Filed On",
+      title: "Date Submitted",
       dataIndex: "createdAt",
       render: (v?: string) => (v ? dayjs(v).format("MMM D, YYYY") : "—"),
     },
@@ -104,7 +104,7 @@ export default function PortalLeaveApplicationList() {
               navigate({ to: "/portal/leave-applications/create" })
             }
           >
-            File Leave Application
+            New Leave Request
           </Button>
         </div>
       </div>

@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { userNotificationApi } from "../services/user-notification.api";
 import type { UserNotificationPage } from "../models/user-notification.model";
 
@@ -11,6 +16,15 @@ export function useMyNotifications() {
   return useQuery({
     queryKey: MY_NOTIFICATIONS_QUERY_KEY,
     queryFn: () => userNotificationApi.getMine(1, BELL_PAGE_SIZE),
+  });
+}
+
+/** One page of the full notification history (the bell only holds the latest 20). */
+export function useMyNotificationsPage(page: number, pageSize: number) {
+  return useQuery({
+    queryKey: [...MY_NOTIFICATIONS_QUERY_KEY, "page", page, pageSize],
+    queryFn: () => userNotificationApi.getMine(page, pageSize),
+    placeholderData: keepPreviousData,
   });
 }
 

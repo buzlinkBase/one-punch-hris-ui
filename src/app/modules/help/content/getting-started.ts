@@ -134,10 +134,10 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
         heading: "The top bar",
         steps: [
           {
-            text: 'Quick search: type any screen name (e.g. "payslip") and pick it to jump straight there.',
+            text: 'Quick search (or press Ctrl+K, Cmd+K on Mac): type any screen name (e.g. "payslip") and pick it to jump straight there. If you can open the Employee screen, typing a name of two or more letters also lists matching employees; pick one to open their record. Use the arrow keys and Enter to choose, and Esc to close.',
           },
           {
-            text: "Bell: your notifications. Approval updates, such as a request waiting on you or your request being approved, appear here. Click one to open that request.",
+            text: "Bell: your notifications. Approval updates, such as a request waiting on you or your request being approved, appear here. Click one to open that request, or choose View all notifications at the bottom to see your full history and mark everything as read.",
           },
           {
             text: "Company icon: switch between companies you belong to.",
@@ -148,12 +148,26 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
             link: { label: "Company Settings", to: "/setup/company-policy" },
           },
           { text: "? icon: help for the screen you're on." },
+          {
+            text: "Star icon beside the path: pin the current screen. Pinned screens appear in a Pinned group at the top of the menu (up to 8). You can also pin or unpin from the quick search. With the quick search box empty, it lists your pinned and recently opened screens.",
+          },
+          {
+            text: "On a phone, Help, dark mode and Company Policy are tucked into the ··· button to save room.",
+          },
         ],
       },
       {
         heading: "The menu",
         body: [
-          "The left menu is grouped by area: My Portal, Time Keeping, Change Schedule, DTR Generation, Payroll Generation, Applications, Setup, Reports, Communication, Client Services and Security (which also holds Billing and Storage). The Dashboard and Analytics figures are clickable and open the list behind them. You only see the areas your role can use. If you expect a screen and can't find it, ask your admin to check your role.",
+          "The path at the top left (for example Applications / Leave / Create) shows where you are. Click any earlier step to go back to it. Opening a menu group closes the others, and the menu scrolls to the screen you're on. The menu stays collapsed or expanded the way you left it, even after you sign in again, and press Tab on any screen to reach the Skip to main content link, which jumps past the menu. A new device follows your computer's light or dark setting until you choose one yourself.",
+          "The left menu is grouped by area: My Portal, Timekeeping, Change Schedule, DTR Processing, Payroll Processing, Applications, Setup, Reports, Communication, Client Services and Security (which also holds Billing and Storage). The Dashboard and Analytics figures are clickable and open the list behind them. You only see the areas your role can use. If you expect a screen and can't find it, ask your admin to check your role.",
+        ],
+      },
+      {
+        heading: "On your phone and when editing",
+        body: [
+          "On a phone, the leave, overtime, undertime and travel order lists show each request as a card instead of a wide table, with its actions at the bottom of the card.",
+          "If you leave a form you've changed without saving, for example the leave application form, you're asked whether to discard your changes. Choose Keep editing to stay on the form.",
         ],
       },
       {

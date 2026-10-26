@@ -1,9 +1,9 @@
 export const DTR_SUMMARY_LABEL = {
   TITLE: "Daily Record Summary",
-  BIO_ID: "BioId",
+  BIO_ID: "Bio ID",
   EMPLOYEE: "Employee",
   // Time shift
-  TIME_SHIFT: "TimeShift",
+  TIME_SHIFT: "Shift",
   START: "Start",
   END: "End",
   // Raw hours

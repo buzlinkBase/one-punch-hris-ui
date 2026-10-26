@@ -9,7 +9,7 @@ export default function Timekeeping() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              Time Keeping
+              Timekeeping
             </Title>
             <p className="page-toolbar-subtitle">
               Review attendance records and manage daily timekeeping workflows.

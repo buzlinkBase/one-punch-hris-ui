@@ -20,7 +20,7 @@ export const WEEKDAY_OPTIONS = [
 export const DAY_TYPE_OPTIONS = [
   { value: 1, label: "Regular days" },
   { value: 2, label: "Rest days" },
-  { value: 4, label: "Legal holidays" },
+  { value: 4, label: "Regular holidays" },
   { value: 8, label: "Special holidays" },
 ];
 

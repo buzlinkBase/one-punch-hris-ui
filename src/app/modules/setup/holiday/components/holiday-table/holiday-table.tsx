@@ -119,7 +119,7 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
         const isLegal = raw?.toUpperCase() === "LEGAL";
         return (
           <Tag color={isLegal ? "blue" : "orange"}>
-            {isLegal ? "Legal" : "Special"}
+            {isLegal ? "Regular" : "Special"}
           </Tag>
         );
       },

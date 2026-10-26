@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { rawLogsApi } from "../services/raw-logs.api";
 import type { RawLogsFilterRequest } from "../models/api/response/raw-attendance-log.model";
 
-const QUERY_KEY = ["raw-logs"];
+export const RAW_LOGS_QUERY_KEY = ["raw-logs"];
 
 interface QueryOptions {
   enabled?: boolean;
@@ -15,7 +15,7 @@ export function useRawAttendanceLogs(
 ) {
   return useQuery({
     queryKey: [
-      ...QUERY_KEY,
+      ...RAW_LOGS_QUERY_KEY,
       "raw-attendance",
       filters,
       options.generateKey ?? 0,
@@ -30,7 +30,12 @@ export function useRawColumnarLogs(
   options: QueryOptions = {},
 ) {
   return useQuery({
-    queryKey: [...QUERY_KEY, "raw-columnar", filters, options.generateKey ?? 0],
+    queryKey: [
+      ...RAW_LOGS_QUERY_KEY,
+      "raw-columnar",
+      filters,
+      options.generateKey ?? 0,
+    ],
     queryFn: () => rawLogsApi.getRawColumnarLogs(filters),
     enabled: options.enabled ?? true,
   });
@@ -41,7 +46,12 @@ export function useCleanRowLogs(
   options: QueryOptions = {},
 ) {
   return useQuery({
-    queryKey: [...QUERY_KEY, "clean-row", filters, options.generateKey ?? 0],
+    queryKey: [
+      ...RAW_LOGS_QUERY_KEY,
+      "clean-row",
+      filters,
+      options.generateKey ?? 0,
+    ],
     queryFn: () => rawLogsApi.getCleanRowLogs(filters),
     enabled: options.enabled ?? true,
   });
@@ -53,7 +63,7 @@ export function useCleanColumnarLogs(
 ) {
   return useQuery({
     queryKey: [
-      ...QUERY_KEY,
+      ...RAW_LOGS_QUERY_KEY,
       "clean-columnar",
       filters,
       options.generateKey ?? 0,

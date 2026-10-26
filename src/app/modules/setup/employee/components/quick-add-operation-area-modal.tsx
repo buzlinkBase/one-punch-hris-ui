@@ -55,7 +55,7 @@ export default function QuickAddOperationAreaModal({
 
   return (
     <Modal
-      title="Add Operation Area"
+      title="Add Project Site"
       open={open}
       onCancel={() => {
         reset();

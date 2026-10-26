@@ -23,19 +23,19 @@ export const RATE_TYPE_LABEL: Record<string, string> = {
   NIGHTDIFF: "Night Differential",
   OVERTIME: "Overtime",
   RESTDAY_DUTY: "Rest Day",
-  LEGAL_HOLIDAY: "Legal Holiday (No Work)",
-  LEGAL_HOLIDAY_DUTY: "Legal Holiday (Worked)",
+  LEGAL_HOLIDAY: "Regular Holiday (No Work)",
+  LEGAL_HOLIDAY_DUTY: "Regular Holiday (Worked)",
   SPECIAL_WORKING: "Special Working Holiday",
   SPECIAL_NON_WORKING: "Special Non-Working Holiday",
   RESTDAY_SPECIAL: "Rest Day + Special Holiday",
   HOLIDAY_OT: "Holiday / Rest Day OT Premium",
   RESTDAY_OT_PREMIUM: "Rest Day OT",
-  LEGAL_HOLIDAY_OT_PREMIUM: "Legal Holiday OT",
+  LEGAL_HOLIDAY_OT_PREMIUM: "Regular Holiday OT",
   SPECIAL_HOLIDAY_OT_PREMIUM: "Special Holiday OT",
-  RESTLEGAL_OT_PREMIUM: "Rest Day + Legal Holiday OT",
+  RESTLEGAL_OT_PREMIUM: "Rest Day + Regular Holiday OT",
   RESTSPECIAL_OT_PREMIUM: "Rest Day + Special Holiday OT",
-  DOUBLELEGAL_OT_PREMIUM: "Double Legal Holiday OT",
-  RESTDOUBLELEGAL_OT_PREMIUM: "Rest Day + Double Legal Holiday OT",
+  DOUBLELEGAL_OT_PREMIUM: "Double Regular Holiday OT",
+  RESTDOUBLELEGAL_OT_PREMIUM: "Rest Day + Double Regular Holiday OT",
 };
 
 export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
@@ -44,8 +44,8 @@ export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
   OVERTIME:
     "Applied to hours worked beyond the regular shift (regular days only).",
   RESTDAY_DUTY: "Applied when an employee works on their designated rest day.",
-  LEGAL_HOLIDAY: "Pay for unworked legal holidays (no-work, paid).",
-  LEGAL_HOLIDAY_DUTY: "Applied when an employee works on a legal holiday.",
+  LEGAL_HOLIDAY: "Pay for unworked regular holidays (no-work, paid).",
+  LEGAL_HOLIDAY_DUTY: "Applied when an employee works on a regular holiday.",
   SPECIAL_WORKING: "Applied for hours worked on a special working holiday.",
   SPECIAL_NON_WORKING:
     "Applied when an employee works on a special non-working holiday.",
@@ -56,17 +56,17 @@ export const RATE_TYPE_DESCRIPTION: Record<string, string> = {
   RESTDAY_OT_PREMIUM:
     "This client's own OT premium for Rest Day overtime hours, multiplied on top of the Rest Day rate above — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
   LEGAL_HOLIDAY_OT_PREMIUM:
-    "This client's own OT premium for Legal Holiday overtime hours, multiplied on top of the Legal Holiday (Worked) rate above — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+    "This client's own OT premium for Regular Holiday overtime hours, multiplied on top of the Regular Holiday (Worked) rate above — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
   SPECIAL_HOLIDAY_OT_PREMIUM:
     "This client's own OT premium for Special Holiday overtime hours, multiplied on top of the Special Non-Working Holiday rate above — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
   RESTLEGAL_OT_PREMIUM:
-    "This client's own OT premium for Rest Day + Legal Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+    "This client's own OT premium for Rest Day + Regular Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
   RESTSPECIAL_OT_PREMIUM:
     "This client's own OT premium for Rest Day + Special Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
   DOUBLELEGAL_OT_PREMIUM:
-    "This client's own OT premium for Double Legal Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+    "This client's own OT premium for Double Regular Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
   RESTDOUBLELEGAL_OT_PREMIUM:
-    "This client's own OT premium for Rest Day + Double Legal Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
+    "This client's own OT premium for Rest Day + Double Regular Holiday overtime hours — leave blank to use the company-wide Holiday / Rest Day OT Premium.",
 };
 
 // Client-only OT PREMIUM overrides (Setup > Client > Settings > Rate Multipliers). Each

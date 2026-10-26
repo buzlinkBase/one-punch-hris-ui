@@ -77,7 +77,7 @@ export default function PortalIncompletePunches() {
                   })
                 }
               >
-                File Pass Slip
+                New Pass Slip
               </Button>
             )}
           />

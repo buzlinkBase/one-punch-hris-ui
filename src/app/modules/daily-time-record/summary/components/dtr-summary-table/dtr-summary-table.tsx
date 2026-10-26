@@ -185,7 +185,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           ],
         },
         {
-          title: "Legal Holiday",
+          title: "Regular Holiday",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "legalHolHours", 75),
@@ -203,7 +203,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           ],
         },
         {
-          title: "Rest + Legal Day",
+          title: "Rest + Regular Holiday",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "restLegalDayHours", 75),
@@ -221,7 +221,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           ],
         },
         {
-          title: "Double Legal Holiday",
+          title: "Double Regular Holiday",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "doubleLegalHours", 75),
@@ -230,7 +230,7 @@ export default function DtrSummaryTable({ data, loading }: Props) {
           ],
         },
         {
-          title: "Rest + Double Legal",
+          title: "Rest + Double Reg Hol",
           onHeaderCell: groupHeader,
           children: [
             col("Hrs", "restDoubleLegalHours", 75),

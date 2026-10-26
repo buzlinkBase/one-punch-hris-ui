@@ -239,7 +239,7 @@ export default function EmployeeOpeningBalanceTab({ employeeId }: Props) {
           >
             Earnings
           </Divider>
-          <div className="grid grid-cols-2 gap-x-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
             <Form.Item label="Basic Pay (₱)">
               <InputNumber
                 className="w-full"
@@ -305,7 +305,7 @@ export default function EmployeeOpeningBalanceTab({ employeeId }: Props) {
           >
             Statutory Deductions &amp; Tax
           </Divider>
-          <div className="grid grid-cols-2 gap-x-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
             <Form.Item label="Non-Taxable Income (₱)">
               <InputNumber
                 className="w-full"

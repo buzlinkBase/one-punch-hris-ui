@@ -124,7 +124,7 @@ export const STATUS_LABELS: Record<SubscriptionStatus, string> = {
   PastDue: "Payment overdue",
   Suspended: "Suspended",
   Expired: "Trial ended",
-  Canceled: "Canceled",
+  Canceled: "Cancelled",
   None: "No plan",
   Unrestricted: "Active",
   Unowned: "Active",

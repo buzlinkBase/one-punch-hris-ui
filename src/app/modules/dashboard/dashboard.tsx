@@ -66,7 +66,13 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* What needs the viewer's action sits right under the headline numbers. */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <PendingRequestsCard
+          data={data?.pendingRequests ?? []}
+          loading={isLoading}
+          drillAction={(request) => action(pendingRequestDrill(request))}
+        />
         <div className="lg:col-span-2">
           <AttendanceOverviewCard
             data={data?.attendanceTrend ?? []}
@@ -74,10 +80,21 @@ export default function Dashboard() {
             drillAction={(point) => action(attendanceDayDrill(point.workDate))}
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         <TodayAttendanceCard
           stats={data?.stats}
           loading={isLoading}
           drillAction={(key) => action(statDrill(key, now))}
+        />
+        <UpcomingHolidaysCard
+          data={data?.upcomingHolidays ?? []}
+          loading={isLoading}
+        />
+        <UpcomingBirthdaysCard
+          data={data?.upcomingBirthdays ?? []}
+          loading={isLoading}
         />
       </div>
 
@@ -117,22 +134,6 @@ export default function Dashboard() {
           data={data?.workforce?.tenure ?? []}
           loading={isLoading}
           drillAction={(row) => action(tenureDrill(row, now))}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        <UpcomingHolidaysCard
-          data={data?.upcomingHolidays ?? []}
-          loading={isLoading}
-        />
-        <UpcomingBirthdaysCard
-          data={data?.upcomingBirthdays ?? []}
-          loading={isLoading}
-        />
-        <PendingRequestsCard
-          data={data?.pendingRequests ?? []}
-          loading={isLoading}
-          drillAction={(request) => action(pendingRequestDrill(request))}
         />
       </div>
 

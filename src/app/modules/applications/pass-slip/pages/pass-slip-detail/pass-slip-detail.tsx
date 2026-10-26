@@ -572,7 +572,7 @@ export default function PassSlipDetail() {
           <div>
             <Title level={4} className="mb-0!">
               {!isEdit
-                ? "File Pass Slip"
+                ? "New Pass Slip"
                 : canEdit
                   ? "Edit Pass Slip"
                   : "View Pass Slip"}

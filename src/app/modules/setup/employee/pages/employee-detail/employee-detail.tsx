@@ -31,10 +31,15 @@ import {
   summarizeFormErrors,
 } from "../../services/form-error-summary";
 import type { EmployeeFormTab } from "../../constants/form-sections.const";
+import { buildSectionNav } from "../../services/section-groups";
+import { adjacentIds } from "../../services/adjacent-employees";
+import { SectionNav } from "@/shared/components/section-nav/section-nav";
 import {
   UserOutlined,
   PlusOutlined,
   PrinterOutlined,
+  LeftOutlined,
+  RightOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "@tanstack/react-router";
@@ -58,6 +63,7 @@ import {
 } from "../../models/forms/employee-form.schema";
 import type { DayName } from "../../models/api/response/employee-response.model";
 import {
+  useCachedEmployeeListIds,
   useEmployee,
   useEmployees,
   useCreateEmployee,
@@ -225,6 +231,7 @@ export default function EmployeeDetail() {
   const canTagConfidential = authStorage.hasConfidentialClearance();
   const formGridClass = isMobile ? "form-grid-1" : "form-grid-2";
   const { data: selected } = useEmployee(isEdit ? id : undefined);
+  const neighbours = adjacentIds(useCachedEmployeeListIds(), id);
   // A confidential employee seen through a partial clearance comes back with pay blanked; the
   // API keeps the stored pay on save, so the pay tabs are simply left out.
   const payHidden = selected?.figuresHidden ?? false;
@@ -449,6 +456,11 @@ export default function EmployeeDetail() {
   const [activeTab, setActiveTab] = useState<string>("personal");
   // Live: a tab keeps its red count until its fields are fixed.
   const tabErrorCounts = errorCountByTab(summarizeFormErrors(errors));
+  const sectionGroups = buildSectionNav({
+    isEdit,
+    hiddenKeys: payHidden ? PAY_TAB_KEYS : [],
+    errorCounts: tabErrorCounts,
+  });
   const tabLabel = (key: EmployeeFormTab, label: string) => {
     const count = tabErrorCounts[key];
     return count ? (
@@ -757,6 +769,30 @@ export default function EmployeeDetail() {
             <Tag color={isEdit ? "processing" : "success"}>
               {isEdit ? "Editing" : "New Record"}
             </Tag>
+            {neighbours.prev || neighbours.next ? (
+              <Space.Compact>
+                <Tooltip title="Previous employee in the list">
+                  <Button
+                    aria-label="Previous employee"
+                    icon={<LeftOutlined />}
+                    disabled={!neighbours.prev}
+                    onClick={() =>
+                      navigate({ to: `/setup/employee/${neighbours.prev}` })
+                    }
+                  />
+                </Tooltip>
+                <Tooltip title="Next employee in the list">
+                  <Button
+                    aria-label="Next employee"
+                    icon={<RightOutlined />}
+                    disabled={!neighbours.next}
+                    onClick={() =>
+                      navigate({ to: `/setup/employee/${neighbours.next}` })
+                    }
+                  />
+                </Tooltip>
+              </Space.Compact>
+            ) : null}
             {isEdit && id && (
               <Button
                 icon={<PrinterOutlined />}
@@ -882,1486 +918,616 @@ export default function EmployeeDetail() {
             </div>
           </div>
         </Card>
-        <div className="mb-2"></div>
+        <div className="mb-4"></div>
         {/* ── Tabbed Sections ── */}
         {payHidden && (
           <Alert
             type="info"
             showIcon
-            className="mb-2"
+            className="mb-4"
             message={EMPLOYEE_LABEL.PAY_HIDDEN_NOTICE}
           />
         )}
-        <Card>
-          <Tabs
-            type="card"
-            activeKey={activeTab}
+        <div className="flex flex-col gap-4 md:flex-row md:items-start">
+          <SectionNav
+            groups={sectionGroups}
+            active={activeTab}
             onChange={setActiveTab}
-            items={[
-              {
-                key: "personal",
-                label: tabLabel("personal", "Personal Information"),
-                forceRender: true,
-                children: (
-                  <div className={formGridClass} style={{ paddingTop: 16 }}>
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.FIRST_NAME}
-                      required
-                      validateStatus={errors.firstName ? "error" : ""}
-                      help={errors.firstName?.message}
-                    >
-                      <Controller
-                        name="firstName"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(capitalizeFirst(e.target.value))
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.LAST_NAME}
-                      required
-                      validateStatus={errors.lastName ? "error" : ""}
-                      help={errors.lastName?.message}
-                    >
-                      <Controller
-                        name="lastName"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(capitalizeFirst(e.target.value))
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.MIDDLE_NAME}>
-                      <Controller
-                        name="middleName"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(capitalizeFirst(e.target.value))
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.SUFFIX}>
-                      <Controller
-                        name="suffix"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            placeholder="Jr., Sr., III…"
-                            onChange={(e) =>
-                              field.onChange(capitalizeFirst(e.target.value))
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.GENDER}>
-                      <Controller
-                        name="gender"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            options={GENDER_OPTIONS}
-                            allowClear
-                            placeholder="Select gender"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.CIVIL_STATUS}>
-                      <Controller
-                        name="civilStatus"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            options={CIVIL_STATUS_OPTIONS}
-                            allowClear
-                            placeholder="Select civil status"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.DOB}>
-                      <Controller
-                        name="dob"
-                        control={control}
-                        render={({ field }) =>
-                          datePicker(field.value, field.onChange)
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.BLOOD_TYPE}>
-                      <Controller
-                        name="bloodType"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            options={BLOOD_TYPE_OPTIONS}
-                            allowClear
-                            placeholder="Select blood type"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.CONTACT}>
-                      <Controller
-                        name="contact"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.ADDRESS1}>
-                      <Controller
-                        name="address1"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.ADDRESS2}>
-                      <Controller
-                        name="address2"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.EMAIL}
-                      validateStatus={errors.email ? "error" : ""}
-                      help={errors.email?.message}
-                    >
-                      <Controller
-                        name="email"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="employee@example.com"
-                            autoComplete="off"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-                  </div>
-                ),
-              },
-              {
-                key: "employment",
-                label: tabLabel("employment", "Employment Details"),
-                forceRender: true,
-                children: (
-                  <div className={formGridClass} style={{ paddingTop: 16 }}>
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.EMPLOYEE_NO}
-                      extra={
-                        autoNumbering
-                          ? EMPLOYEE_LABEL.EMPLOYEE_NO_AUTO_HELP
-                          : undefined
-                      }
-                    >
-                      <Controller
-                        name="employeeNo"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            placeholder={
-                              autoNumbering && !isEdit
-                                ? EMPLOYEE_LABEL.EMPLOYEE_NO_AUTO_PLACEHOLDER
-                                : undefined
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.BIO_ID}>
-                      <Controller
-                        name="bioId"
-                        control={control}
-                        render={({ field }) => (
-                          <InputNumber
-                            {...field}
-                            className="w-full"
-                            min={0}
-                            placeholder=""
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="departmentId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => {
-                                field.onChange(v ?? null);
-                                setValue("sectionId", null);
-                              }}
-                              options={departmentOptions}
-                              loading={isRefLoading}
-                              allowClear
-                              showSearch
-                              filterOption={filterByLabel}
-                              placeholder="Select department"
-                              style={{ flex: 1 }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setDeptModalOpen(true)}
-                          title="Add new department"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.MANAGER}>
-                      <Controller
-                        name="managerId"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            value={field.value ?? undefined}
-                            onChange={(v) => field.onChange(v ?? null)}
-                            options={managerOptions}
-                            loading={isRefLoading}
-                            allowClear
-                            showSearch
-                            filterOption={filterByLabel}
-                            placeholder="Select who this employee reports to"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.SECTION}>
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="sectionId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => field.onChange(v ?? null)}
-                              options={sectionOptions}
-                              loading={isSectionsLoading}
-                              allowClear
-                              showSearch
-                              filterOption={filterByLabel}
-                              placeholder="Select section"
-                              style={{ flex: 1 }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setSectionModalOpen(true)}
-                          title="Add new section"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.AREA}>
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="areaId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => field.onChange(v ?? null)}
-                              options={areaOptions}
-                              loading={isRefLoading}
-                              allowClear
-                              showSearch
-                              filterOption={filterByLabel}
-                              placeholder="Select project site"
-                              style={{ flex: 1 }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setAreaModalOpen(true)}
-                          title="Add new operation area"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.PAYROLL_GROUP}
-                      required
-                      validateStatus={errors.payrollGroupId ? "error" : ""}
-                      help={errors.payrollGroupId?.message}
-                    >
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="payrollGroupId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value || undefined}
-                              onChange={(v?: string) => field.onChange(v ?? "")}
-                              options={payrollGroupOptions}
-                              optionRender={payrollGroupOptionRender}
-                              loading={isRefLoading}
-                              allowClear
-                              showSearch={{
-                                filterOption: filterPayrollGroupOption,
-                              }}
-                              placeholder="Select payroll group"
-                              style={{ flex: 1 }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setPgModalOpen(true)}
-                          title="Add new payroll group"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.CLIENT}>
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="clientId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => field.onChange(v ?? null)}
-                              options={clientOptions}
-                              loading={isClientsLoading}
-                              allowClear
-                              showSearch
-                              filterOption={filterByLabel}
-                              placeholder="Select client"
-                              style={{ flex: 1 }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setClientModalOpen(true)}
-                          title="Add new client"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.BRANCH}>
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="branchId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => field.onChange(v ?? null)}
-                              options={branchOptions}
-                              loading={isBranchesLoading}
-                              allowClear
-                              showSearch
-                              filterOption={filterByLabel}
-                              placeholder="Select branch"
-                              style={{ flex: 1 }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setBranchModalOpen(true)}
-                          title="Add new branch"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.POSITION}>
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="positionId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => field.onChange(v ?? null)}
-                              options={positionOptions}
-                              loading={isPositionsLoading}
-                              allowClear
-                              showSearch
-                              filterOption={filterByLabel}
-                              placeholder="Select position"
-                              style={{ flex: 1 }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setPositionModalOpen(true)}
-                          title="Add new position"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.JOB_LEVEL}>
-                      <Controller
-                        name="jobLevel"
-                        control={control}
-                        render={({ field }) => (
-                          // Suggestions only: any typed level is kept as typed.
-                          <AutoComplete
-                            value={field.value}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            ref={field.ref}
-                            options={jobLevelOptions}
-                            // Options come grouped; only the levels (not the group headers) have a value.
-                            filterOption={(input, option) =>
-                              !!option &&
-                              "value" in option &&
-                              typeof option.value === "string" &&
-                              jobLevelMatches(input, option.value)
-                            }
-                            allowClear
-                            placeholder="Select or type a level"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
-                      <div
-                        style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-                      >
-                        <Controller
-                          name="timeShiftId"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => field.onChange(v ?? null)}
-                              options={timeShiftOptions}
-                              loading={isRefLoading}
-                              allowClear
-                              showSearch
-                              filterOption={filterByLabel}
-                              placeholder="Select time shift"
-                              style={{ flex: 1 }}
-                              optionRender={(opt) => {
-                                const o =
-                                  opt.data as (typeof timeShiftOptions)[number];
-                                const isFixed = o.shiftType === "FIXED";
-                                return (
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                      gap: 8,
-                                    }}
-                                  >
-                                    <span style={{ fontWeight: 500 }}>
-                                      {o.shiftName}
-                                    </span>
-                                    <span
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 6,
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      <span
-                                        style={{
-                                          fontSize: 11,
-                                          color: "#6b7280",
-                                        }}
-                                      >
-                                        {formatShiftTime(o.startTime)} –{" "}
-                                        {formatShiftTime(o.endTime)}
-                                      </span>
-                                      <span
-                                        style={{
-                                          fontSize: 10,
-                                          fontWeight: 600,
-                                          padding: "1px 6px",
-                                          borderRadius: 4,
-                                          background: isFixed
-                                            ? "#d1fae5"
-                                            : "#ede9fe",
-                                          color: isFixed
-                                            ? "#065f46"
-                                            : "#5b21b6",
-                                        }}
-                                      >
-                                        {isFixed ? "Fixed" : "Split"}
-                                      </span>
-                                    </span>
-                                  </div>
-                                );
-                              }}
-                            />
-                          )}
-                        />
-                        <Button
-                          icon={<PlusOutlined />}
-                          onClick={() => setTimeShiftModalOpen(true)}
-                          title="Add new time shift"
-                        />
-                      </div>
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.EMPLOYMENT_STATUS}
-                      required
-                      validateStatus={errors.employmentStatus ? "error" : ""}
-                      help={errors.employmentStatus?.message}
-                    >
-                      <Controller
-                        name="employmentStatus"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            options={EMPLOYMENT_STATUS_OPTIONS}
-                            placeholder="Select status"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    {canTagConfidential && (
+            isMobile={isMobile}
+          />
+          <Card className="min-w-0 flex-1">
+            {/* The section nav above drives the tabs; their own bar stays hidden. */}
+            <Tabs
+              renderTabBar={() => <></>}
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: "personal",
+                  label: tabLabel("personal", "Personal Information"),
+                  forceRender: true,
+                  children: (
+                    <div className={formGridClass} style={{ paddingTop: 16 }}>
                       <Form.Item
-                        label={EMPLOYEE_LABEL.CONFIDENTIAL}
-                        extra={EMPLOYEE_LABEL.CONFIDENTIAL_HELP}
+                        label={EMPLOYEE_LABEL.FIRST_NAME}
+                        required
+                        validateStatus={errors.firstName ? "error" : ""}
+                        help={errors.firstName?.message}
                       >
                         <Controller
-                          name="isConfidential"
+                          name="firstName"
                           control={control}
                           render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false}
-                              onChange={field.onChange}
-                            />
-                          )}
-                        />
-                      </Form.Item>
-                    )}
-
-                    <Form.Item label={EMPLOYEE_LABEL.HIRING_ENTITY}>
-                      <Controller
-                        name="hiringEntity"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.DATE_REGISTERED}
-                      required
-                      validateStatus={errors.dateRegistered ? "error" : ""}
-                      help={errors.dateRegistered?.message}
-                    >
-                      <Controller
-                        name="dateRegistered"
-                        control={control}
-                        render={({ field }) =>
-                          datePicker(
-                            field.value,
-                            (v) => field.onChange(v ?? ""),
-                            false,
-                          )
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.HIRE_DATE}>
-                      <Controller
-                        name="hireDate"
-                        control={control}
-                        render={({ field }) =>
-                          datePicker(field.value, field.onChange)
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.CONTRACT_START}>
-                      <Controller
-                        name="contractStart"
-                        control={control}
-                        render={({ field }) =>
-                          datePicker(field.value, field.onChange)
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.CONTRACT_END}>
-                      <Controller
-                        name="contractEnd"
-                        control={control}
-                        render={({ field }) =>
-                          datePicker(field.value, field.onChange)
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.DATE_RESIGNED}
-                      className="col-span-2"
-                    >
-                      <Controller
-                        name="dateResigned"
-                        control={control}
-                        render={({ field }) =>
-                          datePicker(field.value, field.onChange)
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.REST_DAYS}
-                      className="col-span-2"
-                    >
-                      <Controller
-                        name="restDays"
-                        control={control}
-                        render={({ field }) => (
-                          <Checkbox.Group
-                            options={REST_DAY_OPTIONS}
-                            value={field.value ?? []}
-                            onChange={(checkedValues) =>
-                              field.onChange(checkedValues as string[])
-                            }
-                            className="flex gap-4 flex-wrap"
-                          />
-                        )}
-                      />
-                    </Form.Item>
-                  </div>
-                ),
-              },
-              {
-                key: "compensation",
-                label: tabLabel("compensation", "Compensation"),
-                forceRender: true,
-                children: (
-                  <div className={formGridClass} style={{ paddingTop: 16 }}>
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.SALARY_TYPE}
-                      required
-                      validateStatus={errors.salaryType ? "error" : ""}
-                      help={errors.salaryType?.message}
-                    >
-                      <Controller
-                        name="salaryType"
-                        control={control}
-                        render={({ field }) => (
-                          <Select {...field} options={SALARY_TYPE_OPTIONS} />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.MONTHLY_RATE}
-                      help={
-                        watchedSalaryType === "VARIABLE"
-                          ? "Not applicable for Variable salary"
-                          : undefined
-                      }
-                    >
-                      <Controller
-                        name="monthlyRate"
-                        control={control}
-                        render={({ field }) => (
-                          <InputNumber
-                            {...field}
-                            className="w-full"
-                            min={0}
-                            precision={2}
-                            disabled={watchedSalaryType === "VARIABLE"}
-                            formatter={(v) =>
-                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    {watchedSalaryType === "FIXED" && (
-                      <Form.Item
-                        label={EMPLOYEE_LABEL.DAILY_RATE_MODE}
-                        className="col-span-2"
-                      >
-                        <Controller
-                          name="dailyRateMode"
-                          control={control}
-                          render={({ field }) => (
-                            <Radio.Group
-                              value={field.value ?? "Manual"}
-                              onChange={(e) => {
-                                const newMode = e.target.value;
-                                field.onChange(newMode);
-                                if (newMode === "CalculatedEDR") {
-                                  const isValid = FACTOR_DAYS_OPTIONS.some(
-                                    (o) => o.value === watchedFactorDays,
-                                  );
-                                  if (!isValid) {
-                                    setValue("factorDays", 251);
-                                    applyFactorDaysBooleanDefaults(251);
-                                  }
-                                } else if (newMode === "MonthlyTotalDays") {
-                                  const isValid =
-                                    watchedFactorDays != null &&
-                                    watchedFactorDays > 0 &&
-                                    !FACTOR_DAYS_OPTIONS.some(
-                                      (o) => o.value === watchedFactorDays,
-                                    );
-                                  const isPreset =
-                                    MONTHLY_TOTAL_DAYS_OPTIONS.some(
-                                      (o) => o.value === watchedFactorDays,
-                                    );
-                                  if (!isValid && !isPreset) {
-                                    setValue("factorDays", 26);
-                                    applyFactorDaysBooleanDefaults(26);
-                                  }
-                                }
-                              }}
-                              options={DAILY_RATE_MODE_OPTIONS.map((o) =>
-                                o.value === "CalculatedEDR"
-                                  ? {
-                                      ...o,
-                                      label: (
-                                        <Tooltip title="EDR = Equivalent Daily Rate. Divides the annualized monthly salary (Monthly Rate × 12) by the selected Factor Days to derive a standard daily rate.">
-                                          <span>
-                                            {o.label}{" "}
-                                            <InfoCircleOutlined className="text-[11px] opacity-70" />
-                                          </span>
-                                        </Tooltip>
-                                      ),
-                                    }
-                                  : o,
-                              )}
-                              optionType="button"
-                            />
-                          )}
-                        />
-                      </Form.Item>
-                    )}
-
-                    {isCalculatedEDR && (
-                      <Form.Item label={EMPLOYEE_LABEL.FACTOR_DAYS}>
-                        <Controller
-                          name="factorDays"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
+                            <Input
                               {...field}
-                              value={field.value ?? undefined}
-                              onChange={(v) => {
-                                field.onChange(v);
-                                applyFactorDaysBooleanDefaults(v);
-                              }}
-                              options={FACTOR_DAYS_GROUPS.map((g) => ({
-                                label: g.group,
-                                options: g.options.map((o) => ({
-                                  value: o.value,
-                                  label: o.label,
-                                })),
-                              }))}
-                              showSearch
-                              filterOption={(input, option) =>
-                                typeof option?.label === "string" &&
-                                option.label
-                                  .toLowerCase()
-                                  .includes(input.toLowerCase())
+                              onChange={(e) =>
+                                field.onChange(capitalizeFirst(e.target.value))
                               }
-                              placeholder="Select factor days"
                             />
                           )}
                         />
-                        {watchedFactorDays && (
-                          <Text type="secondary" className="text-xs mt-1 block">
-                            {
-                              FACTOR_DAYS_OPTIONS.find(
-                                (o) => o.value === watchedFactorDays,
-                              )?.description
-                            }
-                          </Text>
-                        )}
                       </Form.Item>
-                    )}
 
-                    {isMonthlyTotalDays && (
                       <Form.Item
-                        label="Use Actual Days in Month"
-                        className="col-span-2"
+                        label={EMPLOYEE_LABEL.LAST_NAME}
+                        required
+                        validateStatus={errors.lastName ? "error" : ""}
+                        help={errors.lastName?.message}
                       >
                         <Controller
-                          name="useActualMonthDays"
+                          name="lastName"
                           control={control}
                           render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false}
-                              onChange={field.onChange}
+                            <Input
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(capitalizeFirst(e.target.value))
+                              }
                             />
                           )}
                         />
-                        <Text type="secondary" className="text-xs mt-1 block">
-                          Divides by the real number of days in each payroll
-                          month (28–31), resolved per pay period, instead of a
-                          fixed divisor below.
-                        </Text>
                       </Form.Item>
-                    )}
 
-                    {isMonthlyTotalDays && !watchedUseActualMonthDays && (
-                      <Form.Item label={EMPLOYEE_LABEL.FACTOR_DAYS}>
+                      <Form.Item label={EMPLOYEE_LABEL.MIDDLE_NAME}>
                         <Controller
-                          name="factorDays"
+                          name="middleName"
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(capitalizeFirst(e.target.value))
+                              }
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.SUFFIX}>
+                        <Controller
+                          name="suffix"
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              placeholder="Jr., Sr., III…"
+                              onChange={(e) =>
+                                field.onChange(capitalizeFirst(e.target.value))
+                              }
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.GENDER}>
+                        <Controller
+                          name="gender"
                           control={control}
                           render={({ field }) => (
                             <Select
                               {...field}
-                              value={
-                                isCustomDivisor
-                                  ? "custom"
-                                  : (field.value ?? undefined)
-                              }
-                              onChange={(v) => {
-                                if (typeof v !== "number") {
-                                  setCustomDivisorSelected(true);
-                                  return;
-                                }
-                                setCustomDivisorSelected(false);
-                                field.onChange(v);
-                                applyFactorDaysBooleanDefaults(v);
-                              }}
-                              options={[
-                                ...MONTHLY_TOTAL_DAYS_OPTIONS.map((o) => ({
-                                  value: o.value,
-                                  label: o.label,
-                                })),
-                                { value: "custom", label: "Custom..." },
-                              ]}
-                              placeholder="Select monthly divisor"
+                              value={field.value ?? undefined}
+                              options={GENDER_OPTIONS}
+                              allowClear
+                              placeholder="Select gender"
                             />
                           )}
                         />
-                        {isCustomDivisor && (
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.CIVIL_STATUS}>
+                        <Controller
+                          name="civilStatus"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              options={CIVIL_STATUS_OPTIONS}
+                              allowClear
+                              placeholder="Select civil status"
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.DOB}>
+                        <Controller
+                          name="dob"
+                          control={control}
+                          render={({ field }) =>
+                            datePicker(field.value, field.onChange)
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.BLOOD_TYPE}>
+                        <Controller
+                          name="bloodType"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              options={BLOOD_TYPE_OPTIONS}
+                              allowClear
+                              placeholder="Select blood type"
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.CONTACT}>
+                        <Controller
+                          name="contact"
+                          control={control}
+                          render={({ field }) => <Input {...field} />}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.ADDRESS1}>
+                        <Controller
+                          name="address1"
+                          control={control}
+                          render={({ field }) => <Input {...field} />}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.ADDRESS2}>
+                        <Controller
+                          name="address2"
+                          control={control}
+                          render={({ field }) => <Input {...field} />}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.EMAIL}
+                        validateStatus={errors.email ? "error" : ""}
+                        help={errors.email?.message}
+                      >
+                        <Controller
+                          name="email"
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              type="email"
+                              placeholder="employee@example.com"
+                              autoComplete="off"
+                            />
+                          )}
+                        />
+                      </Form.Item>
+                    </div>
+                  ),
+                },
+                {
+                  key: "employment",
+                  label: tabLabel("employment", "Employment Details"),
+                  forceRender: true,
+                  children: (
+                    <div className={formGridClass} style={{ paddingTop: 16 }}>
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.EMPLOYEE_NO}
+                        extra={
+                          autoNumbering
+                            ? EMPLOYEE_LABEL.EMPLOYEE_NO_AUTO_HELP
+                            : undefined
+                        }
+                      >
+                        <Controller
+                          name="employeeNo"
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              placeholder={
+                                autoNumbering && !isEdit
+                                  ? EMPLOYEE_LABEL.EMPLOYEE_NO_AUTO_PLACEHOLDER
+                                  : undefined
+                              }
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.BIO_ID}>
+                        <Controller
+                          name="bioId"
+                          control={control}
+                          render={({ field }) => (
+                            <InputNumber
+                              {...field}
+                              className="w-full!"
+                              min={0}
+                              placeholder=""
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.DEPARTMENT}>
+                        <div className="flex gap-2">
                           <Controller
-                            name="factorDays"
+                            name="departmentId"
                             control={control}
                             render={({ field }) => (
-                              <InputNumber
-                                className="w-full mt-2"
-                                min={0.01}
-                                step={0.01}
-                                precision={4}
-                                placeholder="Enter custom divisor"
-                                value={field.value ?? null}
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
                                 onChange={(v) => {
-                                  field.onChange(v);
-                                  applyFactorDaysBooleanDefaults(v);
+                                  field.onChange(v ?? null);
+                                  setValue("sectionId", null);
+                                }}
+                                options={departmentOptions}
+                                loading={isRefLoading}
+                                allowClear
+                                showSearch
+                                filterOption={filterByLabel}
+                                placeholder="Select department"
+                                className="min-w-0 flex-1"
+                              />
+                            )}
+                          />
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setDeptModalOpen(true)}
+                            title="Add new department"
+                          />
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.MANAGER}>
+                        <Controller
+                          name="managerId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              value={field.value ?? undefined}
+                              onChange={(v) => field.onChange(v ?? null)}
+                              options={managerOptions}
+                              loading={isRefLoading}
+                              allowClear
+                              showSearch
+                              filterOption={filterByLabel}
+                              placeholder="Select who this employee reports to"
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.SECTION}>
+                        <div className="flex gap-2">
+                          <Controller
+                            name="sectionId"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v ?? null)}
+                                options={sectionOptions}
+                                loading={isSectionsLoading}
+                                allowClear
+                                showSearch
+                                filterOption={filterByLabel}
+                                placeholder="Select section"
+                                className="min-w-0 flex-1"
+                              />
+                            )}
+                          />
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setSectionModalOpen(true)}
+                            title="Add new section"
+                          />
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.AREA}>
+                        <div className="flex gap-2">
+                          <Controller
+                            name="areaId"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v ?? null)}
+                                options={areaOptions}
+                                loading={isRefLoading}
+                                allowClear
+                                showSearch
+                                filterOption={filterByLabel}
+                                placeholder="Select project site"
+                                className="min-w-0 flex-1"
+                              />
+                            )}
+                          />
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setAreaModalOpen(true)}
+                            title="Add new operation area"
+                          />
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.PAYROLL_GROUP}
+                        required
+                        validateStatus={errors.payrollGroupId ? "error" : ""}
+                        help={errors.payrollGroupId?.message}
+                      >
+                        <div className="flex gap-2">
+                          <Controller
+                            name="payrollGroupId"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value || undefined}
+                                onChange={(v?: string) =>
+                                  field.onChange(v ?? "")
+                                }
+                                options={payrollGroupOptions}
+                                optionRender={payrollGroupOptionRender}
+                                loading={isRefLoading}
+                                allowClear
+                                showSearch={{
+                                  filterOption: filterPayrollGroupOption,
+                                }}
+                                placeholder="Select payroll group"
+                                className="min-w-0 flex-1"
+                              />
+                            )}
+                          />
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setPgModalOpen(true)}
+                            title="Add new payroll group"
+                          />
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.CLIENT}>
+                        <div className="flex gap-2">
+                          <Controller
+                            name="clientId"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v ?? null)}
+                                options={clientOptions}
+                                loading={isClientsLoading}
+                                allowClear
+                                showSearch
+                                filterOption={filterByLabel}
+                                placeholder="Select client"
+                                className="min-w-0 flex-1"
+                              />
+                            )}
+                          />
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setClientModalOpen(true)}
+                            title="Add new client"
+                          />
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.BRANCH}>
+                        <div className="flex gap-2">
+                          <Controller
+                            name="branchId"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v ?? null)}
+                                options={branchOptions}
+                                loading={isBranchesLoading}
+                                allowClear
+                                showSearch
+                                filterOption={filterByLabel}
+                                placeholder="Select branch"
+                                className="min-w-0 flex-1"
+                              />
+                            )}
+                          />
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setBranchModalOpen(true)}
+                            title="Add new branch"
+                          />
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.POSITION}>
+                        <div className="flex gap-2">
+                          <Controller
+                            name="positionId"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v ?? null)}
+                                options={positionOptions}
+                                loading={isPositionsLoading}
+                                allowClear
+                                showSearch
+                                filterOption={filterByLabel}
+                                placeholder="Select position"
+                                className="min-w-0 flex-1"
+                              />
+                            )}
+                          />
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setPositionModalOpen(true)}
+                            title="Add new position"
+                          />
+                        </div>
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.JOB_LEVEL}>
+                        <Controller
+                          name="jobLevel"
+                          control={control}
+                          render={({ field }) => (
+                            // Suggestions only: any typed level is kept as typed.
+                            <AutoComplete
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              ref={field.ref}
+                              options={jobLevelOptions}
+                              // Options come grouped; only the levels (not the group headers) have a value.
+                              filterOption={(input, option) =>
+                                !!option &&
+                                "value" in option &&
+                                typeof option.value === "string" &&
+                                jobLevelMatches(input, option.value)
+                              }
+                              allowClear
+                              placeholder="Select or type a level"
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.TIME_SHIFT}>
+                        <div className="flex gap-2">
+                          <Controller
+                            name="timeShiftId"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => field.onChange(v ?? null)}
+                                options={timeShiftOptions}
+                                loading={isRefLoading}
+                                allowClear
+                                showSearch
+                                filterOption={filterByLabel}
+                                placeholder="Select time shift"
+                                className="min-w-0 flex-1"
+                                optionRender={(opt) => {
+                                  const o =
+                                    opt.data as (typeof timeShiftOptions)[number];
+                                  const isFixed = o.shiftType === "FIXED";
+                                  return (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        gap: 8,
+                                      }}
+                                    >
+                                      <span style={{ fontWeight: 500 }}>
+                                        {o.shiftName}
+                                      </span>
+                                      <span
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: 6,
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        <span
+                                          style={{
+                                            fontSize: 11,
+                                            color: "#6b7280",
+                                          }}
+                                        >
+                                          {formatShiftTime(o.startTime)} –{" "}
+                                          {formatShiftTime(o.endTime)}
+                                        </span>
+                                        <span
+                                          style={{
+                                            fontSize: 10,
+                                            fontWeight: 600,
+                                            padding: "1px 6px",
+                                            borderRadius: 4,
+                                            background: isFixed
+                                              ? "#d1fae5"
+                                              : "#ede9fe",
+                                            color: isFixed
+                                              ? "#065f46"
+                                              : "#5b21b6",
+                                          }}
+                                        >
+                                          {isFixed ? "Fixed" : "Split"}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  );
                                 }}
                               />
                             )}
                           />
-                        )}
-                        {watchedFactorDays && (
-                          <Text type="secondary" className="text-xs mt-1 block">
-                            {isCustomDivisor
-                              ? `Daily Rate = Monthly Rate / ${watchedFactorDays}`
-                              : MONTHLY_TOTAL_DAYS_OPTIONS.find(
-                                  (o) => o.value === watchedFactorDays,
-                                )?.description}
-                          </Text>
-                        )}
+                          <Button
+                            icon={<PlusOutlined />}
+                            onClick={() => setTimeShiftModalOpen(true)}
+                            title="Add new time shift"
+                          />
+                        </div>
                       </Form.Item>
-                    )}
 
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.DAILY_RATE}
-                      help={
-                        isCalculatedEDR
-                          ? "Computed as (Monthly Rate × 12) / Factor Days"
-                          : isMonthlyTotalDays && watchedUseActualMonthDays
-                            ? "Computed as Monthly Rate / days in the payroll month (preview uses the current month)"
-                            : isMonthlyTotalDays
-                              ? "Computed as Monthly Rate / Factor Days"
-                              : undefined
-                      }
-                    >
-                      <Controller
-                        name="dailyRate"
-                        control={control}
-                        render={({ field }) => (
-                          <InputNumber
-                            {...field}
-                            className="w-full"
-                            min={0}
-                            precision={2}
-                            disabled={isDailyRateComputed}
-                            formatter={(v) =>
-                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.COLA}>
-                      <Controller
-                        name="cola"
-                        control={control}
-                        render={({ field }) => (
-                          <InputNumber
-                            {...field}
-                            className="w-full"
-                            min={0}
-                            precision={2}
-                            formatter={(v) =>
-                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.CASH_BOND}
-                      extra="Deducted every payroll. A change applies from the next payroll run and is kept in the cash bond rate history."
-                    >
-                      <Controller
-                        name="cashBond"
-                        control={control}
-                        render={({ field }) => (
-                          <InputNumber
-                            {...field}
-                            className="w-full"
-                            min={0}
-                            precision={2}
-                            formatter={(v) =>
-                              `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                            }
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    {watchedSalaryType === "FIXED" && (
-                      <div className="col-span-2 flex flex-col gap-2 mb-2">
-                        <Divider className="my-1!" />
-                        <Text type="secondary" className="text-xs -mt-1">
-                          Fixed monthly rate — indicate whether it already
-                          covers these, so payroll doesn't add them again.
-                          Toggling on pays only the differential premium above
-                          the base rate; off pays the full rate multiplier.
-                        </Text>
-                        {inclusionMismatches.length > 0 && (
-                          <Alert
-                            type="warning"
-                            showIcon
-                            className="max-w-120"
-                            message={`Doesn't match the ${factorDaysLabel ?? watchedFactorDays}-day convention`}
-                            description={`${inclusionMismatches.join(", ")} ${inclusionMismatches.length === 1 ? "differs" : "differ"} from what this Factor Days setting normally implies. This is allowed — just confirm it's intentional.`}
-                          />
-                        )}
-                        <div className="flex items-center justify-between max-w-120">
-                          <span>Monthly Rate Includes Rest Day Pay</span>
-                          <Controller
-                            name="isRestDayPaid"
-                            control={control}
-                            render={({ field }) => (
-                              <Switch
-                                checked={field.value ?? false}
-                                onChange={field.onChange}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between max-w-120">
-                          <span>Monthly Rate Includes Regular Holiday Pay</span>
-                          <Controller
-                            name="isRegularHolidayIncluded"
-                            control={control}
-                            render={({ field }) => (
-                              <Switch
-                                checked={field.value ?? false}
-                                onChange={field.onChange}
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between max-w-120">
-                          <span>
-                            Monthly Rate Includes Special Non-Working Holiday
-                            Pay
-                          </span>
-                          <Controller
-                            name="isSpecialNonWorkingIncluded"
-                            control={control}
-                            render={({ field }) => (
-                              <Switch
-                                checked={field.value ?? false}
-                                onChange={field.onChange}
-                              />
-                            )}
-                          />
-                        </div>
-                        <Divider className="my-1!" />
-                      </div>
-                    )}
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.MODE_OF_PAYMENT}
-                      required
-                      validateStatus={errors.modeOfPayment ? "error" : ""}
-                      help={errors.modeOfPayment?.message}
-                    >
-                      <Controller
-                        name="modeOfPayment"
-                        control={control}
-                        render={({ field }) => (
-                          <Select
-                            {...field}
-                            options={MODE_OF_PAYMENT_OPTIONS}
-                          />
-                        )}
-                      />
-                    </Form.Item>
-
-                    <Form.Item label={EMPLOYEE_LABEL.BANK_NAME}>
-                      <Controller
-                        name="bankName"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={EMPLOYEE_LABEL.BANK_NO}
-                      className="col-span-2"
-                    >
-                      <Controller
-                        name="bankNo"
-                        control={control}
-                        render={({ field }) => <Input {...field} />}
-                      />
-                    </Form.Item>
-                  </div>
-                ),
-              },
-              {
-                key: "govids",
-                label: tabLabel("govids", "Gov't IDs & Rates"),
-                forceRender: true,
-                children: (
-                  <div className="pt-4 flex flex-col gap-3">
-                    {/* SSS */}
-                    <Card size="small" title="SSS">
-                      <div className={formGridClass}>
-                        <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
-                          <Controller
-                            name="sssNo"
-                            control={control}
-                            render={({ field }) => <Input {...field} />}
-                          />
-                        </Form.Item>
-                        <Form.Item label={computationBasisLabel}>
-                          <Controller
-                            name="sssRate.computationType"
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                {...field}
-                                options={COMPUTATION_BASIS_OPTIONS}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="EE Rate">
-                          <Controller
-                            name="sssRate.eE"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isSSSRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="ER Rate">
-                          <Controller
-                            name="sssRate.eR"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isSSSRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="EC">
-                          <Controller
-                            name="sssRate.eC"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isSSSRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="Add-Ons">
-                          <Controller
-                            name="sssRate.addOns"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isSSSRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                      </div>
-                    </Card>
-
-                    {/* PhilHealth */}
-                    <Card size="small" title="PhilHealth (PHIC)">
-                      <div className={formGridClass}>
-                        <Form.Item label={EMPLOYEE_LABEL.PHIC_NO}>
-                          <Controller
-                            name="phicNo"
-                            control={control}
-                            render={({ field }) => <Input {...field} />}
-                          />
-                        </Form.Item>
-                        <Form.Item label={computationBasisLabel}>
-                          <Controller
-                            name="phicRate.computationType"
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                {...field}
-                                options={COMPUTATION_BASIS_OPTIONS}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="EE Rate">
-                          <Controller
-                            name="phicRate.eE"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isPHICRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="ER Rate">
-                          <Controller
-                            name="phicRate.eR"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isPHICRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="Add-Ons" className="col-span-2">
-                          <Controller
-                            name="phicRate.addOns"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isPHICRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                      </div>
-                    </Card>
-
-                    {/* Pag-IBIG */}
-                    <Card size="small" title="Pag-IBIG (HDMF)">
-                      <div className={formGridClass}>
-                        <Form.Item label={EMPLOYEE_LABEL.HDMF_NO}>
-                          <Controller
-                            name="hdmfNo"
-                            control={control}
-                            render={({ field }) => <Input {...field} />}
-                          />
-                        </Form.Item>
-                        <Form.Item label={computationBasisLabel}>
-                          <Controller
-                            name="hdmfRate.computationType"
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                {...field}
-                                options={COMPUTATION_BASIS_OPTIONS}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="EE Rate">
-                          <Controller
-                            name="hdmfRate.eE"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isHDMFRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="ER Rate">
-                          <Controller
-                            name="hdmfRate.eR"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isHDMFRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="Add-Ons" className="col-span-2">
-                          <Controller
-                            name="hdmfRate.addOns"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isHDMFRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                      </div>
-                    </Card>
-
-                    {/* Tax / BIR */}
-                    <Card size="small" title="Income Tax (BIR)">
-                      <div className={formGridClass}>
-                        <Form.Item label={EMPLOYEE_LABEL.TIN}>
-                          <Controller
-                            name="tin"
-                            control={control}
-                            render={({ field }) => <Input {...field} />}
-                          />
-                        </Form.Item>
-                        <Form.Item label={EMPLOYEE_LABEL.RDO_CODE}>
-                          <Controller
-                            name="rdoCode"
-                            control={control}
-                            render={({ field }) => (
-                              <Input {...field} placeholder="e.g. 044" />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label={computationBasisLabel}>
-                          <Controller
-                            name="taxRate.computationType"
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                {...field}
-                                options={COMPUTATION_BASIS_OPTIONS}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="EE Rate">
-                          <Controller
-                            name="taxRate.eE"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isTaxRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                        <Form.Item label="Add-Ons">
-                          <Controller
-                            name="taxRate.addOns"
-                            control={control}
-                            render={({ field }) => (
-                              <InputNumber
-                                {...field}
-                                className="w-full"
-                                min={0}
-                                step={0.01}
-                                precision={4}
-                                disabled={isTaxRateDisabled}
-                              />
-                            )}
-                          />
-                        </Form.Item>
-                      </div>
-                    </Card>
-                  </div>
-                ),
-              },
-              {
-                key: "settings",
-                label: tabLabel("settings", "Eligibility"),
-                forceRender: true,
-                children: (
-                  <div style={{ paddingTop: 16, maxWidth: 480 }}>
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-center justify-between">
-                        <span>Eligible for Overtime Pay</span>
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.EMPLOYMENT_STATUS}
+                        required
+                        validateStatus={errors.employmentStatus ? "error" : ""}
+                        help={errors.employmentStatus?.message}
+                      >
                         <Controller
-                          name="settings.isEligibleForOvertime"
+                          name="employmentStatus"
                           control={control}
                           render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false}
-                              onChange={field.onChange}
+                            <Select
+                              {...field}
+                              options={EMPLOYMENT_STATUS_OPTIONS}
+                              placeholder="Select status"
                             />
                           )}
                         />
-                      </div>
-                      {/* Regular/Special Holiday, Night Differential, and Leave Credits
-                          eligibility are no longer admin-editable per employee — always on
-                          (forced in onSubmit's payload below), no UI control. */}
-                      <div className="flex items-center justify-between">
-                        <span>Eligible for 13th Month Pay</span>
-                        <Controller
-                          name="settings.isEligibleFor13thMonth"
-                          control={control}
-                          render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false}
-                              onChange={field.onChange}
-                            />
-                          )}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between">
-                          <span>{EMPLOYEE_LABEL.NO_DTR}</span>
+                      </Form.Item>
+
+                      {canTagConfidential && (
+                        <Form.Item
+                          label={EMPLOYEE_LABEL.CONFIDENTIAL}
+                          extra={EMPLOYEE_LABEL.CONFIDENTIAL_HELP}
+                        >
                           <Controller
-                            name="settings.isNoDTRNotRequired"
+                            name="isConfidential"
                             control={control}
                             render={({ field }) => (
                               <Switch
@@ -2370,152 +1536,1027 @@ export default function EmployeeDetail() {
                               />
                             )}
                           />
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {EMPLOYEE_LABEL.NO_DTR_HELP}
-                        </span>
-                        {errors.settings?.isNoDTRNotRequired && (
-                          <span className="text-xs text-red-500">
-                            {errors.settings.isNoDTRNotRequired.message}
-                          </span>
-                        )}
-                      </div>
-                      {watchedNoDtr && (
-                        <>
-                          <Form.Item
-                            label={EMPLOYEE_LABEL.NO_DTR_CATEGORY}
-                            required
-                            className="mb-0"
-                            validateStatus={
-                              errors.settings?.noDtrCategory ? "error" : ""
-                            }
-                            help={errors.settings?.noDtrCategory?.message}
-                          >
+                        </Form.Item>
+                      )}
+
+                      <Form.Item label={EMPLOYEE_LABEL.HIRING_ENTITY}>
+                        <Controller
+                          name="hiringEntity"
+                          control={control}
+                          render={({ field }) => <Input {...field} />}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.DATE_REGISTERED}
+                        required
+                        validateStatus={errors.dateRegistered ? "error" : ""}
+                        help={errors.dateRegistered?.message}
+                      >
+                        <Controller
+                          name="dateRegistered"
+                          control={control}
+                          render={({ field }) =>
+                            datePicker(
+                              field.value,
+                              (v) => field.onChange(v ?? ""),
+                              false,
+                            )
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.HIRE_DATE}>
+                        <Controller
+                          name="hireDate"
+                          control={control}
+                          render={({ field }) =>
+                            datePicker(field.value, field.onChange)
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.CONTRACT_START}>
+                        <Controller
+                          name="contractStart"
+                          control={control}
+                          render={({ field }) =>
+                            datePicker(field.value, field.onChange)
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.CONTRACT_END}>
+                        <Controller
+                          name="contractEnd"
+                          control={control}
+                          render={({ field }) =>
+                            datePicker(field.value, field.onChange)
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.DATE_RESIGNED}
+                        className="col-span-2"
+                      >
+                        <Controller
+                          name="dateResigned"
+                          control={control}
+                          render={({ field }) =>
+                            datePicker(field.value, field.onChange)
+                          }
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.REST_DAYS}
+                        className="col-span-2"
+                      >
+                        <Controller
+                          name="restDays"
+                          control={control}
+                          render={({ field }) => (
+                            <Checkbox.Group
+                              options={REST_DAY_OPTIONS}
+                              value={field.value ?? []}
+                              onChange={(checkedValues) =>
+                                field.onChange(checkedValues as string[])
+                              }
+                              className="flex gap-4 flex-wrap"
+                            />
+                          )}
+                        />
+                      </Form.Item>
+                    </div>
+                  ),
+                },
+                {
+                  key: "compensation",
+                  label: tabLabel("compensation", "Compensation"),
+                  forceRender: true,
+                  children: (
+                    <div className={formGridClass} style={{ paddingTop: 16 }}>
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.SALARY_TYPE}
+                        required
+                        validateStatus={errors.salaryType ? "error" : ""}
+                        help={errors.salaryType?.message}
+                      >
+                        <Controller
+                          name="salaryType"
+                          control={control}
+                          render={({ field }) => (
+                            <Select {...field} options={SALARY_TYPE_OPTIONS} />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.MONTHLY_RATE}
+                        help={
+                          watchedSalaryType === "VARIABLE"
+                            ? "Not applicable for Variable salary"
+                            : undefined
+                        }
+                      >
+                        <Controller
+                          name="monthlyRate"
+                          control={control}
+                          render={({ field }) => (
+                            <InputNumber
+                              {...field}
+                              className="w-full!"
+                              min={0}
+                              precision={2}
+                              disabled={watchedSalaryType === "VARIABLE"}
+                              formatter={(v) =>
+                                `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                              }
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      {watchedSalaryType === "FIXED" && (
+                        <Form.Item
+                          label={EMPLOYEE_LABEL.DAILY_RATE_MODE}
+                          className="col-span-2"
+                        >
+                          <Controller
+                            name="dailyRateMode"
+                            control={control}
+                            render={({ field }) => (
+                              <Radio.Group
+                                value={field.value ?? "Manual"}
+                                onChange={(e) => {
+                                  const newMode = e.target.value;
+                                  field.onChange(newMode);
+                                  if (newMode === "CalculatedEDR") {
+                                    const isValid = FACTOR_DAYS_OPTIONS.some(
+                                      (o) => o.value === watchedFactorDays,
+                                    );
+                                    if (!isValid) {
+                                      setValue("factorDays", 251);
+                                      applyFactorDaysBooleanDefaults(251);
+                                    }
+                                  } else if (newMode === "MonthlyTotalDays") {
+                                    const isValid =
+                                      watchedFactorDays != null &&
+                                      watchedFactorDays > 0 &&
+                                      !FACTOR_DAYS_OPTIONS.some(
+                                        (o) => o.value === watchedFactorDays,
+                                      );
+                                    const isPreset =
+                                      MONTHLY_TOTAL_DAYS_OPTIONS.some(
+                                        (o) => o.value === watchedFactorDays,
+                                      );
+                                    if (!isValid && !isPreset) {
+                                      setValue("factorDays", 26);
+                                      applyFactorDaysBooleanDefaults(26);
+                                    }
+                                  }
+                                }}
+                                options={DAILY_RATE_MODE_OPTIONS.map((o) =>
+                                  o.value === "CalculatedEDR"
+                                    ? {
+                                        ...o,
+                                        label: (
+                                          <Tooltip title="EDR = Equivalent Daily Rate. Divides the annualized monthly salary (Monthly Rate × 12) by the selected Factor Days to derive a standard daily rate.">
+                                            <span>
+                                              {o.label}{" "}
+                                              <InfoCircleOutlined className="text-[11px] opacity-70" />
+                                            </span>
+                                          </Tooltip>
+                                        ),
+                                      }
+                                    : o,
+                                )}
+                                optionType="button"
+                              />
+                            )}
+                          />
+                        </Form.Item>
+                      )}
+
+                      {isCalculatedEDR && (
+                        <Form.Item label={EMPLOYEE_LABEL.FACTOR_DAYS}>
+                          <Controller
+                            name="factorDays"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={field.value ?? undefined}
+                                onChange={(v) => {
+                                  field.onChange(v);
+                                  applyFactorDaysBooleanDefaults(v);
+                                }}
+                                options={FACTOR_DAYS_GROUPS.map((g) => ({
+                                  label: g.group,
+                                  options: g.options.map((o) => ({
+                                    value: o.value,
+                                    label: o.label,
+                                  })),
+                                }))}
+                                showSearch
+                                filterOption={(input, option) =>
+                                  typeof option?.label === "string" &&
+                                  option.label
+                                    .toLowerCase()
+                                    .includes(input.toLowerCase())
+                                }
+                                placeholder="Select factor days"
+                              />
+                            )}
+                          />
+                          {watchedFactorDays && (
+                            <Text
+                              type="secondary"
+                              className="text-xs mt-1 block"
+                            >
+                              {
+                                FACTOR_DAYS_OPTIONS.find(
+                                  (o) => o.value === watchedFactorDays,
+                                )?.description
+                              }
+                            </Text>
+                          )}
+                        </Form.Item>
+                      )}
+
+                      {isMonthlyTotalDays && (
+                        <Form.Item
+                          label="Use Actual Days in Month"
+                          className="col-span-2"
+                        >
+                          <Controller
+                            name="useActualMonthDays"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                          <Text type="secondary" className="text-xs mt-1 block">
+                            Divides by the real number of days in each payroll
+                            month (28–31), resolved per pay period, instead of a
+                            fixed divisor below.
+                          </Text>
+                        </Form.Item>
+                      )}
+
+                      {isMonthlyTotalDays && !watchedUseActualMonthDays && (
+                        <Form.Item label={EMPLOYEE_LABEL.FACTOR_DAYS}>
+                          <Controller
+                            name="factorDays"
+                            control={control}
+                            render={({ field }) => (
+                              <Select
+                                {...field}
+                                value={
+                                  isCustomDivisor
+                                    ? "custom"
+                                    : (field.value ?? undefined)
+                                }
+                                onChange={(v) => {
+                                  if (typeof v !== "number") {
+                                    setCustomDivisorSelected(true);
+                                    return;
+                                  }
+                                  setCustomDivisorSelected(false);
+                                  field.onChange(v);
+                                  applyFactorDaysBooleanDefaults(v);
+                                }}
+                                options={[
+                                  ...MONTHLY_TOTAL_DAYS_OPTIONS.map((o) => ({
+                                    value: o.value,
+                                    label: o.label,
+                                  })),
+                                  { value: "custom", label: "Custom..." },
+                                ]}
+                                placeholder="Select monthly divisor"
+                              />
+                            )}
+                          />
+                          {isCustomDivisor && (
                             <Controller
-                              name="settings.noDtrCategory"
+                              name="factorDays"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  className="w-full mt-2"
+                                  min={0.01}
+                                  step={0.01}
+                                  precision={4}
+                                  placeholder="Enter custom divisor"
+                                  value={field.value ?? null}
+                                  onChange={(v) => {
+                                    field.onChange(v);
+                                    applyFactorDaysBooleanDefaults(v);
+                                  }}
+                                />
+                              )}
+                            />
+                          )}
+                          {watchedFactorDays && (
+                            <Text
+                              type="secondary"
+                              className="text-xs mt-1 block"
+                            >
+                              {isCustomDivisor
+                                ? `Daily Rate = Monthly Rate / ${watchedFactorDays}`
+                                : MONTHLY_TOTAL_DAYS_OPTIONS.find(
+                                    (o) => o.value === watchedFactorDays,
+                                  )?.description}
+                            </Text>
+                          )}
+                        </Form.Item>
+                      )}
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.DAILY_RATE}
+                        help={
+                          isCalculatedEDR
+                            ? "Computed as (Monthly Rate × 12) / Factor Days"
+                            : isMonthlyTotalDays && watchedUseActualMonthDays
+                              ? "Computed as Monthly Rate / days in the payroll month (preview uses the current month)"
+                              : isMonthlyTotalDays
+                                ? "Computed as Monthly Rate / Factor Days"
+                                : undefined
+                        }
+                      >
+                        <Controller
+                          name="dailyRate"
+                          control={control}
+                          render={({ field }) => (
+                            <InputNumber
+                              {...field}
+                              className="w-full!"
+                              min={0}
+                              precision={2}
+                              disabled={isDailyRateComputed}
+                              formatter={(v) =>
+                                `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                              }
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.COLA}>
+                        <Controller
+                          name="cola"
+                          control={control}
+                          render={({ field }) => (
+                            <InputNumber
+                              {...field}
+                              className="w-full!"
+                              min={0}
+                              precision={2}
+                              formatter={(v) =>
+                                `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                              }
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.CASH_BOND}
+                        extra="Deducted every payroll. A change applies from the next payroll run and is kept in the cash bond rate history."
+                      >
+                        <Controller
+                          name="cashBond"
+                          control={control}
+                          render={({ field }) => (
+                            <InputNumber
+                              {...field}
+                              className="w-full!"
+                              min={0}
+                              precision={2}
+                              formatter={(v) =>
+                                `₱ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                              }
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      {watchedSalaryType === "FIXED" && (
+                        <div className="col-span-2 flex flex-col gap-2 mb-2">
+                          <Divider className="my-1!" />
+                          <Text type="secondary" className="text-xs -mt-1">
+                            Fixed monthly rate — indicate whether it already
+                            covers these, so payroll doesn't add them again.
+                            Toggling on pays only the differential premium above
+                            the base rate; off pays the full rate multiplier.
+                          </Text>
+                          {inclusionMismatches.length > 0 && (
+                            <Alert
+                              type="warning"
+                              showIcon
+                              className="max-w-120"
+                              message={`Doesn't match the ${factorDaysLabel ?? watchedFactorDays}-day convention`}
+                              description={`${inclusionMismatches.join(", ")} ${inclusionMismatches.length === 1 ? "differs" : "differ"} from what this Factor Days setting normally implies. This is allowed — just confirm it's intentional.`}
+                            />
+                          )}
+                          <div className="flex items-center justify-between max-w-120">
+                            <span>Monthly Rate Includes Rest Day Pay</span>
+                            <Controller
+                              name="isRestDayPaid"
+                              control={control}
+                              render={({ field }) => (
+                                <Switch
+                                  checked={field.value ?? false}
+                                  onChange={field.onChange}
+                                />
+                              )}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between max-w-120">
+                            <span>
+                              Monthly Rate Includes Regular Holiday Pay
+                            </span>
+                            <Controller
+                              name="isRegularHolidayIncluded"
+                              control={control}
+                              render={({ field }) => (
+                                <Switch
+                                  checked={field.value ?? false}
+                                  onChange={field.onChange}
+                                />
+                              )}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between max-w-120">
+                            <span>
+                              Monthly Rate Includes Special Non-Working Holiday
+                              Pay
+                            </span>
+                            <Controller
+                              name="isSpecialNonWorkingIncluded"
+                              control={control}
+                              render={({ field }) => (
+                                <Switch
+                                  checked={field.value ?? false}
+                                  onChange={field.onChange}
+                                />
+                              )}
+                            />
+                          </div>
+                          <Divider className="my-1!" />
+                        </div>
+                      )}
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.MODE_OF_PAYMENT}
+                        required
+                        validateStatus={errors.modeOfPayment ? "error" : ""}
+                        help={errors.modeOfPayment?.message}
+                      >
+                        <Controller
+                          name="modeOfPayment"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              options={MODE_OF_PAYMENT_OPTIONS}
+                            />
+                          )}
+                        />
+                      </Form.Item>
+
+                      <Form.Item label={EMPLOYEE_LABEL.BANK_NAME}>
+                        <Controller
+                          name="bankName"
+                          control={control}
+                          render={({ field }) => <Input {...field} />}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label={EMPLOYEE_LABEL.BANK_NO}
+                        className="col-span-2"
+                      >
+                        <Controller
+                          name="bankNo"
+                          control={control}
+                          render={({ field }) => <Input {...field} />}
+                        />
+                      </Form.Item>
+                    </div>
+                  ),
+                },
+                {
+                  key: "govids",
+                  label: tabLabel("govids", "Gov't IDs & Rates"),
+                  forceRender: true,
+                  children: (
+                    <div className="pt-4 flex flex-col gap-3">
+                      {/* SSS */}
+                      <Card size="small" title="SSS">
+                        <div className={formGridClass}>
+                          <Form.Item label={EMPLOYEE_LABEL.SSS_NO}>
+                            <Controller
+                              name="sssNo"
+                              control={control}
+                              render={({ field }) => <Input {...field} />}
+                            />
+                          </Form.Item>
+                          <Form.Item label={computationBasisLabel}>
+                            <Controller
+                              name="sssRate.computationType"
                               control={control}
                               render={({ field }) => (
                                 <Select
                                   {...field}
-                                  value={field.value ?? undefined}
-                                  options={NO_DTR_CATEGORY_OPTIONS}
-                                  placeholder="Select category"
+                                  options={COMPUTATION_BASIS_OPTIONS}
                                 />
                               )}
                             />
                           </Form.Item>
-                          <Form.Item
-                            label={EMPLOYEE_LABEL.NO_DTR_FROM}
-                            className="mb-0"
-                          >
+                          <Form.Item label="EE Rate">
                             <Controller
-                              name="settings.noDtrEffectiveFrom"
+                              name="sssRate.eE"
                               control={control}
-                              render={({ field }) =>
-                                datePicker(field.value, field.onChange)
-                              }
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isSSSRateDisabled}
+                                />
+                              )}
                             />
                           </Form.Item>
-                          <Form.Item
-                            label={EMPLOYEE_LABEL.NO_DTR_UNTIL}
-                            className="mb-0"
-                            extra={EMPLOYEE_LABEL.NO_DTR_UNTIL_HELP}
-                            validateStatus={
-                              errors.settings?.noDtrEffectiveUntil
-                                ? "error"
-                                : ""
-                            }
-                            help={errors.settings?.noDtrEffectiveUntil?.message}
-                          >
+                          <Form.Item label="ER Rate">
                             <Controller
-                              name="settings.noDtrEffectiveUntil"
+                              name="sssRate.eR"
                               control={control}
-                              render={({ field }) =>
-                                datePicker(field.value, field.onChange)
-                              }
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isSSSRateDisabled}
+                                />
+                              )}
                             />
                           </Form.Item>
-                        </>
-                      )}
+                          <Form.Item label="EC">
+                            <Controller
+                              name="sssRate.eC"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isSSSRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="Add-Ons">
+                            <Controller
+                              name="sssRate.addOns"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isSSSRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                        </div>
+                      </Card>
+
+                      {/* PhilHealth */}
+                      <Card size="small" title="PhilHealth (PHIC)">
+                        <div className={formGridClass}>
+                          <Form.Item label={EMPLOYEE_LABEL.PHIC_NO}>
+                            <Controller
+                              name="phicNo"
+                              control={control}
+                              render={({ field }) => <Input {...field} />}
+                            />
+                          </Form.Item>
+                          <Form.Item label={computationBasisLabel}>
+                            <Controller
+                              name="phicRate.computationType"
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={COMPUTATION_BASIS_OPTIONS}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="EE Rate">
+                            <Controller
+                              name="phicRate.eE"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isPHICRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="ER Rate">
+                            <Controller
+                              name="phicRate.eR"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isPHICRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="Add-Ons" className="col-span-2">
+                            <Controller
+                              name="phicRate.addOns"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isPHICRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                        </div>
+                      </Card>
+
+                      {/* Pag-IBIG */}
+                      <Card size="small" title="Pag-IBIG (HDMF)">
+                        <div className={formGridClass}>
+                          <Form.Item label={EMPLOYEE_LABEL.HDMF_NO}>
+                            <Controller
+                              name="hdmfNo"
+                              control={control}
+                              render={({ field }) => <Input {...field} />}
+                            />
+                          </Form.Item>
+                          <Form.Item label={computationBasisLabel}>
+                            <Controller
+                              name="hdmfRate.computationType"
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={COMPUTATION_BASIS_OPTIONS}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="EE Rate">
+                            <Controller
+                              name="hdmfRate.eE"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isHDMFRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="ER Rate">
+                            <Controller
+                              name="hdmfRate.eR"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isHDMFRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="Add-Ons" className="col-span-2">
+                            <Controller
+                              name="hdmfRate.addOns"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isHDMFRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                        </div>
+                      </Card>
+
+                      {/* Tax / BIR */}
+                      <Card size="small" title="Income Tax (BIR)">
+                        <div className={formGridClass}>
+                          <Form.Item label={EMPLOYEE_LABEL.TIN}>
+                            <Controller
+                              name="tin"
+                              control={control}
+                              render={({ field }) => <Input {...field} />}
+                            />
+                          </Form.Item>
+                          <Form.Item label={EMPLOYEE_LABEL.RDO_CODE}>
+                            <Controller
+                              name="rdoCode"
+                              control={control}
+                              render={({ field }) => (
+                                <Input {...field} placeholder="e.g. 044" />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label={computationBasisLabel}>
+                            <Controller
+                              name="taxRate.computationType"
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={COMPUTATION_BASIS_OPTIONS}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="EE Rate">
+                            <Controller
+                              name="taxRate.eE"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isTaxRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                          <Form.Item label="Add-Ons">
+                            <Controller
+                              name="taxRate.addOns"
+                              control={control}
+                              render={({ field }) => (
+                                <InputNumber
+                                  {...field}
+                                  className="w-full!"
+                                  min={0}
+                                  step={0.01}
+                                  precision={4}
+                                  disabled={isTaxRateDisabled}
+                                />
+                              )}
+                            />
+                          </Form.Item>
+                        </div>
+                      </Card>
                     </div>
-                  </div>
-                ),
-              },
-              {
-                key: "fixedSchedule",
-                label: "Fixed Schedule",
-                children: (
-                  <div style={{ paddingTop: 16 }}>
-                    <EmployeeFixedScheduleTab
-                      value={fixedSchedule}
-                      onChange={setFixedSchedule}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: "dependents",
-                label: "Dependents",
-                disabled: !isEdit,
-                children: (
-                  <div style={{ paddingTop: 16 }}>
-                    <EmployeeDependentsTab employeeId={id} />
-                  </div>
-                ),
-              },
-              {
-                key: "education",
-                label: "Education",
-                disabled: !isEdit,
-                children: (
-                  <div style={{ paddingTop: 16 }}>
-                    <EmployeeEducationTab employeeId={id} />
-                  </div>
-                ),
-              },
-              {
-                key: "skills",
-                label: "Skills",
-                disabled: !isEdit,
-                children: (
-                  <div style={{ paddingTop: 16 }}>
-                    <EmployeeSkillsTab employeeId={id} />
-                  </div>
-                ),
-              },
-              {
-                key: "employment-history",
-                label: "Employment History",
-                disabled: !isEdit,
-                children: (
-                  <div style={{ paddingTop: 16 }}>
-                    <EmployeeEmploymentHistoryTab employeeId={id} />
-                  </div>
-                ),
-              },
-              {
-                key: "doc-records",
-                label: "Documents",
-                disabled: !isEdit,
-                children: (
-                  <div style={{ paddingTop: 16 }}>
-                    <EmployeeDocRecordsTab employeeId={id} />
-                  </div>
-                ),
-              },
-              {
-                key: "assets",
-                label: "Assets",
-                disabled: !isEdit,
-                children: (
-                  <div style={{ paddingTop: 16 }}>
-                    <EmployeeAssignAssetsTab employeeId={id} />
-                  </div>
-                ),
-              },
-            ].filter((tab) => !payHidden || !PAY_TAB_KEYS.includes(tab.key))}
-          />
-        </Card>
+                  ),
+                },
+                {
+                  key: "settings",
+                  label: tabLabel("settings", "Eligibility"),
+                  forceRender: true,
+                  children: (
+                    <div style={{ paddingTop: 16, maxWidth: 480 }}>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                          <span>Eligible for Overtime Pay</span>
+                          <Controller
+                            name="settings.isEligibleForOvertime"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        {/* Regular/Special Holiday, Night Differential, and Leave Credits
+                            eligibility are no longer admin-editable per employee — always on
+                            (forced in onSubmit's payload below), no UI control. */}
+                        <div className="flex items-center justify-between">
+                          <span>Eligible for 13th Month Pay</span>
+                          <Controller
+                            name="settings.isEligibleFor13thMonth"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value ?? false}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <span>{EMPLOYEE_LABEL.NO_DTR}</span>
+                            <Controller
+                              name="settings.isNoDTRNotRequired"
+                              control={control}
+                              render={({ field }) => (
+                                <Switch
+                                  checked={field.value ?? false}
+                                  onChange={field.onChange}
+                                />
+                              )}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {EMPLOYEE_LABEL.NO_DTR_HELP}
+                          </span>
+                          {errors.settings?.isNoDTRNotRequired && (
+                            <span className="text-xs text-red-500">
+                              {errors.settings.isNoDTRNotRequired.message}
+                            </span>
+                          )}
+                        </div>
+                        {watchedNoDtr && (
+                          <>
+                            <Form.Item
+                              label={EMPLOYEE_LABEL.NO_DTR_CATEGORY}
+                              required
+                              className="mb-0"
+                              validateStatus={
+                                errors.settings?.noDtrCategory ? "error" : ""
+                              }
+                              help={errors.settings?.noDtrCategory?.message}
+                            >
+                              <Controller
+                                name="settings.noDtrCategory"
+                                control={control}
+                                render={({ field }) => (
+                                  <Select
+                                    {...field}
+                                    value={field.value ?? undefined}
+                                    options={NO_DTR_CATEGORY_OPTIONS}
+                                    placeholder="Select category"
+                                  />
+                                )}
+                              />
+                            </Form.Item>
+                            <Form.Item
+                              label={EMPLOYEE_LABEL.NO_DTR_FROM}
+                              className="mb-0"
+                            >
+                              <Controller
+                                name="settings.noDtrEffectiveFrom"
+                                control={control}
+                                render={({ field }) =>
+                                  datePicker(field.value, field.onChange)
+                                }
+                              />
+                            </Form.Item>
+                            <Form.Item
+                              label={EMPLOYEE_LABEL.NO_DTR_UNTIL}
+                              className="mb-0"
+                              extra={EMPLOYEE_LABEL.NO_DTR_UNTIL_HELP}
+                              validateStatus={
+                                errors.settings?.noDtrEffectiveUntil
+                                  ? "error"
+                                  : ""
+                              }
+                              help={
+                                errors.settings?.noDtrEffectiveUntil?.message
+                              }
+                            >
+                              <Controller
+                                name="settings.noDtrEffectiveUntil"
+                                control={control}
+                                render={({ field }) =>
+                                  datePicker(field.value, field.onChange)
+                                }
+                              />
+                            </Form.Item>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: "fixedSchedule",
+                  label: "Fixed Schedule",
+                  children: (
+                    <div style={{ paddingTop: 16 }}>
+                      <EmployeeFixedScheduleTab
+                        value={fixedSchedule}
+                        onChange={setFixedSchedule}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: "dependents",
+                  label: "Dependents",
+                  disabled: !isEdit,
+                  children: (
+                    <div style={{ paddingTop: 16 }}>
+                      <EmployeeDependentsTab employeeId={id} />
+                    </div>
+                  ),
+                },
+                {
+                  key: "education",
+                  label: "Education",
+                  disabled: !isEdit,
+                  children: (
+                    <div style={{ paddingTop: 16 }}>
+                      <EmployeeEducationTab employeeId={id} />
+                    </div>
+                  ),
+                },
+                {
+                  key: "skills",
+                  label: "Skills",
+                  disabled: !isEdit,
+                  children: (
+                    <div style={{ paddingTop: 16 }}>
+                      <EmployeeSkillsTab employeeId={id} />
+                    </div>
+                  ),
+                },
+                {
+                  key: "employment-history",
+                  label: "Employment History",
+                  disabled: !isEdit,
+                  children: (
+                    <div style={{ paddingTop: 16 }}>
+                      <EmployeeEmploymentHistoryTab employeeId={id} />
+                    </div>
+                  ),
+                },
+                {
+                  key: "doc-records",
+                  label: "Documents",
+                  disabled: !isEdit,
+                  children: (
+                    <div style={{ paddingTop: 16 }}>
+                      <EmployeeDocRecordsTab employeeId={id} />
+                    </div>
+                  ),
+                },
+                {
+                  key: "assets",
+                  label: "Assets",
+                  disabled: !isEdit,
+                  children: (
+                    <div style={{ paddingTop: 16 }}>
+                      <EmployeeAssignAssetsTab employeeId={id} />
+                    </div>
+                  ),
+                },
+              ].filter((tab) => !payHidden || !PAY_TAB_KEYS.includes(tab.key))}
+            />
+          </Card>
+        </div>
 
         <div className="form-action-footer">
           <Space className="form-action-footer-row">

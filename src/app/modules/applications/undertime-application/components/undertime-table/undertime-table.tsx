@@ -1,4 +1,7 @@
-import { Table, Button, Space, Popconfirm, Tag } from "antd";
+import { Button, Space, Popconfirm, Tag } from "antd";
+import { ResponsiveTable } from "@/shared/components/responsive-table/responsive-table";
+import { tableEmptyLocale } from "@/shared/components/app-empty/table-empty-locale";
+import { useTablePagination } from "@/shared/hooks/use-table-pagination";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -45,6 +48,7 @@ export default function UndertimeTable({
   onDecline,
 }: Props) {
   const navigate = useNavigate();
+  const { pagination } = useTablePagination();
   const empMap = new Map(employees.map((e) => [e.id, e.name ?? e.id]));
 
   const { widths, handleResize } = useResizableColumns({
@@ -140,7 +144,7 @@ export default function UndertimeTable({
               <Button
                 type="text"
                 icon={<CheckOutlined />}
-                style={{ color: "#52c41a" }}
+                className="text-green-600!"
               />
             </Popconfirm>
           )}
@@ -179,13 +183,14 @@ export default function UndertimeTable({
   ];
 
   return (
-    <Table
+    <ResponsiveTable
       rowKey="id"
       dataSource={data}
       columns={columns}
       size="small"
       loading={loading}
-      pagination={{ pageSize: 15 }}
+      pagination={pagination}
+      locale={tableEmptyLocale("No applications found")}
       scroll={{ x: "max-content" }}
       sticky
       components={{ header: { cell: ResizableTitle } }}

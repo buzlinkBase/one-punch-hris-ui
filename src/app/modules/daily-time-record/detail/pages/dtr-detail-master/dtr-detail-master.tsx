@@ -24,7 +24,7 @@ export default function DtrDetailMaster() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              Calculate Daily Time Record (DTR)
+              Process DTR
             </Title>
             <p className="page-toolbar-subtitle">
               See who still needs DTR for the cutoff, generate it, review each

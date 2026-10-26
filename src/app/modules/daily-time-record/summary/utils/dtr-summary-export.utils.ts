@@ -55,7 +55,7 @@ export const GROUPED_COLS: SumTopGroup[] = [
         ],
       },
       {
-        label: "Legal Holiday",
+        label: "Regular Holiday",
         cols: [
           { key: "legalHolHours", label: "Hrs" },
           { key: "legalHolOTHours", label: "OT" },
@@ -71,7 +71,7 @@ export const GROUPED_COLS: SumTopGroup[] = [
         ],
       },
       {
-        label: "Rest + Legal Day",
+        label: "Rest + Regular Holiday",
         cols: [
           { key: "restLegalDayHours", label: "Hrs" },
           { key: "restLegalDayOTHours", label: "OT" },
@@ -87,7 +87,7 @@ export const GROUPED_COLS: SumTopGroup[] = [
         ],
       },
       {
-        label: "Double Legal Hol",
+        label: "Double Reg Hol",
         cols: [
           { key: "doubleLegalHours", label: "Hrs" },
           { key: "doubleLegalOTHours", label: "OT" },
@@ -95,7 +95,7 @@ export const GROUPED_COLS: SumTopGroup[] = [
         ],
       },
       {
-        label: "Rest + Double Legal",
+        label: "Rest + Double Reg Hol",
         cols: [
           { key: "restDoubleLegalHours", label: "Hrs" },
           { key: "restDoubleLegalOTHours", label: "OT" },

@@ -1,6 +1,6 @@
 export const PORTAL_DASHBOARD_LABEL = {
   title: "My Dashboard",
-  leaveBalance: "Remaining Leaves",
+  leaveBalance: "Leave Balance",
   thirteenthMonth: "13th Month Pay",
   cashBond: "Cash Bond",
   schedule: "My Schedule",

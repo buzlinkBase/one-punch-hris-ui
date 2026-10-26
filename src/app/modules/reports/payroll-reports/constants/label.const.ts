@@ -60,5 +60,5 @@ export const PAYROLL_REPORTS_LABEL = {
     "Member's Contribution Remittance Form file for the Virtual Pag-IBIG portal.",
 
   GOV_FILE_FORMAT_NOTICE:
-    "we neeed to verify the file format against the current portal/template before submission.",
+    "We need to verify the file format against the current portal template before submission.",
 };

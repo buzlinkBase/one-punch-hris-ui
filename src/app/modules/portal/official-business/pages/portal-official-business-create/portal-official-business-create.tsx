@@ -190,7 +190,7 @@ export default function PortalOfficialBusinessCreate() {
     <PortalApplicationShell
       mode={pageMode}
       titles={{
-        create: "File Official Business",
+        create: "New Official Business",
         edit: "Edit Official Business",
         view: "View Official Business",
       }}

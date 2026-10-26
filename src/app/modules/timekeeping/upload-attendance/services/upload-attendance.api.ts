@@ -3,6 +3,7 @@ import httpClient from "@/core/http/http-client";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { UploadAttendanceRequest } from "../models/api/request/upload-attendance-request.model";
 import type { UploadBatchResponse } from "../models/api/response/upload-batch-response.model";
+import type { UploadBatchChangeResponse } from "../models/api/response/upload-batch-change-response.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "attendance/upload-att-log");
 const ATTENDANCE_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "attendance");
@@ -36,6 +37,15 @@ export const uploadAttendanceApi = {
     return httpClient.getUnwrapped<UploadBatchResponse[]>(
       `${ATTENDANCE_ENDPOINT}/upload-batches`,
       { params },
+    );
+  },
+
+  // The logs of an upload a user edited or removed, with their originals.
+  async getBatchChanges(
+    batchCode: string,
+  ): Promise<UploadBatchChangeResponse[]> {
+    return httpClient.getUnwrapped<UploadBatchChangeResponse[]>(
+      `${ATTENDANCE_ENDPOINT}/upload-batch/${encodeURIComponent(batchCode)}/changes`,
     );
   },
 

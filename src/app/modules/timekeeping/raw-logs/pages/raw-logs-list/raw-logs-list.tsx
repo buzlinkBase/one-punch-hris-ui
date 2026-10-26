@@ -8,6 +8,7 @@ import {
   Select,
   Space,
   Tabs,
+  Tag,
   Typography,
   message,
 } from "antd";
@@ -42,6 +43,7 @@ import {
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { AppEmpty } from "@/shared/components/app-empty/app-empty";
 
 const { Title, Text } = Typography;
 
@@ -68,10 +70,8 @@ interface TabState {
 }
 
 const notGeneratedYet = (
-  <div className="py-8 text-center">
-    <Text type="secondary">
-      Set filters above and click Generate to load data.
-    </Text>
+  <div className="py-10">
+    <AppEmpty description="Set the filters, then click Generate to load logs." />
   </div>
 );
 
@@ -167,6 +167,23 @@ export default function RawLogsList() {
     pending.operationAreaId,
     pending.employeeId,
   ].filter(Boolean).length;
+
+  const labelOf = (
+    options: { value: string; label: string }[],
+    id?: string,
+  ): string | undefined => options.find((o) => o.value === id)?.label;
+
+  // What the current filter is, shown while the filter card is collapsed.
+  const filterChips = [
+    pending.fromDate && pending.toDate
+      ? `${dayjs(pending.fromDate).format("MMM DD")} – ${dayjs(pending.toDate).format("MMM DD, YYYY")}`
+      : undefined,
+    labelOf(branchOptions, pending.branchId),
+    labelOf(deptOptions, pending.departmentId),
+    labelOf(clientOptions, pending.clientId),
+    labelOf(areaOptions, pending.operationAreaId),
+    labelOf(employeeOptions, pending.employeeId),
+  ].filter((c): c is string => !!c);
 
   // ── Export helpers ──────────────────────────────────────────────────────────
 
@@ -297,6 +314,8 @@ export default function RawLogsList() {
         key: seqRef.current,
       },
     }));
+    // The results are the point once generated; the chips below keep the filters visible.
+    setFiltersOpen(false);
   };
 
   const handleClear = () => {
@@ -339,6 +358,24 @@ export default function RawLogsList() {
         </div>
       </div>
 
+      {!filtersOpen && filterChips.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Text type="secondary">Showing</Text>
+          {filterChips.map((chip) => (
+            <Tag
+              key={chip}
+              className="me-0! cursor-pointer"
+              onClick={() => setFiltersOpen(true)}
+            >
+              {chip}
+            </Tag>
+          ))}
+          <Button type="link" size="small" onClick={() => setFiltersOpen(true)}>
+            Change filters
+          </Button>
+        </div>
+      )}
+
       {filtersOpen && (
         <Card size="small" className="mb-4">
           <Form layout="vertical">
@@ -355,7 +392,7 @@ export default function RawLogsList() {
                 }
               >
                 <MobileRangePicker
-                  style={{ width: "100%" }}
+                  className="w-full"
                   status={
                     !pending.fromDate || !pending.toDate ? "error" : undefined
                   }

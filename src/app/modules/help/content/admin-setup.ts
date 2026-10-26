@@ -92,7 +92,13 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         ],
       },
       {
-        heading: "The tabs",
+        heading: "The sections",
+        body: [
+          "Company Settings is split into sections listed on the left, grouped as Company and Policies. Click a section to open it; on a phone, use the dropdown at the top instead.",
+        ],
+      },
+      {
+        heading: "What each section holds",
         steps: [
           {
             text: "Company Info: company name, address, TIN, RDO code, SSS / PhilHealth / Pag-IBIG employer numbers and the authorized signatory. These print on government forms and reports.",
@@ -128,7 +134,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Attendance & Payroll Policy: overtime rules (OT Inclusion, OT Eligibility), late policy (half-day and whole-day thresholds), night differential, how many manual attendance entries a day are allowed, holiday rules, when SSS/PhilHealth/Pag-IBIG and withholding tax are credited across months, minimum take-home pay, the OT/ND calculation method, and which payroll run takes the deductions when an employee is paid by several clients in one cutoff.",
           },
           {
-            text: "Payroll Settings: fiscal year start and end month, the 13th month and bonuses non-taxable ceiling, year-end tax annualization, and which pages appear in My Portal: Announcements, Coworkers, the time and attendance pages, My Pay Slips, My Leave Credits, My 13th Month Pay, My Deductions, My Cash Bond, My Uniform Allowance and the Leave, Overtime, Official Business, Pass Slip and Loan application pages (all on by default; turn one off to hide its menu item and page from every employee). My Dashboard and My Profile are always available.",
+            text: "Payroll Settings: fiscal year start and end month, the 13th month and bonuses non-taxable ceiling, year-end tax annualization, and which pages appear in My Portal: Announcements, Coworkers, the time and attendance pages, My Payslips, My Leave Credits, My 13th Month Pay, My Deductions, My Cash Bond, My Uniform Allowance and the Leave, Overtime, Official Business, Pass Slip and Loan application pages (all on by default; turn one off to hide its menu item and page from every employee). My Dashboard and My Profile are always available.",
           },
           {
             text: "Rate Multipliers: premium rates for overtime, rest days, holidays and night differential.",
@@ -358,6 +364,12 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             link: { label: "Employee", to: "/setup/employee" },
           },
           {
+            text: "The form is split into sections listed on the left, grouped as Profile, Job, Pay, Background and Files. Click a section to open it; on a phone, use the dropdown at the top instead. A red number beside a section means it has fields to fix before you can save.",
+          },
+          {
+            text: "When you open an employee from the list, the Previous and Next arrows at the top move to the neighbouring employee on the same list page, keeping your search and filters.",
+          },
+          {
             text: "Personal Information: name, gender, date of birth, email address and contact details. The email is the one they'll sign in with.",
           },
           {
@@ -376,7 +388,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         ],
         tips: [
           "Give each employee a Bio ID matching their ID on the biometric device, or their punches won't be linked to them.",
-          "Other tabs (Dependents, Education, Documents, Assets and more) can be filled in later. Documents and Assets can hold scanned files once attachments are switched on for them in Company Settings.",
+          "Background and Files sections (Dependents, Education, Skills, Employment History, Documents, Assets) show a lock until the employee is saved, then can be filled in later. Documents and Assets can hold scanned files once attachments are switched on for them in Company Settings.",
         ],
       },
       {

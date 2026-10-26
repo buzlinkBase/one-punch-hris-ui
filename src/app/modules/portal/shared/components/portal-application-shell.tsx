@@ -11,7 +11,7 @@ const { Title } = Typography;
 
 interface PortalApplicationShellProps {
   mode: PortalFormMode;
-  /** Page title per mode, e.g. { create: "File Overtime Application", edit: …, view: … }. */
+  /** Page title per mode, e.g. { create: "New Overtime Request", edit: …, view: … }. */
   titles: Record<PortalFormMode, string>;
   subtitle: string;
   /** Portal list route to go back to, e.g. "/portal/overtime". */

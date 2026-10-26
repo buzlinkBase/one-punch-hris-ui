@@ -50,7 +50,7 @@ export default function PortalPassSlipList() {
     { title: "Destination", dataIndex: "destination" },
     { title: "Purpose", dataIndex: "purpose" },
     {
-      title: "Filed On",
+      title: "Date Submitted",
       dataIndex: "createdAt",
       render: (v?: string) => (v ? dayjs(v).format("MMM D, YYYY") : "—"),
     },
@@ -99,7 +99,7 @@ export default function PortalPassSlipList() {
             icon={<PlusOutlined />}
             onClick={() => navigate({ to: "/portal/pass-slip/create" })}
           >
-            File Pass Slip
+            New Pass Slip
           </Button>
         </div>
       </div>

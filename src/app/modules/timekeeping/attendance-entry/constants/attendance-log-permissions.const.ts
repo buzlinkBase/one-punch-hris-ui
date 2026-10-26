@@ -19,6 +19,9 @@ export const ATTENDANCE_LOG_PERMISSIONS: Record<
   },
 };
 
+// Drilling into the edited/removed logs of an upload (Upload Attendance > Upload History).
+export const VIEW_UPLOAD_BATCH_PERMISSION = "Upload Attendance:View";
+
 // Deleting a whole attendance file upload (Upload Attendance > Upload History).
 export const DELETE_UPLOAD_BATCH_PERMISSION = "Upload Attendance:Delete";
 

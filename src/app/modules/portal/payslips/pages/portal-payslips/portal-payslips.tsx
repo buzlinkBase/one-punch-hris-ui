@@ -124,7 +124,7 @@ export default function PortalPayslips() {
         <div className="page-toolbar-row">
           <div>
             <Title level={4} className="mb-0!">
-              My Pay Slips
+              My Payslips
             </Title>
             <p className="page-toolbar-subtitle">
               Your posted payroll runs for the selected period.

@@ -12,7 +12,13 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PlusOutlined, PushpinFilled } from "@ant-design/icons";
+import { IconAction } from "@/shared/components/icon-action/icon-action";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  PushpinFilled,
+} from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import { getNotify } from "@/shared/utils/notify";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -134,12 +140,15 @@ export default function NoticeBoard() {
       render: (_, n) => (
         <PermissionGate permission={OPERATIONS_PERMISSION.MANAGE}>
           <div className="flex justify-end gap-2">
-            <Button size="small" onClick={() => open(n)}>
-              Edit
-            </Button>
-            <Button
-              size="small"
+            <IconAction
+              title="Edit"
+              icon={<EditOutlined />}
+              onClick={() => open(n)}
+            />
+            <IconAction
+              title="Remove"
               danger
+              icon={<DeleteOutlined />}
               onClick={() =>
                 Modal.confirm({
                   title: `Remove "${n.title}"?`,
@@ -147,9 +156,7 @@ export default function NoticeBoard() {
                   onOk: () => remove.mutateAsync(n.id),
                 })
               }
-            >
-              Remove
-            </Button>
+            />
           </div>
         </PermissionGate>
       ),
@@ -228,7 +235,7 @@ export default function NoticeBoard() {
           >
             <Input.TextArea rows={5} maxLength={8000} showCount />
           </Form.Item>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item label="Show from" name="publishAt" extra="Empty = now.">
               <DatePicker showTime className="w-full" />
             </Form.Item>

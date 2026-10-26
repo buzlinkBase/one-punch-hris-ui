@@ -602,7 +602,7 @@ export default function ForPayrollGenerateTab() {
             render: fmt,
           },
           {
-            title: "Other Ded.",
+            title: "Other Deductions",
             dataIndex: "otherDeductions",
             key: "otherDed",
             align: "right",

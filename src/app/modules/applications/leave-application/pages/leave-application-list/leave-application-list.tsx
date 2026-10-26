@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { Button, Select, Space, Typography } from "antd";
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Button, Select } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import {
@@ -13,12 +13,11 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import LeaveApplicationTable from "../../components/leave-application-table";
 import { LEAVE_APPLICATION_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { PageHeader } from "@/shared/components/page-header/page-header";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
 import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 import { useApplicationDrill } from "@/shared/drilldown/use-screen-drill";
-
-const { Title } = Typography;
 
 export default function LeaveApplicationList() {
   const navigate = useNavigate();
@@ -56,34 +55,23 @@ export default function LeaveApplicationList() {
 
   return (
     <div className="content-page">
-      <div className="page-toolbar">
-        <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              {LEAVE_APPLICATION_LABEL.TITLE}
-            </Title>
-            <p className="page-toolbar-subtitle">
-              File and track employee leave requests.
-            </p>
-          </div>
-          <Space>
+      <PageHeader
+        title={LEAVE_APPLICATION_LABEL.TITLE}
+        subtitle="File and track employee leave requests."
+        onRefresh={() => refetch()}
+        isRefreshing={isFetching}
+        actions={
+          <PermissionGate permission="Leave:Create">
             <Button
-              icon={<ReloadOutlined spin={isFetching} />}
-              onClick={() => refetch()}
-              loading={isFetching && !isLoading}
-            />
-            <PermissionGate permission="Leave:Create">
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate({ to: "/applications/leave/create" })}
-              >
-                File Leave
-              </Button>
-            </PermissionGate>
-          </Space>
-        </div>
-      </div>
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate({ to: "/applications/leave/create" })}
+            >
+              New Leave
+            </Button>
+          </PermissionGate>
+        }
+      />
 
       <div className="mb-3 flex items-center gap-3 flex-wrap">
         <MobileRangePicker
@@ -109,7 +97,7 @@ export default function LeaveApplicationList() {
           options={employeeOptions}
           value={employeeFilter}
           onChange={setEmployeeFilter}
-          style={{ width: 240 }}
+          className="w-60"
           filterOption={(input, opt) =>
             String(opt?.label ?? "")
               .toLowerCase()

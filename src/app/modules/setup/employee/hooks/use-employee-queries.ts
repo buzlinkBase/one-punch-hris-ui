@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -5,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { employeeApi } from "../services/employee.api";
+import { useEmployeeListViewStore } from "../store/employee-list-view.store";
 import type { EmployeeListQuery } from "../models/api/request/employee-list-query.model";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { usePayrollGroups } from "@/app/modules/setup/payroll-group/hooks/use-payroll-group-queries";
@@ -48,6 +50,20 @@ export function useEmployeeSearch(query: EmployeeListQuery) {
     queryFn: () => employeeApi.search(query),
     placeholderData: keepPreviousData,
   });
+}
+
+/**
+ * Ids of the employees on the list page the user is working from, in order -- read from the cache
+ * (no request) so an employee form can offer Previous/Next. Empty if the list was never loaded,
+ * e.g. the form was opened straight from a URL.
+ */
+export function useCachedEmployeeListIds(): string[] {
+  const queryClient = useQueryClient();
+  const query = useEmployeeListViewStore((s) => s.query);
+  const cached = queryClient.getQueryData<
+    Awaited<ReturnType<typeof employeeApi.search>>
+  >([...QUERY_KEY, "list", query]);
+  return useMemo(() => (cached?.data ?? []).map((e) => e.id), [cached]);
 }
 
 // Option lists for the table's lookup column filters, built from the existing setup queries

@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -13,14 +14,15 @@ import {
   Empty,
   Layout,
   Menu,
-  Select,
   Spin,
   Tag,
   Tooltip,
+  message,
   notification,
 } from "antd";
 import {
   ApartmentOutlined,
+  EllipsisOutlined,
   BarChartOutlined,
   BankOutlined,
   BellOutlined,
@@ -37,6 +39,8 @@ import {
   IdcardOutlined,
   LineChartOutlined,
   LockOutlined,
+  StarFilled,
+  StarOutlined,
   MenuFoldOutlined,
   MenuOutlined,
   MenuUnfoldOutlined,
@@ -56,6 +60,9 @@ import {
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { CommandPalette } from "./command-palette/command-palette";
+import { HeaderBreadcrumbs } from "./header-breadcrumbs";
+import { buildBreadcrumbs } from "./build-breadcrumbs";
 import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
 import {
@@ -72,8 +79,17 @@ import {
   type FeatureKey,
   type NavFeature,
 } from "@/shared/constants/entitlement-keys.const";
-import type { NavItem } from "@/shared/constants/navigation.const";
 import { useThemeStore } from "@/core/stores/theme.store";
+import { useSidebarStore } from "@/core/stores/sidebar.store";
+import {
+  useNavShortcutsStore,
+  useUserShortcuts,
+} from "@/core/stores/nav-shortcuts.store";
+import {
+  MAX_PINNED_PAGES,
+  keepAvailable,
+} from "@/core/stores/nav-shortcuts.util";
+import { collectPalettePages } from "./command-palette/palette-search";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
 import { resolveFallbackLanding } from "@/core/auth/tenant-routing";
 import { filterNavByPermission } from "./filter-nav-by-permission";
@@ -118,33 +134,6 @@ import type { TenantSummary } from "@/app/modules/auth/login/models/api/response
 import type { MenuProps } from "antd";
 
 const { Header, Sider, Content } = Layout;
-
-interface NavSearchOption {
-  value: string;
-  label: string;
-  breadcrumb: string;
-}
-
-function flattenNavItems(
-  items: NavItem[],
-  trail: string[] = [],
-): NavSearchOption[] {
-  const results: NavSearchOption[] = [];
-  for (const item of items) {
-    if (item.type === "divider") continue;
-    if (item.path) {
-      const breadcrumb = trail.length ? trail.join(" › ") : "";
-      results.push({ value: item.path, label: item.label, breadcrumb });
-    }
-    if (item.children) {
-      const nextTrail = item.path ? trail : [...trail, item.label];
-      results.push(...flattenNavItems(item.children, nextTrail));
-    }
-  }
-  return results;
-}
-
-const NAV_OPTIONS = flattenNavItems(NAVIGATION_ITEMS);
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -433,49 +422,6 @@ function flattenNavigation(
   });
 }
 
-function humanizeSegment(segment: string): string {
-  if (!segment) return "Dashboard";
-
-  const value = segment.replace(/[$_-]/g, " ").trim();
-  if (!value) return "Dashboard";
-
-  return value
-    .split(/\s+/)
-    .map((word) => word[0]?.toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
-
-function buildHeaderContext(
-  pathname: string,
-  navEntries: NavWithTrail[],
-): { title: string; subtitle: string; trailText: string } {
-  const exactMatch = navEntries.find((entry) => entry.path === pathname);
-  const bestPrefixMatch = navEntries
-    .filter((entry) => pathname.startsWith(entry.path + "/"))
-    .sort((a, b) => b.path.length - a.path.length)[0];
-
-  const match = exactMatch ?? bestPrefixMatch;
-  const baseLabel = match?.trail[match.trail.length - 1] ?? "Dashboard";
-  const segments = pathname.split("/").filter(Boolean);
-  const lastSegment = segments[segments.length - 1] ?? "";
-
-  const title =
-    lastSegment === "create"
-      ? `Create ${baseLabel}`
-      : match
-        ? baseLabel
-        : humanizeSegment(lastSegment);
-
-  const subtitle =
-    lastSegment === "create"
-      ? `Add a new ${baseLabel.toLowerCase()} record`
-      : `Manage ${baseLabel.toLowerCase()} records`;
-
-  const trailText = (match?.trail ?? ["Dashboard"]).join(" / ");
-
-  return { title, subtitle, trailText };
-}
-
 function resolveActiveMenuKey(
   pathname: string,
   navEntries: NavWithTrail[],
@@ -514,14 +460,19 @@ function getTenantStateTag(state: string): { color: string; show: boolean } {
 export default function MainLayout() {
   // Tablets (and narrower desktop windows) start with the sider collapsed to
   // icon-only so setup pages (e.g. Employee) get enough width for 2-column forms.
-  const [collapsed, setCollapsed] = useState(
+  const [narrowViewport] = useState(
     () => window.matchMedia("(max-width: 1024px)").matches,
   );
+  const storedCollapsed = useSidebarStore((s) => s.collapsed);
+  const setCollapsed = useSidebarStore((s) => s.setCollapsed);
+  const collapsed = storedCollapsed ?? narrowViewport;
   const [isMobile, setIsMobile] = useState(
     () => window.matchMedia("(max-width: 767px)").matches,
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const menuNavRef = useRef<HTMLElement>(null);
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
@@ -662,7 +613,20 @@ export default function MainLayout() {
       : [];
   const bellItems: MenuItem[] =
     announcementItems.length + activityItems.length > 0
-      ? [...announcementItems, ...activityItems]
+      ? [
+          ...announcementItems,
+          ...activityItems,
+          { key: "__notifications-divider", type: "divider" as const },
+          {
+            key: "__all-notifications",
+            onClick: () => navigate({ to: "/notifications" }),
+            label: (
+              <span className="text-xs text-(--ant-color-primary)">
+                View all notifications
+              </span>
+            ),
+          },
+        ]
       : [
           {
             key: "__empty",
@@ -785,14 +749,63 @@ export default function MainLayout() {
     subscription.snapshot,
     subscription.canViewBilling,
   );
-  const menuItems = buildMenuItems(
+  // Recent and pinned pages, limited to what this user can still open.
+  const userKey = authUser?.email;
+  const palettePages = useMemo(() => collectPalettePages(navItems), [navItems]);
+  const pageLabels = useMemo(
+    () => new Map(palettePages.map((p) => [p.path, p.label])),
+    [palettePages],
+  );
+  const shortcuts = useUserShortcuts(userKey);
+  const visitPage = useNavShortcutsStore((s) => s.visit);
+  const togglePin = useNavShortcutsStore((s) => s.togglePin);
+  const pinnedPaths = useMemo(
+    () => keepAvailable(shortcuts.pinned, new Set(pageLabels.keys())),
+    [shortcuts.pinned, pageLabels],
+  );
+  const recentPaths = useMemo(
+    () => keepAvailable(shortcuts.recent, new Set(pageLabels.keys())),
+    [shortcuts.recent, pageLabels],
+  );
+  useEffect(() => {
+    if (userKey && pageLabels.has(location.pathname)) {
+      visitPage(userKey, location.pathname);
+    }
+  }, [userKey, pageLabels, location.pathname, visitPage]);
+  const handleTogglePin = (path: string) => {
+    if (userKey && !togglePin(userKey, path)) {
+      message.info(
+        `You can pin up to ${MAX_PINNED_PAGES} pages. Unpin one to add another.`,
+      );
+    }
+  };
+  const currentPagePinned = pinnedPaths.includes(location.pathname);
+
+  const baseMenuItems = buildMenuItems(
     companyLocked ? [] : navItems,
     hrDb.ready,
     collapsed,
     subscription.lockFor,
   );
+  const menuItems: MenuItem[] =
+    pinnedPaths.length > 0 && !companyLocked
+      ? [
+          {
+            key: "pinned",
+            type: "group",
+            label: "Pinned",
+            children: pinnedPaths.map((path) => ({
+              key: `pinned:${path}`,
+              label: pageLabels.get(path),
+              icon: <StarFilled />,
+            })),
+          },
+          { key: "pinned-divider", type: "divider" },
+          ...baseMenuItems,
+        ]
+      : baseMenuItems;
   const navEntries = flattenNavigation(navItems);
-  const headerContext = buildHeaderContext(location.pathname, navEntries);
+  const breadcrumbs = buildBreadcrumbs(location.pathname, navItems);
   const activeMenuKey = resolveActiveMenuKey(location.pathname, navEntries);
 
   const [openKeys, setOpenKeys] = useState<string[]>(
@@ -802,22 +815,53 @@ export default function MainLayout() {
   useEffect(() => {
     const keys = findAncestorKeys(location.pathname, navItems);
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (keys) setOpenKeys((prev) => Array.from(new Set([...prev, ...keys])));
+    if (keys) setOpenKeys(keys);
   }, [location.pathname, navItems]);
+
+  // Keep the selected menu item in view -- with a long menu it can sit below the fold.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      menuNavRef.current
+        ?.querySelector(".ant-menu-item-selected")
+        ?.scrollIntoView({ block: "nearest" });
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [activeMenuKey, collapsed]);
 
   useEffect(() => {
     if (!hrDb.known || hrDb.ready) return;
     const allowed =
-      location.pathname === "/dashboard" || location.pathname === "/profile";
+      location.pathname === "/dashboard" ||
+      location.pathname === "/profile" ||
+      location.pathname === "/notifications";
     if (!allowed) {
       navigate({ to: "/dashboard", replace: true });
     }
   }, [hrDb.known, hrDb.ready, location.pathname, navigate]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // Accordion: opening a top-level group closes the others, so the menu stays short.
+  const handleOpenChange = (keys: string[]) => {
+    const opened = keys.find((k) => !openKeys.includes(k));
+    const rootKeys = NAVIGATION_ITEMS.map((item) => item.key);
+    setOpenKeys(opened && rootKeys.includes(opened) ? [opened] : keys);
+  };
+
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
-    if (key.startsWith("/")) {
+    const path = key.startsWith("pinned:") ? key.slice("pinned:".length) : key;
+    if (path.startsWith("/")) {
       if (isMobile) setMobileMenuOpen(false);
-      navigate({ to: key });
+      navigate({ to: path });
     }
   };
 
@@ -910,7 +954,7 @@ export default function MainLayout() {
 
   const handleToggle = () => {
     if (isMobile) setMobileMenuOpen((v) => !v);
-    else setCollapsed((v) => !v);
+    else setCollapsed(!collapsed);
   };
 
   const siderContent = (
@@ -920,7 +964,13 @@ export default function MainLayout() {
         tabIndex={0}
         className="brand-chip m-4 rounded-xl px-3 py-3 text-white shadow-sm cursor-pointer"
         onClick={() => navigate({ to: "/" })}
-        onKeyDown={(e) => e.key === "Enter" && navigate({ to: "/" })}
+        aria-label="Go to home"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            navigate({ to: "/" });
+          }
+        }}
       >
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center text-base">
@@ -938,18 +988,22 @@ export default function MainLayout() {
           )}
         </div>
       </div>
-      <div className="app-sider-menu-scroll">
+      <nav
+        ref={menuNavRef}
+        aria-label="Main navigation"
+        className="app-sider-menu-scroll"
+      >
         <Menu
           theme="light"
           mode="inline"
           className="app-menu"
-          selectedKeys={[activeMenuKey]}
+          selectedKeys={[activeMenuKey, `pinned:${activeMenuKey}`]}
           openKeys={openKeys}
-          onOpenChange={(keys) => setOpenKeys(keys as string[])}
+          onOpenChange={handleOpenChange}
           items={menuItems}
           onClick={handleMenuClick}
         />
-      </div>
+      </nav>
       <div className="app-sider-user">
         {collapsed && !isMobile ? (
           <div className="side-user-collapsed">
@@ -1014,6 +1068,9 @@ export default function MainLayout() {
 
   return (
     <Layout style={{ minHeight: "100vh" }} className="app-shell">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       {isMobile ? (
         <Drawer
           placement="left"
@@ -1072,66 +1129,69 @@ export default function MainLayout() {
                     <MenuFoldOutlined />
                   )}
                 </button>
-                <p className="header-context-trail">
-                  {headerContext.trailText}
-                </p>
+                <HeaderBreadcrumbs crumbs={breadcrumbs} />
+                {pageLabels.has(location.pathname) && (
+                  <Tooltip
+                    title={
+                      currentPagePinned
+                        ? "Unpin from sidebar"
+                        : "Pin to top of sidebar"
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="header-pin-trigger"
+                      aria-pressed={currentPagePinned}
+                      aria-label={
+                        currentPagePinned ? "Unpin this page" : "Pin this page"
+                      }
+                      onClick={() => handleTogglePin(location.pathname)}
+                    >
+                      {currentPagePinned ? <StarFilled /> : <StarOutlined />}
+                    </button>
+                  </Tooltip>
+                )}
               </div>
-              {/* <h1 className="header-context-title">{headerContext.title}</h1> */}
             </div>
 
-            <div
-              className="header-search-wrap"
-              style={{ display: "flex", gap: 12, alignItems: "center" }}
-            >
-              <Select
-                showSearch
+            <div className="header-search-wrap">
+              <button
+                type="button"
                 className="header-search"
-                placeholder="Quick search…"
-                suffixIcon={
-                  <SearchOutlined style={{ pointerEvents: "none" }} />
-                }
-                filterOption={(input, option) =>
-                  `${option?.label ?? ""} ${option?.breadcrumb ?? ""}`
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-                options={NAV_OPTIONS.map((o) => ({
-                  value: o.value,
-                  label: o.label,
-                  breadcrumb: o.breadcrumb,
-                }))}
-                optionRender={(opt) => (
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>
-                      {opt.data.label}
-                    </div>
-                    {opt.data.breadcrumb && (
-                      <div style={{ fontSize: 11, color: "#9ca3af" }}>
-                        {opt.data.breadcrumb}
-                      </div>
-                    )}
-                  </div>
-                )}
-                onChange={(path) => {
-                  if (!path) return;
-                  const ancestors = findAncestorKeys(path, NAVIGATION_ITEMS);
-                  if (ancestors) setOpenKeys(ancestors);
-                  navigate({ to: path });
-                }}
-                value={undefined}
-                style={{ width: 240 }}
-                allowClear
-              />
+                aria-label="Search pages and employees"
+                onClick={() => setPaletteOpen(true)}
+              >
+                <SearchOutlined />
+                <span>Search…</span>
+                <kbd>Ctrl K</kbd>
+              </button>
+              <button
+                type="button"
+                className="header-collapse-trigger header-search-icon"
+                aria-label="Search pages and employees"
+                onClick={() => setPaletteOpen(true)}
+              >
+                <SearchOutlined />
+              </button>
               <Tooltip title="Help for this screen">
                 <button
                   type="button"
-                  className="header-collapse-trigger"
+                  className="header-collapse-trigger max-md:hidden!"
                   aria-label="Help"
                   onClick={() => setHelpOpen(true)}
                 >
                   <QuestionCircleOutlined />
                 </button>
               </Tooltip>
+              <CommandPalette
+                open={paletteOpen}
+                onClose={() => setPaletteOpen(false)}
+                navItems={navItems}
+                onNavigate={(path) => navigate({ to: path })}
+                pinnedPaths={pinnedPaths}
+                recentPaths={recentPaths}
+                onTogglePin={handleTogglePin}
+              />
               <ContextHelpDrawer
                 open={helpOpen}
                 onClose={() => setHelpOpen(false)}
@@ -1272,7 +1332,7 @@ export default function MainLayout() {
               >
                 <button
                   type="button"
-                  className="header-collapse-trigger"
+                  className="header-collapse-trigger max-md:hidden!"
                   aria-label="Toggle theme"
                   onClick={toggleTheme}
                 >
@@ -1283,7 +1343,7 @@ export default function MainLayout() {
                 <Tooltip title="Company Policy">
                   <button
                     type="button"
-                    className="header-collapse-trigger"
+                    className="header-collapse-trigger max-md:hidden!"
                     aria-label="Company Policy"
                     onClick={() => navigate({ to: "/setup/company-policy" })}
                   >
@@ -1291,6 +1351,55 @@ export default function MainLayout() {
                   </button>
                 </Tooltip>
               )}
+              <Dropdown
+                trigger={["click"]}
+                placement="bottomRight"
+                menu={{
+                  items: [
+                    {
+                      key: "help",
+                      icon: <QuestionCircleOutlined />,
+                      label: "Help for this screen",
+                    },
+                    {
+                      key: "theme",
+                      icon:
+                        themeMode === "dark" ? (
+                          <SunOutlined />
+                        ) : (
+                          <MoonOutlined />
+                        ),
+                      label:
+                        themeMode === "dark"
+                          ? "Switch to light mode"
+                          : "Switch to dark mode",
+                    },
+                    ...(authStorage.isEmployeeOnly()
+                      ? []
+                      : [
+                          {
+                            key: "policy",
+                            icon: <SettingOutlined />,
+                            label: "Company Policy",
+                          },
+                        ]),
+                  ],
+                  onClick: ({ key }) => {
+                    if (key === "help") setHelpOpen(true);
+                    else if (key === "theme") toggleTheme();
+                    else if (key === "policy")
+                      navigate({ to: "/setup/company-policy" });
+                  },
+                }}
+              >
+                <button
+                  type="button"
+                  className="header-collapse-trigger header-more-trigger"
+                  aria-label="More options"
+                >
+                  <EllipsisOutlined />
+                </button>
+              </Dropdown>
             </div>
           </div>
         </Header>
@@ -1299,6 +1408,8 @@ export default function MainLayout() {
         {hrDb.ready && !companyLocked && <StorageBanner />}
 
         <Content
+          id="main-content"
+          tabIndex={-1}
           className={
             isPortalRoute
               ? "app-content-scroll p-4 md:p-6 min-h-70 relative portal-shell"

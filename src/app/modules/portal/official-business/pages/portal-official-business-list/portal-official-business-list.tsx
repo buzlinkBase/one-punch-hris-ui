@@ -44,7 +44,7 @@ export default function PortalOfficialBusinessList() {
     { title: "Classification", dataIndex: "classification" },
     { title: "Purpose", dataIndex: "purpose" },
     {
-      title: "Filed On",
+      title: "Date Submitted",
       dataIndex: "createdAt",
       render: (v?: string) => (v ? dayjs(v).format("MMM D, YYYY") : "—"),
     },
@@ -96,7 +96,7 @@ export default function PortalOfficialBusinessList() {
             icon={<PlusOutlined />}
             onClick={() => navigate({ to: "/portal/official-business/create" })}
           >
-            File Official Business
+            New Official Business
           </Button>
         </div>
       </div>

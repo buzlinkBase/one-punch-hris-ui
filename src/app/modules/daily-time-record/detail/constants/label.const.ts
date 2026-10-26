@@ -19,7 +19,7 @@ export const DTR_DETAIL_LABEL = {
   EMPLOYEE: "Employee",
   WORK_TYPE: "Work Type",
   DTR_DATE: "DTR Date",
-  TIME_SHIFT: "TimeShift",
+  TIME_SHIFT: "Shift",
   START: "Actual Start",
   END: "Actual End",
   // Minutes – Late/Over Break

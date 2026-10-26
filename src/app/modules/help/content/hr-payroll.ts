@@ -54,7 +54,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           {
             text: "6. Calculate the DTR for the payroll group and cutoff, review each employee and Save Draft. It goes for approval.",
             link: {
-              label: "Calculate Daily Time Record",
+              label: "Process DTR",
               to: "/daily-time-record/master",
             },
           },
@@ -131,8 +131,16 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Review logs",
         steps: [
           {
-            text: "Attendance Logs shows every raw punch from all sources, for checking what came in.",
+            text: "Attendance Logs shows every raw punch from all sources, for checking what came in. Set the filters and click Generate; the filters collapse into chips so the results get the room. On the Raw Logs (List) tab, use the pencil to edit or the bin to remove a log. Each source needs its own permission (Attendance Manual Entry, Upload Attendance or Sync Attendance), and biometric logs can't be changed.",
             link: { label: "Attendance Logs", to: "/timekeeping/raw-logs" },
+          },
+        ],
+      },
+      {
+        heading: "See which logs of an upload were changed",
+        steps: [
+          {
+            text: "In Upload History, the Changed column counts the logs of that file someone edited or removed. Click the count to see each one: the employee, the original and current time, the reason, and who changed it and when. It needs the Upload Attendance: View permission.",
           },
         ],
       },
@@ -321,9 +329,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Generate",
         steps: [
           {
-            text: "Open Calculate Daily Time Record. You start on the Generate tab.",
+            text: "Open Process DTR. You start on the Generate tab.",
             link: {
-              label: "Calculate Daily Time Record",
+              label: "Process DTR",
               to: "/daily-time-record/master",
             },
           },
@@ -727,7 +735,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
       {
         heading: "Tabs",
         body: [
-          "Each list has For Approval (still waiting) and Processed (approved, declined, cancelled or withdrawn) tabs. The detail page shows Approval Progress: each step, who acted and any notes.",
+          "Each list has For Approval (still waiting) and History (approved, declined, cancelled or withdrawn) tabs. The detail page shows Approval Progress: each step, who acted and any notes.",
         ],
       },
       {

@@ -11,7 +11,8 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { IconAction } from "@/shared/components/icon-action/icon-action";
 import dayjs from "dayjs";
 import { getNotify } from "@/shared/utils/notify";
 import { phNow, toPh } from "@/shared/utils/ph-time.util";
@@ -274,22 +275,24 @@ export default function UniformAllowancePolicyTab({
               render: (_, p) =>
                 canEdit && p.id && !p.isLocked && p.effectiveFrom >= today ? (
                   <Space size={4}>
-                    <Button
-                      size="small"
-                      type="link"
+                    <IconAction
+                      title="Edit"
+                      icon={<EditOutlined />}
                       onClick={() => setEditor({ mode: "edit", policy: p })}
-                    >
-                      Edit
-                    </Button>
+                    />
                     <Popconfirm
                       title="Delete this scheduled change?"
                       okText="Delete"
                       okButtonProps={{ danger: true }}
                       onConfirm={() => remove(p.id!)}
                     >
-                      <Button size="small" type="link" danger>
-                        Delete
-                      </Button>
+                      <span>
+                        <IconAction
+                          title="Delete"
+                          danger
+                          icon={<DeleteOutlined />}
+                        />
+                      </span>
                     </Popconfirm>
                   </Space>
                 ) : null,

@@ -105,7 +105,7 @@ export default function RateMultipliersTab() {
             content={
               <div className="max-w-md text-xs leading-relaxed">
                 <strong>
-                  Regular, Rest Day, Legal Holiday (Worked), Special
+                  Regular, Rest Day, Regular Holiday (Worked), Special
                   Non-Working, and Rest Day + Special Holiday
                 </strong>{" "}
                 are day-type rates — each multiplier is the employee&apos;s{" "}
