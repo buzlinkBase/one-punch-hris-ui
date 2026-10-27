@@ -20,7 +20,7 @@ export const FAQ_ARTICLES: HelpArticle[] = [
       {
         heading: "A menu item or button is missing",
         body: [
-          "The menu and buttons only show what your role is allowed to do. Ask your company admin to check your role in Security › Roles.",
+          "The menu and buttons only show what your role is allowed to do. Ask your company admin to check your role in Administration › Users & Access › Roles.",
         ],
       },
       {
@@ -60,7 +60,7 @@ export const FAQ_ARTICLES: HelpArticle[] = [
       {
         heading: "I can't upload a photo or file",
         body: [
-          "Your company's storage may be full. An owner or admin can free space or add storage in Security › Storage. Files can be PNG, JPG, WebP or PDF up to 5 MB, and the feature must have attachments switched on in Company Settings.",
+          "Your company's storage may be full. An owner or admin can free space or add storage in Administration › Subscription › Storage. Files can be PNG, JPG, WebP or PDF up to 5 MB, and the feature must have attachments switched on in Company Settings.",
         ],
       },
       {

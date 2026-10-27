@@ -523,6 +523,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             link: { label: "Payroll Summary", to: "/payroll/summary" },
           },
           {
+            text: "Narrow the list with the Status, Client, Payroll Group and Employees filters. You can pick several employees; the list only offers people paid in the selected run. Export and Print include only the filtered rows. Click Clear filters to start over.",
+          },
+          {
             text: "Switch between tabs to see earnings, hours, holidays, deductions and employer contributions.",
           },
           {
@@ -558,23 +561,23 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Which one",
         steps: [
           {
-            text: "Generate 13th Month Pay: computed from the year's basic pay. The non-taxable ceiling comes from Company Settings › Payroll Settings.",
+            text: "13th Month Run: computed from the year's basic pay. The non-taxable ceiling comes from Company Settings › Payroll Settings.",
             link: {
-              label: "Generate 13th Month Pay",
+              label: "13th Month Run",
               to: "/daily-time-record/for-13th-month",
             },
           },
           {
-            text: "Generate Last Pay: final pay for an employee who's leaving. You can include unpaid salary adjustments and other income. The cash bond the employee has paid in so far is refunded on it (not taxed); untick Include cash bond refund to hold it back, for example while clearance is pending.",
+            text: "Last Pay Run: final pay for an employee who's leaving. You can include unpaid salary adjustments and other income. The cash bond the employee has paid in so far is refunded on it (not taxed); untick Include cash bond refund to hold it back, for example while clearance is pending.",
             link: {
-              label: "Generate Last Pay",
+              label: "Last Pay Run",
               to: "/daily-time-record/for-last-pay",
             },
           },
           {
-            text: "Year-End Tax Adjustment: annualizes each employee's tax and refunds or collects the difference. Preview it before generating.",
+            text: "Year-End Adjustment Run: annualizes each employee's tax and refunds or collects the difference. Preview it before generating.",
             link: {
-              label: "Year-End Tax Adjustment",
+              label: "Year-End Adjustment Run",
               to: "/daily-time-record/for-year-end-adjustment",
             },
           },
@@ -744,7 +747,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
       {
         heading: "Profile update requests",
         body: [
-          "Employees can request changes to their own personal information from My Portal. Review them under Profile Update Requests. Approving applies the change to the employee record.",
+          "Employees can request changes to their own personal information from My Portal. Review them under Applications › Profile Updates. Approving applies the change to the employee record.",
         ],
       },
     ],

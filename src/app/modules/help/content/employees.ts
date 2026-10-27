@@ -79,8 +79,8 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             },
           },
           {
-            text: "My Raw Attendance: every punch the biometric device recorded.",
-            link: { label: "My Raw Attendance", to: "/portal/raw-attendance" },
+            text: "My Attendance Logs: every punch the biometric device recorded.",
+            link: { label: "My Attendance Logs", to: "/portal/raw-attendance" },
           },
           {
             text: "My Shift Schedule: the shift you're scheduled for each day.",

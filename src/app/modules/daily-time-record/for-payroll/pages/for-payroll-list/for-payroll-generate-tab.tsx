@@ -729,7 +729,7 @@ export default function ForPayrollGenerateTab() {
           </Space>
           <Space>
             {SHOW_PAY_RELEASE_DATE && (
-              <Tooltip title="Pay/Release Date — only required when Company Policy's cross-month statutory posting is set to use the pay date">
+              <Tooltip title="Pay/Release Date — only required when Company Settings' cross-month statutory posting is set to use the pay date">
                 <DatePicker
                   size="middle"
                   placeholder="Pay/Release Date"

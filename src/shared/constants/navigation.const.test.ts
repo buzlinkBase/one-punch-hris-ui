@@ -7,6 +7,7 @@ import {
   getPermissionForPath,
   getRequiredFeatures,
   withHrmsProduct,
+  type NavItem,
 } from "./navigation.const";
 import { BASE_FEATURE, FEATURE_KEYS } from "./entitlement-keys.const";
 
@@ -31,6 +32,40 @@ describe("NAVIGATION_ITEMS", () => {
     );
 
     expect(unassigned).toEqual([]);
+  });
+
+  // Keys become AntD menu keys and open-state; paths become the route gate. A duplicate of
+  // either silently shadows one of the two entries.
+  it("uses every key and every path once", () => {
+    const allKeys = (items: NavItem[]): string[] =>
+      items.flatMap((item) => [item.key, ...allKeys(item.children ?? [])]);
+    const keys = allKeys(NAVIGATION_ITEMS);
+    const paths = flattenNavPaths(NAVIGATION_ITEMS);
+
+    expect(keys.filter((k, i) => keys.indexOf(k) !== i)).toEqual([]);
+    expect(paths.filter((p, i) => paths.indexOf(p) !== i)).toEqual([]);
+  });
+
+  // Company Settings had no menu entry, so its route had no gate: any member could open it.
+  it("gates Company Settings on Organization Setup", () => {
+    expect(getPermissionForPath("/setup/company-policy")).toBe(
+      "Organization Setup:View",
+    );
+  });
+
+  it("gates the SSS, PhilHealth and Pag-IBIG e-filing files as statutory reports", () => {
+    for (const path of [
+      "/payroll/reports/sss-r3",
+      "/payroll/reports/philhealth-eprs",
+      "/payroll/reports/pagibig-mcrf",
+    ]) {
+      expect(getPermissionForPath(path)).toBe(
+        "Government Statutory Reports:View",
+      );
+    }
+    expect(getPermissionForPath("/payroll/reports/bir-2316")).toBe(
+      "BIR Reports:View",
+    );
   });
 });
 

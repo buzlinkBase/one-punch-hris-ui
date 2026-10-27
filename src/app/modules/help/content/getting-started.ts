@@ -152,7 +152,7 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
             text: "Star icon beside the path: pin the current screen. Pinned screens appear in a Pinned group at the top of the menu (up to 8). You can also pin or unpin from the quick search. With the quick search box empty, it lists your pinned and recently opened screens.",
           },
           {
-            text: "On a phone, Help, dark mode and Company Policy are tucked into the ··· button to save room.",
+            text: "On a phone, Help, dark mode and Company Settings are tucked into the ··· button to save room.",
           },
         ],
       },
@@ -160,7 +160,7 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
         heading: "The menu",
         body: [
           "The path at the top left (for example Applications / Leave / Create) shows where you are. Click any earlier step to go back to it. Opening a menu group closes the others, and the menu scrolls to the screen you're on. The menu stays collapsed or expanded the way you left it, even after you sign in again, and press Tab on any screen to reach the Skip to main content link, which jumps past the menu. A new device follows your computer's light or dark setting until you choose one yourself.",
-          "The left menu is grouped by area: My Portal, Timekeeping, Change Schedule, DTR Processing, Payroll Processing, Applications, Setup, Reports, Communication, Client Services and Security (which also holds Billing and Storage). The Dashboard and Analytics figures are clickable and open the list behind them. You only see the areas your role can use. If you expect a screen and can't find it, ask your admin to check your role.",
+          "The left menu follows the pay cycle: My Portal, Employees, Timekeeping, Change Schedule, Applications, DTR Processing, Payroll, Reports, Analytics, Announcements and Client Services, then Setup and Administration (users, roles, billing and storage). Long areas such as Reports and Setup are split into smaller groups. The Dashboard and Analytics figures are clickable and open the list behind them. You only see the areas your role can use. If you expect a screen and can't find it, ask your admin to check your role.",
         ],
       },
       {

@@ -7,6 +7,8 @@ export interface PayrollSummaryFilter {
   status: StatusFilter;
   clientId?: string;
   payrollGroupId?: string;
+  // Missing or empty means every employee.
+  employeeIds?: string[];
 }
 
 // The one filter rule behind the table, CSV/Excel export and Print. Client / payroll group
@@ -14,24 +16,27 @@ export interface PayrollSummaryFilter {
 // print-summary endpoint filters on, so all three always list the same rows.
 export const filterPayrollResults = (
   rows: PayrollRunResult[],
-  { status, clientId, payrollGroupId }: PayrollSummaryFilter,
+  { status, clientId, payrollGroupId, employeeIds = [] }: PayrollSummaryFilter,
 ) =>
   rows.filter(
     (r) =>
       (status === "All" || r.approvalStatus === status) &&
       (!clientId || r.clientId === clientId) &&
-      (!payrollGroupId || r.payrollGroupId === payrollGroupId),
+      (!payrollGroupId || r.payrollGroupId === payrollGroupId) &&
+      (!employeeIds.length || employeeIds.includes(r.employeeId)),
   );
 
 // Query params for GET payrolls/print-summary — the selected batch plus the same filter.
+// employeeIds goes as one comma-separated value, which the endpoint splits.
 export const buildPrintSummaryParams = (
   payrollBatchId: string,
-  { status, clientId, payrollGroupId }: PayrollSummaryFilter,
+  { status, clientId, payrollGroupId, employeeIds = [] }: PayrollSummaryFilter,
 ) => ({
   payrollBatchId,
   status: status === "All" ? undefined : status,
   clientId,
   payrollGroupId,
+  employeeIds: employeeIds.length ? employeeIds.join(",") : undefined,
 });
 
 // Appended to export file names so a filtered file says which filters produced it.

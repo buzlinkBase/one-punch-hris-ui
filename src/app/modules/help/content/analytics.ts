@@ -80,7 +80,7 @@ export const ANALYTICS_ARTICLES: HelpArticle[] = [
       {
         heading: "Who can see Analytics",
         body: [
-          "The Owner and Admins see all four pages. Anyone else needs the View permission of each page, and Export to download it. Grant these under Security > Roles.",
+          "The Owner and Admins see all four pages. Anyone else needs the View permission of each page, and Export to download it. Grant these under Administration › Users & Access › Roles.",
         ],
       },
     ],

@@ -213,7 +213,7 @@ export default function OperationAreaDetail() {
               {isEdit && (
                 <Form.Item
                   label={OPERATION_AREA_LABEL.CLIENT}
-                  extra="Optional. Tag project sites to a client from Setup > Client."
+                  extra="Optional. Tag project sites to a client from Setup › Organization › Clients."
                 >
                   <Input
                     disabled

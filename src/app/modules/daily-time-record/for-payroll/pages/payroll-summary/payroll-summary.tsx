@@ -39,6 +39,7 @@ import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { QUICK_RANGES } from "@/shared/utils/quick-date-ranges.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { useTablePagination } from "@/shared/hooks/use-table-pagination";
 import { forPayrollApi } from "../../services/for-payroll.api";
 import {
   buildFlatCsv,
@@ -192,11 +193,22 @@ export default function PayrollSummary() {
     [payrollGroups],
   );
 
+  // Built from the loaded run's own rows, so it only offers employees paid in this batch.
+  const [employeeFilter, setEmployeeFilter] = useState<string[]>([]);
+  const employeeFilterOptions = useMemo(
+    () =>
+      [...new Map(allResults.map((r) => [r.employeeId, r.fullName]))]
+        .map(([value, label]) => ({ value, label }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [allResults],
+  );
+
   // "Approved" is the default status, so only a different pick counts as an active filter.
   const activeFilterCount =
     Number(statusFilter !== "Approved") +
     Number(!!clientFilter) +
-    Number(!!payrollGroupFilter);
+    Number(!!payrollGroupFilter) +
+    Number(employeeFilter.length > 0);
 
   // One filter for the table, Export and Print — see filterPayrollResults. Client / payroll
   // group match the client / payroll group each row was paid under, not the employee's current one.
@@ -205,8 +217,9 @@ export default function PayrollSummary() {
       status: statusFilter,
       clientId: clientFilter,
       payrollGroupId: payrollGroupFilter,
+      employeeIds: employeeFilter,
     }),
-    [statusFilter, clientFilter, payrollGroupFilter],
+    [statusFilter, clientFilter, payrollGroupFilter, employeeFilter],
   );
   const results = useMemo(
     () => filterPayrollResults(allResults, filter),
@@ -367,6 +380,8 @@ export default function PayrollSummary() {
     statusFiltered: statusFilter !== "All",
   });
 
+  const { pagination } = useTablePagination();
+
   const tableProps = {
     rowKey: "employeeId",
     loading: isLoading,
@@ -385,7 +400,7 @@ export default function PayrollSummary() {
     },
     size: "small" as const,
     scroll: { x: "max-content" as const },
-    pagination: { pageSize: 50, showSizeChanger: false },
+    pagination,
   };
 
   return (
@@ -537,6 +552,18 @@ export default function PayrollSummary() {
             optionRender={payrollGroupOptionRender}
             className="w-full sm:w-52"
           />
+          <Select
+            mode="multiple"
+            value={employeeFilter}
+            onChange={setEmployeeFilter}
+            options={employeeFilterOptions}
+            placeholder="All employees"
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            maxTagCount="responsive"
+            className="w-full sm:w-64"
+          />
           <div className="flex gap-2 sm:ml-auto">
             <Button
               icon={<ClearOutlined />}
@@ -545,6 +572,7 @@ export default function PayrollSummary() {
                 setStatusFilter("Approved");
                 setClientFilter(undefined);
                 setPayrollGroupFilter(undefined);
+                setEmployeeFilter([]);
               }}
             >
               Clear filters

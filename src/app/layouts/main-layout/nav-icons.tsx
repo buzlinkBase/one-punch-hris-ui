@@ -1,0 +1,82 @@
+import type { ReactNode } from "react";
+import {
+  AccountBookOutlined,
+  ApartmentOutlined,
+  BarChartOutlined,
+  BankOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
+  CreditCardOutlined,
+  DashboardOutlined,
+  DollarOutlined,
+  FieldTimeOutlined,
+  FileProtectOutlined,
+  FileTextOutlined,
+  IdcardOutlined,
+  LineChartOutlined,
+  NotificationOutlined,
+  ReconciliationOutlined,
+  SafetyCertificateOutlined,
+  SafetyOutlined,
+  SettingOutlined,
+  ShopOutlined,
+  SolutionOutlined,
+  SwapOutlined,
+  TeamOutlined,
+  UserOutlined,
+  WalletOutlined,
+} from "@ant-design/icons";
+
+/**
+ * Icons for top-level entries, groups and My Portal's own pages. Pages nested inside a group get
+ * none -- a column of identical icons down every submenu only adds noise. nav-icons.test.ts
+ * checks every top-level entry and group has one.
+ */
+const NAV_ICONS: Record<string, ReactNode> = {
+  dashboard: <DashboardOutlined />,
+  "nav-portal": <UserOutlined />,
+  "portal-dashboard": <DashboardOutlined />,
+  "portal-profile": <UserOutlined />,
+  "portal-approvals": <FileProtectOutlined />,
+  "portal-announcements": <NotificationOutlined />,
+  "portal-coworkers": <TeamOutlined />,
+  "portal-group-time": <ClockCircleOutlined />,
+  "portal-group-pay": <DollarOutlined />,
+  "portal-group-applications": <FileProtectOutlined />,
+  employees: <TeamOutlined />,
+  "nav-dtr": <ClockCircleOutlined />,
+  "change-schedule": <SwapOutlined />,
+  applications: <FileProtectOutlined />,
+  "applications-group-time": <CalendarOutlined />,
+  "applications-group-pay": <WalletOutlined />,
+  "daily-time-record": <FieldTimeOutlined />,
+  "nav-payroll": <DollarOutlined />,
+  reports: <BarChartOutlined />,
+  "reports-group-attendance": <ClockCircleOutlined />,
+  "reports-group-payroll": <DollarOutlined />,
+  "reports-group-ledgers": <ReconciliationOutlined />,
+  "reports-group-contributions": <SafetyOutlined />,
+  "reports-group-bir": <FileTextOutlined />,
+  analytics: <LineChartOutlined />,
+  announcements: <NotificationOutlined />,
+  "client-portal": <ShopOutlined />,
+  "client-portal-group-operations": <TeamOutlined />,
+  "client-portal-group-billing": <AccountBookOutlined />,
+  "client-portal-group-settings": <SettingOutlined />,
+  "nav-setup": <SettingOutlined />,
+  "setup-company-settings": <BankOutlined />,
+  "setup-group-org": <ApartmentOutlined />,
+  "setup-group-shifts": <FieldTimeOutlined />,
+  "setup-group-leave": <CalendarOutlined />,
+  "setup-group-pay": <WalletOutlined />,
+  "setup-group-statutory": <SafetyOutlined />,
+  biometric: <SafetyCertificateOutlined />,
+  "setup-group-approvals": <SolutionOutlined />,
+  administration: <SafetyOutlined />,
+  "administration-group-access": <IdcardOutlined />,
+  "administration-group-subscription": <CreditCardOutlined />,
+};
+
+export function getNavIcon(key: string): ReactNode {
+  return NAV_ICONS[key];
+}

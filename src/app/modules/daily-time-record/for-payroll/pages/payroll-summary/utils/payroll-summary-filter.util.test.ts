@@ -49,6 +49,25 @@ describe("filterPayrollResults", () => {
       names(filterPayrollResults(rows, { status: "ForApproval" })),
     ).toEqual(["Pending"]);
   });
+
+  it("keeps only the picked employees, and all of them when none are picked", () => {
+    const people = [
+      row("Ana", { employeeId: "emp-1" }),
+      row("Ben", { employeeId: "emp-2" }),
+      row("Cy", { employeeId: "emp-3" }),
+    ];
+    expect(
+      names(
+        filterPayrollResults(people, {
+          status: "All",
+          employeeIds: ["emp-1", "emp-3"],
+        }),
+      ),
+    ).toEqual(["Ana", "Cy"]);
+    expect(
+      filterPayrollResults(people, { status: "All", employeeIds: [] }),
+    ).toHaveLength(3);
+  });
 });
 
 describe("buildPrintSummaryParams", () => {
@@ -63,10 +82,20 @@ describe("buildPrintSummaryParams", () => {
       status: undefined,
       clientId: "client-a",
       payrollGroupId: undefined,
+      employeeIds: undefined,
     });
     expect(
       buildPrintSummaryParams("batch-1", { status: "Approved" }).status,
     ).toBe("Approved");
+  });
+
+  it("joins the picked employees into one comma-separated value", () => {
+    expect(
+      buildPrintSummaryParams("batch-1", {
+        status: "All",
+        employeeIds: ["emp-1", "emp-2"],
+      }).employeeIds,
+    ).toBe("emp-1,emp-2");
   });
 });
 

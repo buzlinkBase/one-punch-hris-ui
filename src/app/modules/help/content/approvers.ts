@@ -70,14 +70,14 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
         tips: [
           "The person you choose needs a login. They are notified of your requests too, and can approve or decline them in My Approvals -- they don't need the Approve permission for that.",
           "A request that was already decided -- by you or by them -- can't be decided twice. When a step needs several approvals, you and your delegate count as one.",
-          "Switch it off any time from the same card. An Owner or Admin can also set one up for you under Setup > Approval Delegations.",
+          "Switch it off any time from the same card. An Owner or Admin can also set one up for you under Setup › Approvals › Delegations.",
         ],
       },
       {
         heading: "Approve or decline",
         steps: [
           {
-            text: "Open the application list (e.g. Applications › Leave). The Pending tab shows what's still waiting.",
+            text: "Open the application list (e.g. Applications › Time & Leave › Leave). The Pending tab shows what's still waiting.",
             link: { label: "Leave", to: "/applications/leave" },
           },
           {

@@ -35,7 +35,11 @@ describe("filterNavByPermission", () => {
 
     const visible = filterNavByPermission(NAVIGATION_ITEMS);
 
-    expect(keys(visible)).toEqual(["applications", "applications-leave"]);
+    expect(keys(visible)).toEqual([
+      "applications",
+      "applications-group-time",
+      "applications-leave",
+    ]);
   });
 
   it("hides a nested group whose children are all filtered out", () => {
@@ -45,8 +49,23 @@ describe("filterNavByPermission", () => {
 
     expect(keys(visible)).toEqual([
       "nav-setup",
-      "setup-others",
+      "setup-group-shifts",
       "setup-holiday",
+    ]);
+  });
+
+  // Clients sits in Organization but needs Workforce Setup, so the group can't carry a gate of
+  // its own -- it would hide Clients from anyone who has Workforce Setup alone.
+  it("keeps a page whose group mixes permissions", () => {
+    signInWith(["Member"], ["Workforce Setup:View"]);
+
+    const visible = filterNavByPermission(NAVIGATION_ITEMS);
+
+    expect(keys(visible)).toEqual([
+      "employees",
+      "nav-setup",
+      "setup-group-org",
+      "setup-client",
     ]);
   });
 

@@ -45,11 +45,11 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           },
           {
             text: "7. Employees: add them one by one or import from Excel.",
-            link: { label: "Employee", to: "/setup/employee" },
+            link: { label: "Employees", to: "/setup/employee" },
           },
           {
-            text: "8. Biometric: register devices and enroll employees (each needs a Bio ID first).",
-            link: { label: "Manage Devices", to: "/biometric/manage-devices" },
+            text: "8. Biometrics: register devices and enroll employees (each needs a Bio ID first).",
+            link: { label: "Devices", to: "/biometric/manage-devices" },
           },
           {
             text: "9. Approval Workflows: who approves each request type (optional; without one, anyone with the Approve permission can approve).",
@@ -185,8 +185,8 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Add one",
         steps: [
           {
-            text: "Open the screen under Setup › Organization (e.g. Department).",
-            link: { label: "Department", to: "/setup/department" },
+            text: "Open the screen under Setup › Organization (e.g. Departments).",
+            link: { label: "Departments", to: "/setup/department" },
           },
           {
             text: "Click Add (e.g. Add Department), fill in the code and name, and click Save.",
@@ -197,7 +197,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         ],
         tips: [
           "Create Branches before Project Sites, since each project site belongs to a branch.",
-          "If you serve clients at specific sites, open the client under Setup › Client and pick its Project Sites. A site can belong to one client, and this is optional: leave it empty if you don't split clients by site.",
+          "If you serve clients at specific sites, open the client under Setup › Organization › Clients and pick its Project Sites. A site can belong to one client, and this is optional: leave it empty if you don't split clients by site.",
         ],
       },
     ],
@@ -217,13 +217,13 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Steps",
         steps: [
           {
-            text: "Fixed Shift: the same start and end time every working day, with breaks.",
-            link: { label: "Fixed Shift", to: "/setup/time-shift/fixed" },
+            text: "Fixed Shifts: the same start and end time every working day, with breaks.",
+            link: { label: "Fixed Shifts", to: "/setup/time-shift/fixed" },
           },
           {
-            text: "Flexi/Split/Broken Shift: flexible start times, or a day split into separate work periods.",
+            text: "Flexi & Split Shifts: flexible start times, or a day split into separate work periods (a broken shift).",
             link: {
-              label: "Flexi/Split/Broken Shift",
+              label: "Flexi & Split Shifts",
               to: "/setup/time-shift/split",
             },
           },
@@ -360,7 +360,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Add one employee",
         steps: [
           {
-            text: "Open Setup › Workforce › Employee and click Add Employee.",
+            text: "Open Employees and click Add Employee.",
             link: { label: "Employee", to: "/setup/employee" },
           },
           {
@@ -440,8 +440,8 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Register a device",
         steps: [
           {
-            text: "Open Manage Devices and click Register Device. Enter the device's serial number and assign it to a branch.",
-            link: { label: "Manage Devices", to: "/biometric/manage-devices" },
+            text: "Open Setup › Biometrics › Devices and click Register Device. Enter the device's serial number and assign it to a branch.",
+            link: { label: "Devices", to: "/biometric/manage-devices" },
           },
         ],
       },
@@ -619,7 +619,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Invite people",
         steps: [
           {
-            text: "Open Security › Users and click Invite Users.",
+            text: "Open Administration › Users & Access › Users and click Invite Users.",
             link: { label: "Users", to: "/security/users" },
           },
           {
@@ -679,13 +679,15 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Create a custom role",
         steps: [
           {
-            text: 'Open Security › Roles and create a role (e.g. "Payroll Officer").',
+            text: 'Open Administration › Users & Access › Roles and create a role (e.g. "Payroll Officer").',
             link: { label: "Roles", to: "/security/roles" },
           },
           {
             text: "Tick the permissions it needs. Each screen has actions such as View, Create, Edit, Delete, Approve or Export. Hover over a permission to see what it allows.",
           },
-          { text: "Save, then give the role to users from Security › Users." },
+          {
+            text: "Save, then give the role to users from Administration › Users & Access › Users.",
+          },
         ],
       },
       {
@@ -711,7 +713,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Steps",
         steps: [
           {
-            text: "Open Security › Audit.",
+            text: "Open Administration › Users & Access › Audit Trail.",
             link: { label: "Audit", to: "/security/audit" },
           },
           {
@@ -722,7 +724,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           },
         ],
         tips: [
-          "From Security › Users, the activity icon on a user opens the audit trail filtered to that person.",
+          "From Administration › Users & Access › Users, the activity icon on a user opens the audit trail filtered to that person.",
         ],
       },
     ],
@@ -741,7 +743,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Your plan at a glance",
         steps: [
           {
-            text: "Open Security › Billing. Current plan shows your plan, its status (Free trial, Active, Payment overdue, Suspended and so on), when the current period or trial ends and your next payment.",
+            text: "Open Administration › Subscription › Billing. Current plan shows your plan, its status (Free trial, Active, Payment overdue, Suspended and so on), when the current period or trial ends and your next payment.",
             link: { label: "Billing", to: "/billing" },
           },
           {
@@ -804,7 +806,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "See what is using it",
         steps: [
           {
-            text: "Open Security › Storage. The gauge shows used and total storage, split into plan storage and add-ons.",
+            text: "Open Administration › Subscription › Storage. The gauge shows used and total storage, split into plan storage and add-ons.",
             link: { label: "Storage", to: "/billing/storage" },
           },
           {
@@ -897,7 +899,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Create and publish",
         steps: [
           {
-            text: "Open Communication › Announcements and click New Announcement.",
+            text: "Open Announcements and click New Announcement.",
             link: {
               label: "Announcements",
               to: "/communication/announcements",
@@ -987,7 +989,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
       {
         heading: "Invite a client",
         body: [
-          "Invite client logins from Security › Users: choose Client and pick the client. Clients you create in Setup are shared with the portal automatically. Connection shows whether the link is working.",
+          "Invite client logins from Administration › Users & Access › Users: choose Client and pick the client. Clients you create in Setup are shared with the portal automatically. Connection shows whether the link is working.",
         ],
         tips: [
           "The Client Services menu appears only when your plan includes the Client Portal.",

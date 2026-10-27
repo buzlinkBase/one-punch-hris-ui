@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
   Button,
@@ -21,24 +14,12 @@ import {
   notification,
 } from "antd";
 import {
-  ApartmentOutlined,
   EllipsisOutlined,
-  BarChartOutlined,
   BankOutlined,
   BellOutlined,
   CloseOutlined,
   QuestionCircleOutlined,
-  CalendarOutlined,
   CheckOutlined,
-  ClockCircleOutlined,
-  DollarOutlined,
-  EnvironmentOutlined,
-  FileTextOutlined,
-  FileProtectOutlined,
-  SkinOutlined,
-  FieldTimeOutlined,
-  IdcardOutlined,
-  LineChartOutlined,
   LockOutlined,
   StarFilled,
   StarOutlined,
@@ -49,25 +30,20 @@ import {
   PlusOutlined,
   SearchOutlined,
   SafetyCertificateOutlined,
-  SafetyOutlined,
-  GiftOutlined,
   MoonOutlined,
-  NotificationOutlined,
   PushpinFilled,
   SettingOutlined,
-  SolutionOutlined,
   SunOutlined,
-  SwapOutlined,
-  TeamOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import { CommandPalette } from "./command-palette/command-palette";
+import { getNavIcon } from "./nav-icons";
 import { HeaderBreadcrumbs } from "./header-breadcrumbs";
 import { buildBreadcrumbs } from "./build-breadcrumbs";
 import { Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import type { AxiosError } from "axios";
 import {
   NAVIGATION_ITEMS,
+  type NavItem,
   getFeaturesForPath,
   getPermissionForPath,
   getRequiredFeatures,
@@ -189,113 +165,25 @@ function getSessionUser(): SessionUser {
   };
 }
 
-function getNavIcon(key: string): ReactNode {
-  const iconMap: Record<string, ReactNode> = {
-    "nav-portal": <UserOutlined />,
-    "portal-profile": <UserOutlined />,
-    "portal-payslips": <DollarOutlined />,
-    "portal-dtr": <ClockCircleOutlined />,
-    "portal-incomplete-punches": <FieldTimeOutlined />,
-    "portal-raw-attendance": <FieldTimeOutlined />,
-    "portal-shift-schedule": <CalendarOutlined />,
-    "portal-group-time": <ClockCircleOutlined />,
-    "portal-group-pay": <DollarOutlined />,
-    "portal-group-applications": <FileProtectOutlined />,
-    "portal-leave-credits": <FileProtectOutlined />,
-    "portal-thirteenth-month": <DollarOutlined />,
-    "portal-leave-applications": <FileProtectOutlined />,
-    "portal-overtime": <FileProtectOutlined />,
-    "portal-official-business": <FileProtectOutlined />,
-    "portal-pass-slip": <FileProtectOutlined />,
-    "portal-loan-applications": <FileProtectOutlined />,
-    "portal-cash-bond": <FileProtectOutlined />,
-    "portal-uniform-allowance": <SkinOutlined />,
-    "nav-dtr": <ClockCircleOutlined />,
-    "nav-payroll": <DollarOutlined />,
-    "nav-setup": <SettingOutlined />,
-    timekeeping: <ClockCircleOutlined />,
-    "timekeeping-upload-attendance": <FileTextOutlined />,
-    "timekeeping-raw-logs": <FileTextOutlined />,
-    "timekeeping-unregistered-employees": <UserOutlined />,
-    "timekeeping-attendance-entry": <IdcardOutlined />,
-    "timekeeping-incomplete-punches": <ClockCircleOutlined />,
-    "change-schedule": <SwapOutlined />,
-    "change-schedule-work-rotation": <SwapOutlined />,
-    "change-schedule-change-rest-day": <CalendarOutlined />,
-    "change-schedule-change-holiday": <CalendarOutlined />,
-    "daily-time-record": <FileTextOutlined />,
-    "daily-time-record-detail": <FileTextOutlined />,
-    "daily-time-record-summary": <BarChartOutlined />,
-    "daily-time-record-for-payroll": <IdcardOutlined />,
-    analytics: <LineChartOutlined />,
-    "analytics-workforce": <TeamOutlined />,
-    "analytics-attendance": <ClockCircleOutlined />,
-    "analytics-payroll": <DollarOutlined />,
-    "analytics-requests": <FileProtectOutlined />,
-    reports: <BarChartOutlined />,
-    "reports-tardiness": <ClockCircleOutlined />,
-    "reports-dtr-detail": <FieldTimeOutlined />,
-    setup: <SettingOutlined />,
-    "setup-group-shifts": <FieldTimeOutlined />,
-    "setup-group-org": <ApartmentOutlined />,
-    "setup-group-workforce": <TeamOutlined />,
-    "setup-group-statutory": <SafetyOutlined />,
-    "setup-fixed-shift": <FieldTimeOutlined />,
-    "setup-split-shift": <FieldTimeOutlined />,
-    "setup-flexi-shift": <FieldTimeOutlined />,
-    "setup-department": <ApartmentOutlined />,
-    "setup-section": <ApartmentOutlined />,
-    "setup-position": <SolutionOutlined />,
-    "setup-branch": <BankOutlined />,
-    "setup-project-site": <EnvironmentOutlined />,
-    "setup-client": <TeamOutlined />,
-    "setup-operation-area": <BankOutlined />,
-    "setup-payroll-group": <IdcardOutlined />,
-    "setup-holiday": <CalendarOutlined />,
-    "setup-leave-type": <FileProtectOutlined />,
-    "setup-employee": <UserOutlined />,
-    clients: <TeamOutlined />,
-    biometric: <SafetyCertificateOutlined />,
-    "enroll-biometrics": <SafetyCertificateOutlined />,
-    "portal-approvals": <FileProtectOutlined />,
-    "portal-announcements": <NotificationOutlined />,
-    "portal-coworkers": <GiftOutlined />,
-    communication: <NotificationOutlined />,
-    "communication-announcements": <NotificationOutlined />,
-    "client-portal": <TeamOutlined />,
-    "client-portal-clients": <TeamOutlined />,
-    "client-portal-verification": <SafetyCertificateOutlined />,
-    "client-portal-integrations": <ApartmentOutlined />,
-    "client-portal-connection": <SettingOutlined />,
-    "client-portal-billing-setup": <SettingOutlined />,
-    "client-portal-invoices": <FileTextOutlined />,
-    "client-portal-payments": <DollarOutlined />,
-    "client-portal-disputes": <SolutionOutlined />,
-    "client-portal-statements": <FileProtectOutlined />,
-    "client-portal-reports": <BarChartOutlined />,
-    "client-portal-manpower": <TeamOutlined />,
-    "client-portal-guard-documents": <FileProtectOutlined />,
-    "client-portal-scorecard": <LineChartOutlined />,
-    "client-portal-notices": <NotificationOutlined />,
-    security: <SafetyOutlined />,
-    "security-users": <UserOutlined />,
-    "security-roles": <IdcardOutlined />,
-    "security-permissions": <SafetyCertificateOutlined />,
-    "security-audit": <FileTextOutlined />,
-  };
-
-  return iconMap[key] ?? <FileTextOutlined />;
-}
-
 /** Nav keys that don't depend on the tenant's HR database and stay enabled while it provisions. */
 const HR_DB_INDEPENDENT_KEYS = new Set(["dashboard"]);
 const LOGOUT_REVOKE_WAIT_MS = 2_000;
+const COMPANY_SETTINGS_PATH = "/setup/company-policy";
 
 /** Why a menu item is locked by the plan, for its tooltip. */
 function lockTooltip(lock: FeatureLock): string {
   return lock.reason === "revoked"
     ? "Not included in your subscription"
     : `Available on the ${lock.availableOn ?? "higher"} plan`;
+}
+
+/**
+ * The AntD menu key an item renders under. Pages (and page-groups like Reports' "/reports") are
+ * keyed by path so a click navigates; plain groups by their nav key. Open-key tracking must use
+ * the same value, or a page-group never auto-opens.
+ */
+function menuKeyOf(item: NavItem): string {
+  return item.type === "group" ? item.key : (item.path ?? item.key);
 }
 
 function buildMenuItems(
@@ -313,7 +201,7 @@ function buildMenuItems(
     }
 
     if (item.type === "group") {
-      // Group headers (e.g. "Holidays & Leave Types") aren't clickable, so AntD's own
+      // Group headers (e.g. "Time Shifts") aren't clickable, so AntD's own
       // `disabled` styling never applied to them -- only to their children below. Left alone,
       // a still-active-looking group label sitting above visibly greyed-out children reads as
       // the group NOT respecting the provisioning gate, even though the children were already
@@ -379,7 +267,7 @@ function buildMenuItems(
     );
 
     return {
-      key: item.path ?? item.key,
+      key: menuKeyOf(item),
       label,
       icon: getNavIcon(item.key),
       disabled,
@@ -402,7 +290,7 @@ function findAncestorKeys(
       const found = findAncestorKeys(
         path,
         item.children as typeof NAVIGATION_ITEMS,
-        [...ancestors, item.key],
+        [...ancestors, menuKeyOf(item)],
       );
       if (found !== null) return found;
     }
@@ -791,6 +679,8 @@ export default function MainLayout() {
     }
   };
   const currentPagePinned = pinnedPaths.includes(location.pathname);
+  // The header shortcut follows the menu entry, so it hides for anyone the menu hides it from.
+  const canOpenCompanySettings = pageLabels.has(COMPANY_SETTINGS_PATH);
 
   const baseMenuItems = buildMenuItems(
     companyLocked ? [] : navItems,
@@ -864,7 +754,7 @@ export default function MainLayout() {
   // Accordion: opening a top-level group closes the others, so the menu stays short.
   const handleOpenChange = (keys: string[]) => {
     const opened = keys.find((k) => !openKeys.includes(k));
-    const rootKeys = NAVIGATION_ITEMS.map((item) => item.key);
+    const rootKeys = NAVIGATION_ITEMS.map(menuKeyOf);
     setOpenKeys(opened && rootKeys.includes(opened) ? [opened] : keys);
   };
 
@@ -1382,13 +1272,13 @@ export default function MainLayout() {
                   {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
                 </button>
               </Tooltip>
-              {!authStorage.isEmployeeOnly() && (
-                <Tooltip title="Company Policy">
+              {canOpenCompanySettings && (
+                <Tooltip title="Company Settings">
                   <button
                     type="button"
                     className="header-collapse-trigger max-md:hidden!"
-                    aria-label="Company Policy"
-                    onClick={() => navigate({ to: "/setup/company-policy" })}
+                    aria-label="Company Settings"
+                    onClick={() => navigate({ to: COMPANY_SETTINGS_PATH })}
                   >
                     <SettingOutlined />
                   </button>
@@ -1417,21 +1307,21 @@ export default function MainLayout() {
                           ? "Switch to light mode"
                           : "Switch to dark mode",
                     },
-                    ...(authStorage.isEmployeeOnly()
-                      ? []
-                      : [
+                    ...(canOpenCompanySettings
+                      ? [
                           {
                             key: "policy",
                             icon: <SettingOutlined />,
-                            label: "Company Policy",
+                            label: "Company Settings",
                           },
-                        ]),
+                        ]
+                      : []),
                   ],
                   onClick: ({ key }) => {
                     if (key === "help") setHelpOpen(true);
                     else if (key === "theme") toggleTheme();
                     else if (key === "policy")
-                      navigate({ to: "/setup/company-policy" });
+                      navigate({ to: COMPANY_SETTINGS_PATH });
                   },
                 }}
               >
