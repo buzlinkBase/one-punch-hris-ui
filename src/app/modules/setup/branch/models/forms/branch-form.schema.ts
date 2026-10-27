@@ -15,6 +15,7 @@ export const branchFormSchema = z.object({
   status: z.string().min(1, "Status is required"),
   regionCode: z.string().nullable().optional(),
   wageOrderClass: z.string().nullable().optional(),
+  headEmployeeId: z.string().nullable().optional(),
 });
 
 export type BranchFormValues = z.infer<typeof branchFormSchema>;

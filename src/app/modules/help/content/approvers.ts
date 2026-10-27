@@ -34,6 +34,46 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "My Approvals: everything waiting on you in one place",
+        steps: [
+          {
+            text: "Open My Approvals (under My Portal). The For Approval tab lists every request whose current step is yours, including the ones you cover for someone who is away. Each row shows the applicant, a short summary, when it was filed, its step and who it is pending with.",
+            link: { label: "My Approvals", to: "/portal/approvals" },
+          },
+          {
+            text: "Click Approve or Decline on the row. Add a note if asked, then confirm.",
+          },
+          {
+            text: "The In Progress tab lists requests still with another approver. These are ones that will reach your step later, ones you already approved, or (if you hold the Approve permission) every request of that type. It's view only. A request moves to For Approval once it reaches your step.",
+          },
+        ],
+        tips: [
+          "A request on a later step doesn't appear under For Approval until the steps before it are approved.",
+          'A purple "For <name>" tag means you are acting for someone who delegated their approvals to you. The request\'s Approval Progress then reads "Approved by you on behalf of <name>".',
+          "My Approvals works even if your account only has the Employee role.",
+        ],
+      },
+      {
+        heading: "Going away? Let someone approve for you",
+        steps: [
+          {
+            text: "Open your profile and find While I'm away, then click Delegate.",
+            link: { label: "My Profile", to: "/profile" },
+          },
+          {
+            text: "Choose who approves for you, which requests (or all), and the dates. Leave the dates empty to keep it on until you switch it off.",
+          },
+          {
+            text: "Optionally turn on Only while on approved leave: it then switches on by itself on the days you have an approved leave.",
+          },
+        ],
+        tips: [
+          "The person you choose needs a login. They are notified of your requests too, and can approve or decline them in My Approvals -- they don't need the Approve permission for that.",
+          "A request that was already decided -- by you or by them -- can't be decided twice. When a step needs several approvals, you and your delegate count as one.",
+          "Switch it off any time from the same card. An Owner or Admin can also set one up for you under Setup > Approval Delegations.",
+        ],
+      },
+      {
         heading: "Approve or decline",
         steps: [
           {

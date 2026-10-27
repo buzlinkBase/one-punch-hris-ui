@@ -9,4 +9,5 @@ export interface BranchResponse {
   status: string;
   regionCode?: string | null;
   wageOrderClass?: string | null;
+  headEmployeeId?: string | null;
 }

@@ -14,6 +14,7 @@ export const operationAreaFormSchema = z.object({
   boundary: geoJsonPolygon,
   status: z.string().min(1, "Status is required"),
   branchId: z.string().min(1, "Branch is required"),
+  headEmployeeId: z.string().nullable().optional(),
 });
 
 export type OperationAreaFormValues = z.infer<typeof operationAreaFormSchema>;

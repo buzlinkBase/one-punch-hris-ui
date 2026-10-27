@@ -23,6 +23,7 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { ApprovalListStatus } from "@/shared/components/approval-status-cell/approval-list-status";
 
 const STATUS_COLOR: Record<string, string> = {
   ForApproval: "warning",
@@ -52,6 +53,8 @@ interface Props {
   onApprove?: (record: TravelOrderApplicationResponse, note?: string) => void;
   onDecline?: (record: TravelOrderApplicationResponse, note?: string) => void;
   actionLoading?: boolean;
+  /** Show the step and who a pending row waits on in the status column. */
+  showApprovalProgress?: boolean;
 }
 
 export default function TravelOrderTable({
@@ -62,6 +65,7 @@ export default function TravelOrderTable({
   onApprove,
   onDecline,
   actionLoading,
+  showApprovalProgress,
 }: Props) {
   const navigate = useNavigate();
   const { pagination } = useTablePagination();
@@ -84,7 +88,7 @@ export default function TravelOrderTable({
     days: 80,
     destination: 160,
     classification: 150,
-    status: 120,
+    status: 180,
   });
 
   const columns: ColumnsType<TravelOrderApplicationResponse> = [
@@ -185,10 +189,17 @@ export default function TravelOrderTable({
           width: widths.status,
           onResize: (w: number) => handleResize("status", w),
         }) as object,
-      render: (val: string) => (
-        <Tag color={STATUS_COLOR[val] ?? "default"}>
-          {STATUS_LABEL[val] ?? val}
-        </Tag>
+      render: (val: string, r) => (
+        <ApprovalListStatus
+          applicationType="OfficialBusiness"
+          applicationId={r.id}
+          approvalStatus={val}
+          showProgress={showApprovalProgress}
+        >
+          <Tag color={STATUS_COLOR[val] ?? "default"}>
+            {STATUS_LABEL[val] ?? val}
+          </Tag>
+        </ApprovalListStatus>
       ),
     },
     {

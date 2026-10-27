@@ -18,6 +18,8 @@ import {
   EyeOutlined,
   CopyOutlined,
   ClockCircleOutlined,
+  QuestionCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -33,6 +35,12 @@ import {
   APPROVAL_WORKFLOWS_LABEL,
   APPLICATION_TYPE_OPTIONS,
 } from "../../constants/label.const";
+import { WorkflowResolutionModal } from "../../components/workflow-resolution-modal/workflow-resolution-modal";
+import { useScopeOptions } from "../../hooks/use-scope-options";
+import {
+  describeConditions,
+  fromScopeDtos,
+} from "../../services/scope-conditions.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { authStorage } from "@/core/auth/auth-storage";
 import type { ApprovalApplicationType } from "@/shared/types/approval.model";
@@ -48,7 +56,9 @@ export default function ApprovalWorkflowList() {
   const navigate = useNavigate();
   const [applicationType, setApplicationType] =
     useState<ApprovalApplicationType>("Leave");
+  const [checkOpen, setCheckOpen] = useState(false);
   const canManage = authStorage.hasAnyPermission("Approval Workflows:Edit");
+  const { labelFor } = useScopeOptions();
 
   const { data: workflows = [], isLoading } =
     useApprovalWorkflows(applicationType);
@@ -62,13 +72,11 @@ export default function ApprovalWorkflowList() {
   const { mutate: cancelSchedule } =
     useCancelScheduledApprovalWorkflowActivation();
 
-  // The workflow now active for the same scope -- what an inactive version would replace.
+  // The active workflow in the same slot (same conditions) -- what an inactive version would
+  // replace. Workflows with different conditions stay active side by side.
   const activeFor = (r: ApprovalWorkflowResponse) =>
     workflows.find(
-      (w) =>
-        w.id !== r.id &&
-        w.isActive &&
-        (w.scopeDepartmentId ?? null) === (r.scopeDepartmentId ?? null),
+      (w) => w.id !== r.id && w.isActive && w.slotKey === r.slotKey,
     );
 
   const scheduleSwitch = (r: ApprovalWorkflowResponse) =>
@@ -84,12 +92,28 @@ export default function ApprovalWorkflowList() {
   const columns: ColumnsType<ApprovalWorkflowResponse> = [
     { title: "Name", dataIndex: "name", key: "name" },
     {
-      title: "Scope",
+      title: "Applies to",
       key: "scope",
-      render: (_, r) =>
-        r.scopeDepartmentId
-          ? `Scoped: ${r.scopeDepartmentName ?? r.scopeDepartmentId}`
-          : "Company-wide default",
+      render: (_, r) => {
+        const lines = describeConditions(fromScopeDtos(r.scopes), labelFor);
+        if (lines.length === 0) return <Tag>Everyone (default)</Tag>;
+        return (
+          <Space size={[4, 4]} wrap>
+            {lines.map((line) => (
+              <Tag key={line} className="me-0!">
+                {line}
+              </Tag>
+            ))}
+          </Space>
+        );
+      },
+    },
+    {
+      title: "Priority",
+      dataIndex: "priority",
+      key: "priority",
+      width: 90,
+      sorter: (a, b) => a.priority - b.priority,
     },
     {
       title: "Steps",
@@ -106,6 +130,15 @@ export default function ApprovalWorkflowList() {
           <Tag color={r.isActive ? "success" : "default"}>
             {r.isActive ? "Active" : "Inactive"}
           </Tag>
+          {r.overlapsWith.length > 0 && (
+            <Tooltip
+              title={`Can apply to the same people as ${r.overlapsWith.join(", ")} at the same priority, so the more specific (then older) one wins. Give them different priorities to be explicit.`}
+            >
+              <Tag color="warning" icon={<WarningOutlined />}>
+                Same priority overlap
+              </Tag>
+            </Tooltip>
+          )}
           {r.inProgressCount > 0 && (
             <Tooltip title="Requests still going through this workflow. It can't be edited until they finish.">
               <Tag color="processing">{waiting(r.inProgressCount)}</Tag>
@@ -153,7 +186,7 @@ export default function ApprovalWorkflowList() {
             <PermissionGate permission="Approval Workflows:Edit">
               {r.isActive ? (
                 <Popconfirm
-                  title="Deactivate this workflow? New applications of this type will fall back to the company-wide default (or today's single-step behavior if none)."
+                  title="Deactivate this workflow? Applications it covered will use the next matching workflow, or today's single-step behavior if none matches."
                   onConfirm={() => deactivate(r.id)}
                   okText="Deactivate"
                 >
@@ -268,15 +301,23 @@ export default function ApprovalWorkflowList() {
               {APPROVAL_WORKFLOWS_LABEL.SUBTITLE}
             </p>
           </div>
-          <PermissionGate permission="Approval Workflows:Edit">
+          <Space>
             <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: `${LIST_PATH}/create` })}
+              icon={<QuestionCircleOutlined />}
+              onClick={() => setCheckOpen(true)}
             >
-              Add Workflow
+              Which workflow applies?
             </Button>
-          </PermissionGate>
+            <PermissionGate permission="Approval Workflows:Edit">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: `${LIST_PATH}/create` })}
+              >
+                Add Workflow
+              </Button>
+            </PermissionGate>
+          </Space>
         </div>
       </div>
 
@@ -297,6 +338,12 @@ export default function ApprovalWorkflowList() {
         size="small"
         pagination={{ pageSize: 15 }}
         scroll={{ x: true }}
+      />
+
+      <WorkflowResolutionModal
+        open={checkOpen}
+        applicationType={applicationType}
+        onClose={() => setCheckOpen(false)}
       />
     </div>
   );

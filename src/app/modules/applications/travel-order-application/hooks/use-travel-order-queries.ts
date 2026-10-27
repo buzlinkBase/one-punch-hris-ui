@@ -85,6 +85,8 @@ export function useChangeTravelOrderStatus() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "OfficialBusiness", record.id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
   });
 }

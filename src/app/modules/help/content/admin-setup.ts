@@ -176,7 +176,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "What each one is for",
         body: [
           "Payroll Group: employees paid together on the same cutoff schedule. You generate the DTR and payroll one payroll group at a time.",
-          'Department, Section and Position: where someone sits in the organization. These also drive approval workflows (e.g. "the applicant\'s department head").',
+          'Department, Section and Position: where someone sits in the organization. These also drive approval workflows (e.g. "the applicant\'s department head"), and a workflow can be limited to certain departments, sections or positions.',
           "Org chart: these also build the chart under My Portal › Coworkers. Give a department a Parent Department to nest it (e.g. a division) and a Department Head, give a section a Section Head, and set each position's Level (a higher number sits higher in its department). Employees who report to a manager in the same department or section appear under that manager.",
           "Branch and Project Site: where someone works. Attendance uploads are tagged to a branch, and a project site belongs to a branch.",
         ],
@@ -487,7 +487,72 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
       {
         heading: "How approvals work",
         body: [
-          "Each application type (Leave, Overtime, Official Business, Pass Slip, Loans, Profile Update, DTR and payroll batches) can have its own workflow. Types without one keep single-step approval: anyone with that type's Approve permission can approve.",
+          "Each application type (Leave, Overtime, Official Business, Pass Slip, Loans, Profile Update, DTR and payroll batches) can have its own workflow. Requests no workflow covers keep single-step approval: anyone with that type's Approve permission can approve.",
+          "You can run several workflows for the same type at once, each limited to the people it is for -- for example one for the Cebu branch, another for a client's project sites, and a company-wide default for everyone else.",
+        ],
+      },
+      {
+        heading: "Who a workflow applies to",
+        body: [
+          'On a workflow\'s page, "Applies to" lists the conditions that limit it: Branch, Department, Client, Project Site, Payroll Group, Position, Section, Employment Status, or Specific Employees (handy as a custom group). A person must meet every condition; inside one condition any of the chosen values will do. A workflow with no conditions applies to everyone -- the company-wide default.',
+          "When someone fits more than one active workflow, the one with the lowest Priority number is used. Equal priorities are settled by the more specific workflow (more conditions), then the older one. The list warns when two workflows overlap at the same priority.",
+          "DTR and payroll posting have no applicant, so they follow the Payroll Group of the batch: use a Payroll Group condition (or no condition) for those types.",
+          "A request keeps the workflow it started on even if the employee later transfers; the next request follows whichever workflow fits then.",
+        ],
+        tips: [
+          "Not sure which workflow someone gets? Click Which workflow applies?, pick the employee and the type, and it shows the match and the order workflows were tried.",
+        ],
+      },
+      {
+        heading: "Approvers that depend on the applicant",
+        body: [
+          "A step can point at someone who is worked out for each request instead of a fixed person: the applicant's manager, their manager 2 or more levels up (a skip-level approval), or the head of their department (or its parent department), section, branch, project site or client.",
+          "Department and Section heads are set on those records. The head of a Branch, Project Site or Client is the Head field on that record's setup page -- set it there, or steps that use it can't find anyone.",
+          "If the applicant has no manager recorded, or nobody is set as the head, choose what the step does under If no approver is found: Wait for an admin to reassign it (the default), Skip this step and move on, or Use a fallback person. The first step can't be skipped. If every remaining step is skipped, the request is approved.",
+          "Someone is never their own approver: a branch head filing a request has the step resolve to nobody, so the choice above applies.",
+        ],
+        tips: [
+          "A skipped step shows in the request's Approval Progress as skipped. A step waiting because no approver was found says so there, and an Owner or Admin can reassign it.",
+        ],
+      },
+      {
+        heading: "Steps and flows that depend on the request",
+        body: [
+          'A step can apply only when the request is big enough. On any step after the first, set Applies to a measure of the request: Days (leave, official business), Hours (overtime, pass slip) or Amount (loans, official business cost), then a comparison and a number -- for example "Days is at least 5". When the request doesn\'t meet it, the step is skipped and the request moves straight on; if no step is left, it is approved.',
+          "On a leave workflow, Applies to also offers Leave Type: use it to give sick leave a different flow from vacation leave.",
+          "The first step always applies to every request.",
+          "A request's days, hours and amount are read when it is filed and again whenever it is edited. Editing a request after someone has approved sends it back to the first step, and an edit that moves it to a different workflow (a different leave type, say) starts it again on that one.",
+        ],
+        tips: [
+          "A skipped step shows in the request's Approval Progress, marked as skipped and not needed for that request.",
+          "Requests filed before this existed have no recorded days or amount, so every step applies to them.",
+        ],
+      },
+      {
+        heading: "Approval from several groups at once",
+        body: [
+          "Sometimes one step needs more than one kind of approver -- for example one person from HR and one from Finance. On the step, click Add approver group under Also needs approval from. The step's own approver is the first group; each group you add is another, and you can add up to 5.",
+          "The step is approved only when every group has its quorum (its Min Approvals), in any order. Each group can be a person, a department, a position, or a per-applicant approver such as the applicant's branch head.",
+          "A person who belongs to two groups fills only one of them. If any approver declines, the whole request is declined.",
+          "A per-applicant group set to Don't require this group is left out when no approver can be found for that applicant; the others still need to approve. If every group is left out the step is skipped.",
+        ],
+        tips: [
+          "The request's Approval Progress shows each group's progress while it waits, for example \"Finance 1/2 · HR ✓\", so you can see who is still needed.",
+          "An Owner or Admin acting on the request, the approver it was reassigned to, and the person a late step escalated to each decide for the whole step at once.",
+          "Everyone in every group is notified when the step opens.",
+        ],
+      },
+      {
+        heading: "Reminders and escalation",
+        body: [
+          'A request can sit with an approver for days. On any step you can set Remind after (hours): once the request has been at that step that long, its approvers get the "waiting on you" notice again with how long it has waited. Add then every (hours) to keep reminding, up to 10 times.',
+          "Escalate after (hours) with Escalate to opens the step to one more person once it has waited that long. They are told, can approve or decline it from My Approvals, and the timeline records the escalation. The step's own approvers can still act: escalating adds a person, it doesn't take the step away from anyone.",
+          "The hours count from when the request reached that step, so each step has its own clock; the clock starts again when the request moves on. Reminders and escalation are checked every hour.",
+        ],
+        tips: [
+          "Auto-approving after a delay isn't offered on purpose: someone should always make the decision.",
+          "Set both: for example remind after 24 hours, then every 24, and escalate to the department head after 72.",
+          "A step that found no approver (see Approvers that depend on the applicant) has nobody to remind; use Escalate to for those.",
         ],
       },
       {
@@ -502,10 +567,13 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           },
           { text: "Choose the application type." },
           {
-            text: "Add steps in order. For each step choose who approves: a specific Person, a Department, a Position, the applicant's manager, or the applicant's department. Also choose whether a note is None, Optional or Required.",
+            text: "Under Applies to, add conditions to limit it to certain branches, sites, departments and so on -- or leave it empty for everyone. Set a Priority if it overlaps another workflow.",
           },
           {
-            text: "Save. It's saved as inactive; click Activate in the list and new requests of that type follow it.",
+            text: "Add steps in order. For each step choose who approves: a specific Person, a Department, a Position, the applicant's manager (or their manager N levels up), the applicant's department, or the head of the applicant's department, section, branch, project site or client. Also choose whether a note is None, Optional or Required.",
+          },
+          {
+            text: "Save. It's saved as inactive; click Activate in the list and new requests from the people it covers follow it. Other active workflows of the same type are not affected.",
           },
         ],
         tips: [
@@ -520,7 +588,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         ],
         steps: [
           {
-            text: "To change it now, click Copy (or Copy as new version on the workflow's page). Adjust the copy and save it; it's saved as inactive.",
+            text: "To change it now, click Copy (or Copy as new version on the workflow's page). Adjust the copy and save it; it's saved as inactive. Activating a copy with the same conditions replaces the original; a copy with different conditions runs alongside it.",
           },
           {
             text: "Activate now: new requests use the copy right away, and requests already pending finish on the old one.",

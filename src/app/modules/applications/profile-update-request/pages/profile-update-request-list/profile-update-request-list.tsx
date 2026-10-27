@@ -33,7 +33,8 @@ import {
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
-import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
+import { useApplicationApprovalTabs } from "@/shared/hooks/use-application-approval-tabs";
+import { ApprovalListStatus } from "@/shared/components/approval-status-cell/approval-list-status";
 import { useApplicationDrill } from "@/shared/drilldown/use-screen-drill";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
@@ -70,7 +71,11 @@ export default function ProfileUpdateRequestList() {
 
   // A Dashboard or Analytics figure can open this list on a tab (it has no date filter).
   const drill = useApplicationDrill();
-  const approval = useApprovalTabs(requests, drill.tab);
+  const approval = useApplicationApprovalTabs(
+    requests,
+    "ProfileUpdate",
+    drill.tab,
+  );
 
   const columns: ColumnsType<EmployeeProfileUpdateRequestResponse> = [
     {
@@ -93,9 +98,16 @@ export default function ProfileUpdateRequestList() {
       key: "status",
       render: (_, r) => (
         <Space size={4}>
-          <Tag color={APPROVAL_STATUS_COLOR[r.approvalStatus] ?? "default"}>
-            {APPROVAL_STATUS_LABEL[r.approvalStatus] ?? r.approvalStatus}
-          </Tag>
+          <ApprovalListStatus
+            applicationType="ProfileUpdate"
+            applicationId={r.id}
+            approvalStatus={r.approvalStatus}
+            showProgress={approval.showProgress}
+          >
+            <Tag color={APPROVAL_STATUS_COLOR[r.approvalStatus] ?? "default"}>
+              {APPROVAL_STATUS_LABEL[r.approvalStatus] ?? r.approvalStatus}
+            </Tag>
+          </ApprovalListStatus>
           {r.hasConflict && <Tag color="error">Conflict</Tag>}
         </Space>
       ),
@@ -126,7 +138,7 @@ export default function ProfileUpdateRequestList() {
               onClick={() => setHistoryTargetId(record.id)}
             />
           </Tooltip>
-          {record.approvalStatus === "ForApproval" && (
+          {approval.canAct && record.approvalStatus === "ForApproval" && (
             <PermissionGate permission="Profile Update:Approve">
               <Tooltip title="Approve">
                 <Button
@@ -181,7 +193,9 @@ export default function ProfileUpdateRequestList() {
         value={approval.tab}
         onChange={approval.setTab}
         pendingCount={approval.pendingCount}
+        inProgressCount={approval.inProgressCount}
         processedCount={approval.processedCount}
+        pendingLabel="For Approval"
       />
       <Table
         scroll={{ x: "max-content" }}

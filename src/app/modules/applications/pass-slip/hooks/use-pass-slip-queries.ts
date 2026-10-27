@@ -51,6 +51,8 @@ export function useApprovePassSlip() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "PassSlip", id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
   });
 }
@@ -65,6 +67,8 @@ export function useDeclinePassSlip() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "PassSlip", id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
   });
 }

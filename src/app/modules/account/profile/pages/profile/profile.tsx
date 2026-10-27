@@ -24,6 +24,7 @@ import {
   useNotificationPreferencesQuery,
   useUpdateNotificationPreferenceMutation,
 } from "../../hooks/use-notification-preference-queries";
+import { DelegationCard } from "../../components/delegation-card/delegation-card";
 import { APPLICATION_TYPE_OPTIONS } from "@/app/modules/setup/approval-workflows/constants/label.const";
 import type { ApprovalApplicationType } from "@/shared/types/approval.model";
 import {
@@ -447,6 +448,7 @@ export default function Profile() {
         <ProfileDetailsCard />
         <PasswordCard />
         <NotificationPreferencesCard />
+        <DelegationCard />
       </div>
     </div>
   );

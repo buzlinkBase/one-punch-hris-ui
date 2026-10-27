@@ -12,4 +12,5 @@ export interface OperationAreaResponse {
   branchCode?: string | null;
   clientId?: string | null;
   clientName?: string | null;
+  headEmployeeId?: string | null;
 }

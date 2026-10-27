@@ -3,6 +3,7 @@ import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { ApprovalApplicationType } from "@/shared/types/approval.model";
 import type { ApprovalWorkflowRequest } from "../models/api/request/approval-workflow-request.model";
 import type { ApprovalWorkflowResponse } from "../models/api/response/approval-workflow-response.model";
+import type { ApprovalWorkflowResolution } from "../models/api/approval-scope.model";
 
 const ENDPOINT = buildApiUrl(API_PREFIX.hrms, "approvalworkflows");
 
@@ -18,6 +19,16 @@ export const approvalWorkflowApi = {
   getById(id: string): Promise<ApprovalWorkflowResponse> {
     return httpClient.getUnwrapped<ApprovalWorkflowResponse>(
       `${ENDPOINT}/${id}`,
+    );
+  },
+
+  /** Which active workflow an employee's applications of this type would run on right now. */
+  resolve(
+    applicationType: ApprovalApplicationType,
+    employeeId: string,
+  ): Promise<ApprovalWorkflowResolution> {
+    return httpClient.getUnwrapped<ApprovalWorkflowResolution>(
+      `${ENDPOINT}/resolve?applicationType=${applicationType}&employeeId=${employeeId}`,
     );
   },
 

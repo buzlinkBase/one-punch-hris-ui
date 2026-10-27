@@ -35,6 +35,8 @@ export function useApproveProfileUpdateRequest() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "ProfileUpdate", id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
       queryClient.invalidateQueries({ queryKey: ["me", "employee"] });
     },
   });
@@ -50,6 +52,8 @@ export function useDeclineProfileUpdateRequest() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "ProfileUpdate", id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
   });
 }

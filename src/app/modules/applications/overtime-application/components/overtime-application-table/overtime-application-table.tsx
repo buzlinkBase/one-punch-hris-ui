@@ -20,6 +20,7 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { ApprovalListStatus } from "@/shared/components/approval-status-cell/approval-list-status";
 import dayjs from "dayjs";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -46,6 +47,8 @@ interface Props {
   onApprove?: (record: OvertimeApplicationResponse, note?: string) => void;
   onDecline?: (record: OvertimeApplicationResponse, note?: string) => void;
   actionLoading?: boolean;
+  /** Show the step and who a pending row waits on in the status column. */
+  showApprovalProgress?: boolean;
 }
 
 export default function OvertimeApplicationTable({
@@ -56,6 +59,7 @@ export default function OvertimeApplicationTable({
   onApprove,
   onDecline,
   actionLoading,
+  showApprovalProgress,
 }: Props) {
   const navigate = useNavigate();
   const { pagination } = useTablePagination();
@@ -77,7 +81,7 @@ export default function OvertimeApplicationTable({
     startTime: 120,
     endTime: 120,
     otHours: 100,
-    status: 120,
+    status: 180,
   });
 
   const columns: ColumnsType<OvertimeApplicationResponse> = [
@@ -166,10 +170,17 @@ export default function OvertimeApplicationTable({
           width: widths.status,
           onResize: (w: number) => handleResize("status", w),
         }) as object,
-      render: (val: string) => (
-        <Tag color={STATUS_COLOR[val] ?? "default"}>
-          {STATUS_LABEL[val] ?? val}
-        </Tag>
+      render: (val: string, r) => (
+        <ApprovalListStatus
+          applicationType="Overtime"
+          applicationId={r.id}
+          approvalStatus={val}
+          showProgress={showApprovalProgress}
+        >
+          <Tag color={STATUS_COLOR[val] ?? "default"}>
+            {STATUS_LABEL[val] ?? val}
+          </Tag>
+        </ApprovalListStatus>
       ),
     },
     {

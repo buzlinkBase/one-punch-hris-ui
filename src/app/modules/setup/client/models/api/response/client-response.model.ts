@@ -7,6 +7,7 @@ export interface ClientResponse {
   phone: string;
   address: string;
   contactPerson: string;
+  headEmployeeId?: string | null;
   logoUrl?: string | null;
   retirementDaysPerYear: number | null;
   uniformAllowance: number | null;

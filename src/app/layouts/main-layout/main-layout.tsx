@@ -257,6 +257,7 @@ function getNavIcon(key: string): ReactNode {
     clients: <TeamOutlined />,
     biometric: <SafetyCertificateOutlined />,
     "enroll-biometrics": <SafetyCertificateOutlined />,
+    "portal-approvals": <FileProtectOutlined />,
     "portal-announcements": <NotificationOutlined />,
     "portal-coworkers": <GiftOutlined />,
     communication: <NotificationOutlined />,

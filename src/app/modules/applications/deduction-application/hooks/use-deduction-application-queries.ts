@@ -63,6 +63,8 @@ export function useApproveDeductionApplication() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "Loan", id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
   });
 }
@@ -77,6 +79,8 @@ export function useDeclineDeductionApplication() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "Loan", id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
   });
 }

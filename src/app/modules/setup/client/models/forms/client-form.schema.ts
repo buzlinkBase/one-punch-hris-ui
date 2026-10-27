@@ -8,6 +8,7 @@ export const clientFormSchema = z.object({
   phone: z.string(),
   address: z.string(),
   contactPerson: z.string(),
+  headEmployeeId: z.string().nullable().optional(),
   areaIds: z.array(z.string()),
 });
 

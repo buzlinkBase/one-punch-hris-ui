@@ -18,6 +18,7 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { ApprovalListStatus } from "@/shared/components/approval-status-cell/approval-list-status";
 import { formatMoney } from "@/shared/utils/money.util";
 
 interface Props {
@@ -30,6 +31,10 @@ interface Props {
   onApprove: (id: string, note?: string) => void;
   onDecline: (id: string, note?: string) => void;
   actionLoading?: boolean;
+  /** Offer Approve/Decline on pending rows (off on the view-only In Progress tab). Default true. */
+  canApprove?: boolean;
+  /** Show the step and who a pending row waits on in the status column. */
+  showApprovalProgress?: boolean;
 }
 
 export default function DeductionApplicationTable({
@@ -42,6 +47,8 @@ export default function DeductionApplicationTable({
   onApprove,
   onDecline,
   actionLoading,
+  canApprove = true,
+  showApprovalProgress,
 }: Props) {
   const canEdit = useHasPermission("Loan/Deduction:Edit");
   const [actionTarget, setActionTarget] = useState<{
@@ -116,10 +123,17 @@ export default function DeductionApplicationTable({
       title: "Status",
       dataIndex: "approvalStatus",
       key: "approvalStatus",
-      render: (v?: string) => (
-        <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "default"}>
-          {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "—"}
-        </Tag>
+      render: (v: string | undefined, r) => (
+        <ApprovalListStatus
+          applicationType="Loan"
+          applicationId={r.id}
+          approvalStatus={v}
+          showProgress={showApprovalProgress}
+        >
+          <Tag color={APPROVAL_STATUS_COLOR[v ?? ""] ?? "default"}>
+            {APPROVAL_STATUS_LABEL[v ?? ""] ?? v ?? "—"}
+          </Tag>
+        </ApprovalListStatus>
       ),
     },
     {
@@ -128,7 +142,7 @@ export default function DeductionApplicationTable({
       width: 140,
       render: (_, record) => (
         <Space size="small">
-          {record.approvalStatus === "ForApproval" && (
+          {canApprove && record.approvalStatus === "ForApproval" && (
             <>
               <PermissionGate permission="Loan/Deduction:Approve">
                 <Button

@@ -18,6 +18,7 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { ApprovalListStatus } from "@/shared/components/approval-status-cell/approval-list-status";
 
 interface PassSlipGroup {
   key: string;
@@ -36,6 +37,10 @@ interface Props {
   onRevoke: (record: PassSlipResponse) => void;
   onDelete: (id: string) => void;
   actionLoading?: boolean;
+  /** Offer Approve/Decline on pending logs (off on the view-only In Progress tab). Default true. */
+  canApprove?: boolean;
+  /** Show the step and who a pending log waits on in its status column. */
+  showApprovalProgress?: boolean;
 }
 
 const { Text } = Typography;
@@ -47,6 +52,7 @@ function fmtDateTime(v?: string) {
 
 function LogActions({
   record,
+  canApprove,
   onEdit,
   onApproveClick,
   onDeclineClick,
@@ -54,6 +60,7 @@ function LogActions({
   onDelete,
 }: {
   record: PassSlipResponse;
+  canApprove: boolean;
   onEdit: (r: PassSlipResponse) => void;
   onApproveClick: (r: PassSlipResponse) => void;
   onDeclineClick: (r: PassSlipResponse) => void;
@@ -69,7 +76,7 @@ function LogActions({
         canEdit={hasEditPermission && record.approvalStatus === "ForApproval"}
         onOpen={() => onEdit(record)}
       />
-      {record.approvalStatus === "ForApproval" && (
+      {canApprove && record.approvalStatus === "ForApproval" && (
         <>
           <PermissionGate permission="Pass Slip:Approve">
             <Button
@@ -142,6 +149,8 @@ export default function PassSlipTable({
   onRevoke,
   onDelete,
   actionLoading,
+  canApprove = true,
+  showApprovalProgress,
 }: Props) {
   const [actionTarget, setActionTarget] = useState<{
     record: PassSlipResponse;
@@ -224,10 +233,17 @@ export default function PassSlipTable({
       title: "Status",
       dataIndex: "approvalStatus",
       key: "approvalStatus",
-      render: (v) => (
-        <Tag color={APPROVAL_STATUS_COLOR[v] ?? "default"}>
-          {APPROVAL_STATUS_LABEL[v] ?? v}
-        </Tag>
+      render: (v, r) => (
+        <ApprovalListStatus
+          applicationType="PassSlip"
+          applicationId={r.id}
+          approvalStatus={v}
+          showProgress={showApprovalProgress}
+        >
+          <Tag color={APPROVAL_STATUS_COLOR[v] ?? "default"}>
+            {APPROVAL_STATUS_LABEL[v] ?? v}
+          </Tag>
+        </ApprovalListStatus>
       ),
     },
     {
@@ -237,6 +253,7 @@ export default function PassSlipTable({
       render: (_, record) => (
         <LogActions
           record={record}
+          canApprove={canApprove}
           onEdit={onEdit}
           onApproveClick={(r) =>
             setActionTarget({ record: r, action: "Approved" })

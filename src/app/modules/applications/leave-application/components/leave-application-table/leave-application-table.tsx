@@ -18,7 +18,7 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
-import { StatusTag } from "@/shared/components/status-tag/status-tag";
+import { ApprovalListStatus } from "@/shared/components/approval-status-cell/approval-list-status";
 import { ConfirmAction } from "@/shared/components/confirm-action/confirm-action";
 import { ResponsiveTable } from "@/shared/components/responsive-table/responsive-table";
 import { tableEmptyLocale } from "@/shared/components/app-empty/table-empty-locale";
@@ -33,6 +33,8 @@ interface Props {
   onApprove?: (record: LeaveApplicationResponse, note?: string) => void;
   onDecline?: (record: LeaveApplicationResponse, note?: string) => void;
   actionLoading?: boolean;
+  /** Show the step and who a pending row waits on in the status column. */
+  showApprovalProgress?: boolean;
 }
 
 export default function LeaveApplicationTable({
@@ -44,6 +46,7 @@ export default function LeaveApplicationTable({
   onApprove,
   onDecline,
   actionLoading,
+  showApprovalProgress,
 }: Props) {
   const navigate = useNavigate();
   const { pagination } = useTablePagination();
@@ -70,7 +73,7 @@ export default function LeaveApplicationTable({
     dayType: 110,
     payType: 120,
     payoutMode: 130,
-    status: 120,
+    status: 180,
   });
 
   const columns: ColumnsType<LeaveApplicationResponse> = [
@@ -187,7 +190,14 @@ export default function LeaveApplicationTable({
           width: widths.status,
           onResize: (w: number) => handleResize("status", w),
         }) as object,
-      render: (val: string) => <StatusTag status={val} />,
+      render: (val: string, r) => (
+        <ApprovalListStatus
+          applicationType="Leave"
+          applicationId={r.id}
+          approvalStatus={val}
+          showProgress={showApprovalProgress}
+        />
+      ),
     },
     {
       title: "Actions",

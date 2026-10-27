@@ -66,6 +66,8 @@ export function useApprovalHub() {
           payload.applicationId,
         ],
       });
+      // Someone's request just landed on (or left) this person's My Approvals list.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
       // The lists showing this application's status (portal "My …" and admin lists) too --
       // without this the status column stayed stale until a reload.
       for (const queryKey of APPROVAL_LIST_QUERY_KEYS[

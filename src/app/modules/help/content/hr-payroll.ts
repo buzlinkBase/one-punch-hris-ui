@@ -736,7 +736,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
       {
         heading: "Tabs",
         body: [
-          "Each list has For Approval (still waiting) and History (approved, declined, cancelled or withdrawn) tabs. The detail page shows Approval Progress: each step, who acted and any notes.",
+          "Leave, Overtime, Official Business, Pass Slip, Loan/Deduction and Profile Update lists have three tabs. For Approval holds only the requests whose current step is yours. In Progress holds the ones still waiting on another approver (view only). History holds the approved, declined, cancelled and withdrawn ones. Other lists keep For Approval and History.",
+          'On For Approval and In Progress the status reads "Pending with <approver> (Step n/m)". Click it to see the full Approval Progress. Owners and Admins can still approve or decline from In Progress to override a stuck step.',
+          "The detail page shows Approval Progress: each step, who acted and any notes.",
         ],
       },
       {

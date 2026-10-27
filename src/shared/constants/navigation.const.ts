@@ -177,6 +177,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         path: "/portal/profile",
       },
       {
+        key: "portal-approvals",
+        label: "My Approvals",
+        path: "/portal/approvals",
+      },
+      {
         key: "portal-announcements",
         label: "Announcements",
         path: "/portal/announcements",
@@ -684,6 +689,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             key: "setup-approval-workflows",
             label: "Approval Workflows",
             path: "/setup/approval-workflows",
+            permission: "Approval Workflows:View",
+          },
+          {
+            key: "setup-approval-delegations",
+            label: "Approval Delegations",
+            path: "/setup/approval-delegations",
             permission: "Approval Workflows:View",
           },
         ],

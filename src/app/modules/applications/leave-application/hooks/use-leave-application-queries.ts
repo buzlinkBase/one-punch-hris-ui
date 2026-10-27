@@ -127,6 +127,8 @@ export function useChangeLeaveApplicationStatus() {
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "Leave", record.id],
       });
+      // Its For Approval / In Progress placement comes from My Approvals.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       const pd = error.response?.data?.data;

@@ -29,6 +29,10 @@ const PortalProfile = lazy(
 const PortalProfileEdit = lazy(
   () => import("@/app/modules/portal/profile/pages/portal-profile-edit"),
 );
+// My Approvals is always on: it is how an approver (or their delegate) acts on requests.
+const PortalApprovals = lazy(
+  () => import("@/app/modules/portal/approvals/pages/portal-approvals"),
+);
 const PortalAnnouncements = gatedPage(
   () => import("@/app/modules/portal/announcements/pages/portal-announcements"),
   "showAnnouncements",
@@ -138,6 +142,7 @@ export const portalRoutes: SetupRouteConfig[] = [
   { path: "dashboard", component: PortalDashboard },
   { path: "profile", component: PortalProfile },
   { path: "profile/edit", component: PortalProfileEdit },
+  { path: "approvals", component: PortalApprovals },
   { path: "announcements", component: PortalAnnouncements },
   { path: "announcements/$id", component: PortalAnnouncementReader },
   { path: "coworkers", component: PortalCoworkers },

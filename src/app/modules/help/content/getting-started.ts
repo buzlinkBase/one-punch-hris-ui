@@ -217,6 +217,15 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "While I'm away (delegating your approvals)",
+        steps: [
+          {
+            text: "Under While I'm away, click Delegate and choose who approves for you, which requests, and when. They then see your pending requests in My Approvals.",
+          },
+        ],
+        tips: ["The same card lists what others have delegated to you."],
+      },
+      {
         heading: "Notification preferences",
         steps: [
           {

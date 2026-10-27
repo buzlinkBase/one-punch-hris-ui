@@ -67,7 +67,7 @@ export function ApprovalStatusCell({
           <Button
             type="link"
             size="small"
-            style={{ padding: 0, height: "auto" }}
+            className="h-auto! p-0!"
             onClick={() => setOpen(true)}
           >
             {pendingLabel ?? "View progress"}

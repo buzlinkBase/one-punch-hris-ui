@@ -189,6 +189,10 @@ const ApprovalWorkflowList = lazy(
   () =>
     import("@/app/modules/setup/approval-workflows/pages/approval-workflow-list"),
 );
+const ApprovalDelegationList = lazy(
+  () =>
+    import("@/app/modules/setup/approval-delegations/pages/approval-delegation-list"),
+);
 const ApprovalWorkflowDetail = lazy(
   () =>
     import("@/app/modules/setup/approval-workflows/pages/approval-workflow-detail"),
@@ -311,4 +315,5 @@ export const setupRoutes: SetupRouteConfig[] = [
   { path: "approval-workflows", component: ApprovalWorkflowList },
   { path: "approval-workflows/create", component: ApprovalWorkflowDetail },
   { path: "approval-workflows/$id", component: ApprovalWorkflowDetail },
+  { path: "approval-delegations", component: ApprovalDelegationList },
 ];

@@ -26,6 +26,7 @@ import { BRANCH_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
 import { useMinimumWageRates } from "@/app/modules/setup/minimum-wage-rate/hooks/use-minimum-wage-rate-queries";
+import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
@@ -68,6 +69,7 @@ export default function BranchDetail() {
       status: "ACTIVE",
       regionCode: null,
       wageOrderClass: null,
+      headEmployeeId: null,
     },
   });
   const { allowNavigation } = useUnsavedChangesGuard(isDirty);
@@ -82,6 +84,7 @@ export default function BranchDetail() {
         status: selected.status,
         regionCode: selected.regionCode ?? null,
         wageOrderClass: selected.wageOrderClass ?? null,
+        headEmployeeId: selected.headEmployeeId ?? null,
       });
     }
   }, [selected, isEdit, reset]);
@@ -241,6 +244,23 @@ export default function BranchDetail() {
                       showSearch
                       disabled={!selectedRegionCode}
                       notFoundContent="No classes entered for this region yet — add one in Minimum Wage Rate setup."
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Branch Head"
+                extra="Used by approval workflows that route to the applicant's branch head."
+              >
+                <Controller
+                  name="headEmployeeId"
+                  control={control}
+                  render={({ field }) => (
+                    <EmployeeSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select who heads this branch"
                     />
                   )}
                 />

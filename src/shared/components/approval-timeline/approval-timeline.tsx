@@ -81,8 +81,10 @@ export function ApprovalTimeline({
   // employee list), which is what used to leave "Approved by 08df1607…" on the timeline.
   const nameOf = (action: ApprovalActionResponse) =>
     action.actorName ??
-    resolveEmployeeName?.(action.actorEmployeeId) ??
-    `${action.actorEmployeeId.slice(0, 8)}…`;
+    (action.actorEmployeeId
+      ? (resolveEmployeeName?.(action.actorEmployeeId) ??
+        `${action.actorEmployeeId.slice(0, 8)}…`)
+      : "");
 
   const items = instance.actions.map((action) => ({
     color:
@@ -90,12 +92,20 @@ export function ApprovalTimeline({
         ? "green"
         : action.action === "Declined"
           ? "red"
-          : "blue",
+          : action.action === "Skipped"
+            ? "gray"
+            : action.action === "Escalated"
+              ? "orange"
+              : "blue",
     dot:
       action.action === "Approved" ? (
         <CheckCircleFilled style={{ fontSize: 16 }} />
       ) : action.action === "Declined" ? (
         <CloseCircleFilled style={{ fontSize: 16 }} />
+      ) : action.action === "Skipped" ? (
+        <ClockCircleOutlined style={{ fontSize: 16, opacity: 0.4 }} />
+      ) : action.action === "Escalated" ? (
+        <ClockCircleOutlined style={{ fontSize: 16 }} />
       ) : (
         <SwapOutlined style={{ fontSize: 16 }} />
       ),
@@ -103,9 +113,17 @@ export function ApprovalTimeline({
       <div>
         <Text strong>
           Step {action.stepNumber} —{" "}
-          {action.action === "Reassigned"
-            ? `Reassigned by ${nameOf(action)}`
-            : `${action.action} by ${nameOf(action)}`}
+          {action.action === "Skipped"
+            ? "skipped"
+            : action.action === "Escalated"
+              ? "escalated"
+              : action.action === "Reassigned"
+                ? `Reassigned by ${nameOf(action)}`
+                : `${action.action} by ${nameOf(action)}${
+                    action.onBehalfOfName
+                      ? ` on behalf of ${action.onBehalfOfName}`
+                      : ""
+                  }`}
         </Text>
         <div>
           <Text type="secondary">
@@ -126,6 +144,17 @@ export function ApprovalTimeline({
           Pending — Step {instance.currentStepNumber} of {instance.totalSteps}
           {instance.currentStepApproverLabel
             ? ` · Awaiting: ${instance.currentStepApproverLabel}`
+            : ""}
+          {instance.currentStepNoApprover
+            ? " — nobody could be found for this step; an Owner or Admin can reassign it"
+            : ""}
+          {instance.currentStepPools && instance.currentStepPools.length > 0
+            ? ` · ${instance.currentStepPools
+                .map(
+                  (p) =>
+                    `${p.label ?? "Approver"} ${p.satisfied ? "✓" : `${p.approved}/${p.required}`}`,
+                )
+                .join(" · ")}`
             : ""}
         </Text>
       ),
@@ -161,6 +190,11 @@ export function ApprovalTimeline({
             ? `Step ${instance.currentStepNumber} of ${instance.totalSteps}`
             : instance.status}
         </Tag>
+        {instance.approvalWorkflowName && (
+          <Text type="secondary" className="text-xs">
+            Flow: {instance.approvalWorkflowName}
+          </Text>
+        )}
         {canReassign && (
           <Button
             size="small"

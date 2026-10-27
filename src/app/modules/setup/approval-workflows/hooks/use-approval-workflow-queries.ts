@@ -20,6 +20,18 @@ export function useApprovalWorkflow(id: string | undefined) {
   });
 }
 
+export function useResolveApprovalWorkflow() {
+  return useMutation({
+    mutationFn: ({
+      applicationType,
+      employeeId,
+    }: {
+      applicationType: ApprovalApplicationType;
+      employeeId: string;
+    }) => approvalWorkflowApi.resolve(applicationType, employeeId),
+  });
+}
+
 export function useCreateApprovalWorkflow() {
   const queryClient = useQueryClient();
   return useMutation({

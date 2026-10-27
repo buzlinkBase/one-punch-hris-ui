@@ -25,12 +25,14 @@ import { authStorage } from "@/core/auth/auth-storage";
 import {
   useForm,
   useFieldArray,
+  useWatch,
   Controller,
   type Control,
   type FieldErrors,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import type { ApprovalApplicationType } from "@/shared/types/approval.model";
 import {
   approvalWorkflowFormSchema,
   type ApprovalWorkflowFormValues,
@@ -44,10 +46,27 @@ import {
   APPROVAL_WORKFLOWS_LABEL,
   APPLICATION_TYPE_OPTIONS,
   APPROVER_TYPE_OPTIONS,
+  CONDITION_OPERATOR_OPTIONS,
   NOTE_REQUIREMENT_OPTIONS,
+  UNRESOLVED_POLICY_OPTIONS,
+  conditionMetricOptions,
+  hasConditionMetrics,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import {
+  describeDynamicApprover,
+  isDynamicApprover,
+  resolvesToOnePerson,
+  takesApproverLevel,
+} from "../../services/step-approver-types";
+import { StepGroupEditor } from "../../components/step-group-editor/step-group-editor";
+import { EMPTY_GROUP } from "../../components/step-group-editor/step-group.const";
+import { ScopeConditionsEditor } from "../../components/scope-conditions-editor/scope-conditions-editor";
+import {
+  fromScopeDtos,
+  toScopeDtos,
+} from "../../services/scope-conditions.util";
 import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
@@ -70,8 +89,19 @@ const EMPTY_STEP = {
   approverDepartmentId: undefined,
   approverPositionId: undefined,
   minApprovals: 1,
+  approverLevel: undefined,
+  onUnresolved: "Block" as const,
+  fallbackEmployeeId: undefined,
+  conditionMetric: "None" as const,
+  conditionOperator: "GreaterOrEqual" as const,
+  conditionValue: undefined,
+  remindAfterHours: undefined,
+  remindRepeatHours: undefined,
+  escalateAfterHours: undefined,
+  escalateToEmployeeId: undefined,
   noteRequirement: "Optional" as const,
   namedApproverEmployeeIds: [],
+  groups: [] as (typeof EMPTY_GROUP)[],
 };
 
 const LIST_PATH = "/setup/approval-workflows";
@@ -123,11 +153,14 @@ export default function ApprovalWorkflowDetail() {
     defaultValues: {
       applicationType: "Leave",
       name: "",
-      scopeDepartmentId: undefined,
+      scopes: [],
+      priority: 100,
       steps: [EMPTY_STEP],
     },
   });
   const { allowNavigation } = useUnsavedChangesGuard(isDirty);
+  // Which measures a step can depend on, and whether Leave Type scoping applies, follow the type.
+  const applicationType = useWatch({ control, name: "applicationType" });
 
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -139,15 +172,36 @@ export default function ApprovalWorkflowDetail() {
       reset({
         applicationType: selected.applicationType,
         name: isEdit ? selected.name : `${selected.name} (copy)`,
-        scopeDepartmentId: selected.scopeDepartmentId ?? undefined,
+        scopes: fromScopeDtos(selected.scopes),
+        priority: selected.priority ?? 100,
         steps: selected.steps.map((s) => ({
           approverType: s.approverType,
           approverEmployeeId: s.approverEmployeeId ?? undefined,
           approverDepartmentId: s.approverDepartmentId ?? undefined,
           approverPositionId: s.approverPositionId ?? undefined,
           minApprovals: s.minApprovals,
+          approverLevel: s.approverLevel ?? undefined,
+          onUnresolved: s.onUnresolved ?? "Block",
+          fallbackEmployeeId: s.fallbackEmployeeId ?? undefined,
+          conditionMetric: s.conditionMetric ?? "None",
+          conditionOperator: s.conditionOperator ?? "GreaterOrEqual",
+          conditionValue: s.conditionValue ?? undefined,
+          remindAfterHours: s.remindAfterHours ?? undefined,
+          remindRepeatHours: s.remindRepeatHours ?? undefined,
+          escalateAfterHours: s.escalateAfterHours ?? undefined,
+          escalateToEmployeeId: s.escalateToEmployeeId ?? undefined,
           noteRequirement: s.noteRequirement,
           namedApproverEmployeeIds: s.namedApproverEmployeeIds,
+          groups: (s.groups ?? []).map((g) => ({
+            approverType: g.approverType,
+            approverEmployeeId: g.approverEmployeeId ?? undefined,
+            approverDepartmentId: g.approverDepartmentId ?? undefined,
+            approverPositionId: g.approverPositionId ?? undefined,
+            approverLevel: g.approverLevel ?? undefined,
+            onUnresolved: g.onUnresolved ?? "Block",
+            fallbackEmployeeId: g.fallbackEmployeeId ?? undefined,
+            minApprovals: g.minApprovals,
+          })),
         })),
       });
     }
@@ -167,7 +221,9 @@ export default function ApprovalWorkflowDetail() {
     const payload = {
       applicationType: values.applicationType,
       name: values.name,
-      scopeDepartmentId: values.scopeDepartmentId || null,
+      scopeDepartmentId: null,
+      scopes: toScopeDtos(values.scopes),
+      priority: values.priority,
       steps: values.steps.map((s, index) => ({
         stepNumber: index + 1,
         approverType: s.approverType,
@@ -178,8 +234,58 @@ export default function ApprovalWorkflowDetail() {
         approverPositionId:
           s.approverType === "Position" ? s.approverPositionId : null,
         minApprovals: s.minApprovals,
+        approverLevel: takesApproverLevel(s.approverType)
+          ? (s.approverLevel ?? 1)
+          : null,
+        // Only a per-applicant approver can be "not found"; anything else always has someone.
+        onUnresolved: isDynamicApprover(s.approverType)
+          ? s.onUnresolved
+          : ("Block" as const),
+        fallbackEmployeeId:
+          isDynamicApprover(s.approverType) &&
+          s.onUnresolved === "FallbackPerson"
+            ? s.fallbackEmployeeId
+            : null,
+        conditionMetric: s.conditionMetric,
+        conditionOperator: s.conditionOperator,
+        conditionValue:
+          s.conditionMetric === "None" ? null : (s.conditionValue ?? null),
+        remindAfterHours: s.remindAfterHours ?? null,
+        remindRepeatHours: s.remindAfterHours
+          ? (s.remindRepeatHours ?? null)
+          : null,
+        escalateAfterHours: s.escalateToEmployeeId
+          ? (s.escalateAfterHours ?? null)
+          : null,
+        escalateToEmployeeId: s.escalateAfterHours
+          ? (s.escalateToEmployeeId ?? null)
+          : null,
         noteRequirement: s.noteRequirement,
         namedApproverEmployeeIds: s.namedApproverEmployeeIds,
+        groups: s.groups.map((g) => ({
+          approverType: g.approverType,
+          approverEmployeeId:
+            g.approverType === "Person" ? g.approverEmployeeId : null,
+          approverDepartmentId:
+            g.approverType === "Department" ? g.approverDepartmentId : null,
+          approverPositionId:
+            g.approverType === "Position" ? g.approverPositionId : null,
+          approverLevel: takesApproverLevel(g.approverType)
+            ? (g.approverLevel ?? 1)
+            : null,
+          onUnresolved: isDynamicApprover(g.approverType)
+            ? g.onUnresolved
+            : ("Block" as const),
+          fallbackEmployeeId:
+            isDynamicApprover(g.approverType) &&
+            g.onUnresolved === "FallbackPerson"
+              ? g.fallbackEmployeeId
+              : null,
+          minApprovals:
+            g.approverType === "Person" || resolvesToOnePerson(g.approverType)
+              ? 1
+              : g.minApprovals,
+        })),
       })),
     };
 
@@ -300,27 +406,53 @@ export default function ApprovalWorkflowDetail() {
             </Form.Item>
           </div>
 
-          <Form.Item
-            label="Scope"
-            extra="Leave blank for the company-wide default. Scoping to a department overrides the default for applicants in that department only."
-          >
-            <Controller
-              name="scopeDepartmentId"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  allowClear
-                  showSearch
-                  placeholder="Company-wide default"
-                  options={departmentOptions}
-                  filterOption={filterOption}
-                  value={field.value || undefined}
-                  style={{ maxWidth: 400 }}
-                />
-              )}
-            />
-          </Form.Item>
+          <Card size="small" title="Applies to" className="mb-4">
+            <Form.Item
+              className="mb-3"
+              validateStatus={errors.scopes ? "error" : ""}
+              help={
+                errors.scopes?.message ??
+                errors.scopes?.root?.message ??
+                "Limit this workflow to certain people. Every condition must match; values inside one condition are alternatives. No conditions means everyone — the company-wide default."
+              }
+            >
+              <Controller
+                name="scopes"
+                control={control}
+                render={({ field }) => (
+                  <ScopeConditionsEditor
+                    applicationType={applicationType}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={!!isLocked}
+                  />
+                )}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Priority"
+              className="mb-0"
+              validateStatus={errors.priority ? "error" : ""}
+              help={
+                errors.priority?.message ??
+                "When an applicant fits several active workflows, the lowest number wins (then the most specific). Leave at 100 unless two workflows overlap."
+              }
+            >
+              <Controller
+                name="priority"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    min={1}
+                    max={9999}
+                    precision={0}
+                    className="w-32"
+                  />
+                )}
+              />
+            </Form.Item>
+          </Card>
 
           <Divider />
 
@@ -340,6 +472,7 @@ export default function ApprovalWorkflowDetail() {
                 departmentOptions={departmentOptions}
                 positionOptions={positionOptions}
                 employeeOptions={employeeOptions}
+                applicationType={applicationType}
               />
             ))}
           </Space>
@@ -391,6 +524,7 @@ interface StepCardProps {
   departmentOptions: { value: string; label: string }[];
   positionOptions: { value: string; label: string }[];
   employeeOptions: { value: string; label: string }[];
+  applicationType: ApprovalApplicationType;
 }
 
 function StepCard({
@@ -406,7 +540,10 @@ function StepCard({
   departmentOptions,
   positionOptions,
   employeeOptions,
+  applicationType,
 }: StepCardProps) {
+  const levelValue =
+    useWatch({ control, name: `steps.${index}.approverLevel` }) ?? undefined;
   return (
     <Card
       size="small"
@@ -539,9 +676,9 @@ function StepCard({
                 <Input
                   disabled
                   value={
-                    typeField.value === "ApplicantManager"
-                      ? "Resolved per applicant — their manager"
-                      : "Resolved per applicant — their department"
+                    typeField.value === "ApplicantDepartment"
+                      ? "Resolved per applicant — their department"
+                      : describeDynamicApprover(typeField.value, levelValue)
                   }
                 />
               </Form.Item>
@@ -554,7 +691,13 @@ function StepCard({
         name={`steps.${index}.approverType`}
         control={control}
         render={({ field: typeField }) => {
-          if (typeField.value === "Person") return <></>;
+          // A person resolved per applicant (a head, a manager N levels up) is always exactly one
+          // person, so a quorum and narrowing to named people don't apply.
+          if (
+            typeField.value === "Person" ||
+            resolvesToOnePerson(typeField.value)
+          )
+            return <></>;
           return (
             <div className="form-grid-2">
               <Form.Item
@@ -596,6 +739,250 @@ function StepCard({
           );
         }}
       />
+
+      <Controller
+        name={`steps.${index}.approverType`}
+        control={control}
+        render={({ field: typeField }) => {
+          if (!isDynamicApprover(typeField.value)) return <></>;
+          return (
+            <div className="form-grid-2">
+              {takesApproverLevel(typeField.value) && (
+                <Form.Item
+                  label="Levels up"
+                  extra={
+                    typeField.value === "ApplicantManagerLevel"
+                      ? "1 = their manager, 2 = their manager's manager, and so on."
+                      : "1 = their own department's head, 2 = the parent department's head, and so on."
+                  }
+                >
+                  <Controller
+                    name={`steps.${index}.approverLevel`}
+                    control={control}
+                    render={({ field }) => (
+                      <InputNumber
+                        {...field}
+                        min={1}
+                        max={10}
+                        precision={0}
+                        value={field.value ?? 1}
+                        style={{ width: "100%" }}
+                      />
+                    )}
+                  />
+                </Form.Item>
+              )}
+
+              <Form.Item
+                label="If no approver is found"
+                validateStatus={
+                  errors.steps?.[index]?.onUnresolved ? "error" : ""
+                }
+                help={
+                  errors.steps?.[index]?.onUnresolved?.message ??
+                  "When the applicant has no manager recorded, or nobody is set as the head."
+                }
+              >
+                <Controller
+                  name={`steps.${index}.onUnresolved`}
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={UNRESOLVED_POLICY_OPTIONS.map((o) => ({
+                        ...o,
+                        // The first step can't be skipped.
+                        disabled: o.value === "Skip" && index === 0,
+                      }))}
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Controller
+                name={`steps.${index}.onUnresolved`}
+                control={control}
+                render={({ field: policyField }) =>
+                  policyField.value === "FallbackPerson" ? (
+                    <Form.Item
+                      label="Fallback person"
+                      validateStatus={
+                        errors.steps?.[index]?.fallbackEmployeeId ? "error" : ""
+                      }
+                      help={errors.steps?.[index]?.fallbackEmployeeId?.message}
+                    >
+                      <Controller
+                        name={`steps.${index}.fallbackEmployeeId`}
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            showSearch
+                            placeholder="Select employee"
+                            options={employeeOptions}
+                            filterOption={filterOption}
+                            value={field.value || undefined}
+                          />
+                        )}
+                      />
+                    </Form.Item>
+                  ) : (
+                    <></>
+                  )
+                }
+              />
+            </div>
+          );
+        }}
+      />
+
+      {index > 0 && hasConditionMetrics(applicationType) && (
+        <Controller
+          name={`steps.${index}.conditionMetric`}
+          control={control}
+          render={({ field: metricField }) => (
+            <Form.Item
+              label="Applies"
+              extra="A step that doesn't apply is skipped for that request. The first step always applies."
+              validateStatus={
+                errors.steps?.[index]?.conditionValue ||
+                errors.steps?.[index]?.conditionMetric
+                  ? "error"
+                  : ""
+              }
+              help={
+                errors.steps?.[index]?.conditionValue?.message ??
+                errors.steps?.[index]?.conditionMetric?.message
+              }
+            >
+              <Space wrap>
+                <Select
+                  {...metricField}
+                  className="w-56"
+                  options={conditionMetricOptions(applicationType)}
+                />
+                {metricField.value !== "None" && (
+                  <>
+                    <Controller
+                      name={`steps.${index}.conditionOperator`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          className="w-44"
+                          options={CONDITION_OPERATOR_OPTIONS}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name={`steps.${index}.conditionValue`}
+                      control={control}
+                      render={({ field }) => (
+                        <InputNumber
+                          {...field}
+                          min={0}
+                          className="w-32"
+                          placeholder="e.g. 5"
+                        />
+                      )}
+                    />
+                  </>
+                )}
+              </Space>
+            </Form.Item>
+          )}
+        />
+      )}
+
+      <StepGroupEditor
+        control={control}
+        errors={errors}
+        stepIndex={index}
+        departmentOptions={departmentOptions}
+        positionOptions={positionOptions}
+        employeeOptions={employeeOptions}
+      />
+
+      <Form.Item
+        label="Reminders and escalation"
+        extra="Hours count from when the request reaches this step. Leave empty for none. Escalating opens the step to one more person; it doesn't replace the approvers."
+        validateStatus={
+          errors.steps?.[index]?.remindRepeatHours ||
+          errors.steps?.[index]?.escalateAfterHours ||
+          errors.steps?.[index]?.escalateToEmployeeId
+            ? "error"
+            : ""
+        }
+        help={
+          errors.steps?.[index]?.remindRepeatHours?.message ??
+          errors.steps?.[index]?.escalateAfterHours?.message ??
+          errors.steps?.[index]?.escalateToEmployeeId?.message
+        }
+      >
+        <Space wrap>
+          <Controller
+            name={`steps.${index}.remindAfterHours`}
+            control={control}
+            render={({ field }) => (
+              <InputNumber
+                {...field}
+                min={1}
+                max={2160}
+                precision={0}
+                className="w-48"
+                addonBefore="Remind after"
+                addonAfter="h"
+              />
+            )}
+          />
+          <Controller
+            name={`steps.${index}.remindRepeatHours`}
+            control={control}
+            render={({ field }) => (
+              <InputNumber
+                {...field}
+                min={1}
+                max={2160}
+                precision={0}
+                className="w-48"
+                addonBefore="then every"
+                addonAfter="h"
+              />
+            )}
+          />
+          <Controller
+            name={`steps.${index}.escalateAfterHours`}
+            control={control}
+            render={({ field }) => (
+              <InputNumber
+                {...field}
+                min={1}
+                max={2160}
+                precision={0}
+                className="w-52"
+                addonBefore="Escalate after"
+                addonAfter="h"
+              />
+            )}
+          />
+          <Controller
+            name={`steps.${index}.escalateToEmployeeId`}
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                allowClear
+                showSearch
+                className="w-56"
+                placeholder="Escalate to…"
+                options={employeeOptions}
+                filterOption={filterOption}
+                value={field.value || undefined}
+              />
+            )}
+          />
+        </Space>
+      </Form.Item>
 
       <Form.Item label="Note Requirement">
         <Controller

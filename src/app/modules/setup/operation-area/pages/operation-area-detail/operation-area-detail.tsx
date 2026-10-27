@@ -25,6 +25,7 @@ import {
 import { OPERATION_AREA_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
+import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
@@ -97,6 +98,7 @@ export default function OperationAreaDetail() {
       boundary: null,
       status: "ACTIVE",
       branchId: "",
+      headEmployeeId: null,
     },
   });
   const { allowNavigation } = useUnsavedChangesGuard(isDirty);
@@ -110,6 +112,7 @@ export default function OperationAreaDetail() {
         boundary: selected.boundary ?? null,
         status: selected.status,
         branchId: selected.branchId ?? "",
+        headEmployeeId: selected.headEmployeeId ?? null,
       });
     }
   }, [selected, isEdit, reset]);
@@ -233,6 +236,23 @@ export default function OperationAreaDetail() {
                       {...field}
                       rows={3}
                       placeholder="Enter full address"
+                    />
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Project Site Head"
+                extra="Used by approval workflows that route to the applicant's project site head."
+              >
+                <Controller
+                  name="headEmployeeId"
+                  control={control}
+                  render={({ field }) => (
+                    <EmployeeSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select who heads this project site"
                     />
                   )}
                 />

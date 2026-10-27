@@ -24,7 +24,7 @@ import {
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
-import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
+import { useApplicationApprovalTabs } from "@/shared/hooks/use-application-approval-tabs";
 import { useApplicationDrill } from "@/shared/drilldown/use-screen-drill";
 
 const { Title } = Typography;
@@ -72,7 +72,11 @@ export default function TravelOrderList() {
     if (!employeeFilter) return applications;
     return applications.filter((a) => a.employeeId === employeeFilter);
   }, [applications, employeeFilter]);
-  const approval = useApprovalTabs(filtered, drill.tab);
+  const approval = useApplicationApprovalTabs(
+    filtered,
+    "OfficialBusiness",
+    drill.tab,
+  );
 
   return (
     <div className="content-page">
@@ -156,7 +160,9 @@ export default function TravelOrderList() {
         value={approval.tab}
         onChange={approval.setTab}
         pendingCount={approval.pendingCount}
+        inProgressCount={approval.inProgressCount}
         processedCount={approval.processedCount}
+        pendingLabel="For Approval"
       />
 
       <TravelOrderTable
@@ -164,11 +170,18 @@ export default function TravelOrderList() {
         employees={employees}
         loading={isLoading || isFetching}
         actionLoading={isChangingStatus}
-        onApprove={(record, note) =>
-          changeStatus({ record, status: "Approved", note })
+        showApprovalProgress={approval.showProgress}
+        onApprove={
+          approval.canAct
+            ? (record, note) =>
+                changeStatus({ record, status: "Approved", note })
+            : undefined
         }
-        onDecline={(record, note) =>
-          changeStatus({ record, status: "Declined", note })
+        onDecline={
+          approval.canAct
+            ? (record, note) =>
+                changeStatus({ record, status: "Declined", note })
+            : undefined
         }
         onDelete={remove}
       />

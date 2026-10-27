@@ -14,7 +14,7 @@ import DeductionApplicationTable from "../../components/deduction-application-ta
 import { DEDUCTION_APPLICATION_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
-import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
+import { useApplicationApprovalTabs } from "@/shared/hooks/use-application-approval-tabs";
 import { useApplicationDrill } from "@/shared/drilldown/use-screen-drill";
 
 const { Title } = Typography;
@@ -64,7 +64,7 @@ export default function DeductionApplicationList() {
   }, [applications, employeeFilter]);
   // A Dashboard or Analytics figure can open this list on a tab (it has no date filter).
   const drill = useApplicationDrill();
-  const approval = useApprovalTabs(filtered, drill.tab);
+  const approval = useApplicationApprovalTabs(filtered, "Loan", drill.tab);
 
   return (
     <div className="content-page">
@@ -123,12 +123,16 @@ export default function DeductionApplicationList() {
         value={approval.tab}
         onChange={approval.setTab}
         pendingCount={approval.pendingCount}
+        inProgressCount={approval.inProgressCount}
         processedCount={approval.processedCount}
+        pendingLabel="For Approval"
       />
 
       <DeductionApplicationTable
         data={approval.rows}
         loading={isLoading || isFetching}
+        canApprove={approval.canAct}
+        showApprovalProgress={approval.showProgress}
         employeeMap={employeeMap}
         deductionMap={deductionMap}
         onEdit={(record) =>

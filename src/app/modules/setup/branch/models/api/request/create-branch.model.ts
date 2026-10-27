@@ -14,4 +14,6 @@ export interface CreateBranch {
   // Minimum Wage Rate entries for the same region. Null = unspecified, falls back to the
   // region's general (class-less) rate.
   wageOrderClass?: string | null;
+  /** The employee who heads this branch (what an approval step "Applicant's branch head" resolves to). */
+  headEmployeeId?: string | null;
 }

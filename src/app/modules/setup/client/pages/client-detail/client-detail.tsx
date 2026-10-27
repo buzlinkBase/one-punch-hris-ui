@@ -32,6 +32,7 @@ import { authStorage } from "@/core/auth/auth-storage";
 import { CLIENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import ClientBillingTab from "./client-billing-tab";
+import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
@@ -88,6 +89,7 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
       phone: "",
       address: "",
       contactPerson: "",
+      headEmployeeId: null,
       areaIds: [],
     },
   });
@@ -103,6 +105,7 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
         phone: selected.phone,
         address: selected.address,
         contactPerson: selected.contactPerson,
+        headEmployeeId: selected.headEmployeeId ?? null,
         areaIds: selected.areaIds ?? [],
       });
     }
@@ -245,6 +248,23 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
           name="contactPerson"
           control={control}
           render={({ field }) => <Input {...field} />}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="Client Head"
+        extra="Used by approval workflows that route to the applicant's client head."
+      >
+        <Controller
+          name="headEmployeeId"
+          control={control}
+          render={({ field }) => (
+            <EmployeeSelect
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Select who heads this client's account"
+            />
+          )}
         />
       </Form.Item>
 

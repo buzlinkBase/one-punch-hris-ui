@@ -6,6 +6,8 @@ export interface CreateClient {
   phone: string;
   address: string;
   contactPerson: string;
+  /** The employee who heads this client's account (what an approval step "Applicant's client head" resolves to). */
+  headEmployeeId?: string | null;
   retirementDaysPerYear: number | null;
   uniformAllowance: number | null;
   uniformAllowanceBasis: "TenureMonths" | "PresentDays";
