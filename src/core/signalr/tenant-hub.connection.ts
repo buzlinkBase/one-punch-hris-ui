@@ -2,6 +2,7 @@ import * as signalR from "@microsoft/signalr";
 import { API_PREFIX, buildHubUrl } from "@/core/http/api-url.util";
 import { authStorage } from "@/core/auth/auth-storage";
 import { refreshAccessToken } from "@/core/auth/auth-refresh";
+import { persistentRetryPolicy } from "./hub-retry";
 import {
   TENANT_HUB_METHODS,
   type TenantCreatedNotification,
@@ -34,7 +35,7 @@ function createConnection(): signalR.HubConnection {
     .withUrl(HUB_URL, {
       accessTokenFactory: getHubAccessToken,
     })
-    .withAutomaticReconnect()
+    .withAutomaticReconnect(persistentRetryPolicy)
     .configureLogging(signalR.LogLevel.Warning)
     .build();
 }

@@ -157,7 +157,7 @@ export default function RosterList({ embedded = false }: Props) {
     if (format === "csv") {
       triggerDownload(buildFlatCsv(ROSTER_HEADERS, rows), `roster-${date}.csv`);
     } else {
-      downloadExcel(ROSTER_HEADERS, rows, `roster-${date}.xlsx`);
+      void downloadExcel(ROSTER_HEADERS, rows, `roster-${date}.xlsx`);
     }
   };
 

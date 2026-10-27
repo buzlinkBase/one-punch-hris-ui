@@ -91,6 +91,7 @@ export default function EmployeeFixedScheduleTab({ value, onChange }: Props) {
             />
             {assigned && (
               <Button
+                aria-label="Remove"
                 type="text"
                 danger
                 size="small"

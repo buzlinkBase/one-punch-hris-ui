@@ -131,6 +131,7 @@ export default function AuditDetail() {
             <div>
               <Title level={5}>{AUDIT_LABEL.CHANGES}</Title>
               <Table
+                scroll={{ x: "max-content" }}
                 rowKey="property"
                 dataSource={audit.changes}
                 columns={CHANGE_COLUMNS}

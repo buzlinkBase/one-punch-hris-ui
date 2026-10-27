@@ -135,6 +135,7 @@ export default function DtrDetailTable({
         <Space size={4}>
           <Tooltip title="View Attendance">
             <Button
+              aria-label="View Attendance"
               size="small"
               icon={<EyeOutlined />}
               onClick={(e) => {
@@ -146,6 +147,7 @@ export default function DtrDetailTable({
           </Tooltip>
           <Tooltip title="Change Time Shift">
             <Button
+              aria-label="Change Time Shift"
               size="small"
               icon={<SwapOutlined />}
               onClick={(e) => {
@@ -157,6 +159,7 @@ export default function DtrDetailTable({
           </Tooltip>
           <Tooltip title="Change Rest Day">
             <Button
+              aria-label="Change Rest Day"
               size="small"
               icon={<CalendarOutlined />}
               onClick={(e) => {
@@ -168,6 +171,7 @@ export default function DtrDetailTable({
           </Tooltip>
           <Tooltip title="Set Restday Date">
             <Button
+              aria-label="Set Restday Date"
               size="small"
               icon={<PushpinOutlined />}
               onClick={(e) => {

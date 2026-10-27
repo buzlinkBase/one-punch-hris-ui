@@ -25,6 +25,7 @@ import {
 import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Title } = Typography;
 
@@ -44,10 +45,6 @@ const STATUS_COLOR: Record<
   Draft: "processing",
   Posted: "success",
 };
-
-function formatMoney(value: number) {
-  return (value ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
-}
 
 export default function PortalThirteenthMonth() {
   const [year, setYear] = useState(dayjs().year());
@@ -75,6 +72,7 @@ export default function PortalThirteenthMonth() {
               onChange={(d) => d && setYear(d.year())}
             />
             <Button
+              aria-label="Refresh"
               icon={<ReloadOutlined spin={isFetching} />}
               onClick={() => refetch()}
               loading={isFetching && !isLoading}

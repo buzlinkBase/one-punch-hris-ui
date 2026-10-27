@@ -1,4 +1,4 @@
-import { Table, Button, Space, Dropdown, Tag, Modal, message } from "antd";
+import { Table, Button, Space, Dropdown, Tag, Modal } from "antd";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -35,8 +35,8 @@ import {
   dateRangeColumnFilter,
   textColumnFilter,
 } from "@/shared/components/table-column-filters";
-import httpClient from "@/core/http/http-client";
-import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { employeeApi } from "../../services/employee.api";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { authStorage } from "@/core/auth/auth-storage";
 
@@ -76,22 +76,8 @@ export default function EmployeeTable({
   const navigate = useNavigate();
   const filterOptions = useEmployeeFilterOptions();
 
-  const handlePrint201 = async (id: string) => {
-    // Open the tab synchronously (before the await) so popup blockers treat it as a
-    // direct response to the click.
-    const printTab = window.open("about:blank", "_blank");
-    try {
-      const blob = await httpClient.get<Blob>(
-        `${buildApiUrl(API_PREFIX.hrms, "employees")}/${id}/print-201`,
-        { responseType: "blob" },
-      );
-      const url = URL.createObjectURL(blob);
-      if (printTab) printTab.location.href = url;
-    } catch {
-      printTab?.close();
-      message.error("Failed to generate the 201 file. Please try again.");
-    }
-  };
+  const handlePrint201 = (id: string) =>
+    openPdfInNewTab(employeeApi.urls.print201(id));
 
   const { widths, handleResize } = useResizableColumns({
     employeeNo: 120,

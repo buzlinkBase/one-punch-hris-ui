@@ -40,6 +40,16 @@ export function useUpdatePayrollRate() {
   });
 }
 
+export function useReplacePayrollRates() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreatePayrollRate[]) => payrollRateApi.bulkReplace(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
 export function useDeletePayrollRate() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -252,6 +252,7 @@ export default function CutoffTrackerTab() {
           </Space>
           <Tooltip title="Refresh — picks up runs saved or deleted since this tab opened">
             <Button
+              aria-label="Refresh — picks up runs saved or deleted since this tab opened"
               size="small"
               type="text"
               icon={<ReloadOutlined />}

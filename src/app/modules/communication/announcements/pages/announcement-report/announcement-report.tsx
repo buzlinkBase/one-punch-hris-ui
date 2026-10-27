@@ -40,8 +40,8 @@ import {
   useAnnouncement,
   useAnnouncementRecipients,
   useAnnouncementStats,
+  useFetchAllAnnouncementRecipients,
 } from "../../hooks/use-announcement-queries";
-import { announcementApi } from "../../services/announcement.api";
 import type {
   RecipientListQuery,
   RecipientStatusFilter,
@@ -77,6 +77,7 @@ export default function AnnouncementReport() {
     limit: PAGE_SIZE,
   });
   const { data: recipients, isFetching } = useAnnouncementRecipients(id, query);
+  const fetchAllRecipients = useFetchAllAnnouncementRecipients();
   const [exporting, setExporting] = useState(false);
 
   if (isLoading) {
@@ -278,11 +279,7 @@ export default function AnnouncementReport() {
     if (!id || !stats) return;
     setExporting(true);
     try {
-      const all = await announcementApi.recipients(id, {
-        status: "All",
-        page: 1,
-        limit: 0,
-      });
+      const all = await fetchAllRecipients(id);
       const summaryRows: string[][] = [
         ["Title", announcement.title],
         ["Status", STATE_TAG[announcement.state].label],
@@ -303,7 +300,7 @@ export default function AnnouncementReport() {
           : []),
         ["No login account", String(stats.unreachable)],
       ];
-      downloadMultiSheetExcel(
+      await downloadMultiSheetExcel(
         [
           { name: "Summary", headers: ["", ""], rows: summaryRows },
           {
@@ -557,6 +554,7 @@ export default function AnnouncementReport() {
               label: t.label,
               children: (
                 <Table
+                  scroll={{ x: "max-content" }}
                   rowKey="name"
                   size="small"
                   columns={breakdownColumns}

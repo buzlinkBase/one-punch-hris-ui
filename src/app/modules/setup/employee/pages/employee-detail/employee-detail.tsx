@@ -44,8 +44,8 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
-import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
-import httpClient from "@/core/http/http-client";
+import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { employeeApi } from "../../services/employee.api";
 import { authStorage } from "@/core/auth/auth-storage";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 import {
@@ -128,6 +128,7 @@ import EmployeeDocRecordsTab from "../../components/employee-doc-records-tab";
 import EmployeeEmploymentHistoryTab from "../../components/employee-employment-history-tab";
 import EmployeeAssignAssetsTab from "../../components/employee-assign-assets-tab";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -278,11 +279,12 @@ export default function EmployeeDetail() {
     setValue,
     getValues,
     setFocus,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema) as Resolver<EmployeeFormValues>,
     defaultValues: employeeMapper.toDefaultValues(),
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // Company settings: automatic employee numbers, and the default rest day(s) for a new employee.
   const { data: company } = useCompanyInfo();
@@ -414,6 +416,7 @@ export default function EmployeeDetail() {
           }
         }
       }
+      allowNavigation();
       navigate({ to: "/setup/employee" });
     } catch {
       // handled by global error interceptor
@@ -796,24 +799,9 @@ export default function EmployeeDetail() {
             {isEdit && id && (
               <Button
                 icon={<PrinterOutlined />}
-                onClick={async () => {
-                  // Open the tab synchronously (before the await) so popup blockers
-                  // treat it as a direct response to the click.
-                  const printTab = window.open("about:blank", "_blank");
-                  try {
-                    const blob = await httpClient.get<Blob>(
-                      `${buildApiUrl(API_PREFIX.hrms, "employees")}/${id}/print-201`,
-                      { responseType: "blob" },
-                    );
-                    const url = URL.createObjectURL(blob);
-                    if (printTab) printTab.location.href = url;
-                  } catch {
-                    printTab?.close();
-                    message.error(
-                      "Failed to generate the 201 file. Please try again.",
-                    );
-                  }
-                }}
+                onClick={() =>
+                  void openPdfInNewTab(employeeApi.urls.print201(id!))
+                }
               >
                 Print 201
               </Button>

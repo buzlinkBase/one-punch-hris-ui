@@ -38,13 +38,35 @@ describe("generateLoanBreakdown", () => {
     const rows = generateLoanBreakdown(50000, 12, 24, "2026-01-15", "Monthly");
 
     expect(rows).toHaveLength(24);
-    // Every row's payment should be the same level amount (standard amortization).
-    const payments = new Set(rows.map((r) => r.amount));
+    // Every row but the last pays the same level amount (standard amortization); the last one
+    // absorbs the centavos rounding left over.
+    const payments = new Set(rows.slice(0, -1).map((r) => r.amount));
     expect(payments.size).toBe(1);
+    expect(Math.abs(rows.at(-1)!.amount - rows[0].amount)).toBeLessThan(0.25);
     // Interest portion shrinks and principal portion grows as the balance is paid down.
     expect(rows[0].interest).toBeGreaterThan(rows.at(-1)!.interest);
     expect(rows[0].principal).toBeLessThan(rows.at(-1)!.principal);
     expect(rows.at(-1)!.balance).toBe(0);
+  });
+
+  it("keeps every figure in whole centavos", () => {
+    const rows = generateLoanBreakdown(10000, 7.5, 7, "2026-01-15", "Monthly");
+    const isCentavos = (n: number) =>
+      Math.abs(n * 100 - Math.round(n * 100)) < 1e-9;
+
+    for (const row of rows) {
+      expect(isCentavos(row.amount)).toBe(true);
+      expect(isCentavos(row.principal)).toBe(true);
+      expect(isCentavos(row.interest)).toBe(true);
+    }
+  });
+
+  it("pays back exactly the principal", () => {
+    const rows = generateLoanBreakdown(10000, 0, 3, "2026-01-15", "Monthly");
+    const principalPaid = rows.reduce((sum, r) => sum + r.principal, 0);
+
+    expect(rows.map((r) => r.amount)).toEqual([3333.33, 3333.33, 3333.34]);
+    expect(Math.round(principalPaid * 100) / 100).toBe(10000);
   });
 
   it("never lets the running balance go negative", () => {

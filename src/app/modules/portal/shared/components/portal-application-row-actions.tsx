@@ -28,6 +28,7 @@ export function PortalApplicationRowActions({
     <Space size={0}>
       <Tooltip title="View">
         <Button
+          aria-label="View"
           type="text"
           size="small"
           icon={<EyeOutlined />}
@@ -37,6 +38,7 @@ export function PortalApplicationRowActions({
       {isPending && (
         <Tooltip title="Edit">
           <Button
+            aria-label="Edit"
             type="text"
             size="small"
             icon={<EditOutlined />}

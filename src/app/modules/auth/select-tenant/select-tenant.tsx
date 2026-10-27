@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { Card, Typography, List, Button, notification } from "antd";
 import { BankOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
-import axios from "axios";
-import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import { useSelectTenantMutation } from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { authStorage } from "@/core/auth/auth-storage";
-import type { ApiResponse } from "@/shared/types/api-response.model";
+import { authErrorMessage } from "@/core/auth/auth-error-message";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 
 const { Title, Text } = Typography;
@@ -14,6 +13,7 @@ export default function SelectTenant() {
   const navigate = useNavigate();
   const [tenants] = useState<TenantSummary[]>(() => authStorage.getTenants());
   const [loadingTenant, setLoadingTenant] = useState<string | null>(null);
+  const { mutateAsync: selectTenant } = useSelectTenantMutation();
 
   useEffect(() => {
     if (!authStorage.getToken() || tenants.length === 0) {
@@ -24,7 +24,7 @@ export default function SelectTenant() {
   const handleSelect = async (tenantId: string) => {
     setLoadingTenant(tenantId);
     try {
-      const result = await authApi.selectTenant(tenantId);
+      const result = await selectTenant(tenantId);
       const claims = authStorage.getTenantClaims(result.accessToken);
       const user = authStorage.getUser();
       authStorage.save(result.accessToken, {
@@ -37,11 +37,10 @@ export default function SelectTenant() {
       });
       navigate({ to: "/dashboard" });
     } catch (err) {
-      const description = axios.isAxiosError(err)
-        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ??
-          "Couldn't switch to this company. Please try again.")
-        : "An unexpected error occurred.";
+      const description = authErrorMessage(
+        err,
+        "Couldn't switch to this company. Please try again.",
+      );
       notification.error({
         message: "Couldn't switch company",
         description,

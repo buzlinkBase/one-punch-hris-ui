@@ -16,9 +16,7 @@ import {
   downloadBlobFile,
 } from "@/shared/utils/download-file.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const EXPORT_HEADERS = [
   "Employee No",
@@ -64,28 +62,28 @@ const columns: ColumnsType<AlphalistEntryResponse> = [
     dataIndex: "grossCompensation",
     key: "gross",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Non-Taxable",
     dataIndex: "nonTaxableCompensation",
     key: "nonTaxable",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Taxable",
     dataIndex: "taxableCompensation",
     key: "taxable",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "13th Month Pay",
     dataIndex: "thirteenthMonthPay",
     key: "13th",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Tax Withheld",
@@ -93,7 +91,7 @@ const columns: ColumnsType<AlphalistEntryResponse> = [
     key: "tax",
     align: "right",
     fixed: "right",
-    render: fmt,
+    render: formatMoney,
   },
 ];
 

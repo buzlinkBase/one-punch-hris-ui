@@ -39,6 +39,7 @@ import {
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -61,7 +62,7 @@ export default function PayrollGroupDetail() {
     handleSubmit,
     reset,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PayrollGroupFormValues>({
     resolver: zodResolver(
       payrollGroupFormSchema,
@@ -75,6 +76,7 @@ export default function PayrollGroupDetail() {
       status: "ACTIVE",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -109,6 +111,7 @@ export default function PayrollGroupDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/payroll-group" });
   };
 

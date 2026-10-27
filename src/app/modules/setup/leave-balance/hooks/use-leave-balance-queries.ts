@@ -35,15 +35,8 @@ export function useAdjustLeaveBalance() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: AdjustLeaveBalance) => leaveBalanceApi.adjust(data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...QUERY_KEY,
-          variables.employeeId,
-          variables.leaveId,
-          variables.year,
-        ],
-      });
-    },
+    // Every view of the credits, not just this balance -- the portal's leave credits and the
+    // leave ledger report show the same figures.
+    onSuccess: () => invalidateLeaveBalances(queryClient),
   });
 }

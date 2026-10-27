@@ -25,6 +25,7 @@ import {
 import { PHIC_TABLE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -42,7 +43,7 @@ export default function PhicTableDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PhicTableFormValues>({
     resolver: zodResolver(phicTableFormSchema) as Resolver<PhicTableFormValues>,
     defaultValues: {
@@ -54,6 +55,7 @@ export default function PhicTableDetail() {
       remarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -74,6 +76,7 @@ export default function PhicTableDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/phic-table" });
   };
 

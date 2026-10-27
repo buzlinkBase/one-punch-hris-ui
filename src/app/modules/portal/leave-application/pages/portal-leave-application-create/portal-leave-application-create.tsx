@@ -49,6 +49,7 @@ import {
   useStagedAttachments,
 } from "@/shared/hooks/use-attachment-queries";
 import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Text } = Typography;
 
@@ -126,7 +127,7 @@ export default function PortalLeaveApplicationCreate() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<LeaveApplicationFormValues>({
     resolver: zodResolver(leaveApplicationFormSchema),
     defaultValues: {
@@ -147,6 +148,7 @@ export default function PortalLeaveApplicationCreate() {
       supportingDocumentUrl: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (!record) return;
@@ -357,6 +359,7 @@ export default function PortalLeaveApplicationCreate() {
       await create({ ...payload, attachmentIds: staged.stagedIds });
       void staged.refresh();
     }
+    allowNavigation();
     navigate({ to: BACK_TO });
   };
 

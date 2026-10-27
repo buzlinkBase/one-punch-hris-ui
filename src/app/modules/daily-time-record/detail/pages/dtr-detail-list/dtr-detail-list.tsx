@@ -218,7 +218,7 @@ export default function DtrDetailList() {
     if (format === "csv") {
       triggerDownload(buildDtrCsv(records), `dtr-detail-${date}.csv`);
     } else {
-      downloadGroupedHeaderExcel(
+      void downloadGroupedHeaderExcel(
         LEFT_COLS,
         GROUPED_COLS,
         records,

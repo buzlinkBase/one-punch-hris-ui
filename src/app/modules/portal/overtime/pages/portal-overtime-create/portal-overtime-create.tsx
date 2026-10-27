@@ -31,6 +31,7 @@ import {
   buildEndDateTime,
   isCrossMidnight,
 } from "@/shared/utils/duration.util";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { TextArea } = Input;
 
@@ -63,7 +64,7 @@ export default function PortalOvertimeCreate() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<OvertimeApplicationFormValues>({
     resolver: zodResolver(overtimeApplicationFormSchema),
     defaultValues: {
@@ -76,6 +77,7 @@ export default function PortalOvertimeCreate() {
       remarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // employeeId isn't a visible field here -- useMyEmployee() resolves after this form's
   // defaultValues are already fixed at first render, so without this it stays "" forever and
@@ -143,6 +145,7 @@ export default function PortalOvertimeCreate() {
 
     if (id) await update({ id, data: payload });
     else await create(payload);
+    allowNavigation();
     navigate({ to: BACK_TO });
   };
 

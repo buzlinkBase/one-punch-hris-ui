@@ -1,6 +1,7 @@
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
 import dayjs from "dayjs";
 import type { EmployeeFullResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const PRIMARY = "#1DA081";
 const LABEL_COLOR = "#666666";
@@ -187,7 +188,7 @@ function fmtRate(v?: number | null) {
 
 function fmtMoney(v?: number | null) {
   if (v == null || v === 0) return "—";
-  return v.toLocaleString("en-PH", { minimumFractionDigits: 2 });
+  return formatMoney(v);
 }
 
 export default function Employee201Document({

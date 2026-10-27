@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Card, Typography, Button, Space, notification } from "antd";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
-import axios from "axios";
-import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import {
+  useAcceptPendingInvitationMutation,
+  useFetchPendingInvitation,
+} from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { authStorage } from "@/core/auth/auth-storage";
-import type { ApiResponse } from "@/shared/types/api-response.model";
+import { authErrorMessage } from "@/core/auth/auth-error-message";
 import type { InvitationResponse } from "@/app/modules/auth/login/models/api/response/invitation-response.model";
 
 const { Title, Text } = Typography;
@@ -15,10 +17,13 @@ export default function AwaitingInvitation() {
   const [invitation, setInvitation] = useState<InvitationResponse | null>(null);
   const [checking, setChecking] = useState(true);
   const [accepting, setAccepting] = useState(false);
+  const fetchPendingInvitation = useFetchPendingInvitation();
+  const { mutateAsync: acceptInvitation } =
+    useAcceptPendingInvitationMutation();
 
   const checkInvitation = async () => {
     try {
-      const result = await authApi.getPendingInvitation();
+      const result = await fetchPendingInvitation();
       if (result) {
         setInvitation(result);
       } else {
@@ -45,9 +50,7 @@ export default function AwaitingInvitation() {
 
     setAccepting(true);
     try {
-      const result = await authApi.acceptInvitation({
-        token: invitation.token,
-      });
+      const result = await acceptInvitation(invitation.token);
       const claims = authStorage.getTenantClaims(result.accessToken);
       const user = authStorage.getUser();
       const resultIds = new Set(result.tenants.map((t) => t.tenantId));
@@ -64,10 +67,10 @@ export default function AwaitingInvitation() {
       });
       window.location.assign("/dashboard");
     } catch (err) {
-      const description = axios.isAxiosError(err)
-        ? ((err.response?.data as ApiResponse<{ errorMessage: string }>)?.data
-            ?.errorMessage ?? "Failed to accept invitation. Please try again.")
-        : "An unexpected error occurred.";
+      const description = authErrorMessage(
+        err,
+        "Failed to accept invitation. Please try again.",
+      );
       notification.error({
         message: "Acceptance failed",
         description,

@@ -4,9 +4,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { FundLedgerSummaryResponse } from "../../models/api/response/payroll-reports.model";
 import type { ReportTotals } from "../payroll-report-shell/payroll-report-shell";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 interface Labels {
   /** e.g. "Accrued" */
@@ -35,21 +33,21 @@ export function buildFundSummaryColumns(
       dataIndex: "totalAdded",
       key: "added",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: labels.deducted,
       dataIndex: "totalDeducted",
       key: "deducted",
       align: "right",
-      render: (v: number) => (v !== 0 ? fmt(v) : ""),
+      render: (v: number) => (v !== 0 ? formatMoney(v) : ""),
     },
     {
       title: "Balance",
       dataIndex: "balance",
       key: "balance",
       align: "right",
-      render: (v: number) => <strong>{fmt(v)}</strong>,
+      render: (v: number) => <strong>{formatMoney(v)}</strong>,
     },
     {
       title: "Last Entry",

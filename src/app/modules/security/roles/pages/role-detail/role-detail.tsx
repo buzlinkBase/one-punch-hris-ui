@@ -39,6 +39,7 @@ import {
 import { permissionHint } from "../../constants/permission-hints.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -81,11 +82,12 @@ export default function RoleDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<RoleFormValues>({
     resolver: zodResolver(roleFormSchema),
     defaultValues: { name: "", description: "" },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   if (isEdit && selected && selected.id !== syncedRoleId) {
     setSyncedRoleId(selected.id);
@@ -126,9 +128,11 @@ export default function RoleDetail() {
   const onSubmit = async (values: RoleFormValues) => {
     if (isEdit && id) {
       await update({ id, data: values });
+      allowNavigation();
       navigate({ to: "/security/roles" });
     } else {
       const role = await add(values);
+      allowNavigation();
       navigate({ to: `/security/roles/${role.id}` });
     }
   };

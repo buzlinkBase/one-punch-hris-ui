@@ -347,7 +347,12 @@ export default function UserTable({
               okText="Remove"
               cancelText="Cancel"
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button
+                aria-label="Delete"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+              />
             </Popconfirm>
           )}
         </Space>

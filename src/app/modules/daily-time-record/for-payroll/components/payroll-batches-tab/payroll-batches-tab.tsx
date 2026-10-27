@@ -259,6 +259,7 @@ export default function PayrollBatchesTab() {
           <Space size={4}>
             <Tooltip title="View in Payroll Summary">
               <Button
+                aria-label="View in Payroll Summary"
                 size="small"
                 icon={<EyeOutlined />}
                 onClick={() =>
@@ -271,6 +272,7 @@ export default function PayrollBatchesTab() {
             </Tooltip>
             <Tooltip title="History">
               <Button
+                aria-label="History"
                 size="small"
                 icon={<HistoryOutlined />}
                 onClick={() =>
@@ -285,6 +287,7 @@ export default function PayrollBatchesTab() {
               <PermissionGate permission={`${runTypeFeature}:Approve`}>
                 <Tooltip title="Approve">
                   <Button
+                    aria-label="Approve"
                     size="small"
                     icon={<CheckOutlined />}
                     onClick={() =>
@@ -298,6 +301,7 @@ export default function PayrollBatchesTab() {
                 </Tooltip>
                 <Tooltip title="Decline">
                   <Button
+                    aria-label="Decline"
                     danger
                     size="small"
                     icon={<CloseOutlined />}
@@ -316,6 +320,7 @@ export default function PayrollBatchesTab() {
               <PermissionGate permission={`${runTypeFeature}:Approve`}>
                 <Tooltip title="Approve Deletion">
                   <Button
+                    aria-label="Approve Deletion"
                     danger
                     size="small"
                     icon={<CheckOutlined />}
@@ -330,6 +335,7 @@ export default function PayrollBatchesTab() {
                 </Tooltip>
                 <Tooltip title="Decline Deletion">
                   <Button
+                    aria-label="Decline Deletion"
                     size="small"
                     icon={<CloseOutlined />}
                     onClick={() =>
@@ -373,6 +379,7 @@ export default function PayrollBatchesTab() {
                   }
                 >
                   <Button
+                    aria-label="Delete"
                     danger
                     size="small"
                     icon={<DeleteOutlined />}

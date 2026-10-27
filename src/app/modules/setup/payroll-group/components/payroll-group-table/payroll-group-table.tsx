@@ -136,6 +136,7 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
         <Space>
           <PermissionGate permission="Organization Setup:Edit">
             <Button
+              aria-label="Edit"
               type="text"
               icon={<EditOutlined />}
               onClick={() =>
@@ -151,7 +152,12 @@ export default function PayrollGroupTable({ data, loading, onDelete }: Props) {
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

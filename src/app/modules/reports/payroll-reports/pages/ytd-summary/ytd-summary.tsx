@@ -9,9 +9,7 @@ import { useYtdSummary } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { YtdPayrollSummaryResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const EXPORT_HEADERS = [
   "Employee No",
@@ -64,84 +62,84 @@ const columns: ColumnsType<YtdPayrollSummaryResponse> = [
     dataIndex: "totalBasicPay",
     key: "basic",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Overtime",
     dataIndex: "totalOvertimePay",
     key: "ot",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Holiday Pay",
     dataIndex: "totalHolidayPay",
     key: "hol",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Allowances",
     dataIndex: "totalAllowances",
     key: "allow",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Other Income",
     dataIndex: "totalOtherIncome",
     key: "other",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Gross Income",
     dataIndex: "totalGrossIncome",
     key: "gross",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "SSS",
     dataIndex: "totalSSS",
     key: "sss",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "PhilHealth",
     dataIndex: "totalPhilHealth",
     key: "phic",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Pag-IBIG",
     dataIndex: "totalPagIbig",
     key: "hdmf",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "W-Tax",
     dataIndex: "totalWithholdingTax",
     key: "tax",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Other Deductions",
     dataIndex: "totalOtherDeductions",
     key: "otherDed",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Total Deductions",
     dataIndex: "totalDeductions",
     key: "totalDed",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Net Pay",
@@ -149,7 +147,7 @@ const columns: ColumnsType<YtdPayrollSummaryResponse> = [
     key: "net",
     align: "right",
     fixed: "right",
-    render: (v: number) => <strong>{fmt(v)}</strong>,
+    render: (v: number) => <strong>{formatMoney(v)}</strong>,
   },
 ];
 

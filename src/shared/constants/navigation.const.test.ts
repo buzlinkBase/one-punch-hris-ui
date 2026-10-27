@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   NAVIGATION_ITEMS,
+  ROUTE_ALIASES,
   flattenNavPaths,
   getFeaturesForPath,
   getPermissionForPath,
@@ -30,6 +31,39 @@ describe("NAVIGATION_ITEMS", () => {
     );
 
     expect(unassigned).toEqual([]);
+  });
+});
+
+describe("ROUTE_ALIASES", () => {
+  it("points every alias at a menu page", () => {
+    const menuPaths = new Set(flattenNavPaths(NAVIGATION_ITEMS));
+    const dangling = ROUTE_ALIASES.filter((a) => !menuPaths.has(a.as));
+
+    expect(dangling).toEqual([]);
+  });
+
+  it("gates off-menu routes as the page they belong to", () => {
+    expect(getPermissionForPath("/setup/deduction-type/123")).toEqual(
+      getPermissionForPath("/setup/deduction"),
+    );
+    expect(getPermissionForPath("/setup/time-shift/flexi/create")).toEqual(
+      getPermissionForPath("/setup/time-shift/split"),
+    );
+    expect(getPermissionForPath("/daily-time-record/detail")).toEqual(
+      getPermissionForPath("/daily-time-record/master"),
+    );
+    expect(getFeaturesForPath("/setup/other-income-type")).toEqual(
+      getFeaturesForPath("/setup/other-income"),
+    );
+  });
+
+  it("only aliases section indexes exactly", () => {
+    expect(getPermissionForPath("/setup")).toEqual(
+      getPermissionForPath("/setup/department"),
+    );
+    expect(getPermissionForPath("/setup/holiday")).not.toEqual(
+      getPermissionForPath("/setup/department"),
+    );
   });
 });
 

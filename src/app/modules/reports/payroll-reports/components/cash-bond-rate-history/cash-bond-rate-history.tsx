@@ -3,9 +3,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useCashBondRateHistory } from "../../hooks/use-payroll-reports-queries";
 import type { CashBondRateChangeResponse } from "../../models/api/response/payroll-reports.model";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const columns: ColumnsType<CashBondRateChangeResponse> = [
   {
@@ -21,7 +19,7 @@ const columns: ColumnsType<CashBondRateChangeResponse> = [
     key: "oldRate",
     align: "right",
     width: 110,
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "To",
@@ -29,7 +27,7 @@ const columns: ColumnsType<CashBondRateChangeResponse> = [
     key: "newRate",
     align: "right",
     width: 110,
-    render: (v: number) => <strong>{fmt(v)}</strong>,
+    render: (v: number) => <strong>{formatMoney(v)}</strong>,
   },
   { title: "Reason", dataIndex: "reason", key: "reason" },
 ];

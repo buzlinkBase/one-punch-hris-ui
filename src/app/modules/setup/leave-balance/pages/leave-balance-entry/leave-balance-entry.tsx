@@ -29,6 +29,7 @@ import { DtrReconcileModal } from "../../components/dtr-reconcile-modal/dtr-reco
 import { useLeaveTypes } from "@/app/modules/setup/leave-type/hooks/use-leave-type-queries";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
+import { currentYear, yearOptions } from "../../utils/year-options";
 
 const { Title, Text } = Typography;
 
@@ -39,12 +40,6 @@ const filterByLabel = (
   String(option?.label ?? "")
     .toLowerCase()
     .includes(input.toLowerCase());
-
-const CURRENT_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => {
-  const y = CURRENT_YEAR - 2 + i;
-  return { value: y, label: String(y) };
-});
 
 export default function LeaveBalanceEntry() {
   const { data: employees = [], isLoading: isEmployeesLoading } =
@@ -77,7 +72,7 @@ export default function LeaveBalanceEntry() {
     defaultValues: {
       employeeId: "",
       leaveId: "",
-      year: CURRENT_YEAR,
+      year: currentYear(),
       newBalance: 0,
       particulars: "",
     },
@@ -209,8 +204,8 @@ export default function LeaveBalanceEntry() {
                     <Select
                       {...field}
                       value={field.value || undefined}
-                      onChange={(v) => field.onChange(v ?? CURRENT_YEAR)}
-                      options={YEAR_OPTIONS}
+                      onChange={(v) => field.onChange(v ?? currentYear())}
+                      options={yearOptions()}
                     />
                   )}
                 />

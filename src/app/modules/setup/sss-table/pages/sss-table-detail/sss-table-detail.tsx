@@ -24,6 +24,7 @@ import {
 import { SSS_TABLE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -40,7 +41,7 @@ export default function SssTableDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<SssTableFormValues>({
     resolver: zodResolver(sssTableFormSchema) as Resolver<SssTableFormValues>,
     defaultValues: {
@@ -52,6 +53,7 @@ export default function SssTableDetail() {
       ec: 0,
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -72,6 +74,7 @@ export default function SssTableDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/sss-table" });
   };
 

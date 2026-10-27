@@ -16,6 +16,7 @@ import {
 import { OTHER_INCOME_TYPE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -34,11 +35,12 @@ export default function OtherIncomeTypeDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<OtherIncomeTypeFormValues>({
     resolver: zodResolver(otherIncomeTypeFormSchema),
     defaultValues: { description: "" },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) reset({ description: selected.description });
@@ -50,6 +52,7 @@ export default function OtherIncomeTypeDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/other-income-type" });
   };
 

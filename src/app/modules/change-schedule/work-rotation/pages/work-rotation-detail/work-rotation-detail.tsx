@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { apiErrorMessage } from "@/core/http/api-error";
 import {
   Alert,
   App,
@@ -59,7 +59,7 @@ import { WORK_ROTATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
-import type { ErrorResponse } from "@/shared/types/api-response.model";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -127,6 +127,7 @@ function MultiDatePicker({ value, onChange }: MultiDatePickerProps) {
       >
         <Space size={0}>
           <Button
+            aria-label="Previous"
             type="text"
             size="small"
             icon={<LeftOutlined />}
@@ -134,6 +135,7 @@ function MultiDatePicker({ value, onChange }: MultiDatePickerProps) {
             onClick={() => setCurrent((c) => c.subtract(1, "year"))}
           />
           <Button
+            aria-label="Previous"
             type="text"
             size="small"
             icon={<LeftOutlined />}
@@ -145,12 +147,14 @@ function MultiDatePicker({ value, onChange }: MultiDatePickerProps) {
         </Text>
         <Space size={0}>
           <Button
+            aria-label="Next"
             type="text"
             size="small"
             icon={<RightOutlined />}
             onClick={() => setCurrent((c) => c.add(1, "month"))}
           />
           <Button
+            aria-label="Next"
             type="text"
             size="small"
             icon={<RightOutlined />}
@@ -198,31 +202,26 @@ function MultiDatePicker({ value, onChange }: MultiDatePickerProps) {
           const isToday = key === today;
 
           return (
-            <div
+            <button
+              type="button"
               key={key}
               onClick={() => toggle(d)}
-              style={{
-                height: 28,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 4,
-                cursor: "pointer",
-                fontSize: 13,
-                background: isSelected ? "#1DA081" : "transparent",
-                color: isSelected
-                  ? "#fff"
+              aria-pressed={isSelected}
+              aria-label={d.format("MMMM D, YYYY")}
+              className={[
+                "flex h-7 cursor-pointer items-center justify-center rounded border-0 text-[13px] transition-colors duration-100",
+                isSelected
+                  ? "bg-[#1DA081] text-white"
                   : !isCurrentMonth
-                    ? "#bbb"
+                    ? "bg-transparent text-[#bbb]"
                     : isToday
-                      ? "#1DA081"
-                      : "inherit",
-                fontWeight: isSelected || isToday ? 600 : 400,
-                transition: "background 0.1s",
-              }}
+                      ? "bg-transparent text-[#1DA081]"
+                      : "bg-transparent text-inherit",
+                isSelected || isToday ? "font-semibold" : "font-normal",
+              ].join(" ")}
             >
               {d.date()}
-            </div>
+            </button>
           );
         })}
       </div>
@@ -947,10 +946,11 @@ function EditForm({ id }: { id: string }) {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<WorkRotationFormValues>({
     resolver: zodResolver(workRotationFormSchema),
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // Client first, then the sites under it: the site list narrows to the chosen client's sites plus
   // the ones not tied to any client, and a site that belongs to a client fills the client in.
@@ -1001,16 +1001,17 @@ function EditForm({ id }: { id: string }) {
         message: "Work Rotation Updated",
         description: "Record has been updated successfully.",
       });
+      allowNavigation();
       navigate({ to: "/change-schedule/work-rotation" });
     } catch (err) {
       // The server explains a clash with another entry on the chosen date; show that, not a
       // generic failure.
-      const detail = axios.isAxiosError(err)
-        ? (err.response?.data as ErrorResponse | undefined)?.data?.detail
-        : undefined;
       getNotify().error({
         message: "Update Failed",
-        description: detail ?? "Failed to update the record. Please try again.",
+        description: apiErrorMessage(
+          err,
+          "Failed to update the record. Please try again.",
+        ),
       });
     }
   };

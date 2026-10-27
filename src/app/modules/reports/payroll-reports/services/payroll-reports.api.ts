@@ -211,5 +211,6 @@ export const payrollReportsApi = {
     philHealthEprsExport: `${ENDPOINT}/philhealth-eprs/export`,
     pagIbigMcrfPrint: `${ENDPOINT}/pagibig-mcrf/print`,
     pagIbigMcrfExport: `${ENDPOINT}/pagibig-mcrf/export`,
+    thirteenthMonthPayPrint: `${ENDPOINT}/13th-month-pay/print`,
   },
 };

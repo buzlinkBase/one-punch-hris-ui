@@ -117,7 +117,14 @@ export const authStorage = {
   getUser(): AuthUser | null {
     const raw = localStorage.getItem(KEYS.user);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as AuthUser & { role?: string };
+    let parsed: AuthUser & { role?: string };
+    try {
+      parsed = JSON.parse(raw) as AuthUser & { role?: string };
+    } catch {
+      // Corrupt session data would otherwise throw inside the root route guard on every
+      // navigation; treat it as signed out.
+      return null;
+    }
     // Migrate old sessions that stored role: string instead of roles: string[]
     if (!parsed.roles && parsed.role) {
       parsed.roles = [parsed.role];

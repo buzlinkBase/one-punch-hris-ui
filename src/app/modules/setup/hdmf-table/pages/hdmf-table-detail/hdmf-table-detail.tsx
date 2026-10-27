@@ -25,6 +25,7 @@ import {
 import { HDMF_TABLE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -42,7 +43,7 @@ export default function HdmfTableDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<HdmfTableFormValues>({
     resolver: zodResolver(hdmfTableFormSchema) as Resolver<HdmfTableFormValues>,
     defaultValues: {
@@ -55,6 +56,7 @@ export default function HdmfTableDetail() {
       remarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -76,6 +78,7 @@ export default function HdmfTableDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/hdmf-table" });
   };
 

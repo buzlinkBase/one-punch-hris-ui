@@ -11,9 +11,7 @@ import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const EXPORT_HEADERS = [
   "Employee No",
@@ -34,14 +32,14 @@ const toRows = (records: Bir2316Response[]) =>
     r.employeeNo,
     r.fullName,
     r.tin,
-    fmt(r.grossCompensation),
-    fmt(r.nonTaxableCompensation),
-    fmt(r.taxableCompensation),
-    fmt(r.thirteenthMonthPay),
-    fmt(r.totalSSS),
-    fmt(r.totalPhilHealth),
-    fmt(r.totalPagIbig),
-    fmt(r.totalTaxWithheld),
+    formatMoney(r.grossCompensation),
+    formatMoney(r.nonTaxableCompensation),
+    formatMoney(r.taxableCompensation),
+    formatMoney(r.thirteenthMonthPay),
+    formatMoney(r.totalSSS),
+    formatMoney(r.totalPhilHealth),
+    formatMoney(r.totalPagIbig),
+    formatMoney(r.totalTaxWithheld),
   ]);
 
 const columns: ColumnsType<Bir2316Response> = [
@@ -53,14 +51,14 @@ const columns: ColumnsType<Bir2316Response> = [
     dataIndex: "grossCompensation",
     key: "gross",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Taxable",
     dataIndex: "taxableCompensation",
     key: "taxable",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Tax Withheld",
@@ -68,7 +66,7 @@ const columns: ColumnsType<Bir2316Response> = [
     key: "tax",
     align: "right",
     fixed: "right",
-    render: fmt,
+    render: formatMoney,
   },
 ];
 

@@ -641,6 +641,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Fix a schedule row",
         body: [
           "Rows in an Other Income or loan schedule can be edited from the application, for example to change a date or amount, or regenerated. Rows already paid are locked.",
+          "A generated loan schedule is in whole centavos. Every payment is the same amount except the last, which can differ by a few centavos so the payments add up exactly to the loan plus its interest.",
         ],
       },
     ],

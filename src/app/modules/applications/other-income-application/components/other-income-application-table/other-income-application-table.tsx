@@ -7,6 +7,7 @@ import { FREQUENCY_LABEL, PAY_MODE_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { formatMoney } from "@/shared/utils/money.util";
 
 interface Props {
   data: OtherIncomeApplicationResponse[];
@@ -70,8 +71,7 @@ export default function OtherIncomeApplicationTable({
       dataIndex: "amount",
       key: "amount",
       align: "right",
-      render: (v: number) =>
-        v?.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      render: (v: number) => (v == null ? "" : formatMoney(v)),
     },
     {
       title: "Taxable",
@@ -99,6 +99,7 @@ export default function OtherIncomeApplicationTable({
               okButtonProps={{ danger: true }}
             >
               <Button
+                aria-label="Delete"
                 size="small"
                 type="text"
                 icon={<DeleteOutlined />}
@@ -113,6 +114,7 @@ export default function OtherIncomeApplicationTable({
 
   return (
     <Table
+      scroll={{ x: "max-content" }}
       rowKey="id"
       dataSource={data}
       columns={columns}

@@ -203,6 +203,7 @@ function ClientDrawer({
 
       <Title level={5}>Portal users</Title>
       <Table<PortalClientUser>
+        scroll={{ x: "max-content" }}
         rowKey="id"
         size="small"
         loading={users.isLoading}

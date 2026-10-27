@@ -32,6 +32,7 @@ import { buildStartDateTime } from "@/shared/utils/duration.util";
 import { toPassSlipPrefill } from "../../utils/pass-slip-prefill";
 import { useStagedAttachments } from "@/shared/hooks/use-attachment-queries";
 import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -70,7 +71,7 @@ export default function PortalPassSlipCreate() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PortalPassSlipFormValues>({
     resolver: zodResolver(portalPassSlipFormSchema),
     defaultValues: {
@@ -82,6 +83,7 @@ export default function PortalPassSlipCreate() {
       entries: prefill?.entries ?? [{ punchTime: "", notes: "" }],
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -136,6 +138,7 @@ export default function PortalPassSlipCreate() {
           },
         });
         message.success("Pass slip updated.");
+        allowNavigation();
         navigate({ to: BACK_TO });
       } catch {
         message.error("Failed to save. Please try again.");
@@ -170,6 +173,7 @@ export default function PortalPassSlipCreate() {
           ? "Pass slip filed."
           : `${values.entries.length} pass slips filed.`,
       );
+      allowNavigation();
       navigate({ to: BACK_TO });
     } catch {
       message.error("Failed to save. Please try again.");
@@ -336,6 +340,7 @@ export default function PortalPassSlipCreate() {
                   {!isExisting && (
                     <Tooltip title="Remove">
                       <Button
+                        aria-label="Remove"
                         type="text"
                         danger
                         size="small"

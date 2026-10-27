@@ -33,4 +33,14 @@ describe("applyNumberFormat", () => {
     expect(ws["C2"].z).toBe("#,##0.00");
     expect(ws["A2"].z).toBeUndefined();
   });
+
+  it("finds the header of columns past Z", () => {
+    const headers = Array.from({ length: 28 }, (_, i) => `H${i}`);
+    const row = headers.map((_, i) => (i === 27 ? 9 : ""));
+    const ws = XLSX.utils.aoa_to_sheet([headers, row]);
+
+    applyNumberFormat(ws, "#,##0.00", headers, ["H27"]);
+
+    expect(ws["AB2"].z).toBe("0");
+  });
 });

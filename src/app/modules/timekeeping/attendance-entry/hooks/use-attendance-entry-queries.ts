@@ -7,10 +7,13 @@ import type { UpdateAttendanceEntry } from "../models/api/request/update-attenda
 
 export const QUERY_KEY = ["timekeeping", "attendance-entry"];
 
-// A log edited or removed here also changes the Attendance Logs report.
+// A log edited or removed here also changes the Attendance Logs report, and the DTR computed
+// from those logs (its detail/summary views and which days count as covered).
 function invalidateLogViews(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: QUERY_KEY });
   queryClient.invalidateQueries({ queryKey: RAW_LOGS_QUERY_KEY });
+  queryClient.invalidateQueries({ queryKey: ["daily-time-record"] });
+  queryClient.invalidateQueries({ queryKey: ["dtr-coverage"] });
 }
 
 export function useShiftAttendanceLogs(

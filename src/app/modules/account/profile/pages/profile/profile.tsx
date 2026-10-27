@@ -13,7 +13,7 @@ import {
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { PasswordRequirements } from "@/shared/components/password-requirements";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { apiErrorBody } from "@/core/http/api-error";
 import {
   useProfileQuery,
   useUpdateProfileMutation,
@@ -43,13 +43,9 @@ import type { ApiResponse } from "@/shared/types/api-response.model";
 const { Title } = Typography;
 
 function extractErrorMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err)) {
-    const payload = err.response?.data as
-      ApiResponse<{ errors?: string[] }> | undefined;
-    const errors = payload?.data?.errors;
-    if (errors?.length) return errors.join(" ");
-  }
-  return fallback;
+  const errors =
+    apiErrorBody<ApiResponse<{ errors?: string[] }>>(err)?.data?.errors;
+  return errors?.length ? errors.join(" ") : fallback;
 }
 
 function ProfileDetailsCard() {
@@ -390,6 +386,7 @@ function NotificationPreferencesCard() {
         when your own application is approved or declined.
       </p>
       <Table<NotificationPreferenceRow>
+        scroll={{ x: "max-content" }}
         dataSource={rows}
         rowKey="applicationType"
         pagination={false}

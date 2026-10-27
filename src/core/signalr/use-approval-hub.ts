@@ -7,6 +7,7 @@ import { approvalLink } from "@/core/notifications/approval-link";
 import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
 import { approvalHub } from "./approval-hub.connection";
 import { APPROVAL_LIST_QUERY_KEYS } from "./approval-query-keys";
+import { startWithRetry } from "./hub-retry";
 import {
   APPROVAL_HUB_METHODS,
   type ApprovalPushNotification,
@@ -79,12 +80,17 @@ export function useApprovalHub() {
       handleApprovalNotification,
     );
 
-    // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke --
-    // see tenant-hub.connection.ts's stop() for the full rationale. A genuine connection
-    // failure just means no live push for this session; the bell still loads its saved entries.
-    void approvalHub.start().catch(() => {});
+    // Retries until connected or unmounted; the expected AbortError from StrictMode's dev-only
+    // double-invoke (see tenant-hub.connection.ts's stop()) just ends the loop. Until it
+    // connects the bell still loads its saved entries.
+    let active = true;
+    void startWithRetry(
+      () => approvalHub.start(),
+      () => active,
+    );
 
     return () => {
+      active = false;
       connection.off(
         APPROVAL_HUB_METHODS.onApprovalNotification,
         handleApprovalNotification,

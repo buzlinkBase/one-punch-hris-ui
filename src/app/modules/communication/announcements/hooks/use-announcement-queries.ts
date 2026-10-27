@@ -53,6 +53,19 @@ export function useAnnouncementRecipients(
   });
 }
 
+// Every recipient on one page (limit 0), fetched on demand for the Excel export.
+export function useFetchAllAnnouncementRecipients() {
+  const queryClient = useQueryClient();
+  return (id: string) => {
+    const query: RecipientListQuery = { status: "All", page: 1, limit: 0 };
+    return queryClient.fetchQuery({
+      queryKey: [...QUERY_KEY, "recipients", id, query],
+      queryFn: () => announcementApi.recipients(id, query),
+      staleTime: 30 * 1000,
+    });
+  };
+}
+
 export function useAudiencePreview(request: AudiencePreviewRequest) {
   return useQuery({
     queryKey: [...QUERY_KEY, "audience-preview", request],

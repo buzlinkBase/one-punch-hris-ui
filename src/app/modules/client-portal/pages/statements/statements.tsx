@@ -16,9 +16,8 @@ import {
   usePortalClients,
   useStatement,
 } from "../../hooks/use-client-portal-queries";
-import { clientPortalApi } from "../../services/client-portal.api";
 import { BILLING_PERMISSION, peso } from "../../constants/label.const";
-import { openBlobInNewTab } from "../../utils/open-blob";
+import { openPortalFile } from "../../utils/open-blob";
 import type { StatementLine } from "../../models/api/response/client-portal-response.model";
 
 const { Title, Text } = Typography;
@@ -63,10 +62,10 @@ export default function Statements() {
 
   const print = async () => {
     if (!clientId) return;
-    const blob = await clientPortalApi.fetchBlob(
+    await openPortalFile(
       `statements/print?clientId=${clientId}&from=${from}&to=${to}`,
+      "text/html",
     );
-    openBlobInNewTab(blob, "text/html");
   };
 
   const send = async () => {
@@ -79,7 +78,7 @@ export default function Statements() {
 
   const exportExcel = () => {
     if (!s) return;
-    downloadMultiSheetExcel(
+    void downloadMultiSheetExcel(
       [
         {
           name: "Statement",

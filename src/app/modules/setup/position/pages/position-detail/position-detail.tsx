@@ -25,6 +25,7 @@ import {
 import { POSITION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -45,11 +46,12 @@ export default function PositionDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PositionFormValues>({
     resolver: zodResolver(positionFormSchema) as Resolver<PositionFormValues>,
     defaultValues: { code: "", name: "", rate: 0, level: 0, status: "ACTIVE" },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -66,6 +68,7 @@ export default function PositionDetail() {
   const onSubmit = async (values: PositionFormValues) => {
     if (isEdit && id) await update({ id, ...values });
     else await add(values);
+    allowNavigation();
     navigate({ to: "/setup/position" });
   };
 

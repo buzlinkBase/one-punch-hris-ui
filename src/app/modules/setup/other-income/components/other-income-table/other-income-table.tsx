@@ -90,6 +90,7 @@ export default function OtherIncomeTable({
         <Space size="small">
           <PermissionGate permission="Deductions & Income Setup:Edit">
             <Button
+              aria-label="Edit"
               size="small"
               type="text"
               icon={<EditOutlined />}
@@ -104,6 +105,7 @@ export default function OtherIncomeTable({
               okButtonProps={{ danger: true }}
             >
               <Button
+                aria-label="Delete"
                 size="small"
                 type="text"
                 icon={<DeleteOutlined />}
@@ -118,6 +120,7 @@ export default function OtherIncomeTable({
 
   return (
     <Table
+      scroll={{ x: "max-content" }}
       rowKey="id"
       dataSource={data}
       columns={columns}

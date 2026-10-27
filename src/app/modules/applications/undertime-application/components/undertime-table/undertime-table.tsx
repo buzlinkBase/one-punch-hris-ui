@@ -142,6 +142,7 @@ export default function UndertimeTable({
               cancelText="Cancel"
             >
               <Button
+                aria-label="Approve"
                 type="text"
                 icon={<CheckOutlined />}
                 className="text-green-600!"
@@ -156,10 +157,16 @@ export default function UndertimeTable({
               okButtonProps={{ danger: true }}
               cancelText="Cancel"
             >
-              <Button type="text" danger icon={<CloseOutlined />} />
+              <Button
+                aria-label="Decline"
+                type="text"
+                danger
+                icon={<CloseOutlined />}
+              />
             </Popconfirm>
           )}
           <Button
+            aria-label="Edit"
             type="text"
             icon={<EditOutlined />}
             onClick={() =>
@@ -174,7 +181,12 @@ export default function UndertimeTable({
               okButtonProps={{ danger: true }}
               cancelText="Cancel"
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button
+                aria-label="Delete"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+              />
             </Popconfirm>
           )}
         </Space>

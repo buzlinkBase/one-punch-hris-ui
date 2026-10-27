@@ -37,6 +37,21 @@ export const APPROVAL_LIST_QUERY_KEYS: Record<
     ["payroll-readiness"],
   ],
   DtrDeletion: [["daily-time-record"], ["dtr-batches"]],
-  PayrollPosting: [["payroll-batches"]],
-  PayrollPostingDeletion: [["payroll-batches"]],
+  // An approved run is what payslips and payroll reports show; deleting one also unposts its
+  // DTRs (readiness) and gives their leave days back.
+  PayrollPosting: [
+    ["payroll-batches"],
+    ["payrolls"],
+    ["me", "payrolls"],
+    ["payroll-reports"],
+  ],
+  PayrollPostingDeletion: [
+    ["payroll-batches"],
+    ["payrolls"],
+    ["payroll-readiness"],
+    ["me", "payrolls"],
+    ["payroll-reports"],
+    ["leave-balance"],
+    ["me", "leave-credits"],
+  ],
 };

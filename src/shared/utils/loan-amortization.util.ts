@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import type { ColumnsType } from "antd/es/table";
+import { formatMoney, roundMoney } from "@/shared/utils/money.util";
 
 export interface LoanBreakdownRow {
   // The stored installment's id; absent for freshly generated rows, which the API adds as new.
@@ -48,22 +49,27 @@ export function generateLoanBreakdown(
   };
   const stepDays = daysMap[frequency] ?? 30;
 
+  // Payroll deducts each installment as-is, so every figure is in whole centavos. Rounding the
+  // level payment leaves a few centavos over or under by the end; the last installment takes
+  // exactly what's left, so the schedule sums to the principal plus its interest.
+  const level = roundMoney(payment);
   const rows: LoanBreakdownRow[] = [];
-  let balance = principal;
+  let balance = roundMoney(principal);
   let currentDate = dayjs(startDate);
 
   for (let i = 1; i <= terms; i++) {
-    const interest = balance * periodRate;
-    const principalPart = payment - interest;
-    balance = Math.max(0, balance - principalPart);
+    const interest = roundMoney(balance * periodRate);
+    const principalPart =
+      i === terms ? balance : Math.min(balance, roundMoney(level - interest));
+    balance = roundMoney(balance - principalPart);
 
     rows.push({
       period: i,
       date: currentDate.format("YYYY-MM-DD"),
-      principal: +principalPart.toFixed(4),
-      interest: +interest.toFixed(4),
-      amount: +payment.toFixed(4),
-      balance: +balance.toFixed(4),
+      principal: principalPart,
+      interest,
+      amount: roundMoney(principalPart + interest),
+      balance,
     });
 
     if (frequency === "SemiMonthly") {
@@ -97,9 +103,9 @@ export function recomputeLoanBalances<T extends LoanBreakdownRow>(
   return rows.map((r) => {
     const principalPart = isLocked(r)
       ? r.principal
-      : +Math.max(0, r.amount - r.interest).toFixed(4);
-    balance = Math.max(0, balance - principalPart);
-    return { ...r, principal: principalPart, balance: +balance.toFixed(4) };
+      : roundMoney(Math.max(0, r.amount - r.interest));
+    balance = Math.max(0, roundMoney(balance - principalPart));
+    return { ...r, principal: principalPart, balance };
   });
 }
 
@@ -111,8 +117,8 @@ export function withRunningBalance<
 >(rows: T[]): T[] {
   let remaining = rows.reduce((sum, r) => sum + r.amount, 0);
   return rows.map((r) => {
-    remaining = Math.max(0, remaining - r.amount);
-    return { ...r, balance: +remaining.toFixed(4) };
+    remaining = Math.max(0, roundMoney(remaining - r.amount));
+    return { ...r, balance: remaining };
   });
 }
 
@@ -130,31 +136,27 @@ export const loanBreakdownColumns: ColumnsType<LoanBreakdownRow> = [
     dataIndex: "principal",
     key: "principal",
     align: "right",
-    render: (v: number) =>
-      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+    render: (v: number) => formatMoney(v),
   },
   {
     title: "Interest",
     dataIndex: "interest",
     key: "interest",
     align: "right",
-    render: (v: number) =>
-      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+    render: (v: number) => formatMoney(v),
   },
   {
     title: "Payment",
     dataIndex: "amount",
     key: "amount",
     align: "right",
-    render: (v: number) =>
-      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+    render: (v: number) => formatMoney(v),
   },
   {
     title: "Balance",
     dataIndex: "balance",
     key: "balance",
     align: "right",
-    render: (v: number) =>
-      (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+    render: (v: number) => formatMoney(v),
   },
 ];

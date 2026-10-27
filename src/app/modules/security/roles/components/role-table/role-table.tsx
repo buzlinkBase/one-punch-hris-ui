@@ -111,7 +111,12 @@ export default function RoleTable({ data, loading, onDelete }: Props) {
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

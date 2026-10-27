@@ -153,7 +153,12 @@ export default function ChangeRestDayTable({
               okText="Yes"
               cancelText="No"
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button
+                aria-label="Delete"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+              />
             </Popconfirm>
           )}
         </Space>

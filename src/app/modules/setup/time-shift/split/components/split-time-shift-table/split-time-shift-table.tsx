@@ -185,6 +185,7 @@ export default function SplitTimeShiftTable({
           <PermissionGate permission="Time Shift Setup:Create">
             <Tooltip title="Duplicate">
               <Button
+                aria-label="Duplicate"
                 type="text"
                 icon={<CopyOutlined />}
                 onClick={() =>
@@ -197,6 +198,7 @@ export default function SplitTimeShiftTable({
           </PermissionGate>
           <PermissionGate permission="Time Shift Setup:Edit">
             <Button
+              aria-label="Edit"
               type="text"
               icon={<EditOutlined />}
               onClick={() =>
@@ -212,7 +214,12 @@ export default function SplitTimeShiftTable({
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

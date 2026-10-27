@@ -80,6 +80,7 @@ export default function DeductionApplicationList() {
           </div>
           <Space>
             <Button
+              aria-label="Refresh"
               icon={<ReloadOutlined spin={isFetching} />}
               onClick={() => refetch()}
               loading={isFetching && !isLoading}

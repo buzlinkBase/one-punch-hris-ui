@@ -49,6 +49,7 @@ import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendanc
 import type { CreateChangeHoliday } from "../../models/api/request/create-change-holiday.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { z } from "zod";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -596,10 +597,11 @@ function EditForm({ id }: { id: string }) {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const fromDate = watch("fromDate");
@@ -628,6 +630,7 @@ function EditForm({ id }: { id: string }) {
         message: "Holiday Change Updated",
         description: "Record has been updated successfully.",
       });
+      allowNavigation();
       navigate({ to: "/change-schedule/change-holiday" });
     } catch {
       getNotify().error({

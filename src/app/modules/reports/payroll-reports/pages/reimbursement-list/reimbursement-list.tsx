@@ -11,9 +11,7 @@ import type { ReimbursementListResponse } from "../../models/api/response/payrol
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { useUpdateReimbursementStatus } from "@/app/modules/applications/leave-application/hooks/use-leave-application-queries";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const STATUS_COLOR: Record<ReimbursementListResponse["status"], string> = {
   NotFiled: "default",
@@ -145,7 +143,7 @@ export default function ReimbursementList() {
       key: "amount",
       align: "right",
       width: 150,
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Status",

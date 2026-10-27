@@ -18,6 +18,7 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { formatMoney } from "@/shared/utils/money.util";
 
 interface Props {
   data: DeductionApplicationResponse[];
@@ -102,16 +103,14 @@ export default function DeductionApplicationTable({
       dataIndex: "totalPrincipal",
       key: "totalPrincipal",
       align: "right",
-      render: (v: number) =>
-        v?.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      render: (v: number) => (v == null ? "" : formatMoney(v)),
     },
     {
       title: "Total Amount",
       dataIndex: "totalAmount",
       key: "totalAmount",
       align: "right",
-      render: (v: number) =>
-        v?.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      render: (v: number) => (v == null ? "" : formatMoney(v)),
     },
     {
       title: "Status",
@@ -169,6 +168,7 @@ export default function DeductionApplicationTable({
               okButtonProps={{ danger: true }}
             >
               <Button
+                aria-label="Delete"
                 size="small"
                 type="text"
                 icon={<DeleteOutlined />}
@@ -184,6 +184,7 @@ export default function DeductionApplicationTable({
   return (
     <>
       <Table
+        scroll={{ x: "max-content" }}
         rowKey="id"
         dataSource={data}
         columns={columns}

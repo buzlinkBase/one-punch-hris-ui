@@ -18,6 +18,7 @@ import { DEPARTMENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -44,7 +45,7 @@ export default function DepartmentDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
     defaultValues: {
@@ -55,6 +56,7 @@ export default function DepartmentDetail() {
       status: "Active",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -74,6 +76,7 @@ export default function DepartmentDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/department" });
   };
 

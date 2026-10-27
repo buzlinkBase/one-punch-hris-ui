@@ -12,7 +12,6 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import { Spin } from "antd";
-import MainLayout from "@/app/layouts/main-layout";
 import AuthLayout from "@/app/layouts/auth-layout";
 import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
@@ -237,12 +236,6 @@ const AccountConfirmation = lazy(
 const AcceptInvitation = lazy(
   () => import("@/app/modules/auth/accept-invitation/accept-invitation"),
 );
-const ClientList = lazy(
-  () => import("@/app/modules/onboard/client/pages/client-list"),
-);
-const ClientDetail = lazy(
-  () => import("@/app/modules/onboard/client/pages/client-detail"),
-);
 
 const RouteFallback = () => null;
 
@@ -265,6 +258,16 @@ const withSuspense = (Component: LazyExoticComponent<ComponentType>) => {
 
   return Wrapped;
 };
+
+// The signed-in app shell, loaded on demand so the login page doesn't download it (and SignalR,
+// which it starts). Built once and shared by every section route: one component identity keeps
+// React from remounting the shell -- and restarting its hub connections -- between sections.
+const MainLayout = lazy(() => import("@/app/layouts/main-layout"));
+const AppShell = () => (
+  <Suspense fallback={<RouterPendingFallback />}>
+    <MainLayout />
+  </Suspense>
+);
 
 const ComingSoon = ({ title }: { title: string }) => (
   <div className="content-page">
@@ -510,7 +513,7 @@ const acceptInviteIndexRoute = createRoute({
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "dashboard",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const dashboardIndexRoute = createRoute({
@@ -527,7 +530,7 @@ const Notifications = lazy(
 const notificationsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "notifications",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const notificationsIndexRoute = createRoute({
@@ -539,7 +542,7 @@ const notificationsIndexRoute = createRoute({
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "profile",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const profileIndexRoute = createRoute({
@@ -553,7 +556,7 @@ const profileIndexRoute = createRoute({
 const helpRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "help",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const helpIndexRoute = createRoute({
@@ -571,7 +574,7 @@ const helpArticleRoute = createRoute({
 const portalRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "portal",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const portalIndexRoute = createRoute({
@@ -591,7 +594,7 @@ const portalChildRoutes = portalRoutes.map((route) =>
 const communicationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "communication",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const communicationChildRoutes = communicationRoutes.map((route) =>
@@ -605,7 +608,7 @@ const communicationChildRoutes = communicationRoutes.map((route) =>
 const clientPortalRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "client-portal",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const clientPortalChildRoutes = clientPortalRoutes.map((route) =>
@@ -619,7 +622,7 @@ const clientPortalChildRoutes = clientPortalRoutes.map((route) =>
 const analyticsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "analytics",
-  component: MainLayout,
+  component: AppShell,
 });
 
 // /analytics itself has no page: open the first Analytics page this user may see.
@@ -645,7 +648,7 @@ const analyticsChildRoutes = analyticsRoutes.map((route) =>
 const setupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "setup",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const setupIndexRoute = createRoute({
@@ -665,7 +668,7 @@ const setupChildRoutes = setupRoutes.map((route) =>
 const timekeepingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "timekeeping",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const timekeepingIndexRoute = createRoute({
@@ -677,7 +680,7 @@ const timekeepingIndexRoute = createRoute({
 const uploadAttendanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "timekeeping/upload-attendance",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const uploadAttendanceIndexRoute = createRoute({
@@ -689,7 +692,7 @@ const uploadAttendanceIndexRoute = createRoute({
 const attendanceEntryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "timekeeping/attendance-entry",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const attendanceEntryIndexRoute = createRoute({
@@ -707,7 +710,7 @@ const attendanceEntryCreateRoute = createRoute({
 const rawLogsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "timekeeping/raw-logs",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const rawLogsIndexRoute = createRoute({
@@ -719,7 +722,7 @@ const rawLogsIndexRoute = createRoute({
 const incompletePunchesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "timekeeping/incomplete-punches",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const incompletePunchesIndexRoute = createRoute({
@@ -731,7 +734,7 @@ const incompletePunchesIndexRoute = createRoute({
 const unregisterEmployeeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "timekeeping/unregistered-employees",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const unregisterEmployeeIndexRoute = createRoute({
@@ -744,7 +747,7 @@ const appSectionRoute = (path: string, title: string) => {
   const sectionRoute = createRoute({
     getParentRoute: () => rootRoute,
     path,
-    component: MainLayout,
+    component: AppShell,
   });
 
   const sectionIndexRoute = createRoute({
@@ -759,7 +762,7 @@ const appSectionRoute = (path: string, title: string) => {
 const changeHolidayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "change-schedule/change-holiday",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const changeHolidayIndexRoute = createRoute({
@@ -783,7 +786,7 @@ const changeHolidayDetailRoute = createRoute({
 const changeRestDayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "change-schedule/change-rest-day",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const changeRestDayIndexRoute = createRoute({
@@ -807,7 +810,7 @@ const changeRestDayDetailRoute = createRoute({
 const workRotationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "change-schedule/work-rotation",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const workRotationIndexRoute = createRoute({
@@ -831,7 +834,7 @@ const workRotationDetailRoute = createRoute({
 const dtrDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/detail",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const dtrDetailIndexRoute = createRoute({
@@ -843,7 +846,7 @@ const dtrDetailIndexRoute = createRoute({
 const dtrDetailMasterRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/master",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const dtrDetailMasterIndexRoute = createRoute({
@@ -855,7 +858,7 @@ const dtrDetailMasterIndexRoute = createRoute({
 const dtrSummaryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/summary",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const dtrSummaryIndexRoute = createRoute({
@@ -867,7 +870,7 @@ const dtrSummaryIndexRoute = createRoute({
 const forPayrollRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/for-payroll",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const forPayrollIndexRoute = createRoute({
@@ -879,7 +882,7 @@ const forPayrollIndexRoute = createRoute({
 const generateThirteenthMonthRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/for-13th-month",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const generateThirteenthMonthIndexRoute = createRoute({
@@ -891,7 +894,7 @@ const generateThirteenthMonthIndexRoute = createRoute({
 const generateLastPayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/for-last-pay",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const generateLastPayIndexRoute = createRoute({
@@ -903,7 +906,7 @@ const generateLastPayIndexRoute = createRoute({
 const generateYearEndAdjustmentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "daily-time-record/for-year-end-adjustment",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const generateYearEndAdjustmentIndexRoute = createRoute({
@@ -915,7 +918,7 @@ const generateYearEndAdjustmentIndexRoute = createRoute({
 const payrollSummaryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/summary",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const payrollSummaryIndexRoute = createRoute({
@@ -927,7 +930,7 @@ const payrollSummaryIndexRoute = createRoute({
 const sssRemittanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/sss-remittance",
-  component: MainLayout,
+  component: AppShell,
 });
 const sssRemittanceIndexRoute = createRoute({
   getParentRoute: () => sssRemittanceRoute,
@@ -938,7 +941,7 @@ const sssRemittanceIndexRoute = createRoute({
 const philHealthRemittanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/philhealth-remittance",
-  component: MainLayout,
+  component: AppShell,
 });
 const philHealthRemittanceIndexRoute = createRoute({
   getParentRoute: () => philHealthRemittanceRoute,
@@ -949,7 +952,7 @@ const philHealthRemittanceIndexRoute = createRoute({
 const pagIbigRemittanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/pagibig-remittance",
-  component: MainLayout,
+  component: AppShell,
 });
 const pagIbigRemittanceIndexRoute = createRoute({
   getParentRoute: () => pagIbigRemittanceRoute,
@@ -960,7 +963,7 @@ const pagIbigRemittanceIndexRoute = createRoute({
 const wtaxRemittanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/wtax-remittance",
-  component: MainLayout,
+  component: AppShell,
 });
 const wtaxRemittanceIndexRoute = createRoute({
   getParentRoute: () => wtaxRemittanceRoute,
@@ -971,7 +974,7 @@ const wtaxRemittanceIndexRoute = createRoute({
 const bankDisbursementRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/bank-disbursement",
-  component: MainLayout,
+  component: AppShell,
 });
 const bankDisbursementIndexRoute = createRoute({
   getParentRoute: () => bankDisbursementRoute,
@@ -982,7 +985,7 @@ const bankDisbursementIndexRoute = createRoute({
 const deductionLedgerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/deduction-ledger",
-  component: MainLayout,
+  component: AppShell,
 });
 const deductionLedgerIndexRoute = createRoute({
   getParentRoute: () => deductionLedgerRoute,
@@ -993,7 +996,7 @@ const deductionLedgerIndexRoute = createRoute({
 const cashBondReportRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/cash-bond",
-  component: MainLayout,
+  component: AppShell,
 });
 const cashBondReportIndexRoute = createRoute({
   getParentRoute: () => cashBondReportRoute,
@@ -1004,7 +1007,7 @@ const cashBondReportIndexRoute = createRoute({
 const leaveLedgerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/leave-ledger",
-  component: MainLayout,
+  component: AppShell,
 });
 const leaveLedgerIndexRoute = createRoute({
   getParentRoute: () => leaveLedgerRoute,
@@ -1015,7 +1018,7 @@ const leaveLedgerIndexRoute = createRoute({
 const retirementLedgerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/retirement-ledger",
-  component: MainLayout,
+  component: AppShell,
 });
 const retirementLedgerIndexRoute = createRoute({
   getParentRoute: () => retirementLedgerRoute,
@@ -1026,7 +1029,7 @@ const retirementLedgerIndexRoute = createRoute({
 const uniformAllowanceLedgerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/uniform-allowance-ledger",
-  component: MainLayout,
+  component: AppShell,
 });
 const uniformAllowanceLedgerIndexRoute = createRoute({
   getParentRoute: () => uniformAllowanceLedgerRoute,
@@ -1037,7 +1040,7 @@ const uniformAllowanceLedgerIndexRoute = createRoute({
 const reimbursementListRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/reimbursement-list",
-  component: MainLayout,
+  component: AppShell,
 });
 const reimbursementListIndexRoute = createRoute({
   getParentRoute: () => reimbursementListRoute,
@@ -1048,7 +1051,7 @@ const reimbursementListIndexRoute = createRoute({
 const costSummaryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/cost-summary",
-  component: MainLayout,
+  component: AppShell,
 });
 const costSummaryIndexRoute = createRoute({
   getParentRoute: () => costSummaryRoute,
@@ -1059,7 +1062,7 @@ const costSummaryIndexRoute = createRoute({
 const ytdSummaryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/ytd-summary",
-  component: MainLayout,
+  component: AppShell,
 });
 const ytdSummaryIndexRoute = createRoute({
   getParentRoute: () => ytdSummaryRoute,
@@ -1070,7 +1073,7 @@ const ytdSummaryIndexRoute = createRoute({
 const thirteenthMonthPayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/13th-month-pay",
-  component: MainLayout,
+  component: AppShell,
 });
 const thirteenthMonthPayIndexRoute = createRoute({
   getParentRoute: () => thirteenthMonthPayRoute,
@@ -1081,7 +1084,7 @@ const thirteenthMonthPayIndexRoute = createRoute({
 const bir1601CRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/bir-1601c",
-  component: MainLayout,
+  component: AppShell,
 });
 const bir1601CIndexRoute = createRoute({
   getParentRoute: () => bir1601CRoute,
@@ -1092,7 +1095,7 @@ const bir1601CIndexRoute = createRoute({
 const birAlphalistRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/bir-alphalist",
-  component: MainLayout,
+  component: AppShell,
 });
 const birAlphalistIndexRoute = createRoute({
   getParentRoute: () => birAlphalistRoute,
@@ -1103,7 +1106,7 @@ const birAlphalistIndexRoute = createRoute({
 const bir2316Route = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/bir-2316",
-  component: MainLayout,
+  component: AppShell,
 });
 const bir2316IndexRoute = createRoute({
   getParentRoute: () => bir2316Route,
@@ -1114,7 +1117,7 @@ const bir2316IndexRoute = createRoute({
 const sssR3Route = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/sss-r3",
-  component: MainLayout,
+  component: AppShell,
 });
 const sssR3IndexRoute = createRoute({
   getParentRoute: () => sssR3Route,
@@ -1125,7 +1128,7 @@ const sssR3IndexRoute = createRoute({
 const philHealthEprsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/philhealth-eprs",
-  component: MainLayout,
+  component: AppShell,
 });
 const philHealthEprsIndexRoute = createRoute({
   getParentRoute: () => philHealthEprsRoute,
@@ -1136,7 +1139,7 @@ const philHealthEprsIndexRoute = createRoute({
 const pagIbigMcrfRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "payroll/reports/pagibig-mcrf",
-  component: MainLayout,
+  component: AppShell,
 });
 const pagIbigMcrfIndexRoute = createRoute({
   getParentRoute: () => pagIbigMcrfRoute,
@@ -1147,7 +1150,7 @@ const pagIbigMcrfIndexRoute = createRoute({
 const tardinessRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "reports/tardiness",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const tardinessIndexRoute = createRoute({
@@ -1159,7 +1162,7 @@ const tardinessIndexRoute = createRoute({
 const rosterRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "reports/rostering",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const rosterIndexRoute = createRoute({
@@ -1168,34 +1171,10 @@ const rosterIndexRoute = createRoute({
   component: withSuspense(RosterList),
 });
 
-const clientsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "clients",
-  component: MainLayout,
-});
-
-const clientsIndexRoute = createRoute({
-  getParentRoute: () => clientsRoute,
-  path: "/",
-  component: withSuspense(ClientList),
-});
-
-const clientsCreateRoute = createRoute({
-  getParentRoute: () => clientsRoute,
-  path: "create",
-  component: withSuspense(ClientDetail),
-});
-
-const clientsDetailRoute = createRoute({
-  getParentRoute: () => clientsRoute,
-  path: "$id",
-  component: withSuspense(ClientDetail),
-});
-
 const securityUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/users",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const securityUsersIndexRoute = createRoute({
@@ -1219,7 +1198,7 @@ const securityUsersDetailRoute = createRoute({
 const securityRolesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/roles",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const securityRolesIndexRoute = createRoute({
@@ -1247,7 +1226,7 @@ const PermissionList = lazy(
 const securityPermissionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/permissions",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const securityPermissionsIndexRoute = createRoute({
@@ -1361,7 +1340,7 @@ const AuditDetail = lazy(
 const leaveApplicationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/leave",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const leaveApplicationIndexRoute = createRoute({
@@ -1385,49 +1364,49 @@ const leaveApplicationDetailRoute = createRoute({
 const overtimeApplicationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/overtime",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const travelOrderRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/official-business",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const passSlipRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/pass-slip",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const profileUpdateRequestRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/profile-update-request",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const deductionApplicationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/deduction-application",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const otherIncomeApplicationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/other-income",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const salaryAdjustmentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "applications/salary-adjustment",
-  component: MainLayout,
+  component: AppShell,
 });
 
 // const undertimeRoute = createRoute({
 //   getParentRoute: () => rootRoute,
 //   path: "applications/undertime",
-//   component: MainLayout,
+//   component: AppShell,
 // });
 
 const overtimeApplicationIndexRoute = createRoute({
@@ -1571,7 +1550,7 @@ const salaryAdjustmentDetailRoute = createRoute({
 const securityAuditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "security/audit",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const securityAuditIndexRoute = createRoute({
@@ -1590,7 +1569,7 @@ const securityAuditDetailRoute = createRoute({
 const billingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "billing",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const billingIndexRoute = createRoute({
@@ -1622,7 +1601,7 @@ const billingStorageRoute = createRoute({
 const enrollBiometricsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "enroll-biometrics",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const enrollBiometricsIndexRoute = createRoute({
@@ -1634,7 +1613,7 @@ const enrollBiometricsIndexRoute = createRoute({
 const manageDevicesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "biometric/manage-devices",
-  component: MainLayout,
+  component: AppShell,
 });
 
 const manageDevicesIndexRoute = createRoute({
@@ -1737,11 +1716,6 @@ const routeTree = rootRoute.addChildren([
   appSectionRoute("reports", "Reports"),
   tardinessRoute.addChildren([tardinessIndexRoute]),
   rosterRoute.addChildren([rosterIndexRoute]),
-  clientsRoute.addChildren([
-    clientsIndexRoute,
-    clientsCreateRoute,
-    clientsDetailRoute,
-  ]),
   enrollBiometricsRoute.addChildren([enrollBiometricsIndexRoute]),
   manageDevicesRoute.addChildren([
     manageDevicesIndexRoute,

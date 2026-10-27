@@ -7,6 +7,7 @@ import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
 } from "../../constants/label.const";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Text } = Typography;
 
@@ -20,11 +21,6 @@ interface Props {
   clientName: (id?: string | null) => string;
 }
 
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 const fmtDate = (d?: string | null) =>
   d ? dayjs(d.replace(/Z$/, "")).format("MMM DD, YYYY") : "—";
 
@@ -93,42 +89,42 @@ export default function CutoffStatementModal({
       dataIndex: "grossIncome",
       key: "gross",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "SSS",
       dataIndex: "sssContribution",
       key: "sss",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "PhilHealth",
       dataIndex: "philHealthContribution",
       key: "phic",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Pag-IBIG",
       dataIndex: "pagIbigContribution",
       key: "hdmf",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "W-Tax",
       dataIndex: "withholdingTax",
       key: "tax",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Loans & other",
       key: "other",
       align: "right",
       render: (_, r) =>
-        fmt(r.totalLoans + r.otherDeductions + r.cashBondDeduction),
+        formatMoney(r.totalLoans + r.otherDeductions + r.cashBondDeduction),
     },
     {
       title: "Net pay",
@@ -136,7 +132,7 @@ export default function CutoffStatementModal({
       key: "net",
       align: "right",
       fixed: "right",
-      render: (v: number) => <Text strong>{fmt(v)}</Text>,
+      render: (v: number) => <Text strong>{formatMoney(v)}</Text>,
     },
   ];
 

@@ -12,15 +12,13 @@ import type { MinimumWageRateResponse } from "../../models/api/response/minimum-
 import { MINIMUM_WAGE_RATE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { formatMoney } from "@/shared/utils/money.util";
 
 interface Props {
   data: MinimumWageRateResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
 }
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
 export default function MinimumWageRateTable({
   data,
@@ -74,7 +72,7 @@ export default function MinimumWageRateTable({
           width: widths.dailyRate,
           onResize: (w: number) => handleResize("dailyRate", w),
         }) as object,
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: MINIMUM_WAGE_RATE_LABEL.EFFECTIVE_DATE,
@@ -122,6 +120,7 @@ export default function MinimumWageRateTable({
       render: (_, record) => (
         <Space>
           <Button
+            aria-label="Edit"
             type="text"
             icon={<EditOutlined />}
             onClick={() =>
@@ -135,7 +134,12 @@ export default function MinimumWageRateTable({
               okText="Yes"
               cancelText="No"
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button
+                aria-label="Delete"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+              />
             </Popconfirm>
           )}
         </Space>

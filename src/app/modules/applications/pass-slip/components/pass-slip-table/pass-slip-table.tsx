@@ -73,6 +73,7 @@ function LogActions({
         <>
           <PermissionGate permission="Pass Slip:Approve">
             <Button
+              aria-label="Approve"
               size="small"
               type="text"
               icon={<CheckOutlined />}
@@ -80,6 +81,7 @@ function LogActions({
               onClick={() => onApproveClick(record)}
             />
             <Button
+              aria-label="Decline"
               size="small"
               type="text"
               danger
@@ -98,6 +100,7 @@ function LogActions({
             okButtonProps={{ danger: true }}
           >
             <Button
+              aria-label="Revoke"
               size="small"
               type="text"
               icon={<RollbackOutlined />}
@@ -116,7 +119,13 @@ function LogActions({
             okText="Delete"
             okButtonProps={{ danger: true }}
           >
-            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
+            <Button
+              aria-label="Delete"
+              size="small"
+              type="text"
+              icon={<DeleteOutlined />}
+              danger
+            />
           </Popconfirm>
         </PermissionGate>
       )}
@@ -245,6 +254,7 @@ export default function PassSlipTable({
   return (
     <>
       <Table
+        scroll={{ x: "max-content" }}
         rowKey="key"
         dataSource={groups}
         columns={parentColumns}
@@ -254,6 +264,7 @@ export default function PassSlipTable({
         expandable={{
           expandedRowRender: (group) => (
             <Table
+              scroll={{ x: "max-content" }}
               rowKey="id"
               dataSource={group.logs}
               columns={logColumns}

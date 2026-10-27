@@ -31,7 +31,6 @@ import {
   SaveOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import axios from "axios";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
@@ -57,9 +56,10 @@ import type {
   AvailableSalaryAdjustment,
   AvailableOtherIncome,
 } from "../../models/api/response/last-pay-review.model";
-import type { ErrorResponse } from "@/shared/types/api-response.model";
-import httpClient from "@/core/http/http-client";
-import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { forPayrollApi } from "../../services/for-payroll.api";
+import { formatMoney } from "@/shared/utils/money.util";
+import { apiErrorMessage } from "@/core/http/api-error";
 
 const { Title, Text } = Typography;
 
@@ -71,21 +71,6 @@ const SEPARATED_STATUSES = ["Terminated", "Resigned", "Retired", "Deceased"];
 // table by, so it queries a wide, effectively-unbounded range instead.
 const RUNS_FROM = "2000-01-01";
 const RUNS_TO = dayjs().add(1, "year").format("YYYY-MM-DD");
-
-// ValidationException messages (e.g. "already been generated for one or more selected
-// employees") land in data.detail via GlobalExceptionHandler — surface that instead of a
-// generic fallback.
-const getErrorDetail = (err: unknown, fallback: string) =>
-  axios.isAxiosError(err)
-    ? ((err.response?.data as ErrorResponse | undefined)?.data?.detail ??
-      fallback)
-    : fallback;
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
 export default function GenerateLastPay() {
   const [employeeIds, setEmployeeIds] = useState<string[]>([]);
@@ -190,7 +175,7 @@ export default function GenerateLastPay() {
       refetchRunsPayrolls();
     } catch (err) {
       message.error(
-        getErrorDetail(err, "Failed to generate Last Pay. Please try again."),
+        apiErrorMessage(err, "Failed to generate Last Pay. Please try again."),
       );
     }
   };
@@ -293,18 +278,7 @@ export default function GenerateLastPay() {
       message.error("This record has no printable payslip yet.");
       return;
     }
-    const printTab = window.open("about:blank", "_blank");
-    try {
-      const blob = await httpClient.get<Blob>(
-        `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/${record.id}/print`,
-        { responseType: "blob" },
-      );
-      const url = URL.createObjectURL(blob);
-      if (printTab) printTab.location.href = url;
-    } catch {
-      printTab?.close();
-      message.error("Failed to generate the payslip. Please try again.");
-    }
+    await openPdfInNewTab(forPayrollApi.urls.payslipPrint(record.id));
   };
 
   const employeeColumns: ColumnsType<PayrollRunResult> = [
@@ -314,56 +288,56 @@ export default function GenerateLastPay() {
       dataIndex: "grossIncome",
       key: "gross",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Non-Taxable",
       dataIndex: "nonTaxableBenefits",
       key: "nonTaxable",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Taxable Excess",
       dataIndex: "taxableBenefits",
       key: "taxable",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "W-Tax",
       dataIndex: "withholdingTax",
       key: "tax",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Outstanding Loans",
       dataIndex: "totalLoans",
       key: "loans",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Retirement Payout",
       dataIndex: "retirementPayout",
       key: "retirementPayout",
       align: "right",
-      render: (v?: number) => fmt(v ?? 0),
+      render: (v?: number) => formatMoney(v ?? 0),
     },
     {
       title: "Cash Bond Refund",
       dataIndex: "cashBondRefund",
       key: "cashBondRefund",
       align: "right",
-      render: (v?: number) => fmt(v ?? 0),
+      render: (v?: number) => formatMoney(v ?? 0),
     },
     {
       title: "Net Pay",
       dataIndex: "netPay",
       key: "net",
       align: "right",
-      render: (v: number) => <Text strong>{fmt(v)}</Text>,
+      render: (v: number) => <Text strong>{formatMoney(v)}</Text>,
     },
     {
       title: "Status",
@@ -382,6 +356,7 @@ export default function GenerateLastPay() {
         <PermissionGate permission="Payroll Summary:Export">
           <Tooltip title="Print payslip">
             <Button
+              aria-label="Print payslip"
               type="text"
               size="small"
               icon={<PrinterOutlined />}
@@ -400,56 +375,56 @@ export default function GenerateLastPay() {
       dataIndex: "grossIncome",
       key: "gross",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Non-Taxable",
       dataIndex: "nonTaxableBenefits",
       key: "nonTaxable",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Taxable Excess",
       dataIndex: "taxableBenefits",
       key: "taxable",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "W-Tax",
       dataIndex: "withholdingTax",
       key: "tax",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Outstanding Loans",
       dataIndex: "totalLoans",
       key: "loans",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Retirement Payout",
       dataIndex: "retirementPayout",
       key: "retirementPayout",
       align: "right",
-      render: (v?: number) => fmt(v ?? 0),
+      render: (v?: number) => formatMoney(v ?? 0),
     },
     {
       title: "Cash Bond Refund",
       dataIndex: "cashBondRefund",
       key: "cashBondRefund",
       align: "right",
-      render: (v?: number) => fmt(v ?? 0),
+      render: (v?: number) => formatMoney(v ?? 0),
     },
     {
       title: "Net Pay",
       dataIndex: "netPay",
       key: "net",
       align: "right",
-      render: (v: number) => <Text strong>{fmt(v)}</Text>,
+      render: (v: number) => <Text strong>{formatMoney(v)}</Text>,
     },
   ];
 
@@ -621,6 +596,7 @@ export default function GenerateLastPay() {
             Pending Salary Adjustments
           </Text>
           <Table<AvailableSalaryAdjustment>
+            scroll={{ x: "max-content" }}
             className="mb-4"
             rowKey="id"
             size="small"
@@ -650,7 +626,7 @@ export default function GenerateLastPay() {
                 dataIndex: "amount",
                 key: "amount",
                 align: "right",
-                render: fmt,
+                render: formatMoney,
               },
               {
                 title: "Remarks",
@@ -665,6 +641,7 @@ export default function GenerateLastPay() {
             Pending Other Income
           </Text>
           <Table<AvailableOtherIncome>
+            scroll={{ x: "max-content" }}
             rowKey="id"
             size="small"
             loading={isLoadingOtherIncome}
@@ -697,7 +674,7 @@ export default function GenerateLastPay() {
                 dataIndex: "amount",
                 key: "amount",
                 align: "right",
-                render: fmt,
+                render: formatMoney,
               },
               {
                 title: "Taxable",
@@ -751,6 +728,7 @@ export default function GenerateLastPay() {
           </Row>
           <Card className="mb-4" title="Just Generated">
             <Table
+              scroll={{ x: "max-content" }}
               rowKey="employeeId"
               size="small"
               dataSource={results}
@@ -763,14 +741,16 @@ export default function GenerateLastPay() {
 
       <Card title="Last Pay Runs">
         <Table
+          scroll={{ x: "max-content" }}
           rowKey="payrollBatchId"
           size="small"
           dataSource={batchGroups}
           pagination={false}
-          scroll={{ x: "max-content" }}
+
           expandable={{
             expandedRowRender: (g) => (
               <Table
+                scroll={{ x: "max-content" }}
                 rowKey="employeeId"
                 size="small"
                 pagination={false}
@@ -793,14 +773,14 @@ export default function GenerateLastPay() {
               dataIndex: "totalGross",
               key: "totalGross",
               align: "right",
-              render: fmt,
+              render: formatMoney,
             },
             {
               title: "Total Net",
               dataIndex: "totalNet",
               key: "totalNet",
               align: "right",
-              render: fmt,
+              render: formatMoney,
             },
             {
               title: "Payout Date",
@@ -841,6 +821,7 @@ export default function GenerateLastPay() {
                 <Space size={4}>
                   <Tooltip title="History">
                     <Button
+                      aria-label="History"
                       size="small"
                       icon={<HistoryOutlined />}
                       onClick={() => setHistoryTargetId(g.payrollBatchId)}
@@ -850,6 +831,7 @@ export default function GenerateLastPay() {
                     <PermissionGate permission="Last Pay Run:Approve">
                       <Tooltip title="Approve">
                         <Button
+                          aria-label="Approve"
                           size="small"
                           icon={<CheckOutlined />}
                           onClick={() =>
@@ -862,6 +844,7 @@ export default function GenerateLastPay() {
                       </Tooltip>
                       <Tooltip title="Decline">
                         <Button
+                          aria-label="Decline"
                           danger
                           size="small"
                           icon={<CloseOutlined />}
@@ -895,6 +878,7 @@ export default function GenerateLastPay() {
                         }
                       >
                         <Button
+                          aria-label="Delete"
                           danger
                           size="small"
                           icon={<DeleteOutlined />}

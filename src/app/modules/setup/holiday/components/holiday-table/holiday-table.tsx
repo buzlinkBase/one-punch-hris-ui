@@ -187,6 +187,7 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
       render: (_, record) => (
         <Space>
           <Button
+            aria-label="Edit"
             type="text"
             icon={<EditOutlined />}
             onClick={() => navigate({ to: `/setup/holiday/${record.id}` })}
@@ -198,7 +199,12 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
               okText="Yes"
               cancelText="No"
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button
+                aria-label="Delete"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+              />
             </Popconfirm>
           )}
         </Space>

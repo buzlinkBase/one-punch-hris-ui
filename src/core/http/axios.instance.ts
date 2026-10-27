@@ -1,6 +1,7 @@
 import axios from "axios";
 import { applyAuthInterceptor } from "./interceptors/auth.interceptor";
 import { applyErrorInterceptor } from "./interceptors/error.interceptor";
+import { applyUnauthorizedInterceptor } from "./interceptors/unauthorized.interceptor";
 
 const axiosInstance = axios.create({
   withCredentials: true,
@@ -19,6 +20,9 @@ const axiosInstance = axios.create({
 });
 
 applyAuthInterceptor(axiosInstance);
+// Response interceptors run in registration order: a 401 gets one refresh-and-replay before
+// the error interceptor decides whether to toast it.
+applyUnauthorizedInterceptor(axiosInstance);
 applyErrorInterceptor(axiosInstance);
 
 export default axiosInstance;

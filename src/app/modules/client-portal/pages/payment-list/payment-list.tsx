@@ -26,14 +26,13 @@ import {
   useRejectPayment,
   useSetCheckStatus,
 } from "../../hooks/use-client-portal-queries";
-import { clientPortalApi } from "../../services/client-portal.api";
 import {
   BILLING_LABEL,
   BILLING_PERMISSION,
   PAYMENT_METHOD_OPTIONS,
   peso,
 } from "../../constants/label.const";
-import { openBlobInNewTab } from "../../utils/open-blob";
+import { openPortalFile } from "../../utils/open-blob";
 import type { Payment } from "../../models/api/response/client-portal-response.model";
 
 const { Title, Text } = Typography;
@@ -122,10 +121,7 @@ export default function PaymentList() {
     recordForm.resetFields();
   };
 
-  const viewProof = async (id: string) => {
-    const blob = await clientPortalApi.fetchBlob(`payments/${id}/proof`);
-    openBlobInNewTab(blob, blob.type);
-  };
+  const viewProof = (id: string) => openPortalFile(`payments/${id}/proof`);
 
   const columns: ColumnsType<Payment> = [
     {

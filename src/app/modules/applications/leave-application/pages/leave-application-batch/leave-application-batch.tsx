@@ -29,6 +29,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -124,7 +125,7 @@ export default function LeaveApplicationBatch() {
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<BatchLeaveFormValues>({
     resolver: zodResolver(batchLeaveFormSchema),
     defaultValues: {
@@ -140,6 +141,7 @@ export default function LeaveApplicationBatch() {
       entries: [defaultEntry()],
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -242,6 +244,7 @@ export default function LeaveApplicationBatch() {
     }));
 
     await createBatch(payload);
+    allowNavigation();
     navigate({ to: "/applications/leave" });
   };
 
@@ -597,6 +600,7 @@ export default function LeaveApplicationBatch() {
 
                     <div className="flex justify-end sm:block sm:pt-1">
                       <Button
+                        aria-label="Delete"
                         type="text"
                         danger
                         icon={<DeleteOutlined />}

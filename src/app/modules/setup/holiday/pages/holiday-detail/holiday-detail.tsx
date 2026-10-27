@@ -37,6 +37,7 @@ import {
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { isActiveStatus } from "@/shared/utils/status.util";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -67,7 +68,7 @@ export default function HolidayDetail() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<HolidayFormValues>({
     resolver: zodResolver(holidayFormSchema) as Resolver<HolidayFormValues>,
     defaultValues: {
@@ -83,6 +84,7 @@ export default function HolidayDetail() {
       status: "ACTIVE",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const watchedHolType = useWatch({ control, name: "holType" });
   const isLegal = watchedHolType === "LEGAL";
@@ -156,6 +158,7 @@ export default function HolidayDetail() {
     };
     if (isEdit && id) await update({ id, ...payload });
     else await add(payload);
+    allowNavigation();
     navigate({ to: "/setup/holiday" });
   };
 

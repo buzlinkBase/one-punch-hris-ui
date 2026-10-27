@@ -201,6 +201,7 @@ export default function TravelOrderTable({
           {onApprove && record.approvalStatus === "ForApproval" && (
             <PermissionGate permission="Official Business:Approve">
               <Button
+                aria-label="Approve"
                 type="text"
                 icon={<CheckOutlined />}
                 className="text-green-600!"
@@ -211,6 +212,7 @@ export default function TravelOrderTable({
           {onDecline && record.approvalStatus === "ForApproval" && (
             <PermissionGate permission="Official Business:Approve">
               <Button
+                aria-label="Decline"
                 type="text"
                 danger
                 icon={<CloseOutlined />}
@@ -235,7 +237,12 @@ export default function TravelOrderTable({
                 okButtonProps={{ danger: true }}
                 cancelText="Cancel"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

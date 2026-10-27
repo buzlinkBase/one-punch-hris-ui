@@ -27,6 +27,7 @@ import {
 import { MINIMUM_WAGE_RATE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -45,7 +46,7 @@ export default function MinimumWageRateDetail() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<MinimumWageRateFormValues>({
     resolver: zodResolver(minimumWageRateFormSchema),
     defaultValues: {
@@ -57,6 +58,7 @@ export default function MinimumWageRateDetail() {
       wageOrderClass: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -79,6 +81,7 @@ export default function MinimumWageRateDetail() {
     };
     if (isEdit && id) await update({ id, ...payload });
     else await add(payload);
+    allowNavigation();
     navigate({ to: "/setup/minimum-wage-rate" });
   };
 

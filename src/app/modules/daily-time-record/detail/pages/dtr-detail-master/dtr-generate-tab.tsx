@@ -391,7 +391,7 @@ export default function DtrGenerateTab() {
     if (format === "csv") {
       triggerDownload(buildDtrCsv(records), `dtr-detail-${date}.csv`);
     } else {
-      downloadGroupedHeaderExcel(
+      void downloadGroupedHeaderExcel(
         LEFT_COLS,
         GROUPED_COLS,
         records,
@@ -577,6 +577,7 @@ export default function DtrGenerateTab() {
           extra={
             <Tooltip title="Refresh — picks up DTR saved or approved since this page opened">
               <Button
+                aria-label="Refresh — picks up DTR saved or approved since this page opened"
                 size="small"
                 type="text"
                 icon={<ReloadOutlined />}

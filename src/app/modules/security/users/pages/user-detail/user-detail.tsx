@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 import {
   Form,
   Typography,
@@ -22,7 +21,7 @@ import { USER_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { getNotify } from "@/shared/utils/notify";
-import type { ErrorResponse } from "@/shared/types/api-response.model";
+import { apiErrorBody, apiErrorMessage } from "@/core/http/api-error";
 
 const { Title } = Typography;
 
@@ -89,17 +88,10 @@ export default function UserDetail() {
 
       message.success("Member updated successfully");
     } catch (error) {
-      const response = axios.isAxiosError<ErrorResponse>(error)
-        ? error.response?.data
-        : undefined;
-      const responseData = response?.data as unknown as
-        { detail?: string } | string | undefined;
-      const description =
-        typeof responseData === "string"
-          ? responseData
-          : (responseData?.detail ??
-            response?.message ??
-            "Failed to update member");
+      const description = apiErrorMessage(
+        error,
+        apiErrorBody(error)?.message ?? "Failed to update member",
+      );
       getNotify().error({
         message: "Member update failed",
         description,

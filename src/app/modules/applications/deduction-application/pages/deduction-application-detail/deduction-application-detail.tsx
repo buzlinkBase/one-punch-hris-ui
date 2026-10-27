@@ -91,6 +91,8 @@ import {
   sortAndRenumber,
   updateRowAt,
 } from "@/shared/utils/schedule-edit.util";
+import { formatMoney } from "@/shared/utils/money.util";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -110,7 +112,7 @@ const ALL_WEEKDAYS_MASK = bitsToMask(ALL_WEEKDAY_BITS);
 const ALL_DAY_TYPES_MASK = bitsToMask(ALL_DAY_TYPE_BITS);
 
 function formatAmount(value: number): string {
-  return (value ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+  return formatMoney(value);
 }
 
 function toDateOnly(value?: string | null): string {
@@ -290,11 +292,12 @@ export default function DeductionApplicationDetail() {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<DeductionApplicationAdminFormValues>({
     resolver: zodResolver(deductionApplicationAdminFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const values = watch();
@@ -559,6 +562,7 @@ export default function DeductionApplicationDetail() {
     const callbacks = {
       onSuccess: () => {
         message.success("Saved.");
+        allowNavigation();
         navigate({ to: "/applications/deduction-application" });
       },
       onError: () => message.error("Failed to save."),
@@ -1020,6 +1024,7 @@ export default function DeductionApplicationDetail() {
             <div className="overflow-x-auto">
               {isAttendanceMode ? (
                 <Table
+                  scroll={{ x: "max-content" }}
                   rowKey="period"
                   dataSource={breakdown}
                   columns={attendanceColumns(isPeriodic, hasStatus, rowActions)}
@@ -1045,6 +1050,7 @@ export default function DeductionApplicationDetail() {
                 />
               ) : (
                 <Table
+                  scroll={{ x: "max-content" }}
                   rowKey="period"
                   dataSource={breakdown}
                   columns={fixedColumns}

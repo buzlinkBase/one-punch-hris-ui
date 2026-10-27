@@ -38,6 +38,7 @@ import type { DeductionTypeResponse } from "@/app/modules/setup/deduction-type/m
 import { DEDUCTION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -124,6 +125,7 @@ function ManageDeductionTypesModal({
       render: (_, row) => (
         <Space size="small">
           <Button
+            aria-label="Edit"
             size="small"
             type="text"
             icon={<EditOutlined />}
@@ -137,7 +139,13 @@ function ManageDeductionTypesModal({
             okText="Delete"
             okButtonProps={{ danger: true }}
           >
-            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
+            <Button
+              aria-label="Delete"
+              size="small"
+              type="text"
+              icon={<DeleteOutlined />}
+              danger
+            />
           </Popconfirm>
         </Space>
       ),
@@ -207,6 +215,7 @@ function ManageDeductionTypesModal({
 
       {/* List */}
       <Table
+        scroll={{ x: "max-content" }}
         rowKey="id"
         dataSource={types}
         columns={columns}
@@ -241,7 +250,7 @@ export default function DeductionDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<DeductionFormValues>({
     resolver: zodResolver(deductionFormSchema),
     defaultValues: {
@@ -253,6 +262,7 @@ export default function DeductionDetail() {
       allowAttendanceRules: false,
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -273,6 +283,7 @@ export default function DeductionDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/deduction" });
   };
 

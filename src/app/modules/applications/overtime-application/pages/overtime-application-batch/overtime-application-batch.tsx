@@ -26,6 +26,7 @@ import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/ho
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -81,7 +82,7 @@ export default function OvertimeApplicationBatch() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<BatchOvertimeFormValues>({
     resolver: zodResolver(batchOvertimeFormSchema),
     defaultValues: {
@@ -89,6 +90,7 @@ export default function OvertimeApplicationBatch() {
       entries: [defaultEntry()],
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -126,6 +128,7 @@ export default function OvertimeApplicationBatch() {
           },
     );
     await createBatch(payload);
+    allowNavigation();
     navigate({ to: "/applications/overtime" });
   };
 
@@ -365,6 +368,7 @@ export default function OvertimeApplicationBatch() {
                     {/* Remove */}
                     <div className="flex justify-end sm:block sm:pt-1">
                       <Button
+                        aria-label="Delete"
                         type="text"
                         danger
                         icon={<DeleteOutlined />}

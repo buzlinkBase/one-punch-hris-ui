@@ -5,7 +5,7 @@ import type {
   ProblemDetails,
 } from "@/shared/types/api-response.model";
 import { useConnectionStore } from "@/core/stores/connection.store";
-import { serviceKeyOf } from "../service-registry";
+import { isMonitoredService, serviceKeyOf } from "../service-registry";
 import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
 import { queryClient } from "@/core/query-client";
 import { SUBSCRIPTION_PROBLEM_TYPES } from "@/shared/constants/entitlement-keys.const";
@@ -26,6 +26,11 @@ function isConnectivityFailure(error: AxiosError): boolean {
   return !error.response && error.code !== "ERR_CANCELED";
 }
 
+// A replayed request (see unauthorized.interceptor.ts) runs this interceptor in its own chain,
+// then its rejection passes through the original chain's copy too -- without this, every
+// replayed failure would toast twice.
+const handled = new WeakSet<object>();
+
 export function applyErrorInterceptor(instance: AxiosInstance): void {
   instance.interceptors.response.use(
     (response) => {
@@ -35,9 +40,16 @@ export function applyErrorInterceptor(instance: AxiosInstance): void {
       return response;
     },
     (error: AxiosError<ErrorResponse>) => {
+      if (handled.has(error)) return Promise.reject(error);
+      handled.add(error);
+      // An aborted request (unmount, superseded refetch) is not an error to show anyone.
+      if (error.code === "ERR_CANCELED") return Promise.reject(error);
+
       const service = serviceKeyOf(error.config?.url);
       if (isConnectivityFailure(error)) {
-        useConnectionStore.getState().markUnreachable(service);
+        if (isMonitoredService(service)) {
+          useConnectionStore.getState().markUnreachable(service);
+        }
         return Promise.reject(error);
       }
       // Any answer at all, even a 4xx/5xx, means that service is reachable again.

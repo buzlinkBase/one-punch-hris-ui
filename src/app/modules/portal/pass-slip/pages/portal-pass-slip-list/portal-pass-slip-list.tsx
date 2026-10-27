@@ -114,6 +114,7 @@ export default function PortalPassSlipList() {
             pendingLabel="Pending"
           />
           <Table<PortalPassSlipResponse>
+            scroll={{ x: "max-content" }}
             rowKey="id"
             loading={isLoading}
             columns={columns}

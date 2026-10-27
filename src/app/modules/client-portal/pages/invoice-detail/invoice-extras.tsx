@@ -26,9 +26,8 @@ import {
   useInvoiceHistory,
   useUpload2307,
 } from "../../hooks/use-client-portal-queries";
-import { clientPortalApi } from "../../services/client-portal.api";
 import { BILLING_PERMISSION, peso } from "../../constants/label.const";
-import { openBlobInNewTab } from "../../utils/open-blob";
+import { openPortalFile } from "../../utils/open-blob";
 import type {
   Cert2307,
   CollectionNote,
@@ -76,10 +75,7 @@ export function InvoiceExtras({
     file: UploadFile[];
   }>();
 
-  const openCert = async (id: string) => {
-    const blob = await clientPortalApi.fetchBlob(`withholding/${id}/file`);
-    openBlobInNewTab(blob, blob.type);
-  };
+  const openCert = (id: string) => openPortalFile(`withholding/${id}/file`);
 
   const memoColumns: ColumnsType<Memo> = [
     { title: "Memo", dataIndex: "number" },

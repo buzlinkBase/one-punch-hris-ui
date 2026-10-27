@@ -28,6 +28,13 @@ const DTR_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "dailyrecords");
 const PAYROLL_ENDPOINT = buildApiUrl(API_PREFIX.hrms, "payrolls");
 
 export const forPayrollApi = {
+  // PDF endpoints -- opened with openPdfInNewTab (src/shared/utils/download-file.util.ts).
+  urls: {
+    payslipPrint: (payrollId: string) =>
+      `${PAYROLL_ENDPOINT}/${payrollId}/print`,
+    summaryPrint: `${PAYROLL_ENDPOINT}/print-summary`,
+  },
+
   postBatch(batchCode: string): Promise<void> {
     return httpClient.post<void>(`${DTR_ENDPOINT}/post`, null, {
       params: { batchCode },

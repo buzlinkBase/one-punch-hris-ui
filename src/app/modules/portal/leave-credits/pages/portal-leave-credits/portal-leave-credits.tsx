@@ -71,6 +71,7 @@ export default function PortalLeaveCredits() {
       <div className="form-page-body">
         <Card>
           <Table<LeaveBalanceResponse>
+            scroll={{ x: "max-content" }}
             rowKey="leaveId"
             loading={isLoading}
             columns={columns}

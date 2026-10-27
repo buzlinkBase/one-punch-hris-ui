@@ -33,7 +33,6 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import axios from "axios";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
@@ -59,25 +58,12 @@ import {
 } from "../../constants/label.const";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import type { TaxAnnualizationPreview } from "../../models/api/response/tax-annualization-preview.model";
-import type { ErrorResponse } from "@/shared/types/api-response.model";
-import httpClient from "@/core/http/http-client";
-import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { forPayrollApi } from "../../services/for-payroll.api";
+import { formatMoney } from "@/shared/utils/money.util";
+import { apiErrorMessage } from "@/core/http/api-error";
 
 const { Title, Text } = Typography;
-
-// ValidationException messages (e.g. "already been generated for every eligible employee")
-// land in data.detail via GlobalExceptionHandler — surface that instead of a generic fallback.
-const getErrorDetail = (err: unknown, fallback: string) =>
-  axios.isAxiosError(err)
-    ? ((err.response?.data as ErrorResponse | undefined)?.data?.detail ??
-      fallback)
-    : fallback;
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
 export default function GenerateYearEndAdjustment() {
   const [year, setYear] = useState(dayjs().year());
@@ -107,7 +93,7 @@ export default function GenerateYearEndAdjustment() {
       message.success(`${lockYear} has been reopened.`);
     } catch (err) {
       message.error(
-        getErrorDetail(err, "Failed to reopen this year. Please try again."),
+        apiErrorMessage(err, "Failed to reopen this year. Please try again."),
       );
     }
   };
@@ -129,7 +115,7 @@ export default function GenerateYearEndAdjustment() {
       }
     } catch (err) {
       message.error(
-        getErrorDetail(
+        apiErrorMessage(
           err,
           "Failed to compute the Year-End Tax Adjustment preview. Please try again.",
         ),
@@ -147,7 +133,7 @@ export default function GenerateYearEndAdjustment() {
       refetchYearPayrolls();
     } catch (err) {
       message.error(
-        getErrorDetail(
+        apiErrorMessage(
           err,
           "Failed to generate the Year-End Tax Adjustment. Please try again.",
         ),
@@ -257,23 +243,12 @@ export default function GenerateYearEndAdjustment() {
       message.error("This record has no printable payslip yet.");
       return;
     }
-    const printTab = window.open("about:blank", "_blank");
-    try {
-      const blob = await httpClient.get<Blob>(
-        `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/${record.id}/print`,
-        { responseType: "blob" },
-      );
-      const url = URL.createObjectURL(blob);
-      if (printTab) printTab.location.href = url;
-    } catch {
-      printTab?.close();
-      message.error("Failed to generate the payslip. Please try again.");
-    }
+    await openPdfInNewTab(forPayrollApi.urls.payslipPrint(record.id));
   };
 
   const adjustmentTag = (amount: number, isRefund: boolean) => (
     <Tag color={isRefund ? "blue" : "orange"}>
-      {isRefund ? "Refund" : "Collection"} {fmt(Math.abs(amount))}
+      {isRefund ? "Refund" : "Collection"} {formatMoney(Math.abs(amount))}
     </Tag>
   );
 
@@ -287,7 +262,7 @@ export default function GenerateYearEndAdjustment() {
           {name}
           {r.hasPriorEmployerData && (
             <Tooltip
-              title={`Includes prior employer: Gross ${fmt(r.priorEmployerGrossIncome)}, Tax Withheld ${fmt(r.priorEmployerTaxWithheld)}`}
+              title={`Includes prior employer: Gross ${formatMoney(r.priorEmployerGrossIncome)}, Tax Withheld ${formatMoney(r.priorEmployerTaxWithheld)}`}
             >
               <InfoCircleOutlined style={{ color: "#1677ff" }} />
             </Tooltip>
@@ -300,28 +275,28 @@ export default function GenerateYearEndAdjustment() {
       dataIndex: "annualGrossIncome",
       key: "gross",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Annual Taxable Income",
       dataIndex: "annualTaxableIncome",
       key: "taxable",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Annual Tax Due",
       dataIndex: "annualTaxDue",
       key: "due",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Tax Withheld (YTD)",
       dataIndex: "annualWithholdingTaxYTD",
       key: "withheld",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Adjustment",
@@ -367,9 +342,9 @@ export default function GenerateYearEndAdjustment() {
       align: "right",
       render: (v: number) =>
         v < 0 ? (
-          <Tag color="blue">Refund {fmt(Math.abs(v))}</Tag>
+          <Tag color="blue">Refund {formatMoney(Math.abs(v))}</Tag>
         ) : (
-          <Tag color="orange">Collection {fmt(v)}</Tag>
+          <Tag color="orange">Collection {formatMoney(v)}</Tag>
         ),
     },
     {
@@ -377,7 +352,7 @@ export default function GenerateYearEndAdjustment() {
       dataIndex: "netPay",
       key: "net",
       align: "right",
-      render: (v: number) => <Text strong>{fmt(v)}</Text>,
+      render: (v: number) => <Text strong>{formatMoney(v)}</Text>,
     },
     {
       title: "Status",
@@ -396,6 +371,7 @@ export default function GenerateYearEndAdjustment() {
         <PermissionGate permission="Payroll Summary:Export">
           <Tooltip title="Print payslip">
             <Button
+              aria-label="Print payslip"
               type="text"
               size="small"
               icon={<PrinterOutlined />}
@@ -591,6 +567,7 @@ export default function GenerateYearEndAdjustment() {
           </Row>
           <Card className="mb-4" title="Just Generated">
             <Table
+              scroll={{ x: "max-content" }}
               rowKey="employeeId"
               size="small"
               dataSource={results}
@@ -603,14 +580,16 @@ export default function GenerateYearEndAdjustment() {
 
       <Card title={`Year-End Tax Adjustment Runs — ${year}`}>
         <Table
+          scroll={{ x: "max-content" }}
           rowKey="payrollBatchId"
           size="small"
           dataSource={batchGroups}
           pagination={false}
-          scroll={{ x: "max-content" }}
+
           expandable={{
             expandedRowRender: (g) => (
               <Table
+                scroll={{ x: "max-content" }}
                 rowKey="employeeId"
                 size="small"
                 pagination={false}
@@ -633,14 +612,14 @@ export default function GenerateYearEndAdjustment() {
               dataIndex: "totalAdjustment",
               key: "totalAdjustment",
               align: "right",
-              render: fmt,
+              render: formatMoney,
             },
             {
               title: "Total Net Pay",
               dataIndex: "totalNet",
               key: "totalNet",
               align: "right",
-              render: fmt,
+              render: formatMoney,
             },
             {
               title: "Payout Date",
@@ -681,6 +660,7 @@ export default function GenerateYearEndAdjustment() {
                 <Space size={4}>
                   <Tooltip title="History">
                     <Button
+                      aria-label="History"
                       size="small"
                       icon={<HistoryOutlined />}
                       onClick={() => setHistoryTargetId(g.payrollBatchId)}
@@ -690,6 +670,7 @@ export default function GenerateYearEndAdjustment() {
                     <PermissionGate permission="Year-End Adjustment Run:Approve">
                       <Tooltip title="Approve">
                         <Button
+                          aria-label="Approve"
                           size="small"
                           icon={<CheckOutlined />}
                           onClick={() =>
@@ -702,6 +683,7 @@ export default function GenerateYearEndAdjustment() {
                       </Tooltip>
                       <Tooltip title="Decline">
                         <Button
+                          aria-label="Decline"
                           danger
                           size="small"
                           icon={<CloseOutlined />}
@@ -735,6 +717,7 @@ export default function GenerateYearEndAdjustment() {
                         }
                       >
                         <Button
+                          aria-label="Delete"
                           danger
                           size="small"
                           icon={<DeleteOutlined />}

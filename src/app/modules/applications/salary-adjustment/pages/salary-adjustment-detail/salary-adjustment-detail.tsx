@@ -16,6 +16,7 @@ import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 import {
   useCreateSalaryAdjustment,
   useSalaryAdjustment,
@@ -24,16 +25,14 @@ import {
 import { ADJUSTMENT_TYPE_OPTIONS } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  salaryAdjustmentFormSchema,
+  type SalaryAdjustmentFormValues,
+} from "../../models/forms/salary-adjustment-form.schema";
 
 const { Title } = Typography;
-
-interface FormValues {
-  employeeId: string;
-  adjustmentType: number;
-  payrollDate: dayjs.Dayjs;
-  amount: number;
-  remarks?: string;
-}
 
 export default function SalaryAdjustmentDetail() {
   const navigate = useNavigate();
@@ -43,7 +42,15 @@ export default function SalaryAdjustmentDetail() {
   const readOnly = !useHasPermission(
     isEdit ? "Salary Adjustment:Edit" : "Salary Adjustment:Create",
   );
-  const [form] = Form.useForm<FormValues>();
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<SalaryAdjustmentFormValues>({
+    resolver: zodResolver(salaryAdjustmentFormSchema),
+  });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { data: existing, isLoading: loadingExisting } =
     useSalaryAdjustment(id);
@@ -62,7 +69,7 @@ export default function SalaryAdjustmentDetail() {
 
   useEffect(() => {
     if (existing) {
-      form.setFieldsValue({
+      reset({
         employeeId: existing.employeeId,
         adjustmentType: existing.adjustmentType,
         payrollDate: dayjs(existing.payrollDate),
@@ -70,9 +77,9 @@ export default function SalaryAdjustmentDetail() {
         remarks: existing.remarks,
       });
     }
-  }, [existing, form]);
+  }, [existing, reset]);
 
-  const handleSubmit = (values: FormValues) => {
+  const onSubmit = (values: SalaryAdjustmentFormValues) => {
     const payload = {
       employeeId: values.employeeId,
       adjustmentType: values.adjustmentType,
@@ -87,6 +94,7 @@ export default function SalaryAdjustmentDetail() {
         {
           onSuccess: () => {
             message.success("Updated.");
+            allowNavigation();
             navigate({ to: "/applications/salary-adjustment" });
           },
           onError: () => message.error("Update failed."),
@@ -96,6 +104,7 @@ export default function SalaryAdjustmentDetail() {
       create(payload, {
         onSuccess: () => {
           message.success("Created.");
+          allowNavigation();
           navigate({ to: "/applications/salary-adjustment" });
         },
         onError: () => message.error("Create failed."),
@@ -136,7 +145,7 @@ export default function SalaryAdjustmentDetail() {
             >
               <Button
                 type="primary"
-                onClick={() => form.submit()}
+                onClick={handleSubmit(onSubmit)}
                 loading={creating || updating}
               >
                 Save
@@ -147,64 +156,101 @@ export default function SalaryAdjustmentDetail() {
       </div>
 
       <Card loading={isEdit && loadingExisting}>
-        <Form
-          form={form}
-          layout="vertical"
-          disabled={readOnly}
-          onFinish={handleSubmit}
-          style={{ maxWidth: 560 }}
-        >
+        <Form layout="vertical" disabled={readOnly} className="max-w-140">
           <Form.Item
-            name="employeeId"
             label="Employee"
-            rules={[{ required: true, message: "Select an employee" }]}
+            required
+            validateStatus={errors.employeeId ? "error" : ""}
+            help={errors.employeeId?.message}
           >
-            <Select
-              showSearch
-              options={empOptions}
-              filterOption={(input, opt) =>
-                (opt?.label as string)
-                  ?.toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-              placeholder="Search employee"
+            <Controller
+              name="employeeId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  showSearch
+                  options={empOptions}
+                  filterOption={(input, opt) =>
+                    (opt?.label as string)
+                      ?.toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  placeholder="Search employee"
+                />
+              )}
             />
           </Form.Item>
 
           <Form.Item
-            name="adjustmentType"
             label="Adjustment Type"
-            rules={[{ required: true, message: "Select a type" }]}
+            required
+            validateStatus={errors.adjustmentType ? "error" : ""}
+            help={errors.adjustmentType?.message}
           >
-            <Select
-              options={ADJUSTMENT_TYPE_OPTIONS}
-              placeholder="Select type"
+            <Controller
+              name="adjustmentType"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={ADJUSTMENT_TYPE_OPTIONS}
+                  placeholder="Select type"
+                />
+              )}
             />
           </Form.Item>
 
           <Form.Item
-            name="payrollDate"
             label="Payroll Date"
-            rules={[{ required: true, message: "Select a payroll date" }]}
+            required
+            validateStatus={errors.payrollDate ? "error" : ""}
+            help={errors.payrollDate?.message}
           >
-            <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
-          </Form.Item>
-
-          <Form.Item
-            name="amount"
-            label="Amount"
-            rules={[{ required: true, message: "Enter an amount" }]}
-          >
-            <InputNumber
-              style={{ width: "100%" }}
-              min={0.01}
-              precision={2}
-              prefix="₱"
+            <Controller
+              name="payrollDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker {...field} className="w-full" format="YYYY-MM-DD" />
+              )}
             />
           </Form.Item>
 
-          <Form.Item name="remarks" label="Remarks">
-            <Input.TextArea rows={2} placeholder="Optional remarks" />
+          <Form.Item
+            label="Amount"
+            required
+            validateStatus={errors.amount ? "error" : ""}
+            help={errors.amount?.message}
+          >
+            <Controller
+              name="amount"
+              control={control}
+              render={({ field }) => (
+                <InputNumber
+                  {...field}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v ?? undefined)}
+                  className="w-full"
+                  min={0.01}
+                  precision={2}
+                  prefix="₱"
+                />
+              )}
+            />
+          </Form.Item>
+
+          <Form.Item label="Remarks">
+            <Controller
+              name="remarks"
+              control={control}
+              render={({ field }) => (
+                <Input.TextArea
+                  {...field}
+                  rows={2}
+                  placeholder="Optional remarks"
+                />
+              )}
+            />
           </Form.Item>
         </Form>
       </Card>

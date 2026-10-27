@@ -27,6 +27,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
 import { useMinimumWageRates } from "@/app/modules/setup/minimum-wage-rate/hooks/use-minimum-wage-rate-queries";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 // Lazy-load the map to avoid SSR/leaflet issues
 const PolygonMapPicker = lazy(() =>
@@ -56,7 +57,7 @@ export default function BranchDetail() {
     reset,
     getValues,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<BranchFormValues>({
     resolver: zodResolver(branchFormSchema),
     defaultValues: {
@@ -69,6 +70,7 @@ export default function BranchDetail() {
       wageOrderClass: null,
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -102,6 +104,7 @@ export default function BranchDetail() {
   const onSubmit = async (values: BranchFormValues) => {
     if (isEdit && id) await update({ id, ...values });
     else await add(values);
+    allowNavigation();
     navigate({ to: "/setup/branch" });
   };
 

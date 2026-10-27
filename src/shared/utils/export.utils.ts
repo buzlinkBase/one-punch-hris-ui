@@ -1,4 +1,32 @@
-import * as XLSX from "xlsx";
+import { message } from "antd";
+import type { CellObject, WorkBook, WorkSheet } from "xlsx";
+
+// xlsx is ~330 KB: loaded on the first export instead of with every page that offers one.
+const loadXlsx = () => import("xlsx");
+
+/** Loads xlsx, builds the workbook and saves it; a failure gets a message instead of an
+ * unhandled rejection, since callers fire exports from click handlers without awaiting. */
+async function writeWorkbook(
+  filename: string,
+  build: (xlsx: typeof import("xlsx")) => WorkBook,
+): Promise<void> {
+  try {
+    const xlsx = await loadXlsx();
+    xlsx.writeFile(build(xlsx), filename);
+  } catch {
+    message.error("Couldn't create the Excel file. Please try again.");
+  }
+}
+
+// "AB12" -> 27: the zero-based column of a cell address.
+function columnIndexOf(address: string): number {
+  let column = 0;
+  for (const ch of address) {
+    if (ch < "A" || ch > "Z") break;
+    column = column * 26 + (ch.charCodeAt(0) - 64);
+  }
+  return column - 1;
+}
 
 /** Strings are quoted; numbers are written bare (no thousands separator) so spreadsheet apps
  * read them as numbers. */
@@ -29,16 +57,16 @@ export const EXCEL_AMOUNT_FORMAT = "#,##0.00";
 const EXCEL_INTEGER_FORMAT = "0";
 
 export function applyNumberFormat(
-  ws: XLSX.WorkSheet,
+  ws: WorkSheet,
   format: string,
   headers: string[],
   integerHeaders: string[] = [],
 ): void {
   for (const [address, value] of Object.entries(ws)) {
     if (address.startsWith("!")) continue;
-    const cell = value as XLSX.CellObject;
+    const cell = value as CellObject;
     if (cell.t !== "n") continue;
-    const header = headers[XLSX.utils.decode_cell(address).c];
+    const header = headers[columnIndexOf(address)];
     cell.z = integerHeaders.includes(header) ? EXCEL_INTEGER_FORMAT : format;
   }
 }
@@ -47,22 +75,24 @@ export function applyNumberFormat(
 export function downloadMultiSheetExcel(
   sheets: ExcelSheet[],
   filename: string,
-): void {
-  const wb = XLSX.utils.book_new();
-  for (const sheet of sheets) {
-    const ws = XLSX.utils.aoa_to_sheet([sheet.headers, ...sheet.rows]);
-    if (sheet.numberFormat)
-      applyNumberFormat(
-        ws,
-        sheet.numberFormat,
-        sheet.headers,
-        sheet.integerHeaders,
-      );
-    // Excel worksheet names: max 31 chars, and : \ / ? * [ ] aren't allowed.
-    const safeName = sheet.name.replace(/[:\\/?*[\]]/g, "").slice(0, 31);
-    XLSX.utils.book_append_sheet(wb, ws, safeName);
-  }
-  XLSX.writeFile(wb, filename);
+): Promise<void> {
+  return writeWorkbook(filename, (XLSX) => {
+    const wb = XLSX.utils.book_new();
+    for (const sheet of sheets) {
+      const ws = XLSX.utils.aoa_to_sheet([sheet.headers, ...sheet.rows]);
+      if (sheet.numberFormat)
+        applyNumberFormat(
+          ws,
+          sheet.numberFormat,
+          sheet.headers,
+          sheet.integerHeaders,
+        );
+      // Excel worksheet names: max 31 chars, and : \ / ? * [ ] aren't allowed.
+      const safeName = sheet.name.replace(/[:\\/?*[\]]/g, "").slice(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, safeName);
+    }
+    return wb;
+  });
 }
 
 /** Single-sheet convenience wrapper over downloadMultiSheetExcel. Numbers in rows become numeric
@@ -73,8 +103,8 @@ export function downloadExcel(
   filename: string,
   sheetName = "Sheet1",
   integerHeaders?: string[],
-): void {
-  downloadMultiSheetExcel(
+): Promise<void> {
+  return downloadMultiSheetExcel(
     [
       {
         name: sheetName,
@@ -115,7 +145,7 @@ export function downloadGroupedHeaderExcel<T>(
   fmtCell: (record: T, key: keyof T) => string,
   filename: string,
   sheetName = "Sheet1",
-): void {
+): Promise<void> {
   const allLeafCols = groupedCols.flatMap((g) =>
     g.subGroups.flatMap((s) => s.cols),
   );
@@ -161,12 +191,14 @@ export function downloadGroupedHeaderExcel<T>(
   }
 
   const dataRows = records.map((r) => allCols.map((c) => fmtCell(r, c.key)));
-  const ws = XLSX.utils.aoa_to_sheet([topRow, subRow, leafRow, ...dataRows]);
-  ws["!merges"] = merges;
-  const wb = XLSX.utils.book_new();
-  const safeName = sheetName.replace(/[:\\/?*[\]]/g, "").slice(0, 31);
-  XLSX.utils.book_append_sheet(wb, ws, safeName);
-  XLSX.writeFile(wb, filename);
+  return writeWorkbook(filename, (XLSX) => {
+    const ws = XLSX.utils.aoa_to_sheet([topRow, subRow, leafRow, ...dataRows]);
+    ws["!merges"] = merges;
+    const wb = XLSX.utils.book_new();
+    const safeName = sheetName.replace(/[:\\/?*[\]]/g, "").slice(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, safeName);
+    return wb;
+  });
 }
 
 /** Downloads plain-text content (CSV) as a file. Excel exports go through downloadExcel /

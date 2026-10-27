@@ -108,6 +108,7 @@ export default function ProfileUpdateRequestList() {
         <Space size="small">
           <Tooltip title="View">
             <Button
+              aria-label="View"
               size="small"
               icon={<EyeOutlined />}
               onClick={() =>
@@ -119,6 +120,7 @@ export default function ProfileUpdateRequestList() {
           </Tooltip>
           <Tooltip title="History">
             <Button
+              aria-label="History"
               size="small"
               icon={<HistoryOutlined />}
               onClick={() => setHistoryTargetId(record.id)}
@@ -128,6 +130,7 @@ export default function ProfileUpdateRequestList() {
             <PermissionGate permission="Profile Update:Approve">
               <Tooltip title="Approve">
                 <Button
+                  aria-label="Approve"
                   size="small"
                   icon={<CheckOutlined />}
                   onClick={() =>
@@ -137,6 +140,7 @@ export default function ProfileUpdateRequestList() {
               </Tooltip>
               <Tooltip title="Decline">
                 <Button
+                  aria-label="Decline"
                   size="small"
                   danger
                   icon={<CloseOutlined />}
@@ -165,6 +169,7 @@ export default function ProfileUpdateRequestList() {
             </p>
           </div>
           <Button
+            aria-label="Refresh"
             icon={<ReloadOutlined spin={isFetching} />}
             onClick={() => refetch()}
             loading={isFetching && !isLoading}
@@ -179,6 +184,7 @@ export default function ProfileUpdateRequestList() {
         processedCount={approval.processedCount}
       />
       <Table
+        scroll={{ x: "max-content" }}
         rowKey="id"
         dataSource={approval.rows}
         columns={columns}

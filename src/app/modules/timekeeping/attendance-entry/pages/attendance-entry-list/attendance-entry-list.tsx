@@ -168,7 +168,7 @@ export default function AttendanceEntryList() {
     if (format === "csv") {
       triggerDownload(buildFlatCsv(headers, strRows), `attendance-${date}.csv`);
     } else {
-      downloadExcel(headers, strRows, `attendance-${date}.xlsx`);
+      void downloadExcel(headers, strRows, `attendance-${date}.xlsx`);
     }
     setIsExporting(false);
   };

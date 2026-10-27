@@ -20,6 +20,7 @@ import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/app
 import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
 import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Title } = Typography;
 
@@ -71,16 +72,14 @@ export default function PortalLoanApplicationList() {
       dataIndex: "totalPrincipal",
       key: "totalPrincipal",
       align: "right",
-      render: (v: number) =>
-        (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: "Total Amount",
       dataIndex: "totalAmount",
       key: "totalAmount",
       align: "right",
-      render: (v: number) =>
-        (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: "Status",
@@ -144,6 +143,7 @@ export default function PortalLoanApplicationList() {
             pendingLabel="Pending"
           />
           <Table<DeductionApplicationResponse>
+            scroll={{ x: "max-content" }}
             rowKey="id"
             loading={isLoading}
             columns={columns}
@@ -152,6 +152,7 @@ export default function PortalLoanApplicationList() {
             expandable={{
               expandedRowRender: (record) => (
                 <Table<LoanBreakdownRow>
+                  scroll={{ x: "max-content" }}
                   rowKey="period"
                   size="small"
                   pagination={false}

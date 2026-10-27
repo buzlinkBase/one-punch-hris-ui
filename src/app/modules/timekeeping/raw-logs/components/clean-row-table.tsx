@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import type { CleanAttendanceLogRow } from "../models/api/response/raw-attendance-log.model";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { withRowKeys } from "@/shared/utils/row-key.util";
 
 interface Props {
   data: CleanAttendanceLogRow[];
@@ -202,8 +203,10 @@ export default function CleanRowTable({ data, loading }: Props) {
         style={{ maxWidth: 320 }}
       />
       <Table
-        rowKey={(r, i) => r.log1?.attId ?? `${r.employeeId}-${r.workDate}-${i}`}
-        dataSource={filtered}
+        dataSource={withRowKeys(
+          filtered,
+          (r) => r.log1?.attId ?? `${r.employeeId}-${r.workDate}`,
+        )}
         columns={columns}
         size="small"
         loading={loading}

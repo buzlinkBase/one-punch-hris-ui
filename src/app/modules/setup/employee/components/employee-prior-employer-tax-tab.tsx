@@ -23,12 +23,7 @@ import {
   useDeletePriorEmployerTaxRecord,
 } from "../hooks/use-employee-relations-queries";
 import type { PriorEmployerTaxRecordResponse } from "../models/api/response/employee-relations-response.models";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const EMPTY = {
   year: dayjs().year(),
@@ -112,28 +107,28 @@ export default function EmployeePriorEmployerTaxTab({ employeeId }: Props) {
       dataIndex: "grossIncomeYtd",
       key: "gross",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Non-Taxable YTD",
       dataIndex: "nonTaxableYtd",
       key: "nonTaxable",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Statutory Deductions YTD",
       dataIndex: "statutoryDeductionsYtd",
       key: "statutory",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Tax Withheld YTD",
       dataIndex: "taxWithheldYtd",
       key: "withheld",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "",
@@ -143,6 +138,7 @@ export default function EmployeePriorEmployerTaxTab({ employeeId }: Props) {
       render: (_, row) => (
         <Space size="small">
           <Button
+            aria-label="Edit"
             size="small"
             type="text"
             icon={<EditOutlined />}
@@ -154,7 +150,13 @@ export default function EmployeePriorEmployerTaxTab({ employeeId }: Props) {
             okText="Remove"
             okButtonProps={{ danger: true }}
           >
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              aria-label="Delete"
+              size="small"
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+            />
           </Popconfirm>
         </Space>
       ),

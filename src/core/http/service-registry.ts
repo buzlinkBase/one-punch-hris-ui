@@ -15,6 +15,15 @@ const SERVICE_LABELS: Readonly<Record<string, string>> = {
   clientPortal: "client portal",
 };
 
+// Services whose outages the connection banner ignores. The client portal isn't in use yet, so
+// its being down is expected and the HRIS works fine without it.
+const UNMONITORED_SERVICES: ReadonlySet<string> = new Set(["clientPortal"]);
+
+/** Whether an outage of this service should show the connection banner. */
+export function isMonitoredService(key: string): boolean {
+  return !UNMONITORED_SERVICES.has(key);
+}
+
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, "");
 
 /**

@@ -27,6 +27,7 @@ import { useState } from "react";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Title } = Typography;
 
@@ -98,8 +99,7 @@ export default function SalaryAdjustmentList() {
       dataIndex: "amount",
       key: "amount",
       align: "right",
-      render: (v: number) =>
-        (v ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 }),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: "Remarks",
@@ -128,7 +128,12 @@ export default function SalaryAdjustmentList() {
               okButtonProps={{ danger: true }}
               okText="Delete"
             >
-              <Button size="small" icon={<DeleteOutlined />} danger />
+              <Button
+                aria-label="Delete"
+                size="small"
+                icon={<DeleteOutlined />}
+                danger
+              />
             </Popconfirm>
           </PermissionGate>
         </Space>
@@ -191,6 +196,7 @@ export default function SalaryAdjustmentList() {
         </div>
       </div>
       <Table
+        scroll={{ x: "max-content" }}
         rowKey="id"
         dataSource={filtered}
         columns={columns}

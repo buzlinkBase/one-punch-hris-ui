@@ -44,6 +44,7 @@ import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendanc
 import type { CreateChangeRestDay } from "../../models/api/request/create-change-rest-day.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -512,10 +513,11 @@ function EditForm({ id }: { id: string }) {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ChangeRestDayFormValues>({
     resolver: zodResolver(changeRestDayFormSchema),
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const fromDate = watch("fromDate");
@@ -534,6 +536,7 @@ function EditForm({ id }: { id: string }) {
       payrollDateTo: values.newDate,
       employeeIds: [values.employeeId],
     });
+    allowNavigation();
     navigate({ to: "/change-schedule/change-rest-day" });
   };
 

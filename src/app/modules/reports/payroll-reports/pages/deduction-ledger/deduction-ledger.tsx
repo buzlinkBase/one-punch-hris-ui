@@ -13,9 +13,7 @@ import {
   type DeductionLedgerGroup,
   type DeductionLedgerLine,
 } from "./deduction-ledger.util";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const fmtDate = (v: string) => (v ? dayjs(v).format("MMM DD, YYYY") : "—");
 
@@ -64,12 +62,12 @@ const exportRows = (rows: LedgerRow[]) =>
     r.fullName,
     r.deductionTypeName,
     r.deductionName,
-    fmt(r.totalPrincipal),
-    fmt(r.interestRate),
+    formatMoney(r.totalPrincipal),
+    formatMoney(r.interestRate),
     r.startDate,
     r.endDate,
-    fmt(r.currentBalance),
-    fmt(r.runningBalance),
+    formatMoney(r.currentBalance),
+    formatMoney(r.runningBalance),
   ]);
 
 const columns: ColumnsType<LedgerRow> = [
@@ -103,13 +101,14 @@ const columns: ColumnsType<LedgerRow> = [
     key: "principal",
     align: "right",
     render: (_, row) =>
-      row.kind === "line" ? fmt(row.line.totalPrincipal) : "",
+      row.kind === "line" ? formatMoney(row.line.totalPrincipal) : "",
   },
   {
     title: "Interest %",
     key: "interest",
     align: "right",
-    render: (_, row) => (row.kind === "line" ? fmt(row.line.interestRate) : ""),
+    render: (_, row) =>
+      row.kind === "line" ? formatMoney(row.line.interestRate) : "",
   },
   {
     title: "Period",
@@ -132,9 +131,9 @@ const columns: ColumnsType<LedgerRow> = [
     align: "right",
     render: (_, row) =>
       row.kind === "group" ? (
-        <strong>{fmt(row.group.total)}</strong>
+        <strong>{formatMoney(row.group.total)}</strong>
       ) : (
-        fmt(row.line.currentBalance)
+        formatMoney(row.line.currentBalance)
       ),
   },
   {
@@ -144,7 +143,9 @@ const columns: ColumnsType<LedgerRow> = [
     fixed: "right",
     render: (_, row) =>
       row.kind === "line" ? (
-        <span className="text-gray-600">{fmt(row.line.runningBalance)}</span>
+        <span className="text-gray-600">
+          {formatMoney(row.line.runningBalance)}
+        </span>
       ) : null,
   },
 ];
@@ -213,7 +214,7 @@ export default function DeductionLedger() {
             <Card size="small">
               <Statistic
                 title="Total outstanding"
-                value={fmt(totalOutstanding)}
+                value={formatMoney(totalOutstanding)}
               />
             </Card>
           </Col>

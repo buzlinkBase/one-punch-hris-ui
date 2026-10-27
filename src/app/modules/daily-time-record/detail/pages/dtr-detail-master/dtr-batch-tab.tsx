@@ -233,7 +233,7 @@ export default function DtrBatchTab() {
     if (format === "csv") {
       triggerDownload(buildDtrCsv(records), `dtr-detail-${suffix}.csv`);
     } else {
-      downloadGroupedHeaderExcel(
+      void downloadGroupedHeaderExcel(
         LEFT_COLS,
         GROUPED_COLS,
         records,
@@ -336,6 +336,7 @@ export default function DtrBatchTab() {
         <Space size={4}>
           <Tooltip title="View">
             <Button
+              aria-label="View"
               size="small"
               type={r.code === viewingBatchCode ? "primary" : "default"}
               icon={<EyeOutlined />}
@@ -344,6 +345,7 @@ export default function DtrBatchTab() {
           </Tooltip>
           <Tooltip title="History">
             <Button
+              aria-label="History"
               size="small"
               icon={<HistoryOutlined />}
               disabled={!r.id}
@@ -360,6 +362,7 @@ export default function DtrBatchTab() {
             <PermissionGate permission="DTR Master:Approve">
               <Tooltip title="Approve">
                 <Button
+                  aria-label="Approve"
                   size="small"
                   icon={<CheckOutlined />}
                   onClick={() =>
@@ -373,6 +376,7 @@ export default function DtrBatchTab() {
               </Tooltip>
               <Tooltip title="Decline">
                 <Button
+                  aria-label="Decline"
                   danger
                   size="small"
                   icon={<CloseOutlined />}
@@ -391,6 +395,7 @@ export default function DtrBatchTab() {
             <PermissionGate permission="DTR Master:Approve">
               <Tooltip title="Approve Deletion">
                 <Button
+                  aria-label="Approve Deletion"
                   danger
                   size="small"
                   icon={<CheckOutlined />}
@@ -405,6 +410,7 @@ export default function DtrBatchTab() {
               </Tooltip>
               <Tooltip title="Decline Deletion">
                 <Button
+                  aria-label="Decline Deletion"
                   size="small"
                   icon={<CloseOutlined />}
                   onClick={() =>
@@ -446,6 +452,7 @@ export default function DtrBatchTab() {
                 }
               >
                 <Button
+                  aria-label="Delete"
                   danger
                   size="small"
                   icon={<DeleteOutlined />}

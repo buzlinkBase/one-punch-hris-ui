@@ -30,12 +30,11 @@ import {
   useVaultExpiring,
   useVaultGuards,
 } from "../../hooks/use-client-portal-queries";
-import { clientPortalApi } from "../../services/client-portal.api";
 import {
   DOCUMENT_KIND_OPTIONS,
   OPERATIONS_PERMISSION,
 } from "../../constants/label.const";
-import { openBlobInNewTab } from "../../utils/open-blob";
+import { openPortalFile } from "../../utils/open-blob";
 import type {
   GuardDocument,
   GuardVaultRow,
@@ -109,10 +108,7 @@ export default function GuardVault() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [form] = Form.useForm<UploadForm>();
 
-  const open = async (id: string) => {
-    const blob = await clientPortalApi.fetchBlob(`vault/documents/${id}/file`);
-    openBlobInNewTab(blob, blob.type);
-  };
+  const open = (id: string) => openPortalFile(`vault/documents/${id}/file`);
 
   const documentColumns: ColumnsType<GuardDocument> = [
     { title: "Document", dataIndex: "title" },
@@ -310,6 +306,7 @@ export default function GuardVault() {
           />
         )}
         <Table<GuardDocument>
+          scroll={{ x: "max-content" }}
           rowKey="id"
           size="small"
           loading={documents.isLoading}

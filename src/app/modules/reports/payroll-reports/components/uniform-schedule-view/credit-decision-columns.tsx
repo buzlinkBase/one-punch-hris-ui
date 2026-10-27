@@ -2,9 +2,9 @@ import { Tag } from "antd";
 import dayjs from "dayjs";
 import { UNIFORM_OUTCOME_TAG } from "@/app/modules/setup/client/constants/uniform-allowance.const";
 import type { UniformAllowanceCreditLog } from "@/app/modules/setup/client/models/api/response/uniform-allowance-policy.model";
+import { formatMoney } from "@/shared/utils/money.util";
 
-export const peso = (value: number) =>
-  `₱${value.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+export const peso = (value: number) => `₱${formatMoney(value)}`;
 export const day = (value: string) => dayjs(value).format("MMM D, YYYY");
 export const period = (from: string, to: string) =>
   `${dayjs(from).format("MMM D")} – ${day(to)}`;

@@ -185,7 +185,7 @@ export default function BillingReports() {
   ];
 
   const exportAll = () => {
-    downloadMultiSheetExcel(
+    void downloadMultiSheetExcel(
       [
         {
           name: "Overdue",

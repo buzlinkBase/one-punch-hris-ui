@@ -21,12 +21,7 @@ import {
   useDeleteOpeningBalance,
 } from "../hooks/use-employee-relations-queries";
 import type { PayrollOpeningBalanceResponse } from "../models/api/response/employee-relations-response.models";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const EMPTY = {
   year: dayjs().year(),
@@ -133,21 +128,21 @@ export default function EmployeeOpeningBalanceTab({ employeeId }: Props) {
       dataIndex: "grossIncome",
       key: "grossIncome",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Total Deductions",
       dataIndex: "totalDeductions",
       key: "totalDeductions",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Net Pay",
       dataIndex: "netPay",
       key: "netPay",
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "",
@@ -157,6 +152,7 @@ export default function EmployeeOpeningBalanceTab({ employeeId }: Props) {
       render: (_, row) => (
         <Space size="small">
           <Button
+            aria-label="Edit"
             size="small"
             type="text"
             icon={<EditOutlined />}
@@ -168,7 +164,13 @@ export default function EmployeeOpeningBalanceTab({ employeeId }: Props) {
             okText="Remove"
             okButtonProps={{ danger: true }}
           >
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              aria-label="Delete"
+              size="small"
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -295,7 +297,7 @@ export default function EmployeeOpeningBalanceTab({ employeeId }: Props) {
           </div>
           <div className="flex justify-between text-sm font-medium bg-gray-50 rounded px-3 py-2 mb-2">
             <span>Gross Income</span>
-            <span>₱ {fmt(grossIncome)}</span>
+            <span>₱ {formatMoney(grossIncome)}</span>
           </div>
 
           <Divider
@@ -369,12 +371,12 @@ export default function EmployeeOpeningBalanceTab({ employeeId }: Props) {
           </div>
           <div className="flex justify-between text-sm font-medium bg-gray-50 rounded px-3 py-2 mb-3">
             <span>Total Deductions</span>
-            <span>₱ {fmt(totalDeductions)}</span>
+            <span>₱ {formatMoney(totalDeductions)}</span>
           </div>
 
           <div className="flex justify-between text-base font-semibold bg-[#1DA081]/10 rounded px-3 py-2">
             <span>Net Pay</span>
-            <span>₱ {fmt(netPay)}</span>
+            <span>₱ {formatMoney(netPay)}</span>
           </div>
         </Form>
       </Modal>

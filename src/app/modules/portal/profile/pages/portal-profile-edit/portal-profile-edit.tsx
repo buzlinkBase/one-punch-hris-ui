@@ -14,6 +14,7 @@ import {
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { Controller, useForm } from "react-hook-form";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
@@ -44,7 +45,7 @@ export default function PortalProfileEdit() {
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PortalProfileEditFormValues>({
     resolver: zodResolver(portalProfileEditFormSchema),
     defaultValues: {
@@ -57,6 +58,7 @@ export default function PortalProfileEdit() {
       remarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (employee) {
@@ -91,6 +93,7 @@ export default function PortalProfileEdit() {
       message.success(
         "Your changes were submitted for approval and will take effect once approved.",
       );
+      allowNavigation();
       backTo();
     } catch {
       message.error("Failed to submit your request. Please try again.");

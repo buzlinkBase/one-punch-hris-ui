@@ -1,2 +1,2 @@
-export const formatPeso = (n: number) =>
-  `₱${(n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+import { formatMoney } from "@/shared/utils/money.util";
+export const formatPeso = (n: number) => `₱${formatMoney(n)}`;

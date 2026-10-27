@@ -173,7 +173,7 @@ export default function DtrSummaryList() {
         `dtr-summary-${suffix}.csv`,
       );
     } else {
-      downloadGroupedHeaderExcel(
+      void downloadGroupedHeaderExcel(
         LEFT_COLS,
         GROUPED_COLS,
         filteredRecords,

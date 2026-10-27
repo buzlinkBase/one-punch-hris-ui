@@ -12,7 +12,7 @@ import {
 } from "antd";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { apiErrorMessage, httpStatusOf } from "@/core/http/api-error";
 import { EmailChipInput } from "@/shared/components/email-chip-input/email-chip-input";
 import { isValidEmail } from "@/shared/components/email-chip-input/parse-email-list";
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
@@ -20,7 +20,6 @@ import { useGrantableRoles } from "@/app/modules/security/roles/hooks/use-role-q
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { useInvitePortalUsers } from "@/app/modules/client-portal/hooks/use-client-portal-queries";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
-import type { ProblemDetails } from "@/shared/types/api-response.model";
 import {
   useBatchInviteLookup,
   useSendBatchInvitations,
@@ -53,17 +52,14 @@ const defaultValues = (
 });
 
 function errorMessage(err: unknown): string {
-  if (axios.isAxiosError(err)) {
-    if (err.response?.status === 429)
-      return "Too many invitation requests. Please wait a minute and try again.";
-    if (err.response?.status === 403)
-      return "You don't have permission to invite users.";
-    const problem = err.response?.data?.data as
-      ProblemDetails | string | undefined;
-    if (typeof problem === "string") return problem;
-    if (problem?.detail) return problem.detail;
-  }
-  return "The invitations could not be sent. Please try again.";
+  const status = httpStatusOf(err);
+  if (status === 429)
+    return "Too many invitation requests. Please wait a minute and try again.";
+  if (status === 403) return "You don't have permission to invite users.";
+  return apiErrorMessage(
+    err,
+    "The invitations could not be sent. Please try again.",
+  );
 }
 
 interface BatchInviteModalProps {

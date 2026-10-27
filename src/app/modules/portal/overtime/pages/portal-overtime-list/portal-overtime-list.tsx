@@ -111,6 +111,7 @@ export default function PortalOvertimeList() {
             pendingLabel="Pending"
           />
           <Table<OvertimeApplicationResponse>
+            scroll={{ x: "max-content" }}
             rowKey="id"
             loading={isLoading}
             columns={columns}

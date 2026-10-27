@@ -132,6 +132,7 @@ export default function UploadBatchTable({
                 <Tooltip title={savedDtrMessage(record.savedDtrBatches)}>
                   <span>
                     <Button
+                      aria-label="Delete"
                       type="text"
                       size="small"
                       danger
@@ -157,6 +158,7 @@ export default function UploadBatchTable({
                 >
                   <Tooltip title="Delete upload">
                     <Button
+                      aria-label="Delete upload"
                       type="text"
                       size="small"
                       danger

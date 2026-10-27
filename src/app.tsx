@@ -6,6 +6,7 @@ import { ConfigProvider } from "antd";
 import { theme } from "antd";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import router from "@/app/routes/app-routes";
+import { AppErrorBoundary } from "@/app/routes/app-error-boundary";
 import { queryClient } from "@/core/query-client";
 import { THEME_CONFIG } from "@/core/theme.config";
 import { useThemeStore } from "@/core/stores/theme.store";
@@ -128,12 +129,14 @@ export default function App() {
           },
         }}
       >
-        <QueryClientProvider client={queryClient}>
-          <ConnectionStatusBanner />
-          <NotificationProvider />
-          <RouterProvider router={router} />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
+        <AppErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <ConnectionStatusBanner />
+            <NotificationProvider />
+            <RouterProvider router={router} />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </QueryClientProvider>
+        </AppErrorBoundary>
       </ConfigProvider>
     </GoogleOAuthProvider>
   );

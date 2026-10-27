@@ -21,6 +21,7 @@ import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries"
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -63,7 +64,7 @@ export default function ManageDevicesDetail() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<DeviceFormValues>({
     resolver: zodResolver(deviceFormSchema),
     defaultValues: {
@@ -75,6 +76,7 @@ export default function ManageDevicesDetail() {
       status: "Active",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const selectedBranchId = useWatch({ control, name: "branchId" });
   const selectedAreaId = useWatch({ control, name: "areaId" });
@@ -130,6 +132,7 @@ export default function ManageDevicesDetail() {
     } else {
       await add(payload);
     }
+    allowNavigation();
     navigate({ to: LIST_PATH });
   };
 

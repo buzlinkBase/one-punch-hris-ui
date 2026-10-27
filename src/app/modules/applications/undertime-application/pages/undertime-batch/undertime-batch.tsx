@@ -21,6 +21,7 @@ import type { CreateUndertimeApplication } from "../../models/api/request/create
 import { useCreateUndertimeApplicationBatch } from "../../hooks/use-undertime-application-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -55,7 +56,7 @@ export default function UndertimeBatch() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<BatchUndertimeFormValues>({
     resolver: zodResolver(batchUndertimeFormSchema),
     defaultValues: {
@@ -63,6 +64,7 @@ export default function UndertimeBatch() {
       entries: [defaultEntry()],
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -82,6 +84,7 @@ export default function UndertimeBatch() {
       }),
     );
     await createBatch(payload);
+    allowNavigation();
     navigate({ to: "/applications/undertime" });
   };
 
@@ -208,6 +211,7 @@ export default function UndertimeBatch() {
 
                     <div className="flex justify-end sm:block sm:pt-1">
                       <Button
+                        aria-label="Delete"
                         type="text"
                         danger
                         icon={<DeleteOutlined />}

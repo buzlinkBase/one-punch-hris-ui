@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   UNKNOWN_SERVICE,
+  isMonitoredService,
   serviceKeyOf,
   unreachableMessage,
 } from "./service-registry";
@@ -74,5 +75,17 @@ describe("unreachableMessage", () => {
       "Can't reach the server.",
     );
     expect(unreachableMessage([])).toBe("Can't reach the server.");
+  });
+});
+
+describe("isMonitoredService", () => {
+  it("ignores the client portal, which isn't in use yet", () => {
+    expect(isMonitoredService("clientPortal")).toBe(false);
+  });
+
+  it("watches every HRIS service", () => {
+    for (const key of ["auth", "hrms", "adms", "tenants", "notifications"]) {
+      expect(isMonitoredService(key)).toBe(true);
+    }
   });
 });

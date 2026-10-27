@@ -400,6 +400,7 @@ export default function DtrAttendanceLogsModal({
           return (
             <Space size={4}>
               <Button
+                aria-label="Save changes"
                 type="text"
                 size="small"
                 icon={<CheckOutlined />}
@@ -409,6 +410,7 @@ export default function DtrAttendanceLogsModal({
                 onClick={() => saveEdit(record.id)}
               />
               <Button
+                aria-label="Cancel edit"
                 type="text"
                 size="small"
                 danger
@@ -426,6 +428,7 @@ export default function DtrAttendanceLogsModal({
           <Space size={4}>
             {canEdit && (
               <Button
+                aria-label="Edit"
                 type="text"
                 size="small"
                 icon={<EditOutlined />}
@@ -442,6 +445,7 @@ export default function DtrAttendanceLogsModal({
               >
                 <Tooltip title="Restore original">
                   <Button
+                    aria-label="Restore original"
                     type="text"
                     size="small"
                     icon={<RollbackOutlined />}
@@ -481,6 +485,7 @@ export default function DtrAttendanceLogsModal({
                 }}
               >
                 <Button
+                  aria-label="Delete"
                   type="text"
                   size="small"
                   danger
@@ -544,6 +549,7 @@ export default function DtrAttendanceLogsModal({
           >
             <Tooltip title="Restore">
               <Button
+                aria-label="Restore"
                 type="text"
                 size="small"
                 icon={<RollbackOutlined />}

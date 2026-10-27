@@ -521,6 +521,14 @@ export function usePortalClients() {
   });
 }
 
+export function usePortalSites(clientId: string | undefined) {
+  return useQuery({
+    queryKey: [...KEY, "sites", clientId],
+    queryFn: () => clientPortalApi.listSites(clientId!),
+    enabled: !!clientId,
+  });
+}
+
 export function usePortalModules(clientId: string | undefined) {
   return useQuery({
     queryKey: [...KEY, "modules", clientId],

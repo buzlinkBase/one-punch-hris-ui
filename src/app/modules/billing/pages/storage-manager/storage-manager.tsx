@@ -208,7 +208,7 @@ export default function StorageManager() {
               columns={categoryColumns}
               dataSource={breakdown.categories}
               pagination={false}
-              scroll={{ x: "max-content" }}
+
               expandable={{
                 expandRowByClick: true,
                 expandedRowRender: (category) => (

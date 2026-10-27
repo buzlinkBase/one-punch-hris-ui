@@ -14,7 +14,11 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginFormSchema, type LoginFormValues } from "./login-form.schema";
-import { authApi } from "./services/auth.api";
+import {
+  useAcceptPendingInvitationMutation,
+  useGoogleLoginMutation,
+  useLoginMutation,
+} from "./hooks/use-auth-mutations";
 import { getNotify } from "@/shared/utils/notify";
 import { authStorage } from "@/core/auth/auth-storage";
 import { authErrorMessage } from "@/core/auth/auth-error-message";
@@ -56,6 +60,10 @@ const GoogleIcon = () => (
 export default function Login() {
   const navigate = useNavigate();
   const [googleLoggingIn, setGoogleLoggingIn] = useState(false);
+  const { mutateAsync: login } = useLoginMutation();
+  const { mutateAsync: loginWithGoogle } = useGoogleLoginMutation();
+  const { mutateAsync: acceptInvitation } =
+    useAcceptPendingInvitationMutation();
 
   // Safely grab the query parameters from the active route using TanStack Router
   const searchParams = useSearch({ from: "/login" }) as Record<string, string>;
@@ -78,9 +86,7 @@ export default function Login() {
     if (!pendingToken) return;
     sessionStorage.removeItem(PENDING_INVITE_KEY);
     try {
-      saveInvitationSession(
-        await authApi.acceptInvitation({ token: pendingToken }),
-      );
+      saveInvitationSession(await acceptInvitation(pendingToken));
     } catch (err) {
       notification.warning({
         message: "Couldn't join company",
@@ -100,7 +106,7 @@ export default function Login() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      const result = await authApi.login(values);
+      const result = await login(values);
       const claims = authStorage.getTenantClaims(result.accessToken);
       authStorage.save(result.accessToken, {
         email: values.email,
@@ -128,7 +134,7 @@ export default function Login() {
     onSuccess: async ({ code }) => {
       setGoogleLoggingIn(true);
       try {
-        const result = await authApi.loginWithGoogle(code);
+        const result = await loginWithGoogle(code);
         const googleClaims = authStorage.getTenantClaims(result.accessToken);
         authStorage.save(result.accessToken, {
           email: result.email,

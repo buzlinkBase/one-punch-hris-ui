@@ -7,6 +7,7 @@ import { queryClient } from "@/core/query-client";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { tenantHub } from "./tenant-hub.connection";
 import { approvalHub } from "./approval-hub.connection";
+import { startWithRetry } from "./hub-retry";
 import {
   TENANT_HUB_METHODS,
   type HrDbCreatedNotification,
@@ -189,12 +190,14 @@ export function useTenantHub() {
       handleSubscriptionChanged,
     );
 
-    // Swallows the expected AbortError from React 18 StrictMode's dev-only double-invoke (the
-    // first mount's connection gets stopped mid-negotiate by its own cleanup before this ever
-    // settles) -- see the comment on tenantHub.stop(). A genuine connection failure just means
-    // no live push for this session, already tolerated by falling back to the existing
-    // expiry-based refresh, so silently dropping it here isn't hiding anything actionable.
-    void tenantHub.start().catch(() => {});
+    // Retries until connected or unmounted. The expected AbortError from StrictMode's dev-only
+    // double-invoke (the first mount's connection gets stopped mid-negotiate by its own cleanup)
+    // just ends the loop -- see the comment on tenantHub.stop().
+    let active = true;
+    void startWithRetry(
+      () => tenantHub.start(),
+      () => active,
+    );
 
     // Seed HR-DB status on load/refresh from stored tenant list first (no network needed).
     authStorage.getTenants().forEach((tenant) => {
@@ -232,13 +235,14 @@ export function useTenantHub() {
       authApi
         .getTenantCreationStatus(tenantId)
         .then((status) => {
+          if (!active) return;
           setHrDbStatus(tenantId, status.hrDbStatus, status.hrDbReady);
           // If not ready yet, poll until the hub push arrives or the REST endpoint confirms ready.
           if (!status.hrDbReady) startPolling();
         })
         .catch(() => {
           // Status endpoint unreachable — poll so we recover when it comes back.
-          startPolling();
+          if (active) startPolling();
         });
     }
 
@@ -253,7 +257,10 @@ export function useTenantHub() {
         TENANT_HUB_METHODS.onSubscriptionChanged,
         handleSubscriptionChanged,
       );
-      if (pollTimer.current) clearInterval(pollTimer.current);
+      active = false;
+      // Clears the ref too -- startPolling() bails while it's set, so leaving the dead id there
+      // stopped the remount (StrictMode, or a later mount) from ever polling again.
+      stopPolling();
       void tenantHub.stop();
       started.current = false;
     };

@@ -10,9 +10,7 @@ import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { BankDisbursementResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 type ModeFilter = "All" | "ATM" | "Cash";
 
@@ -96,7 +94,7 @@ const bankColumns: ColumnsType<BankDisbursementResponse> = [
     key: "net",
     align: "right",
     fixed: "right",
-    render: fmt,
+    render: formatMoney,
   },
 ];
 
@@ -121,7 +119,7 @@ const cashColumns: ColumnsType<BankDisbursementResponse> = [
     key: "net",
     align: "right",
     width: 140,
-    render: fmt,
+    render: formatMoney,
   },
   { title: "Signature", key: "signature", width: 200, render: () => "" },
 ];

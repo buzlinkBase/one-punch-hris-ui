@@ -14,6 +14,11 @@ import type { EmployeeListQuery } from "../models/api/request/employee-list-quer
 const BASE_URL = buildApiUrl(API_PREFIX.hrms, "employees");
 
 export const employeeApi = {
+  // PDF endpoints -- opened with openPdfInNewTab (src/shared/utils/download-file.util.ts).
+  urls: {
+    print201: (employeeId: string) => `${BASE_URL}/${employeeId}/print-201`,
+  },
+
   async getAll(keyword?: string): Promise<EmployeeResponse[]> {
     const data = await httpClient.getUnwrapped<
       PaginatedResponse<EmployeeResponse[]>

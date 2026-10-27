@@ -6,11 +6,10 @@ import type {
   MyCashBondAdjustment,
   MyCashBondRun,
 } from "../../models/api/response/portal-cash-bond-response.model";
+import { formatMoney } from "@/shared/utils/money.util";
+import { withRowKeys } from "@/shared/utils/row-key.util";
 
 const { Title, Text } = Typography;
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
 const columns: ColumnsType<MyCashBondRun> = [
   {
@@ -24,7 +23,7 @@ const columns: ColumnsType<MyCashBondRun> = [
     dataIndex: "amount",
     key: "amount",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
 ];
 
@@ -41,7 +40,7 @@ const adjustmentColumns: ColumnsType<MyCashBondAdjustment> = [
     dataIndex: "amount",
     key: "amount",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
 ];
 
@@ -109,9 +108,9 @@ export default function PortalCashBond() {
                 <div className="mb-4">
                   <Title level={5}>Beginning Balance & Adjustments</Title>
                   <Table<MyCashBondAdjustment>
-                    rowKey={(r, i) => `${r.entryDate}-${i}`}
+                    scroll={{ x: "max-content" }}
                     columns={adjustmentColumns}
-                    dataSource={adjustments}
+                    dataSource={withRowKeys(adjustments, (r) => r.entryDate)}
                     pagination={false}
                     size="small"
                   />
@@ -119,6 +118,7 @@ export default function PortalCashBond() {
               )}
               <Title level={5}>Payroll Deductions & Refund</Title>
               <Table<MyCashBondRun>
+                scroll={{ x: "max-content" }}
                 rowKey="payrollId"
                 loading={isLoading}
                 columns={columns}

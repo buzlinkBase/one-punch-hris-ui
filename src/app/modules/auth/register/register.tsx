@@ -20,7 +20,7 @@ import {
 } from "./models/forms/register-form.schema";
 import { useRegisterMutation } from "./hooks/use-register-mutation";
 import { authErrorMessage } from "@/core/auth/auth-error-message";
-import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import { useGoogleSignUpMutation } from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
 
@@ -52,6 +52,7 @@ export default function Register() {
   const { mutateAsync: register, isPending } = useRegisterMutation();
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const [googleSigningUp, setGoogleSigningUp] = useState(false);
+  const { mutateAsync: signUpWithGoogle } = useGoogleSignUpMutation();
 
   const {
     control,
@@ -93,7 +94,7 @@ export default function Register() {
     onSuccess: async ({ code }) => {
       setGoogleSigningUp(true);
       try {
-        const result = await authApi.signUpWithGoogle(code);
+        const result = await signUpWithGoogle(code);
         const claims = authStorage.getTenantClaims(result.accessToken);
         authStorage.save(result.accessToken, {
           email: result.email,

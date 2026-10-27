@@ -132,6 +132,7 @@ export default function EmployeeSkillsTab({
       render: (_, row) => (
         <Space size="small">
           <Button
+            aria-label="Edit"
             size="small"
             type="text"
             icon={<EditOutlined />}
@@ -143,7 +144,13 @@ export default function EmployeeSkillsTab({
             okText="Remove"
             okButtonProps={{ danger: true }}
           >
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              aria-label="Delete"
+              size="small"
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+            />
           </Popconfirm>
         </Space>
       ),

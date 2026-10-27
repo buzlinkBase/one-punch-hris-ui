@@ -2,6 +2,7 @@ import { Modal, Table, Typography, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type { DtrPayResult } from "../../models/api/response/payroll-run-result.model";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Text } = Typography;
 
@@ -11,12 +12,6 @@ interface Props {
   employeeName?: string;
   results: DtrPayResult[];
 }
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
 // "RegularWorkDay" -> "Regular Work Day" — same space-before-caps convention
 // dtr-detail-table.tsx's own WorkType column uses (backend StringHelpers.AddSpacesBeforeCaps,
@@ -193,7 +188,7 @@ export default function TimeHourPayResultsModal({
           </span>
         );
       }
-      return fmt(n);
+      return formatMoney(n);
     },
   });
 
@@ -258,7 +253,9 @@ export default function TimeHourPayResultsModal({
             {ALL_LEAVES.map((leaf, i) => (
               <Table.Summary.Cell key={leaf.key} index={i + 2} align="right">
                 <strong>
-                  {fmt(rows.reduce((s, r) => s + (leaf.pick(r) ?? 0), 0))}
+                  {formatMoney(
+                    rows.reduce((s, r) => s + (leaf.pick(r) ?? 0), 0),
+                  )}
                 </strong>
               </Table.Summary.Cell>
             ))}

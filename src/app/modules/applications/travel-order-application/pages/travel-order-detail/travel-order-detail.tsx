@@ -41,6 +41,7 @@ import { ApprovalRestartNotice } from "@/shared/components/approval-restart-noti
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { useStagedAttachments } from "@/shared/hooks/use-attachment-queries";
 import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -121,7 +122,7 @@ export default function TravelOrderDetail() {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<TravelOrderFormValues>({
     resolver: zodResolver(travelOrderFormSchema),
     defaultValues: {
@@ -140,6 +141,7 @@ export default function TravelOrderDetail() {
       applicationRemarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const startDate = watch("startDate");
@@ -220,6 +222,7 @@ export default function TravelOrderDetail() {
       await add({ ...payload, attachmentIds: staged.stagedIds });
       void staged.refresh();
     }
+    allowNavigation();
     navigate({ to: "/applications/official-business" });
   };
 

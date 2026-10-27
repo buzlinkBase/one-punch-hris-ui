@@ -26,6 +26,7 @@ import { OPERATION_AREA_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const PolygonMapPicker = lazy(() =>
   import("@/shared/components/polygon-map-picker").then((m) => ({
@@ -86,7 +87,7 @@ export default function OperationAreaDetail() {
     reset,
     getValues,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<OperationAreaFormValues>({
     resolver: zodResolver(operationAreaFormSchema),
     defaultValues: {
@@ -98,6 +99,7 @@ export default function OperationAreaDetail() {
       branchId: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -115,6 +117,7 @@ export default function OperationAreaDetail() {
   const onSubmit = async (values: OperationAreaFormValues) => {
     if (isEdit && id) await update({ id, ...values });
     else await add(values);
+    allowNavigation();
     navigate({ to: "/setup/project-site" });
   };
 

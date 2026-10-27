@@ -10,9 +10,7 @@ import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { ContributionRemittanceResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const EXPORT_HEADERS = [
   "Employee No",
@@ -65,14 +63,14 @@ const columns: ColumnsType<ContributionRemittanceResponse> = [
     dataIndex: "employeeShare",
     key: "ee",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "ER Share",
     dataIndex: "employerShare",
     key: "er",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Total",
@@ -80,7 +78,7 @@ const columns: ColumnsType<ContributionRemittanceResponse> = [
     key: "total",
     align: "right",
     fixed: "right",
-    render: fmt,
+    render: formatMoney,
   },
 ];
 

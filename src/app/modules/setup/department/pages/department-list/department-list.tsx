@@ -35,6 +35,7 @@ export default function DepartmentList() {
           </div>
           <Space>
             <Button
+              aria-label="Refresh"
               icon={<ReloadOutlined spin={isFetching} />}
               onClick={() => refetch()}
               loading={isFetching && !isLoading}

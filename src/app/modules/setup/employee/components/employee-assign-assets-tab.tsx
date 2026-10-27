@@ -214,6 +214,7 @@ export default function EmployeeAssignAssetsTab({
       render: (_, row) => (
         <Space size="small">
           <Button
+            aria-label="Edit"
             size="small"
             type="text"
             icon={<EditOutlined />}
@@ -225,7 +226,13 @@ export default function EmployeeAssignAssetsTab({
             okText="Remove"
             okButtonProps={{ danger: true }}
           >
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              aria-label="Delete"
+              size="small"
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+            />
           </Popconfirm>
         </Space>
       ),

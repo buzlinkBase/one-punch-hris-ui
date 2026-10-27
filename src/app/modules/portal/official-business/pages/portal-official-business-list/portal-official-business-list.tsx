@@ -111,6 +111,7 @@ export default function PortalOfficialBusinessList() {
             pendingLabel="Pending"
           />
           <Table<TravelOrderApplicationResponse>
+            scroll={{ x: "max-content" }}
             rowKey="id"
             loading={isLoading}
             columns={columns}

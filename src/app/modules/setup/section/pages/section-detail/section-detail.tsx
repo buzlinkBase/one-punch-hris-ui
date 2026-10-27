@@ -19,6 +19,7 @@ import { SECTION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -49,7 +50,7 @@ export default function SectionDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<SectionFormValues>({
     resolver: zodResolver(sectionFormSchema),
     defaultValues: {
@@ -60,6 +61,7 @@ export default function SectionDetail() {
       status: "ACTIVE",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -76,6 +78,7 @@ export default function SectionDetail() {
   const onSubmit = async (values: SectionFormValues) => {
     if (isEdit && id) await update({ id, ...values });
     else await add(values);
+    allowNavigation();
     navigate({ to: "/setup/section" });
   };
 

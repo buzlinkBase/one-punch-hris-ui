@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { SignedAmount } from "../signed-amount/signed-amount";
 import type { LedgerEntryResponse } from "../../models/api/response/payroll-reports.model";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { withRowKeys } from "@/shared/utils/row-key.util";
 
 const fmt = (n: number) =>
   (n ?? 0).toLocaleString("en-PH", {
@@ -101,9 +102,8 @@ export function LedgerDrawer({
   const entriesTable = (
     <Table
       size="small"
-      rowKey={(r, i) => `${r.entryDate}-${r.entryType}-${i}`}
       columns={buildColumns(amountLabel)}
-      dataSource={entries}
+      dataSource={withRowKeys(entries, (r) => `${r.entryDate}-${r.entryType}`)}
       loading={loading}
       pagination={false}
       scroll={{ x: 600 }}

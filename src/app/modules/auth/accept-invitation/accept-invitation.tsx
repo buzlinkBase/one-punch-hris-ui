@@ -6,10 +6,10 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import { Link, useLocation } from "@tanstack/react-router";
-import axios from "axios";
-import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import { useLogoutMutation } from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { authStorage } from "@/core/auth/auth-storage";
 import { guardCode, problemDetail } from "@/core/auth/guard-error";
+import { httpStatusOf } from "@/core/http/api-error";
 import { PENDING_INVITE_KEY } from "@/core/auth/invitation-session";
 import {
   useAcceptInvitationMutation,
@@ -36,7 +36,7 @@ function resolveExistingAccountView(
   if (!hasSession) return { phase: "needsSignIn" };
   if (!error) return { phase: "attempting" };
   // Not authenticated after all (token rejected, or the silent refresh also failed).
-  if (axios.isAxiosError(error) && error.response?.status === 401) {
+  if (httpStatusOf(error) === 401) {
     return { phase: "needsSignIn" };
   }
   if (guardCode(error) === "INVITATION_EMAIL_MISMATCH") {
@@ -60,6 +60,7 @@ export default function AcceptInvitation() {
   const previewQuery = useInvitationPreviewQuery(token);
   const preview = previewQuery.data;
   const acceptInvitation = useAcceptInvitationMutation();
+  const { mutateAsync: logout } = useLogoutMutation();
 
   // Read once per mount -- the session this visit started with is what decides the flow.
   const [hasSession] = useState(() => !!authStorage.getToken());
@@ -83,7 +84,7 @@ export default function AcceptInvitation() {
     }
     acceptInvitation.mutate(token, {
       onError: (err) => {
-        if (axios.isAxiosError(err) && err.response?.status === 401) {
+        if (httpStatusOf(err) === 401) {
           parkForSignIn();
         }
       },
@@ -91,7 +92,7 @@ export default function AcceptInvitation() {
   }, [preview, hasSession, token, acceptInvitation]);
 
   const handleSwitchAccount = async () => {
-    await authApi.logout().catch(() => {});
+    await logout().catch(() => {});
     authStorage.clear();
     sessionStorage.setItem(PENDING_INVITE_KEY, token);
     window.location.assign("/login");

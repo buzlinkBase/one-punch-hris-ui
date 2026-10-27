@@ -8,6 +8,7 @@ import {
 } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { withRowKeys } from "@/shared/utils/row-key.util";
 
 interface Props {
   data: RosterResponse[];
@@ -90,8 +91,7 @@ export default function RosterTable({ data, loading }: Props) {
 
   return (
     <Table
-      rowKey={(r, i) => `${r.employeeId}-${r.workDate}-${i}`}
-      dataSource={data}
+      dataSource={withRowKeys(data, (r) => `${r.employeeId}-${r.workDate}`)}
       columns={columns}
       size="small"
       loading={loading}

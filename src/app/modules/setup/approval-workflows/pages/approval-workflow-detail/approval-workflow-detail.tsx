@@ -52,6 +52,7 @@ import { useDepartments } from "@/app/modules/setup/department/hooks/use-departm
 import { usePositions } from "@/app/modules/setup/position/hooks/use-position-queries";
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { withReferencedEmployees } from "../../services/approver-options";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -116,7 +117,7 @@ export default function ApprovalWorkflowDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ApprovalWorkflowFormValues>({
     resolver: zodResolver(approvalWorkflowFormSchema),
     defaultValues: {
@@ -126,6 +127,7 @@ export default function ApprovalWorkflowDetail() {
       steps: [EMPTY_STEP],
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -192,6 +194,7 @@ export default function ApprovalWorkflowDetail() {
         placement: "topRight",
       });
     }
+    allowNavigation();
     navigate({ to: LIST_PATH });
   };
 
@@ -411,6 +414,7 @@ function StepCard({
       extra={
         <Space size="small">
           <Button
+            aria-label="Move up"
             size="small"
             type="text"
             icon={<ArrowUpOutlined />}
@@ -418,6 +422,7 @@ function StepCard({
             onClick={onMoveUp}
           />
           <Button
+            aria-label="Move down"
             size="small"
             type="text"
             icon={<ArrowDownOutlined />}
@@ -425,6 +430,7 @@ function StepCard({
             onClick={onMoveDown}
           />
           <Button
+            aria-label="Delete"
             size="small"
             type="text"
             danger

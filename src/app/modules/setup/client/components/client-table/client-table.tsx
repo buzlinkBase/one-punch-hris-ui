@@ -105,6 +105,7 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
         <Space>
           <Tooltip title="Client Settings">
             <Button
+              aria-label="Client Settings"
               type="text"
               icon={<SettingOutlined />}
               onClick={() =>
@@ -114,6 +115,7 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
           </Tooltip>
           <PermissionGate permission="Workforce Setup:Edit">
             <Button
+              aria-label="Edit"
               type="text"
               icon={<EditOutlined />}
               onClick={() => navigate({ to: `/setup/client/${record.id}` })}
@@ -127,7 +129,12 @@ export default function ClientTable({ data, loading, onDelete }: Props) {
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

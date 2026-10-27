@@ -28,6 +28,7 @@ import {
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { UNDERTIME_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -77,7 +78,7 @@ export default function UndertimeDetail() {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<UndertimeApplicationFormValues>({
     resolver: zodResolver(undertimeApplicationFormSchema),
     defaultValues: {
@@ -88,6 +89,7 @@ export default function UndertimeDetail() {
       approvalStatus: "Approved",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const payrollDate = watch("payrollDate");
@@ -110,6 +112,7 @@ export default function UndertimeDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/applications/undertime" });
   };
 

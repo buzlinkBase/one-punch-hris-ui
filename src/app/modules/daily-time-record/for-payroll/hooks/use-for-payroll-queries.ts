@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { forPayrollApi } from "../services/for-payroll.api";
 import type { PayrollRunRequest } from "../models/api/request/payroll-run-request.model";
 import type { GenerateThirteenthMonthRequest } from "../models/api/request/generate-thirteenth-month-request.model";
@@ -11,6 +16,19 @@ const PAYROLL_BATCHES_KEY = ["payroll-batches"];
 // Which employees a cutoff can pay -- changes whenever DTR days are approved/unposted or a payroll
 // run pays/releases them, so every such mutation below invalidates it.
 const READINESS_KEY = ["payroll-readiness"];
+
+/**
+ * Everything that reads saved payroll results: the run lists, readiness, the employee portal's
+ * payslips and the payroll reports. Every mutation that creates, approves or removes a run calls
+ * this -- without it, other open screens kept showing the old figures for up to 5 minutes.
+ */
+function invalidatePayrollResults(queryClient: QueryClient) {
+  queryClient.invalidateQueries({ queryKey: ["payrolls"] });
+  queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+  queryClient.invalidateQueries({ queryKey: READINESS_KEY });
+  queryClient.invalidateQueries({ queryKey: ["me", "payrolls"] });
+  queryClient.invalidateQueries({ queryKey: ["payroll-reports"] });
+}
 
 export function usePayrollReadiness(
   from?: string,
@@ -108,24 +126,32 @@ export function useGeneratePayroll() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: PayrollRunRequest) => forPayrollApi.generate(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
-      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
-    },
+    onSuccess: () => invalidatePayrollResults(queryClient),
   });
 }
 
 export function useGenerateThirteenthMonth() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: GenerateThirteenthMonthRequest) =>
       forPayrollApi.generateThirteenthMonth(payload),
+    onSuccess: () => invalidatePayrollResults(queryClient),
   });
 }
 
 export function useGenerateLastPay() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: GenerateLastPayRequest) =>
       forPayrollApi.generateLastPay(payload),
+    onSuccess: () => {
+      invalidatePayrollResults(queryClient);
+      // Last pay converts unused leave and refunds the cash bond.
+      invalidateLeaveBalances(queryClient);
+      queryClient.invalidateQueries({
+        queryKey: ["last-pay-cash-bond-status"],
+      });
+    },
   });
 }
 
@@ -137,9 +163,11 @@ export function usePreviewYearEndAdjustment() {
 }
 
 export function useGenerateYearEndAdjustment() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: TaxAnnualizationRunRequest) =>
       forPayrollApi.generateYearEndAdjustment(payload),
+    onSuccess: () => invalidatePayrollResults(queryClient),
   });
 }
 
@@ -201,8 +229,7 @@ export function useApproveBatch() {
     // server (e.g. the response never made it back), so refetch either way to reflect whatever
     // actually got committed rather than leaving stale For Approval/Approved state on screen.
     onSettled: (_data, _error, { batchId }) => {
-      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
-      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
+      invalidatePayrollResults(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "PayrollPosting", batchId],
       });
@@ -230,9 +257,7 @@ export function useDeletePayrollBatch() {
   return useMutation({
     mutationFn: (batchId: string) => forPayrollApi.deletePayrollBatch(batchId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
-      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
-      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
+      invalidatePayrollResults(queryClient);
       // Deleting a payroll run unposts its DTRs, which gives their leave days back.
       invalidateLeaveBalances(queryClient);
     },
@@ -268,9 +293,7 @@ export function useApprovePayrollBatchDeletion() {
     mutationFn: ({ batchId, note }: { batchId: string; note?: string }) =>
       forPayrollApi.approveBatchDeletion(batchId, note),
     onSettled: (_data, _error, { batchId }) => {
-      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
-      queryClient.invalidateQueries({ queryKey: PAYROLL_BATCHES_KEY });
-      queryClient.invalidateQueries({ queryKey: READINESS_KEY });
+      invalidatePayrollResults(queryClient);
       invalidateLeaveBalances(queryClient);
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", "PayrollPostingDeletion", batchId],

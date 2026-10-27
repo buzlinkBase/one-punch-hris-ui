@@ -15,8 +15,10 @@ import {
   ReloadOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
-import { usePayrollRates } from "@/app/modules/setup/payroll-rate/hooks/use-payroll-rate-queries";
-import { payrollRateApi } from "@/app/modules/setup/payroll-rate/services/payroll-rate.api";
+import {
+  usePayrollRates,
+  useReplacePayrollRates,
+} from "@/app/modules/setup/payroll-rate/hooks/use-payroll-rate-queries";
 import {
   BASE_RATE_DEFAULTS,
   BASE_RATE_KEYS,
@@ -40,7 +42,8 @@ export default function RateMultipliersTab() {
   const [vals, setVals] = useState<Record<string, number>>(() =>
     Object.fromEntries(BASE_RATE_KEYS.map((k) => [k, BASE_RATE_DEFAULTS[k]])),
   );
-  const [saving, setSaving] = useState(false);
+  const { mutateAsync: replaceRates, isPending: saving } =
+    useReplacePayrollRates();
 
   const syncFromApi = (records: typeof all) => {
     const next: Record<string, number> = Object.fromEntries(
@@ -65,7 +68,6 @@ export default function RateMultipliersTab() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
     // REGULAR is always 1; SPECIAL_WORKING mirrors REGULAR
     const effective: Record<string, number> = {
       ...vals,
@@ -73,7 +75,7 @@ export default function RateMultipliersTab() {
       SPECIAL_WORKING: 1,
     };
     try {
-      await payrollRateApi.bulkReplace(
+      await replaceRates(
         BASE_RATE_KEYS.map((type) => ({
           type,
           rate: effective[type],
@@ -84,11 +86,8 @@ export default function RateMultipliersTab() {
       );
 
       message.success("Rate multipliers saved.");
-      refetch();
     } catch {
       message.error("Failed to save. Please try again.");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -130,6 +129,7 @@ export default function RateMultipliersTab() {
           </Popover>
         </Text>
         <Button
+          aria-label="Refresh"
           icon={<ReloadOutlined spin={isFetching} />}
           onClick={() => refetch()}
           loading={isFetching && !isLoading}

@@ -15,14 +15,9 @@ import {
   usePreviewDtrReconcile,
 } from "../../hooks/use-leave-balance-queries";
 import type { DtrReconcileLine } from "../../models/api/response/leave-balance-response.model";
+import { currentYear, yearOptions } from "../../utils/year-options";
 
 const { Text } = Typography;
-
-const CURRENT_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => {
-  const y = CURRENT_YEAR - 2 + i;
-  return { value: y, label: String(y) };
-});
 
 const formatDays = (days: number) => days.toFixed(2);
 
@@ -85,7 +80,7 @@ interface DtrReconcileModalProps {
  * the ledger back. Safe to run again: a second run finds nothing to change.
  */
 export function DtrReconcileModal({ open, onClose }: DtrReconcileModalProps) {
-  const [year, setYear] = useState(CURRENT_YEAR);
+  const [year, setYear] = useState(currentYear);
   const [messageApi, contextHolder] = message.useMessage();
   const preview = usePreviewDtrReconcile();
   const apply = useApplyDtrReconcile();
@@ -153,7 +148,7 @@ export function DtrReconcileModal({ open, onClose }: DtrReconcileModalProps) {
           <Select
             className="w-32"
             value={year}
-            options={YEAR_OPTIONS}
+            options={yearOptions()}
             onChange={handleYearChange}
           />
           <Button

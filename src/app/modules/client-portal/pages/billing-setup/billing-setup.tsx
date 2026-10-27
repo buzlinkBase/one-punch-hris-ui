@@ -22,9 +22,9 @@ import {
   useBillingProfile,
   useContractRates,
   usePortalClients,
+  usePortalSites,
   useSaveBillingProfile,
 } from "../../hooks/use-client-portal-queries";
-import { clientPortalApi } from "../../services/client-portal.api";
 import {
   BILLING_LABEL,
   BILLING_PERMISSION,
@@ -34,7 +34,6 @@ import {
 import type {
   BillingProfile,
   ContractRate,
-  PortalSite,
 } from "../../models/api/response/client-portal-response.model";
 
 const { Title, Text } = Typography;
@@ -71,22 +70,10 @@ export default function BillingSetup() {
   const rates = useContractRates(clientId);
   const save = useSaveBillingProfile();
   const addRate = useAddContractRate();
-  const [loadedSites, setLoadedSites] = useState<{
-    clientId: string;
-    sites: PortalSite[];
-  }>();
-  const sites =
-    loadedSites && loadedSites.clientId === clientId ? loadedSites.sites : [];
+  const sites = usePortalSites(clientId).data ?? [];
   const [rateOpen, setRateOpen] = useState(false);
   const [profileForm] = Form.useForm<ProfileForm>();
   const [rateForm] = Form.useForm<RateForm>();
-
-  useEffect(() => {
-    if (!clientId) return;
-    void clientPortalApi
-      .listSites(clientId)
-      .then((list) => setLoadedSites({ clientId, sites: list }));
-  }, [clientId]);
 
   useEffect(() => {
     const p = profile.data;

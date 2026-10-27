@@ -7,18 +7,13 @@ import { HDMF_TABLE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { formatMoney } from "@/shared/utils/money.util";
 
 interface Props {
   data: HdmfTableResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
 }
-
-const fmt = (v: number) =>
-  (v ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
 const fmtRate = (v: number) => `${(v * 100).toFixed(4)}%`;
 
@@ -47,7 +42,7 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
           width: widths.minSalaryBase,
           onResize: (w: number) => handleResize("minSalaryBase", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: HDMF_TABLE_LABEL.MAX_SALARY_BASE,
@@ -59,7 +54,7 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
           width: widths.maxSalaryBase,
           onResize: (w: number) => handleResize("maxSalaryBase", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: HDMF_TABLE_LABEL.EMPLOYEE_RATE,
@@ -95,7 +90,7 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
           width: widths.employeeShare,
           onResize: (w: number) => handleResize("employeeShare", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: HDMF_TABLE_LABEL.EMPLOYER_SHARE,
@@ -107,7 +102,7 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
           width: widths.employerShare,
           onResize: (w: number) => handleResize("employerShare", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: HDMF_TABLE_LABEL.TOTAL,
@@ -119,7 +114,7 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
           width: widths.totalContribution,
           onResize: (w: number) => handleResize("totalContribution", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: HDMF_TABLE_LABEL.REMARKS,
@@ -142,6 +137,7 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
         <Space>
           <PermissionGate permission="Statutory Tables:Edit">
             <Button
+              aria-label="Edit"
               type="text"
               icon={<EditOutlined />}
               onClick={() => navigate({ to: `/setup/hdmf-table/${record.id}` })}
@@ -155,7 +151,12 @@ export default function HdmfTableTable({ data, loading, onDelete }: Props) {
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

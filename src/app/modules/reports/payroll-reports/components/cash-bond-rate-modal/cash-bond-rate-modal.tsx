@@ -1,8 +1,12 @@
 import { useEffect } from "react";
 import { Form, Input, InputNumber, Modal } from "antd";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { formatMoney } from "@/shared/utils/money.util";
+import {
+  cashBondRateFormSchema,
+  type CashBondRateFormValues,
+} from "../../models/forms/cash-bond-rate-form.schema";
 
 export interface CashBondRateTarget {
   employeeId: string;
@@ -12,11 +16,6 @@ export interface CashBondRateTarget {
 
 export interface CashBondRateSubmitValues {
   employeeId: string;
-  newRate: number;
-  reason: string;
-}
-
-interface FormValues {
   newRate: number;
   reason: string;
 }
@@ -38,17 +37,24 @@ export function CashBondRateModal({
   onSubmit,
   isSubmitting,
 }: Props) {
-  const [form] = Form.useForm<FormValues>();
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CashBondRateFormValues>({
+    resolver: zodResolver(cashBondRateFormSchema),
+    defaultValues: { reason: "" },
+  });
 
   useEffect(() => {
     if (open && target) {
-      form.setFieldsValue({ newRate: target.currentRate, reason: "" });
+      reset({ newRate: target.currentRate, reason: "" });
     }
-  }, [open, target, form]);
+  }, [open, target, reset]);
 
-  const handleOk = async () => {
+  const submit = async (values: CashBondRateFormValues) => {
     if (!target) return;
-    const values = await form.validateFields();
     await onSubmit({
       employeeId: target.employeeId,
       newRate: values.newRate,
@@ -61,41 +67,60 @@ export function CashBondRateModal({
       title="Edit Cash Bond Rate"
       open={open}
       onCancel={onClose}
-      onOk={handleOk}
+      onOk={handleSubmit(submit)}
       okText="Save"
       confirmLoading={isSubmitting}
       destroyOnHidden
     >
-      <Form form={form} layout="vertical">
+      <Form layout="vertical">
         {target && (
           <p className="text-sm text-gray-500">
             {target.employeeName}
             <br />
-            Current rate per payroll: <strong>{fmt(target.currentRate)}</strong>
+            Current rate per payroll:{" "}
+            <strong>{formatMoney(target.currentRate)}</strong>
           </p>
         )}
         <Form.Item
-          name="newRate"
           label="New rate per payroll"
-          rules={[{ required: true, message: "Required" }]}
+          required
+          validateStatus={errors.newRate ? "error" : ""}
+          help={errors.newRate?.message}
           extra="Applies from the next payroll run. Payrolls already generated keep their amounts, and the cash bond collected so far does not change."
         >
-          <InputNumber
-            className="w-full"
-            min={0}
-            step={50}
-            precision={2}
-            prefix="₱"
+          <Controller
+            name="newRate"
+            control={control}
+            render={({ field }) => (
+              <InputNumber
+                {...field}
+                value={field.value}
+                onChange={(v) => field.onChange(v ?? undefined)}
+                className="w-full"
+                min={0}
+                step={50}
+                precision={2}
+                prefix="₱"
+              />
+            )}
           />
         </Form.Item>
         <Form.Item
-          name="reason"
           label="Reason"
-          rules={[{ required: true, message: "Required" }]}
+          required
+          validateStatus={errors.reason ? "error" : ""}
+          help={errors.reason?.message}
         >
-          <Input.TextArea
-            rows={3}
-            placeholder="e.g. Employee asked to increase savings"
+          <Controller
+            name="reason"
+            control={control}
+            render={({ field }) => (
+              <Input.TextArea
+                {...field}
+                rows={3}
+                placeholder="e.g. Employee asked to increase savings"
+              />
+            )}
           />
         </Form.Item>
       </Form>

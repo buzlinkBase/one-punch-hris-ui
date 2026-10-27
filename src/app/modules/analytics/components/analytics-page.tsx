@@ -83,7 +83,7 @@ export function AnalyticsPage({ config }: { config: AnalyticsPageConfig }) {
   const canExport = authStorage.hasAnyPermission(config.exportPermission);
   const exportExcel = () => {
     if (!data) return;
-    downloadMultiSheetExcel(
+    void downloadMultiSheetExcel(
       buildAnalyticsSheets(data),
       `${config.title} ${data.from} to ${data.to}.xlsx`,
     );

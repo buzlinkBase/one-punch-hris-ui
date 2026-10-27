@@ -120,6 +120,7 @@ export default function DeductionTable({
         <Space>
           <PermissionGate permission="Deductions & Income Setup:Edit">
             <Button
+              aria-label="Edit"
               type="text"
               icon={<EditOutlined />}
               onClick={() => navigate({ to: `/setup/deduction/${record.id}` })}
@@ -133,7 +134,12 @@ export default function DeductionTable({
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

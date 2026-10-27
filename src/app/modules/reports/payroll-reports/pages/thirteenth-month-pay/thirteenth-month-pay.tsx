@@ -10,11 +10,10 @@ import { useThirteenthMonth } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { ThirteenthMonthResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
-import httpClient from "@/core/http/http-client";
-import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { forPayrollApi } from "@/app/modules/daily-time-record/for-payroll/services/for-payroll.api";
+import { payrollReportsApi } from "../../services/payroll-reports.api";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const STATUS_LABEL: Record<ThirteenthMonthResponse["status"], string> = {
   NotGenerated: "Not Generated",
@@ -43,20 +42,8 @@ const EXPORT_HEADERS = [
 
 // Opens the payslip PDF in a new tab (same convention as Payroll Summary's per-row print) —
 // PayslipDocument.cs renders a dedicated "13TH MONTH PAY" layout for these rows.
-const handlePrintPayslip = async (payrollId: string) => {
-  const printTab = window.open("about:blank", "_blank");
-  try {
-    const blob = await httpClient.get<Blob>(
-      `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/${payrollId}/print`,
-      { responseType: "blob" },
-    );
-    const url = URL.createObjectURL(blob);
-    if (printTab) printTab.location.href = url;
-  } catch {
-    printTab?.close();
-    message.error("Failed to generate the payslip. Please try again.");
-  }
-};
+const handlePrintPayslip = (payrollId: string) =>
+  openPdfInNewTab(forPayrollApi.urls.payslipPrint(payrollId));
 
 const toRows = (records: ThirteenthMonthResponse[]) =>
   records.map((r) => [
@@ -83,21 +70,21 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
     dataIndex: "totalBasicPayForYear",
     key: "basic",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Special Bonuses (Year)",
     dataIndex: "totalSpecialBonusesForYear",
     key: "bonuses",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "13th Month Pay",
     dataIndex: "thirteenthMonthPay",
     key: "thirteenth",
     align: "right",
-    render: (v: number) => <strong>{fmt(v)}</strong>,
+    render: (v: number) => <strong>{formatMoney(v)}</strong>,
   },
   {
     title: "Status",
@@ -112,7 +99,7 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
     dataIndex: "netPay",
     key: "netPay",
     align: "right",
-    render: (v: number | null) => (v != null ? fmt(v) : "—"),
+    render: (v: number | null) => (v != null ? formatMoney(v) : "—"),
   },
   {
     title: "",
@@ -123,6 +110,7 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
       r.payrollId ? (
         <Tooltip title="Print payslip">
           <Button
+            aria-label="Print payslip"
             type="text"
             size="small"
             icon={<PrinterOutlined />}
@@ -132,6 +120,7 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
       ) : (
         <Tooltip title="Not generated yet">
           <Button
+            aria-label="Not generated yet"
             type="text"
             size="small"
             icon={<PrinterOutlined />}
@@ -153,20 +142,10 @@ export default function ThirteenthMonthPay() {
       message.info("No data to print. Adjust the year first.");
       return;
     }
-    const printTab = window.open("about:blank", "_blank");
-    try {
-      const blob = await httpClient.get<Blob>(
-        // PayrollReportsController's route resolves to "payrollreports" (no hyphen) — see
-        // payroll-reports.api.ts's ENDPOINT comment for why.
-        `${buildApiUrl(API_PREFIX.hrms, "payrollreports")}/13th-month-pay/print`,
-        { params: { year, clientId }, responseType: "blob" },
-      );
-      const url = URL.createObjectURL(blob);
-      if (printTab) printTab.location.href = url;
-    } catch {
-      printTab?.close();
-      message.error("Failed to generate the report. Please try again.");
-    }
+    await openPdfInNewTab(payrollReportsApi.urls.thirteenthMonthPayPrint, {
+      year,
+      clientId,
+    });
   };
 
   return (

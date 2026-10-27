@@ -35,6 +35,7 @@ import { SPLIT_TIME_SHIFT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import type { CreateSplitTimeShift } from "../../models/api/request/create-split-time-shift.model";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -92,7 +93,7 @@ export default function SplitTimeShiftDetail() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<SplitTimeShiftFormValues>({
     resolver: zodResolver(SplitTimeShiftFormSchema),
     defaultValues: {
@@ -111,6 +112,7 @@ export default function SplitTimeShiftDetail() {
       nightDiffThreshold: null,
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const startTime = useWatch({ control, name: "startTime" });
   const endTime = useWatch({ control, name: "endTime" });
@@ -207,6 +209,7 @@ export default function SplitTimeShiftDetail() {
 
     if (isEdit && id) await update({ id, ...payload });
     else await add(payload);
+    allowNavigation();
     navigate({ to: "/setup/time-shift/split" });
   };
 

@@ -35,14 +35,13 @@ import {
   useSetInvoiceDelivery,
   useVoidInvoice,
 } from "../../hooks/use-client-portal-queries";
-import { clientPortalApi } from "../../services/client-portal.api";
 import {
   BILLING_PATH,
   BILLING_PERMISSION,
   INVOICE_STATUS_TAG,
   peso,
 } from "../../constants/label.const";
-import { openBlobInNewTab, saveBlob } from "../../utils/open-blob";
+import { openPortalFile, savePortalFile } from "../../utils/open-blob";
 import { InvoiceExtras } from "./invoice-extras";
 import type {
   DeliveryMode,
@@ -106,9 +105,8 @@ export default function InvoiceDetail() {
     fileName: string,
     type: string,
   ) => {
-    const blob = await clientPortalApi.fetchBlob(path);
-    if (kind === "tab") openBlobInNewTab(blob, type);
-    else saveBlob(blob, fileName);
+    if (kind === "tab") await openPortalFile(path, type);
+    else await savePortalFile(path, fileName);
   };
 
   const lineColumns: ColumnsType<InvoiceLine> = [
@@ -212,6 +210,7 @@ export default function InvoiceDetail() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Button
+          aria-label="Back"
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate({ to: BILLING_PATH.INVOICES })}
         />

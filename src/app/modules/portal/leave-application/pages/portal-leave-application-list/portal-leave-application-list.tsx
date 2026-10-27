@@ -119,6 +119,7 @@ export default function PortalLeaveApplicationList() {
             pendingLabel="Pending"
           />
           <Table<LeaveApplicationResponse>
+            scroll={{ x: "max-content" }}
             rowKey="id"
             loading={isLoading}
             columns={columns}

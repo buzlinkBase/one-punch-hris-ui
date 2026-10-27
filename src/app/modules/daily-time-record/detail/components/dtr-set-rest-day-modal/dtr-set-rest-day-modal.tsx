@@ -153,6 +153,7 @@ export default function DtrSetRestDayModal({
                   onConfirm={() => handleDelete(item.id, item.payrollDate)}
                 >
                   <Button
+                    aria-label="Delete"
                     type="text"
                     danger
                     size="small"

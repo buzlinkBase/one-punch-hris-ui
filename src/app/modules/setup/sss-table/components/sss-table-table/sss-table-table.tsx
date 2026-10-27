@@ -7,18 +7,13 @@ import { SSS_TABLE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { formatMoney } from "@/shared/utils/money.util";
 
 interface Props {
   data: SssTableResponse[];
   loading?: boolean;
   onDelete?: (id: string) => void;
 }
-
-const fmt = (v: number) =>
-  (v ?? 0).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 
 export default function SssTableTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
@@ -44,7 +39,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
           width: widths.rangeFrom,
           onResize: (w: number) => handleResize("rangeFrom", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: SSS_TABLE_LABEL.RANGE_TO,
@@ -56,7 +51,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
           width: widths.rangeTo,
           onResize: (w: number) => handleResize("rangeTo", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: SSS_TABLE_LABEL.MSC,
@@ -68,7 +63,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
           width: widths.msc,
           onResize: (w: number) => handleResize("msc", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: SSS_TABLE_LABEL.EE,
@@ -80,7 +75,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
           width: widths.ee,
           onResize: (w: number) => handleResize("ee", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: SSS_TABLE_LABEL.ER,
@@ -92,7 +87,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
           width: widths.er,
           onResize: (w: number) => handleResize("er", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: SSS_TABLE_LABEL.EC,
@@ -104,7 +99,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
           width: widths.ec,
           onResize: (w: number) => handleResize("ec", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: SSS_TABLE_LABEL.TOTAL,
@@ -116,7 +111,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
           width: widths.totalContibution,
           onResize: (w: number) => handleResize("totalContibution", w),
         }) as object,
-      render: (v: number) => fmt(v),
+      render: (v: number) => formatMoney(v),
     },
     {
       title: "Actions",
@@ -127,6 +122,7 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
         <Space>
           <PermissionGate permission="Statutory Tables:Edit">
             <Button
+              aria-label="Edit"
               type="text"
               icon={<EditOutlined />}
               onClick={() => navigate({ to: `/setup/sss-table/${record.id}` })}
@@ -140,7 +136,12 @@ export default function SssTableTable({ data, loading, onDelete }: Props) {
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

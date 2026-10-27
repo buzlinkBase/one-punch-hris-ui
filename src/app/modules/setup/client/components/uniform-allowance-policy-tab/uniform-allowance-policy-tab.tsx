@@ -36,11 +36,11 @@ import type { UniformAllowancePolicy } from "../../models/api/response/uniform-a
 import type { UniformAllowancePolicyFormValues } from "../../models/forms/uniform-allowance-policy.schema";
 import UniformAllowanceSummary from "../uniform-allowance-summary/uniform-allowance-summary";
 import UniformAllowancePolicyForm from "./uniform-allowance-policy-form";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Text } = Typography;
 
-const peso = (value: number) =>
-  `₱${value.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+const peso = (value: number) => `₱${formatMoney(value)}`;
 const date = (value: string) => dayjs(value).format("MMM D, YYYY");
 
 /** What's open below the current rules: nothing, a new version, or a scheduled one being edited. */

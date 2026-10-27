@@ -20,9 +20,10 @@ import {
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { LeaveCreditsBalanceResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
+import { formatDecimal } from "@/shared/utils/number.util";
 
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+// Leave credits are days, not pesos.
+const fmtDays = (n: number) => formatDecimal(n ?? 0);
 
 const leaveName = (r: LeaveCreditsBalanceResponse) =>
   r.leaveDescription || r.leaveCode;
@@ -43,11 +44,11 @@ const toRows = (records: LeaveCreditsBalanceResponse[]) =>
     r.employeeNo,
     r.fullName,
     leaveName(r),
-    fmt(r.granted),
-    fmt(r.used),
-    fmt(r.reserved),
-    fmt(r.balance),
-    fmt(r.availableToFile),
+    fmtDays(r.granted),
+    fmtDays(r.used),
+    fmtDays(r.reserved),
+    fmtDays(r.balance),
+    fmtDays(r.availableToFile),
   ]);
 
 export default function LeaveLedger() {
@@ -125,35 +126,35 @@ export default function LeaveLedger() {
       dataIndex: "granted",
       key: "granted",
       align: "right",
-      render: fmt,
+      render: fmtDays,
     },
     {
       title: "Used",
       dataIndex: "used",
       key: "used",
       align: "right",
-      render: fmt,
+      render: fmtDays,
     },
     {
       title: "Reserved",
       dataIndex: "reserved",
       key: "reserved",
       align: "right",
-      render: fmt,
+      render: fmtDays,
     },
     {
       title: "Balance",
       dataIndex: "balance",
       key: "balance",
       align: "right",
-      render: (v: number) => <strong>{fmt(v)}</strong>,
+      render: (v: number) => <strong>{fmtDays(v)}</strong>,
     },
     {
       title: "Available to File",
       dataIndex: "availableToFile",
       key: "available",
       align: "right",
-      render: fmt,
+      render: fmtDays,
     },
     {
       title: "",

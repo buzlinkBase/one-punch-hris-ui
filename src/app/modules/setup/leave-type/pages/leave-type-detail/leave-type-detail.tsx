@@ -36,6 +36,7 @@ import {
 import { LEAVE_TYPE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -255,11 +256,12 @@ export default function LeaveTypeDetail() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<LeaveTypeFormValues>({
     resolver: zodResolver(leaveTypeFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const accrualBasis = useWatch({ control, name: "accrualBasis" });
   const paySource = useWatch({ control, name: "paySource" });
@@ -335,6 +337,7 @@ export default function LeaveTypeDetail() {
         message: isEdit ? "Leave Type Updated" : "Leave Type Created",
         description: `"${values.description}" was saved successfully.`,
       });
+      allowNavigation();
       navigate({ to: "/setup/leave-type" });
     } catch (err: unknown) {
       const msg =

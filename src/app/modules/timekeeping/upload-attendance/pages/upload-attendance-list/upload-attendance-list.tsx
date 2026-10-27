@@ -236,6 +236,7 @@ export default function UploadAttendanceList() {
                   {fileList[0].name}
                 </Text>
                 <Button
+                  aria-label="Delete"
                   type="text"
                   size="small"
                   danger

@@ -38,8 +38,8 @@ import { otPay, ndPay } from "../../utils/ot-nd-pay.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { QUICK_RANGES } from "@/shared/utils/quick-date-ranges.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
-import httpClient from "@/core/http/http-client";
-import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import { openPdfInNewTab } from "@/shared/utils/download-file.util";
+import { forPayrollApi } from "../../services/for-payroll.api";
 import {
   buildFlatCsv,
   downloadMultiSheetExcel,
@@ -232,18 +232,7 @@ export default function PayrollSummary() {
       message.error("This payroll record has no printable payslip yet.");
       return;
     }
-    const printTab = window.open("about:blank", "_blank");
-    try {
-      const blob = await httpClient.get<Blob>(
-        `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/${record.id}/print`,
-        { responseType: "blob" },
-      );
-      const url = URL.createObjectURL(blob);
-      if (printTab) printTab.location.href = url;
-    } catch {
-      printTab?.close();
-      message.error("Failed to generate the payslip. Please try again.");
-    }
+    await openPdfInNewTab(forPayrollApi.urls.payslipPrint(record.id));
   };
 
   // Payroll tab: earnings -> deductions -> Net in one row; the 7 holiday categories and the
@@ -266,21 +255,10 @@ export default function PayrollSummary() {
   // the table — see buildPrintSummaryParams / PayrollsController.PrintSummary.
   const handlePrintSummary = async () => {
     if (!results.length || !selectedBatch) return;
-    const printTab = window.open("about:blank", "_blank");
-    try {
-      const blob = await httpClient.get<Blob>(
-        `${buildApiUrl(API_PREFIX.hrms, "payrolls")}/print-summary`,
-        {
-          params: buildPrintSummaryParams(selectedBatch.id, filter),
-          responseType: "blob",
-        },
-      );
-      const url = URL.createObjectURL(blob);
-      if (printTab) printTab.location.href = url;
-    } catch {
-      printTab?.close();
-      message.error("Failed to generate the report. Please try again.");
-    }
+    await openPdfInNewTab(
+      forPayrollApi.urls.summaryPrint,
+      buildPrintSummaryParams(selectedBatch.id, filter),
+    );
   };
 
   // Export files are built from `results`, so they hold exactly the filtered rows on screen; the
@@ -296,7 +274,7 @@ export default function PayrollSummary() {
   const handleExportDeductions = () => {
     if (!deductionRows.length || !selectedBatch) return;
     const deductions = buildDeductionsSheet(deductionRows);
-    downloadMultiSheetExcel(
+    void downloadMultiSheetExcel(
       [
         {
           name: "Deductions",
@@ -323,7 +301,7 @@ export default function PayrollSummary() {
       // Other Deductions / Other Income groups unfolded).
       const payroll = buildPayrollSheet(results);
       const deductions = buildDeductionsSheet(results);
-      downloadMultiSheetExcel(
+      void downloadMultiSheetExcel(
         [
           {
             name: "Payroll",

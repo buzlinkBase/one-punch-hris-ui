@@ -403,6 +403,7 @@ export default function ClientSettingsModal({
                           style={{ width: 180 }}
                         />
                         <Button
+                          aria-label="Remove"
                           type="text"
                           size="small"
                           icon={<CloseCircleOutlined />}
@@ -435,6 +436,7 @@ export default function ClientSettingsModal({
                           style={{ width: 180 }}
                         />
                         <Button
+                          aria-label="Remove"
                           type="text"
                           size="small"
                           icon={<CloseCircleOutlined />}

@@ -127,7 +127,7 @@ export default function TardinessList() {
         `tardiness-${date}.csv`,
       );
     } else {
-      downloadExcel(TARDINESS_HEADERS, rows, `tardiness-${date}.xlsx`);
+      void downloadExcel(TARDINESS_HEADERS, rows, `tardiness-${date}.xlsx`);
     }
   };
 

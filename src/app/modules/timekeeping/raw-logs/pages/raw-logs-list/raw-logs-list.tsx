@@ -280,7 +280,7 @@ export default function RawLogsList() {
     if (format === "csv") {
       triggerDownload(buildFlatCsv(headers, strRows), `${name}-${date}.csv`);
     } else {
-      downloadExcel(headers, strRows, `${name}-${date}.xlsx`);
+      void downloadExcel(headers, strRows, `${name}-${date}.xlsx`);
     }
   };
 

@@ -123,7 +123,7 @@ export function PayrollReportShell<T extends object>({
         `${exportFileName}-${date}.csv`,
       );
     } else {
-      downloadExcel(
+      void downloadExcel(
         exportHeaders,
         rows,
         `${exportFileName}-${date}.xlsx`,
@@ -157,6 +157,7 @@ export function PayrollReportShell<T extends object>({
             {onRefresh && (
               <Tooltip title={filterValidationMessage}>
                 <Button
+                  aria-label="Refresh"
                   icon={<ReloadOutlined spin={loading} />}
                   onClick={onRefresh}
                   disabled={!!filterValidationMessage}

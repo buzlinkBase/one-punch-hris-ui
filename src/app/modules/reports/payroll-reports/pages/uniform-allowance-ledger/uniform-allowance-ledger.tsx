@@ -45,11 +45,9 @@ import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries"
 import { useUniformAllowanceSchedule } from "@/app/modules/setup/client/hooks/use-uniform-allowance-policy-queries";
 import { UniformScheduleView } from "../../components/uniform-schedule-view/uniform-schedule-view";
 import { UniformCreditLogDrawer } from "../../components/uniform-credit-log-drawer/uniform-credit-log-drawer";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Text } = Typography;
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
 const LABELS = { added: "Accrued", deducted: "Released" };
 const EXPORT = fundSummaryExport(LABELS);
@@ -360,6 +358,7 @@ export default function UniformAllowanceLedger() {
 
           {releaseEmployeeIds.length > 0 && (
             <Table
+              scroll={{ x: "max-content" }}
               size="small"
               loading={isLoadingBalances}
               dataSource={releaseEmployeeIds.map((id) => ({ employeeId: id }))}
@@ -377,7 +376,7 @@ export default function UniformAllowanceLedger() {
                   key: "balance",
                   align: "right",
                   render: (_, row) =>
-                    fmt(balanceByEmployee[row.employeeId] ?? 0),
+                    formatMoney(balanceByEmployee[row.employeeId] ?? 0),
                 },
                 {
                   title: "Release Amount",

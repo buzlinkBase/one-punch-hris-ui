@@ -8,14 +8,14 @@ import type {
   PortalVisibilityKey,
   PortalVisibilityResponse,
 } from "../../shared/models/api/response/portal-visibility-response.model";
+import { formatMoney } from "@/shared/utils/money.util";
 
 export const DATE_FORMAT = "YYYY-MM-DD";
 
 /** Backend status of a request still waiting on its approvers. */
 const PENDING_STATUS = "ForApproval";
 
-export const fmtAmount = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+export const fmtAmount = (n: number) => formatMoney(n);
 
 export const fmtDays = (n: number) =>
   Number.isInteger(n) ? String(n) : n.toFixed(2);

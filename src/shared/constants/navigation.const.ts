@@ -37,11 +37,42 @@ export function flattenNavPaths(
   ]);
 }
 
+interface RouteAlias {
+  path: string;
+  as: string;
+  exact?: boolean;
+}
+
+/**
+ * Routes with no menu entry of their own, gated as the menu page they belong to. The route guard
+ * only knows the menu, so a route missing from both the menu and this list needs no permission
+ * at all -- any signed-in member could open it by URL.
+ */
+export const ROUTE_ALIASES: RouteAlias[] = [
+  { path: "/setup", as: "/setup/department", exact: true },
+  { path: "/portal", as: "/portal/dashboard", exact: true },
+  { path: "/setup/time-shift/flexi", as: "/setup/time-shift/split" },
+  { path: "/setup/deduction-type", as: "/setup/deduction" },
+  { path: "/setup/other-income-type", as: "/setup/other-income" },
+  { path: "/daily-time-record/detail", as: "/daily-time-record/master" },
+];
+
+/** The menu path whose permission and features `path` is gated by. */
+export function resolveNavPath(path: string): string {
+  const alias = ROUTE_ALIASES.find((a) =>
+    a.exact
+      ? path === a.path
+      : path === a.path || path.startsWith(`${a.path}/`),
+  );
+  return alias?.as ?? path;
+}
+
 /** Returns the most specific permission attached to a navigation path. */
 export function getPermissionForPath(
-  path: string,
+  rawPath: string,
   items: NavItem[] = NAVIGATION_ITEMS,
 ): string | string[] | undefined {
+  const path = resolveNavPath(rawPath);
   let match: { path: string; permission?: string | string[] } | undefined;
 
   const visit = (
@@ -71,9 +102,10 @@ export function getPermissionForPath(
  * ancestors'. BASE_FEATURE is included when tagged, so a page with none at all is untagged.
  */
 export function getFeaturesForPath(
-  path: string,
+  rawPath: string,
   items: NavItem[] = NAVIGATION_ITEMS,
 ): NavFeature[] {
+  const path = resolveNavPath(rawPath);
   let match: { path: string; features: NavFeature[] } | undefined;
 
   const visit = (entries: NavItem[], inherited: NavFeature[]) => {

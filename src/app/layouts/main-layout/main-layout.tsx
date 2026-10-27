@@ -97,8 +97,10 @@ import { filterNavByPortalVisibility } from "./filter-nav-by-portal-visibility";
 import { ConfidentialDataNotice } from "@/shared/components/confidential-data-notice/confidential-data-notice";
 import { confidentialNoticeFor } from "@/shared/components/confidential-data-notice/confidential-notice-paths";
 import { useAuthUser } from "@/core/auth/use-auth-user";
-import { authApi } from "@/app/modules/auth/login/services/auth.api";
-import { refreshAccessToken } from "@/core/auth/auth-refresh";
+import {
+  useLogoutMutation,
+  useSelectTenantMutation,
+} from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { useTenantHub } from "@/core/signalr/use-tenant-hub";
 import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { useApprovalHub } from "@/core/signalr/use-approval-hub";
@@ -283,6 +285,7 @@ function getNavIcon(key: string): ReactNode {
 
 /** Nav keys that don't depend on the tenant's HR database and stay enabled while it provisions. */
 const HR_DB_INDEPENDENT_KEYS = new Set(["dashboard"]);
+const LOGOUT_REVOKE_WAIT_MS = 2_000;
 
 /** Why a menu item is locked by the plan, for its tooltip. */
 function lockTooltip(lock: FeatureLock): string {
@@ -476,6 +479,8 @@ export default function MainLayout() {
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
+  const { mutateAsync: logout } = useLogoutMutation();
+  const { mutateAsync: selectTenant } = useSelectTenantMutation();
   const location = useLocation();
   const noticeClearance = confidentialNoticeFor(location.pathname);
   const sessionUser = getSessionUser();
@@ -865,13 +870,14 @@ export default function MainLayout() {
     }
   };
 
-  const handleLogout = () => {
-    // Fire-and-forget: revokes the refresh-token cookie server-side (authApi.logout), but a
-    // failed/slow revoke call must never delay or block the client-side logout the user is
-    // actually waiting on -- local state is cleared and the redirect fires immediately either
-    // way, matching how every other forced-logout path in this app (auth-refresh.ts,
-    // use-tenant-hub.ts) already behaves.
-    void authApi.logout().catch(() => {});
+  const handleLogout = async () => {
+    // Gives the server a moment to revoke the refresh-token cookie (authApi.logout): navigating
+    // away immediately usually aborts that request, leaving the cookie valid. Capped, so a
+    // failed/slow revoke still never blocks the client-side logout the user is waiting on.
+    await Promise.race([
+      logout().catch(() => {}),
+      new Promise((resolve) => setTimeout(resolve, LOGOUT_REVOKE_WAIT_MS)),
+    ]);
     authStorage.clear();
     window.location.assign("/login");
   };
@@ -880,7 +886,7 @@ export default function MainLayout() {
     setSwitchingTenant(tenantId);
 
     const doSwitch = async () => {
-      const result = await authApi.selectTenant(tenantId);
+      const result = await selectTenant(tenantId);
       const claims = authStorage.getTenantClaims(result.accessToken);
       const user = authStorage.getUser();
 
@@ -922,23 +928,12 @@ export default function MainLayout() {
       setSwitchingTenant(null);
     };
 
+    // A 401 here was already force-refreshed and replayed once by the axios unauthorized
+    // interceptor (and a dead refresh token signs the user out), so any error left is final.
     try {
       await doSwitch();
     } catch (err) {
-      const axiosErr = err as AxiosError;
-      if (axiosErr.response?.status === 401) {
-        // The service validates the token internally — force a refresh to get a fresh
-        // token even if the frontend didn't detect expiry (clock skew / missing exp claim).
-        // refreshAccessToken() redirects to /login if the refresh token is also gone.
-        try {
-          await refreshAccessToken();
-          await doSwitch();
-        } catch (retryErr) {
-          showError(retryErr);
-        }
-      } else {
-        showError(err);
-      }
+      showError(err);
     }
   };
 

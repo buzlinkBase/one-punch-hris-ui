@@ -11,9 +11,7 @@ import type {
 } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const GROUP_BY_OPTIONS: { value: CostSummaryGroupBy; label: string }[] = [
   { value: "department", label: "Department" },
@@ -62,28 +60,28 @@ const columns: ColumnsType<CostSummaryResponse> = [
     dataIndex: "totalBasicPay",
     key: "basic",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Gross Income",
     dataIndex: "totalGrossIncome",
     key: "gross",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Deductions",
     dataIndex: "totalDeductions",
     key: "ded",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Employer Cost",
     dataIndex: "employerContributionsCost",
     key: "erCost",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Net Pay",
@@ -91,7 +89,7 @@ const columns: ColumnsType<CostSummaryResponse> = [
     key: "net",
     align: "right",
     fixed: "right",
-    render: (v: number) => <strong>{fmt(v)}</strong>,
+    render: (v: number) => <strong>{formatMoney(v)}</strong>,
   },
 ];
 

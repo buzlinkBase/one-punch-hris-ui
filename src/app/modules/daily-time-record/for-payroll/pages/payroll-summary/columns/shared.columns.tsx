@@ -54,6 +54,7 @@ export const actionsColumn = (
         title={r.id ? "Print payslip" : "Not yet available for this record"}
       >
         <Button
+          aria-label="Print"
           type="text"
           size="small"
           icon={<PrinterOutlined />}

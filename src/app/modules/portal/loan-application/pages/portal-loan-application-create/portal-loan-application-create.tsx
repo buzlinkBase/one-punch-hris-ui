@@ -41,6 +41,7 @@ import {
   withRunningBalance,
   type LoanBreakdownRow,
 } from "@/shared/utils/loan-amortization.util";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const BACK_TO = "/portal/loan-applications";
 
@@ -70,7 +71,7 @@ export default function PortalLoanApplicationCreate() {
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<DeductionApplicationFormValues>({
     resolver: zodResolver(deductionApplicationFormSchema),
     defaultValues: {
@@ -89,6 +90,7 @@ export default function PortalLoanApplicationCreate() {
       remarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // employeeId isn't a visible field here -- useMyEmployee() resolves after this form's
   // defaultValues are already fixed at first render, so without this it stays "" forever and
@@ -232,6 +234,7 @@ export default function PortalLoanApplicationCreate() {
         })),
       });
     }
+    allowNavigation();
     navigate({ to: BACK_TO });
   };
 
@@ -445,6 +448,7 @@ export default function PortalLoanApplicationCreate() {
           >
             <div style={{ overflowX: "auto" }}>
               <Table
+                scroll={{ x: "max-content" }}
                 rowKey="period"
                 dataSource={breakdown}
                 columns={loanBreakdownColumns}

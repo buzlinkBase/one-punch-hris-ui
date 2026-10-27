@@ -28,9 +28,7 @@ import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { CashBondReportResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
+import { formatMoney } from "@/shared/utils/money.util";
 
 const EXPORT_HEADERS = [
   "Employee No",
@@ -69,7 +67,7 @@ const columns: ColumnsType<CashBondReportResponse> = [
     dataIndex: "cashBondRate",
     key: "rate",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: (
@@ -80,14 +78,14 @@ const columns: ColumnsType<CashBondReportResponse> = [
     dataIndex: "adjustments",
     key: "adjustments",
     align: "right",
-    render: (v: number) => (v !== 0 ? fmt(v) : ""),
+    render: (v: number) => (v !== 0 ? formatMoney(v) : ""),
   },
   {
     title: "From Payroll",
     dataIndex: "collectedFromPayroll",
     key: "fromPayroll",
     align: "right",
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: (
@@ -98,14 +96,14 @@ const columns: ColumnsType<CashBondReportResponse> = [
     dataIndex: "refunded",
     key: "refunded",
     align: "right",
-    render: (v: number) => (v !== 0 ? fmt(v) : ""),
+    render: (v: number) => (v !== 0 ? formatMoney(v) : ""),
   },
   {
     title: "Total Collected",
     dataIndex: "totalCollected",
     key: "collected",
     align: "right",
-    render: (v: number) => <strong>{fmt(v)}</strong>,
+    render: (v: number) => <strong>{formatMoney(v)}</strong>,
   },
   {
     title: "Payroll Runs",

@@ -16,6 +16,7 @@ import {
 import { DEDUCTION_TYPE_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -37,11 +38,12 @@ export default function DeductionTypeDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<DeductionTypeFormValues>({
     resolver: zodResolver(deductionTypeFormSchema),
     defaultValues: { code: "", name: "", status: "ACTIVE" },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -59,6 +61,7 @@ export default function DeductionTypeDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/deduction-type" });
   };
 

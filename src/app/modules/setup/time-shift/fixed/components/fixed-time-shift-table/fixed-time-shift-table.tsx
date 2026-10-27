@@ -234,6 +234,7 @@ export default function FixedTimeShiftTable({
           <PermissionGate permission="Time Shift Setup:Create">
             <Tooltip title="Duplicate">
               <Button
+                aria-label="Duplicate"
                 type="text"
                 icon={<CopyOutlined />}
                 onClick={() =>
@@ -246,6 +247,7 @@ export default function FixedTimeShiftTable({
           </PermissionGate>
           <PermissionGate permission="Time Shift Setup:Edit">
             <Button
+              aria-label="Edit"
               type="text"
               icon={<EditOutlined />}
               onClick={() =>
@@ -261,7 +263,12 @@ export default function FixedTimeShiftTable({
                 okText="Yes"
                 cancelText="No"
               >
-                <Button type="text" danger icon={<DeleteOutlined />} />
+                <Button
+                  aria-label="Delete"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                />
               </Popconfirm>
             </PermissionGate>
           )}

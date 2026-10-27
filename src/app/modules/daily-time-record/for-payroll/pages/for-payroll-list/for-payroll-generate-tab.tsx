@@ -25,7 +25,6 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import axios from "axios";
 import {
   useCalculatePayroll,
   useGeneratePayroll,
@@ -46,7 +45,6 @@ import {
   basicPay,
   holidayPay,
 } from "../../utils/ot-nd-pay.util";
-import type { ErrorResponse } from "@/shared/types/api-response.model";
 import PayrollRunPostModal from "../../components/payroll-run-post-modal";
 import TimeHourPayResultsModal from "../../components/time-hour-pay-results-modal";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
@@ -59,19 +57,13 @@ import {
   buildReadinessRows,
   isPayable,
 } from "../../utils/payroll-readiness.util";
+import { formatMoney } from "@/shared/utils/money.util";
+import { apiErrorMessage } from "@/core/http/api-error";
 
 const { Text } = Typography;
 
 // Hidden for now -- flip back to true to show the Pay/Release Date picker again.
 const SHOW_PAY_RELEASE_DATE = false;
-
-// ValidationException messages (e.g. "A Pay/Release Date is required...") land in
-// data.detail via GlobalExceptionHandler — surface that instead of a generic fallback.
-const getErrorDetail = (err: unknown, fallback: string) =>
-  axios.isAxiosError(err)
-    ? ((err.response?.data as ErrorResponse | undefined)?.data?.detail ??
-      fallback)
-    : fallback;
 
 // Matches on the group's code or its description.
 const filterByLabel = (
@@ -89,11 +81,6 @@ const filterByLabel = (
   );
 };
 
-const fmt = (n: number) =>
-  n?.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }) ?? "0.00";
 const fmtDate = (d: string) =>
   d ? dayjs(d.replace(/Z$/, "")).format("MMM DD, YYYY") : "—";
 
@@ -299,7 +286,7 @@ export default function ForPayrollGenerateTab() {
           message.success(`Preview: ${res.total} employee(s) calculated.`);
       },
       onError: (err) =>
-        message.error(getErrorDetail(err, "Payroll calculation failed.")),
+        message.error(apiErrorMessage(err, "Payroll calculation failed.")),
     });
   };
 
@@ -324,7 +311,7 @@ export default function ForPayrollGenerateTab() {
         );
       },
       onError: (err) =>
-        message.error(getErrorDetail(err, "Payroll generation failed.")),
+        message.error(apiErrorMessage(err, "Payroll generation failed.")),
     });
   };
 
@@ -390,6 +377,7 @@ export default function ForPayrollGenerateTab() {
         r.timeHourPayResults?.length ? (
           <Tooltip title="View daily pay breakdown">
             <Button
+              aria-label="View daily pay breakdown"
               type="text"
               size="small"
               icon={<EyeOutlined />}
@@ -449,7 +437,7 @@ export default function ForPayrollGenerateTab() {
       key: "dailyRate",
       width: 100,
       align: "right",
-      render: fmt,
+      render: formatMoney,
     },
     {
       title: "Earnings",
@@ -461,19 +449,19 @@ export default function ForPayrollGenerateTab() {
             title: "Basic",
             key: "basicPay",
             align: "right",
-            render: (_, r) => fmt(basicPay(r)),
+            render: (_, r) => formatMoney(basicPay(r)),
           },
           {
             title: "OT",
             key: "overtimePay",
             align: "right",
-            render: (_, r) => fmt(otPay(r)),
+            render: (_, r) => formatMoney(otPay(r)),
           },
           {
             title: "ND",
             key: "nd",
             align: "right",
-            render: (_, r) => fmt(ndPay(r)),
+            render: (_, r) => formatMoney(ndPay(r)),
           },
           {
             title: "NDOT",
@@ -483,7 +471,7 @@ export default function ForPayrollGenerateTab() {
             // ot-nd-pay.util.ts.
             render: (_, r) => {
               const v = ndotDisplayPay(r);
-              return v === null ? "—" : fmt(v);
+              return v === null ? "—" : formatMoney(v);
             },
           },
           {
@@ -491,69 +479,69 @@ export default function ForPayrollGenerateTab() {
             dataIndex: "restDayPay",
             key: "restDayPay",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Holiday",
             key: "holidayPay",
             align: "right",
-            render: (_, r) => fmt(holidayPay(r)),
+            render: (_, r) => formatMoney(holidayPay(r)),
           },
           {
             title: "Allowances",
             dataIndex: "totalRegularAllowances",
             key: "allowances",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "COLA",
             dataIndex: "cola",
             key: "cola",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Bonuses",
             dataIndex: "totalBonuses",
             key: "bonuses",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Commissions",
             dataIndex: "totalCommissions",
             key: "commissions",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "De Minimis",
             dataIndex: "totalDeminimises",
             key: "deminimis",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Other Income",
             dataIndex: "totalOtherIncome",
             key: "otherIncome",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Reimbursement",
             dataIndex: "reimbursement",
             key: "reimbursement",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Gross",
             dataIndex: "grossIncome",
             key: "grossIncome",
             align: "right",
-            render: fmt,
+            render: formatMoney,
             className: "font-semibold",
           },
         ],
@@ -571,42 +559,42 @@ export default function ForPayrollGenerateTab() {
             dataIndex: "sssContribution",
             key: "sss",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "PhilHealth",
             dataIndex: "philHealthContribution",
             key: "phic",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Pag-IBIG",
             dataIndex: "pagIbigContribution",
             key: "hdmf",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "W-Tax",
             dataIndex: "withholdingTax",
             key: "tax",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Cash Bond",
             dataIndex: "cashBondDeduction",
             key: "cashBond",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Other Deductions",
             dataIndex: "otherDeductions",
             key: "otherDed",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
         ],
         BAND_CLASS.deductions,
@@ -623,20 +611,20 @@ export default function ForPayrollGenerateTab() {
             dataIndex: "lateAmount",
             key: "lateAmount",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "UT",
             dataIndex: "underTimeAmount",
             key: "underTimeAmount",
             align: "right",
-            render: fmt,
+            render: formatMoney,
           },
           {
             title: "Absent",
             key: "absent",
             align: "right",
-            render: (_, r) => fmt(r.absencesAmount),
+            render: (_, r) => formatMoney(r.absencesAmount),
           },
         ],
         BAND_CLASS.attendance,
@@ -650,7 +638,7 @@ export default function ForPayrollGenerateTab() {
       fixed: "right",
       render: (v: number) => (
         <Text strong style={{ color: token.colorPrimary }}>
-          {fmt(v)}
+          {formatMoney(v)}
         </Text>
       ),
     },
@@ -802,6 +790,7 @@ export default function ForPayrollGenerateTab() {
               )}
               <Tooltip title="Refresh — picks up DTR approved since this page opened">
                 <Button
+                  aria-label="Refresh — picks up DTR approved since this page opened"
                   size="small"
                   type="text"
                   icon={<ReloadOutlined />}
@@ -990,7 +979,7 @@ export default function ForPayrollGenerateTab() {
                         index={i + leadColumns}
                         align="right"
                       >
-                        <strong>{fmt(val)}</strong>
+                        <strong>{formatMoney(val)}</strong>
                       </Table.Summary.Cell>
                     ))}
                     <Table.Summary.Cell
@@ -998,7 +987,7 @@ export default function ForPayrollGenerateTab() {
                       align="right"
                     >
                       <Text strong style={{ color: token.colorPrimary }}>
-                        {fmt(totals.net)}
+                        {formatMoney(totals.net)}
                       </Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>

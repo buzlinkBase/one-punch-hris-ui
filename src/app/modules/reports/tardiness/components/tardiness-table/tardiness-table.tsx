@@ -6,6 +6,7 @@ import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import { formatDecimal } from "@/shared/utils/number.util";
 import dayjs from "dayjs";
+import { withRowKeys } from "@/shared/utils/row-key.util";
 
 interface Props {
   data: TardinessResponse[];
@@ -122,8 +123,7 @@ export default function TardinessTable({ data, loading }: Props) {
 
   return (
     <Table
-      rowKey={(r, i) => `${r.employeeNo}-${r.workDate}-${i}`}
-      dataSource={data}
+      dataSource={withRowKeys(data, (r) => `${r.employeeNo}-${r.workDate}`)}
       columns={columns}
       size="small"
       loading={loading}

@@ -167,7 +167,8 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
         heading: "On your phone and when editing",
         body: [
           "On a phone, the leave, overtime, undertime and travel order lists show each request as a card instead of a wide table, with its actions at the bottom of the card.",
-          "If you leave a form you've changed without saving, for example the leave application form, you're asked whether to discard your changes. Choose Keep editing to stay on the form.",
+          "If you leave any form you've changed without saving, for example an employee record, a setup screen, an application or a request in My Portal, you're asked whether to discard your changes. This includes moving to the previous or next employee and closing or reloading the browser tab. Choose Keep editing to stay on the form.",
+          "Wide tables scroll sideways on smaller screens instead of squeezing their columns.",
         ],
       },
       {

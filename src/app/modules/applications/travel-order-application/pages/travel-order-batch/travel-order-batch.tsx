@@ -30,6 +30,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -95,7 +96,7 @@ export default function TravelOrderBatch() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<BatchTravelOrderFormValues>({
     resolver: zodResolver(batchTravelOrderFormSchema),
     defaultValues: {
@@ -112,6 +113,7 @@ export default function TravelOrderBatch() {
       entries: [defaultEntry()],
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -167,6 +169,7 @@ export default function TravelOrderBatch() {
     );
 
     await createBatch(payload);
+    allowNavigation();
     navigate({ to: "/applications/official-business" });
   };
 
@@ -474,6 +477,7 @@ export default function TravelOrderBatch() {
 
                     <div className="flex justify-end sm:block sm:pt-1">
                       <Button
+                        aria-label="Delete"
                         type="text"
                         danger
                         icon={<DeleteOutlined />}

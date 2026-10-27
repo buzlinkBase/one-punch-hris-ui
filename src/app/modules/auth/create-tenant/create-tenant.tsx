@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Card,
   Collapse,
@@ -17,7 +17,10 @@ import {
   createTenantFormSchema,
   type CreateTenantFormValues,
 } from "./create-tenant-form.schema";
-import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import {
+  useCreateTenantMutation,
+  useFetchTenantCreationStatus,
+} from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { authStorage } from "@/core/auth/auth-storage";
 import { tenantHub } from "@/core/signalr/tenant-hub.connection";
 import { TENANT_FAILED_STATUSES } from "@/core/signalr/tenant-hub.types";
@@ -131,6 +134,8 @@ export default function CreateTenant() {
     .filter((t) => t.state !== "Provisioning");
   const hasExistingTenants = usableTenants.length > 0;
   const [provisioning, setProvisioning] = useState(false);
+  const { mutateAsync: createTenant } = useCreateTenantMutation();
+  const fetchCreationStatus = useFetchTenantCreationStatus();
 
   const {
     control,
@@ -160,61 +165,62 @@ export default function CreateTenant() {
 
   // Shared tail of both a fresh submission and resuming an interrupted one: wait for
   // provisioning to finish, reconcile the stored tenant state, then enter the company.
-  const waitAndFinalize = async (tenantId: string, tenantName: string) => {
-    setProvisioning(true);
-    const { ready, timedOut } = await tenantHub.waitForProvisioning(tenantId);
+  const waitAndFinalize = useCallback(
+    async (tenantId: string, tenantName: string) => {
+      setProvisioning(true);
+      const { ready, timedOut } = await tenantHub.waitForProvisioning(tenantId);
 
-    let finalReady = ready;
+      let finalReady = ready;
 
-    if (!ready && timedOut) {
-      const status = await authApi
-        .getTenantCreationStatus(tenantId)
-        .catch(() => null);
+      if (!ready && timedOut) {
+        const status = await fetchCreationStatus(tenantId).catch(() => null);
 
-      if (
-        status &&
-        TENANT_FAILED_STATUSES.includes(status.status.toLowerCase())
-      ) {
-        setProvisioning(false);
-        notification.error({
-          message: "Setup failed",
-          description: `We couldn't finish setting up "${tenantName}". Please try again.`,
-          placement: "topRight",
-        });
-        return;
+        if (
+          status &&
+          TENANT_FAILED_STATUSES.includes(status.status.toLowerCase())
+        ) {
+          setProvisioning(false);
+          notification.error({
+            message: "Setup failed",
+            description: `We couldn't finish setting up "${tenantName}". Please try again.`,
+            placement: "topRight",
+          });
+          return;
+        }
+
+        finalReady = status?.isReady ?? false;
+
+        if (!finalReady) {
+          notification.info({
+            message: "Still setting up",
+            description:
+              "Your company is finishing setup in the background — we'll notify you once it's ready.",
+            placement: "topRight",
+          });
+        }
       }
 
-      finalReady = status?.isReady ?? false;
+      // Update the stored tenant entry's state now that TenantCreated fired.
+      // Do NOT call selectTenant here — membership is not yet "Active" at this
+      // point in provisioning, so that endpoint returns 403. The session token
+      // from createTenant already has tenantId embedded; the menu-lock + polling
+      // in use-tenant-hub will handle unlocking once HrDb is ready.
+      const userAfterProvisioning = authStorage.getUser()!;
+      const updatedTenants = (userAfterProvisioning.tenants ?? []).map((t) =>
+        t.tenantId === tenantId
+          ? { ...t, state: finalReady ? "Created" : "Provisioning" }
+          : t,
+      );
+      authStorage.save(authStorage.getToken()!, {
+        ...userAfterProvisioning,
+        tenants: updatedTenants,
+      });
 
-      if (!finalReady) {
-        notification.info({
-          message: "Still setting up",
-          description:
-            "Your company is finishing setup in the background — we'll notify you once it's ready.",
-          placement: "topRight",
-        });
-      }
-    }
-
-    // Update the stored tenant entry's state now that TenantCreated fired.
-    // Do NOT call selectTenant here — membership is not yet "Active" at this
-    // point in provisioning, so that endpoint returns 403. The session token
-    // from createTenant already has tenantId embedded; the menu-lock + polling
-    // in use-tenant-hub will handle unlocking once HrDb is ready.
-    const userAfterProvisioning = authStorage.getUser()!;
-    const updatedTenants = (userAfterProvisioning.tenants ?? []).map((t) =>
-      t.tenantId === tenantId
-        ? { ...t, state: finalReady ? "Created" : "Provisioning" }
-        : t,
-    );
-    authStorage.save(authStorage.getToken()!, {
-      ...userAfterProvisioning,
-      tenants: updatedTenants,
-    });
-
-    setProvisioning(false);
-    window.location.assign("/dashboard");
-  };
+      setProvisioning(false);
+      window.location.assign("/dashboard");
+    },
+    [fetchCreationStatus],
+  );
 
   useEffect(() => {
     if (!authStorage.getToken()) {
@@ -244,11 +250,11 @@ export default function CreateTenant() {
         );
       });
     }
-  }, [navigate]);
+  }, [navigate, waitAndFinalize]);
 
   const onSubmit = async (values: CreateTenantFormValues) => {
     try {
-      const result = await authApi.createTenant(toRequest(values));
+      const result = await createTenant(toRequest(values));
       const claims = authStorage.getTenantClaims(result.accessToken);
       const currentUser = authStorage.getUser()!;
 

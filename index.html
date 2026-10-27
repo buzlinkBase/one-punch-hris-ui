@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     <meta name="theme-color" content="#1DA081" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Poppins heads the font stack (index.css, app.tsx); without this it was never loaded and
+         every device fell back to its own system font. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    />
     <title>One Punch HRIS</title>
   </head>
   <body>

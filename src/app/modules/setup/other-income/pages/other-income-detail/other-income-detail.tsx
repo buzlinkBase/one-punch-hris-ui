@@ -42,6 +42,7 @@ import {
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title, Text } = Typography;
 
@@ -97,6 +98,7 @@ function ManageIncomeTypesModal({
       render: (_, row) => (
         <Space size="small">
           <Button
+            aria-label="Edit"
             size="small"
             type="text"
             icon={<EditOutlined />}
@@ -110,7 +112,13 @@ function ManageIncomeTypesModal({
             okText="Delete"
             okButtonProps={{ danger: true }}
           >
-            <Button size="small" type="text" icon={<DeleteOutlined />} danger />
+            <Button
+              aria-label="Delete"
+              size="small"
+              type="text"
+              icon={<DeleteOutlined />}
+              danger
+            />
           </Popconfirm>
         </Space>
       ),
@@ -163,6 +171,7 @@ function ManageIncomeTypesModal({
 
       {/* List */}
       <Table
+        scroll={{ x: "max-content" }}
         rowKey="id"
         dataSource={types}
         columns={columns}
@@ -196,7 +205,7 @@ export default function OtherIncomeDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<OtherIncomeFormValues>({
     resolver: zodResolver(otherIncomeFormSchema),
     defaultValues: {
@@ -209,6 +218,7 @@ export default function OtherIncomeDetail() {
       status: "Active",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -230,6 +240,7 @@ export default function OtherIncomeDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/other-income" });
   };
 

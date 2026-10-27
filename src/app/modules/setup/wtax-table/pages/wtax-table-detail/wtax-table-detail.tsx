@@ -27,6 +27,7 @@ import {
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 
@@ -44,7 +45,7 @@ export default function WtaxTableDetail() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<WtaxTableFormValues>({
     resolver: zodResolver(wtaxTableFormSchema) as Resolver<WtaxTableFormValues>,
     defaultValues: {
@@ -55,6 +56,7 @@ export default function WtaxTableDetail() {
       addOnPercentage: 0,
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -74,6 +76,7 @@ export default function WtaxTableDetail() {
     } else {
       await add(values);
     }
+    allowNavigation();
     navigate({ to: "/setup/wtax-table" });
   };
 

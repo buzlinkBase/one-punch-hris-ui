@@ -23,8 +23,15 @@ export function ScheduleRowActions({
     return (
       <Tooltip title="Already processed by payroll">
         <Space size={4}>
-          <Button size="small" type="text" icon={<EditOutlined />} disabled />
           <Button
+            aria-label="Edit"
+            size="small"
+            type="text"
+            icon={<EditOutlined />}
+            disabled
+          />
+          <Button
+            aria-label="Delete"
             size="small"
             type="text"
             danger
@@ -40,6 +47,7 @@ export function ScheduleRowActions({
     <Space size={4}>
       <Tooltip title="Edit">
         <Button
+          aria-label="Edit"
           size="small"
           type="text"
           icon={<EditOutlined />}
@@ -53,7 +61,13 @@ export function ScheduleRowActions({
         onConfirm={onRemove}
       >
         <Tooltip title="Remove">
-          <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          <Button
+            aria-label="Remove"
+            size="small"
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+          />
         </Tooltip>
       </Popconfirm>
     </Space>

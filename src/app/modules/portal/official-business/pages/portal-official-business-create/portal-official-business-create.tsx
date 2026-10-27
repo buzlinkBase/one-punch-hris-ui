@@ -38,6 +38,7 @@ import {
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { useStagedAttachments } from "@/shared/hooks/use-attachment-queries";
 import { AttachmentField } from "@/shared/components/attachment-upload/attachment-field";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { TextArea } = Input;
 
@@ -80,7 +81,7 @@ export default function PortalOfficialBusinessCreate() {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<TravelOrderFormValues>({
     resolver: zodResolver(travelOrderFormSchema),
     defaultValues: {
@@ -99,6 +100,7 @@ export default function PortalOfficialBusinessCreate() {
       applicationRemarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // employeeId isn't a visible field here -- useMyEmployee() resolves after this form's
   // defaultValues are already fixed at first render, so without this it stays "" forever and
@@ -183,6 +185,7 @@ export default function PortalOfficialBusinessCreate() {
       await create({ ...payload, attachmentIds: staged.stagedIds });
       void staged.refresh();
     }
+    allowNavigation();
     navigate({ to: BACK_TO });
   };
 

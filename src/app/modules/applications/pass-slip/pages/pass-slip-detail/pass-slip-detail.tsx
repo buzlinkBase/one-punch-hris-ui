@@ -17,6 +17,7 @@ import {
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
 import {
@@ -77,7 +78,7 @@ function EditPassSlip({ id }: { id: string }) {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PassSlipFormValues>({
     resolver: zodResolver(passSlipFormSchema),
     defaultValues: {
@@ -88,6 +89,7 @@ function EditPassSlip({ id }: { id: string }) {
       remarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const departureTime = watch("departureTime");
@@ -116,6 +118,7 @@ function EditPassSlip({ id }: { id: string }) {
         remarks: values.remarks || undefined,
       });
       message.success("Pass slip updated.");
+      allowNavigation();
       navigate({ to: "/applications/pass-slip" });
     } catch {
       message.error("Failed to save. Please try again.");
@@ -295,7 +298,7 @@ function CreatePassSlip() {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PassSlipCreateFormValues>({
     resolver: zodResolver(passSlipCreateFormSchema),
     defaultValues: {
@@ -305,6 +308,7 @@ function CreatePassSlip() {
       entries: [{ punchTime: "", notes: "" }],
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -333,6 +337,7 @@ function CreatePassSlip() {
           ? "Pass slip filed."
           : `${values.entries.length} pass slips filed.`,
       );
+      allowNavigation();
       navigate({ to: "/applications/pass-slip" });
     } catch {
       message.error("Failed to save. Please try again.");
@@ -488,6 +493,7 @@ function CreatePassSlip() {
 
                   <Tooltip title="Remove">
                     <Button
+                      aria-label="Remove"
                       type="text"
                       danger
                       size="small"

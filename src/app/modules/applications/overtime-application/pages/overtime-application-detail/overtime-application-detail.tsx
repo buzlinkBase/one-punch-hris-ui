@@ -36,6 +36,7 @@ import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval
 import { ApprovalStatusField } from "@/shared/components/approval-status-field";
 import { ApprovalRestartNotice } from "@/shared/components/approval-restart-notice";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -119,7 +120,7 @@ export default function OvertimeApplicationDetail() {
     reset,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<OvertimeApplicationFormValues>({
     resolver: zodResolver(overtimeApplicationFormSchema),
     defaultValues: {
@@ -132,6 +133,7 @@ export default function OvertimeApplicationDetail() {
       remarks: "",
     },
   });
+  const { allowNavigation } = useUnsavedChangesGuard(isDirty);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const mode = watch("mode");
@@ -197,6 +199,7 @@ export default function OvertimeApplicationDetail() {
     } else {
       await add(payload);
     }
+    allowNavigation();
     navigate({ to: "/applications/overtime" });
   };
 

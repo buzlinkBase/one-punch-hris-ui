@@ -25,14 +25,11 @@ import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
+import { formatMoney } from "@/shared/utils/money.util";
 
 const { Title } = Typography;
 
 const ME_BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
-
-function formatMoney(value: number) {
-  return value.toLocaleString("en-PH", { minimumFractionDigits: 2 });
-}
 
 export default function PortalPayslips() {
   const defaultCutoff = getSemiMonthlyCutoff();
@@ -142,6 +139,7 @@ export default function PortalPayslips() {
               }}
             />
             <Button
+              aria-label="Refresh"
               icon={<ReloadOutlined spin={isFetching} />}
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
@@ -153,6 +151,7 @@ export default function PortalPayslips() {
       <div className="form-page-body">
         <Card>
           <Table<PayrollRunResult>
+            scroll={{ x: "max-content" }}
             rowKey={(r) => r.id ?? `${r.employeeId}-${r.payPeriodStart}`}
             loading={isLoading}
             columns={columns}

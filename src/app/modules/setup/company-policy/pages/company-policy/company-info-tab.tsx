@@ -1,9 +1,5 @@
 import { useEffect } from "react";
-import axios from "axios";
-import type {
-  ErrorResponse,
-  ProblemDetails,
-} from "@/shared/types/api-response.model";
+import { apiErrorBody, apiErrorMessage } from "@/core/http/api-error";
 import {
   Button,
   Card,
@@ -51,14 +47,11 @@ import { BankOutlined } from "@ant-design/icons";
 // The reason the API gave for refusing the save (its ProblemDetails "detail", or a plain string),
 // so the notification says what to fix rather than only that it failed.
 function serverMessage(err: unknown, fallback: string): string {
-  if (axios.isAxiosError(err)) {
-    const body = err.response?.data as ErrorResponse | undefined;
-    const data = body?.data as ProblemDetails | string | undefined;
-    if (typeof data === "string" && data) return data;
-    if (typeof data === "object" && data?.detail) return data.detail;
-    if (body?.message && body.message !== "Error") return body.message;
-  }
-  return fallback;
+  const message = apiErrorBody(err)?.message;
+  return apiErrorMessage(
+    err,
+    message && message !== "Error" ? message : fallback,
+  );
 }
 
 // The API sends ISO date-times; a date input wants yyyy-MM-dd.

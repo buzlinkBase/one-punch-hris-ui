@@ -4,11 +4,10 @@ import dayjs from "dayjs";
 import { useMyUniformAllowance } from "../../../shared/hooks/use-my-employee-queries";
 import { UniformScheduleView } from "@/app/modules/reports/payroll-reports/components/uniform-schedule-view/uniform-schedule-view";
 import type { LedgerEntryResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
+import { formatMoney } from "@/shared/utils/money.util";
+import { withRowKeys } from "@/shared/utils/row-key.util";
 
 const { Title } = Typography;
-
-const fmt = (n: number) =>
-  (n ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
 const ENTRY_TYPE: Record<string, { color: string; label: string }> = {
   Accrual: { color: "blue", label: "Credited" },
@@ -42,7 +41,7 @@ const columns: ColumnsType<LedgerEntryResponse> = [
     key: "amount",
     align: "right",
     width: 120,
-    render: fmt,
+    render: formatMoney,
   },
   {
     title: "Balance",
@@ -50,7 +49,7 @@ const columns: ColumnsType<LedgerEntryResponse> = [
     key: "balance",
     align: "right",
     width: 120,
-    render: fmt,
+    render: formatMoney,
   },
 ];
 
@@ -107,9 +106,11 @@ export default function PortalUniformAllowance() {
                 children: (
                   <Table<LedgerEntryResponse>
                     size="small"
-                    rowKey={(r, i) => `${r.entryDate}-${r.entryType}-${i}`}
                     loading={isLoading}
-                    dataSource={[...(data?.entries ?? [])].reverse()}
+                    dataSource={withRowKeys(
+                      [...(data?.entries ?? [])].reverse(),
+                      (r) => `${r.entryDate}-${r.entryType}`,
+                    )}
                     columns={columns}
                     scroll={{ x: 640 }}
                     pagination={{ pageSize: 20, showSizeChanger: false }}
