@@ -55,7 +55,7 @@ export default function AttendanceEntryTable({
           width: widths.timeLog,
           onResize: (w: number) => handleResize("timeLog", w),
         }) as object,
-      render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm A"),
+      render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm:ss A"),
     },
     {
       title: "Batch",

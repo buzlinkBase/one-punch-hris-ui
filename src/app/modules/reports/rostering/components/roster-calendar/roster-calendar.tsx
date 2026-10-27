@@ -134,7 +134,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         // roster reads "Rest Day" but preparers can still see which shift it's covering.
         const hasShift = r.shiftId && r.shiftStart && r.shiftEnd;
         const timeRange = hasShift
-          ? `${dayjs(r.shiftStart).format("h:mm A")} – ${dayjs(r.shiftEnd).format("h:mm A")}`
+          ? `${dayjs(r.shiftStart).format("h:mm:ss A")} – ${dayjs(r.shiftEnd).format("h:mm:ss A")}`
           : null;
         return {
           id: `${r.employeeId}_${r.workDate}`,
@@ -170,7 +170,7 @@ export default function RosterCalendar({ data, fromDate, toDate }: Props) {
         };
       }
       if (r.shiftId && r.shiftStart && r.shiftEnd) {
-        const timeRange = `${dayjs(r.shiftStart).format("h:mm A")} – ${dayjs(r.shiftEnd).format("h:mm A")}`;
+        const timeRange = `${dayjs(r.shiftStart).format("h:mm:ss A")} – ${dayjs(r.shiftEnd).format("h:mm:ss A")}`;
         return {
           id: `${r.employeeId}_${r.workDate}`,
           resource: r.employeeId,

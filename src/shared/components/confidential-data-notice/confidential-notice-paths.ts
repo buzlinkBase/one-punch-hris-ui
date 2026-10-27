@@ -12,6 +12,8 @@ export type ConfidentialNoticeClearance = "access" | "operations";
 const NOTICE_PATHS: [prefix: string, clearance: ConfidentialNoticeClearance][] =
   [
     ["/payroll/", "access"],
+    // DTR records are visible with the partial Operations clearance.
+    ["/reports/dtr-detail", "operations"],
     ["/reports/", "access"],
     ["/daily-time-record/summary", "operations"],
     ["/daily-time-record/for-", "operations"],

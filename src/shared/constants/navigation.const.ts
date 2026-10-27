@@ -730,6 +730,7 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     // permission. Each child still narrows this to its specific code.
     permission: [
       "Attendance Reports:View",
+      "DTR Master:View",
       "Government Statutory Reports:View",
       "Payroll Reports:View",
       "BIR Reports:View",
@@ -741,6 +742,13 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Tardiness",
         path: "/reports/tardiness",
         permission: "Attendance Reports:View",
+      },
+      {
+        key: "reports-dtr-detail",
+        feature: FEATURE_KEYS.TIMEKEEPING_CORE,
+        label: "DTR Detail",
+        path: "/reports/dtr-detail",
+        permission: "DTR Master:View",
       },
       // {
       //   key: "reports-rostering",

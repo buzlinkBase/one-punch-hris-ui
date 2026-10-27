@@ -21,10 +21,10 @@ const LOG_KEYS = Array.from(
 function renderTime(v: string | null | undefined, workDate: string) {
   if (!v) return "";
   const t = dayjs(v);
-  if (!t.isAfter(dayjs(workDate), "day")) return t.format("HH:mm");
+  if (!t.isAfter(dayjs(workDate), "day")) return t.format("HH:mm:ss");
   return (
     <span>
-      {t.format("HH:mm")}
+      {t.format("HH:mm:ss")}
       <sup
         style={{
           color: "#1DA081",
@@ -182,9 +182,9 @@ export default function RawColumnarTable({ data, loading }: Props) {
         const t = dayjs(entry.workTime);
         const isCross = t.isAfter(dayjs(record.workDate), "day");
         return (
-          <Tooltip title={t.format("MMM DD HH:mm")}>
+          <Tooltip title={t.format("MMM DD HH:mm:ss")}>
             <span>
-              {t.format("HH:mm")}
+              {t.format("HH:mm:ss")}
               {isCross && (
                 <sup
                   style={{

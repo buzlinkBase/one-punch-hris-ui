@@ -14,4 +14,9 @@ export const userNotificationApi = {
   markAllRead(): Promise<number> {
     return httpClient.postUnwrapped<number>(`${ENDPOINT}/read-all`);
   },
+
+  /** Removes all of the caller's saved notifications. */
+  async clearAll(): Promise<void> {
+    await httpClient.delete(ENDPOINT);
+  },
 };

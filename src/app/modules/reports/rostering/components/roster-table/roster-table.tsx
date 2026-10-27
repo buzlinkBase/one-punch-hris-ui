@@ -56,11 +56,11 @@ export default function RosterTable({ data, loading }: Props) {
     col("shiftName", ROSTER_LABEL.SHIFT, 150),
     {
       ...col("shiftStart", ROSTER_LABEL.SHIFT_START, 120),
-      render: (v: string | null) => (v ? dayjs(v).format("hh:mm A") : "—"),
+      render: (v: string | null) => (v ? dayjs(v).format("hh:mm:ss A") : "—"),
     },
     {
       ...col("shiftEnd", ROSTER_LABEL.SHIFT_END, 120),
-      render: (v: string | null) => (v ? dayjs(v).format("hh:mm A") : "—"),
+      render: (v: string | null) => (v ? dayjs(v).format("hh:mm:ss A") : "—"),
     },
     {
       ...col("areaName", ROSTER_LABEL.AREA, 150),

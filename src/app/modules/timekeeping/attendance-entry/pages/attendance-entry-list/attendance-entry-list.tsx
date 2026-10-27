@@ -4,7 +4,6 @@ import {
   Dropdown,
   Form,
   Popconfirm,
-  Select,
   Space,
   Table,
   Tabs,
@@ -16,7 +15,6 @@ import type { MenuProps, TableColumnsType } from "antd";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import {
-  ClearOutlined,
   DeleteOutlined,
   DownloadOutlined,
   EditOutlined,
@@ -43,7 +41,18 @@ import {
   downloadExcel,
   triggerDownload,
 } from "@/shared/utils/export.utils";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { FilterSelect } from "@/shared/components/filter-panel/filter-select";
+import {
+  compactChips,
+  formatRangeChip,
+  labelOf,
+} from "@/shared/utils/filter-chips.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { formatClockDateTime } from "@/shared/utils/clock-format.util";
 import { getSemiMonthlyCutoff } from "@/shared/utils/cutoff.util";
 
 const { Title, Text } = Typography;
@@ -63,6 +72,7 @@ const EMPTY_FILTER: AttendanceEntryFilter = {};
 export default function AttendanceEntryList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entries");
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [pending, setPending] = useState<AttendanceEntryFilter>(DEFAULT_CUTOFF);
   const [committedFilter, setCommittedFilter] =
     useState<AttendanceEntryFilter | null>(DEFAULT_CUTOFF);
@@ -131,6 +141,15 @@ export default function AttendanceEntryList() {
       .sort((a, b) => b.batchCode.localeCompare(a.batchCode));
   }, [records]);
 
+  const activeFilterCount = [
+    pending.fromDate && pending.toDate,
+    pending.employeeId,
+  ].filter(Boolean).length;
+  const filterChips = compactChips([
+    formatRangeChip(pending.fromDate, pending.toDate),
+    labelOf(employees, pending.employeeId),
+  ]);
+
   const handleSearch = () => {
     setCommittedFilter({ ...pending });
     setSearchKey((k) => k + 1);
@@ -161,7 +180,7 @@ export default function AttendanceEntryList() {
     const headers = ["Employee", "Time Log", "Batch Code"];
     const strRows = records.map((r) => [
       r.employeeName ?? "",
-      r.timeLog,
+      formatClockDateTime(r.timeLog),
       r.batchCode ?? "",
     ]);
     const date = dayjs().format("YYYYMMDD");
@@ -204,7 +223,7 @@ export default function AttendanceEntryList() {
           width: entryWidths.timeLog,
           onResize: (w: number) => entryResize("timeLog", w),
         }) as object,
-      render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A"),
+      render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm:ss A"),
     },
     {
       title: "Remarks",
@@ -283,9 +302,9 @@ export default function AttendanceEntryList() {
         }) as object,
       render: (_: unknown, row: BatchGroup) => (
         <Text type="secondary" style={{ fontSize: 13 }}>
-          {dayjs(row.fromDate).format("MMM DD, YYYY hh:mm A")}
+          {dayjs(row.fromDate).format("MMM DD, YYYY hh:mm:ss A")}
           {" — "}
-          {dayjs(row.toDate).format("MMM DD, YYYY hh:mm A")}
+          {dayjs(row.toDate).format("MMM DD, YYYY hh:mm:ss A")}
         </Text>
       ),
     },
@@ -351,6 +370,11 @@ export default function AttendanceEntryList() {
             </p>
           </div>
           <div className="flex gap-2">
+            <FilterToggleButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              activeCount={activeFilterCount}
+            />
             <Dropdown
               menu={{ items: exportMenuItems }}
               trigger={["click"]}
@@ -379,65 +403,47 @@ export default function AttendanceEntryList() {
         </div>
       </div>
 
-      {/* Filter bar — always visible, search required before data loads */}
-      <Form layout="vertical" className="mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
-          <Form.Item label="Date Range" className="mb-0 sm:col-span-2">
-            <MobileRangePicker
-              style={{ width: "100%" }}
-              value={
-                pending.fromDate && pending.toDate
-                  ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
-                  : null
-              }
-              onChange={(dates) =>
-                setPending((c) => ({
-                  ...c,
-                  fromDate: dates?.[0]?.format("YYYY-MM-DD"),
-                  toDate: dates?.[1]?.format("YYYY-MM-DD"),
-                }))
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            label={ATTENDANCE_ENTRY_LABEL.FILTER_EMPLOYEE}
-            className="mb-0"
-          >
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              placeholder="All Employees"
-              options={employees}
-              value={pending.employeeId}
-              onChange={(value) =>
-                setPending((c) => ({ ...c, employeeId: value }))
-              }
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-          <Form.Item label=" " className="mb-0">
-            <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-              >
-                Search
-              </Button>
-              <Button
-                icon={<ClearOutlined />}
-                onClick={handleClear}
-                disabled={
-                  !hasSearched && !pending.fromDate && !pending.employeeId
-                }
-              >
-                Clear
-              </Button>
-            </Space>
-          </Form.Item>
-        </div>
-      </Form>
+      <FilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        chips={filterChips}
+        onClear={handleClear}
+        onApply={handleSearch}
+        applyLabel="Search"
+        applyIcon={<SearchOutlined />}
+        gridClassName="grid grid-cols-1 sm:grid-cols-3 gap-x-4"
+      >
+        <Form.Item label="Date Range" className="mb-3 sm:col-span-2">
+          <MobileRangePicker
+            className="w-full"
+            value={
+              pending.fromDate && pending.toDate
+                ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                : null
+            }
+            onChange={(dates) =>
+              setPending((c) => ({
+                ...c,
+                fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                toDate: dates?.[1]?.format("YYYY-MM-DD"),
+              }))
+            }
+          />
+        </Form.Item>
+        <Form.Item
+          label={ATTENDANCE_ENTRY_LABEL.FILTER_EMPLOYEE}
+          className="mb-3"
+        >
+          <FilterSelect
+            placeholder="All Employees"
+            options={employees}
+            value={pending.employeeId}
+            onChange={(value) =>
+              setPending((c) => ({ ...c, employeeId: value }))
+            }
+          />
+        </Form.Item>
+      </FilterPanel>
 
       <Tabs
         activeKey={activeTab}

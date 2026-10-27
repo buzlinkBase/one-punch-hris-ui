@@ -1,24 +1,7 @@
 import { useRef, useState } from "react";
-import {
-  Badge,
-  Button,
-  Card,
-  Dropdown,
-  Form,
-  Select,
-  Space,
-  Tabs,
-  Tag,
-  Typography,
-  message,
-} from "antd";
+import { Button, Dropdown, Form, Space, Tabs, Typography, message } from "antd";
 import type { MenuProps } from "antd";
-import {
-  ClearOutlined,
-  DownloadOutlined,
-  FilterOutlined,
-  PlayCircleOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   useRawAttendanceLogs,
@@ -43,11 +26,26 @@ import {
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { formatClockDateTime } from "@/shared/utils/clock-format.util";
 import { AppEmpty } from "@/shared/components/app-empty/app-empty";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { FilterSelect } from "@/shared/components/filter-panel/filter-select";
+import {
+  compactChips,
+  formatRangeChip,
+  labelOf,
+} from "@/shared/utils/filter-chips.util";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const EMPTY_FILTER: RawLogsFilterRequest = {};
+
+// Export timestamps carry seconds; fall back to the raw value if it isn't a parseable date-time.
+const stamp = (v?: string | null): string =>
+  formatClockDateTime(v) || (v ?? "");
 
 function currentSemiMonthlyRange(): { fromDate: string; toDate: string } {
   const today = dayjs();
@@ -168,22 +166,15 @@ export default function RawLogsList() {
     pending.employeeId,
   ].filter(Boolean).length;
 
-  const labelOf = (
-    options: { value: string; label: string }[],
-    id?: string,
-  ): string | undefined => options.find((o) => o.value === id)?.label;
-
   // What the current filter is, shown while the filter card is collapsed.
-  const filterChips = [
-    pending.fromDate && pending.toDate
-      ? `${dayjs(pending.fromDate).format("MMM DD")} – ${dayjs(pending.toDate).format("MMM DD, YYYY")}`
-      : undefined,
+  const filterChips = compactChips([
+    formatRangeChip(pending.fromDate, pending.toDate),
     labelOf(branchOptions, pending.branchId),
     labelOf(deptOptions, pending.departmentId),
     labelOf(clientOptions, pending.clientId),
     labelOf(areaOptions, pending.operationAreaId),
     labelOf(employeeOptions, pending.employeeId),
-  ].filter((c): c is string => !!c);
+  ]);
 
   // ── Export helpers ──────────────────────────────────────────────────────────
 
@@ -196,7 +187,7 @@ export default function RawLogsList() {
           name: "raw-attendance",
           rows: rawAttendanceLogs.map((r) => ({
             Employee: r.name ?? "",
-            WorkDateTime: r.workDateTime,
+            WorkDateTime: stamp(r.workDateTime),
             LogSource: r.logSource,
             Batch: r.batch,
           })),
@@ -210,15 +201,15 @@ export default function RawLogsList() {
             Department: r.department,
             WorkDate: r.workDate,
             ShiftName: r.shiftName,
-            ShiftStart: r.shiftStart,
-            ShiftEnd: r.shiftEnd,
-            BreakOut: r.breakOut ?? "",
-            BreakIn: r.breakIn ?? "",
+            ShiftStart: stamp(r.shiftStart),
+            ShiftEnd: stamp(r.shiftEnd),
+            BreakOut: stamp(r.breakOut),
+            BreakIn: stamp(r.breakIn),
             ...Object.fromEntries(
               Array.from({ length: 20 }, (_, i) => {
                 const k = `log${i + 1}` as keyof typeof r;
                 const v = r[k] as { workTime: string } | null;
-                return [`Log${i + 1}`, v?.workTime ?? ""];
+                return [`Log${i + 1}`, stamp(v?.workTime)];
               }).filter(([, v]) => v !== ""),
             ),
           })),
@@ -232,11 +223,11 @@ export default function RawLogsList() {
             Department: r.department,
             WorkDate: r.workDate,
             ShiftName: r.shiftName,
-            ShiftStart: r.shiftStart,
-            ShiftEnd: r.shiftEnd,
-            BreakOut: r.breakOut ?? "",
-            BreakIn: r.breakIn ?? "",
-            Log1: r.log1?.workTime ?? "",
+            ShiftStart: stamp(r.shiftStart),
+            ShiftEnd: stamp(r.shiftEnd),
+            BreakOut: stamp(r.breakOut),
+            BreakIn: stamp(r.breakIn),
+            Log1: stamp(r.log1?.workTime),
           })),
         };
       case "clean-columnar":
@@ -248,15 +239,15 @@ export default function RawLogsList() {
             Department: r.department,
             WorkDate: r.workDate,
             ShiftName: r.shiftName,
-            ShiftStart: r.shiftStart,
-            ShiftEnd: r.shiftEnd,
-            BreakOut: r.breakOut ?? "",
-            BreakIn: r.breakIn ?? "",
+            ShiftStart: stamp(r.shiftStart),
+            ShiftEnd: stamp(r.shiftEnd),
+            BreakOut: stamp(r.breakOut),
+            BreakIn: stamp(r.breakIn),
             ...Object.fromEntries(
               Array.from({ length: 20 }, (_, i) => {
                 const k = `log${i + 1}` as keyof typeof r;
                 const v = r[k] as { workTime: string } | null;
-                return [`Log${i + 1}`, v?.workTime ?? ""];
+                return [`Log${i + 1}`, stamp(v?.workTime)];
               }).filter(([, v]) => v !== ""),
             ),
           })),
@@ -345,229 +336,98 @@ export default function RawLogsList() {
                 Export
               </Button>
             </Dropdown>
-            <Badge count={activeFilterCount} size="small">
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setFiltersOpen((v) => !v)}
-                type={filtersOpen ? "default" : "text"}
-              >
-                Filters
-              </Button>
-            </Badge>
+            <FilterToggleButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              activeCount={activeFilterCount}
+            />
           </Space>
         </div>
       </div>
 
-      {!filtersOpen && filterChips.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Text type="secondary">Showing</Text>
-          {filterChips.map((chip) => (
-            <Tag
-              key={chip}
-              className="me-0! cursor-pointer"
-              onClick={() => setFiltersOpen(true)}
-            >
-              {chip}
-            </Tag>
-          ))}
-          <Button type="link" size="small" onClick={() => setFiltersOpen(true)}>
-            Change filters
-          </Button>
-        </div>
-      )}
-
-      {filtersOpen && (
-        <Card size="small" className="mb-4">
-          <Form layout="vertical">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4">
-              <Form.Item
-                label="Date Range"
-                className="mb-3 sm:col-span-2"
-                required
-                validateStatus={
-                  !pending.fromDate || !pending.toDate ? "error" : ""
-                }
-                help={
-                  !pending.fromDate || !pending.toDate ? "Required" : undefined
-                }
-              >
-                <MobileRangePicker
-                  className="w-full"
-                  status={
-                    !pending.fromDate || !pending.toDate ? "error" : undefined
-                  }
-                  value={
-                    pending.fromDate && pending.toDate
-                      ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
-                      : null
-                  }
-                  onChange={(dates) =>
-                    setPending((c) => ({
-                      ...c,
-                      fromDate: dates?.[0]?.format("YYYY-MM-DD"),
-                      toDate: dates?.[1]?.format("YYYY-MM-DD"),
-                    }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item label="Branch" className="mb-3">
-                <Select
-                  allowClear
-                  showSearch
-                  filterOption={(input, opt) => {
-                    const q = input.toLowerCase();
-                    return (
-                      String(opt?.label ?? "")
-                        .toLowerCase()
-                        .includes(q) ||
-                      String(opt?.fullLabel ?? "")
-                        .toLowerCase()
-                        .includes(q)
-                    );
-                  }}
-                  placeholder="All branches"
-                  options={branchOptions}
-                  optionRender={(opt) =>
-                    opt.data.fullLabel
-                      ? `${opt.data.label} - ${opt.data.fullLabel}`
-                      : String(opt.data.label ?? "")
-                  }
-                  value={pending.branchId}
-                  onChange={(v) =>
-                    // Project Site is restricted to the selected Branch.
-                    setPending((c) => ({
-                      ...c,
-                      branchId: v,
-                      operationAreaId: undefined,
-                    }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item label="Department" className="mb-3">
-                <Select
-                  allowClear
-                  showSearch
-                  filterOption={(input, opt) => {
-                    const q = input.toLowerCase();
-                    return (
-                      String(opt?.label ?? "")
-                        .toLowerCase()
-                        .includes(q) ||
-                      String(opt?.fullLabel ?? "")
-                        .toLowerCase()
-                        .includes(q)
-                    );
-                  }}
-                  placeholder="All departments"
-                  options={deptOptions}
-                  optionRender={(opt) =>
-                    opt.data.fullLabel
-                      ? `${opt.data.label} - ${opt.data.fullLabel}`
-                      : String(opt.data.label ?? "")
-                  }
-                  value={pending.departmentId}
-                  onChange={(v) =>
-                    setPending((c) => ({ ...c, departmentId: v }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item label={RAW_LOGS_LABEL.CLIENT} className="mb-3">
-                <Select
-                  allowClear
-                  showSearch
-                  filterOption={(input, opt) => {
-                    const q = input.toLowerCase();
-                    return (
-                      String(opt?.label ?? "")
-                        .toLowerCase()
-                        .includes(q) ||
-                      String(opt?.fullLabel ?? "")
-                        .toLowerCase()
-                        .includes(q)
-                    );
-                  }}
-                  placeholder="All clients"
-                  options={clientOptions}
-                  optionRender={(opt) =>
-                    opt.data.fullLabel
-                      ? `${opt.data.label} - ${opt.data.fullLabel}`
-                      : String(opt.data.label ?? "")
-                  }
-                  value={pending.clientId}
-                  onChange={(v) => setPending((c) => ({ ...c, clientId: v }))}
-                />
-              </Form.Item>
-              <Form.Item label="Project Site" className="mb-3">
-                <Select
-                  allowClear
-                  showSearch
-                  filterOption={(input, opt) => {
-                    const q = input.toLowerCase();
-                    return (
-                      String(opt?.label ?? "")
-                        .toLowerCase()
-                        .includes(q) ||
-                      String(opt?.fullLabel ?? "")
-                        .toLowerCase()
-                        .includes(q)
-                    );
-                  }}
-                  placeholder="All project sites"
-                  options={areaOptions}
-                  optionRender={(opt) =>
-                    opt.data.fullLabel
-                      ? `${opt.data.label} - ${opt.data.fullLabel}`
-                      : String(opt.data.label ?? "")
-                  }
-                  value={pending.operationAreaId}
-                  onChange={(v) =>
-                    setPending((c) => ({ ...c, operationAreaId: v }))
-                  }
-                />
-              </Form.Item>
-              <Form.Item
-                label={RAW_LOGS_LABEL.EMPLOYEE_FILTER}
-                className="mb-3"
-              >
-                <Select
-                  allowClear
-                  showSearch
-                  filterOption={(input, opt) => {
-                    const q = input.toLowerCase();
-                    const o = opt as typeof opt & { fullLabel?: string };
-                    return (
-                      String(o?.label ?? "")
-                        .toLowerCase()
-                        .includes(q) ||
-                      String(o?.fullLabel ?? "")
-                        .toLowerCase()
-                        .includes(q)
-                    );
-                  }}
-                  placeholder="All employees"
-                  options={employeeOptions}
-                  value={pending.employeeId}
-                  onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
-                />
-              </Form.Item>
-            </div>
-            <div className="flex justify-end gap-2 mt-1">
-              <Button icon={<ClearOutlined />} onClick={handleClear}>
-                Clear
-              </Button>
-              <Button
-                type="primary"
-                icon={<PlayCircleOutlined />}
-                loading={isActiveTabLoading}
-                disabled={!pending.fromDate || !pending.toDate}
-                onClick={handleGenerate}
-              >
-                Generate
-              </Button>
-            </div>
-          </Form>
-        </Card>
-      )}
+      <FilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        chips={filterChips}
+        onClear={handleClear}
+        onApply={handleGenerate}
+        applyLabel="Generate"
+        applyIcon={<PlayCircleOutlined />}
+        applyLoading={isActiveTabLoading}
+        applyDisabled={!pending.fromDate || !pending.toDate}
+      >
+        <Form.Item
+          label="Date Range"
+          className="mb-3 sm:col-span-2"
+          required
+          validateStatus={!pending.fromDate || !pending.toDate ? "error" : ""}
+          help={!pending.fromDate || !pending.toDate ? "Required" : undefined}
+        >
+          <MobileRangePicker
+            className="w-full"
+            status={!pending.fromDate || !pending.toDate ? "error" : undefined}
+            value={
+              pending.fromDate && pending.toDate
+                ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                : null
+            }
+            onChange={(dates) =>
+              setPending((c) => ({
+                ...c,
+                fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                toDate: dates?.[1]?.format("YYYY-MM-DD"),
+              }))
+            }
+          />
+        </Form.Item>
+        <Form.Item label="Branch" className="mb-3">
+          <FilterSelect
+            placeholder="All branches"
+            options={branchOptions}
+            value={pending.branchId}
+            onChange={(v) =>
+              // Project Site is restricted to the selected Branch.
+              setPending((c) => ({
+                ...c,
+                branchId: v,
+                operationAreaId: undefined,
+              }))
+            }
+          />
+        </Form.Item>
+        <Form.Item label="Department" className="mb-3">
+          <FilterSelect
+            placeholder="All departments"
+            options={deptOptions}
+            value={pending.departmentId}
+            onChange={(v) => setPending((c) => ({ ...c, departmentId: v }))}
+          />
+        </Form.Item>
+        <Form.Item label={RAW_LOGS_LABEL.CLIENT} className="mb-3">
+          <FilterSelect
+            placeholder="All clients"
+            options={clientOptions}
+            value={pending.clientId}
+            onChange={(v) => setPending((c) => ({ ...c, clientId: v }))}
+          />
+        </Form.Item>
+        <Form.Item label="Project Site" className="mb-3">
+          <FilterSelect
+            placeholder="All project sites"
+            options={areaOptions}
+            value={pending.operationAreaId}
+            onChange={(v) => setPending((c) => ({ ...c, operationAreaId: v }))}
+          />
+        </Form.Item>
+        <Form.Item label={RAW_LOGS_LABEL.EMPLOYEE_FILTER} className="mb-3">
+          <FilterSelect
+            placeholder="All employees"
+            options={employeeOptions}
+            value={pending.employeeId}
+            onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
+          />
+        </Form.Item>
+      </FilterPanel>
 
       <Tabs
         activeKey={activeTab}

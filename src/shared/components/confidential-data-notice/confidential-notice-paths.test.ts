@@ -8,6 +8,7 @@ describe("confidentialNoticeFor", () => {
   it.each([
     ["/payroll/summary", "access"],
     ["/reports/tardiness", "access"],
+    ["/reports/dtr-detail", "operations"],
     ["/daily-time-record/summary", "operations"],
     ["/daily-time-record/for-payroll", "operations"],
     ["/setup/employee", null],

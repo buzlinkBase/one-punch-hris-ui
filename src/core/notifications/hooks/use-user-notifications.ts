@@ -28,6 +28,22 @@ export function useMyNotificationsPage(page: number, pageSize: number) {
   });
 }
 
+/** Clears the bell's saved entries; the list empties at once, then the server confirms. */
+export function useClearMyNotifications() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => userNotificationApi.clearAll(),
+    onMutate: () => {
+      queryClient.setQueryData<UserNotificationPage>(
+        MY_NOTIFICATIONS_QUERY_KEY,
+        (page) => page && { ...page, items: [], total: 0, unreadCount: 0 },
+      );
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: MY_NOTIFICATIONS_QUERY_KEY }),
+  });
+}
+
 /** Opening the bell reads everything in it; the badge clears at once, then the server confirms. */
 export function useMarkAllNotificationsRead() {
   const queryClient = useQueryClient();

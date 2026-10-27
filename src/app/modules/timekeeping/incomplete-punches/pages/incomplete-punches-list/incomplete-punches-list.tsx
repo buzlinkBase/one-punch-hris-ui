@@ -46,7 +46,7 @@ const { Title, Text } = Typography;
 
 function fmtTime(v: string | null | undefined): string {
   if (!v) return "";
-  return dayjs(v).format("HH:mm");
+  return dayjs(v).format("HH:mm:ss");
 }
 
 function currentSemiMonthlyRange(): { fromDate: string; toDate: string } {
@@ -306,7 +306,7 @@ export default function IncompletePunchesList() {
         );
         const isUnpaired = count % 2 !== 0 && lastNonNullKey === k;
         return (
-          <Tooltip title={dayjs(entry.workTime).format("MMM DD HH:mm")}>
+          <Tooltip title={dayjs(entry.workTime).format("MMM DD HH:mm:ss")}>
             <span
               style={
                 isUnpaired ? { color: "#ff4d4f", fontWeight: 600 } : undefined

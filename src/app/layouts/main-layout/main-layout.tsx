@@ -26,6 +26,7 @@ import {
   BarChartOutlined,
   BankOutlined,
   BellOutlined,
+  CloseOutlined,
   QuestionCircleOutlined,
   CalendarOutlined,
   CheckOutlined,
@@ -106,6 +107,7 @@ import { useTenantHubStore } from "@/core/stores/tenant-hub.store";
 import { useApprovalHub } from "@/core/signalr/use-approval-hub";
 import { useApprovalNotificationStore } from "@/core/stores/approval-notification.store";
 import {
+  useClearMyNotifications,
   useMarkAllNotificationsRead,
   useMyNotifications,
 } from "@/core/notifications/hooks/use-user-notifications";
@@ -232,6 +234,7 @@ function getNavIcon(key: string): ReactNode {
     "analytics-requests": <FileProtectOutlined />,
     reports: <BarChartOutlined />,
     "reports-tardiness": <ClockCircleOutlined />,
+    "reports-dtr-detail": <FieldTimeOutlined />,
     setup: <SettingOutlined />,
     "setup-group-shifts": <FieldTimeOutlined />,
     "setup-group-org": <ApartmentOutlined />,
@@ -474,6 +477,7 @@ export default function MainLayout() {
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const menuNavRef = useRef<HTMLElement>(null);
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
@@ -499,6 +503,7 @@ export default function MainLayout() {
   useApprovalHub();
   const { data: savedPage } = useMyNotifications();
   const { mutate: markSavedRead } = useMarkAllNotificationsRead();
+  const { mutate: clearSaved } = useClearMyNotifications();
   const savedNotifications = useMemo(
     () => (savedPage?.items ?? []).map(toBellEntry),
     [savedPage],
@@ -512,6 +517,12 @@ export default function MainLayout() {
   );
   const markUnsavedApprovalRead = useApprovalNotificationStore(
     (s) => s.markAllRead,
+  );
+  const clearUnsavedApproval = useApprovalNotificationStore(
+    (s) => s.clearNotifications,
+  );
+  const clearTenantNotifications = useTenantHubStore(
+    (s) => s.clearNotifications,
   );
 
   // Company announcements are saved server-side (unlike the two in-memory stores above) and stay
@@ -547,6 +558,11 @@ export default function MainLayout() {
     markTenantNotificationsRead();
     markUnsavedApprovalRead();
     if (savedUnreadCount > 0) markSavedRead();
+  };
+  const clearAllNotifications = () => {
+    clearTenantNotifications();
+    clearUnsavedApproval();
+    if (savedNotifications.length > 0) clearSaved();
   };
   const activityItems: MenuItem[] = notifications.map((n) => {
     // Approval updates open the related request; tenant/account events have nowhere to go.
@@ -616,35 +632,24 @@ export default function MainLayout() {
             : []),
         ]
       : [];
-  const bellItems: MenuItem[] =
-    announcementItems.length + activityItems.length > 0
-      ? [
-          ...announcementItems,
-          ...activityItems,
-          { key: "__notifications-divider", type: "divider" as const },
-          {
-            key: "__all-notifications",
-            onClick: () => navigate({ to: "/notifications" }),
-            label: (
-              <span className="text-xs text-(--ant-color-primary)">
-                View all notifications
-              </span>
-            ),
-          },
-        ]
-      : [
-          {
-            key: "__empty",
-            disabled: true,
-            label: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="No notifications yet"
-                className="py-3"
-              />
-            ),
-          },
-        ];
+  const hasBellEntries = announcementItems.length + activityItems.length > 0;
+  // View all / Clear all live in the dropdown's pinned footer (popupRender below), not in this
+  // scrolling list, so they stay visible however many notifications there are.
+  const bellItems: MenuItem[] = hasBellEntries
+    ? [...announcementItems, ...activityItems]
+    : [
+        {
+          key: "__empty",
+          disabled: true,
+          label: (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="No notifications yet"
+              className="py-3"
+            />
+          ),
+        },
+      ];
 
   const hrDbFailed =
     hrDb.known && !!hrDb.status && /fail|error/i.test(hrDb.status);
@@ -1194,13 +1199,55 @@ export default function MainLayout() {
               <Dropdown
                 trigger={["click"]}
                 placement="bottomRight"
+                open={bellOpen}
+                rootClassName="bell-dropdown"
                 onOpenChange={(open) => {
+                  setBellOpen(open);
                   if (open) markAllRead();
                 }}
                 menu={{
-                  className: "min-w-80 max-w-96 max-h-110 overflow-y-auto",
+                  className: "min-w-80 max-w-96 max-h-none! overflow-visible!",
                   items: bellItems,
                 }}
+                popupRender={(menu) => (
+                  <div className="flex flex-col overflow-hidden rounded-lg bg-(--ant-color-bg-elevated) shadow-lg max-sm:h-dvh max-sm:rounded-none">
+                    <div className="flex items-center justify-between border-b border-(--ant-color-split) px-4 py-2 sm:hidden">
+                      <span className="font-semibold">Notifications</span>
+                      <Button
+                        type="text"
+                        aria-label="Close notifications"
+                        icon={<CloseOutlined />}
+                        onClick={() => setBellOpen(false)}
+                      />
+                    </div>
+                    <div className="max-h-[min(24rem,calc(100vh-10rem))] overflow-y-auto max-sm:max-h-none max-sm:flex-1">
+                      {menu}
+                    </div>
+                    {hasBellEntries && (
+                      <div className="flex items-center justify-between border-t border-(--ant-color-split) px-2 py-1">
+                        <Button
+                          type="link"
+                          size="small"
+                          onClick={() => {
+                            setBellOpen(false);
+                            navigate({ to: "/notifications" });
+                          }}
+                        >
+                          View all notifications
+                        </Button>
+                        {activityItems.length > 0 && (
+                          <Button
+                            type="text"
+                            size="small"
+                            onClick={clearAllNotifications}
+                          >
+                            Clear all
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               >
                 <button
                   type="button"

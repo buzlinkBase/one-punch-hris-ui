@@ -684,7 +684,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             },
           },
           {
-            text: "Attendance: Tardiness and Rostering.",
+            text: "Attendance: Tardiness, Rostering and DTR Detail (per-day time records filtered by client, department, branch, project site, payroll group or employee, exportable to CSV or Excel; all times show seconds).",
             link: { label: "Tardiness", to: "/reports/tardiness" },
           },
         ],

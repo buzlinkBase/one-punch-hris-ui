@@ -300,10 +300,10 @@ export default function DtrAttendanceLogsModal({
         if (editingId === record.id) {
           return (
             <DatePicker
-              showTime={{ format: "HH:mm" }}
+              showTime={{ format: "HH:mm:ss" }}
               value={editingValue}
               onChange={setEditingValue}
-              format="YYYY-MM-DD HH:mm"
+              format="YYYY-MM-DD HH:mm:ss"
               size="small"
               style={{ width: 190 }}
             />
@@ -315,7 +315,7 @@ export default function DtrAttendanceLogsModal({
           <Space size={4}>
             {time}
             <Tooltip
-              title={`Original: ${dayjs(record.originalTimeLog).format("YYYY-MM-DD HH:mm")}`}
+              title={`Original: ${dayjs(record.originalTimeLog).format("YYYY-MM-DD HH:mm:ss")}`}
             >
               <Tag color="gold" className="me-0!">
                 Edited
@@ -438,7 +438,7 @@ export default function DtrAttendanceLogsModal({
             {canEdit && originalLogId && originalTimeLog && (
               <Popconfirm
                 title="Restore the original time?"
-                description={`Puts back ${dayjs(originalTimeLog).format("YYYY-MM-DD HH:mm")}, as the file/device had it.`}
+                description={`Puts back ${dayjs(originalTimeLog).format("YYYY-MM-DD HH:mm:ss")}, as the file/device had it.`}
                 onConfirm={() => handleRestore(originalLogId)}
                 okText="Restore"
                 cancelText="Cancel"
@@ -528,7 +528,7 @@ export default function DtrAttendanceLogsModal({
         <div className="flex flex-col">
           <span>{record.removedBy || "—"}</span>
           <span className="text-xs text-gray-500">
-            {dayjs(record.removedAt).format("YYYY-MM-DD HH:mm")}
+            {dayjs(record.removedAt).format("YYYY-MM-DD HH:mm:ss")}
           </span>
         </div>
       ),
@@ -641,8 +641,8 @@ export default function DtrAttendanceLogsModal({
             <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
               <Form.Item label="Time Log" required className="mb-3!">
                 <DatePicker
-                  showTime={{ format: "HH:mm" }}
-                  format="YYYY-MM-DD HH:mm"
+                  showTime={{ format: "HH:mm:ss" }}
+                  format="YYYY-MM-DD HH:mm:ss"
                   placeholder="Time log"
                   value={newTime}
                   onChange={pickNewTime}

@@ -54,7 +54,7 @@ export default function TardinessTable({ data, loading }: Props) {
     },
     {
       ...col("scheduledIn", TARDINESS_LABEL.SCHEDULED_IN, 140),
-      render: (v: string) => dayjs(v).format("hh:mm A"),
+      render: (v: string) => dayjs(v).format("hh:mm:ss A"),
     },
     {
       title: TARDINESS_LABEL.ACTUAL_IN,
@@ -72,7 +72,7 @@ export default function TardinessTable({ data, loading }: Props) {
           <span
             style={{ color: row.tardinessMinutes > 0 ? "#f5222d" : undefined }}
           >
-            {dayjs(v).format("hh:mm A")}
+            {dayjs(v).format("hh:mm:ss A")}
           </span>
         );
       },

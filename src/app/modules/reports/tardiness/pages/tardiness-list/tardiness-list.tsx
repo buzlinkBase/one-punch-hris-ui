@@ -48,6 +48,7 @@ import {
   triggerDownload,
 } from "@/shared/utils/export.utils";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { formatClock } from "@/shared/utils/clock-format.util";
 import { ClientFilter } from "@/app/modules/reports/payroll-reports/components/client-filter/client-filter";
 
 const { Title } = Typography;
@@ -82,8 +83,8 @@ function toTardinessRows(records: TardinessResponse[]): string[][] {
     r.employeeNo,
     r.fullName ?? "",
     r.department ?? "",
-    r.scheduledIn,
-    r.actualIn ?? "",
+    formatClock(r.scheduledIn),
+    formatClock(r.actualIn),
     formatDecimal(r.gracePeriodMinutes),
     formatDecimal(r.tardinessMinutes),
     formatDecimal(r.deductibleMinutes),

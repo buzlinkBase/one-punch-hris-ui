@@ -137,7 +137,7 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
             text: 'Quick search (or press Ctrl+K, Cmd+K on Mac): type any screen name (e.g. "payslip") and pick it to jump straight there. If you can open the Employee screen, typing a name of two or more letters also lists matching employees; pick one to open their record. Use the arrow keys and Enter to choose, and Esc to close.',
           },
           {
-            text: "Bell: your notifications. Approval updates, such as a request waiting on you or your request being approved, appear here. Click one to open that request, or choose View all notifications at the bottom to see your full history and mark everything as read.",
+            text: "Bell: your notifications. Approval updates, such as a request waiting on you or your request being approved, appear here. Click one to open that request, or choose View all notifications at the bottom to see your full history and mark everything as read. Choose Clear all to remove every notification from the bell. You are not notified about requests you filed or approved yourself.",
           },
           {
             text: "Company icon: switch between companies you belong to.",

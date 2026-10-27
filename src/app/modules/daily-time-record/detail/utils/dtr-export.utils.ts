@@ -122,16 +122,58 @@ export function fmtCell(
 ): string {
   const v = r[key];
   if (key === "startTime" || key === "endTime")
-    return v ? dayjs(v as string).format("HH:mm") : "";
+    return v ? dayjs(v as string).format("HH:mm:ss") : "";
   if (typeof v === "number") return v === 0 ? "" : formatDecimal(v);
   return String(v ?? "");
 }
 
-export function buildDtrCsv(records: DtrDetailResponse[]): string {
+/** A DTR Detail row enriched with display names, for the Reports > DTR Detail export. */
+export type DtrReportRow = DtrDetailResponse & {
+  clientName: string;
+  departmentName: string;
+  branchName: string;
+  areaName: string;
+};
+
+export type ReportCol = { key: keyof DtrReportRow; label: string };
+
+export const REPORT_LEFT_COLS: ReportCol[] = [
+  { key: "clientName", label: "Client" },
+  { key: "departmentName", label: "Department" },
+  { key: "branchName", label: "Branch" },
+  { key: "areaName", label: "Project Site" },
+  ...LEFT_COLS,
+];
+
+const REPORT_NAME_KEYS: (keyof DtrReportRow)[] = [
+  "clientName",
+  "departmentName",
+  "branchName",
+  "areaName",
+];
+
+export function fmtReportCell(
+  r: DtrReportRow,
+  key: keyof DtrReportRow,
+): string {
+  if (REPORT_NAME_KEYS.includes(key)) return String(r[key] ?? "");
+  return fmtCell(r, key as keyof DtrDetailResponse);
+}
+
+function buildGroupedCsv<T>(
+  records: T[],
+  leftCols: { key: keyof T; label: string }[],
+  cell: (r: T, key: keyof T) => string,
+): string {
   const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
+  const leafCols = ALL_LEAF_COLS as unknown as {
+    key: keyof T;
+    label: string;
+  }[];
+  const allCols = [...leftCols, ...leafCols];
 
   const row1 = [
-    ...LEFT_COLS.map(() => esc("")),
+    ...leftCols.map(() => esc("")),
     ...GROUPED_COLS.flatMap((g) =>
       g.subGroups.flatMap((s) =>
         s.cols.map((_, i) =>
@@ -142,7 +184,7 @@ export function buildDtrCsv(records: DtrDetailResponse[]): string {
   ].join(",");
 
   const row2 = [
-    ...LEFT_COLS.map((c) => esc(c.label)),
+    ...leftCols.map((c) => esc(c.label)),
     ...GROUPED_COLS.flatMap((g) =>
       g.subGroups.flatMap((s) =>
         s.cols.map((_, i) => esc(i === 0 ? s.label : "")),
@@ -150,11 +192,19 @@ export function buildDtrCsv(records: DtrDetailResponse[]): string {
     ),
   ].join(",");
 
-  const row3 = ALL_COLS.map((c) => esc(c.label)).join(",");
+  const row3 = allCols.map((c) => esc(c.label)).join(",");
 
   const dataRows = records.map((r) =>
-    ALL_COLS.map((c) => esc(fmtCell(r, c.key))).join(","),
+    allCols.map((c) => esc(cell(r, c.key))).join(","),
   );
 
   return [row1, row2, row3, ...dataRows].join("\n");
+}
+
+export function buildDtrCsv(records: DtrDetailResponse[]): string {
+  return buildGroupedCsv(records, LEFT_COLS, fmtCell);
+}
+
+export function buildDtrReportCsv(records: DtrReportRow[]): string {
+  return buildGroupedCsv(records, REPORT_LEFT_COLS, fmtReportCell);
 }

@@ -27,7 +27,7 @@ interface Props {
 
 const dash = <span style={{ color: "#d9d9d9" }}>—</span>;
 
-const fmt = (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A");
+const fmt = (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm:ss A");
 
 export default function UnregisterEmployeeTable({
   data,

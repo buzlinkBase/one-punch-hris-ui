@@ -86,6 +86,9 @@ const RoleDetail = lazy(
 const TardinessList = lazy(
   () => import("@/app/modules/reports/tardiness/pages/tardiness-list"),
 );
+const DtrDetailReport = lazy(
+  () => import("@/app/modules/reports/dtr-detail/pages/dtr-detail-report"),
+);
 const RosterList = lazy(
   () => import("@/app/modules/reports/rostering/pages/roster-list"),
 );
@@ -1159,6 +1162,18 @@ const tardinessIndexRoute = createRoute({
   component: withSuspense(TardinessList),
 });
 
+const dtrDetailReportRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "reports/dtr-detail",
+  component: AppShell,
+});
+
+const dtrDetailReportIndexRoute = createRoute({
+  getParentRoute: () => dtrDetailReportRoute,
+  path: "/",
+  component: withSuspense(DtrDetailReport),
+});
+
 const rosterRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "reports/rostering",
@@ -1715,6 +1730,7 @@ const routeTree = rootRoute.addChildren([
   pagIbigMcrfRoute.addChildren([pagIbigMcrfIndexRoute]),
   appSectionRoute("reports", "Reports"),
   tardinessRoute.addChildren([tardinessIndexRoute]),
+  dtrDetailReportRoute.addChildren([dtrDetailReportIndexRoute]),
   rosterRoute.addChildren([rosterIndexRoute]),
   enrollBiometricsRoute.addChildren([enrollBiometricsIndexRoute]),
   manageDevicesRoute.addChildren([

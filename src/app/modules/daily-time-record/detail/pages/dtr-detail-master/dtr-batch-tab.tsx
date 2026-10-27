@@ -543,8 +543,7 @@ export default function DtrBatchTab() {
         onCancel={() => setViewingBatchCode(null)}
         footer={null}
         destroyOnHidden
-        width="95vw"
-        style={{ maxWidth: 1600, top: 24 }}
+        className="modal-fullscreen"
         title={
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pr-8">
             <span>DTR Detail</span>

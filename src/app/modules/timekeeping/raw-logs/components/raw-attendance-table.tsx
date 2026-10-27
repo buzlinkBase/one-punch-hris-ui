@@ -105,7 +105,7 @@ export default function RawAttendanceTable({ data, loading }: Props) {
           width: widths.workDateTime,
           onResize: (w: number) => handleResize("workDateTime", w),
         }) as object,
-      render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm A"),
+      render: (v: string) => dayjs(v).format("MMM DD, YYYY hh:mm:ss A"),
     },
     {
       title: "Log Source",

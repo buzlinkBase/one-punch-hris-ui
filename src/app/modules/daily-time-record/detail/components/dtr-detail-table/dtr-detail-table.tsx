@@ -249,10 +249,10 @@ export default function DtrDetailTable({
         }) as object,
       render: (name: string | null, record: DtrDetailResponse) => {
         const start = record.shiftStartTime
-          ? dayjs(record.shiftStartTime).format("HH:mm")
+          ? dayjs(record.shiftStartTime).format("HH:mm:ss")
           : null;
         const end = record.shiftEndTime
-          ? dayjs(record.shiftEndTime).format("HH:mm")
+          ? dayjs(record.shiftEndTime).format("HH:mm:ss")
           : null;
         return (
           <div style={{ lineHeight: 1.3 }}>
@@ -277,7 +277,7 @@ export default function DtrDetailTable({
           width: widths.startTime,
           onResize: (w: number) => handleResize("startTime", w),
         }) as object,
-      render: (v: string | null) => (v ? dayjs(v).format("HH:mm") : null),
+      render: (v: string | null) => (v ? dayjs(v).format("HH:mm:ss") : null),
     },
     {
       title: DTR_DETAIL_LABEL.END,
@@ -296,7 +296,7 @@ export default function DtrDetailTable({
         const isCrossDate = endDay.isAfter(dayjs(record.workDate), "day");
         return (
           <span>
-            {endDay.format("HH:mm")}
+            {endDay.format("HH:mm:ss")}
             {isCrossDate && (
               <sup
                 style={{

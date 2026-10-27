@@ -48,8 +48,8 @@ export default function EditAttendanceEntryModal({ record, onClose }: Props) {
           </Form.Item>
           <Form.Item label="Date &amp; Time" required>
             <DatePicker
-              showTime={{ format: "HH:mm" }}
-              format="MMM DD, YYYY HH:mm"
+              showTime={{ format: "HH:mm:ss" }}
+              format="MMM DD, YYYY HH:mm:ss"
               value={value}
               onChange={(d) => setValue(d)}
               style={{ width: "100%" }}

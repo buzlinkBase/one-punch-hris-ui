@@ -39,14 +39,14 @@ function shiftLabel(r: RosterResponse): { text: string; color: string } {
     const hasShift = r.shiftId && r.shiftStart && r.shiftEnd;
     return {
       text: hasShift
-        ? `Rest Day — ${r.shiftName} (${dayjs(r.shiftStart).format("h:mm A")}–${dayjs(r.shiftEnd).format("h:mm A")})`
+        ? `Rest Day — ${r.shiftName} (${dayjs(r.shiftStart).format("h:mm:ss A")}–${dayjs(r.shiftEnd).format("h:mm:ss A")})`
         : "Rest Day",
       color: REST_DAY_COLOR,
     };
   }
   if (r.shiftId && r.shiftStart && r.shiftEnd) {
     return {
-      text: `${r.shiftName} (${dayjs(r.shiftStart).format("h:mm A")}–${dayjs(r.shiftEnd).format("h:mm A")})`,
+      text: `${r.shiftName} (${dayjs(r.shiftStart).format("h:mm:ss A")}–${dayjs(r.shiftEnd).format("h:mm:ss A")})`,
       color: SHIFT_COLOR,
     };
   }

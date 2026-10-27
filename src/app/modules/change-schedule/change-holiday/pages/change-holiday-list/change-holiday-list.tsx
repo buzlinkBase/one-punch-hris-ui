@@ -3,7 +3,6 @@ import {
   Button,
   Form,
   Popconfirm,
-  Select,
   Space,
   Table,
   Tabs,
@@ -13,7 +12,6 @@ import {
 import type { TableColumnsType } from "antd";
 import {
   ArrowRightOutlined,
-  ClearOutlined,
   DeleteOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -32,6 +30,16 @@ import { CHANGE_HOLIDAY_LABEL } from "../../constants/label.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { ChangeHolidayFilter } from "../../models/api/request/change-holiday-filter.model";
 import type { ChangeHolidayResponse } from "../../models/api/response/change-holiday-response.model";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { FilterSelect } from "@/shared/components/filter-panel/filter-select";
+import {
+  compactChips,
+  formatRangeChip,
+  labelOf,
+} from "@/shared/utils/filter-chips.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { IconAction } from "@/shared/components/icon-action/icon-action";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -67,6 +75,7 @@ const DEFAULT_FILTER = currentSemiMonthlyRange();
 export default function ChangeHolidayList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entries");
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [pending, setPending] = useState<ChangeHolidayFilter>(DEFAULT_FILTER);
   const [committed, setCommitted] =
     useState<ChangeHolidayFilter>(DEFAULT_FILTER);
@@ -124,6 +133,15 @@ export default function ChangeHolidayList() {
       }))
       .sort((a, b) => b.batchCode.localeCompare(a.batchCode));
   }, [records]);
+
+  const activeFilterCount = [
+    pending.fromDate && pending.toDate,
+    pending.employeeId,
+  ].filter(Boolean).length;
+  const filterChips = compactChips([
+    formatRangeChip(pending.fromDate, pending.toDate),
+    labelOf(employees, pending.employeeId),
+  ]);
 
   const handleSearch = () => {
     setCommitted({ ...pending });
@@ -409,75 +427,66 @@ export default function ChangeHolidayList() {
               Configure holiday changes by employee or employee group.
             </p>
           </div>
-          <PermissionGate permission="Change Holiday:Create">
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/change-schedule/change-holiday/create" })
-              }
-            >
-              Add Entry
-            </Button>
-          </PermissionGate>
+          <Space>
+            <FilterToggleButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              activeCount={activeFilterCount}
+            />
+            <PermissionGate permission="Change Holiday:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/change-schedule/change-holiday/create" })
+                }
+              >
+                Add Entry
+              </Button>
+            </PermissionGate>
+          </Space>
         </div>
       </div>
 
-      <Form layout="vertical" className="mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
-          <Form.Item label="Entry Date" className="mb-0 sm:col-span-2">
-            <MobileRangePicker
-              style={{ width: "100%" }}
-              value={
-                pending.fromDate && pending.toDate
-                  ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
-                  : null
-              }
-              onChange={(dates) =>
-                setPending((c) => ({
-                  ...c,
-                  fromDate: dates?.[0]?.format("YYYY-MM-DD"),
-                  toDate: dates?.[1]?.format("YYYY-MM-DD"),
-                }))
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            label={CHANGE_HOLIDAY_LABEL.FILTER_EMPLOYEE}
-            className="mb-0"
-          >
-            <Select
-              allowClear
-              showSearch
-              filterOption={(input, opt) =>
-                String(opt?.label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-              placeholder="All Employees"
-              options={employees}
-              value={pending.employeeId}
-              onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-          <Form.Item label=" " className="mb-0">
-            <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                loading={isLoading}
-                onClick={handleSearch}
-              >
-                Search
-              </Button>
-              <Button icon={<ClearOutlined />} onClick={handleClear}>
-                Clear
-              </Button>
-            </Space>
-          </Form.Item>
-        </div>
-      </Form>
+      <FilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        chips={filterChips}
+        onClear={handleClear}
+        onApply={handleSearch}
+        applyLabel="Search"
+        applyIcon={<SearchOutlined />}
+        applyLoading={isLoading}
+      >
+        <Form.Item label="Entry Date" className="mb-3 sm:col-span-2">
+          <MobileRangePicker
+            className="w-full"
+            value={
+              pending.fromDate && pending.toDate
+                ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                : null
+            }
+            onChange={(dates) =>
+              setPending((c) => ({
+                ...c,
+                fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                toDate: dates?.[1]?.format("YYYY-MM-DD"),
+              }))
+            }
+          />
+        </Form.Item>
+        <Form.Item
+          label={CHANGE_HOLIDAY_LABEL.FILTER_EMPLOYEE}
+          className="mb-3"
+        >
+          <FilterSelect
+            placeholder="All Employees"
+            options={employees}
+            value={pending.employeeId}
+            onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
+          />
+        </Form.Item>
+      </FilterPanel>
 
       <Tabs
         activeKey={activeTab}

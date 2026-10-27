@@ -13,7 +13,7 @@ export function describeShift(
   const s = dayjs(start);
   const e = dayjs(end);
   const range = s.isSame(e, "day")
-    ? `${s.format("HH:mm")} – ${e.format("HH:mm")}`
-    : `${s.format("MMM D HH:mm")} – ${e.format("MMM D HH:mm")}`;
+    ? `${s.format("HH:mm:ss")} – ${e.format("HH:mm:ss")}`
+    : `${s.format("MMM D HH:mm:ss")} – ${e.format("MMM D HH:mm:ss")}`;
   return name ? `${name} · ${range}` : range;
 }

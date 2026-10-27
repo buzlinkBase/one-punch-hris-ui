@@ -40,7 +40,7 @@ export default function UploadAttendanceTable({ data, loading }: Props) {
           width: widths.timeLog,
           onResize: (w: number) => handleResize("timeLog", w),
         }) as object,
-      render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm A"),
+      render: (value: string) => dayjs(value).format("MMM DD, YYYY hh:mm:ss A"),
     },
     {
       title: UPLOAD_ATTENDANCE_LABEL.SOURCE,

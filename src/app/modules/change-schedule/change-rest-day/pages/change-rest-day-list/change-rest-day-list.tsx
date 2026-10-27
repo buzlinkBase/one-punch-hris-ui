@@ -3,7 +3,6 @@ import {
   Button,
   Form,
   Popconfirm,
-  Select,
   Space,
   Table,
   Tabs,
@@ -14,7 +13,6 @@ import type { TableColumnsType } from "antd";
 import {
   ArrowRightOutlined,
   CheckOutlined,
-  ClearOutlined,
   CloseOutlined,
   DeleteOutlined,
   PlusOutlined,
@@ -40,6 +38,16 @@ import {
 import { getNotify } from "@/shared/utils/notify";
 import type { ChangeRestDayFilter } from "../../models/api/request/change-rest-day-filter.model";
 import type { ChangeRestDayResponse } from "../../models/api/response/change-rest-day-response.model";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { FilterSelect } from "@/shared/components/filter-panel/filter-select";
+import {
+  compactChips,
+  formatRangeChip,
+  labelOf,
+} from "@/shared/utils/filter-chips.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { IconAction } from "@/shared/components/icon-action/icon-action";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -76,6 +84,7 @@ const DEFAULT_FILTER = currentSemiMonthlyRange();
 export default function ChangeRestDayList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entries");
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [pending, setPending] = useState<ChangeRestDayFilter>(DEFAULT_FILTER);
   const [committed, setCommitted] = useState<ChangeRestDayFilter>({});
   const [searchKey, setSearchKey] = useState(0);
@@ -134,6 +143,15 @@ export default function ChangeRestDayList() {
       }))
       .sort((a, b) => b.batchCode.localeCompare(a.batchCode));
   }, [records]);
+
+  const activeFilterCount = [
+    pending.fromDate && pending.toDate,
+    pending.employeeId,
+  ].filter(Boolean).length;
+  const filterChips = compactChips([
+    formatRangeChip(pending.fromDate, pending.toDate),
+    labelOf(employees, pending.employeeId),
+  ]);
 
   const handleSearch = () => {
     setCommitted({ ...pending });
@@ -259,23 +277,30 @@ export default function ChangeRestDayList() {
       render: (_: unknown, record: ChangeRestDayResponse) => (
         <Space size={4}>
           {record.approvalStatus === "ForApproval" && (
-            <PermissionGate permission="Change Rest Day:Approve">
-              <IconAction
-                title="Approve"
-                icon={<CheckOutlined />}
-                onClick={() =>
-                  handleApprove(record.employeeId, record.batchCode)
-                }
+            <Space>
+              <FilterToggleButton
+                open={filtersOpen}
+                onOpenChange={setFiltersOpen}
+                activeCount={activeFilterCount}
               />
-              <IconAction
-                title="Decline"
-                danger
-                icon={<CloseOutlined />}
-                onClick={() =>
-                  handleDecline(record.employeeId, record.batchCode)
-                }
-              />
-            </PermissionGate>
+              <PermissionGate permission="Change Rest Day:Approve">
+                <IconAction
+                  title="Approve"
+                  icon={<CheckOutlined />}
+                  onClick={() =>
+                    handleApprove(record.employeeId, record.batchCode)
+                  }
+                />
+                <IconAction
+                  title="Decline"
+                  danger
+                  icon={<CloseOutlined />}
+                  onClick={() =>
+                    handleDecline(record.employeeId, record.batchCode)
+                  }
+                />
+              </PermissionGate>
+            </Space>
           )}
           <PermissionGate permission="Change Rest Day:Delete">
             <Popconfirm
@@ -460,61 +485,45 @@ export default function ChangeRestDayList() {
         </div>
       </div>
 
-      <Form layout="vertical" className="mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-4 items-end">
-          <Form.Item label="Entry Date" className="mb-0 sm:col-span-2">
-            <MobileRangePicker
-              style={{ width: "100%" }}
-              value={
-                pending.fromDate && pending.toDate
-                  ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
-                  : null
-              }
-              onChange={(dates) =>
-                setPending((c) => ({
-                  ...c,
-                  fromDate: dates?.[0]?.format("YYYY-MM-DD"),
-                  toDate: dates?.[1]?.format("YYYY-MM-DD"),
-                }))
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            label={CHANGE_REST_DAY_LABEL.FILTER_EMPLOYEE}
-            className="mb-0"
-          >
-            <Select
-              allowClear
-              showSearch
-              filterOption={(input, opt) =>
-                String(opt?.label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-              placeholder="All Employees"
-              options={employees}
-              value={pending.employeeId}
-              onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-          <Form.Item label=" " className="mb-0">
-            <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                loading={isLoading}
-                onClick={handleSearch}
-              >
-                Search
-              </Button>
-              <Button icon={<ClearOutlined />} onClick={handleClear}>
-                Clear
-              </Button>
-            </Space>
-          </Form.Item>
-        </div>
-      </Form>
+      <FilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        chips={filterChips}
+        onClear={handleClear}
+        onApply={handleSearch}
+        applyLabel="Search"
+        applyIcon={<SearchOutlined />}
+        applyLoading={isLoading}
+      >
+        <Form.Item label="Entry Date" className="mb-3 sm:col-span-2">
+          <MobileRangePicker
+            className="w-full"
+            value={
+              pending.fromDate && pending.toDate
+                ? [dayjs(pending.fromDate), dayjs(pending.toDate)]
+                : null
+            }
+            onChange={(dates) =>
+              setPending((c) => ({
+                ...c,
+                fromDate: dates?.[0]?.format("YYYY-MM-DD"),
+                toDate: dates?.[1]?.format("YYYY-MM-DD"),
+              }))
+            }
+          />
+        </Form.Item>
+        <Form.Item
+          label={CHANGE_REST_DAY_LABEL.FILTER_EMPLOYEE}
+          className="mb-3"
+        >
+          <FilterSelect
+            placeholder="All Employees"
+            options={employees}
+            value={pending.employeeId}
+            onChange={(v) => setPending((c) => ({ ...c, employeeId: v }))}
+          />
+        </Form.Item>
+      </FilterPanel>
 
       <Tabs
         activeKey={activeTab}
