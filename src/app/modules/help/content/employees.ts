@@ -10,6 +10,10 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
     chapter: "My Portal",
     summary:
       "Your profile, time records, payslips and leave credits, all in one place.",
+    purpose: [
+      "My Portal is your own HR self-service. Instead of asking HR, you check your attendance, payslips and leave credits and file your own requests.",
+      "Example: wondering why your pay was lower? Open My Daily Time Record to see lates and absences, then My Payslips to see the deductions.",
+    ],
     permission: PORTAL,
     paths: ["/portal/profile", "/portal/dashboard"],
     sections: [
@@ -56,6 +60,10 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
     chapter: "My Portal",
     summary:
       "See your time records, fix missing punches and check your schedule.",
+    purpose: [
+      "Your pay is based on these records, so check them each cutoff while there is still time to fix anything.",
+      "Example: your DTR for Oct 21 shows 8:02 time-in but no time-out. Open My Incomplete Logs and file a pass slip, or tell HR, before the cutoff closes.",
+    ],
     permission: PORTAL,
     paths: [
       "/portal/dtr",
@@ -101,6 +109,10 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
     chapter: "My Portal",
     summary:
       "View and print payslips and check your leave credits and benefits.",
+    purpose: [
+      "A payslip is the breakdown of your pay: what you earned and what was deducted. Here you can also see how many leave days you have left and track loans, cash bond and 13th month.",
+      "Sample payslip: Basic ₱10,400 + overtime ₱187.50 = gross ₱10,587.50; minus SSS, PhilHealth, Pag-IBIG and a loan payment = net pay ₱9,162.50.",
+    ],
     permission: PORTAL,
     paths: [
       "/portal/payslips",
@@ -152,6 +164,10 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
     chapter: "Requests",
     summary:
       "Submit a request, follow its approval, and edit or withdraw it while it's still pending.",
+    purpose: [
+      "Leave, overtime, official business, pass slips and loans only count after they are approved, so file them through the system rather than by message.",
+      "Example: file a one-day vacation leave on Nov 3 with the reason 'family event'. It goes to your approver, you get a bell notice when it is approved, and your leave credit goes down by one day.",
+    ],
     permission: PORTAL,
     paths: [
       "/portal/leave-applications",

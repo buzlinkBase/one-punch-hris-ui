@@ -147,6 +147,32 @@ export default function TardinessSummaryTable({ data, loading }: Props) {
       scroll={{ x: "max-content" }}
       sticky
       components={{ header: { cell: ResizableTitle } }}
+      summary={() =>
+        summary.length > 0 && (
+          <Table.Summary fixed>
+            <Table.Summary.Row className="font-semibold">
+              <Table.Summary.Cell index={0} colSpan={3}>
+                Grand Total
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={3} align="right">
+                {summary.reduce((sum, r) => sum + r.occurrences, 0)}x
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={4} align="right">
+                {formatDecimal(
+                  summary.reduce((sum, r) => sum + r.totalTardinessMins, 0),
+                )}{" "}
+                mins
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={5} align="right">
+                {formatDecimal(
+                  summary.reduce((sum, r) => sum + r.totalDeductibleMins, 0),
+                )}{" "}
+                mins
+              </Table.Summary.Cell>
+            </Table.Summary.Row>
+          </Table.Summary>
+        )
+      }
     />
   );
 }

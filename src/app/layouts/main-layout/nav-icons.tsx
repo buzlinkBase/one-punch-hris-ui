@@ -47,6 +47,7 @@ const NAV_ICONS: Record<string, ReactNode> = {
   "nav-dtr": <ClockCircleOutlined />,
   "change-schedule": <SwapOutlined />,
   applications: <FileProtectOutlined />,
+  "applications-approvals": <FileProtectOutlined />,
   "applications-group-time": <CalendarOutlined />,
   "applications-group-pay": <WalletOutlined />,
   "daily-time-record": <FieldTimeOutlined />,

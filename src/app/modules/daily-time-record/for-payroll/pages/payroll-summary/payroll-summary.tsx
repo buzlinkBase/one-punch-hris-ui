@@ -40,6 +40,7 @@ import { QUICK_RANGES } from "@/shared/utils/quick-date-ranges.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { useTablePagination } from "@/shared/hooks/use-table-pagination";
+import { grandTotalSummary } from "@/shared/utils/table-total.util";
 import { forPayrollApi } from "../../services/for-payroll.api";
 import {
   buildFlatCsv,
@@ -235,6 +236,7 @@ export default function PayrollSummary() {
         : results,
     [results, deductionsView],
   );
+  const deductionTableColumns = deductionsColumns(deductionRows);
 
   // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
   // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
@@ -683,6 +685,11 @@ export default function PayrollSummary() {
                   dataSource={results}
                   columns={payrollTableColumns}
                   bordered
+                  summary={() =>
+                    grandTotalSummary(payrollTableColumns, results, [
+                      "dailyRate",
+                    ])
+                  }
                   {...tableProps}
                 />
               ),
@@ -693,8 +700,11 @@ export default function PayrollSummary() {
               children: (
                 <Table
                   dataSource={deductionRows}
-                  columns={deductionsColumns(deductionRows)}
+                  columns={deductionTableColumns}
                   bordered
+                  summary={() =>
+                    grandTotalSummary(deductionTableColumns, deductionRows)
+                  }
                   {...tableProps}
                 />
               ),
@@ -706,6 +716,7 @@ export default function PayrollSummary() {
                 <Table
                   dataSource={results}
                   columns={erColumns}
+                  summary={() => grandTotalSummary(erColumns, results)}
                   {...tableProps}
                 />
               ),
@@ -717,6 +728,7 @@ export default function PayrollSummary() {
                 <Table
                   dataSource={results}
                   columns={hoursColumns}
+                  summary={() => grandTotalSummary(hoursColumns, results)}
                   {...tableProps}
                 />
               ),

@@ -380,6 +380,22 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     key: "applications",
     label: "Applications",
     children: [
+      // The one inbox for every request the person is involved in as an approver -- the same page
+      // as My Portal > My Approvals, for admin-side approvers.
+      {
+        key: "applications-approvals",
+        feature: FEATURE_KEYS.APPLICATIONS_CORE,
+        label: "Approvals",
+        path: "/approvals",
+        permission: [
+          "Leave:Approve",
+          "Overtime:Approve",
+          "Official Business:Approve",
+          "Pass Slip:Approve",
+          "Loan/Deduction:Approve",
+          "Profile Update:Approve",
+        ],
+      },
       {
         key: "applications-group-time",
         feature: FEATURE_KEYS.APPLICATIONS_CORE,

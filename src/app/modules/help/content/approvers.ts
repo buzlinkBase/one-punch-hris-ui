@@ -20,6 +20,10 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
     chapter: "Approving",
     summary:
       "Find what's waiting on you, approve or decline it with a note, and follow multi-step approvals.",
+    purpose: [
+      "Employees' leave, overtime and other requests only count once approved. As an approver you are the check that the request is legitimate before it affects attendance or pay.",
+      "Example: Ben files 2 days of vacation leave. His supervisor approves at step 1, HR approves at step 2, and only then are the days deducted from his credits.",
+    ],
     permission: APPROVE_PERMISSIONS,
     sections: [
       {
@@ -44,20 +48,22 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
             text: "Click Approve or Decline on the row. Add a note if asked, then confirm.",
           },
           {
-            text: "The In Progress tab lists requests still with another approver. These are ones that will reach your step later, ones you already approved, or (if you hold the Approve permission) every request of that type. It's view only. A request moves to For Approval once it reaches your step.",
+            text: "The In Progress tab lists requests still with another approver. These are ones that will reach your step later, or ones you already approved, so only requests you take part in as an approver. Owners and Admins see every request still in flight. Everyone else can see the full list of a type on its own page under Applications. It's view only. A request moves to For Approval once it reaches your step.",
           },
         ],
         tips: [
           "A request on a later step doesn't appear under For Approval until the steps before it are approved.",
           'A purple "For <name>" tag means you are acting for someone who delegated their approvals to you. The request\'s Approval Progress then reads "Approved by you on behalf of <name>".',
           "My Approvals works even if your account only has the Employee role.",
+          "Once a request is fully decided it leaves For Approval and In Progress. Find it under the History tab, which lists the requests you approved or declined (including ones you decided for someone else, or that your delegate decided for you), with how each one ended up. It opens on This month; use the quick date buttons (Current cutoff, Last month, Last 3 months, This year) or the date range to look further back.",
+          "If you hold an Approve permission you also find the same page as Approvals under Applications in the main menu, so you don't have to go through My Portal.",
         ],
       },
       {
         heading: "Going away? Let someone approve for you",
         steps: [
           {
-            text: "Open your profile and find While I'm away, then click Delegate.",
+            text: "In My Approvals, click While I'm away. Or open your profile, find While I'm away, then click Delegate.",
             link: { label: "My Profile", to: "/profile" },
           },
           {
@@ -109,6 +115,10 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
     chapter: "Approving",
     summary:
       "Approve the saved DTR for a cutoff and the payroll run computed from it.",
+    purpose: [
+      "A DTR batch is a whole cutoff's attendance for a payroll group, and a payroll run is the pay computed from it. Approving them is the last check before money is paid, so approvers look for anything unusual.",
+      "Before approving a DTR, check: no unexpected absences, lates or overtime spikes, and every employee of the group is present. Before approving payroll, check: totals look reasonable compared with the last cutoff, no negative net pay and no missing employees.",
+    ],
     permission: ["DTR Master:Approve", "Payroll Run:Approve"],
     sections: [
       {
@@ -142,6 +152,14 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
         ],
         warning:
           "Deleting an approved batch also needs approval (Approve Deletion / Decline Deletion). A deleted DTR batch can't be used for payroll.",
+        example: {
+          title: "Sample review before approving payroll",
+          lines: [
+            "Last cutoff: 48 employees, net pay ₱412,300. This cutoff: 48 employees, net pay ₱418,900. About the same, so nothing odd.",
+            "One employee shows net pay ₱0 because deductions equal earnings. Ask HR before approving.",
+            "Decline with a note such as 'Please recheck Maria's loan deduction' so HR knows what to fix.",
+          ],
+        },
       },
     ],
     related: ["payroll-cutoff"],

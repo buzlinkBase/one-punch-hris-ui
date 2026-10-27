@@ -177,6 +177,10 @@ export default function DeductionLedger() {
   const allExpanded = expandedKeys.length === groups.length;
 
   const totalOutstanding = groups.reduce((sum, g) => sum + g.total, 0);
+  const totalPrincipal = groups.reduce(
+    (sum, g) => sum + g.children.reduce((s, l) => s + l.totalPrincipal, 0),
+    0,
+  );
   const deductionCount = groups.reduce((sum, g) => sum + g.children.length, 0);
 
   return (
@@ -191,6 +195,10 @@ export default function DeductionLedger() {
       exportFileName="deduction-ledger"
       exportHeaders={EXPORT_HEADERS}
       exportRows={exportRows}
+      grandTotalCells={{
+        principal: formatMoney(totalPrincipal),
+        balance: formatMoney(totalOutstanding),
+      }}
       expandable={{
         expandedRowKeys: expandedKeys,
         onExpandedRowsChange: (keys) => setExpanded(keys.map(String)),

@@ -8,6 +8,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Company setup",
     summary:
       "Set up a new company in the right order, from company details to your first employees and users.",
+    purpose: [
+      "A new company needs its building blocks before anyone can be paid. This checklist puts them in the order that avoids dead ends, for example the payroll group exists before you add employees to it.",
+      "Typical day 1: company details and payroll rules, one payroll group, one or two shifts, current holidays, statutory tables, then your first five test employees.",
+    ],
     permission: ["Organization Setup:View", "Workforce Setup:View"],
     sections: [
       {
@@ -20,46 +24,46 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "The checklist",
         steps: [
           {
-            text: "1. Company Settings: company profile, government numbers, attendance and payroll rules.",
+            text: "Company Settings: company profile, government numbers, attendance and payroll rules.",
             link: { label: "Company Settings", to: "/setup/company-policy" },
           },
           {
-            text: "2. Organization: Payroll Group, Department, Section, Position, Branch, Project Site.",
+            text: "Organization: Payroll Group, Department, Section, Position, Branch, Project Site.",
             link: { label: "Payroll Group", to: "/setup/payroll-group" },
           },
           {
-            text: "3. Time Shifts: the fixed and flexi/split shifts people work.",
+            text: "Time Shifts: the fixed and flexi/split shifts people work.",
             link: { label: "Fixed Shift", to: "/setup/time-shift/fixed" },
           },
           {
-            text: "4. Holidays, Minimum Wage Rates and Leave Types, then Leave Balances.",
+            text: "Holidays, Minimum Wage Rates and Leave Types, then Leave Balances.",
             link: { label: "Holidays", to: "/setup/holiday" },
           },
           {
-            text: "5. Statutory tables: SSS, PHIC, HDMF, WTax and Annual Tax. Check they match the current government rates.",
+            text: "Statutory tables: SSS, PHIC, HDMF, WTax and Annual Tax. Check they match the current government rates.",
             link: { label: "SSS Table", to: "/setup/sss-table" },
           },
           {
-            text: "6. Deductions & Income: the deduction and other-income types you use.",
+            text: "Deductions & Income: the deduction and other-income types you use.",
             link: { label: "Deductions", to: "/setup/deduction" },
           },
           {
-            text: "7. Employees: add them one by one or import from Excel.",
+            text: "Employees: add them one by one or import from Excel.",
             link: { label: "Employees", to: "/setup/employee" },
           },
           {
-            text: "8. Biometrics: register devices and enroll employees (each needs a Bio ID first).",
+            text: "Biometrics: register devices and enroll employees (each needs a Bio ID first).",
             link: { label: "Devices", to: "/biometric/manage-devices" },
           },
           {
-            text: "9. Approval Workflows: who approves each request type (optional; without one, anyone with the Approve permission can approve).",
+            text: "Approval Workflows: who approves each request type (optional; without one, anyone with the Approve permission can approve).",
             link: {
               label: "Approval Workflows",
               to: "/setup/approval-workflows",
             },
           },
           {
-            text: "10. Users & access: create roles, then invite employees so they can use My Portal.",
+            text: "Users & access: create roles, then invite employees so they can use My Portal.",
             link: { label: "Users", to: "/security/users" },
           },
         ],
@@ -79,6 +83,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Company setup",
     summary:
       "Your company profile, government registration numbers, and the attendance and payroll rules every computation uses.",
+    purpose: [
+      "Company Settings holds the rules the whole system calculates with: how late is counted, who gets overtime, the premium rates, the 13th month ceiling, and the details printed on government forms.",
+      "Example: set the half-day late threshold to 120 minutes, and an employee who arrives two hours late is treated as half-day absent instead of 120 minutes late.",
+    ],
     permission: ["Organization Setup:View", "Tenant Members:Manage"],
     paths: ["/setup/company-policy"],
     sections: [
@@ -162,6 +170,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Company setup",
     summary:
       "Create the payroll groups, departments, sections, positions, branches and project sites employees are assigned to.",
+    purpose: [
+      "This is how you describe your company's structure. Employees are assigned to these, then DTR, payroll, approvals and reports are all organized by them.",
+      "Example: payroll group 'Semi-monthly Staff' (cutoffs 1–15 and 16–end), departments Operations and Finance, branch Makati with project sites Tower A and Tower B.",
+    ],
     permission: "Organization Setup:View",
     paths: [
       "/setup/payroll-group",
@@ -210,6 +222,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Company setup",
     summary:
       "Define working hours: fixed shifts, and flexi, split or broken shifts.",
+    purpose: [
+      "A shift tells the system when someone is supposed to work. Late, undertime, overtime and night differential are all measured against it.",
+      "A fixed shift has the same hours every day. A flexi shift lets people start within a window but still work a set number of hours. A split (broken) shift has two work periods with a long gap, such as a restaurant shift 10:00–14:00 and 18:00–22:00.",
+    ],
     permission: "Time Shift Setup:View",
     paths: ["/setup/time-shift"],
     sections: [
@@ -234,6 +250,27 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         tips: [
           "Late, undertime, overtime and night differential are all measured against the shift, so get the times and breaks right before your first DTR.",
         ],
+        example: {
+          title: "Three shifts",
+          table: {
+            columns: ["Type", "Hours", "Break", "Good for"],
+            rows: [
+              ["Fixed", "08:00–17:00", "12:00–13:00", "Office staff"],
+              [
+                "Flexi",
+                "Start 07:00–09:00, work 8 hours",
+                "1 hour",
+                "People who may arrive any time in the window",
+              ],
+              [
+                "Split (broken)",
+                "10:00–14:00 and 18:00–22:00",
+                "Gap between periods",
+                "Restaurant or event staff",
+              ],
+            ],
+          },
+        },
       },
     ],
     related: ["employees", "schedule-changes"],
@@ -245,6 +282,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Company setup",
     summary:
       "Holidays for premium pay, minimum wage rates, leave types and starting leave balances.",
+    purpose: [
+      "These decide how special days and time off are paid. A regular holiday worked is normally paid double (200%), a special non-working holiday worked 130%. Leave types and balances decide how many paid days off each person has.",
+      "Example: leave type 'Vacation Leave' with 15 days a year. An employee hired mid-year can start with a balance of 7 days.",
+    ],
     permission: [
       "Holiday Setup:View",
       "Leave Setup:View",
@@ -268,6 +309,22 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         tips: [
           "Holiday pay depends on the holiday type and the rules in Company Settings (for example whether attendance the day before is required).",
         ],
+        example: {
+          title: "Pay on a holiday (daily rate ₱800)",
+          note: "These are the standard rates, set under Company Settings › Rate Multipliers. Worked-day rates are shown; unworked regular holidays are normally still paid 100% if the attendance rule is met.",
+          table: {
+            columns: ["Day", "Worked", "Pay"],
+            rows: [
+              ["Regular holiday (e.g. Christmas Day)", "Yes", "200% = ₱1,600"],
+              ["Special non-working day", "Yes", "130% = ₱1,040"],
+              [
+                "Special non-working day",
+                "No",
+                "No work, no pay (unless company policy says otherwise)",
+              ],
+            ],
+          },
+        },
       },
       {
         heading: "Minimum wage rates",
@@ -307,6 +364,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Company setup",
     summary:
       "SSS, PhilHealth, Pag-IBIG and tax tables, plus the deduction and other-income types payroll uses.",
+    purpose: [
+      "Statutory tables are the government's contribution and tax brackets. Payroll looks an employee's pay up in them to find what to deduct for SSS, PhilHealth, Pag-IBIG and withholding tax. Deduction and income types are the labels for loans and allowances.",
+      "Example: an employee earning ₱20,000 a month falls in one SSS bracket, which gives the employee and employer shares. When SSS issues new rates, add the new table before the next payroll.",
+    ],
     permission: ["Statutory Tables:View", "Deductions & Income Setup:View"],
     paths: [
       "/setup/sss-table",
@@ -353,6 +414,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "People",
     summary:
       "Add employees one by one or import from Excel, set pay and schedules, mark confidential employees and print the 201 file.",
+    purpose: [
+      "The employee record is the master data payroll reads: pay rate, shift, rest days, payroll group and government numbers. A wrong rate or shift here means a wrong payslip.",
+      "Example: Juan Dela Cruz, Monthly rate ₱20,800, Permanent Shift 8:00–17:00, rest day Sunday, Bio ID 1042, payroll group Semi-monthly Staff.",
+    ],
     permission: "Workforce Setup:View",
     paths: ["/setup/employee"],
     sections: [
@@ -433,6 +498,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "People",
     summary:
       "Register biometric devices, enroll fingerprints and faces, and keep devices in sync.",
+    purpose: [
+      "Biometric devices are the time clocks that record punches. Registering them connects their punches to your company, and enrolling gives each employee a fingerprint or face the device recognises.",
+      "Example: register the Makati device by serial number, give Juan the Bio ID 1042, enroll his fingerprint, and his punches appear in Attendance Logs automatically.",
+    ],
     permission: "Biometric Setup:View",
     paths: ["/biometric/manage-devices", "/enroll-biometrics"],
     sections: [
@@ -481,6 +550,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Access & approvals",
     summary:
       "Decide how many approval levels each request type needs and who approves at each step.",
+    purpose: [
+      "Workflows decide who must say yes before a request counts. Without one, anyone with the Approve permission can approve. With one you control the levels and the people.",
+      "Example: Leave of 3 days or more: Step 1 the applicant's manager, Step 2 the department head, Step 3 HR. Leave under 3 days: manager only. Add a reminder after 24 hours so requests don't stall.",
+    ],
     permission: "Approval Workflows:View",
     paths: ["/setup/approval-workflows"],
     sections: [
@@ -612,6 +685,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Access & approvals",
     summary:
       "Invite employees and client logins, choose their role, and manage access from the Users list.",
+    purpose: [
+      "A login is how someone enters the system; a role decides what they can do. Inviting by email makes sure only the people you choose can join.",
+      "Example: invite the 20 staff emails at once with the Employee role, then invite finance@company.com with the custom role 'Payroll Officer'.",
+    ],
     permission: ["Users:View", "Tenant Members:Manage"],
     paths: ["/security/users"],
     sections: [
@@ -666,6 +743,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Access & approvals",
     summary:
       "Create custom roles, choose exactly which screens and actions they allow, and grant confidential-record access.",
+    purpose: [
+      "Roles keep people to what their job needs. A role is a named set of permissions, and each permission is one action on one screen.",
+      "Example: role 'Payroll Officer' gets View, Create and Export on Payroll Run and Payroll Summary, plus View on Employees, but no Delete and no access to Company Settings.",
+    ],
     permission: ["Roles:View", "Tenant Roles:Manage"],
     paths: ["/security/roles", "/security/permissions"],
     sections: [
@@ -706,6 +787,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Access & approvals",
     summary:
       "See who changed what and when: sign-ins, record changes, approvals and permission edits.",
+    purpose: [
+      "The audit trail is the company's record of changes. Use it to answer 'who changed this employee's rate?' or to investigate an unexpected figure.",
+      "Sample entry: 2026-10-21 14:32, Maria Santos, Update, Employee Juan Dela Cruz, Monthly rate: ₱20,000 → ₱20,800.",
+    ],
     permission: "Audit Trail:View",
     paths: ["/security/audit"],
     sections: [
@@ -736,6 +821,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Billing & storage",
     summary:
       "Choose or change your plan, pay online, see what each plan includes and what happens when a payment is overdue.",
+    purpose: [
+      "Billing is where the company pays for its subscription. Your plan decides which parts of the system, how many employees and how much storage you get.",
+      "Example: you upgrade from Timekeeping to Payroll 10 days into the month. The unused days of the old plan are credited against the new price, so you only pay the difference.",
+    ],
     permission: "Billing:View",
     paths: ["/billing"],
     sections: [
@@ -793,6 +882,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Billing & storage",
     summary:
       "See how much file storage you use, add more, and delete files you no longer need.",
+    purpose: [
+      "Photos, logos and attached documents use shared storage. When it is full, new uploads are blocked, so this page shows what is using space and lets you add more or clean up.",
+      "Example: your 50 GB is 95% used. Delete last year's decided leave attachments, or add one more 50 GB block.",
+    ],
     permission: ["Storage:View", "Storage:Manage"],
     paths: ["/billing/storage"],
     sections: [
@@ -857,6 +950,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Billing & storage",
     summary:
       "Allow images and PDFs on employee documents, assets, leave, pass slips and other records, one feature at a time.",
+    purpose: [
+      "Attachments let employees and HR keep proof with a record, such as a medical certificate on a sick leave. They are off by default, so you switch on only what you need.",
+      "Example: switch on Leave and Pass Slips. Employees can now attach a medical certificate (PDF, up to 5 MB) when filing sick leave.",
+    ],
     permission: ["Organization Setup:View", "Tenant Members:Manage"],
     paths: ["/setup/company-policy"],
     sections: [
@@ -892,6 +989,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Communication",
     summary:
       "Send notices to everyone or to chosen groups, schedule them and track who has read and acknowledged them.",
+    purpose: [
+      "Announcements replace group chats for official notices, and show you who has actually read them. Ask for acknowledgement when you need proof they were informed.",
+      "Example: 'New attendance policy starts Nov 1', priority Important, audience: all employees of the Makati branch, acknowledge by Oct 30. Remind those who haven't acknowledged on Oct 28.",
+    ],
     permission: "Announcements:View",
     paths: ["/communication/announcements"],
     sections: [
@@ -949,6 +1050,10 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     chapter: "Communication",
     summary:
       "Invite clients, verify their DTR, prepare invoices and record payments from the Client Services menu.",
+    purpose: [
+      "For companies that supply manpower to clients (security, outsourcing). Clients confirm the hours worked, you invoice from the verified hours, and payments are recorded against invoices.",
+      "Example: each cutoff the client verifies the guards' DTR, you prepare the invoice from the verified hours, and when they pay you record it against that invoice.",
+    ],
     permission: "clientportal:Client:Manage",
     paths: ["/client-portal/clients"],
     sections: [

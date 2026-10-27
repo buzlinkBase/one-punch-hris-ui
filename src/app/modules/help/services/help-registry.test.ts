@@ -85,6 +85,30 @@ describe("searchArticles", () => {
     expect(ids.slice(0, 2).sort()).toEqual(["payroll-summary", "portal-pay"]);
   });
 
+  it("searches the purpose and the example text of a guide", () => {
+    const article = {
+      id: "x",
+      title: "Plain title",
+      audience: "hr" as const,
+      chapter: "C",
+      summary: "Plain summary",
+      purpose: ["Explains zebrafish rules"],
+      sections: [
+        {
+          heading: "H",
+          example: {
+            title: "T",
+            table: { columns: ["A"], rows: [["narwhal"]] },
+          },
+        },
+      ],
+    };
+
+    expect(searchArticles([article], "zebrafish")).toHaveLength(1);
+    expect(searchArticles([article], "narwhal")).toHaveLength(1);
+    expect(searchArticles([article], "walrus")).toHaveLength(0);
+  });
+
   it("returns everything for an empty query", () => {
     expect(searchArticles(HELP_ARTICLES, "  ")).toHaveLength(
       HELP_ARTICLES.length,

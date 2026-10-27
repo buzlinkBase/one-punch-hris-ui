@@ -1,4 +1,4 @@
-import { Alert, Button, Tag, Typography } from "antd";
+import { Alert, Button, Table, Tag, Typography } from "antd";
 import { ArrowRightOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import type { HelpArticle } from "../../models/help-article.model";
@@ -47,20 +47,35 @@ export function HelpArticleView({
         </Paragraph>
       </header>
 
-      {article.sections.map((section) => (
-        <section key={section.heading} className="flex flex-col gap-2">
+      {article.purpose && article.purpose.length > 0 && (
+        <Alert
+          type="info"
+          showIcon
+          message="What it's for"
+          description={
+            <div className="flex flex-col gap-1">
+              {article.purpose.map((text, i) => (
+                <span key={i}>{text}</span>
+              ))}
+            </div>
+          }
+        />
+      )}
+
+      {article.sections.map((section, sectionIndex) => (
+        <section key={sectionIndex} className="flex flex-col gap-2">
           <Title level={5} className="mb-0!">
             {section.heading}
           </Title>
-          {section.body?.map((text) => (
-            <Paragraph key={text} className="mb-0!">
+          {section.body?.map((text, i) => (
+            <Paragraph key={i} className="mb-0!">
               {text}
             </Paragraph>
           ))}
           {section.steps && (
             <ol className="m-0 flex list-decimal flex-col gap-2 pl-5">
-              {section.steps.map((step) => (
-                <li key={step.text}>
+              {section.steps.map((step, i) => (
+                <li key={i}>
                   <span>{step.text}</span>
                   {step.link && (
                     <Button
@@ -83,10 +98,46 @@ export function HelpArticleView({
               message="Tips"
               description={
                 <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
-                  {section.tips.map((tip) => (
-                    <li key={tip}>{tip}</li>
+                  {section.tips.map((tip, i) => (
+                    <li key={i}>{tip}</li>
                   ))}
                 </ul>
+              }
+            />
+          )}
+          {section.example && (
+            <Alert
+              type="success"
+              message={`Example: ${section.example.title}`}
+              description={
+                <div className="flex flex-col gap-2">
+                  {section.example.note && <span>{section.example.note}</span>}
+                  {section.example.lines && (
+                    <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
+                      {section.example.lines.map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {section.example.table && (
+                    <Table
+                      size="small"
+                      pagination={false}
+                      bordered
+                      scroll={{ x: "max-content" }}
+                      columns={section.example.table.columns.map(
+                        (title, col) => ({
+                          title,
+                          dataIndex: col,
+                          key: col,
+                        }),
+                      )}
+                      dataSource={section.example.table.rows.map(
+                        (row, rowIndex) => ({ key: rowIndex, ...row }),
+                      )}
+                    />
+                  )}
+                </div>
               }
             />
           )}

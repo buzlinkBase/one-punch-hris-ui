@@ -323,6 +323,7 @@ export default function DtrDetailReport() {
           data={records}
           loading={isLoading}
           readOnly
+          showGrandTotal
           dateFrom={committed?.fromDate}
           dateTo={committed?.toDate}
         />

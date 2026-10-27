@@ -49,12 +49,17 @@ function searchableText(article: HelpArticle): string {
     article.title,
     article.chapter,
     article.summary,
+    ...(article.purpose ?? []),
     ...article.sections.flatMap((section) => [
       section.heading,
       ...(section.body ?? []),
       ...(section.steps ?? []).map((step) => step.text),
       ...(section.tips ?? []),
       section.warning ?? "",
+      section.example?.title ?? "",
+      section.example?.note ?? "",
+      ...(section.example?.lines ?? []),
+      ...(section.example?.table?.rows.flat() ?? []),
     ]),
   ]
     .join(" ")

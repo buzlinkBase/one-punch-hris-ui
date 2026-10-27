@@ -27,11 +27,50 @@ interface Props {
   isRowLocked?: (r: DtrDetailResponse) => boolean;
   dateFrom?: string;
   dateTo?: string;
+  /** Adds a Grand Total row under the table (reports; off where rows are one employee's days). */
+  showGrandTotal?: boolean;
 }
 
 function rowKey(r: DtrDetailResponse) {
   return `${r.employeeId}-${r.workDate}-${r.workType}`;
 }
+
+// The numeric columns, left to right, summed into the Grand Total row.
+const TOTAL_FIELDS: (keyof DtrDetailResponse)[] = [
+  "lateMinutes",
+  "utMinutes",
+  "overMinutes",
+  "regularNetHours",
+  "regularOTHours",
+  "regularNDHours",
+  "restDayHours",
+  "restDayOTHours",
+  "restDayNDHours",
+  "legalHolHours",
+  "legalHolOTHours",
+  "legalHolNightDiffHours",
+  "specialHolHours",
+  "specialHolOTHours",
+  "specialHolNightDiffHours",
+  "restLegalDayHours",
+  "restLegalDayOTHours",
+  "restLegalDayNDHours",
+  "restSpecialDayHours",
+  "restSpecialDayOTHours",
+  "restSpecialDayNDHours",
+  "doubleLegalHours",
+  "doubleLegalOTHours",
+  "doubleLegalNDHours",
+  "restDoubleLegalHours",
+  "restDoubleLegalOTHours",
+  "restDoubleLegalNDHours",
+  "obHours",
+  "paidLeaveHours",
+  "unpaidLeaveHours",
+];
+
+// Employee, work type, date, time shift, start and end sit before the numeric columns.
+const LABEL_COLUMNS = 6;
 
 const R = "right" as const;
 const L = "left" as const;
@@ -44,6 +83,7 @@ export default function DtrDetailTable({
   isRowLocked,
   dateFrom,
   dateTo,
+  showGrandTotal,
 }: Props) {
   const { token } = theme.useToken();
   const groupHeader = (): object => ({
@@ -475,6 +515,34 @@ export default function DtrDetailTable({
         bordered
         sticky
         components={{ header: { cell: ResizableTitle } }}
+        summary={() => {
+          if (!showGrandTotal || data.length === 0) return null;
+          const labelSpan = LABEL_COLUMNS + (readOnly ? 0 : 1);
+          return (
+            <Table.Summary fixed>
+              <Table.Summary.Row className="font-semibold">
+                <Table.Summary.Cell index={0} colSpan={labelSpan}>
+                  Grand Total
+                </Table.Summary.Cell>
+                {TOTAL_FIELDS.map((field, i) => {
+                  const sum = data.reduce(
+                    (acc, r) => acc + (Number(r[field]) || 0),
+                    0,
+                  );
+                  return (
+                    <Table.Summary.Cell
+                      key={field}
+                      index={labelSpan + i}
+                      align="right"
+                    >
+                      {sum === 0 ? "—" : formatDecimal(sum)}
+                    </Table.Summary.Cell>
+                  );
+                })}
+              </Table.Summary.Row>
+            </Table.Summary>
+          );
+        }}
         rowClassName={(record) =>
           rowKey(record) === selectedKey ? "ant-table-row-selected" : ""
         }

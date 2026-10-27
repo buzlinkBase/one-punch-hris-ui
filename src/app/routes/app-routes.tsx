@@ -41,6 +41,9 @@ const Profile = lazy(
   () => import("@/app/modules/account/profile/pages/profile/profile"),
 );
 const HelpCenter = lazy(() => import("@/app/modules/help/pages/help-center"));
+const PortalApprovals = lazy(
+  () => import("@/app/modules/portal/approvals/pages/portal-approvals"),
+);
 const PortalDashboard = lazy(
   () => import("@/app/modules/portal/dashboard/pages/portal-dashboard"),
 );
@@ -572,6 +575,20 @@ const helpArticleRoute = createRoute({
   getParentRoute: () => helpRoute,
   path: "$articleId",
   component: withSuspense(HelpCenter),
+});
+
+// The admin-side entry to the same approvals inbox as My Portal > My Approvals; gated through its
+// nav entry's Approve permissions (see getPermissionForPath).
+const approvalsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "approvals",
+  component: AppShell,
+});
+
+const approvalsIndexRoute = createRoute({
+  getParentRoute: () => approvalsRoute,
+  path: "/",
+  component: withSuspense(PortalApprovals),
 });
 
 const portalRoute = createRoute({
@@ -1667,6 +1684,7 @@ const routeTree = rootRoute.addChildren([
   profileRoute.addChildren([profileIndexRoute]),
   notificationsRoute.addChildren([notificationsIndexRoute]),
   helpRoute.addChildren([helpIndexRoute, helpArticleRoute]),
+  approvalsRoute.addChildren([approvalsIndexRoute]),
   portalRoute.addChildren([portalIndexRoute, ...portalChildRoutes]),
   setupRoute.addChildren([setupIndexRoute, ...setupChildRoutes]),
   communicationRoute.addChildren([...communicationChildRoutes]),

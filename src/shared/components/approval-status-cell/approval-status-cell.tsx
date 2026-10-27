@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button, Drawer, Tag, Space } from "antd";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
@@ -26,6 +26,8 @@ interface ApprovalStatusCellProps {
   /** The record's own plain status field (e.g. "ForApproval"/"Approved") — shown immediately,
    * before/regardless of whether the richer ApprovalInstance has loaded. */
   approvalStatus: string;
+  /** A table's own status display, shown instead of the plain tag (the approvers still list under it). */
+  statusTag?: ReactNode;
 }
 
 /**
@@ -38,6 +40,7 @@ export function ApprovalStatusCell({
   applicationType,
   applicationId,
   approvalStatus,
+  statusTag,
 }: ApprovalStatusCellProps) {
   const [open, setOpen] = useState(false);
   const { data: instance } = useApprovalInstance(
@@ -56,13 +59,38 @@ export function ApprovalStatusCell({
       : null;
 
   const hasHistory = !!instance && instance.actions.length > 0;
+  // Who decided each step so far, so the list shows the approvers on every step without opening
+  // the drawer.
+  const decisions = (instance?.actions ?? []).filter(
+    (a) =>
+      a.action === "Approved" ||
+      a.action === "Declined" ||
+      a.action === "Skipped",
+  );
 
   return (
     <>
       <Space direction="vertical" size={0}>
-        <Tag color={STATUS_COLOR[approvalStatus] ?? "default"}>
-          {STATUS_LABEL[approvalStatus] ?? approvalStatus}
-        </Tag>
+        {statusTag ?? (
+          <Tag color={STATUS_COLOR[approvalStatus] ?? "default"}>
+            {STATUS_LABEL[approvalStatus] ?? approvalStatus}
+          </Tag>
+        )}
+        {decisions.map((a, i) => (
+          <span key={`${a.stepNumber}-${i}`} className="text-xs">
+            <span className="opacity-60">Step {a.stepNumber} · </span>
+            {a.action === "Skipped"
+              ? "Skipped"
+              : `${a.actorName ?? "—"}${a.onBehalfOfName ? ` (for ${a.onBehalfOfName})` : ""}`}
+            {a.action !== "Skipped" && (
+              <span
+                className={`ms-1 ${a.action === "Declined" ? "text-red-500" : "text-green-600"}`}
+              >
+                {a.action === "Declined" ? "✗" : "✓"}
+              </span>
+            )}
+          </span>
+        ))}
         {(pendingLabel || hasHistory) && (
           <Button
             type="link"

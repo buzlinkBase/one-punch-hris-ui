@@ -5,17 +5,13 @@ import {
   ReloadOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
-import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
+import { QuickRangeBar } from "@/shared/components/quick-range-bar/quick-range-bar";
 import {
   BATCH_STATUS_FILTER_OPTIONS,
   type BatchStatusFilter,
 } from "@/shared/utils/batch-status-filter.util";
-import { QUICK_RANGES } from "@/shared/utils/quick-date-ranges.util";
 
 const { Text } = Typography;
-
-const DATE_FORMAT = "YYYY-MM-DD";
 
 interface Props {
   dateRange: [string, string];
@@ -57,35 +53,10 @@ export function BatchListFilters({
 }: Props) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-1">
-          {QUICK_RANGES.map((q) => {
-            const [from, to] = q.range();
-            const active = dateRange[0] === from && dateRange[1] === to;
-            return (
-              <Button
-                key={q.key}
-                size="small"
-                type={active ? "primary" : "default"}
-                onClick={() => onDateRangeChange([from, to])}
-              >
-                {q.label}
-              </Button>
-            );
-          })}
-        </div>
-        <MobileRangePicker
-          allowClear={false}
-          value={[dayjs(dateRange[0]), dayjs(dateRange[1])]}
-          onChange={(dates) => {
-            if (dates?.[0] && dates[1])
-              onDateRangeChange([
-                dates[0].format(DATE_FORMAT),
-                dates[1].format(DATE_FORMAT),
-              ]);
-          }}
-        />
-      </div>
+      <QuickRangeBar
+        dateRange={dateRange}
+        onDateRangeChange={onDateRangeChange}
+      />
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <Input

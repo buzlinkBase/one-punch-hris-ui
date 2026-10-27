@@ -624,6 +624,9 @@ export default function MainLayout() {
   const ownedCompanies = sessionUser.tenants.filter((t) =>
     t.roles.includes("Owner"),
   ).length;
+  // Only the owner of the company they're working in can start another (the server refuses
+  // anyone else); switch to a company you own to add one.
+  const canCreateCompany = ownsCurrentCompany;
   const companyLimitReached =
     ownsCurrentCompany &&
     companiesMax !== UNLIMITED &&
@@ -1219,26 +1222,32 @@ export default function MainLayout() {
                             ),
                           };
                         }),
-                        { type: "divider" as const },
-                        {
-                          key: "__create-tenant",
-                          icon: <PlusOutlined style={{ color: "#1DA081" }} />,
-                          label: (
-                            <span
-                              style={{
-                                color: "#1DA081",
-                                fontWeight: 500,
-                                fontSize: 13,
-                              }}
-                            >
-                              New company
-                              {companyLimitReached && (
-                                <LockOutlined className="ml-2 text-xs opacity-60" />
-                              )}
-                            </span>
-                          ),
-                          onClick: handleNewCompany,
-                        },
+                        ...(canCreateCompany
+                          ? [
+                              { type: "divider" as const },
+                              {
+                                key: "__create-tenant",
+                                icon: (
+                                  <PlusOutlined style={{ color: "#1DA081" }} />
+                                ),
+                                label: (
+                                  <span
+                                    style={{
+                                      color: "#1DA081",
+                                      fontWeight: 500,
+                                      fontSize: 13,
+                                    }}
+                                  >
+                                    New company
+                                    {companyLimitReached && (
+                                      <LockOutlined className="ml-2 text-xs opacity-60" />
+                                    )}
+                                  </span>
+                                ),
+                                onClick: handleNewCompany,
+                              },
+                            ]
+                          : []),
                       ],
                     }}
                   >

@@ -21,6 +21,14 @@ export function useInProgressApprovals() {
   });
 }
 
+/** Finished requests the signed-in person decided between two dates (YYYY-MM-DD), newest first. */
+export function useApprovalHistory(from: string, to: string) {
+  return useQuery({
+    queryKey: [...MY_APPROVALS_QUERY_KEY, "history", from, to],
+    queryFn: () => myApprovalsApi.getHistory(from, to),
+  });
+}
+
 export function useActOnApproval() {
   const queryClient = useQueryClient();
   return useMutation({

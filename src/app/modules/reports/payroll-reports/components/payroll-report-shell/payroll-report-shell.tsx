@@ -18,6 +18,7 @@ import type {
 import type { MenuProps } from "antd";
 import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { formatMoney } from "@/shared/utils/money.util";
 import {
   buildFlatCsv,
   downloadExcel,
@@ -32,6 +33,8 @@ export interface ReportTotals<T> {
   fields: (keyof T)[];
   /** Export header of each field, in the same order as `fields`. */
   exportHeaders: string[];
+  /** How the on-screen Grand Total shows a sum; amounts when omitted (e.g. days for leave). */
+  format?: (value: number) => string;
 }
 
 interface PayrollReportShellProps<T> {
@@ -68,6 +71,24 @@ interface PayrollReportShellProps<T> {
   expandable?: ExpandableConfig<T>;
   /** Shown between the filters and the table, e.g. a row of totals. */
   summary?: ReactNode;
+  /**
+   * Grand Total cells by column `key`, for reports whose rows can't be summed by `totals`
+   * (e.g. grouped rows). Adds to, and wins over, the sums taken from `totals`.
+   */
+  grandTotalCells?: Record<string, ReactNode>;
+}
+
+const INTEGER_FORMAT = new Intl.NumberFormat("en-PH", {
+  maximumFractionDigits: 0,
+});
+
+/** The columns that hold values, with grouped headers flattened into their children. */
+function leafColumns<T>(columns: ColumnsType<T>): ColumnsType<T> {
+  return columns.flatMap((column) =>
+    "children" in column && column.children
+      ? leafColumns(column.children)
+      : [column],
+  );
 }
 
 export function PayrollReportShell<T extends object>({
@@ -90,6 +111,7 @@ export function PayrollReportShell<T extends object>({
   rowSelection,
   expandable,
   summary,
+  grandTotalCells,
 }: PayrollReportShellProps<T>) {
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -131,6 +153,61 @@ export function PayrollReportShell<T extends object>({
         exportIntegerHeaders,
       );
     }
+  };
+
+  // Grand total of the whole filtered result (every page), shown under the table.
+  const renderGrandTotal = () => {
+    if ((!totals && !grandTotalCells) || !data.length) return null;
+    const cells = new Map<string, ReactNode>();
+    totals?.fields.forEach((field, i) => {
+      const sum = data.reduce((acc, r) => acc + (Number(r[field]) || 0), 0);
+      const integer = !!exportIntegerHeaders?.includes(totals.exportHeaders[i]);
+      cells.set(
+        String(field),
+        totals.format
+          ? totals.format(sum)
+          : integer
+            ? INTEGER_FORMAT.format(sum)
+            : formatMoney(sum),
+      );
+    });
+    const leaves = leafColumns(columns);
+    const cellFor = (column: (typeof leaves)[number]): ReactNode => {
+      const byKey =
+        column.key != null ? grandTotalCells?.[String(column.key)] : null;
+      if (byKey != null) return byKey;
+      return "dataIndex" in column ? cells.get(String(column.dataIndex)) : null;
+    };
+    if (!leaves.some((c) => cellFor(c) != null)) return null;
+    const leading =
+      (rowSelection ? 1 : 0) + (expandable?.expandedRowRender ? 1 : 0);
+    const labelIndex = leaves.findIndex((c) => cellFor(c) == null);
+
+    return (
+      <Table.Summary fixed>
+        <Table.Summary.Row className="font-semibold">
+          {Array.from({ length: leading }, (_, i) => (
+            <Table.Summary.Cell key={`lead-${i}`} index={i} />
+          ))}
+          {leaves.map((column, i) => {
+            const total = cellFor(column);
+            return (
+              <Table.Summary.Cell
+                key={column.key ?? i}
+                index={leading + i}
+                align={total != null ? "right" : undefined}
+              >
+                {total != null
+                  ? total
+                  : i === labelIndex
+                    ? "Grand Total"
+                    : null}
+              </Table.Summary.Cell>
+            );
+          })}
+        </Table.Summary.Row>
+      </Table.Summary>
+    );
   };
 
   const exportMenu: MenuProps["items"] = [
@@ -207,6 +284,7 @@ export function PayrollReportShell<T extends object>({
             pagination={{ pageSize: 50, showSizeChanger: false }}
             rowSelection={rowSelection}
             expandable={expandable}
+            summary={totals || grandTotalCells ? renderGrandTotal : undefined}
           />
         )}
       </Card>

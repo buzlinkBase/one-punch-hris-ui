@@ -97,6 +97,28 @@ export default function Bir2316() {
       exportFileName={`bir-2316-${year}`}
       exportHeaders={EXPORT_HEADERS}
       exportRows={toRows}
+      totals={{
+        fields: [
+          "grossCompensation",
+          "nonTaxableCompensation",
+          "taxableCompensation",
+          "thirteenthMonthPay",
+          "totalSSS",
+          "totalPhilHealth",
+          "totalPagIbig",
+          "totalTaxWithheld",
+        ],
+        exportHeaders: [
+          "Gross Compensation",
+          "Non-Taxable",
+          "Taxable",
+          "13th Month Pay",
+          "SSS",
+          "PhilHealth",
+          "Pag-IBIG",
+          "Tax Withheld",
+        ],
+      }}
       filterValidationMessage={
         !employeeId ? "Select an employee first" : undefined
       }

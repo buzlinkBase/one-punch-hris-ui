@@ -8,6 +8,10 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "Payroll cutoff",
     summary:
       "Everything from raw attendance to released payslips and remittances for one cutoff, in order.",
+    purpose: [
+      "Use this as your checklist every cutoff. Payroll is only as accurate as the attendance and approvals feeding it, so the order matters: attendance first, then approvals, then DTR, then payroll.",
+      "Sample timeline for the 1st–15th cutoff paid on the 20th: upload logs on the 16th, fix incomplete logs and approve requests by the 17th, save the DTR on the 17th, run payroll on the 18th, release payslips and file remittances on the 19th–20th.",
+    ],
     permission: ["DTR Master:View", "Payroll Run:View"],
     sections: [
       {
@@ -20,57 +24,57 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "The steps",
         steps: [
           {
-            text: "1. Bring in attendance: devices send punches automatically, or upload a device file.",
+            text: "Bring in attendance: devices send punches automatically, or upload a device file.",
             link: {
               label: "Upload Attendance",
               to: "/timekeeping/upload-attendance",
             },
           },
           {
-            text: "2. Tag punches with an unknown Bio ID to their employee.",
+            text: "Tag punches with an unknown Bio ID to their employee.",
             link: {
               label: "Unregistered Employees",
               to: "/timekeeping/unregistered-employees",
             },
           },
           {
-            text: "3. Fix missing time-ins and time-outs.",
+            text: "Fix missing time-ins and time-outs.",
             link: {
               label: "Incomplete Logs",
               to: "/timekeeping/incomplete-punches",
             },
           },
           {
-            text: "4. Apply schedule changes (rotations, rest day and holiday changes) for the period.",
+            text: "Apply schedule changes (rotations, rest day and holiday changes) for the period.",
             link: {
               label: "Work Rotation Plan",
               to: "/change-schedule/work-rotation",
             },
           },
           {
-            text: "5. Make sure every leave, overtime, official business and pass slip for the period is approved. Pending ones aren't counted.",
+            text: "Make sure every leave, overtime, official business and pass slip for the period is approved. Pending ones aren't counted.",
             link: { label: "Leave", to: "/applications/leave" },
           },
           {
-            text: "6. Calculate the DTR for the payroll group and cutoff, review each employee and Save Draft. It goes for approval.",
+            text: "Calculate the DTR for the payroll group and cutoff, review each employee and Save Draft. It goes for approval.",
             link: {
               label: "Process DTR",
               to: "/daily-time-record/master",
             },
           },
           {
-            text: "7. Once the DTR batch is approved, run payroll on it, review it and Save Payroll. It goes for approval.",
+            text: "Once the DTR batch is approved, run payroll on it, review it and Save Payroll. It goes for approval.",
             link: {
               label: "Payroll Run",
               to: "/daily-time-record/for-payroll",
             },
           },
           {
-            text: "8. Once payroll is approved, check the Payroll Summary. Employees then see their payslips in My Portal.",
+            text: "Once payroll is approved, check the Payroll Summary. Employees then see their payslips in My Portal.",
             link: { label: "Payroll Summary", to: "/payroll/summary" },
           },
           {
-            text: "9. Produce remittances and reports: SSS, PhilHealth, Pag-IBIG, BIR and disbursement.",
+            text: "Produce remittances and reports: SSS, PhilHealth, Pag-IBIG, BIR and disbursement.",
             link: {
               label: "SSS Remittance",
               to: "/payroll/reports/sss-remittance",
@@ -95,6 +99,10 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "Attendance",
     summary:
       "Upload a device file, review raw attendance logs, and link unknown Bio IDs to employees.",
+    purpose: [
+      "Attendance logs (punches) are the raw time-in and time-out records every DTR is built from. Biometric devices send them automatically; if a device is offline or a branch has no live connection, you upload the exported .dat file instead.",
+      "Unregistered employees are punches whose Bio ID isn't linked to anyone yet. Until you tag them, those hours aren't counted.",
+    ],
     permission: [
       "Upload Attendance:View",
       "Raw Logs:View",
@@ -126,6 +134,15 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         ],
         warning:
           "Logs are tagged to the branch you choose. Pick the branch whose device generated the file.",
+        example: {
+          title: "A branch device was offline all week",
+          lines: [
+            "The Makati branch device couldn't sync from Mon to Fri.",
+            "On Friday the guard exports the .dat file from the device.",
+            "HR opens Upload Attendance, picks Branch: Makati, types the reason 'Device offline Oct 20–24' and uploads the file.",
+            "The week's punches now appear in Attendance Logs and are ready for the DTR.",
+          ],
+        },
       },
       {
         heading: "Review logs",
@@ -187,6 +204,10 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "Attendance",
     summary:
       "Find days with a missing time-in or time-out and fix them before calculating the DTR.",
+    purpose: [
+      "An incomplete log is a day with only one punch, usually a forgotten time-out. The DTR can't compute hours for it, so the employee would be treated as absent or short.",
+      "Fixing these before you calculate the DTR avoids wrong pay and corrections later.",
+    ],
     permission: ["Incomplete Punches:View", "Attendance Manual Entry:View"],
     paths: ["/timekeeping/incomplete-punches", "/timekeeping/attendance-entry"],
     sections: [
@@ -215,6 +236,21 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           "Company Settings controls how many manual entries a day are allowed (Manual Attendance Fill Limit).",
           "Employees can see their own incomplete logs in My Portal and file a pass slip from there.",
         ],
+        example: {
+          title: "Forgotten time-out",
+          table: {
+            columns: ["Employee", "Date", "Time in", "Time out", "Fix"],
+            rows: [
+              [
+                "Juan Dela Cruz",
+                "Oct 21",
+                "08:02",
+                "(missing)",
+                "Confirm he left at 17:00, then add a 17:00 time-out in Manual Attendance Entry with a reason.",
+              ],
+            ],
+          },
+        },
       },
     ],
     related: ["dtr-calculate"],
@@ -226,6 +262,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "Attendance",
     summary:
       "Handle people whose shift changes, swapped rest days and holidays moved for a group.",
+    purpose: [
+      "Employees have a usual shift and rest day. When reality differs for a few dates (a rotating guard, a swapped rest day, a holiday moved for one client), you record it here so the DTR pays the right rates instead of treating it as lates or absences.",
+    ],
     permission: [
       "Work Rotation:View",
       "Change Rest Day:View",
@@ -261,6 +300,17 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         tips: [
           "These can require approval. Approve them before you calculate the DTR for that period.",
         ],
+        example: {
+          title: "Rotating guard",
+          table: {
+            columns: ["Date", "Assigned shift", "Why"],
+            rows: [
+              ["Oct 20", "Day 06:00–14:00", "Work Rotation Plan"],
+              ["Oct 21", "Night 22:00–06:00", "Work Rotation Plan"],
+              ["Oct 22", "Rest day", "Change Rest Day (swapped with Oct 25)"],
+            ],
+          },
+        },
       },
       {
         heading: "Send someone to another project site for the day",
@@ -322,6 +372,10 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "DTR & payroll",
     summary:
       "Compute each employee's hours, lates, overtime and premiums for a period, then save it for approval.",
+    purpose: [
+      "The Daily Time Record turns raw punches, shifts, holidays and approved requests into payable hours: regular, late, undertime, overtime, night differential and holiday or rest day premiums.",
+      "Payroll runs on the saved, approved DTR, never on raw punches, so this is where you catch problems.",
+    ],
     permission: "DTR Master:View",
     paths: ["/daily-time-record/master", "/daily-time-record/detail"],
     sections: [
@@ -354,6 +408,16 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           "Wrong numbers usually mean a missing punch, an unapproved request or the wrong shift. Fix it, generate again and save again.",
           "Employees set to Payroll only (no DTR) don't appear here; they are paid through payroll without time records.",
         ],
+        example: {
+          title: "One day, step by step",
+          note: "Shift 8:00–17:00 with a 1-hour break. Overtime of 1.5 hours is approved.",
+          lines: [
+            "Punches: in 8:15, out 18:30.",
+            "Late: 15 minutes (8:00 to 8:15).",
+            "Overtime: 1 hour 30 minutes (17:00 to 18:30), counted because the OT request is approved.",
+            "If that OT request were still pending, the 1.5 hours would not be counted.",
+          ],
+        },
       },
       {
         heading: "Saved DTR",
@@ -381,6 +445,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     audience: "hr",
     chapter: "DTR & payroll",
     summary: "Totals per employee for a saved DTR batch.",
+    purpose: [
+      "A one-screen review of a whole batch before you send it on. Scan it for unusual lates, absences or hours, and export it as a record for the cutoff.",
+    ],
     permission: "DTR Summary:View",
     paths: ["/daily-time-record/summary"],
     sections: [
@@ -398,6 +465,21 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         tips: [
           "If a notice says confidential employees are excluded, the totals leave them out. Ask someone with confidential access to produce the version you submit.",
         ],
+        example: {
+          title: "Reading a row",
+          note: "Juan was 45 minutes late in total, absent one day and has 3.5 hours of approved overtime. Check the absence before you save: was a leave request missed?",
+          table: {
+            columns: [
+              "Employee",
+              "Late",
+              "Undertime",
+              "Absences",
+              "Regular hrs",
+              "OT hrs",
+            ],
+            rows: [["Juan Dela Cruz", "0:45", "0:00", "1", "80:00", "3:30"]],
+          },
+        },
       },
     ],
   },
@@ -408,6 +490,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "DTR & payroll",
     summary:
       "See who is ready to be paid, compute pay from their approved DTR, preview it and save it for approval.",
+    purpose: [
+      "Payroll Run computes each employee's pay for a cutoff from the approved DTR, then adds loans, other income and salary adjustments and takes out statutory contributions, tax and other deductions. Always preview before you save.",
+    ],
     permission: "Payroll Run:View",
     paths: ["/daily-time-record/for-payroll"],
     sections: [
@@ -442,6 +527,23 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           "Loans, other income and salary adjustments scheduled for the period are included automatically, so record them first.",
           "If the minimum take-home rule in Company Settings would be breached, some deductions are held back to protect it.",
         ],
+        example: {
+          title: "One employee's pay (sample figures)",
+          note: "Daily rate ₱800 (₱100 an hour), 13 days worked, 1.5 hours of overtime at the standard 125% rate. Contribution and loan amounts are only for illustration; yours come from the statutory tables.",
+          table: {
+            columns: ["Item", "Computation", "Amount"],
+            rows: [
+              ["Basic pay", "13 days × ₱800", "₱10,400.00"],
+              ["Overtime", "1.5 h × ₱100 × 1.25", "₱187.50"],
+              ["Gross pay", "", "₱10,587.50"],
+              ["SSS", "", "-₱450.00"],
+              ["PhilHealth", "", "-₱275.00"],
+              ["Pag-IBIG", "", "-₱200.00"],
+              ["Company loan", "1 of 6 payments", "-₱500.00"],
+              ["Net pay", "", "₱9,162.50"],
+            ],
+          },
+        },
       },
       {
         heading: "Employees paid by several clients",
@@ -512,6 +614,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     audience: "hr",
     chapter: "DTR & payroll",
     summary: "Review a payroll run in detail and print payslips.",
+    purpose: [
+      "After payroll is approved, this is where you check the final numbers per employee, answer 'why is my pay this amount?' questions, and print the summary or payslips.",
+    ],
     permission: "Payroll Summary:View",
     paths: ["/payroll/summary"],
     sections: [
@@ -535,6 +640,28 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Print the summary or individual payslips. They open as a PDF in a new tab.",
           },
         ],
+        example: {
+          title: "What each tab answers",
+          table: {
+            columns: ["Tab", "Use it to check"],
+            rows: [
+              [
+                "Earnings",
+                "Basic pay, overtime, night differential, holiday pay, other income",
+              ],
+              ["Hours", "Days and hours behind the pay"],
+              ["Holidays", "Regular and special holiday pay"],
+              [
+                "Deductions",
+                "Contributions, tax, each loan, late, undertime and absences",
+              ],
+              [
+                "Employer contributions",
+                "What the company pays on top (SSS, PhilHealth, Pag-IBIG)",
+              ],
+            ],
+          },
+        },
       },
     ],
     related: ["reports"],
@@ -546,6 +673,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "DTR & payroll",
     summary:
       "The special payroll runs: 13th month pay, final pay for leavers, and annual tax adjustment.",
+    purpose: [
+      "Besides the regular cutoff payroll, three yearly or one-off runs exist. 13th month is the mandatory year-end bonus, last pay settles everything owed to someone who is leaving, and the year-end adjustment corrects withholding tax so it matches what the employee actually owes for the year.",
+    ],
     permission: [
       "13th Month Run:View",
       "Last Pay Run:View",
@@ -585,6 +715,14 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Each run is saved For Approval and appears under Saved Payroll Runs, like a regular payroll.",
           },
         ],
+        example: {
+          title: "13th month, last pay and year-end (sample figures)",
+          lines: [
+            "13th month = total basic pay earned in the year ÷ 12. An employee who earned ₱240,000 in basic pay gets ₱240,000 ÷ 12 = ₱20,000. Any part above the non-taxable ceiling in Company Settings is taxed.",
+            "Last pay for someone leaving on Oct 31: unpaid salary for Oct 16–31, the 13th month earned so far, plus any unpaid adjustments, other income and the cash bond refund, less remaining loan balances.",
+            "Year-end adjustment: if tax withheld during the year was ₱18,000 but the annualized tax is ₱15,000, the employee is refunded ₱3,000. If only ₱12,000 was withheld, ₱3,000 is collected.",
+          ],
+        },
       },
     ],
   },
@@ -595,6 +733,10 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "DTR & payroll",
     summary:
       "Record loans and scheduled deductions, allowances and other income, and salary adjustments so payroll picks them up.",
+    purpose: [
+      "Loans & Deductions take money out of pay on a schedule (company loans, cash advances). Other Income adds money (allowances, incentives). Salary Adjustments correct past pay (back pay or an overpayment).",
+      "Record them before running payroll: once approved they are included automatically for the period they are scheduled in.",
+    ],
     permission: [
       "Loan/Deduction:View",
       "Other Income:View",
@@ -631,6 +773,29 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Once approved, these are included automatically in the payroll run for their scheduled period.",
           },
         ],
+        example: {
+          title: "Three typical entries",
+          table: {
+            columns: ["Type", "Entry", "Effect on payroll"],
+            rows: [
+              [
+                "Loan / Deduction",
+                "₱12,000 company loan over 6 cutoffs",
+                "-₱2,000 each cutoff for 6 cutoffs",
+              ],
+              [
+                "Other Income",
+                "₱100 meal allowance per qualifying day",
+                "+₱100 for each day the employee met the attendance rule",
+              ],
+              [
+                "Salary Adjustment",
+                "₱1,500 back pay for a missed rate increase",
+                "+₱1,500 once, in the next run",
+              ],
+            ],
+          },
+        },
       },
       {
         heading: "Paying only when attendance is met",
@@ -657,6 +822,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "Reports",
     summary:
       "Statutory remittances, BIR forms and files, payroll ledgers and attendance reports.",
+    purpose: [
+      "Reports are the outputs you hand to others: government agencies (SSS, PhilHealth, Pag-IBIG, BIR), the bank, your clients and management. Produce them after payroll is approved so the figures are final.",
+    ],
     permission: [
       "Government Statutory Reports:View",
       "Payroll Reports:View",
@@ -693,9 +861,10 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         ],
         tips: [
           "Choose the period and filters, then print (opens a PDF in a new tab) or export to Excel.",
-          "Report tables show a Total row for amount columns, and Excel/CSV exports end with a TOTAL row. Exported amounts are real numbers, so you can sort and sum them in Excel.",
+          "Report tables end with a Grand Total row for amount columns. It adds up every row of your filtered result, not just the page you are on. Excel/CSV exports end with a Total row too, and exported amounts are real numbers, so you can sort and sum them in Excel.",
           "Most reports have a Client filter. Pick a client to see only that client's employees, or clear it for everyone. Prints, exports and upload files follow the same filter.",
           "Government forms use the details in Company Settings › Company Info. Fill those in first.",
+          "Sample use: after the Oct 16–31 payroll is approved, print Disbursement for the bank, then export the SSS, PhilHealth and Pag-IBIG remittances for the month to pay and upload by their deadlines.",
           "Cash Bond: use the pencil on a row to change an employee's cash bond per payroll. It applies from the next payroll run, payrolls already generated keep their amounts, and the change (old rate, new rate, reason) is kept under Rate history in the row's ledger and in the audit log. Changing it in Employee Details is logged the same way. A cash bond refunded through Last Pay shows in the Refunded column and the balance drops accordingly.",
           "Uniform Allowance rules are set per client (Clients › gear icon › Uniform Allowance). The ledger's Credit Log shows every credit and every skipped one with the reason; an employee's Credit schedule shows their next credits.",
         ],
@@ -709,6 +878,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
     chapter: "Applications",
     summary:
       "File leave, overtime, official business and pass slips on an employee's behalf, and handle profile update requests.",
+    purpose: [
+      "Employees normally file their own requests in My Portal. HR files on their behalf for staff without portal access or when something was missed, so the DTR still counts it.",
+    ],
     permission: [
       "Leave:View",
       "Overtime:View",
@@ -735,12 +907,19 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Choose the employee, fill in the dates and details, and save. It goes through the same approval as a request the employee files.",
           },
         ],
+        example: {
+          title: "Overtime filed by HR",
+          lines: [
+            "Employee: Maria Santos. Date: Oct 21. From 17:00 to 19:00 (2 hours). Reason: client deadline.",
+            "Saved, it goes to her approver. Once approved, the 2 hours count as overtime when you calculate the DTR.",
+          ],
+        },
       },
       {
         heading: "Tabs",
         body: [
           "Leave, Overtime, Official Business, Pass Slip, Loan/Deduction and Profile Update lists have three tabs. For Approval holds only the requests whose current step is yours. In Progress holds the ones still waiting on another approver (view only). History holds the approved, declined, cancelled and withdrawn ones. Other lists keep For Approval and History.",
-          'On For Approval and In Progress the status reads "Pending with <approver> (Step n/m)". Click it to see the full Approval Progress. Owners and Admins can still approve or decline from In Progress to override a stuck step.',
+          'On For Approval and In Progress the status reads "Pending with <approver> (Step n/m)". Click it to see the full Approval Progress. Under the status tag, each step already decided is listed with who approved or declined it (for example "Step 1 · Ben Cruz ✓"). Owners and Admins can still approve or decline from In Progress to override a stuck step.',
           "The detail page shows Approval Progress: each step, who acted and any notes.",
         ],
       },

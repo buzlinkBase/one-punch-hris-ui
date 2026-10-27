@@ -8,6 +8,10 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
     chapter: "Start here",
     summary:
       "What the system does, how it's organized, and which guides to read for your role.",
+    purpose: [
+      "This is the map of One Punch HRIS. It tells you what the system covers and which guides to read first, so you don't have to read everything.",
+      "Example: a payroll officer goes straight to HR & Payroll › The payroll cutoff, end to end; an employee goes to Employees › My Portal.",
+    ],
     paths: ["/dashboard"],
     sections: [
       {
@@ -50,6 +54,9 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
     chapter: "Start here",
     summary:
       "Sign in with email or Google, reset a forgotten password, and switch between companies.",
+    purpose: [
+      "Everything starts with signing in. If you work for more than one company (for example an accountant handling several clients), the system keeps their data separate and you switch between them here.",
+    ],
     sections: [
       {
         heading: "Sign in",
@@ -102,6 +109,10 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
     chapter: "Start here",
     summary:
       "Join your company from the invitation email, whether you're new or already have an account.",
+    purpose: [
+      "Nobody can sign up on their own. Your company invites you by email so only real employees get in, with the role they were given.",
+      "Example: HR invites maria@company.com; Maria opens the email within 7 days, sets a password and lands in My Portal.",
+    ],
     sections: [
       {
         heading: "Steps",
@@ -129,6 +140,10 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
     chapter: "Start here",
     summary:
       "The menu, quick search, notifications, dark mode and your profile.",
+    purpose: [
+      "A quick tour so you can find any screen fast, without hunting through menus.",
+      "Example: press Ctrl+K, type 'payslip' and pick My Payslips to jump straight there.",
+    ],
     sections: [
       {
         heading: "The top bar",
@@ -187,6 +202,10 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
     chapter: "Your account",
     summary:
       "Update your password, name and phone number, and choose which notifications you get.",
+    purpose: [
+      "Keeps your account secure and your contact details current, and lets you decide which approval alerts reach you. Approvers who go on leave can also hand their approvals to someone else here.",
+      "Example: leaving for a week? Delegate your approvals to a colleague for those dates so requests don't pile up.",
+    ],
     paths: ["/profile"],
     sections: [
       {
@@ -220,7 +239,7 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
         heading: "While I'm away (delegating your approvals)",
         steps: [
           {
-            text: "Under While I'm away, click Delegate and choose who approves for you, which requests, and when. They then see your pending requests in My Approvals.",
+            text: "Under While I'm away, click Delegate and choose who approves for you, which requests, and when. They then see your pending requests in My Approvals. You can also start it from the While I'm away button in My Approvals.",
           },
         ],
         tips: ["The same card lists what others have delegated to you."],

@@ -189,6 +189,17 @@ export default function LeaveLedger() {
         exportFileName={`leave-ledger-${year}`}
         exportHeaders={EXPORT_HEADERS}
         exportRows={toRows}
+        totals={{
+          fields: ["granted", "used", "reserved", "balance", "availableToFile"],
+          exportHeaders: [
+            "Granted",
+            "Used",
+            "Reserved",
+            "Balance",
+            "Available to File",
+          ],
+          format: fmtDays,
+        }}
         filters={
           <Form layout="vertical">
             <div className="flex items-end gap-4 flex-wrap">

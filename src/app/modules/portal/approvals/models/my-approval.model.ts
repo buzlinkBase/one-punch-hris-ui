@@ -1,7 +1,42 @@
 import type {
+  ApprovalActionType,
   ApprovalApplicationType,
+  ApprovalInstanceStatus,
   NoteRequirement,
 } from "@/shared/types/approval.model";
+
+/** A finished request the signed-in person decided, as themself or through a delegate. */
+export interface MyApprovalHistory {
+  applicationType: ApprovalApplicationType;
+  applicationId: string;
+  applicantEmployeeId: string;
+  applicantName: string;
+  summary: string;
+  filedAt: string;
+  /** Where the request ended up: Approved, Declined or Cancelled. */
+  finalStatus: ApprovalInstanceStatus;
+  /** What the signed-in person (or their delegate) decided. */
+  myDecision: ApprovalActionType;
+  decidedAt: string;
+  note?: string | null;
+  /** Set when the signed-in person decided for someone who delegated to them. */
+  onBehalfOfName?: string | null;
+  /** Set when the signed-in person's delegate decided in their place. */
+  decidedByName?: string | null;
+  /** Who approved or declined each step, in step order. */
+  trail: MyApprovalTrailEntry[];
+}
+
+export interface MyApprovalTrailEntry {
+  stepNumber: number;
+  action: ApprovalActionType;
+  /** Null for a step the system skipped. */
+  approverName?: string | null;
+  /** Set when the approver acted for someone who delegated to them. */
+  onBehalfOfName?: string | null;
+  at: string;
+  note?: string | null;
+}
 
 /**
  * One request on the signed-in person's approval lists: waiting on them (directly, or because

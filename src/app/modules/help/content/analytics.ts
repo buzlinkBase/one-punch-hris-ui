@@ -8,6 +8,10 @@ export const ANALYTICS_ARTICLES: HelpArticle[] = [
     chapter: "Analytics",
     summary:
       "Trends and breakdowns for your workforce, attendance, labor cost and requests, with Excel export.",
+    purpose: [
+      "Analytics turns your approved records into charts so you can spot problems early instead of reading lists: rising turnover, a department with heavy lates, or labor cost creeping up.",
+      "Example: Attendance & Time shows the Warehouse department's late hours doubled this quarter, so you click the figure to see which employees are behind it.",
+    ],
     permission: [
       "Workforce Analytics:View",
       "Attendance Analytics:View",
@@ -44,16 +48,16 @@ export const ANALYTICS_ARTICLES: HelpArticle[] = [
         heading: "Filtering and comparing",
         steps: [
           {
-            text: "1. Pick a date range. It opens on the last 12 months, and can cover up to 24 months.",
+            text: "Pick a date range. It opens on the last 12 months, and can cover up to 24 months.",
           },
           {
-            text: "2. Narrow it to a department, branch, payroll group or employment status if you like. Clear filters puts everyone back.",
+            text: "Narrow it to a department, branch, payroll group or employment status if you like. Clear filters puts everyone back.",
           },
           {
-            text: "3. Each headline figure shows its change against the period of the same length just before. Green means better, red means worse, gray is neither.",
+            text: "Each headline figure shows its change against the period of the same length just before. Green means better, red means worse, gray is neither.",
           },
           {
-            text: "4. Hover a chart for exact values, or switch it to Table.",
+            text: "Hover a chart for exact values, or switch it to Table.",
           },
         ],
         tips: [
