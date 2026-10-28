@@ -260,6 +260,18 @@ export function useUnreleasePayout() {
   });
 }
 
+export function useUnreleaseBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (batchId: string) => forPayrollApi.unreleaseBatch(batchId),
+    onSuccess: () => {
+      invalidatePayrollResults(queryClient);
+      // Unreleasing a run frees the DTR days it paid, which gives their leave days back.
+      invalidateLeaveBalances(queryClient);
+    },
+  });
+}
+
 export function useDeletePayrollBatch() {
   const queryClient = useQueryClient();
   return useMutation({

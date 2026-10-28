@@ -86,6 +86,16 @@ export const FOR_PAYROLL_LABEL = {
   FILTER_PAYROLL_GROUP: "Payroll Group",
 };
 
+export const UNRELEASE_BATCH_LABEL = {
+  ACTION: "Reset (unrelease all)",
+  TITLE: "Unrelease every employee in this run?",
+  THIRTEENTH_MONTH:
+    "All released 13th month payouts in this run are deleted and the employees go back to Not yet generated. Generate the 13th Month Run again afterwards.",
+  OK: "Reset",
+  SUCCESS: "Run unreleased.",
+  FAILED: "Failed to unrelease this run. Please try again.",
+} as const;
+
 export const UNRELEASE_PAYOUT_LABEL = {
   ACTION: "Unrelease",
   TITLE: "Unrelease this payout?",

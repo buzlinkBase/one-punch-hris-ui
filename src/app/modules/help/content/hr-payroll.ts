@@ -778,7 +778,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Still Unpaid: 13th Month Earned minus the payout's amount before tax, shown in orange. It is the 13th month earned in cutoffs posted after the run was generated, which the payout did not cover.",
           },
           {
-            text: "Unrelease (the arrow button on a Posted row of the 13th Month Run or Last Pay Run page, and on a Released row of this report, for users who can approve that run): withdraws that employee's payout when it was released by mistake. The employee goes back to Not yet generated and you generate the run again; a Last Pay also puts back the loan installments and retirement payout it settled. It only affects that one employee, and it is blocked once the year-end tax adjustment has been posted for the year.",
+            text: "Unrelease (the arrow button on a Posted row of the 13th Month Run or Last Pay Run page, and on a Released row of this report, for users who can approve that run): withdraws that employee's payout when it was released by mistake. The employee goes back to Not yet generated and you generate the run again; a Last Pay also puts back the loan installments and retirement payout it settled. It only affects that one employee, and it is blocked once the year-end tax adjustment has been posted for the year. To withdraw the whole 13th Month Run at once, use Reset (unrelease all) on the run's row in the Generate 13th Month Pay page: it deletes every released payout in that run in one command, with the same year-end restriction.",
           },
         ],
         example: {
