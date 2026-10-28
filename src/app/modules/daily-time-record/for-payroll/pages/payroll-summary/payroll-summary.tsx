@@ -34,6 +34,7 @@ import {
   usePayrollBatches,
 } from "../../hooks/use-for-payroll-queries";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
+import type { PayrollBatchListModel } from "../../models/api/response/payroll-batch-list.model";
 import { otPay, ndPay } from "../../utils/ot-nd-pay.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { QUICK_RANGES } from "@/shared/utils/quick-date-ranges.util";
@@ -99,20 +100,39 @@ const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   ).map(([value, label]) => ({ value, label })),
 ];
 
+interface PayrollSummaryContentProps {
+  // Pre-selects this run (deep link `?batchId=` or the Saved Payroll Runs popup).
+  batchId?: string;
+  // Popup mode: the run is fixed, so the date range / run picker is hidden and the run itself
+  // supplies the period used for export file names.
+  embedded?: boolean;
+  batch?: PayrollBatchListModel;
+}
+
+// The Saved Payroll Runs tab's "View" action opens this in a full-screen popup instead of
+// navigating to the page — see PayrollRunViewModal.
 export default function PayrollSummary() {
-  const { token } = theme.useToken();
-  // Arriving from the Saved Payroll Runs tab's "View" action pre-selects that exact run —
-  // see PayrollBatchesTab's navigate({ to: "/payroll/summary", search: { batchId } }).
   const searchParams = useSearch({ from: "/payroll/summary" }) as Record<
     string,
     string
   >;
+  return <PayrollSummaryContent batchId={searchParams.batchId} />;
+}
+
+export function PayrollSummaryContent({
+  batchId: initialBatchId,
+  embedded = false,
+  batch: embeddedBatch,
+}: PayrollSummaryContentProps) {
+  const { token } = theme.useToken();
+  const defaultStatus: StatusFilter = embedded ? "All" : "Approved";
   const [selectedBatchId, setSelectedBatchId] = useState<string | undefined>(
-    searchParams.batchId,
+    initialBatchId,
   );
   // Defaults to Approved so the report reads clean day-to-day — switch to All/For Approval/
-  // Declined to inspect a pending or declined run's figures from this page.
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("Approved");
+  // Declined to inspect a pending or declined run's figures from this page. The popup opens on
+  // All so a pending run's rows aren't hidden.
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(defaultStatus);
   const [activeTab, setActiveTab] = useState("payroll");
 
   // Narrows the batch selector below -- defaults to last month through this month, same as
@@ -122,7 +142,7 @@ export default function PayrollSummary() {
   // missing range as open-ended) so that specific batch is guaranteed to be in the dropdown's option list.
   const [batchDateRange, setBatchDateRange] = useState<[string, string] | null>(
     () => {
-      if (searchParams.batchId) return null;
+      if (initialBatchId) return null;
       const { fromDate, toDate } = getLastMonthToCurrentRange();
       return [fromDate, toDate];
     },
@@ -130,6 +150,7 @@ export default function PayrollSummary() {
   const { data: batchData, isFetching: isFetchingBatches } = usePayrollBatches(
     batchDateRange?.[0],
     batchDateRange?.[1],
+    { enabled: !embedded },
   );
   const batches = useMemo(
     () => sortBatchesLatestFirst(batchData ?? []),
@@ -139,8 +160,9 @@ export default function PayrollSummary() {
   // Open on the newest run instead of an empty page, and fall back to it when a range change
   // drops the picked run from the list. While the list is still loading the pick is kept as-is,
   // so a deep-linked batch isn't replaced before it arrives.
-  const batchId =
-    isFetchingBatches || batches.some((b) => b.id === selectedBatchId)
+  const batchId = embedded
+    ? initialBatchId
+    : isFetchingBatches || batches.some((b) => b.id === selectedBatchId)
       ? selectedBatchId
       : batches[0]?.id;
 
@@ -163,8 +185,8 @@ export default function PayrollSummary() {
   );
 
   const selectedBatch = useMemo(
-    () => batches.find((b) => b.id === batchId),
-    [batches, batchId],
+    () => embeddedBatch ?? batches.find((b) => b.id === batchId),
+    [embeddedBatch, batches, batchId],
   );
 
   const {
@@ -206,7 +228,7 @@ export default function PayrollSummary() {
 
   // "Approved" is the default status, so only a different pick counts as an active filter.
   const activeFilterCount =
-    Number(statusFilter !== "Approved") +
+    Number(statusFilter !== defaultStatus) +
     Number(!!clientFilter) +
     Number(!!payrollGroupFilter) +
     Number(employeeFilter.length > 0);
@@ -407,18 +429,20 @@ export default function PayrollSummary() {
 
   return (
     <div className="content-page">
-      <div className="page-toolbar">
+      <div className={embedded ? "" : "page-toolbar"}>
         <div className="page-toolbar-row">
-          <div>
-            <Title level={4} className="mb-0!">
-              Payroll Summary
-            </Title>
-            <p className="page-toolbar-subtitle">
-              View generated payroll records with full earnings, deductions, and
-              hour breakdown.
-            </p>
-          </div>
-          <Space>
+          {!embedded && (
+            <div>
+              <Title level={4} className="mb-0!">
+                Payroll Summary
+              </Title>
+              <p className="page-toolbar-subtitle">
+                View generated payroll records with full earnings, deductions,
+                and hour breakdown.
+              </p>
+            </div>
+          )}
+          <Space className={embedded ? "ml-auto" : ""}>
             <Dropdown
               menu={{ items: exportMenuItems }}
               trigger={["click"]}
@@ -442,92 +466,96 @@ export default function PayrollSummary() {
       </div>
 
       <div className="mt-4 mb-4 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-1">
-            {QUICK_RANGES.map((q) => {
-              const [from, to] = q.range();
-              const active =
-                batchDateRange?.[0] === from && batchDateRange?.[1] === to;
-              return (
-                <Button
-                  key={q.key}
-                  size="small"
-                  type={active ? "primary" : "default"}
-                  onClick={() => setBatchDateRange([from, to])}
-                >
-                  {q.label}
-                </Button>
-              );
-            })}
-          </div>
-          <MobileRangePicker
-            allowClear={false}
-            value={
-              batchDateRange
-                ? [dayjs(batchDateRange[0]), dayjs(batchDateRange[1])]
-                : null
-            }
-            onChange={(dates) => {
-              if (dates?.[0] && dates[1])
-                setBatchDateRange([
-                  dates[0].format("YYYY-MM-DD"),
-                  dates[1].format("YYYY-MM-DD"),
-                ]);
-            }}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <Space.Compact className="w-full sm:w-auto">
-            <Button
-              icon={<LeftOutlined />}
-              title="Older payroll"
-              disabled={
-                selectedIndex < 0 || selectedIndex >= batches.length - 1
-              }
-              onClick={() => stepBatch(1)}
-            />
-            <Select
-              value={batchId}
-              onChange={setSelectedBatchId}
-              placeholder="Select a payroll batch"
-              showSearch
-              optionFilterProp="label"
-              className="w-80"
-              popupMatchSelectWidth={false}
-              classNames={{ popup: { root: "min-w-[420px] max-w-[90vw]" } }}
-              notFoundContent="No payroll batches in this date range"
-              options={batchOptions}
-              optionRender={(option) => {
-                const { remarks, period, status, statusColor, meta } =
-                  option.data as {
-                    remarks: string | null;
-                    period: string;
-                    status: string;
-                    statusColor: string;
-                    meta: string;
-                  };
+        {!embedded && (
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-1">
+              {QUICK_RANGES.map((q) => {
+                const [from, to] = q.range();
+                const active =
+                  batchDateRange?.[0] === from && batchDateRange?.[1] === to;
                 return (
-                  <div className="whitespace-normal py-0.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{period}</span>
-                      <Tag color={statusColor} className="mr-0!">
-                        {status}
-                      </Tag>
-                    </div>
-                    {remarks && <div className="text-sm">{remarks}</div>}
-                    <div className="text-xs opacity-70">{meta}</div>
-                  </div>
+                  <Button
+                    key={q.key}
+                    size="small"
+                    type={active ? "primary" : "default"}
+                    onClick={() => setBatchDateRange([from, to])}
+                  >
+                    {q.label}
+                  </Button>
                 );
+              })}
+            </div>
+            <MobileRangePicker
+              allowClear={false}
+              value={
+                batchDateRange
+                  ? [dayjs(batchDateRange[0]), dayjs(batchDateRange[1])]
+                  : null
+              }
+              onChange={(dates) => {
+                if (dates?.[0] && dates[1])
+                  setBatchDateRange([
+                    dates[0].format("YYYY-MM-DD"),
+                    dates[1].format("YYYY-MM-DD"),
+                  ]);
               }}
             />
-            <Button
-              icon={<RightOutlined />}
-              title="Newer payroll"
-              disabled={selectedIndex <= 0}
-              onClick={() => stepBatch(-1)}
-            />
-          </Space.Compact>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          {!embedded && (
+            <Space.Compact className="w-full sm:w-auto">
+              <Button
+                icon={<LeftOutlined />}
+                title="Older payroll"
+                disabled={
+                  selectedIndex < 0 || selectedIndex >= batches.length - 1
+                }
+                onClick={() => stepBatch(1)}
+              />
+              <Select
+                value={batchId}
+                onChange={setSelectedBatchId}
+                placeholder="Select a payroll batch"
+                showSearch
+                optionFilterProp="label"
+                className="w-80"
+                popupMatchSelectWidth={false}
+                classNames={{ popup: { root: "min-w-[420px] max-w-[90vw]" } }}
+                notFoundContent="No payroll batches in this date range"
+                options={batchOptions}
+                optionRender={(option) => {
+                  const { remarks, period, status, statusColor, meta } =
+                    option.data as {
+                      remarks: string | null;
+                      period: string;
+                      status: string;
+                      statusColor: string;
+                      meta: string;
+                    };
+                  return (
+                    <div className="whitespace-normal py-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{period}</span>
+                        <Tag color={statusColor} className="mr-0!">
+                          {status}
+                        </Tag>
+                      </div>
+                      {remarks && <div className="text-sm">{remarks}</div>}
+                      <div className="text-xs opacity-70">{meta}</div>
+                    </div>
+                  );
+                }}
+              />
+              <Button
+                icon={<RightOutlined />}
+                title="Newer payroll"
+                disabled={selectedIndex <= 0}
+                onClick={() => stepBatch(-1)}
+              />
+            </Space.Compact>
+          )}
           <Select<StatusFilter>
             value={statusFilter}
             onChange={setStatusFilter}
@@ -571,7 +599,7 @@ export default function PayrollSummary() {
               icon={<ClearOutlined />}
               disabled={activeFilterCount === 0}
               onClick={() => {
-                setStatusFilter("Approved");
+                setStatusFilter(defaultStatus);
                 setClientFilter(undefined);
                 setPayrollGroupFilter(undefined);
                 setEmployeeFilter([]);
@@ -591,8 +619,9 @@ export default function PayrollSummary() {
         </div>
 
         <Typography.Text type="secondary" className="text-xs">
-          Showing {results.length} of {allResults.length} employees ·{" "}
-          {batches.length} payroll run{batches.length === 1 ? "" : "s"} in range
+          Showing {results.length} of {allResults.length} employees
+          {!embedded &&
+            ` · ${batches.length} payroll run${batches.length === 1 ? "" : "s"} in range`}
         </Typography.Text>
       </div>
 

@@ -48,6 +48,7 @@ export default function UploadBatchTable({
       title: "Reason / Remarks",
       dataIndex: "remarks",
       key: "remarks",
+      ellipsis: true,
       render: (v: string) => v || "—",
     },
     {
@@ -180,7 +181,8 @@ export default function UploadBatchTable({
       columns={columns}
       size="small"
       loading={loading}
-      pagination={{ pageSize: 10 }}
+      pagination={{ pageSize: 20, showSizeChanger: true }}
+      sticky
       scroll={{ x: "max-content" }}
     />
   );

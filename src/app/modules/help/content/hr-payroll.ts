@@ -157,7 +157,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "See which logs of an upload were changed",
         steps: [
           {
-            text: "In Upload History, the Changed column counts the logs of that file someone edited or removed. Click the count to see each one: the employee, the original and current time, the reason, and who changed it and when. It needs the Upload Attendance: View permission.",
+            text: "Click View upload history to open the full-screen history. There, the Changed column counts the logs of that file someone edited or removed. Click the count to see each one: the employee, the original and current time, the reason, and who changed it and when. It needs the Upload Attendance: View permission.",
           },
         ],
       },
@@ -625,7 +625,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "The list opens on the current cutoff. Change it with the quick date buttons (Current cutoff, This month, Last month...) or the date range, and narrow it with the search box and the Status and Run Type filters. Click Clear filters to start over.",
           },
           {
-            text: "Approvers use Approve / Decline on the row. View in Payroll Summary opens the run's details.",
+            text: "Approvers use Approve / Decline on the row. The eye button opens the run's full Payroll Summary in a full-screen popup, with its tabs, totals, Export and Print.",
           },
           {
             text: "Once it's Approved, employees see the payslip in My Portal.",

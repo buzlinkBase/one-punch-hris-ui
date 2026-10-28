@@ -22,7 +22,6 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { apiErrorMessage } from "@/core/http/api-error";
-import { useNavigate } from "@tanstack/react-router";
 import {
   usePayrollBatches,
   useApproveBatch,
@@ -32,6 +31,7 @@ import {
   useApprovePayrollBatchDeletion,
   useDeclinePayrollBatchDeletion,
 } from "../../hooks/use-for-payroll-queries";
+import PayrollRunViewModal from "../payroll-run-view-modal/payroll-run-view-modal";
 import type { PayrollBatchListModel } from "../../models/api/response/payroll-batch-list.model";
 import { sortBatchesLatestFirst } from "../../pages/payroll-summary/utils/payroll-batch-option.util";
 import {
@@ -67,7 +67,6 @@ const defaultRange = (): [string, string] => {
 // Payroll Summary tabs' own (typically narrower) date range, so approving/reviewing older or
 // backlogged runs isn't limited by whatever range the report tabs happen to be showing.
 export default function PayrollBatchesTab() {
-  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<[string, string]>(defaultRange);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -117,6 +116,9 @@ export default function PayrollBatchesTab() {
       ? "PayrollPostingDeletion"
       : "PayrollPosting",
     actionTarget?.batch.id,
+  );
+  const [viewTarget, setViewTarget] = useState<PayrollBatchListModel | null>(
+    null,
   );
   const [historyTarget, setHistoryTarget] = useState<{
     id: string;
@@ -282,17 +284,12 @@ export default function PayrollBatchesTab() {
         const runTypeFeature = RUN_TYPE_FEATURE[g.payrollType] ?? "Payroll Run";
         return (
           <Space size={4}>
-            <Tooltip title="View in Payroll Summary">
+            <Tooltip title="View payroll run">
               <Button
-                aria-label="View in Payroll Summary"
+                aria-label="View payroll run"
                 size="small"
                 icon={<EyeOutlined />}
-                onClick={() =>
-                  navigate({
-                    to: "/payroll/summary",
-                    search: { batchId: g.id },
-                  })
-                }
+                onClick={() => setViewTarget(g)}
               />
             </Tooltip>
             <Tooltip title="History">
@@ -483,6 +480,11 @@ export default function PayrollBatchesTab() {
         }}
         pagination={{ pageSize: 20, showSizeChanger: false }}
         scroll={{ x: "max-content" }}
+      />
+
+      <PayrollRunViewModal
+        batch={viewTarget}
+        onClose={() => setViewTarget(null)}
       />
 
       <Modal

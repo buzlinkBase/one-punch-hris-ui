@@ -220,19 +220,9 @@ export default function UploadAttendanceList() {
             </Dragger>
 
             {fileList.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 12px",
-                  background: "#f6ffed",
-                  border: "1px solid #b7eb8f",
-                  borderRadius: 6,
-                }}
-              >
-                <FileOutlined style={{ color: "#52c41a", flexShrink: 0 }} />
-                <Text style={{ flex: 1, fontSize: 13, wordBreak: "break-all" }}>
+              <div className="flex items-center gap-2 rounded-md border border-green-300 bg-green-50 px-3 py-2">
+                <FileOutlined className="shrink-0 text-green-500" />
+                <Text className="flex-1 text-[13px] break-all">
                   {fileList[0].name}
                 </Text>
                 <Button
@@ -267,7 +257,7 @@ export default function UploadAttendanceList() {
               description={
                 <>
                   <Text strong>Accepted file format</Text>
-                  <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                  <ul className="mt-1 mb-0 pl-[18px]">
                     <li>
                       <Text strong>.dat</Text> — biometric device binary export
                     </li>

@@ -274,10 +274,15 @@ export function useDeletePayrollBatch() {
 
 // Batch-list projection for the Saved Payroll Runs tab -- independent of usePayrolls' own
 // date-scoped report query.
-export function usePayrollBatches(from?: string, to?: string) {
+export function usePayrollBatches(
+  from?: string,
+  to?: string,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: [...PAYROLL_BATCHES_KEY, from, to],
     queryFn: () => forPayrollApi.getPayrollBatches(from, to),
+    enabled: options?.enabled,
   });
 }
 
