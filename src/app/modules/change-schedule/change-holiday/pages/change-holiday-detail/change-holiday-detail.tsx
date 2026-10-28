@@ -45,8 +45,15 @@ import { CHANGE_HOLIDAY_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { getNotify } from "@/shared/utils/notify";
 import { isActiveStatus } from "@/shared/utils/status.util";
+import { apiErrorMessage } from "@/core/http/api-error";
+import type { HolidayResponse } from "@/app/modules/setup/holiday/models/api/response/holiday-response.model";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
 import type { CreateChangeHoliday } from "../../models/api/request/create-change-holiday.model";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { compactChips, labelOf } from "@/shared/utils/filter-chips.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { z } from "zod";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
@@ -77,6 +84,20 @@ export default function ChangeHolidayDetail() {
   return <CreateForm />;
 }
 
+// "Osmeña Day (Sep 09, 2026) · Cebu City Area, Mandaue City Area" -- a localized
+// holiday shows its project sites so same-named entries can be told apart.
+const holidayLabel = (h: HolidayResponse) => {
+  const base = `${h.description} (${h.holDate})`;
+  return h.areaNames?.length ? `${base} · ${h.areaNames.join(", ")}` : base;
+};
+
+// The project sites a localized special holiday is limited to, or null when it
+// applies everywhere (nationwide special or regular holiday).
+const holidaySites = (h: HolidayResponse | null | undefined) => {
+  const type = (h?.holidayType ?? h?.holType)?.toUpperCase();
+  return type === "SPECIAL" && h?.areaIds?.length ? new Set(h.areaIds) : null;
+};
+
 // ── Create — Step 1: find employees, Step 2: holiday + date range ────────────
 
 function CreateForm() {
@@ -94,6 +115,7 @@ function CreateForm() {
     string | null | undefined
   > | null>(null);
   const [searchKey, setSearchKey] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Step 2 — holiday + replacement date
@@ -153,8 +175,23 @@ function CreateForm() {
     .filter((h) => isActiveStatus(h.status))
     .map((h) => ({
       value: h.id,
-      label: `${h.description} (${h.holDate})`,
+      label: holidayLabel(h),
     }));
+
+  const filterChips = compactChips([
+    labelOf(branchOptions, branchId ?? undefined),
+    labelOf(deptOptions, deptId ?? undefined),
+    labelOf(clientOptions, clientId ?? undefined),
+    labelOf(payrollGroupOptions, payrollGroupId ?? undefined),
+    labelOf(areaOptions, operationAreaId ?? undefined),
+  ]);
+  const activeFilterCount = [
+    branchId,
+    deptId,
+    clientId,
+    payrollGroupId,
+    operationAreaId,
+  ].filter(Boolean).length;
 
   const hasSearched = committedFilter !== null;
   // Guard against a stale/shared React Query cache: other pages fetch the
@@ -163,18 +200,39 @@ function CreateForm() {
   // user has actually clicked Search.
   const visibleEmployees = hasSearched ? employees : [];
   const selectedCount = selectedIds.size;
-  const allChecked =
-    visibleEmployees.length > 0 &&
-    visibleEmployees.every((e) => selectedIds.has(e.id));
-  const someChecked =
-    !allChecked && visibleEmployees.some((e) => selectedIds.has(e.id));
 
   const selectedHoliday = holidayId
     ? holidays.find((h) => h.id === holidayId)
     : null;
   const selectedHolidayLabel = selectedHoliday
-    ? `${selectedHoliday.description} (${selectedHoliday.holDate})`
+    ? holidayLabel(selectedHoliday)
     : null;
+  // A localized holiday can only be moved for employees assigned to one of its sites.
+  const coveredSites = holidaySites(selectedHoliday);
+  const isCovered = (e: EmployeeFilterResponse) =>
+    !coveredSites || (!!e.areaId && coveredSites.has(e.areaId));
+  const selectableEmployees = visibleEmployees.filter(isCovered);
+  const uncoveredCount = visibleEmployees.length - selectableEmployees.length;
+
+  const allChecked =
+    selectableEmployees.length > 0 &&
+    selectableEmployees.every((e) => selectedIds.has(e.id));
+  const someChecked =
+    !allChecked && selectableEmployees.some((e) => selectedIds.has(e.id));
+
+  const handleHolidayChange = (id: string | null) => {
+    setHolidayId(id);
+    const sites = holidaySites(holidays.find((h) => h.id === id));
+    if (!sites) return;
+    // Drop anyone already ticked who isn't at one of the new holiday's sites.
+    setSelectedIds((prev) => {
+      const next = new Set<string>();
+      visibleEmployees.forEach((e) => {
+        if (prev.has(e.id) && e.areaId && sites.has(e.areaId)) next.add(e.id);
+      });
+      return next;
+    });
+  };
 
   const handleSearch = () => {
     setSelectedIds(new Set());
@@ -186,6 +244,19 @@ function CreateForm() {
       operationAreaId,
     });
     setSearchKey((k) => k + 1);
+    // The results are the point once searched; the chips keep the filters visible.
+    setFiltersOpen(false);
+  };
+
+  const handleReset = () => {
+    setBranchId(null);
+    setDeptId(null);
+    setClientId(null);
+    setPayrollGroupId(null);
+    setOperationAreaId(null);
+    setCommittedFilter(null);
+    setSelectedIds(new Set());
+    setFiltersOpen(true);
   };
 
   const toggle = (id: string, checked: boolean) => {
@@ -206,7 +277,7 @@ function CreateForm() {
           indeterminate={someChecked}
           onChange={(e) =>
             e.target.checked
-              ? setSelectedIds(new Set(visibleEmployees.map((e) => e.id)))
+              ? setSelectedIds(new Set(selectableEmployees.map((e) => e.id)))
               : setSelectedIds(new Set())
           }
         />
@@ -214,6 +285,7 @@ function CreateForm() {
       render: (_: unknown, emp: EmployeeFilterResponse) => (
         <Checkbox
           checked={selectedIds.has(emp.id)}
+          disabled={!isCovered(emp)}
           onChange={(e) => toggle(emp.id, e.target.checked)}
         />
       ),
@@ -283,6 +355,14 @@ function CreateForm() {
           width: widths.areaName,
           onResize: (w: number) => handleResize("areaName", w),
         }) as object,
+      render: (name: string | null | undefined, emp: EmployeeFilterResponse) =>
+        isCovered(emp) ? (
+          name
+        ) : (
+          <span className="text-gray-400">
+            {name ?? "—"} <Tag className="ml-1">Not covered</Tag>
+          </span>
+        ),
     },
   ];
 
@@ -314,10 +394,13 @@ function CreateForm() {
         description: `Applied to ${selectedIds.size} employee${selectedIds.size !== 1 ? "s" : ""}.`,
       });
       navigate({ to: "/change-schedule/change-holiday" });
-    } catch {
+    } catch (err) {
       getNotify().error({
         message: "Save Failed",
-        description: "Failed to create records. Please try again.",
+        description: apiErrorMessage(
+          err,
+          "Failed to create records. Please try again.",
+        ),
       });
     }
   };
@@ -344,6 +427,11 @@ function CreateForm() {
           </div>
           <Space>
             <Tag color="success">New Record</Tag>
+            <FilterToggleButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              activeCount={activeFilterCount}
+            />
             <Button
               onClick={() =>
                 navigate({ to: "/change-schedule/change-holiday" })
@@ -355,90 +443,74 @@ function CreateForm() {
         </div>
       </div>
 
-      {/* Step 1 — Find Employees */}
-      <Card
-        size="small"
-        className="mb-4"
-        title={
-          <Text strong style={{ fontSize: 13 }}>
-            Step 1 — Find Employees
-          </Text>
-        }
+      {/* Filters — collapse into chips once employees are searched */}
+      <FilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        chips={filterChips}
+        onClear={handleReset}
+        onApply={handleSearch}
+        applyLabel="Search Employees"
+        applyIcon={<SearchOutlined />}
+        applyLoading={hasSearched && isEmployeesLoading}
+        gridClassName="grid grid-cols-1 sm:grid-cols-3 gap-x-4"
       >
-        <Form layout="vertical">
-          <div className="form-grid-3">
-            <Form.Item label="Branch" className="mb-3">
-              <Select
-                placeholder="All branches"
-                options={branchOptions}
-                value={branchId ?? undefined}
-                onChange={(v: string | undefined) => {
-                  setBranchId(v ?? null);
-                  // Project Site is restricted to the selected Branch.
-                  setOperationAreaId(null);
-                }}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Department" className="mb-3">
-              <Select
-                placeholder="All departments"
-                options={deptOptions}
-                value={deptId ?? undefined}
-                onChange={(v: string | undefined) => setDeptId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Client" className="mb-3">
-              <Select
-                placeholder="All clients"
-                options={clientOptions}
-                value={clientId ?? undefined}
-                onChange={(v: string | undefined) => setClientId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Payroll Group" className="mb-0">
-              <Select
-                placeholder="All payroll groups"
-                options={payrollGroupOptions}
-                optionRender={payrollGroupOptionRender}
-                value={payrollGroupId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  setPayrollGroupId(v ?? null)
-                }
-                showSearch={{ filterOption: filterPayrollGroupOption }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Project Site" className="mb-0">
-              <Select
-                placeholder="All project sites"
-                options={areaOptions}
-                value={operationAreaId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  setOperationAreaId(v ?? null)
-                }
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="&nbsp;" className="mb-0">
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-                style={{ width: "100%" }}
-              >
-                Search Employees
-              </Button>
-            </Form.Item>
-          </div>
-        </Form>
-      </Card>
+        <Form.Item label="Branch" className="mb-3">
+          <Select
+            placeholder="All branches"
+            options={branchOptions}
+            value={branchId ?? undefined}
+            onChange={(v: string | undefined) => {
+              setBranchId(v ?? null);
+              // Project Site is restricted to the selected Branch.
+              setOperationAreaId(null);
+            }}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Department" className="mb-3">
+          <Select
+            placeholder="All departments"
+            options={deptOptions}
+            value={deptId ?? undefined}
+            onChange={(v: string | undefined) => setDeptId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Client" className="mb-3">
+          <Select
+            placeholder="All clients"
+            options={clientOptions}
+            value={clientId ?? undefined}
+            onChange={(v: string | undefined) => setClientId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Payroll Group" className="mb-3">
+          <Select
+            placeholder="All payroll groups"
+            options={payrollGroupOptions}
+            optionRender={payrollGroupOptionRender}
+            value={payrollGroupId ?? undefined}
+            onChange={(v: string | undefined) => setPayrollGroupId(v ?? null)}
+            showSearch={{ filterOption: filterPayrollGroupOption }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Project Site" className="mb-3">
+          <Select
+            placeholder="All project sites"
+            options={areaOptions}
+            value={operationAreaId ?? undefined}
+            onChange={(v: string | undefined) => setOperationAreaId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+      </FilterPanel>
 
       {hasSearched && (
         <div className="flex items-center justify-between mb-2">
@@ -456,9 +528,9 @@ function CreateForm() {
             <Button
               size="small"
               onClick={() =>
-                setSelectedIds(new Set(visibleEmployees.map((e) => e.id)))
+                setSelectedIds(new Set(selectableEmployees.map((e) => e.id)))
               }
-              disabled={visibleEmployees.length === 0 || allChecked}
+              disabled={selectableEmployees.length === 0 || allChecked}
             >
               Select All
             </Button>
@@ -496,7 +568,7 @@ function CreateForm() {
         className="mb-4"
         title={
           <Text strong style={{ fontSize: 13 }}>
-            Step 2 — Set Holiday &amp; Replacement Date
+            Set Holiday &amp; Replacement Date
           </Text>
         }
       >
@@ -523,7 +595,9 @@ function CreateForm() {
                 placeholder="Select holiday"
                 options={holidayOptions}
                 value={holidayId ?? undefined}
-                onChange={(v: string | undefined) => setHolidayId(v ?? null)}
+                onChange={(v: string | undefined) =>
+                  handleHolidayChange(v ?? null)
+                }
                 style={{ width: "100%" }}
               />
             </Form.Item>
@@ -544,6 +618,14 @@ function CreateForm() {
               />
             </Form.Item>
           </div>
+          {coveredSites && (
+            <Alert
+              type="warning"
+              showIcon
+              className="mb-3"
+              message={`Local holiday: only employees assigned to ${selectedHoliday?.areaNames?.join(", ")} can be included.${uncoveredCount > 0 ? ` ${uncoveredCount} employee${uncoveredCount !== 1 ? "s" : ""} in the list ${uncoveredCount !== 1 ? "are" : "is"} not covered.` : ""}`}
+            />
+          )}
           {selectedIds.size > 0 && holidayId && replaceDate && (
             <Alert
               type="info"
@@ -588,7 +670,7 @@ function EditForm({ id }: { id: string }) {
     .filter((h) => isActiveStatus(h.status))
     .map((h) => ({
       value: h.id,
-      label: `${h.description} (${h.holDate})`,
+      label: holidayLabel(h),
     }));
 
   const {

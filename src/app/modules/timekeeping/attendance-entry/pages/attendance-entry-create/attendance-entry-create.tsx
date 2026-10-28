@@ -16,6 +16,7 @@ import {
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { TableColumnsType } from "antd";
+import type { ReactNode } from "react";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
 import type { Dayjs } from "dayjs";
@@ -41,6 +42,11 @@ import {
 import { ATTENDANCE_ENTRY_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { compactChips, labelOf } from "@/shared/utils/filter-chips.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 
 const { Title, Text } = Typography;
@@ -51,6 +57,7 @@ interface CommittedFilter {
   clientId?: string | null;
   payrollGroupId?: string | null;
   operationAreaId?: string | null;
+  employeeId?: string | null;
 }
 
 const filterByLabel = (
@@ -84,6 +91,22 @@ function formatShiftTime(timeStr: string): string {
   return `${h}:${m}`;
 }
 
+interface StepTitleProps {
+  step: number;
+  children: ReactNode;
+}
+
+function StepTitle({ step, children }: StepTitleProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#1DA081] text-xs font-semibold text-white">
+        {step}
+      </span>
+      <Text strong>{children}</Text>
+    </div>
+  );
+}
+
 export default function AttendanceEntryCreate() {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
@@ -94,12 +117,14 @@ export default function AttendanceEntryCreate() {
   const [clientId, setClientId] = useState<string | null>(null);
   const [payrollGroupId, setPayrollGroupId] = useState<string | null>(null);
   const [operationAreaId, setOperationAreaId] = useState<string | null>(null);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
 
   // Committed filter — null means "not yet searched"
   const [committedFilter, setCommittedFilter] =
     useState<CommittedFilter | null>(null);
   const [employeeSearchKey, setEmployeeSearchKey] = useState(0);
 
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [timeShiftId, setTimeShiftId] = useState<string | null>(null);
@@ -110,7 +135,7 @@ export default function AttendanceEntryCreate() {
   const [outDayOffset, setOutDayOffset] = useState(0);
   const [remarks, setRemarks] = useState("");
 
-  const { data: employees = [], isLoading: isEmployeesLoading } =
+  const { data: foundEmployees = [], isLoading: isEmployeesLoading } =
     useEmployeeFilter(
       {
         branchId: committedFilter?.branchId ?? undefined,
@@ -122,6 +147,12 @@ export default function AttendanceEntryCreate() {
       { enabled: committedFilter !== null, searchKey: employeeSearchKey },
     );
 
+  const committedEmployeeId = committedFilter?.employeeId;
+  const employees = committedEmployeeId
+    ? foundEmployees.filter((e) => e.id === committedEmployeeId)
+    : foundEmployees;
+
+  const { data: allEmployees = [] } = useEmployeeFilter();
   const { data: departments = [] } = useDepartments();
   const { data: clients = [] } = useClients();
   const { data: payrollGroups = [] } = usePayrollGroups();
@@ -150,8 +181,23 @@ export default function AttendanceEntryCreate() {
       clientId,
       payrollGroupId,
       operationAreaId,
+      employeeId,
     });
     setEmployeeSearchKey((k) => k + 1);
+    // The results are the point once searched; the chips keep the filters visible.
+    setFiltersOpen(false);
+  };
+
+  const handleReset = () => {
+    setBranchId(null);
+    setDeptId(null);
+    setClientId(null);
+    setPayrollGroupId(null);
+    setOperationAreaId(null);
+    setEmployeeId(null);
+    setCommittedFilter(null);
+    setSelectedIds(new Set());
+    setFiltersOpen(true);
   };
 
   const allChecked =
@@ -229,10 +275,31 @@ export default function AttendanceEntryCreate() {
       value: a.id,
       label: `${a.code} - ${a.name}`,
     }));
+  const employeeOptions = allEmployees.map((e) => ({
+    value: e.id,
+    label: e.name ?? e.id,
+  }));
   const timeShiftOptions = timeShifts.map((ts) => ({
     value: ts.id,
     label: `${ts.shiftName} (${formatShiftTime(ts.startTime)} – ${formatShiftTime(ts.endTime)})`,
   }));
+
+  const filterChips = compactChips([
+    labelOf(branchOptions, branchId ?? undefined),
+    labelOf(deptOptions, deptId ?? undefined),
+    labelOf(clientOptions, clientId ?? undefined),
+    labelOf(payrollGroupOptions, payrollGroupId ?? undefined),
+    labelOf(areaOptions, operationAreaId ?? undefined),
+    labelOf(employeeOptions, employeeId ?? undefined),
+  ]);
+  const activeFilterCount = [
+    branchId,
+    deptId,
+    clientId,
+    payrollGroupId,
+    operationAreaId,
+    employeeId,
+  ].filter(Boolean).length;
 
   const dateCount = useMemo(() => {
     if (!dateRange) return 0;
@@ -431,6 +498,11 @@ export default function AttendanceEntryCreate() {
           </div>
           <Space>
             <Tag color="success">New Record</Tag>
+            <FilterToggleButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              activeCount={activeFilterCount}
+            />
             <Button
               onClick={() => navigate({ to: "/timekeeping/attendance-entry" })}
             >
@@ -440,182 +512,155 @@ export default function AttendanceEntryCreate() {
         </div>
       </div>
 
-      <Alert
-        type="info"
-        showIcon
-        className="mb-4"
-        message="How to create attendance entries"
-        description={
-          <ol className="m-0 pl-4 space-y-0.5 text-xs">
-            <li>
-              Set filters (Branch, Department, Client, etc.) then click{" "}
-              <strong>Search Employees</strong>. All filters are optional.
-            </li>
-            <li>
-              Check the employees you want to include. Use{" "}
-              <strong>Select All</strong> to pick everyone in the results.
-            </li>
-            <li>
-              Pick a <strong>Date Range</strong>. Optionally select a{" "}
-              <strong>Time Shift</strong> to pre-fill the In/Out times.
-            </li>
-            <li>
-              Adjust <strong>In Time</strong> / <strong>Out Time</strong> as
-              needed — check <strong>+1d</strong> for overnight shifts — then
-              click <strong>Save</strong>.
-            </li>
-          </ol>
-        }
-      />
+      {/* Filters — collapse into chips once employees are searched */}
+      <FilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        chips={filterChips}
+        onClear={handleReset}
+        onApply={handleSearch}
+        applyLabel="Search Employees"
+        applyIcon={<SearchOutlined />}
+        applyLoading={isEmployeesLoading}
+        gridClassName="grid grid-cols-1 sm:grid-cols-3 gap-x-4"
+      >
+        <Form.Item label="Branch" className="mb-3">
+          <Select
+            placeholder="All branches"
+            options={branchOptions}
+            value={branchId ?? undefined}
+            onChange={(v: string | undefined) => {
+              setBranchId(v ?? null);
+              // Project Site is restricted to the selected Branch — clear a stale pick.
+              setOperationAreaId(null);
+            }}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Department" className="mb-3">
+          <Select
+            placeholder="All departments"
+            options={deptOptions}
+            value={deptId ?? undefined}
+            onChange={(v: string | undefined) => setDeptId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Client" className="mb-3">
+          <Select
+            placeholder="All clients"
+            options={clientOptions}
+            value={clientId ?? undefined}
+            onChange={(v: string | undefined) => setClientId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Payroll Group" className="mb-3">
+          <Select
+            placeholder="All payroll groups"
+            options={payrollGroupOptions}
+            optionRender={payrollGroupOptionRender}
+            value={payrollGroupId ?? undefined}
+            onChange={(v: string | undefined) => setPayrollGroupId(v ?? null)}
+            showSearch={{ filterOption: filterPayrollGroupOption }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Project Site" className="mb-3">
+          <Select
+            placeholder="All project sites"
+            options={areaOptions}
+            value={operationAreaId ?? undefined}
+            onChange={(v: string | undefined) => setOperationAreaId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Employee" className="mb-3">
+          <Select
+            placeholder="All employees"
+            options={employeeOptions}
+            value={employeeId ?? undefined}
+            onChange={(v: string | undefined) => setEmployeeId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+      </FilterPanel>
 
-      {/* Step 1 — Employee filters */}
+      {/* Step 2 — Select employees */}
       <Card
         size="small"
         className="mb-4"
         title={
-          <Text strong style={{ fontSize: 13 }}>
-            Step 1 — Find Employees
-          </Text>
+          <div className="flex flex-wrap items-center gap-2">
+            <StepTitle step={1}>Select Employees</StepTitle>
+            {hasSearched && (
+              <>
+                <Tag>{employees.length} found</Tag>
+                {selectedCount > 0 && (
+                  <Tag color="success">{selectedCount} selected</Tag>
+                )}
+              </>
+            )}
+          </div>
+        }
+        extra={
+          hasSearched && (
+            <div className="flex gap-2">
+              <Button
+                size="small"
+                onClick={handleSelectAll}
+                disabled={employees.length === 0 || allChecked}
+              >
+                Select All
+              </Button>
+              <Button
+                size="small"
+                onClick={handleDeselectAll}
+                disabled={selectedCount === 0}
+              >
+                Deselect All
+              </Button>
+            </div>
+          )
         }
       >
-        <Form layout="vertical">
-          <div className="form-grid-3">
-            <Form.Item label="Branch" className="mb-3">
-              <Select
-                placeholder="All branches"
-                options={branchOptions}
-                value={branchId ?? undefined}
-                onChange={(v: string | undefined) => {
-                  setBranchId(v ?? null);
-                  // Project Site is restricted to the selected Branch — clear a stale pick.
-                  setOperationAreaId(null);
-                }}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Department" className="mb-3">
-              <Select
-                placeholder="All departments"
-                options={deptOptions}
-                value={deptId ?? undefined}
-                onChange={(v: string | undefined) => setDeptId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Client" className="mb-3">
-              <Select
-                placeholder="All clients"
-                options={clientOptions}
-                value={clientId ?? undefined}
-                onChange={(v: string | undefined) => setClientId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Payroll Group" className="mb-0">
-              <Select
-                placeholder="All payroll groups"
-                options={payrollGroupOptions}
-                optionRender={payrollGroupOptionRender}
-                value={payrollGroupId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  setPayrollGroupId(v ?? null)
-                }
-                showSearch={{ filterOption: filterPayrollGroupOption }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Project Site" className="mb-0">
-              <Select
-                placeholder="All project sites"
-                options={areaOptions}
-                value={operationAreaId ?? undefined}
-                onChange={(v: string | undefined) =>
-                  setOperationAreaId(v ?? null)
-                }
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="&nbsp;" className="mb-0">
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-                style={{ width: "100%" }}
-              >
-                Search Employees
-              </Button>
-            </Form.Item>
-          </div>
-        </Form>
+        <Table<EmployeeFilterResponse>
+          rowKey="id"
+          columns={columns}
+          dataSource={employees}
+          loading={isEmployeesLoading}
+          size="small"
+          pagination={{ pageSize: 10, size: "small", showSizeChanger: false }}
+          scroll={{ x: "max-content" }}
+          locale={{
+            emptyText: hasSearched
+              ? "No employees found for the selected filters."
+              : "Set filters above and click Search Employees to load employees.",
+          }}
+          components={{ header: { cell: ResizableTitle } }}
+          onRow={(emp) => ({
+            onClick: () => toggle(emp.id, !selectedIds.has(emp.id)),
+            className: "cursor-pointer",
+          })}
+        />
       </Card>
-
-      {/* Step 2 — Select employees */}
-      {hasSearched && (
-        <div className="flex items-center justify-between mb-2">
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            {employees.length} employee{employees.length !== 1 ? "s" : ""} found
-            {selectedCount > 0 && (
-              <Text strong style={{ fontSize: 13 }}>
-                {" · "}
-                {selectedCount} selected
-              </Text>
-            )}
-          </Text>
-          <div className="flex gap-2">
-            <Button
-              size="small"
-              onClick={handleSelectAll}
-              disabled={employees.length === 0 || allChecked}
-            >
-              Select All
-            </Button>
-            <Button
-              size="small"
-              onClick={handleDeselectAll}
-              disabled={selectedCount === 0}
-            >
-              Deselect All
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <Table<EmployeeFilterResponse>
-        rowKey="id"
-        columns={columns}
-        dataSource={employees}
-        loading={isEmployeesLoading}
-        size="small"
-        pagination={{ pageSize: 10, size: "small", showSizeChanger: false }}
-        className="mb-4"
-        scroll={{ x: "max-content" }}
-        locale={{
-          emptyText: hasSearched
-            ? "No employees found for the selected filters."
-            : "Set filters above and click Search Employees to load employees.",
-        }}
-        components={{ header: { cell: ResizableTitle } }}
-      />
 
       {/* Step 3 — Date range and work time */}
       <Card
         size="small"
         className="mb-4"
-        title={
-          <Text strong style={{ fontSize: 13 }}>
-            Step 2 — Set Date Range &amp; Work Time
-          </Text>
-        }
+        title={<StepTitle step={2}>Set Date Range &amp; Work Time</StepTitle>}
       >
         <Form layout="vertical">
           <div className="form-grid-2">
             <Form.Item label="Date Range" required className="mb-3">
               <MobileRangePicker
-                style={{ width: "100%" }}
+                className="w-full"
                 value={dateRange}
                 onChange={(range) => {
                   if (range?.[0] && range[1]) {
@@ -638,43 +683,56 @@ export default function AttendanceEntryCreate() {
             </Form.Item>
           </div>
           <div className="form-grid-2">
-            <Form.Item className="mb-0">
-              <div className="flex items-center gap-2">
+            <Form.Item
+              className="mb-3"
+              label={
                 <Checkbox
                   checked={includeIn}
                   onChange={(e) => setIncludeIn(e.target.checked)}
                 >
                   In Time
                 </Checkbox>
-                <TimePicker
-                  format="HH:mm"
-                  minuteStep={5}
-                  value={inTime}
-                  onChange={handleInTimeChange}
-                  disabled={!includeIn}
-                  style={{ flex: 1 }}
-                />
-              </div>
+              }
+            >
+              <TimePicker
+                format="HH:mm"
+                minuteStep={5}
+                value={inTime}
+                onChange={handleInTimeChange}
+                disabled={!includeIn}
+                className="w-full"
+              />
             </Form.Item>
-            <Form.Item className="mb-0">
-              <div className="flex items-center gap-2">
+            <Form.Item
+              className="mb-3"
+              label={
                 <Checkbox
                   checked={includeOut}
                   onChange={(e) => setIncludeOut(e.target.checked)}
                 >
                   Out Time
                 </Checkbox>
+              }
+              extra={
+                includeOut && outDayOffset === 1
+                  ? "Out Time falls on the next day (overnight shift)."
+                  : undefined
+              }
+            >
+              <div className="flex items-center gap-2">
                 <TimePicker
                   format="HH:mm"
                   minuteStep={5}
                   value={outTime}
                   onChange={handleOutTimeChange}
                   disabled={!includeOut}
-                  style={{ flex: 1 }}
+                  className="w-full"
                 />
-                <Checkbox checked={outDayOffset === 1} disabled>
-                  +1d
-                </Checkbox>
+                {includeOut && outDayOffset === 1 && (
+                  <Tag color="warning" className="m-0">
+                    +1d
+                  </Tag>
+                )}
               </div>
             </Form.Item>
           </div>
@@ -687,6 +745,15 @@ export default function AttendanceEntryCreate() {
             />
           </Form.Item>
         </Form>
+        {totalEntries > 0 && (
+          <Alert
+            type="success"
+            showIcon
+            className="mt-4"
+            message={`${totalEntries} ${totalEntries === 1 ? "entry" : "entries"} will be created`}
+            description={`${selectedCount} employee${selectedCount === 1 ? "" : "s"} × ${dateCount} day${dateCount === 1 ? "" : "s"} × ${punchCount} punch${punchCount === 1 ? "" : "es"}`}
+          />
+        )}
       </Card>
 
       <div className="form-action-footer">

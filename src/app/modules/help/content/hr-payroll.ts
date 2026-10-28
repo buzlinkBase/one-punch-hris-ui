@@ -252,6 +252,29 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           },
         },
       },
+      {
+        heading: "Creating manual entries in bulk",
+        steps: [
+          {
+            text: "Open Manual Attendance Entry and click New. In Select Employees, set any filters (Branch, Department, Client, Payroll Group, Project Site, Employee) and click Search Employees. All filters are optional.",
+          },
+          {
+            text: "Check the employees to include, or use Select All to pick everyone in the results. Click Filters (or Change filters) to search again.",
+          },
+          {
+            text: "In Set Date Range & Work Time, pick the Date Range. Optionally pick a Time Shift to pre-fill the In and Out times.",
+          },
+          {
+            text: "Adjust In Time and Out Time. Untick one if you only need the other. For an overnight shift the Out Time is saved on the next day and shows a +1d tag.",
+          },
+          {
+            text: "Enter the reason in Remarks (required), check the preview of how many entries will be created, then click Save.",
+          },
+        ],
+        tips: [
+          "The total is employees x days x punches, so a wide date range for many employees creates many entries at once.",
+        ],
+      },
     ],
     related: ["dtr-calculate"],
   },
@@ -299,6 +322,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         ],
         tips: [
           "These can require approval. Approve them before you calculate the DTR for that period.",
+          "A local holiday (one limited to certain project sites) can only be moved for employees assigned to one of its sites. Others are greyed out in the employee list.",
         ],
         example: {
           title: "Rotating guard",

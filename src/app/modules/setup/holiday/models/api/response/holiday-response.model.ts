@@ -18,7 +18,7 @@ export interface HolidayResponse {
   weekOfMonth?: number | null;
   dayOfWeek?: DayOfWeekName | null;
   isPaid: boolean;
-  areaId?: string | null;
-  areaName?: string | null;
+  areaIds?: string[];
+  areaNames?: string[];
   status: string;
 }

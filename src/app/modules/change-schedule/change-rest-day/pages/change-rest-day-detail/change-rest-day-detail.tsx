@@ -42,6 +42,11 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
 import type { CreateChangeRestDay } from "../../models/api/request/create-change-rest-day.model";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { compactChips, labelOf } from "@/shared/utils/filter-chips.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
@@ -85,6 +90,7 @@ function CreateBatchForm() {
   const [committedFilter, setCommittedFilter] =
     useState<CommittedFilter | null>(null);
   const [searchKey, setSearchKey] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Step 2 — replacement date (payrollDateTo); priorDate is payrollDateFrom
@@ -127,6 +133,16 @@ function CreateBatchForm() {
     label: `${c.code} - ${c.name}`,
   }));
 
+  const filterChips = compactChips([
+    priorDate ? `Day-off ${priorDate.format("MMM DD, YYYY")}` : undefined,
+    labelOf(branchOptions, branchId ?? undefined),
+    labelOf(deptOptions, deptId ?? undefined),
+    labelOf(clientOptions, clientId ?? undefined),
+  ]);
+  const activeFilterCount = [priorDate, branchId, deptId, clientId].filter(
+    Boolean,
+  ).length;
+
   const hasSearched = committedFilter !== null;
   // Guard against a stale/shared React Query cache: other pages fetch the
   // full employee list under an equivalent key, so `employees` can be
@@ -148,6 +164,18 @@ function CreateBatchForm() {
     setSelectedIds(new Set());
     setCommittedFilter({ branchId, deptId, clientId, priorDate });
     setSearchKey((k) => k + 1);
+    // The results are the point once searched; the chips keep the filters visible.
+    setFiltersOpen(false);
+  };
+
+  const handleReset = () => {
+    setBranchId(null);
+    setDeptId(null);
+    setClientId(null);
+    setPriorDate(null);
+    setCommittedFilter(null);
+    setSelectedIds(new Set());
+    setFiltersOpen(true);
   };
 
   const toggle = (id: string, checked: boolean) => {
@@ -287,6 +315,11 @@ function CreateBatchForm() {
           </div>
           <Space>
             <Tag color="success">New Record</Tag>
+            <FilterToggleButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              activeCount={activeFilterCount}
+            />
             <Button
               onClick={() =>
                 navigate({ to: "/change-schedule/change-rest-day" })
@@ -298,74 +331,65 @@ function CreateBatchForm() {
         </div>
       </div>
 
-      {/* Step 1 — Find Employees */}
-      <Card
-        size="small"
-        className="mb-4"
-        title={
-          <Text strong style={{ fontSize: 13 }}>
-            Step 1 — Find Employees
-          </Text>
-        }
+      {/* Filters — collapse into chips once employees are searched */}
+      <FilterPanel
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        chips={filterChips}
+        onClear={handleReset}
+        onApply={handleSearch}
+        applyLabel="Search Employees"
+        applyIcon={<SearchOutlined />}
+        applyLoading={hasSearched && isEmployeesLoading}
+        applyDisabled={!priorDate}
+        gridClassName="grid grid-cols-1 sm:grid-cols-4 gap-x-4"
       >
-        <Form layout="vertical">
-          <div className="form-grid-4">
-            <Form.Item label="Day-Off Date" required className="mb-3">
-              <DatePicker
-                style={{ width: "100%" }}
-                value={priorDate}
-                onChange={(d) => {
-                  setPriorDate(d ?? null);
-                  if (d && newDate && d.isSame(newDate, "day")) {
-                    setNewDate(null);
-                    messageApi.warning(
-                      "New Day-Off Date was cleared because it matched the Prior Day-Off Date.",
-                    );
-                  }
-                }}
-              />
-            </Form.Item>
-            <Form.Item label="Branch" className="mb-3">
-              <Select
-                placeholder="All branches"
-                options={branchOptions}
-                value={branchId ?? undefined}
-                onChange={(v: string | undefined) => setBranchId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Department" className="mb-3">
-              <Select
-                placeholder="All departments"
-                options={deptOptions}
-                value={deptId ?? undefined}
-                onChange={(v: string | undefined) => setDeptId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item label="Client" className="mb-3">
-              <Select
-                placeholder="All clients"
-                options={clientOptions}
-                value={clientId ?? undefined}
-                onChange={(v: string | undefined) => setClientId(v ?? null)}
-                showSearch={{ filterOption: filterByLabel }}
-                allowClear
-              />
-            </Form.Item>
-          </div>
-          <Button
-            type="primary"
-            icon={<SearchOutlined />}
-            onClick={handleSearch}
-            disabled={!priorDate}
-          >
-            Search Employees
-          </Button>
-        </Form>
-      </Card>
+        <Form.Item label="Day-Off Date" required className="mb-3">
+          <DatePicker
+            className="w-full"
+            value={priorDate}
+            onChange={(d) => {
+              setPriorDate(d ?? null);
+              if (d && newDate && d.isSame(newDate, "day")) {
+                setNewDate(null);
+                messageApi.warning(
+                  "New Day-Off Date was cleared because it matched the Prior Day-Off Date.",
+                );
+              }
+            }}
+          />
+        </Form.Item>
+        <Form.Item label="Branch" className="mb-3">
+          <Select
+            placeholder="All branches"
+            options={branchOptions}
+            value={branchId ?? undefined}
+            onChange={(v: string | undefined) => setBranchId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Department" className="mb-3">
+          <Select
+            placeholder="All departments"
+            options={deptOptions}
+            value={deptId ?? undefined}
+            onChange={(v: string | undefined) => setDeptId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Client" className="mb-3">
+          <Select
+            placeholder="All clients"
+            options={clientOptions}
+            value={clientId ?? undefined}
+            onChange={(v: string | undefined) => setClientId(v ?? null)}
+            showSearch={{ filterOption: filterByLabel }}
+            allowClear
+          />
+        </Form.Item>
+      </FilterPanel>
 
       {hasSearched && (
         <div className="flex items-center justify-between mb-2">
@@ -421,13 +445,13 @@ function CreateBatchForm() {
         components={{ header: { cell: ResizableTitle } }}
       />
 
-      {/* Step 2 — Set Replacement Date */}
+      {/* Set Replacement Date */}
       <Card
         size="small"
         className="mb-4"
         title={
           <Text strong style={{ fontSize: 13 }}>
-            Step 2 — Set Replacement Date
+            Set Replacement Date
           </Text>
         }
       >
@@ -443,7 +467,7 @@ function CreateBatchForm() {
               required
             >
               <DatePicker
-                style={{ width: "100%" }}
+                className="w-full"
                 value={newDate}
                 disabledDate={(d) =>
                   priorDate ? d.isSame(priorDate, "day") : false

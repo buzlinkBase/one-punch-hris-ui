@@ -80,7 +80,7 @@ export default function HolidayDetail() {
       weekOfMonth: null,
       dayOfWeek: null,
       isPaid: false,
-      areaId: null,
+      areaIds: [],
       status: "ACTIVE",
     },
   });
@@ -105,7 +105,7 @@ export default function HolidayDetail() {
   useEffect(() => {
     if (isLegal) {
       setValue("workType", "NonWorking");
-      setValue("areaId", null);
+      setValue("areaIds", []);
     }
   }, [isLegal, setValue]);
 
@@ -126,7 +126,7 @@ export default function HolidayDetail() {
         weekOfMonth: selected.weekOfMonth ?? null,
         dayOfWeek: selected.dayOfWeek ?? null,
         isPaid: selected.isPaid,
-        areaId: selected.areaId ?? null,
+        areaIds: selected.areaIds ?? [],
         status: selected.status,
       });
     }
@@ -280,19 +280,20 @@ export default function HolidayDetail() {
             {isSpecial && (
               <Form.Item label={HOLIDAY_LABEL.AREA}>
                 <Controller
-                  name="areaId"
+                  name="areaIds"
                   control={control}
                   render={({ field }) => (
                     <Select
                       {...field}
-                      value={field.value ?? undefined}
-                      onChange={(v) => field.onChange(v ?? null)}
+                      mode="multiple"
+                      value={field.value ?? []}
+                      onChange={(v) => field.onChange(v ?? [])}
                       options={areaOptions}
                       loading={isAreasLoading}
                       allowClear
                       showSearch
                       filterOption={filterByLabel}
-                      placeholder="Select area (leave blank for nationwide)"
+                      placeholder={HOLIDAY_LABEL.AREA_PLACEHOLDER}
                     />
                   )}
                 />

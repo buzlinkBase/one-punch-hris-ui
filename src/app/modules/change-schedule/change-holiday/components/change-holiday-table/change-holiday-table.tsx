@@ -26,6 +26,7 @@ export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
     fullName: 150,
     holidayName: 150,
     clientName: 150,
+    area: 150,
     fromDate: 120,
     toDate: 120,
   });
@@ -35,6 +36,7 @@ export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
       item.fullName,
       item.holidayName,
       item.clientName,
+      item.area,
       item.fromDate,
       item.toDate,
     ].some((val) =>
@@ -76,6 +78,17 @@ export default function ChangeHolidayTable({ data, loading, onDelete }: Props) {
         ({
           width: widths.clientName,
           onResize: (w: number) => handleResize("clientName", w),
+        }) as object,
+    },
+    {
+      title: CHANGE_HOLIDAY_LABEL.AREA,
+      dataIndex: "area",
+      key: "area",
+      width: widths.area,
+      onHeaderCell: () =>
+        ({
+          width: widths.area,
+          onResize: (w: number) => handleResize("area", w),
         }) as object,
     },
     {

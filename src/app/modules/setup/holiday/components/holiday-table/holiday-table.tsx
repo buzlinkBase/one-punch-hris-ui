@@ -51,7 +51,7 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
     holDate: 120,
     holidayType: 120,
     workType: 120,
-    areaName: 140,
+    areaNames: 180,
     isRecuring: 100,
     status: 120,
   });
@@ -62,7 +62,7 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
       item.holDate,
       item.holidayType ?? item.holType,
       item.workType,
-      item.areaName,
+      ...(item.areaNames ?? []),
       item.status,
     ].some((val) =>
       String(val ?? "")
@@ -142,14 +142,31 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
     },
     {
       title: HOLIDAY_LABEL.AREA,
-      dataIndex: "areaName",
-      key: "areaName",
-      width: widths.areaName,
+      dataIndex: "areaNames",
+      key: "areaNames",
+      width: widths.areaNames,
       onHeaderCell: () =>
         ({
-          width: widths.areaName,
-          onResize: (w: number) => handleResize("areaName", w),
+          width: widths.areaNames,
+          onResize: (w: number) => handleResize("areaNames", w),
         }) as object,
+      render: (names: string[] | undefined, record) => {
+        if (names?.length) {
+          return (
+            <div className="flex flex-wrap gap-1">
+              {names.map((name) => (
+                <Tag key={name} className="m-0">
+                  {name}
+                </Tag>
+              ))}
+            </div>
+          );
+        }
+        const type = record.holidayType ?? record.holType;
+        return type?.toUpperCase() === "SPECIAL" ? (
+          <span className="text-gray-400">{HOLIDAY_LABEL.NATIONWIDE}</span>
+        ) : null;
+      },
     },
     {
       title: HOLIDAY_LABEL.IS_RECURING,

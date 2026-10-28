@@ -20,7 +20,7 @@ export const holidayFormSchema = z.object({
     .nullable()
     .optional(),
   isPaid: z.boolean().default(false),
-  areaId: z.string().nullable().optional(),
+  areaIds: z.array(z.string()),
   status: z.string().min(1, "Status is required"),
 });
 

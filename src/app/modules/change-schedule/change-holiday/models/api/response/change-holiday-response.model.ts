@@ -3,6 +3,8 @@ export interface ChangeHolidayResponse {
   batchCode: string;
   holidayName: string;
   clientName: string;
+  // The employee's assigned project site.
+  area?: string | null;
   fullName: string;
   fromDate: string;
   toDate: string;

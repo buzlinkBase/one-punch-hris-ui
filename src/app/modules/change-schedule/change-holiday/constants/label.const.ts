@@ -13,6 +13,7 @@ export const CHANGE_HOLIDAY_LABEL = {
   HOLIDAY_NAME: "Holiday Name",
   HOLIDAY: "Holiday",
   CLIENT: "Client",
+  AREA: "Project Site",
   FROM_DATE: "Payroll Date From",
   TO_DATE: "Payroll Date To",
   REPLACEMENT_DATE: "Replacement Date",

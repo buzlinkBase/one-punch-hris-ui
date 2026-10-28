@@ -23,6 +23,7 @@ export interface CreateHoliday {
   weekOfMonth?: number | null;
   dayOfWeek?: DayOfWeekName | null;
   isPaid: boolean;
-  areaId?: string | null;
+  // Project sites a special holiday is limited to; empty = nationwide.
+  areaIds: string[];
   status: string;
 }

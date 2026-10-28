@@ -326,8 +326,12 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Add each regular and special holiday for the year, with its date and type.",
             link: { label: "Holidays", to: "/setup/holiday" },
           },
+          {
+            text: "For a local special holiday (for example a city or provincial holiday), pick every project site it covers in Project Sites. Leave it blank for a nationwide special holiday. Regular holidays always apply everywhere.",
+          },
         ],
         tips: [
+          "A local holiday follows where the employee is that day: the project site on their Work Rotation Plan for that day, otherwise the site of their first punch, otherwise their assigned site. A reliever sent to a covered site gets the holiday there.",
           "Holiday pay depends on the holiday type and the rules in Company Settings (for example whether attendance the day before is required).",
         ],
         example: {

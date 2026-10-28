@@ -57,6 +57,11 @@ import {
 } from "../../utils/site-client-options.util";
 import { WORK_ROTATION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
+import {
+  FilterPanel,
+  FilterToggleButton,
+} from "@/shared/components/filter-panel/filter-panel";
+import { compactChips, labelOf } from "@/shared/utils/filter-chips.util";
 import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
@@ -315,6 +320,7 @@ function CreateForm() {
     string | null | undefined
   > | null>(null);
   const [searchKey, setSearchKey] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Step 2 — time shift + specific payroll dates
@@ -440,6 +446,25 @@ function CreateForm() {
     );
   };
 
+  const filterChips = compactChips([
+    labelOf(branchOptions, branchId ?? undefined),
+    labelOf(deptOptions, deptId ?? undefined),
+    labelOf(clientOptions, clientId ?? undefined),
+    labelOf(payrollGroupOptions, payrollGroupId ?? undefined),
+    labelOf(areaOptions, operationAreaId ?? undefined),
+    pickedEmployeeIds.length
+      ? `${pickedEmployeeIds.length} employee${pickedEmployeeIds.length !== 1 ? "s" : ""}`
+      : undefined,
+  ]);
+  const activeFilterCount = [
+    branchId,
+    deptId,
+    clientId,
+    payrollGroupId,
+    operationAreaId,
+    pickedEmployeeIds.length ? "picked" : null,
+  ].filter(Boolean).length;
+
   const hasSearched = isTeamScoped
     ? !!myEmployee?.id
     : committedFilter !== null;
@@ -474,6 +499,21 @@ function CreateForm() {
     });
     setCommittedEmployeeIds(pickedEmployeeIds);
     setSearchKey((k) => k + 1);
+    // The results are the point once searched; the chips keep the filters visible.
+    setFiltersOpen(false);
+  };
+
+  const handleReset = () => {
+    setBranchId(null);
+    setDeptId(null);
+    setClientId(null);
+    setPayrollGroupId(null);
+    setOperationAreaId(null);
+    setPickedEmployeeIds([]);
+    setCommittedFilter(null);
+    setCommittedEmployeeIds([]);
+    setSelectedIds(new Set());
+    setFiltersOpen(true);
   };
 
   const toggle = (id: string, checked: boolean) => {
@@ -632,6 +672,13 @@ function CreateForm() {
           </div>
           <Space>
             <Tag color="success">New Record</Tag>
+            {!isTeamScoped && (
+              <FilterToggleButton
+                open={filtersOpen}
+                onOpenChange={setFiltersOpen}
+                activeCount={activeFilterCount}
+              />
+            )}
             <Button
               onClick={() => navigate({ to: "/change-schedule/work-rotation" })}
             >
@@ -641,7 +688,7 @@ function CreateForm() {
         </div>
       </div>
 
-      {/* Step 1 — Find Employees (skipped entirely when team-scoped: there's nothing to
+      {/* Filters — collapse into chips once searched (skipped entirely when team-scoped: there's nothing to
           configure, the picker below is always locked to the caller's own direct reports) */}
       {isTeamScoped ? (
         <Alert
@@ -652,102 +699,88 @@ function CreateForm() {
           description="You can schedule Work Rotation for employees who report directly to you."
         />
       ) : (
-        <Card
-          size="small"
-          className="mb-4"
-          title={
-            <Text strong style={{ fontSize: 13 }}>
-              Step 1 — Find Employees
-            </Text>
-          }
+        <FilterPanel
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          chips={filterChips}
+          onClear={handleReset}
+          onApply={handleSearch}
+          applyLabel="Search Employees"
+          applyIcon={<SearchOutlined />}
+          applyLoading={hasSearched && isEmployeesLoading}
+          gridClassName="grid grid-cols-1 sm:grid-cols-3 gap-x-4"
         >
-          <Form layout="vertical">
-            <div className="form-grid-3">
-              <Form.Item label="Branch" className="mb-3">
-                <Select
-                  placeholder="All branches"
-                  options={branchOptions}
-                  value={branchId ?? undefined}
-                  onChange={(v: string | undefined) => {
-                    setBranchId(v ?? null);
-                    // Project Site is restricted to the selected Branch.
-                    setOperationAreaId(null);
-                  }}
-                  showSearch={{ filterOption: filterByLabel }}
-                  allowClear
-                />
-              </Form.Item>
-              <Form.Item label="Department" className="mb-3">
-                <Select
-                  placeholder="All departments"
-                  options={deptOptions}
-                  value={deptId ?? undefined}
-                  onChange={(v: string | undefined) => setDeptId(v ?? null)}
-                  showSearch={{ filterOption: filterByLabel }}
-                  allowClear
-                />
-              </Form.Item>
-              <Form.Item label="Client" className="mb-3">
-                <Select
-                  placeholder="All clients"
-                  options={clientOptions}
-                  value={clientId ?? undefined}
-                  onChange={(v: string | undefined) => setClientId(v ?? null)}
-                  showSearch={{ filterOption: filterByLabel }}
-                  allowClear
-                />
-              </Form.Item>
-              <Form.Item label="Payroll Group" className="mb-0">
-                <Select
-                  placeholder="All payroll groups"
-                  options={payrollGroupOptions}
-                  optionRender={payrollGroupOptionRender}
-                  value={payrollGroupId ?? undefined}
-                  onChange={(v: string | undefined) =>
-                    setPayrollGroupId(v ?? null)
-                  }
-                  showSearch={{ filterOption: filterPayrollGroupOption }}
-                  allowClear
-                />
-              </Form.Item>
-              <Form.Item label="Project Site" className="mb-0">
-                <Select
-                  placeholder="All project sites"
-                  options={areaOptions}
-                  value={operationAreaId ?? undefined}
-                  onChange={(v: string | undefined) =>
-                    setOperationAreaId(v ?? null)
-                  }
-                  showSearch={{ filterOption: filterByLabel }}
-                  allowClear
-                />
-              </Form.Item>
-              <Form.Item label="Employee" className="mb-0">
-                <Select
-                  mode="multiple"
-                  placeholder="All employees"
-                  options={employeeOptions}
-                  value={pickedEmployeeIds}
-                  onChange={setPickedEmployeeIds}
-                  loading={isAllEmployeesLoading}
-                  maxTagCount="responsive"
-                  showSearch={{ filterOption: filterByLabel }}
-                  allowClear
-                />
-              </Form.Item>
-              <Form.Item className="mb-0 col-span-full">
-                <Button
-                  type="primary"
-                  icon={<SearchOutlined />}
-                  onClick={handleSearch}
-                  className="w-full sm:w-auto"
-                >
-                  Search Employees
-                </Button>
-              </Form.Item>
-            </div>
-          </Form>
-        </Card>
+          <Form.Item label="Branch" className="mb-3">
+            <Select
+              placeholder="All branches"
+              options={branchOptions}
+              value={branchId ?? undefined}
+              onChange={(v: string | undefined) => {
+                setBranchId(v ?? null);
+                // Project Site is restricted to the selected Branch.
+                setOperationAreaId(null);
+              }}
+              showSearch={{ filterOption: filterByLabel }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item label="Department" className="mb-3">
+            <Select
+              placeholder="All departments"
+              options={deptOptions}
+              value={deptId ?? undefined}
+              onChange={(v: string | undefined) => setDeptId(v ?? null)}
+              showSearch={{ filterOption: filterByLabel }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item label="Client" className="mb-3">
+            <Select
+              placeholder="All clients"
+              options={clientOptions}
+              value={clientId ?? undefined}
+              onChange={(v: string | undefined) => setClientId(v ?? null)}
+              showSearch={{ filterOption: filterByLabel }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item label="Payroll Group" className="mb-3">
+            <Select
+              placeholder="All payroll groups"
+              options={payrollGroupOptions}
+              optionRender={payrollGroupOptionRender}
+              value={payrollGroupId ?? undefined}
+              onChange={(v: string | undefined) => setPayrollGroupId(v ?? null)}
+              showSearch={{ filterOption: filterPayrollGroupOption }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item label="Project Site" className="mb-3">
+            <Select
+              placeholder="All project sites"
+              options={areaOptions}
+              value={operationAreaId ?? undefined}
+              onChange={(v: string | undefined) =>
+                setOperationAreaId(v ?? null)
+              }
+              showSearch={{ filterOption: filterByLabel }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item label="Employee" className="mb-3">
+            <Select
+              mode="multiple"
+              placeholder="All employees"
+              options={employeeOptions}
+              value={pickedEmployeeIds}
+              onChange={setPickedEmployeeIds}
+              loading={isAllEmployeesLoading}
+              maxTagCount="responsive"
+              showSearch={{ filterOption: filterByLabel }}
+              allowClear
+            />
+          </Form.Item>
+        </FilterPanel>
       )}
 
       {hasSearched && (
@@ -806,7 +839,7 @@ function CreateForm() {
         className="mb-4"
         title={
           <Text strong style={{ fontSize: 13 }}>
-            Step 2 — Set Time Shift &amp; Payroll Dates
+            Set Time Shift &amp; Payroll Dates
           </Text>
         }
       >
