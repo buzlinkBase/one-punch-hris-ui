@@ -139,7 +139,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             link: { label: "My Leave Credits", to: "/portal/leave-credits" },
           },
           {
-            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts. Your company can hide any My Portal page except My Dashboard and My Profile (for example these two, My Uniform Allowance, My Payslips or the application pages), so you may not see all of them.",
+            text: "My 13th Month Pay and My Cash Bond: your accumulated amounts. On My 13th Month Pay, 13th Month Earned is your basic pay this year ÷ 12 and grows with every payroll; Amount Released is what your 13th month payout paid after tax; Still Unpaid (if shown) was earned in payrolls after the payout and isn't paid yet, so ask HR when it will be. Your company can hide any My Portal page except My Dashboard and My Profile (for example these two, My Uniform Allowance, My Payslips or the application pages), so you may not see all of them.",
             link: {
               label: "My 13th Month Pay",
               to: "/portal/thirteenth-month",

@@ -194,6 +194,27 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "Payroll group cutoffs and statutory deductions",
+        body: [
+          "A payroll group's cutoff days decide which cutoff of the month a payroll is. The cutoff it ends on counts, not the day it starts.",
+          "Statutory deduction schedule decides when SSS, PhilHealth and Pag-IBIG are withheld. Per payroll splits the month's amount across the cutoffs, First cutoff withholds it all on the first cutoff, and Last cutoff withholds it all on the last cutoff. The last cutoff always corrects the month to the exact amount owed.",
+          "Cutoffs that don't end at month end (for example 10 and 25) make periods that cross into the next month, such as the 26th to the 10th. Both of a month's periods count toward the month they end in, whatever the cross-month setting in Company Settings says. That setting only applies to groups whose last cutoff is the end of the month.",
+          "The rules are the same for employees with DTR and for Fixed employees with No DTR needed. The only difference is the pay the amount is based on: absences, lates and undertime lower it for employees with DTR, while No DTR employees are always counted at their full rate.",
+          "Weekly groups: with 50/50 split, a Fixed employee's monthly amount is spread evenly over the group's weekly cutoffs (four cutoffs means a quarter each week), and the last week corrects any difference. First cutoff withholds it all in the first week, and Last cutoff withholds it all in the last week.",
+          "Monthly groups have one payroll a month, so every release schedule withholds the whole month on it. A monthly group paid on a day before month end (for example the 25th, for Feb 26–Mar 25) counts toward the month it ends in.",
+          "Variable employees: an early payroll can only use the pay earned so far, so it withholds that bracket's amount, and the last payroll of the month tops it up to the full month's bracket. The month's total is always exact.",
+        ],
+        example: {
+          title: "Cutoffs 10 and 25, Last cutoff (sample figures)",
+          lines: [
+            "March's payrolls are Feb 26–Mar 10 and Mar 11–25. A Fixed employee earning ₱30,000 a month is paid ₱15,000 on each.",
+            "Feb 26–Mar 10: no SSS, PhilHealth or Pag-IBIG; it is March's first cutoff.",
+            "Mar 11–25: March's full contributions for ₱30,000 are withheld, counting both payrolls' pay.",
+            "With Per payroll instead, half is withheld on each, and the two halves add up to exactly March's amount.",
+          ],
+        },
+      },
+      {
         heading: "Add one",
         steps: [
           {
@@ -402,7 +423,18 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Other Income: allowances and other earnings (e.g. transportation, meal allowance) and whether they're taxable.",
             link: { label: "Other Income", to: "/setup/other-income" },
           },
+          {
+            text: "Income Class decides whether the amount counts toward SSS, PhilHealth and Pag-IBIG contributions. Regular, Commission and Others count. De Minimis, Reimbursement and Special Bonus don't. The rule is the same for every payroll frequency, and the Income Class list shows a tag beside each class.",
+          },
         ],
+        example: {
+          title: "Which allowances raise the contributions (sample figures)",
+          lines: [
+            "A semi-monthly cutoff pays ₱15,000 basic, a ₱2,000 Regular allowance (e.g. a fixed transportation allowance), ₱1,000 De Minimis (rice subsidy) and ₱500 Reimbursement.",
+            "Gross pay is ₱18,500, but SSS, PhilHealth and Pag-IBIG are worked out from ₱17,000: basic plus the Regular allowance only.",
+            "Pick De Minimis only for benefits within the BIR de minimis limits, and Reimbursement only for refunds of the employee's own expenses. Anything else that is really pay belongs in Regular, Commission or Others.",
+          ],
+        },
       },
     ],
     related: ["loans-income"],

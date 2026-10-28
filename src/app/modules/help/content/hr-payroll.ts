@@ -685,6 +685,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
       "/daily-time-record/for-13th-month",
       "/daily-time-record/for-last-pay",
       "/daily-time-record/for-year-end-adjustment",
+      "/payroll/reports/13th-month-pay",
     ],
     sections: [
       {
@@ -723,6 +724,47 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             "Year-end adjustment: if tax withheld during the year was ₱18,000 but the annualized tax is ₱15,000, the employee is refunded ₱3,000. If only ₱12,000 was withheld, ₱3,000 is collected.",
           ],
         },
+      },
+      {
+        heading: "Reading the 13th Month Pay report",
+        steps: [
+          {
+            text: "Basic Pay Earned (Year to Date): basic pay from this year's posted regular payrolls. It grows with every cutoff that is posted.",
+            link: {
+              label: "13th Month Pay report",
+              to: "/payroll/reports/13th-month-pay",
+            },
+          },
+          {
+            text: "Special Bonuses Paid: bonuses that share the tax-free ceiling (₱90,000 by default, set in Company Settings › Payroll Settings) with the 13th month.",
+          },
+          {
+            text: "13th Month Earned: Basic Pay Earned ÷ 12, worked out again every time you open the report. It keeps growing until the year's last cutoff is posted.",
+          },
+          {
+            text: "Status: Not yet generated (no 13th Month Run includes the employee), Generated, not released (the run is saved but not posted), or Released (posted and paid).",
+          },
+          {
+            text: "Amount Released (after tax): what the 13th month payout actually paid. Anything above the tax-free ceiling is taxed, so this can be lower than the amount before tax. It is fixed on the day the run was generated and does not change afterwards.",
+          },
+          {
+            text: "Still Unpaid: 13th Month Earned minus the payout's amount before tax, shown in orange. It is the 13th month earned in cutoffs posted after the run was generated, which the payout did not cover.",
+          },
+        ],
+        example: {
+          title:
+            "Why 13th Month Earned and Amount Released differ (sample figures)",
+          lines: [
+            "The 13th Month Run was generated on Oct 15. Basic pay posted so far was ₱7,532.40, so the payout was ₱7,532.40 ÷ 12 = ₱627.70. It was under the ceiling, so no tax: Amount Released = ₱627.70.",
+            "By December, basic pay posted is ₱14,067.24, so 13th Month Earned is ₱14,067.24 ÷ 12 = ₱1,172.27.",
+            "Still Unpaid = ₱1,172.27 − ₱627.70 = ₱544.57, earned in the cutoffs posted after Oct 15.",
+          ],
+        },
+        tips: [
+          "Generate the 13th Month Run after the year's last December cutoff is posted, so the payout covers the whole year.",
+          "If it was generated early, Still Unpaid shows what each employee is still owed.",
+          "Print opens the listing as a PDF; Export gives the same columns in Excel with a Total row. The printer icon on a row opens that employee's 13th month payslip.",
+        ],
       },
     ],
   },
@@ -848,7 +890,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             link: { label: "BIR 1601-C", to: "/payroll/reports/bir-1601c" },
           },
           {
-            text: "Payroll: Disbursement, Deduction Ledger (grouped by employee, with each deduction's balance and a running total), Cash Bond, Leave Ledger, Retirement and Uniform Allowance Ledgers, Reimbursements, Cost Summary, YTD Summary and 13th Month Pay.",
+            text: "Payroll: Disbursement, Deduction Ledger (grouped by employee, with each deduction's balance and a running total), Cash Bond, Leave Ledger, Retirement and Uniform Allowance Ledgers, Reimbursements, Cost Summary, YTD Summary and 13th Month Pay. On 13th Month Pay, 13th Month Earned is live (basic pay so far ÷ 12), Amount Released is what the payout paid, and Still Unpaid is what was earned after it was generated; see 13th month, last pay and year-end tax adjustment.",
             link: {
               label: "Disbursement",
               to: "/payroll/reports/bank-disbursement",

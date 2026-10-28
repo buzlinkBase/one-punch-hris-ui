@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, DatePicker, Form, Tag, Tooltip, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PrinterOutlined } from "@ant-design/icons";
+import { PrinterOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
 import { ClientFilter } from "../../components/client-filter/client-filter";
@@ -10,35 +10,38 @@ import { useThirteenthMonth } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { ThirteenthMonthResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
+import {
+  THIRTEENTH_MONTH_HINT,
+  THIRTEENTH_MONTH_LABEL,
+  THIRTEENTH_MONTH_STATUS_COLOR,
+  THIRTEENTH_MONTH_STATUS_LABEL,
+  isStillUnpaid,
+} from "../../constants/thirteenth-month.const";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { forPayrollApi } from "@/app/modules/daily-time-record/for-payroll/services/for-payroll.api";
 import { payrollReportsApi } from "../../services/payroll-reports.api";
 import { formatMoney } from "@/shared/utils/money.util";
 
-const STATUS_LABEL: Record<ThirteenthMonthResponse["status"], string> = {
-  NotGenerated: "Not Generated",
-  Draft: "Draft",
-  Posted: "Posted",
-};
-
-const STATUS_COLOR: Record<
-  ThirteenthMonthResponse["status"],
-  "success" | "processing" | "default"
-> = {
-  NotGenerated: "default",
-  Draft: "processing",
-  Posted: "success",
-};
-
 const EXPORT_HEADERS = [
   "Employee No",
   "Full Name",
-  "Total Basic Pay (Year)",
-  "Special Bonuses (Year)",
-  "13th Month Pay",
-  "Status",
-  "Net Pay",
+  THIRTEENTH_MONTH_LABEL.BASIC_PAY,
+  THIRTEENTH_MONTH_LABEL.SPECIAL_BONUSES,
+  THIRTEENTH_MONTH_LABEL.EARNED,
+  THIRTEENTH_MONTH_LABEL.STATUS,
+  THIRTEENTH_MONTH_LABEL.RELEASED,
+  THIRTEENTH_MONTH_LABEL.STILL_UNPAID,
 ];
+
+// A column title with a "?" that explains the figure in plain words.
+const titleWithHint = (label: string, hint: string) => (
+  <Tooltip title={hint}>
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <QuestionCircleOutlined className="text-xs opacity-60" />
+    </span>
+  </Tooltip>
+);
 
 // Opens the payslip PDF in a new tab (same convention as Payroll Summary's per-row print) —
 // PayslipDocument.cs renders a dedicated "13TH MONTH PAY" layout for these rows.
@@ -52,8 +55,9 @@ const toRows = (records: ThirteenthMonthResponse[]) =>
     r.totalBasicPayForYear,
     r.totalSpecialBonusesForYear,
     r.thirteenthMonthPay,
-    STATUS_LABEL[r.status],
+    THIRTEENTH_MONTH_STATUS_LABEL[r.status],
     r.netPay ?? "",
+    r.stillUnpaid,
   ]);
 
 const columns: ColumnsType<ThirteenthMonthResponse> = [
@@ -66,40 +70,74 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
   },
   { title: "Full Name", dataIndex: "fullName", key: "name", width: 220 },
   {
-    title: "Total Basic Pay (Year)",
+    title: titleWithHint(
+      THIRTEENTH_MONTH_LABEL.BASIC_PAY,
+      THIRTEENTH_MONTH_HINT.BASIC_PAY,
+    ),
     dataIndex: "totalBasicPayForYear",
     key: "basic",
     align: "right",
     render: formatMoney,
   },
   {
-    title: "Special Bonuses (Year)",
+    title: titleWithHint(
+      THIRTEENTH_MONTH_LABEL.SPECIAL_BONUSES,
+      THIRTEENTH_MONTH_HINT.SPECIAL_BONUSES,
+    ),
     dataIndex: "totalSpecialBonusesForYear",
     key: "bonuses",
     align: "right",
     render: formatMoney,
   },
   {
-    title: "13th Month Pay",
+    title: titleWithHint(
+      THIRTEENTH_MONTH_LABEL.EARNED,
+      THIRTEENTH_MONTH_HINT.EARNED,
+    ),
     dataIndex: "thirteenthMonthPay",
     key: "thirteenth",
     align: "right",
     render: (v: number) => <strong>{formatMoney(v)}</strong>,
   },
   {
-    title: "Status",
+    title: titleWithHint(
+      THIRTEENTH_MONTH_LABEL.STATUS,
+      THIRTEENTH_MONTH_HINT.STATUS,
+    ),
     dataIndex: "status",
     key: "status",
     render: (v: ThirteenthMonthResponse["status"]) => (
-      <Tag color={STATUS_COLOR[v]}>{STATUS_LABEL[v]}</Tag>
+      <Tag color={THIRTEENTH_MONTH_STATUS_COLOR[v]}>
+        {THIRTEENTH_MONTH_STATUS_LABEL[v]}
+      </Tag>
     ),
   },
   {
-    title: "Net Pay",
+    title: titleWithHint(
+      THIRTEENTH_MONTH_LABEL.RELEASED,
+      THIRTEENTH_MONTH_HINT.RELEASED,
+    ),
     dataIndex: "netPay",
     key: "netPay",
     align: "right",
     render: (v: number | null) => (v != null ? formatMoney(v) : "—"),
+  },
+  {
+    title: titleWithHint(
+      THIRTEENTH_MONTH_LABEL.STILL_UNPAID,
+      THIRTEENTH_MONTH_HINT.STILL_UNPAID,
+    ),
+    dataIndex: "stillUnpaid",
+    key: "stillUnpaid",
+    align: "right",
+    render: (v: number, r) =>
+      isStillUnpaid(r) ? (
+        <Tooltip title="The payout was generated before later cutoffs were posted. This amount hasn't been paid.">
+          <strong className="text-orange-600">{formatMoney(v)}</strong>
+        </Tooltip>
+      ) : (
+        "—"
+      ),
   },
   {
     title: "",
@@ -166,12 +204,14 @@ export default function ThirteenthMonthPay() {
           "totalSpecialBonusesForYear",
           "thirteenthMonthPay",
           "netPay",
+          "stillUnpaid",
         ],
         exportHeaders: [
-          "Total Basic Pay (Year)",
-          "Special Bonuses (Year)",
-          "13th Month Pay",
-          "Net Pay",
+          THIRTEENTH_MONTH_LABEL.BASIC_PAY,
+          THIRTEENTH_MONTH_LABEL.SPECIAL_BONUSES,
+          THIRTEENTH_MONTH_LABEL.EARNED,
+          THIRTEENTH_MONTH_LABEL.RELEASED,
+          THIRTEENTH_MONTH_LABEL.STILL_UNPAID,
         ],
       }}
       extraActions={
@@ -186,10 +226,10 @@ export default function ThirteenthMonthPay() {
       filters={
         <Form layout="vertical">
           <div className="flex items-end gap-4 flex-wrap">
-            <Form.Item label="Year" className="mb-0" style={{ maxWidth: 180 }}>
+            <Form.Item label="Year" className="mb-0 max-w-[180px]">
               <DatePicker
                 picker="year"
-                style={{ width: "100%" }}
+                className="w-full"
                 value={dayjs().year(year)}
                 allowClear={false}
                 onChange={(date) => date && setYear(date.year())}

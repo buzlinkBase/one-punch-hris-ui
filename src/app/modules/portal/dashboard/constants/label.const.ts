@@ -1,7 +1,7 @@
 export const PORTAL_DASHBOARD_LABEL = {
   title: "My Dashboard",
   leaveBalance: "Leave Balance",
-  thirteenthMonth: "13th Month Pay",
+  thirteenthMonth: "13th Month Earned",
   cashBond: "Cash Bond",
   schedule: "My Schedule",
   incompleteLogs: "Incomplete Logs",

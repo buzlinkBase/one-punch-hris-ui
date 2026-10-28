@@ -253,6 +253,12 @@ export interface ThirteenthMonthResponse {
   status: "NotGenerated" | "Draft" | "Posted";
   // Only set once a 13th month payout row exists (status !== "NotGenerated").
   netPay: number | null;
+  // The payout's amount before withholding tax, fixed on the day it was generated. Null when
+  // status === "NotGenerated".
+  paidGross: number | null;
+  // thirteenthMonthPay (live) minus paidGross, floored at 0: 13th month earned in cutoffs
+  // posted after the payout was generated. 0 when there is no payout yet.
+  stillUnpaid: number;
   // The generated Payroll row's own id — needed to print its payslip. Null when
   // status === "NotGenerated".
   payrollId: string | null;

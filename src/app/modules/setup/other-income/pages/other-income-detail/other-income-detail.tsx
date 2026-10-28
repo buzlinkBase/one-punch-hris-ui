@@ -16,7 +16,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
 import {
@@ -39,6 +39,9 @@ import {
   INCOME_CLASS_OPTIONS,
   OTHER_INCOME_LABEL,
   STATUS_OPTIONS,
+  STATUTORY_NOTE,
+  STATUTORY_TAG,
+  countsTowardStatutory,
 } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -219,6 +222,7 @@ export default function OtherIncomeDetail() {
     },
   });
   const { allowNavigation } = useUnsavedChangesGuard(isDirty);
+  const incomeClass = useWatch({ control, name: "incomeClass" });
 
   useEffect(() => {
     if (isEdit && selected) {
@@ -306,6 +310,7 @@ export default function OtherIncomeDetail() {
               label={OTHER_INCOME_LABEL.INCOME_CLASS}
               validateStatus={errors.incomeClass ? "error" : ""}
               help={errors.incomeClass?.message}
+              extra={incomeClass ? STATUTORY_NOTE[incomeClass] : undefined}
             >
               <Controller
                 name="incomeClass"
@@ -315,6 +320,23 @@ export default function OtherIncomeDetail() {
                     {...field}
                     options={INCOME_CLASS_OPTIONS}
                     placeholder="Select income class"
+                    optionRender={(option) => (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>{option.label}</span>
+                        <Tag
+                          color={
+                            countsTowardStatutory(String(option.value))
+                              ? "green"
+                              : "default"
+                          }
+                          className="m-0 text-xs"
+                        >
+                          {countsTowardStatutory(String(option.value))
+                            ? STATUTORY_TAG.COUNTED
+                            : STATUTORY_TAG.NOT_COUNTED}
+                        </Tag>
+                      </div>
+                    )}
                   />
                 )}
               />

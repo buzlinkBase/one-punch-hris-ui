@@ -38,7 +38,7 @@ export const PAYROLL_REPORTS_LABEL = {
   YTD_SUBTITLE: "Cumulative payroll totals per employee for the selected year.",
   THIRTEENTH_MONTH_TITLE: "13th Month Pay",
   THIRTEENTH_MONTH_SUBTITLE:
-    "Total Basic Pay for the year divided by 12, per employee.",
+    "13th Month Earned = basic pay earned so far ÷ 12. Amount Released is what the 13th month payout paid; Still Unpaid is what was earned after it was generated.",
 
   BIR_1601C_TITLE: "BIR 1601-C Monthly Remittance",
   BIR_1601C_SUBTITLE:

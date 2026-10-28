@@ -22,7 +22,12 @@ import {
   useAcknowledgeMyPayroll,
   useMy13thMonth,
 } from "../../../shared/hooks/use-my-employee-queries";
-import type { ThirteenthMonthResponse } from "@/app/modules/reports/payroll-reports/models/api/response/payroll-reports.model";
+import {
+  THIRTEENTH_MONTH_LABEL,
+  THIRTEENTH_MONTH_STATUS_COLOR,
+  THIRTEENTH_MONTH_STATUS_LABEL,
+  isStillUnpaid,
+} from "@/app/modules/reports/payroll-reports/constants/thirteenth-month.const";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import { formatMoney } from "@/shared/utils/money.util";
@@ -30,21 +35,6 @@ import { formatMoney } from "@/shared/utils/money.util";
 const { Title } = Typography;
 
 const ME_BASE_URL = buildApiUrl(API_PREFIX.hrms, "me");
-
-const STATUS_LABEL: Record<ThirteenthMonthResponse["status"], string> = {
-  NotGenerated: "Not Generated",
-  Draft: "Draft",
-  Posted: "Posted",
-};
-
-const STATUS_COLOR: Record<
-  ThirteenthMonthResponse["status"],
-  "success" | "processing" | "default"
-> = {
-  NotGenerated: "default",
-  Draft: "processing",
-  Posted: "success",
-};
 
 export default function PortalThirteenthMonth() {
   const [year, setYear] = useState(dayjs().year());
@@ -61,7 +51,8 @@ export default function PortalThirteenthMonth() {
               My 13th Month Pay
             </Title>
             <p className="page-toolbar-subtitle">
-              Your 13th month entitlement for the selected year.
+              Your 13th month is your basic pay earned this year ÷ 12. It grows
+              with every payroll until the year's last cutoff.
             </p>
           </div>
           <Space wrap>
@@ -91,8 +82,8 @@ export default function PortalThirteenthMonth() {
             title={`${year} 13th Month Pay`}
             extra={
               <Space>
-                <Tag color={STATUS_COLOR[data.status]}>
-                  {STATUS_LABEL[data.status]}
+                <Tag color={THIRTEENTH_MONTH_STATUS_COLOR[data.status]}>
+                  {THIRTEENTH_MONTH_STATUS_LABEL[data.status]}
                 </Tag>
                 {data.payrollId && (
                   <Button
@@ -131,20 +122,31 @@ export default function PortalThirteenthMonth() {
             }
           >
             <Descriptions column={1} bordered size="middle">
-              <Descriptions.Item label="Total Basic Pay for the Year">
+              <Descriptions.Item label={THIRTEENTH_MONTH_LABEL.BASIC_PAY}>
                 ₱{formatMoney(data.totalBasicPayForYear)}
               </Descriptions.Item>
-              <Descriptions.Item label="Special Bonuses for the Year">
+              <Descriptions.Item label={THIRTEENTH_MONTH_LABEL.SPECIAL_BONUSES}>
                 ₱{formatMoney(data.totalSpecialBonusesForYear)}
               </Descriptions.Item>
-              <Descriptions.Item label="13th Month Pay">
+              <Descriptions.Item label={THIRTEENTH_MONTH_LABEL.EARNED}>
                 <strong className="text-lg">
                   ₱{formatMoney(data.thirteenthMonthPay)}
                 </strong>
               </Descriptions.Item>
               {data.netPay != null && (
-                <Descriptions.Item label="Net Pay (after tax and deductions)">
+                <Descriptions.Item label={THIRTEENTH_MONTH_LABEL.RELEASED}>
                   ₱{formatMoney(data.netPay)}
+                </Descriptions.Item>
+              )}
+              {isStillUnpaid(data) && (
+                <Descriptions.Item label={THIRTEENTH_MONTH_LABEL.STILL_UNPAID}>
+                  <strong className="text-orange-600">
+                    ₱{formatMoney(data.stillUnpaid)}
+                  </strong>
+                  <div className="text-xs opacity-70">
+                    Earned in payrolls after your 13th month was released. Ask
+                    HR about when it will be paid.
+                  </div>
                 </Descriptions.Item>
               )}
             </Descriptions>
