@@ -41,6 +41,8 @@ export function useReassignApprover(
       queryClient.invalidateQueries({
         queryKey: ["approval-instance", applicationType, applicationId],
       });
+      // The reassigned step shows a new approver in My Approvals / the admin Approvals tab too.
+      queryClient.invalidateQueries({ queryKey: ["me", "approvals"] });
     },
   });
 }

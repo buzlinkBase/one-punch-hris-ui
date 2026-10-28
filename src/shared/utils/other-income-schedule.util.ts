@@ -103,8 +103,22 @@ function generatePerDay(
   return rows;
 }
 
-// One row per week or month window, dated on the window's last day (or the end date if the window
-// runs past it). The attendance gate is judged over [periodStart, periodEnd].
+// The window a periodic row covers: a week, a semi-monthly cut-off (1st-15th, 16th-month end) or a
+// calendar month counted from the window start.
+function periodicWindowEnd(windowStart: Dayjs, frequency: string): Dayjs {
+  if (frequency === "Monthly") {
+    return windowStart.add(1, "month").subtract(1, "day");
+  }
+  if (frequency === "SemiMonthly") {
+    return windowStart.date() <= 15
+      ? windowStart.date(15)
+      : windowStart.endOf("month").startOf("day");
+  }
+  return windowStart.add(6, "day");
+}
+
+// One row per week, cut-off or month window, dated on the window's last day (or the end date if the
+// window runs past it). The attendance gate is judged over [periodStart, periodEnd].
 function generatePeriodic(
   start: Dayjs,
   end: Dayjs,
@@ -114,10 +128,7 @@ function generatePeriodic(
   const rows: OtherIncomeScheduleRow[] = [];
   let windowStart = start;
   while (!windowStart.isAfter(end, "day") && rows.length < MAX_ROWS) {
-    const naturalEnd =
-      frequency === "Monthly"
-        ? windowStart.add(1, "month").subtract(1, "day")
-        : windowStart.add(6, "day");
+    const naturalEnd = periodicWindowEnd(windowStart, frequency);
     const windowEnd = naturalEnd.isAfter(end, "day") ? end : naturalEnd;
     rows.push({
       index: rows.length + 1,

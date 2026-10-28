@@ -516,7 +516,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Everyone Ready is selected for you. Tick or untick employees, or use Add partly ready to also pay their approved days now.",
           },
           {
-            text: "Click Preview. Check earnings, deductions and net pay in Payroll Results.",
+            text: "Click Preview. The results open in a full-screen window. Check earnings, deductions and net pay there. Click an amount shown as a link, such as Basic, Allowances, Bonuses or Other Income, to see what it is made of, including adjustments. Click OT, ND, Rest Day or Holiday to see the day-by-day pay.",
           },
           {
             text: "Click Save Payroll, add Remarks if needed, and click Save. The payroll goes For Approval.",
@@ -550,6 +550,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         steps: [
           {
             text: "If your guards or relievers work for more than one client in the same cutoff, run payroll once per client: pick the client in the Clients filter, then Preview and Save. Each run pays only the days worked for that client, and each run can have its own payout date.",
+          },
+          {
+            text: "Client rate settings follow where the work was done. In these runs, a day worked for a client uses that client's own premium rates, and retirement accrues under the client each day was worked for. Government contribution caps stay with the employee's own client.",
           },
           {
             text: "In Company Settings, under Attendance & Payroll Policy, choose which payroll run takes the deductions. Government contributions, tax, loans and other income are then taken in only one run per employee per cutoff. The employee's other runs pay earnings only.",
@@ -750,6 +753,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           {
             text: "Still Unpaid: 13th Month Earned minus the payout's amount before tax, shown in orange. It is the 13th month earned in cutoffs posted after the run was generated, which the payout did not cover.",
           },
+          {
+            text: "Unrelease (the arrow button on a Posted row of the 13th Month Run or Last Pay Run page, and on a Released row of this report, for users who can approve that run): withdraws that employee's payout when it was released by mistake. The employee goes back to Not yet generated and you generate the run again; a Last Pay also puts back the loan installments and retirement payout it settled. It only affects that one employee, and it is blocked once the year-end tax adjustment has been posted for the year.",
+          },
         ],
         example: {
           title:
@@ -842,8 +848,8 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
       {
         heading: "Paying only when attendance is met",
         body: [
-          "On an Other Income application, choose How it is given: Fixed schedule (paid on set dates, no condition), Per qualifying day (a daily amount for each day the employee meets the rule) or Weekly / monthly with attendance (one payment per week or month, only if the rule is met in that period).",
-          "The attendance rule sets what counts as present (Worked, or Worked or on paid leave), the minimum hours, the weekdays and day types it applies to, and how much lateness or undertime is allowed. A weekly or monthly rule can also require a minimum number of qualifying days.",
+          "On an Other Income application, choose How it is given: Fixed schedule (paid on set dates, no condition), Per qualifying day (a daily amount for each day the employee meets the rule) or Weekly / semi-monthly / monthly with attendance (one payment per week, cut-off or month, only if the rule is met in that period).",
+          "The attendance rule sets what counts as present (Worked, or Worked or on paid leave), the minimum hours, the weekdays and day types it applies to, and how much lateness or undertime is allowed. A weekly, semi-monthly or monthly rule can also require a minimum number of qualifying days.",
           "A payment payroll didn't make is marked skipped with the reason, such as No posted DTR, Did not work, Below minimum hours or Late beyond the limit.",
         ],
       },

@@ -29,6 +29,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { UnreleasePayoutButton } from "../../components/unrelease-payout-button/unrelease-payout-button";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
@@ -51,6 +52,7 @@ import { forPayrollApi } from "../../services/for-payroll.api";
 import {
   APPROVAL_STATUS_COLOR,
   APPROVAL_STATUS_LABEL,
+  UNRELEASE_PAYOUT_LABEL,
 } from "../../constants/label.const";
 import { formatMoney } from "@/shared/utils/money.util";
 import { apiErrorMessage } from "@/core/http/api-error";
@@ -247,19 +249,28 @@ export default function GenerateThirteenthMonth() {
     {
       title: "",
       key: "print",
-      width: 48,
+      width: 84,
       render: (_, r) => (
-        <PermissionGate permission="Payroll Summary:Export">
-          <Tooltip title="Print payslip">
-            <Button
-              aria-label="Print payslip"
-              type="text"
-              size="small"
-              icon={<PrinterOutlined />}
-              onClick={() => handlePrintPayslip(r)}
+        <div className="flex items-center">
+          <PermissionGate permission="Payroll Summary:Export">
+            <Tooltip title="Print payslip">
+              <Button
+                aria-label="Print payslip"
+                type="text"
+                size="small"
+                icon={<PrinterOutlined />}
+                onClick={() => handlePrintPayslip(r)}
+              />
+            </Tooltip>
+          </PermissionGate>
+          {r.isPosted && r.id && (
+            <UnreleasePayoutButton
+              payrollId={r.id}
+              feature="13th Month Run"
+              description={UNRELEASE_PAYOUT_LABEL.THIRTEENTH_MONTH}
             />
-          </Tooltip>
-        </PermissionGate>
+          )}
+        </div>
       ),
     },
   ];

@@ -252,6 +252,14 @@ export function useDeclineBatch() {
   });
 }
 
+export function useUnreleasePayout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payrollId: string) => forPayrollApi.unreleasePayout(payrollId),
+    onSuccess: () => invalidatePayrollResults(queryClient),
+  });
+}
+
 export function useDeletePayrollBatch() {
   const queryClient = useQueryClient();
   return useMutation({

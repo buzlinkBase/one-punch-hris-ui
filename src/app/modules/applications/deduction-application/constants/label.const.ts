@@ -20,9 +20,9 @@ export const FREQUENCY_LABEL: Record<string, string> = {
   Monthly: "Monthly",
 };
 
-// Weekly and monthly are the only frequencies an attendance gate can cover.
+// Weekly, semi-monthly and monthly are the only frequencies an attendance gate can cover.
 export const PERIODIC_FREQUENCY_OPTIONS = FREQUENCY_OPTIONS.filter((o) =>
-  ["Weekly", "Monthly"].includes(o.value),
+  ["Weekly", "SemiMonthly", "Monthly"].includes(o.value),
 );
 
 export const PAY_MODE_OPTIONS = [
@@ -39,9 +39,9 @@ export const PAY_MODE_OPTIONS = [
   },
   {
     value: "PeriodicGated",
-    label: "Weekly / monthly with attendance",
+    label: "Weekly / semi-monthly / monthly with attendance",
     description:
-      "One amount per week or month, taken only if the attendance rule is met in that period.",
+      "One amount per week, cut-off or month, taken only if the attendance rule is met in that period.",
   },
 ];
 

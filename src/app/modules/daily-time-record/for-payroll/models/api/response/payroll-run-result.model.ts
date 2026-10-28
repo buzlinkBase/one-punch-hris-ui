@@ -8,6 +8,14 @@ export interface PayrollBreakdownItem {
   isLoan?: boolean;
 }
 
+// One piece of what a payroll amount is made of — backend PayrollSourceItem. Signed: a cut (late,
+// absent, ...) is negative.
+export interface PayrollSourceItem {
+  label: string;
+  amount: number;
+  note?: string | null;
+}
+
 export interface PayrollRunResult {
   // Only populated when this row came from GET /payrolls (Payroll Summary — a persisted
   // record); Calculate/Generate preview responses have no saved Payroll.Id yet.
@@ -285,6 +293,9 @@ export interface PayrollRunResult {
   // persisted Payroll.TimeHourPayResults — a List<PayrollDtrDetail> — once a run has been
   // saved and re-fetched via GET /payrolls; both round-trip through this same shape now).
   timeHourPayResults?: DtrPayResult[];
+  // What each complex amount is made of, keyed by that amount's field name (e.g. "basicPay",
+  // "totalRegularAllowances"). Only returned by the Calculate/Generate preview, not by GET /payrolls.
+  sources?: Record<string, PayrollSourceItem[]>;
 }
 
 // One day's contribution to a payroll line — mirrors backend DTRPayModel, using the same

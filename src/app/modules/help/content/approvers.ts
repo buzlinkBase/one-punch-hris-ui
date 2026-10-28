@@ -102,7 +102,7 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
         heading: "Multi-step approvals",
         body: [
           "Some request types need several approvals in order, set up in Approval Workflows. When you approve your step, the next approver is notified and the applicant sees it moved forward. The request is only approved after the last step. A decline at any step ends it.",
-          "If an approver is away, an Owner or Admin can reassign the current step to someone else from Approval Progress.",
+          "If an approver is away, an Owner or Admin can reassign the current step to someone else from Approval Progress. On the Approvals page, click the Status of a request in For Approval or In Progress to open it. An Owner or Admin can also approve or decline any step, even if they are not a member of the approver group or quorum for it. That counts as an override: it completes the whole step no matter how many approvals the step asks for, and the timeline marks it as an Owner override. Anyone else who isn't the approver gets a message naming who the request is waiting on.",
         ],
       },
     ],

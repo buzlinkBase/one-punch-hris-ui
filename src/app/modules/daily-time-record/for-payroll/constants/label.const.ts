@@ -85,3 +85,15 @@ export const FOR_PAYROLL_LABEL = {
   FILTER_EMPLOYEE: "Employee",
   FILTER_PAYROLL_GROUP: "Payroll Group",
 };
+
+export const UNRELEASE_PAYOUT_LABEL = {
+  ACTION: "Unrelease",
+  TITLE: "Unrelease this payout?",
+  THIRTEENTH_MONTH:
+    "The 13th month payout is deleted and the employee goes back to Not yet generated. Generate the 13th Month Run again afterwards.",
+  LAST_PAY:
+    "The last pay is deleted, loan installments it paid are owed again, and any retirement payout is put back. Generate the Last Pay Run again afterwards.",
+  OK: "Unrelease",
+  SUCCESS: "Payout unreleased.",
+  FAILED: "Failed to unrelease this payout. Please try again.",
+} as const;

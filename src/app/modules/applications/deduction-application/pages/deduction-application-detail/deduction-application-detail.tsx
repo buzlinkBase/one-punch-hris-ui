@@ -372,8 +372,10 @@ export default function DeductionApplicationDetail() {
     }
     if (mode === "PerQualifyingDay") {
       setValue("frequencyOfPayment", "Daily");
-    } else if (!["Weekly", "Monthly"].includes(values.frequencyOfPayment)) {
-      setValue("frequencyOfPayment", "Weekly");
+    } else if (
+      !["Weekly", "SemiMonthly", "Monthly"].includes(values.frequencyOfPayment)
+    ) {
+      setValue("frequencyOfPayment", "SemiMonthly");
     }
   };
 

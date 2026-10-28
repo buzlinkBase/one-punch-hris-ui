@@ -21,6 +21,7 @@ import {
   HistoryOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { apiErrorMessage } from "@/core/http/api-error";
 import { useNavigate } from "@tanstack/react-router";
 import {
   usePayrollBatches,
@@ -127,8 +128,13 @@ export default function PayrollBatchesTab() {
     try {
       await deleteBatch(batchId);
       messageApi.success("Payroll run deleted.");
-    } catch {
-      messageApi.error("Failed to delete this payroll run. Please try again.");
+    } catch (err) {
+      messageApi.error(
+        apiErrorMessage(
+          err,
+          "Failed to delete this payroll run. Please try again.",
+        ),
+      );
     }
   };
 
@@ -139,9 +145,12 @@ export default function PayrollBatchesTab() {
       messageApi.success(
         "Deletion requested. This payroll run will be removed once approved.",
       );
-    } catch {
+    } catch (err) {
       messageApi.error(
-        "Failed to request deletion for this payroll run. Please try again.",
+        apiErrorMessage(
+          err,
+          "Failed to request deletion for this payroll run. Please try again.",
+        ),
       );
     }
   };
@@ -152,8 +161,13 @@ export default function PayrollBatchesTab() {
       messageApi.success(
         "Approval recorded. This run is posted as final once fully approved.",
       );
-    } catch {
-      messageApi.error("Failed to approve this payroll run. Please try again.");
+    } catch (err) {
+      messageApi.error(
+        apiErrorMessage(
+          err,
+          "Failed to approve this payroll run. Please try again.",
+        ),
+      );
     }
   };
 
@@ -161,8 +175,13 @@ export default function PayrollBatchesTab() {
     try {
       await declineBatch({ batchId, note });
       messageApi.success("Payroll run declined.");
-    } catch {
-      messageApi.error("Failed to decline this payroll run. Please try again.");
+    } catch (err) {
+      messageApi.error(
+        apiErrorMessage(
+          err,
+          "Failed to decline this payroll run. Please try again.",
+        ),
+      );
     }
   };
 
@@ -172,9 +191,12 @@ export default function PayrollBatchesTab() {
       messageApi.success(
         "Deletion approved. This run is removed once fully approved.",
       );
-    } catch {
+    } catch (err) {
       messageApi.error(
-        "Failed to approve this deletion request. Please try again.",
+        apiErrorMessage(
+          err,
+          "Failed to approve this deletion request. Please try again.",
+        ),
       );
     }
   };
@@ -183,9 +205,12 @@ export default function PayrollBatchesTab() {
     try {
       await declineDeletion({ batchId, note });
       messageApi.success("Deletion request declined. The run is kept.");
-    } catch {
+    } catch (err) {
       messageApi.error(
-        "Failed to decline this deletion request. Please try again.",
+        apiErrorMessage(
+          err,
+          "Failed to decline this deletion request. Please try again.",
+        ),
       );
     }
   };

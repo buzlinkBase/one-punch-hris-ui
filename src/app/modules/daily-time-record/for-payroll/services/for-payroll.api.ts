@@ -246,6 +246,12 @@ export const forPayrollApi = {
     return httpClient.delete<void>(`${PAYROLL_ENDPOINT}/batch/${batchId}`);
   },
 
+  // Withdraws one employee's released 13th month / last pay payout (the batch-level delete
+  // above would drop every employee in the run).
+  unreleasePayout(payrollId: string): Promise<void> {
+    return httpClient.delete<void>(`${PAYROLL_ENDPOINT}/payout/${payrollId}`);
+  },
+
   // Batch-list projection for the Saved Payroll Runs tab -- independent of getPayrolls' own
   // date-scoped report query. Defaults server-side to today minus 5 months / plus 1 month when
   // from/to are omitted, same as DTR's batch-codes endpoint.

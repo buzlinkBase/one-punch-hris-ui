@@ -19,6 +19,8 @@ import {
 } from "../../constants/thirteenth-month.const";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { forPayrollApi } from "@/app/modules/daily-time-record/for-payroll/services/for-payroll.api";
+import { UnreleasePayoutButton } from "@/app/modules/daily-time-record/for-payroll/components/unrelease-payout-button/unrelease-payout-button";
+import { UNRELEASE_PAYOUT_LABEL } from "@/app/modules/daily-time-record/for-payroll/constants/label.const";
 import { payrollReportsApi } from "../../services/payroll-reports.api";
 import { formatMoney } from "@/shared/utils/money.util";
 
@@ -142,19 +144,28 @@ const columns: ColumnsType<ThirteenthMonthResponse> = [
   {
     title: "",
     key: "print",
-    width: 48,
+    width: 84,
     fixed: "right",
     render: (_, r) =>
       r.payrollId ? (
-        <Tooltip title="Print payslip">
-          <Button
-            aria-label="Print payslip"
-            type="text"
-            size="small"
-            icon={<PrinterOutlined />}
-            onClick={() => handlePrintPayslip(r.payrollId!)}
-          />
-        </Tooltip>
+        <div className="flex items-center">
+          <Tooltip title="Print payslip">
+            <Button
+              aria-label="Print payslip"
+              type="text"
+              size="small"
+              icon={<PrinterOutlined />}
+              onClick={() => handlePrintPayslip(r.payrollId!)}
+            />
+          </Tooltip>
+          {r.status === "Posted" && (
+            <UnreleasePayoutButton
+              payrollId={r.payrollId}
+              feature="13th Month Run"
+              description={UNRELEASE_PAYOUT_LABEL.THIRTEENTH_MONTH}
+            />
+          )}
+        </div>
       ) : (
         <Tooltip title="Not generated yet">
           <Button

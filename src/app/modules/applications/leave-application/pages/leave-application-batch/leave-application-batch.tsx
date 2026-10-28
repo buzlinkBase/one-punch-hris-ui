@@ -84,17 +84,9 @@ function buildEndDateTime(
   return adjusted.format("YYYY-MM-DDTHH:mm:ss");
 }
 
-function countBusinessDays(from: string, to: string): number {
+function countCalendarDays(from: string, to: string): number {
   if (!from || !to) return 0;
-  let count = 0;
-  let current = dayjs(from);
-  const end = dayjs(to);
-  while (!current.isAfter(end)) {
-    const dow = current.day();
-    if (dow !== 0 && dow !== 6) count++;
-    current = current.add(1, "day");
-  }
-  return count;
+  return Math.max(0, dayjs(to).diff(dayjs(from), "day") + 1);
 }
 
 const defaultEntry = () => ({
@@ -172,9 +164,9 @@ export default function LeaveApplicationBatch() {
     partialMode === "timerange" &&
     isCrossMidnight(startTime ?? "", endTime ?? "");
 
-  const businessDays =
+  const calendarDays =
     mode === "multiday"
-      ? countBusinessDays(leaveDateFrom ?? "", leaveDateTo ?? "")
+      ? countCalendarDays(leaveDateFrom ?? "", leaveDateTo ?? "")
       : 0;
 
   const onSubmit = async (values: BatchLeaveFormValues) => {
@@ -363,7 +355,7 @@ export default function LeaveApplicationBatch() {
               />
               {leaveDateFrom && leaveDateTo && (
                 <div className="mt-1 text-xs text-gray-500">
-                  {businessDays} business day{businessDays !== 1 ? "s" : ""}
+                  {calendarDays} day{calendarDays !== 1 ? "s" : ""}
                 </div>
               )}
             </Form.Item>

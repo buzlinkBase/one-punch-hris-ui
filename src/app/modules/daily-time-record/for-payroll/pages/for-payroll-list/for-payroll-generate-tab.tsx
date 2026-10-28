@@ -19,6 +19,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import {
   EyeOutlined,
+  FullscreenOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
   SaveOutlined,
@@ -37,6 +38,7 @@ import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-qu
 import type {
   PayrollNotReadyEmployee,
   PayrollRunResult,
+  PayrollSourceItem,
 } from "../../models/api/response/payroll-run-result.model";
 import {
   otPay,
@@ -45,6 +47,7 @@ import {
   basicPay,
   holidayPay,
 } from "../../utils/ot-nd-pay.util";
+import PayrollSourceModal from "../../components/payroll-source-modal";
 import PayrollRunPostModal from "../../components/payroll-run-post-modal";
 import TimeHourPayResultsModal from "../../components/time-hour-pay-results-modal";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
@@ -141,6 +144,15 @@ export default function ForPayrollGenerateTab() {
   const [notReadyOpen, setNotReadyOpen] = useState(false);
   const [dailyBreakdownRow, setDailyBreakdownRow] =
     useState<PayrollRunResult | null>(null);
+  // The results open in a full-screen dialog; the page keeps only a summary card.
+  const [previewOpen, setPreviewOpen] = useState(false);
+  // The amount whose composition is being shown (a Basic / allowance / bonus ... cell).
+  const [sourceView, setSourceView] = useState<{
+    row: PayrollRunResult;
+    title: string;
+    amount: number;
+    items: PayrollSourceItem[];
+  } | null>(null);
 
   const { data: payrollGroups = [], isLoading: groupsLoading } =
     usePayrollGroups();
@@ -244,6 +256,7 @@ export default function ForPayrollGenerateTab() {
   // to "everyone Ready".
   const clearResults = () => {
     setResults(null);
+    setPreviewOpen(false);
     setResultsSaved(false);
     setDeductionOverrides({});
     setNotReady([]);
@@ -282,8 +295,10 @@ export default function ForPayrollGenerateTab() {
         setResults(res.data);
         setResultsSaved(false);
         setNotReady(res.notReady ?? []);
-        if (!quiet)
+        if (!quiet) {
+          setPreviewOpen(true);
           message.success(`Preview: ${res.total} employee(s) calculated.`);
+        }
       },
       onError: (err) =>
         message.error(apiErrorMessage(err, "Payroll calculation failed.")),
@@ -306,6 +321,7 @@ export default function ForPayrollGenerateTab() {
         setNotReady([]);
         setPickedIds(null);
         setPostModalOpen(false);
+        setPreviewOpen(true);
         message.success(
           `Payroll generated and saved for ${res.total} employee(s).`,
         );
@@ -322,6 +338,49 @@ export default function ForPayrollGenerateTab() {
     results?.filter((r) => r.isDeductionCarrier === false).length ?? 0;
   // Columns before the first earnings band: view, employee, [deductions], salary type, daily rate.
   const leadColumns = showCarrier ? 5 : 4;
+
+  // An amount that is a sum of separate records (a salary share, allowances, adjustments ...)
+  // becomes a link that opens what it is made of. Falls back to plain text when the response
+  // carries no breakdown for it (e.g. a saved run re-read from the register).
+  const sourceCell = (
+    r: PayrollRunResult,
+    key: string,
+    title: string,
+    amount: number,
+    extra: PayrollSourceItem[] = [],
+  ) => {
+    const items = [...(r.sources?.[key] ?? []), ...extra];
+    if (!items.length || !amount) return formatMoney(amount);
+    return (
+      <Tooltip title={`See what ${title} is made of`}>
+        <Button
+          type="link"
+          size="small"
+          className="p-0 h-auto"
+          onClick={() => setSourceView({ row: r, title, amount, items })}
+        >
+          {formatMoney(amount)}
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  // Pay that comes from the days worked (OT, ND, rest day, holiday): opens the day-by-day pay.
+  const dailyCell = (r: PayrollRunResult, amount: number) => {
+    if (!r.timeHourPayResults?.length || !amount) return formatMoney(amount);
+    return (
+      <Tooltip title="See the day-by-day pay">
+        <Button
+          type="link"
+          size="small"
+          className="p-0 h-auto"
+          onClick={() => setDailyBreakdownRow(r)}
+        >
+          {formatMoney(amount)}
+        </Button>
+      </Tooltip>
+    );
+  };
 
   const deductionsColumn: ColumnsType<PayrollRunResult>[number] = {
     title: "Deductions",
@@ -449,19 +508,31 @@ export default function ForPayrollGenerateTab() {
             title: "Basic",
             key: "basicPay",
             align: "right",
-            render: (_, r) => formatMoney(basicPay(r)),
+            render: (_, r) => {
+              // Additive mode folds the night-hours day-rate portion into Basic (see ot-nd-pay.util).
+              const folded = basicPay(r) - r.basicPay;
+              return sourceCell(
+                r,
+                "basicPay",
+                "Basic",
+                basicPay(r),
+                folded
+                  ? [{ label: "Night-hours day-rate portion", amount: folded }]
+                  : [],
+              );
+            },
           },
           {
             title: "OT",
             key: "overtimePay",
             align: "right",
-            render: (_, r) => formatMoney(otPay(r)),
+            render: (_, r) => dailyCell(r, otPay(r)),
           },
           {
             title: "ND",
             key: "nd",
             align: "right",
-            render: (_, r) => formatMoney(ndPay(r)),
+            render: (_, r) => dailyCell(r, ndPay(r)),
           },
           {
             title: "NDOT",
@@ -471,7 +542,7 @@ export default function ForPayrollGenerateTab() {
             // ot-nd-pay.util.ts.
             render: (_, r) => {
               const v = ndotDisplayPay(r);
-              return v === null ? "—" : formatMoney(v);
+              return v === null ? "—" : dailyCell(r, v);
             },
           },
           {
@@ -479,20 +550,25 @@ export default function ForPayrollGenerateTab() {
             dataIndex: "restDayPay",
             key: "restDayPay",
             align: "right",
-            render: formatMoney,
+            render: (_, r) => dailyCell(r, r.restDayPay),
           },
           {
             title: "Holiday",
             key: "holidayPay",
             align: "right",
-            render: (_, r) => formatMoney(holidayPay(r)),
+            render: (_, r) => dailyCell(r, holidayPay(r)),
           },
           {
             title: "Allowances",
-            dataIndex: "totalRegularAllowances",
             key: "allowances",
             align: "right",
-            render: formatMoney,
+            render: (_, r) =>
+              sourceCell(
+                r,
+                "totalRegularAllowances",
+                "Allowances",
+                r.totalRegularAllowances,
+              ),
           },
           {
             title: "COLA",
@@ -503,38 +579,53 @@ export default function ForPayrollGenerateTab() {
           },
           {
             title: "Bonuses",
-            dataIndex: "totalBonuses",
             key: "bonuses",
             align: "right",
-            render: formatMoney,
+            render: (_, r) =>
+              sourceCell(r, "totalBonuses", "Bonuses", r.totalBonuses),
           },
           {
             title: "Commissions",
-            dataIndex: "totalCommissions",
             key: "commissions",
             align: "right",
-            render: formatMoney,
+            render: (_, r) =>
+              sourceCell(
+                r,
+                "totalCommissions",
+                "Commissions",
+                r.totalCommissions,
+              ),
           },
           {
             title: "De Minimis",
-            dataIndex: "totalDeminimises",
             key: "deminimis",
             align: "right",
-            render: formatMoney,
+            render: (_, r) =>
+              sourceCell(
+                r,
+                "totalDeminimises",
+                "De Minimis",
+                r.totalDeminimises,
+              ),
           },
           {
             title: "Other Income",
-            dataIndex: "totalOtherIncome",
             key: "otherIncome",
             align: "right",
-            render: formatMoney,
+            render: (_, r) =>
+              sourceCell(
+                r,
+                "totalOtherIncome",
+                "Other Income",
+                r.totalOtherIncome,
+              ),
           },
           {
             title: "Reimbursement",
-            dataIndex: "reimbursement",
             key: "reimbursement",
             align: "right",
-            render: formatMoney,
+            render: (_, r) =>
+              sourceCell(r, "reimbursement", "Reimbursement", r.reimbursement),
           },
           {
             title: "Gross",
@@ -591,10 +682,15 @@ export default function ForPayrollGenerateTab() {
           },
           {
             title: "Other Deductions",
-            dataIndex: "otherDeductions",
             key: "otherDed",
             align: "right",
-            render: formatMoney,
+            render: (_, r) =>
+              sourceCell(
+                r,
+                "otherDeductions",
+                "Other Deductions",
+                r.otherDeductions,
+              ),
           },
         ],
         BAND_CLASS.deductions,
@@ -868,6 +964,7 @@ export default function ForPayrollGenerateTab() {
 
       {results && (
         <Card
+          size="small"
           title={
             <Space>
               <span>Payroll Results</span>
@@ -875,128 +972,209 @@ export default function ForPayrollGenerateTab() {
             </Space>
           }
           extra={
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-8">
-              <Statistic
-                title="Total Gross"
-                value={totalGross}
-                precision={2}
-                prefix="₱"
-                valueStyle={{ fontSize: 14 }}
-              />
-              <Statistic
-                title="Total Net Pay"
-                value={totalNetPay}
-                precision={2}
-                prefix="₱"
-                valueStyle={{ fontSize: 14, color: token.colorPrimary }}
-              />
-            </div>
+            <Button
+              type="primary"
+              icon={<FullscreenOutlined />}
+              onClick={() => setPreviewOpen(true)}
+            >
+              Open full-screen preview
+            </Button>
           }
         >
-          {showCarrier && (
-            <Alert
-              type="info"
-              showIcon
-              className="mb-3"
-              message={
-                earningsOnlyCount > 0
-                  ? `${earningsOnlyCount} employee(s) are paid earnings only in this run. Their government contributions, tax, loans and other income are taken in one run per cutoff.`
-                  : "Every employee in this run has their deductions taken here. Government contributions, tax, loans and other income are taken in one run per cutoff."
-              }
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-8">
+            <Statistic
+              title="Total Gross"
+              value={totalGross}
+              precision={2}
+              prefix="₱"
+              valueStyle={{ fontSize: 14 }}
             />
-          )}
-          <div style={{ overflowX: "auto" }}>
-            <Table
-              rowKey="employeeId"
-              dataSource={results}
-              columns={resultColumns}
-              size="small"
-              pagination={{ pageSize: 50, showSizeChanger: false }}
-              scroll={{ x: "max-content" }}
-              summary={(rows) => {
-                const sum = (pick: (r: PayrollRunResult) => number) =>
-                  rows.reduce((s, r) => s + (pick(r) ?? 0), 0);
-
-                const totals = {
-                  basic: sum(basicPay),
-                  ot: sum(otPay),
-                  nd: sum(ndPay),
-                  ndot: sum((r) => ndotDisplayPay(r) ?? 0),
-                  restDay: sum((r) => r.restDayPay),
-                  holiday: sum(holidayPay),
-                  allowances: sum((r) => r.totalRegularAllowances),
-                  cola: sum((r) => r.cola),
-                  bonuses: sum((r) => r.totalBonuses),
-                  commissions: sum((r) => r.totalCommissions),
-                  deminimis: sum((r) => r.totalDeminimises),
-                  otherIncome: sum((r) => r.totalOtherIncome),
-                  reimbursement: sum((r) => r.reimbursement),
-                  gross: sum((r) => r.grossIncome),
-                  sss: sum((r) => r.sssContribution),
-                  phic: sum((r) => r.philHealthContribution),
-                  hdmf: sum((r) => r.pagIbigContribution),
-                  tax: sum((r) => r.withholdingTax),
-                  cashBond: sum((r) => r.cashBondDeduction),
-                  otherDed: sum((r) => r.otherDeductions),
-                  late: sum((r) => r.lateAmount),
-                  ut: sum((r) => r.underTimeAmount),
-                  absent: sum((r) => r.absencesAmount),
-                  net: sum((r) => r.netPay),
-                };
-                const cells = [
-                  totals.basic,
-                  totals.ot,
-                  totals.nd,
-                  totals.ndot,
-                  totals.restDay,
-                  totals.holiday,
-                  totals.allowances,
-                  totals.cola,
-                  totals.bonuses,
-                  totals.commissions,
-                  totals.deminimis,
-                  totals.otherIncome,
-                  totals.reimbursement,
-                  totals.gross,
-                  totals.sss,
-                  totals.phic,
-                  totals.hdmf,
-                  totals.tax,
-                  totals.cashBond,
-                  totals.otherDed,
-                  totals.late,
-                  totals.ut,
-                  totals.absent,
-                ];
-                return (
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell index={0} colSpan={leadColumns}>
-                      <strong>Total</strong>
-                    </Table.Summary.Cell>
-                    {cells.map((val, i) => (
-                      <Table.Summary.Cell
-                        key={i}
-                        index={i + leadColumns}
-                        align="right"
-                      >
-                        <strong>{formatMoney(val)}</strong>
-                      </Table.Summary.Cell>
-                    ))}
-                    <Table.Summary.Cell
-                      index={cells.length + leadColumns}
-                      align="right"
-                    >
-                      <Text strong style={{ color: token.colorPrimary }}>
-                        {formatMoney(totals.net)}
-                      </Text>
-                    </Table.Summary.Cell>
-                  </Table.Summary.Row>
-                );
-              }}
+            <Statistic
+              title="Total Net Pay"
+              value={totalNetPay}
+              precision={2}
+              prefix="₱"
+              valueStyle={{ fontSize: 14, color: token.colorPrimary }}
             />
           </div>
         </Card>
       )}
+
+      <Modal
+        open={!!results && previewOpen}
+        onCancel={() => setPreviewOpen(false)}
+        className="modal-fullscreen"
+        destroyOnHidden
+        title={
+          <div className="flex flex-col gap-1">
+            <Space>
+              <span>
+                {resultsSaved
+                  ? "Payroll Results (saved)"
+                  : "Payroll Run Preview"}
+              </span>
+              <Tag color="green">{results?.length ?? 0} employees</Tag>
+            </Space>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-normal">
+              {dateRange && (
+                <Text type="secondary">
+                  Cutoff: {fmtDate(dateRange[0])} — {fmtDate(dateRange[1])}
+                </Text>
+              )}
+              <Text type="secondary">
+                Payroll group: {selectedGroupLabel || "—"}
+              </Text>
+              <Text type="secondary">
+                Clients:{" "}
+                {clientIds.length
+                  ? clientIds.map((id) => clientNameOf(id)).join(", ")
+                  : "All"}
+              </Text>
+              <Text type="secondary">
+                Departments:{" "}
+                {departmentIds.length
+                  ? departmentIds
+                      .map(
+                        (id) =>
+                          departments.find((d) => d.id === id)?.name ?? id,
+                      )
+                      .join(", ")
+                  : "All"}
+              </Text>
+            </div>
+          </div>
+        }
+        footer={
+          <Space>
+            <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+            {!resultsSaved && (
+              <PermissionGate permission="Payroll Run:Create">
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  onClick={() => setPostModalOpen(true)}
+                  loading={generating}
+                  disabled={!canRun}
+                >
+                  Save Payroll{canRun ? ` (${employeeIds.length})` : ""}
+                </Button>
+              </PermissionGate>
+            )}
+          </Space>
+        }
+      >
+        {showCarrier && (
+          <Alert
+            type="info"
+            showIcon
+            className="mb-3"
+            message={
+              earningsOnlyCount > 0
+                ? `${earningsOnlyCount} employee(s) are paid earnings only in this run. Their government contributions, tax, loans and other income are taken in one run per cutoff.`
+                : "Every employee in this run has their deductions taken here. Government contributions, tax, loans and other income are taken in one run per cutoff."
+            }
+          />
+        )}
+        <div style={{ overflowX: "auto" }}>
+          <Table
+            rowKey="employeeId"
+            dataSource={results ?? undefined}
+            columns={resultColumns}
+            size="small"
+            pagination={{ pageSize: 50, showSizeChanger: false }}
+            scroll={{ x: "max-content" }}
+            summary={(rows) => {
+              const sum = (pick: (r: PayrollRunResult) => number) =>
+                rows.reduce((s, r) => s + (pick(r) ?? 0), 0);
+
+              const totals = {
+                basic: sum(basicPay),
+                ot: sum(otPay),
+                nd: sum(ndPay),
+                ndot: sum((r) => ndotDisplayPay(r) ?? 0),
+                restDay: sum((r) => r.restDayPay),
+                holiday: sum(holidayPay),
+                allowances: sum((r) => r.totalRegularAllowances),
+                cola: sum((r) => r.cola),
+                bonuses: sum((r) => r.totalBonuses),
+                commissions: sum((r) => r.totalCommissions),
+                deminimis: sum((r) => r.totalDeminimises),
+                otherIncome: sum((r) => r.totalOtherIncome),
+                reimbursement: sum((r) => r.reimbursement),
+                gross: sum((r) => r.grossIncome),
+                sss: sum((r) => r.sssContribution),
+                phic: sum((r) => r.philHealthContribution),
+                hdmf: sum((r) => r.pagIbigContribution),
+                tax: sum((r) => r.withholdingTax),
+                cashBond: sum((r) => r.cashBondDeduction),
+                otherDed: sum((r) => r.otherDeductions),
+                late: sum((r) => r.lateAmount),
+                ut: sum((r) => r.underTimeAmount),
+                absent: sum((r) => r.absencesAmount),
+                net: sum((r) => r.netPay),
+              };
+              const cells = [
+                totals.basic,
+                totals.ot,
+                totals.nd,
+                totals.ndot,
+                totals.restDay,
+                totals.holiday,
+                totals.allowances,
+                totals.cola,
+                totals.bonuses,
+                totals.commissions,
+                totals.deminimis,
+                totals.otherIncome,
+                totals.reimbursement,
+                totals.gross,
+                totals.sss,
+                totals.phic,
+                totals.hdmf,
+                totals.tax,
+                totals.cashBond,
+                totals.otherDed,
+                totals.late,
+                totals.ut,
+                totals.absent,
+              ];
+              return (
+                <Table.Summary.Row>
+                  <Table.Summary.Cell index={0} colSpan={leadColumns}>
+                    <strong>Total</strong>
+                  </Table.Summary.Cell>
+                  {cells.map((val, i) => (
+                    <Table.Summary.Cell
+                      key={i}
+                      index={i + leadColumns}
+                      align="right"
+                    >
+                      <strong>{formatMoney(val)}</strong>
+                    </Table.Summary.Cell>
+                  ))}
+                  <Table.Summary.Cell
+                    index={cells.length + leadColumns}
+                    align="right"
+                  >
+                    <Text strong style={{ color: token.colorPrimary }}>
+                      {formatMoney(totals.net)}
+                    </Text>
+                  </Table.Summary.Cell>
+                </Table.Summary.Row>
+              );
+            }}
+          />
+        </div>
+      </Modal>
+
+      <PayrollSourceModal
+        open={!!sourceView}
+        onClose={() => setSourceView(null)}
+        employeeName={sourceView?.row.fullName}
+        title={sourceView?.title ?? ""}
+        amount={sourceView?.amount ?? 0}
+        items={sourceView?.items ?? []}
+      />
 
       <TimeHourPayResultsModal
         open={!!dailyBreakdownRow}

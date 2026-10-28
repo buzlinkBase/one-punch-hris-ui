@@ -29,6 +29,8 @@ import type {
   MyApprovalHistory,
 } from "../../models/my-approval.model";
 import type { ApprovalInstanceStatus } from "@/shared/types/approval.model";
+import type { ErrorResponse } from "@/shared/types/api-response.model";
+import type { AxiosError } from "axios";
 import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 import { QuickRangeBar } from "@/shared/components/quick-range-bar/quick-range-bar";
 import { QUICK_RANGES } from "@/shared/utils/quick-date-ranges.util";
@@ -156,17 +158,16 @@ const baseColumns: ColumnsType<MyApproval> = [
     ),
   },
   {
-    title: "Step / Approver",
+    title: "Status",
     key: "step",
-    width: 240,
+    width: 260,
     render: (_, r) => (
       <Space direction="vertical" size={0}>
-        <span>
-          Step {r.stepNumber} of {r.totalSteps}
-        </span>
-        {r.currentApproverLabel && (
-          <span className="text-xs">Pending with {r.currentApproverLabel}</span>
-        )}
+        <ApprovalStatusCell
+          applicationType={r.applicationType}
+          applicationId={r.applicationId}
+          approvalStatus="ForApproval"
+        />
         {r.flowName && <span className="text-xs opacity-60">{r.flowName}</span>}{" "}
         {r.onBehalfOfName && (
           <Tag color="purple" className="mt-1 me-0!">
@@ -216,10 +217,14 @@ export default function PortalApprovals() {
             action === "Approved" ? "Request approved." : "Request declined.",
           );
         },
-        onError: () =>
+        onError: (error) => {
+          const pd = (error as AxiosError<ErrorResponse>).response?.data?.data;
           messageApi.error(
-            "That didn't go through. It may already have been decided, or you may no longer be able to approve it.",
-          ),
+            pd?.innerException ??
+              pd?.detail ??
+              "That didn't go through. It may already have been decided, or you may no longer be able to approve it.",
+          );
+        },
       },
     );
   };
