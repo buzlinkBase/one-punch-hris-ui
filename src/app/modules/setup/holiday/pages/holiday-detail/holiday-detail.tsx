@@ -11,6 +11,7 @@ import {
   Space,
   Tag,
   Alert,
+  ConfigProvider,
 } from "antd";
 import { useNavigate } from "@tanstack/react-router";
 import { useRouteParams } from "@/shared/hooks/use-route-params";
@@ -38,6 +39,7 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { isActiveStatus } from "@/shared/utils/status.util";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 
@@ -57,6 +59,10 @@ const filterByLabel = (
 export default function HolidayDetail() {
   const { id } = useRouteParams<{ id?: string }>();
   const isEdit = Boolean(id);
+  // No right to save (or a closed company): the record opens as View, every field locked.
+  const readOnly = !useHasPermission(
+    isEdit ? "Holiday Setup:Edit" : "Holiday Setup:Create",
+  );
   const navigate = useNavigate();
   const { data: selected } = useHoliday(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateHoliday();
@@ -193,7 +199,11 @@ export default function HolidayDetail() {
       </div>
 
       <div className="form-page-body">
-        <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        <Form
+          layout="vertical"
+          onFinish={handleSubmit(onSubmit)}
+          disabled={readOnly}
+        >
           <div className="form-grid-2">
             <Form.Item
               label={HOLIDAY_LABEL.DESCRIPTION}
@@ -420,18 +430,22 @@ export default function HolidayDetail() {
           </div>
 
           <div className="form-action-footer">
-            <Space className="form-action-footer-row">
-              <Button onClick={() => navigate({ to: "/setup/holiday" })}>
-                {NAVIGATION_BUTTON_LABEL.BACK}
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isUpdating || isCreating}
-              >
-                {NAVIGATION_BUTTON_LABEL.SAVE}
-              </Button>
-            </Space>
+            <ConfigProvider componentDisabled={false}>
+              <Space className="form-action-footer-row">
+                <Button onClick={() => navigate({ to: "/setup/holiday" })}>
+                  {NAVIGATION_BUTTON_LABEL.BACK}
+                </Button>
+                {!readOnly && (
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={isUpdating || isCreating}
+                  >
+                    {NAVIGATION_BUTTON_LABEL.SAVE}
+                  </Button>
+                )}
+              </Space>
+            </ConfigProvider>
           </div>
         </Form>
       </div>

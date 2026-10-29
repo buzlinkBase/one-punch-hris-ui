@@ -40,10 +40,13 @@ import CompanyInfoTab from "./company-info-tab";
 import RateMultipliersTab from "./rate-multipliers-tab";
 import PayrollSettingsTab from "./payroll-settings-tab";
 import AttachmentsTab from "./attachments-tab";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 function GeneralPolicyTab() {
   const { data: policy, isLoading } = useCompanyPolicy();
   const { mutateAsync: update, isPending } = useUpdateCompanyPolicy();
+  // No right to change these settings (or a closed company): every field locked, no Save.
+  const readOnly = !useHasPermission("Organization Setup:Edit");
 
   const {
     control,
@@ -142,6 +145,7 @@ function GeneralPolicyTab() {
 
   return (
     <Form
+      disabled={readOnly}
       layout="vertical"
       onFinish={handleSubmit(onSubmit)}
       className="form-page-body"
@@ -612,9 +616,11 @@ function GeneralPolicyTab() {
 
       <div className="form-action-footer">
         <Space className="form-action-footer-row">
-          <Button type="primary" htmlType="submit" loading={isPending}>
-            Save Settings
-          </Button>
+          {!readOnly && (
+            <Button type="primary" htmlType="submit" loading={isPending}>
+              Save Settings
+            </Button>
+          )}
         </Space>
       </div>
     </Form>

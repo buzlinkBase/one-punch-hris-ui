@@ -48,10 +48,19 @@ export function useBankDisbursement(
   from: string,
   to: string,
   clientId?: string,
+  departmentId?: string,
 ) {
   return useQuery({
-    queryKey: ["payroll-reports", "bank-disbursement", from, to, clientId],
-    queryFn: () => payrollReportsApi.bankDisbursement(from, to, clientId),
+    queryKey: [
+      "payroll-reports",
+      "bank-disbursement",
+      from,
+      to,
+      clientId,
+      departmentId,
+    ],
+    queryFn: () =>
+      payrollReportsApi.bankDisbursement(from, to, clientId, departmentId),
   });
 }
 

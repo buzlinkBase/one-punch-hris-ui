@@ -21,6 +21,7 @@ import {
   useDeleteDependent,
 } from "../hooks/use-employee-relations-queries";
 import type { DependentResponse } from "../models/api/response/employee-relations-response.models";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const GENDER_OPTIONS = [
   { value: "Male", label: "Male" },
@@ -140,29 +141,31 @@ export default function EmployeeDependentsTab({
       width: 72,
       fixed: "right",
       render: (_, row) => (
-        <Space size="small">
-          <Button
-            aria-label="Edit"
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => openEdit(row)}
-          />
-          <Popconfirm
-            title="Remove this dependent?"
-            onConfirm={() => handleDelete(row)}
-            okText="Remove"
-            okButtonProps={{ danger: true }}
-          >
+        <WriteGate>
+          <Space size="small">
             <Button
-              aria-label="Delete"
+              aria-label="Edit"
               size="small"
               type="text"
-              danger
-              icon={<DeleteOutlined />}
+              icon={<EditOutlined />}
+              onClick={() => openEdit(row)}
             />
-          </Popconfirm>
-        </Space>
+            <Popconfirm
+              title="Remove this dependent?"
+              onConfirm={() => handleDelete(row)}
+              okText="Remove"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                aria-label="Delete"
+                size="small"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+              />
+            </Popconfirm>
+          </Space>
+        </WriteGate>
       ),
     },
   ];
@@ -170,16 +173,18 @@ export default function EmployeeDependentsTab({
   return (
     <>
       <div className="flex justify-end mb-3">
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            reset();
-            setOpen(true);
-          }}
-        >
-          Add Dependent
-        </Button>
+        <WriteGate>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              reset();
+              setOpen(true);
+            }}
+          >
+            Add Dependent
+          </Button>
+        </WriteGate>
       </div>
       <Table
         rowKey="id"

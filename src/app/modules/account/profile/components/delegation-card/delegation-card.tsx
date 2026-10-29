@@ -9,6 +9,7 @@ import {
 } from "@/app/modules/setup/approval-delegations/hooks/use-approval-delegation-queries";
 import { DelegationFormModal } from "@/app/modules/setup/approval-delegations/components/delegation-form-modal/delegation-form-modal";
 import { DelegationTable } from "@/app/modules/setup/approval-delegations/components/delegation-table/delegation-table";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Text } = Typography;
 
@@ -27,14 +28,16 @@ export function DelegationCard() {
     <Card
       title="While I'm away"
       extra={
-        <Button
-          size="small"
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setModalOpen(true)}
-        >
-          Delegate
-        </Button>
+        <WriteGate>
+          <Button
+            size="small"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setModalOpen(true)}
+          >
+            Delegate
+          </Button>
+        </WriteGate>
       }
     >
       <Text type="secondary">

@@ -12,6 +12,7 @@ import {
   siteOptionGroups,
   type SiteLite,
 } from "@/app/modules/change-schedule/work-rotation/utils/site-client-options.util";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 interface Props {
   assignTarget: AssignTarget | null;
@@ -92,32 +93,36 @@ export default function AssignShiftModal({
       destroyOnClose
       footer={
         <div className="flex items-center justify-between">
-          <Tooltip
-            title={
-              assignTarget?.overrideId
-                ? undefined
-                : "No Work Rotation Plan override to remove — this shift comes from Fixed Schedule or the employee's Permanent Shift."
-            }
-          >
-            <Button
-              danger
-              disabled={!assignTarget?.overrideId}
-              loading={isRemoving}
-              onClick={onRemove}
+          <WriteGate>
+            <Tooltip
+              title={
+                assignTarget?.overrideId
+                  ? undefined
+                  : "No Work Rotation Plan override to remove — this shift comes from Fixed Schedule or the employee's Permanent Shift."
+              }
             >
-              Remove Shift
-            </Button>
-          </Tooltip>
+              <Button
+                danger
+                disabled={!assignTarget?.overrideId}
+                loading={isRemoving}
+                onClick={onRemove}
+              >
+                Remove Shift
+              </Button>
+            </Tooltip>
+          </WriteGate>
           <Space>
             <Button onClick={onCancel}>Cancel</Button>
-            <Button
-              type="primary"
-              loading={isAssigning}
-              disabled={!selectedShiftId}
-              onClick={onAssign}
-            >
-              Assign
-            </Button>
+            <WriteGate>
+              <Button
+                type="primary"
+                loading={isAssigning}
+                disabled={!selectedShiftId}
+                onClick={onAssign}
+              >
+                Assign
+              </Button>
+            </WriteGate>
           </Space>
         </div>
       }

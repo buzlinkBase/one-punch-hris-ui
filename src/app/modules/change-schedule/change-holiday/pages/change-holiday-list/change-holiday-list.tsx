@@ -260,6 +260,7 @@ export default function ChangeHolidayList() {
           >
             <span>
               <IconAction
+                write
                 title="Delete"
                 danger
                 icon={<DeleteOutlined />}
@@ -313,6 +314,7 @@ export default function ChangeHolidayList() {
           >
             <span>
               <IconAction
+                write
                 title="Delete"
                 danger
                 icon={<DeleteOutlined />}

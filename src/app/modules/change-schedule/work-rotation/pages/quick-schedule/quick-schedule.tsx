@@ -77,6 +77,7 @@ import {
   splitCellKey,
   type CellPaint,
 } from "../../utils/schedule-grid.util";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title, Text } = Typography;
 
@@ -625,29 +626,31 @@ export default function QuickSchedule() {
   };
   const brushChip = brush ? shiftChips.get(brush) : undefined;
   const actionButtons = (
-    <Space wrap>
-      <Button
-        disabled={visibleEmployees.length === 0}
-        onClick={fillSelectedRows}
-      >
-        Paint {selectedIds.size ? "selected rows" : "all rows"}
-      </Button>
-      <Button
-        icon={<RetweetOutlined />}
-        disabled={visibleEmployees.length === 0}
-        onClick={() => setPatternOpen(true)}
-      >
-        Repeat a pattern
-      </Button>
-      <Button
-        icon={<CopyOutlined />}
-        loading={isCopying}
-        disabled={visibleEmployees.length === 0}
-        onClick={copyPreviousPeriod}
-      >
-        Copy previous period
-      </Button>
-    </Space>
+    <WriteGate>
+      <Space wrap>
+        <Button
+          disabled={visibleEmployees.length === 0}
+          onClick={fillSelectedRows}
+        >
+          Paint {selectedIds.size ? "selected rows" : "all rows"}
+        </Button>
+        <Button
+          icon={<RetweetOutlined />}
+          disabled={visibleEmployees.length === 0}
+          onClick={() => setPatternOpen(true)}
+        >
+          Repeat a pattern
+        </Button>
+        <Button
+          icon={<CopyOutlined />}
+          loading={isCopying}
+          disabled={visibleEmployees.length === 0}
+          onClick={copyPreviousPeriod}
+        >
+          Copy previous period
+        </Button>
+      </Space>
+    </WriteGate>
   );
   const shiftOptions = paletteShifts.map((s) => ({
     value: s.id,
@@ -944,31 +947,33 @@ export default function QuickSchedule() {
         )}
       </Card>
 
-      <div className="sticky bottom-0 z-40 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-md">
-        <Text>
-          {hasChanges
-            ? `${entries.length} change${entries.length === 1 ? "" : "s"} for ${changedEmployees} employee${changedEmployees === 1 ? "" : "s"}`
-            : "No unsaved changes"}
-        </Text>
-        <Space>
-          <Button
-            icon={<ReloadOutlined />}
-            disabled={edits.size === 0 || isSaving}
-            onClick={() => setEdits(new Map())}
-          >
-            Discard
-          </Button>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={isSaving}
-            disabled={!hasChanges}
-            onClick={save}
-          >
-            Save schedule
-          </Button>
-        </Space>
-      </div>
+      <WriteGate>
+        <div className="sticky bottom-0 z-40 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-md">
+          <Text>
+            {hasChanges
+              ? `${entries.length} change${entries.length === 1 ? "" : "s"} for ${changedEmployees} employee${changedEmployees === 1 ? "" : "s"}`
+              : "No unsaved changes"}
+          </Text>
+          <Space>
+            <Button
+              icon={<ReloadOutlined />}
+              disabled={edits.size === 0 || isSaving}
+              onClick={() => setEdits(new Map())}
+            >
+              Discard
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={isSaving}
+              disabled={!hasChanges}
+              onClick={save}
+            >
+              Save schedule
+            </Button>
+          </Space>
+        </div>
+      </WriteGate>
 
       <CellEditorModal
         target={editTarget}

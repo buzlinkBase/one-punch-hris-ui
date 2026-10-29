@@ -97,7 +97,7 @@ const PAY_TYPE_OPTIONS = [
 /** File (create), edit (own pending) or view (read-only) a leave application. */
 export default function PortalLeaveApplicationCreate() {
   const navigate = useNavigate();
-  const { id, mode: pageMode } = usePortalFormMode();
+  const { id, mode: pageMode, closed } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
   const { data: leaveTypes = [] } = useLeaveTypes();
   const { data: applications = [], isLoading: applicationsLoading } =
@@ -112,6 +112,7 @@ export default function PortalLeaveApplicationCreate() {
   const record = id ? applications.find((a) => a.id === id) : undefined;
   // Only a still-pending application is editable; anything else opens as a view.
   const readOnly =
+    closed ||
     pageMode === "view" ||
     (!!record && record.approvalStatus !== "ForApproval");
 

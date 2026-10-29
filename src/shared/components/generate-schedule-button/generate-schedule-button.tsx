@@ -1,5 +1,6 @@
 import { Button, Popconfirm } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 interface GenerateScheduleButtonProps {
   // True once rows were edited or removed by hand: regenerating would throw that work away.
@@ -11,6 +12,9 @@ export function GenerateScheduleButton({
   hasManualChanges,
   onGenerate,
 }: GenerateScheduleButtonProps) {
+  const closed = useCompanyClosed();
+  if (closed) return null;
+
   const button = (
     <Button
       icon={<SyncOutlined />}

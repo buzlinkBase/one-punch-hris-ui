@@ -40,12 +40,12 @@ import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { FundLedgerSummaryResponse } from "../../models/api/response/payroll-reports.model";
 import { PAYROLL_REPORTS_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
-import { authStorage } from "@/core/auth/auth-storage";
 import { useClients } from "@/app/modules/setup/client/hooks/use-client-queries";
 import { useUniformAllowanceSchedule } from "@/app/modules/setup/client/hooks/use-uniform-allowance-policy-queries";
 import { UniformScheduleView } from "../../components/uniform-schedule-view/uniform-schedule-view";
 import { UniformCreditLogDrawer } from "../../components/uniform-credit-log-drawer/uniform-credit-log-drawer";
 import { formatMoney } from "@/shared/utils/money.util";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Text } = Typography;
 
@@ -118,6 +118,7 @@ export default function UniformAllowanceLedger() {
 
   // ── Release (batch disbursement for a period) ────────────────────────────────
   const [releaseOpen, setReleaseOpen] = useState(false);
+  const canRelease = useHasPermission("Payroll Reports:Edit");
   const [releaseEmployeeIds, setReleaseEmployeeIds] = useState<string[]>([]);
   const [releaseAmounts, setReleaseAmounts] = useState<Record<string, number>>(
     {},
@@ -316,7 +317,7 @@ export default function UniformAllowanceLedger() {
         okText="Release"
         confirmLoading={isReleasing}
         okButtonProps={{
-          disabled: !authStorage.hasAnyPermission("Payroll Reports:Edit"),
+          disabled: !canRelease,
         }}
         width={640}
         destroyOnHidden

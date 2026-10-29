@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Button, DatePicker, Form, Modal, Space, theme } from "antd";
 import { ArrowRightOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,6 +6,7 @@ import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useCreateChangeRestDay } from "@/app/modules/change-schedule/change-rest-day/hooks/use-change-rest-day-queries";
 import { getNotify } from "@/shared/utils/notify";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 interface Props {
   open: boolean;
@@ -178,9 +179,11 @@ function ChangeRestDayForm({
 
       <div className="flex justify-end gap-2 mt-3">
         <Button onClick={onCancel}>Cancel</Button>
-        <Button type="primary" loading={isSubmitting} onClick={handleOk}>
-          Save
-        </Button>
+        <WriteGate>
+          <Button type="primary" loading={isSubmitting} onClick={handleOk}>
+            Save
+          </Button>
+        </WriteGate>
       </div>
     </>
   );

@@ -19,6 +19,7 @@ import {
   parseWallClock,
   secondsUntilNextPunch,
 } from "../../utils/punch-clock.util";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title, Text } = Typography;
 
@@ -80,19 +81,21 @@ export default function PortalPunch() {
               <div className="text-5xl font-semibold tabular-nums">
                 {serverNow?.format("HH:mm:ss") ?? "--:--:--"}
               </div>
-              <Button
-                type="primary"
-                size="large"
-                icon={<ClockCircleOutlined />}
-                className="w-full max-w-xs"
-                loading={isPending}
-                disabled={!status || waitSeconds > 0}
-                onClick={onPunch}
-              >
-                {waitSeconds > 0
-                  ? `Wait ${formatCountdown(waitSeconds)}`
-                  : "Punch Now"}
-              </Button>
+              <WriteGate>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<ClockCircleOutlined />}
+                  className="w-full max-w-xs"
+                  loading={isPending}
+                  disabled={!status || waitSeconds > 0}
+                  onClick={onPunch}
+                >
+                  {waitSeconds > 0
+                    ? `Wait ${formatCountdown(waitSeconds)}`
+                    : "Punch Now"}
+                </Button>
+              </WriteGate>
               {status && (
                 <Text type="secondary" className="text-center text-sm">
                   {status.lastPunchAt

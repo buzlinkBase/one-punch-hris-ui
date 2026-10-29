@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { PayrollReportShell } from "../../components/payroll-report-shell/payroll-report-shell";
 import { ClientFilter } from "../../components/client-filter/client-filter";
 import { ReportNameFilter } from "../../components/report-name-filter/report-name-filter";
+import { useDepartments } from "@/app/modules/setup/department/hooks/use-department-queries";
 import { useBankDisbursement } from "../../hooks/use-payroll-reports-queries";
 import { useReportNameFilter } from "../../hooks/use-report-name-filter";
 import type { BankDisbursementResponse } from "../../models/api/response/payroll-reports.model";
@@ -126,6 +127,7 @@ const cashColumns: ColumnsType<BankDisbursementResponse> = [
 
 export default function BankDisbursement() {
   const [clientId, setClientId] = useState<string | undefined>();
+  const [departmentId, setDepartmentId] = useState<string | undefined>();
   const [mode, setMode] = useState<ModeFilter>("All");
   const [range, setRange] = useState<[string, string]>([
     dayjs().startOf("month").format("YYYY-MM-DD"),
@@ -135,7 +137,12 @@ export default function BankDisbursement() {
     data = [],
     isLoading,
     refetch,
-  } = useBankDisbursement(range[0], range[1], clientId);
+  } = useBankDisbursement(range[0], range[1], clientId, departmentId);
+  const { data: departments = [] } = useDepartments();
+  const departmentOptions = departments
+    .filter((d) => !d.status || d.status.toUpperCase() === "ACTIVE")
+    .map((d) => ({ value: d.id, label: d.name }))
+    .sort((a, b) => a.label.localeCompare(b.label));
   const byMode = data.filter((r) => mode === "All" || r.modeOfPayment === mode);
   const isCash = mode === "Cash";
   const employeeFilter = useReportNameFilter(byMode, (r) => r.fullName);
@@ -186,6 +193,17 @@ export default function BankDisbursement() {
               />
             </Form.Item>
             <ClientFilter value={clientId} onChange={setClientId} />
+            <Form.Item label="Department" className="mb-0 min-w-52">
+              <Select
+                allowClear
+                showSearch={{ optionFilterProp: "label" }}
+                placeholder="All Departments"
+                options={departmentOptions}
+                value={departmentId}
+                onChange={setDepartmentId}
+                className="w-full"
+              />
+            </Form.Item>
             <ReportNameFilter
               label="Employee"
               options={employeeFilter.options}

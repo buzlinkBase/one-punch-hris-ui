@@ -113,42 +113,44 @@ function ClientDrawer({
       key: "actions",
       align: "right",
       render: (_, u) => (
-        <div className="flex justify-end gap-2">
-          {u.invitePending ? (
-            <Button
-              size="small"
-              onClick={() =>
-                userAction.mutate({ kind: "resend", userId: u.id })
-              }
-            >
-              Resend
-            </Button>
-          ) : (
-            <>
+        <PermissionGate permission={CLIENT_PORTAL_PERMISSION.MANAGE}>
+          <div className="flex justify-end gap-2">
+            {u.invitePending ? (
               <Button
                 size="small"
                 onClick={() =>
-                  userAction.mutate({ kind: "reset", userId: u.id })
+                  userAction.mutate({ kind: "resend", userId: u.id })
                 }
               >
-                Reset access
+                Resend
               </Button>
-              <Popconfirm
-                title="Remove this person from the client?"
-                description="They lose access to this client. Their other clients, if any, are not affected."
-                okText="Remove"
-                okButtonProps={{ danger: true }}
-                onConfirm={() =>
-                  userAction.mutate({ kind: "remove", userId: u.id })
-                }
-              >
-                <Button size="small" danger>
-                  Remove
+            ) : (
+              <>
+                <Button
+                  size="small"
+                  onClick={() =>
+                    userAction.mutate({ kind: "reset", userId: u.id })
+                  }
+                >
+                  Reset access
                 </Button>
-              </Popconfirm>
-            </>
-          )}
-        </div>
+                <Popconfirm
+                  title="Remove this person from the client?"
+                  description="They lose access to this client. Their other clients, if any, are not affected."
+                  okText="Remove"
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() =>
+                    userAction.mutate({ kind: "remove", userId: u.id })
+                  }
+                >
+                  <Button size="small" danger>
+                    Remove
+                  </Button>
+                </Popconfirm>
+              </>
+            )}
+          </div>
+        </PermissionGate>
       ),
     },
   ];
@@ -213,28 +215,30 @@ function ClientDrawer({
         className="mb-4"
       />
 
-      <Form
-        form={inviteForm}
-        layout="inline"
-        onFinish={submitInvite}
-        className="gap-y-2"
-      >
-        <Form.Item
-          name="fullName"
-          rules={[{ required: true, message: "Name" }]}
+      <PermissionGate permission={CLIENT_PORTAL_PERMISSION.MANAGE}>
+        <Form
+          form={inviteForm}
+          layout="inline"
+          onFinish={submitInvite}
+          className="gap-y-2"
         >
-          <Input placeholder="Administrator name" />
-        </Form.Item>
-        <Form.Item
-          name="email"
-          rules={[{ required: true, type: "email", message: "Email" }]}
-        >
-          <Input placeholder="Email" />
-        </Form.Item>
-        <Button type="primary" htmlType="submit" loading={invite.isPending}>
-          Invite administrator
-        </Button>
-      </Form>
+          <Form.Item
+            name="fullName"
+            rules={[{ required: true, message: "Name" }]}
+          >
+            <Input placeholder="Administrator name" />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            rules={[{ required: true, type: "email", message: "Email" }]}
+          >
+            <Input placeholder="Email" />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" loading={invite.isPending}>
+            Invite administrator
+          </Button>
+        </Form>
+      </PermissionGate>
     </Drawer>
   );
 }

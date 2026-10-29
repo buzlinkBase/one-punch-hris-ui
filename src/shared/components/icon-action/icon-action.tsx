@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Button, Tooltip } from "antd";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 interface Props {
   /** Shown as the tooltip and read by screen readers, e.g. "Edit". */
@@ -9,6 +10,8 @@ interface Props {
   danger?: boolean;
   loading?: boolean;
   disabled?: boolean;
+  /** A change (edit, delete, approve ...): hidden while the company is closed. */
+  write?: boolean;
 }
 
 /**
@@ -23,7 +26,10 @@ export function IconAction({
   danger,
   loading,
   disabled,
+  write,
 }: Props) {
+  const closed = useCompanyClosed();
+  if (write && closed) return null;
   return (
     <Tooltip title={title}>
       <Button

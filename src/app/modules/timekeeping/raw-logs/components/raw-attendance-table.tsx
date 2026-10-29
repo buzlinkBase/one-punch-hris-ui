@@ -182,6 +182,7 @@ export default function RawAttendanceTable({ data, loading }: Props) {
           <Space size={4}>
             {canEdit && (
               <IconAction
+                write
                 title="Edit"
                 icon={<EditOutlined />}
                 onClick={() => setEditing(toEntry(record))}
@@ -202,6 +203,7 @@ export default function RawAttendanceTable({ data, loading }: Props) {
               >
                 <span>
                   <IconAction
+                    write
                     title="Delete"
                     danger
                     icon={<DeleteOutlined />}

@@ -25,6 +25,7 @@ import {
   isImageType,
 } from "@/shared/utils/attachment-file.util";
 import { openAttachment } from "./open-attachment";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 interface AttachmentFieldProps {
   ownerType: AttachmentOwnerType;
@@ -53,8 +54,11 @@ export function AttachmentField({
   ownerId,
   label = "Attachments",
   imagesOnly,
-  readOnly,
+  readOnly: readOnlyProp,
 }: AttachmentFieldProps) {
+  // A closed company (read-only, suspended, on hold) still lists and opens files, but changes none.
+  const closed = useCompanyClosed();
+  const readOnly = readOnlyProp || closed;
   const enabled = useAttachmentsEnabled(ownerType);
   const { files, upload, remove } = useAttachments(ownerType, ownerId);
   const inputRef = useRef<HTMLInputElement>(null);

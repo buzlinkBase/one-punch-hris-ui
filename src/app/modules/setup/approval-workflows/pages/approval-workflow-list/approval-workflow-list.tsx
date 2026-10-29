@@ -42,8 +42,8 @@ import {
   fromScopeDtos,
 } from "../../services/scope-conditions.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
-import { authStorage } from "@/core/auth/auth-storage";
 import type { ApprovalApplicationType } from "@/shared/types/approval.model";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 
@@ -57,7 +57,7 @@ export default function ApprovalWorkflowList() {
   const [applicationType, setApplicationType] =
     useState<ApprovalApplicationType>("Leave");
   const [checkOpen, setCheckOpen] = useState(false);
-  const canManage = authStorage.hasAnyPermission("Approval Workflows:Edit");
+  const canManage = useHasPermission("Approval Workflows:Edit");
   const { labelFor } = useScopeOptions();
 
   const { data: workflows = [], isLoading } =

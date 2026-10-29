@@ -1,5 +1,6 @@
 import { Button, Popconfirm, Space, Tooltip } from "antd";
 import { CloseOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 interface PortalApplicationRowActionsProps {
   status: string;
@@ -13,7 +14,8 @@ interface PortalApplicationRowActionsProps {
 /**
  * Row actions on the portal's "My …" application lists: View is always available (read-only);
  * Edit and Withdraw only while the application is still pending. Editing after an approver has
- * signed off sends it back to the first approver (server-side).
+ * signed off sends it back to the first approver (server-side). A closed company (read-only,
+ * suspended, on hold) gets View only.
  */
 export function PortalApplicationRowActions({
   status,
@@ -23,7 +25,8 @@ export function PortalApplicationRowActions({
   onWithdraw,
   withdrawing,
 }: PortalApplicationRowActionsProps) {
-  const isPending = status === "ForApproval";
+  const closed = useCompanyClosed();
+  const isPending = status === "ForApproval" && !closed;
   return (
     <Space size={0}>
       <Tooltip title="View">

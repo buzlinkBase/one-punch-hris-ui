@@ -21,6 +21,7 @@ import { PortalApplicationRowActions } from "../../../shared/components/portal-a
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
 import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
 import { formatMoney } from "@/shared/utils/money.util";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title } = Typography;
 
@@ -123,13 +124,17 @@ export default function PortalLoanApplicationList() {
               Every loan you've filed and its amortization schedule.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate({ to: "/portal/loan-applications/create" })}
-          >
-            Request Loan
-          </Button>
+          <WriteGate>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/portal/loan-applications/create" })
+              }
+            >
+              Request Loan
+            </Button>
+          </WriteGate>
         </div>
       </div>
 

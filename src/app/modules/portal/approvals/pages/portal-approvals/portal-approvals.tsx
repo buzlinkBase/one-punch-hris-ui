@@ -38,6 +38,8 @@ import { ApprovalActionModal } from "@/shared/components/approval-action-modal/a
 import { APPLICATION_TYPE_LABEL } from "@/app/modules/setup/approval-workflows/constants/label.const";
 import { useCreateMyDelegation } from "@/app/modules/setup/approval-delegations/hooks/use-approval-delegation-queries";
 import { DelegationFormModal } from "@/app/modules/setup/approval-delegations/components/delegation-form-modal/delegation-form-modal";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 dayjs.extend(relativeTime);
 
@@ -199,6 +201,7 @@ export default function PortalApprovals() {
   const [delegating, setDelegating] = useState(false);
   const { mutateAsync: createDelegation, isPending: isDelegating } =
     useCreateMyDelegation();
+  const closed = useCompanyClosed();
 
   const confirm = (note?: string) => {
     if (!pending) return;
@@ -229,34 +232,35 @@ export default function PortalApprovals() {
     );
   };
 
-  const forApprovalColumns: ColumnsType<MyApproval> = [
-    ...baseColumns,
-    {
-      title: "",
-      key: "actions",
-      width: 220,
-      render: (_, r) => (
-        <Space>
-          <Button
-            size="small"
-            type="primary"
-            icon={<CheckOutlined />}
-            onClick={() => setPending({ item: r, action: "Approved" })}
-          >
-            Approve
-          </Button>
-          <Button
-            size="small"
-            danger
-            icon={<CloseOutlined />}
-            onClick={() => setPending({ item: r, action: "Declined" })}
-          >
-            Decline
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  const actionsColumn: ColumnsType<MyApproval>[number] = {
+    title: "",
+    key: "actions",
+    width: 220,
+    render: (_, r) => (
+      <Space>
+        <Button
+          size="small"
+          type="primary"
+          icon={<CheckOutlined />}
+          onClick={() => setPending({ item: r, action: "Approved" })}
+        >
+          Approve
+        </Button>
+        <Button
+          size="small"
+          danger
+          icon={<CloseOutlined />}
+          onClick={() => setPending({ item: r, action: "Declined" })}
+        >
+          Decline
+        </Button>
+      </Space>
+    ),
+  };
+  // A closed company (read-only, suspended, on hold) decides nothing: the requests just show.
+  const forApprovalColumns: ColumnsType<MyApproval> = closed
+    ? baseColumns
+    : [...baseColumns, actionsColumn];
 
   const showingForApproval = tab === "for-approval";
   const rows = showingForApproval ? items : inProgress;
@@ -275,12 +279,14 @@ export default function PortalApprovals() {
               is away, and requests still with other approvers.
             </p>
           </div>
-          <Button
-            icon={<UserSwitchOutlined />}
-            onClick={() => setDelegating(true)}
-          >
-            While I'm away
-          </Button>
+          <WriteGate>
+            <Button
+              icon={<UserSwitchOutlined />}
+              onClick={() => setDelegating(true)}
+            >
+              While I'm away
+            </Button>
+          </WriteGate>
         </div>
       </div>
 

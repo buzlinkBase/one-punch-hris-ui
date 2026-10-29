@@ -31,6 +31,7 @@ import {
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import { formatMoney } from "@/shared/utils/money.util";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title } = Typography;
 
@@ -107,16 +108,18 @@ export default function PortalThirteenthMonth() {
                       </Tag>
                     </Tooltip>
                   ) : (
-                    <Popconfirm
-                      title="Acknowledge receipt of this document?"
-                      description="Confirms you've received this document. This can't be undone."
-                      onConfirm={() => acknowledge(data.payrollId!)}
-                      okText="Acknowledge"
-                    >
-                      <Button loading={isAcknowledging}>
-                        Acknowledge Receipt
-                      </Button>
-                    </Popconfirm>
+                    <WriteGate>
+                      <Popconfirm
+                        title="Acknowledge receipt of this document?"
+                        description="Confirms you've received this document. This can't be undone."
+                        onConfirm={() => acknowledge(data.payrollId!)}
+                        okText="Acknowledge"
+                      >
+                        <Button loading={isAcknowledging}>
+                          Acknowledge Receipt
+                        </Button>
+                      </Popconfirm>
+                    </WriteGate>
                   ))}
               </Space>
             }

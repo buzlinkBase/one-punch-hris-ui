@@ -14,7 +14,8 @@ import {
   hasAccount,
   mergeClientUsers,
 } from "../utils/classify-users";
-import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { authStorage } from "@/core/auth/auth-storage";
+import { useAuthUser } from "@/core/auth/use-auth-user";
 import type { UserRow } from "../models/api/response/user-response.model";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
 import type { SendInvitationRequest } from "../models/api/request/send-invitation-request.model";
@@ -85,7 +86,12 @@ export function useUserRows() {
   });
 
   // Client-portal users are not company members, so they come from their own list.
-  const canSeeClientUsers = useHasPermission(CLIENT_USERS_PERMISSION);
+  // A read gate, so checked on the session directly: useHasPermission would drop this Manage
+  // code while the company is read-only and hide a list that's still viewable.
+  useAuthUser();
+  const canSeeClientUsers = authStorage.hasAnyPermission(
+    CLIENT_USERS_PERMISSION,
+  );
   const clientUsers = useQuery({
     queryKey: [...QUERY_KEY, "client-users"],
     queryFn: () => clientUserApi.getAll(),

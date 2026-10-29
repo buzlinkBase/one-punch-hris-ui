@@ -110,6 +110,7 @@ export default function AttendanceEntryTable({
           {onEdit && (
             <PermissionGate permission="Attendance Manual Entry:Edit">
               <IconAction
+                write
                 title="Edit"
                 icon={<EditOutlined />}
                 onClick={() => onEdit(record)}
@@ -125,7 +126,12 @@ export default function AttendanceEntryTable({
                 onConfirm={() => onDelete(record.id)}
               >
                 <span>
-                  <IconAction title="Delete" danger icon={<DeleteOutlined />} />
+                  <IconAction
+                    write
+                    title="Delete"
+                    danger
+                    icon={<DeleteOutlined />}
+                  />
                 </span>
               </Popconfirm>
             </PermissionGate>

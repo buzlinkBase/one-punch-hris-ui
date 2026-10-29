@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiErrorMessage } from "@/core/http/api-error";
 import {
   Alert,
@@ -65,6 +65,7 @@ import { compactChips, labelOf } from "@/shared/utils/filter-chips.util";
 import { getNotify } from "@/shared/utils/notify";
 import type { EmployeeFilterResponse } from "@/app/modules/timekeeping/attendance-entry/models/api/response/employee-filter-response.model";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -942,14 +943,18 @@ function CreateForm() {
           >
             {NAVIGATION_BUTTON_LABEL.BACK}
           </Button>
-          <Button
-            type="primary"
-            loading={isSubmitting}
-            disabled={isSubmitDisabled}
-            onClick={handleSubmit}
+          <PermissionGate
+            permission={["Work Rotation:Create", "Work Rotation:ManageOwnTeam"]}
           >
-            {saveLabel}
-          </Button>
+            <Button
+              type="primary"
+              loading={isSubmitting}
+              disabled={isSubmitDisabled}
+              onClick={handleSubmit}
+            >
+              {saveLabel}
+            </Button>
+          </PermissionGate>
         </Space>
       </div>
     </div>
@@ -1196,14 +1201,21 @@ function EditForm({ id }: { id: string }) {
           </Card>
 
           <div className="form-actions">
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isUpdating}
-              disabled={isUpdating}
+            <PermissionGate
+              permission={[
+                "Work Rotation:Create",
+                "Work Rotation:ManageOwnTeam",
+              ]}
             >
-              Update
-            </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isUpdating}
+                disabled={isUpdating}
+              >
+                Update
+              </Button>
+            </PermissionGate>
             <Button
               onClick={() => navigate({ to: "/change-schedule/work-rotation" })}
             >

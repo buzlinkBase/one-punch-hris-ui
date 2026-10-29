@@ -23,6 +23,8 @@ import { SectionTabs } from "@/shared/components/section-nav/section-tabs";
 import BirthdayGreetingBanner from "../../../shared/components/birthday-greeting-banner";
 import { formatFullName } from "@/app/modules/setup/employee/utils/format-full-name";
 import { EMPLOYEE_LABEL } from "@/app/modules/setup/employee/constants/label.const";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 const { Title, Text } = Typography;
 
@@ -50,6 +52,7 @@ function formatDate(value?: string | null) {
 
 export default function PortalProfile() {
   const navigate = useNavigate();
+  const closed = useCompanyClosed();
   const { data: employee, isLoading } = useMyEmployee();
   const { data: requests = [] } = useMyProfileUpdateRequests();
   const setSharing = useSetBirthdaySharing();
@@ -72,13 +75,15 @@ export default function PortalProfile() {
           </div>
           {employee && (
             <Space>
-              <Button
-                icon={<EditOutlined />}
-                disabled={!!pendingRequest}
-                onClick={() => navigate({ to: "/portal/profile/edit" })}
-              >
-                Edit Profile
-              </Button>
+              <WriteGate>
+                <Button
+                  icon={<EditOutlined />}
+                  disabled={!!pendingRequest}
+                  onClick={() => navigate({ to: "/portal/profile/edit" })}
+                >
+                  Edit Profile
+                </Button>
+              </WriteGate>
             </Space>
           )}
         </div>
@@ -117,7 +122,7 @@ export default function PortalProfile() {
                 <Switch
                   checked={employee.shareBirthday ?? false}
                   loading={setSharing.isPending}
-                  disabled={!employee.dob}
+                  disabled={closed || !employee.dob}
                   onChange={(share) => setSharing.mutate(share)}
                 />
               </div>
@@ -132,6 +137,7 @@ export default function PortalProfile() {
                 <Switch
                   checked={employee.shareContact ?? false}
                   loading={setContactSharing.isPending}
+                  disabled={closed}
                   onChange={(share) => setContactSharing.mutate(share)}
                 />
               </div>

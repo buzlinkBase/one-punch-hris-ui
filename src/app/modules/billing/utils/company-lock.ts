@@ -15,3 +15,14 @@ export function isCompanyLocked(
   if (snapshot?.restriction) return true;
   return snapshot?.accessMode === "ReadOnly" && !canViewBilling;
 }
+
+/**
+ * Whether the company takes no changes at all, for anyone: its plan lapsed (read-only) or an
+ * operator suspended it / put it on legal hold. The UI hides every write action then, and the
+ * header keeps only the company switcher -- the server refuses the writes either way.
+ */
+export function isCompanyClosed(
+  snapshot: EntitlementSnapshot | undefined,
+): boolean {
+  return !!snapshot?.restriction || snapshot?.accessMode === "ReadOnly";
+}

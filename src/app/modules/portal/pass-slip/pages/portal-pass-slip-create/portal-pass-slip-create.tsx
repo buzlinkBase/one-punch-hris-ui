@@ -46,7 +46,7 @@ const BACK_TO = "/portal/pass-slip";
 export default function PortalPassSlipCreate() {
   const { token } = theme.useToken();
   const navigate = useNavigate();
-  const { id, mode } = usePortalFormMode();
+  const { id, mode, closed } = usePortalFormMode();
   // A new filing opened from My Incomplete Logs arrives with the day's date and missing
   // punches in the search params.
   const search = useSearch({ strict: false }) as Record<string, unknown>;
@@ -64,7 +64,9 @@ export default function PortalPassSlipCreate() {
   const isExisting = !!id;
   // Only a still-pending slip is editable; anything else opens as a view.
   const readOnly =
-    mode === "view" || (!!record && record.approvalStatus !== "ForApproval");
+    closed ||
+    mode === "view" ||
+    (!!record && record.approvalStatus !== "ForApproval");
 
   const {
     control,

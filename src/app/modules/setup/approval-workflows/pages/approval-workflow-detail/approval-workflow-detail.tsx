@@ -21,7 +21,6 @@ import {
   CopyOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { authStorage } from "@/core/auth/auth-storage";
 import {
   useForm,
   useFieldArray,
@@ -72,6 +71,7 @@ import { usePositions } from "@/app/modules/setup/position/hooks/use-position-qu
 import { useEmployeeFilter } from "@/app/modules/timekeeping/attendance-entry/hooks/use-attendance-entry-queries";
 import { withReferencedEmployees } from "../../services/approver-options";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 
@@ -207,7 +207,7 @@ export default function ApprovalWorkflowDetail() {
     }
   }, [selected, isEdit, copyFrom, reset]);
 
-  const canManage = authStorage.hasAnyPermission("Approval Workflows:Edit");
+  const canManage = useHasPermission("Approval Workflows:Edit");
   // Read-only while requests are still going through it (they read its steps live), or for
   // someone who may only view workflows.
   const inProgress = isEdit && selected ? selected.inProgressCount : 0;

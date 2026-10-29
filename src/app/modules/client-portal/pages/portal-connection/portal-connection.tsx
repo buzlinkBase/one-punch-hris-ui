@@ -17,6 +17,7 @@ import {
   useSendAllPortalClients,
 } from "../../hooks/use-client-portal-queries";
 import { CLIENT_PORTAL_LABEL } from "../../constants/label.const";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title, Text } = Typography;
 
@@ -104,9 +105,11 @@ export default function PortalConnection() {
           >
             <Input.Password autoComplete="off" placeholder="cpk_…" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={save.isPending}>
-            Save
-          </Button>
+          <WriteGate>
+            <Button type="primary" htmlType="submit" loading={save.isPending}>
+              Save
+            </Button>
+          </WriteGate>
         </Form>
       </Card>
 
@@ -118,13 +121,15 @@ export default function PortalConnection() {
             the portal was unavailable.
           </Text>
           <div>
-            <Button
-              onClick={sendAllClients}
-              loading={sendAll.isPending}
-              disabled={!connection.data?.enabled}
-            >
-              Send all clients
-            </Button>
+            <WriteGate>
+              <Button
+                onClick={sendAllClients}
+                loading={sendAll.isPending}
+                disabled={!connection.data?.enabled}
+              >
+                Send all clients
+              </Button>
+            </WriteGate>
           </div>
         </div>
       </Card>

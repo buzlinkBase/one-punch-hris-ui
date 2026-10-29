@@ -52,7 +52,7 @@ const BACK_TO = "/portal/official-business";
 /** File (create), edit (own pending) or view (read-only) an official business application. */
 export default function PortalOfficialBusinessCreate() {
   const navigate = useNavigate();
-  const { id, mode: pageMode } = usePortalFormMode();
+  const { id, mode: pageMode, closed } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
   const { data: applications = [], isLoading: applicationsLoading } =
     useMyTravelOrderApplications();
@@ -66,6 +66,7 @@ export default function PortalOfficialBusinessCreate() {
   const record = id ? applications.find((a) => a.id === id) : undefined;
   // Only a still-pending application is editable; anything else opens as a view.
   const readOnly =
+    closed ||
     pageMode === "view" ||
     (!!record && record.approvalStatus !== "ForApproval");
 

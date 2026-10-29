@@ -26,6 +26,7 @@ import {
   RATE_TYPE_DESCRIPTION,
   RATE_TYPE_LABEL,
 } from "@/app/modules/setup/payroll-rate/constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Text } = Typography;
 
@@ -211,14 +212,16 @@ export default function RateMultipliersTab() {
 
       <div className="form-action-footer">
         <Space className="form-action-footer-row">
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={saving}
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
+          <PermissionGate permission="Organization Setup:Edit">
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={saving}
+              onClick={handleSave}
+            >
+              Save Changes
+            </Button>
+          </PermissionGate>
         </Space>
       </div>
     </div>

@@ -30,6 +30,7 @@ import {
   BLOOD_TYPE_OPTIONS,
   CIVIL_STATUS_OPTIONS,
 } from "@/app/modules/setup/employee/constants/label.const";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -214,9 +215,15 @@ export default function PortalProfileEdit() {
                   <Button onClick={backTo}>
                     {NAVIGATION_BUTTON_LABEL.CANCEL}
                   </Button>
-                  <Button type="primary" htmlType="submit" loading={isPending}>
-                    Submit for Approval
-                  </Button>
+                  <WriteGate>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={isPending}
+                    >
+                      Submit for Approval
+                    </Button>
+                  </WriteGate>
                 </Space>
               </div>
             </Form>

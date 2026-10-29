@@ -28,13 +28,13 @@ import {
 } from "../../hooks/use-client-queries";
 import { useOperationAreas } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
 import { ImageUpload } from "@/shared/components/image-upload/image-upload";
-import { authStorage } from "@/core/auth/auth-storage";
 import { CLIENT_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import ClientBillingTab from "./client-billing-tab";
 import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Title } = Typography;
 
@@ -69,7 +69,7 @@ function GeneralInfoTab({ id, isEdit }: GeneralInfoTabProps) {
   // Local override of the saved logo ("" = removed); undefined shows what the server has.
   const [logoPreview, setLogoPreview] = useState<string | undefined>();
   // Same gate as the logo endpoint: anyone who may edit -- or, while creating, add -- clients.
-  const canEditLogo = authStorage.hasAnyPermission(
+  const canEditLogo = useHasPermission(
     "Workforce Setup:Edit",
     ...(isEdit ? [] : ["Workforce Setup:Create"]),
   );

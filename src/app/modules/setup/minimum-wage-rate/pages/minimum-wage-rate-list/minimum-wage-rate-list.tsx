@@ -7,6 +7,7 @@ import {
 } from "../../hooks/use-minimum-wage-rate-queries";
 import MinimumWageRateTable from "../../components/minimum-wage-rate-table";
 import { MINIMUM_WAGE_RATE_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -40,15 +41,17 @@ export default function MinimumWageRateList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                navigate({ to: "/setup/minimum-wage-rate/create" })
-              }
-            >
-              Add Rate
-            </Button>
+            <PermissionGate permission="Minimum Wage Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  navigate({ to: "/setup/minimum-wage-rate/create" })
+                }
+              >
+                Add Rate
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

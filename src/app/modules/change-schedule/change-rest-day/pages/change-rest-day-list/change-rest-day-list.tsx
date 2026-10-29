@@ -285,6 +285,7 @@ export default function ChangeRestDayList() {
               />
               <PermissionGate permission="Change Rest Day:Approve">
                 <IconAction
+                  write
                   title="Approve"
                   icon={<CheckOutlined />}
                   onClick={() =>
@@ -292,6 +293,7 @@ export default function ChangeRestDayList() {
                   }
                 />
                 <IconAction
+                  write
                   title="Decline"
                   danger
                   icon={<CloseOutlined />}
@@ -314,6 +316,7 @@ export default function ChangeRestDayList() {
             >
               <span>
                 <IconAction
+                  write
                   title="Delete"
                   danger
                   icon={<DeleteOutlined />}
@@ -368,6 +371,7 @@ export default function ChangeRestDayList() {
           >
             <span>
               <IconAction
+                write
                 title="Delete"
                 danger
                 icon={<DeleteOutlined />}

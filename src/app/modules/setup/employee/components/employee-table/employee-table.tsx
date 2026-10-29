@@ -1,6 +1,5 @@
 import { Table, Button, Space, Dropdown, Tag, Modal } from "antd";
 import {
-  EditOutlined,
   DeleteOutlined,
   MailOutlined,
   PrinterOutlined,
@@ -37,8 +36,8 @@ import {
 } from "@/shared/components/table-column-filters";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { employeeApi } from "../../services/employee.api";
-import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
-import { authStorage } from "@/core/auth/auth-storage";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 interface Props {
   data: EmployeeResponse[];
@@ -74,6 +73,9 @@ export default function EmployeeTable({
   onOpeningBalance,
 }: Props) {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Workforce Setup:Edit");
+  const canDelete = useHasPermission("Workforce Setup:Delete");
+  const canInvite = useHasPermission("Users:Invite");
   const filterOptions = useEmployeeFilterOptions();
 
   const handlePrint201 = (id: string) =>
@@ -150,7 +152,7 @@ export default function EmployeeTable({
             onClick: () => handlePrint201(record.id),
           },
           onInvite &&
-            authStorage.hasPermission("Users:Invite") && {
+            canInvite && {
               key: "invite",
               icon: <MailOutlined />,
               label: "Invite to Company",
@@ -169,11 +171,11 @@ export default function EmployeeTable({
             onClick: () => onOpeningBalance(record),
           },
           onDelete &&
-            authStorage.hasAnyPermission("Workforce Setup:Delete") && {
+            canDelete && {
               type: "divider" as const,
             },
           onDelete &&
-            authStorage.hasAnyPermission("Workforce Setup:Delete") && {
+            canDelete && {
               key: "delete",
               icon: <DeleteOutlined />,
               label: "Delete",
@@ -193,14 +195,10 @@ export default function EmployeeTable({
 
         return (
           <Space>
-            <PermissionGate permission="Workforce Setup:Edit">
-              <Button
-                type="text"
-                icon={<EditOutlined />}
-                title="Edit"
-                onClick={() => navigate({ to: `/setup/employee/${record.id}` })}
-              />
-            </PermissionGate>
+            <RecordOpenAction
+              canEdit={canEdit}
+              onOpen={() => navigate({ to: `/setup/employee/${record.id}` })}
+            />
             <Dropdown trigger={["click"]} menu={{ items: menuItems }}>
               <Button
                 type="text"

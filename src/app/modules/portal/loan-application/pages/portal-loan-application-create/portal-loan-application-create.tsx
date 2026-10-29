@@ -48,7 +48,7 @@ const BACK_TO = "/portal/loan-applications";
 /** File (create), edit (own pending) or view (read-only) a loan application. */
 export default function PortalLoanApplicationCreate() {
   const navigate = useNavigate();
-  const { id, mode } = usePortalFormMode();
+  const { id, mode, closed } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
   const { data: rawDeductions = [] } = useDeductions();
   const { data: rawDeductionTypes = [] } = useDeductionTypes();
@@ -61,7 +61,9 @@ export default function PortalLoanApplicationCreate() {
   const record = id ? loans.find((l) => l.id === id) : undefined;
   // Only a still-pending loan is editable; anything else opens as a view.
   const readOnly =
-    mode === "view" || (!!record && record.approvalStatus !== "ForApproval");
+    closed ||
+    mode === "view" ||
+    (!!record && record.approvalStatus !== "ForApproval");
 
   const [breakdown, setBreakdown] = useState<LoanBreakdownRow[]>([]);
 

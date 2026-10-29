@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isCompanyLocked } from "./company-lock";
+import { isCompanyClosed, isCompanyLocked } from "./company-lock";
 import type { EntitlementSnapshot } from "../models/api/response/subscription-response.model";
 
 const snapshot = (
@@ -42,5 +42,27 @@ describe("isCompanyLocked", () => {
   it("locks no one while the plan is current, or before it loads", () => {
     expect(isCompanyLocked(snapshot("Full"), false)).toBe(false);
     expect(isCompanyLocked(undefined, false)).toBe(false);
+  });
+});
+
+describe("isCompanyClosed", () => {
+  it("is closed while read-only, whoever is looking", () => {
+    expect(isCompanyClosed(snapshot("ReadOnly"))).toBe(true);
+  });
+
+  it("is closed while an operator has suspended it or put it on legal hold", () => {
+    for (const kind of ["Suspended", "LegalHold"] as const) {
+      expect(
+        isCompanyClosed({
+          ...snapshot("Full"),
+          restriction: { kind, reason: null },
+        }),
+      ).toBe(true);
+    }
+  });
+
+  it("is open while the plan is current, or before it loads", () => {
+    expect(isCompanyClosed(snapshot("Full"))).toBe(false);
+    expect(isCompanyClosed(undefined)).toBe(false);
   });
 });

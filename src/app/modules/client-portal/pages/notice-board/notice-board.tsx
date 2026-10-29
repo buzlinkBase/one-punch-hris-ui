@@ -141,11 +141,13 @@ export default function NoticeBoard() {
         <PermissionGate permission={OPERATIONS_PERMISSION.MANAGE}>
           <div className="flex justify-end gap-2">
             <IconAction
+              write
               title="Edit"
               icon={<EditOutlined />}
               onClick={() => open(n)}
             />
             <IconAction
+              write
               title="Remove"
               danger
               icon={<DeleteOutlined />}

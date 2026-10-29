@@ -997,6 +997,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           "Choose the period and filters, then print (opens a PDF in a new tab) or export to Excel.",
           "Report tables end with a Grand Total row for amount columns. It adds up every row of your filtered result, not just the page you are on. Excel/CSV exports end with a Total row too, and exported amounts are real numbers, so you can sort and sum them in Excel.",
           "Most reports have a Client filter. Pick a client to see only that client's employees, or clear it for everyone. Prints, exports and upload files follow the same filter.",
+          "Disbursement also has a Department filter, so you can pay out one department at a time. It combines with Client, Mode of Payment, Employee and Bank, and the export follows it.",
           "Government forms use the details in Company Settings › Company Info. Fill those in first.",
           "Sample use: after the Oct 16–31 payroll is approved, print Disbursement for the bank, then export the SSS, PhilHealth and Pag-IBIG remittances for the month to pay and upload by their deadlines.",
           "Cash Bond: use the pencil on a row to change an employee's cash bond per payroll. It applies from the next payroll run, payrolls already generated keep their amounts, and the change (old rate, new rate, reason) is kept under Rate history in the row's ledger and in the audit log. Changing it in Employee Details is logged the same way. A cash bond refunded through Last Pay shows in the Refunded column and the balance drops accordingly.",

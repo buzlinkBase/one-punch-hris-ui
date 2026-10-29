@@ -62,6 +62,7 @@ import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { forPayrollApi } from "../../services/for-payroll.api";
 import { formatMoney } from "@/shared/utils/money.util";
 import { apiErrorMessage } from "@/core/http/api-error";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title, Text } = Typography;
 
@@ -495,22 +496,24 @@ export default function GenerateYearEndAdjustment() {
                     </Text>
                   )}
                 </Space>
-                <Popconfirm
-                  title={`Reopen ${y.year}?`}
-                  description="This allows new or edited payroll for this year again. Use with caution."
-                  okText="Reopen"
-                  okButtonProps={{ danger: true }}
-                  cancelText="Cancel"
-                  onConfirm={() => handleReopenYear(y.year)}
-                >
-                  <Button
-                    size="small"
-                    icon={<UnlockOutlined />}
-                    loading={isReopening}
+                <WriteGate>
+                  <Popconfirm
+                    title={`Reopen ${y.year}?`}
+                    description="This allows new or edited payroll for this year again. Use with caution."
+                    okText="Reopen"
+                    okButtonProps={{ danger: true }}
+                    cancelText="Cancel"
+                    onConfirm={() => handleReopenYear(y.year)}
                   >
-                    Reopen
-                  </Button>
-                </Popconfirm>
+                    <Button
+                      size="small"
+                      icon={<UnlockOutlined />}
+                      loading={isReopening}
+                    >
+                      Reopen
+                    </Button>
+                  </Popconfirm>
+                </WriteGate>
               </div>
             ))}
           </Space>

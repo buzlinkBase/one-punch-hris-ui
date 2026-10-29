@@ -52,9 +52,9 @@ export const FAQ_ARTICLES: HelpArticle[] = [
           "Biometric devices keep sending punches while HRMS is off, but the system discards them. Once HRMS is back on, they don't come back automatically, but you can upload those logs manually in Upload Attendance.",
       },
       {
-        heading: "My changes aren't saving and a banner says read-only",
+        heading: "My edit buttons are gone and a banner says read-only",
         body: [
-          "Your company's trial ended or a payment is overdue, so it is in read-only mode. You can still view and export your data. Ask your company's owner or billing admin to open Billing and pay or renew.",
+          "Your company's trial ended or a payment is overdue, so it is in read-only mode. You can still view and export your data, but every change button (Add, Edit, Delete, Save, Approve, Upload and so on) is hidden, records open in View mode, and My Portal takes no new filings or punches. Search, Help, Notifications and Company Settings also leave the top bar. Ask your company's owner or billing admin to open Billing and pay or renew.",
         ],
       },
       {

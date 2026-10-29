@@ -45,7 +45,7 @@ const BACK_TO = "/portal/overtime";
 /** File (create), edit (own pending) or view (read-only) an overtime application. */
 export default function PortalOvertimeCreate() {
   const navigate = useNavigate();
-  const { id, mode } = usePortalFormMode();
+  const { id, mode, closed } = usePortalFormMode();
   const { data: employee, isLoading: employeeLoading } = useMyEmployee();
   const { data: applications = [], isLoading: applicationsLoading } =
     useMyOvertimeApplications();
@@ -57,7 +57,9 @@ export default function PortalOvertimeCreate() {
   const record = id ? applications.find((a) => a.id === id) : undefined;
   // Only a still-pending application is editable; anything else opens as a view.
   const readOnly =
-    mode === "view" || (!!record && record.approvalStatus !== "ForApproval");
+    closed ||
+    mode === "view" ||
+    (!!record && record.approvalStatus !== "ForApproval");
 
   const {
     control,

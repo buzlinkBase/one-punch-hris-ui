@@ -138,6 +138,7 @@ function PendingCommandsSection({ sn }: { sn: string }) {
           >
             <span>
               <IconAction
+                write
                 title="Delete"
                 danger
                 icon={<DeleteOutlined />}

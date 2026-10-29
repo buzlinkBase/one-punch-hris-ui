@@ -14,6 +14,7 @@ import {
 } from "../../hooks/use-unregister-employee-queries";
 import type { UnregisterEmployeeFilter as UnregisterEmployeeFilterRequest } from "../../models/api/request/unregister-employee-filter.model";
 import type { UnregisteredAttendanceLog } from "../../models/api/response/unregister-employee-response.model";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -68,13 +69,15 @@ export default function UnregisterEmployeeList() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/employee/create" })}
-            >
-              Create Employee
-            </Button>
+            <PermissionGate permission="Workforce Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/employee/create" })}
+              >
+                Create Employee
+              </Button>
+            </PermissionGate>
             <Badge count={activeFilterCount} size="small">
               <Button
                 icon={<FilterOutlined />}

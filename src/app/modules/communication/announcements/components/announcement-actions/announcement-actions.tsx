@@ -51,6 +51,7 @@ import {
   useUnpublishAnnouncement,
   useUnscheduleAnnouncement,
 } from "../../hooks/use-announcement-queries";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 const { Text } = Typography;
 
@@ -138,6 +139,8 @@ export function AnnouncementActions({
   trigger = "icon",
 }: AnnouncementActionsProps) {
   useAuthUser();
+  // Every action here changes the announcement: none while the company is closed.
+  const closed = useCompanyClosed();
   const navigate = useNavigate();
   const [modal, modalContext] = Modal.useModal();
   const [dialog, setDialog] = useState<DialogKind>(null);
@@ -272,8 +275,8 @@ export function AnnouncementActions({
     }
   };
 
-  const allowed = announcement.allowedActions.filter((a) =>
-    authStorage.hasAnyPermission(ACTION_META[a].permission),
+  const allowed = announcement.allowedActions.filter(
+    (a) => !closed && authStorage.hasAnyPermission(ACTION_META[a].permission),
   );
   if (allowed.length === 0) return null;
 

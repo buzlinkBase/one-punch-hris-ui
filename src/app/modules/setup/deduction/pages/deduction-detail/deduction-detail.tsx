@@ -39,6 +39,7 @@ import { DEDUCTION_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title, Text } = Typography;
 
@@ -123,31 +124,33 @@ function ManageDeductionTypesModal({
       key: "actions",
       width: 72,
       render: (_, row) => (
-        <Space size="small">
-          <Button
-            aria-label="Edit"
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => loadForEdit(row)}
-          />
-          <Popconfirm
-            title="Delete this type?"
-            onConfirm={() =>
-              remove(row.id, { onSuccess: () => message.success("Deleted.") })
-            }
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-          >
+        <WriteGate>
+          <Space size="small">
             <Button
-              aria-label="Delete"
+              aria-label="Edit"
               size="small"
               type="text"
-              icon={<DeleteOutlined />}
-              danger
+              icon={<EditOutlined />}
+              onClick={() => loadForEdit(row)}
             />
-          </Popconfirm>
-        </Space>
+            <Popconfirm
+              title="Delete this type?"
+              onConfirm={() =>
+                remove(row.id, { onSuccess: () => message.success("Deleted.") })
+              }
+              okText="Delete"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                aria-label="Delete"
+                size="small"
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+              />
+            </Popconfirm>
+          </Space>
+        </WriteGate>
       ),
     },
   ];

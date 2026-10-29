@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   App,
@@ -57,6 +57,7 @@ import { compactChips, labelOf } from "@/shared/utils/filter-chips.util";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { z } from "zod";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title, Text } = Typography;
 
@@ -643,14 +644,16 @@ function CreateForm() {
           >
             {NAVIGATION_BUTTON_LABEL.BACK}
           </Button>
-          <Button
-            type="primary"
-            loading={isSubmitting}
-            disabled={isSubmitDisabled}
-            onClick={handleSubmit}
-          >
-            {saveLabel}
-          </Button>
+          <PermissionGate permission="Change Holiday:Create">
+            <Button
+              type="primary"
+              loading={isSubmitting}
+              disabled={isSubmitDisabled}
+              onClick={handleSubmit}
+            >
+              {saveLabel}
+            </Button>
+          </PermissionGate>
         </Space>
       </div>
     </div>
@@ -823,14 +826,16 @@ function EditForm({ id }: { id: string }) {
           </Card>
 
           <div className="form-actions">
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={isUpdating}
-              disabled={isUpdating}
-            >
-              Update
-            </Button>
+            <PermissionGate permission="Change Holiday:Edit">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isUpdating}
+                disabled={isUpdating}
+              >
+                Update
+              </Button>
+            </PermissionGate>
             <Button
               onClick={() =>
                 navigate({ to: "/change-schedule/change-holiday" })

@@ -40,6 +40,7 @@ import {
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title, Text } = Typography;
 
@@ -253,28 +254,30 @@ export default function PayrollGroupDetail() {
                   </Space>
                 );
               })}
-              <Space>
-                <Button
-                  size="small"
-                  icon={<PlusOutlined />}
-                  onClick={() =>
-                    append({ day: 1, isEndOfMonth: false, label: "" })
-                  }
-                >
-                  Add Cutoff
-                </Button>
-                <Tooltip title="Replace the list above with the recommended cutoffs for the selected Payroll Frequency">
+              <WriteGate>
+                <Space>
                   <Button
                     size="small"
-                    icon={<UndoOutlined />}
+                    icon={<PlusOutlined />}
                     onClick={() =>
-                      replace(CUTOFF_DAY_PRESETS[payrollFrequency])
+                      append({ day: 1, isEndOfMonth: false, label: "" })
                     }
                   >
-                    Use Recommended
+                    Add Cutoff
                   </Button>
-                </Tooltip>
-              </Space>
+                  <Tooltip title="Replace the list above with the recommended cutoffs for the selected Payroll Frequency">
+                    <Button
+                      size="small"
+                      icon={<UndoOutlined />}
+                      onClick={() =>
+                        replace(CUTOFF_DAY_PRESETS[payrollFrequency])
+                      }
+                    >
+                      Use Recommended
+                    </Button>
+                  </Tooltip>
+                </Space>
+              </WriteGate>
             </div>
           </Form.Item>
 

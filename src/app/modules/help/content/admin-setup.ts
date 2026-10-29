@@ -912,6 +912,8 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "When payment is overdue: read-only mode",
         body: [
           "If a trial ends or a payment isn't made, the company goes read-only. You can still view and export your data, but changes aren't saved, and a banner explains why. Paying or renewing restores full access.",
+          "While read-only, suspended or on hold, nothing can be changed anywhere: Add, Edit, Delete, Save, Approve, Upload, Post and the other change buttons are hidden, records open in View mode with every field locked, and in My Portal nothing can be filed, edited, withdrawn, acknowledged or punched. They come back as soon as access is restored.",
+          "The top bar also keeps only the company switcher and the light/dark toggle: Search, Help, Notifications, Company Settings and New company are hidden until the company is active again.",
           "If the plan doesn't include HRMS, every HRMS page is locked, but Billing stays open so you can fix it.",
         ],
         warning:

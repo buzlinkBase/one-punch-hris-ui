@@ -21,6 +21,7 @@ import {
 } from "../hooks/use-employee-relations-queries";
 import type { EmploymentHistoryResponse } from "../models/api/response/employee-relations-response.models";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const EMPTY = { companyName: "", position: "", fromDate: "", toDate: "" };
 
@@ -134,29 +135,31 @@ export default function EmployeeEmploymentHistoryTab({
       width: 72,
       fixed: "right",
       render: (_, row) => (
-        <Space size="small">
-          <Button
-            aria-label="Edit"
-            size="small"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => openEdit(row)}
-          />
-          <Popconfirm
-            title="Remove this employment record?"
-            onConfirm={() => handleDelete(row)}
-            okText="Remove"
-            okButtonProps={{ danger: true }}
-          >
+        <WriteGate>
+          <Space size="small">
             <Button
-              aria-label="Delete"
+              aria-label="Edit"
               size="small"
               type="text"
-              danger
-              icon={<DeleteOutlined />}
+              icon={<EditOutlined />}
+              onClick={() => openEdit(row)}
             />
-          </Popconfirm>
-        </Space>
+            <Popconfirm
+              title="Remove this employment record?"
+              onConfirm={() => handleDelete(row)}
+              okText="Remove"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                aria-label="Delete"
+                size="small"
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+              />
+            </Popconfirm>
+          </Space>
+        </WriteGate>
       ),
     },
   ];
@@ -164,16 +167,18 @@ export default function EmployeeEmploymentHistoryTab({
   return (
     <>
       <div className="flex justify-end mb-3">
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            reset();
-            setOpen(true);
-          }}
-        >
-          Add Record
-        </Button>
+        <WriteGate>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              reset();
+              setOpen(true);
+            }}
+          >
+            Add Record
+          </Button>
+        </WriteGate>
       </div>
       <Table
         rowKey="id"

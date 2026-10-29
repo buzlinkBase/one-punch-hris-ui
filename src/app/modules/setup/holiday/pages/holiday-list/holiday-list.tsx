@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { useHolidays, useDeleteHoliday } from "../../hooks/use-holiday-queries";
 import HolidayTable from "../../components/holiday-table";
 import { HOLIDAY_LABEL } from "../../constants/label.const";
+import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 
 const { Title } = Typography;
 
@@ -62,13 +63,15 @@ export default function HolidayList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate({ to: "/setup/holiday/create" })}
-            >
-              Add Holiday
-            </Button>
+            <PermissionGate permission="Holiday Setup:Create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate({ to: "/setup/holiday/create" })}
+              >
+                Add Holiday
+              </Button>
+            </PermissionGate>
           </Space>
         </div>
       </div>

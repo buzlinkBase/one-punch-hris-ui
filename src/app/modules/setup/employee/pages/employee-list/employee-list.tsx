@@ -157,34 +157,36 @@ export default function EmployeeList() {
               onClick={() => refetch()}
               loading={isFetching && !isLoading}
             />
-            <Dropdown
-              trigger={["click"]}
-              menu={{
-                items: [
-                  {
-                    key: "template",
-                    icon: <DownloadOutlined />,
-                    label: "Download Template",
-                    onClick: handleDownloadTemplate,
-                    disabled: downloading,
-                  },
-                  {
-                    key: "upload",
-                    icon: <UploadOutlined />,
-                    label: "Upload File",
-                    onClick: handleImportClick,
-                    disabled: previewing,
-                  },
-                ] as MenuProps["items"],
-              }}
-            >
-              <Button
-                icon={<UploadOutlined />}
-                loading={previewing || downloading}
+            <PermissionGate permission="Workforce Setup:Create">
+              <Dropdown
+                trigger={["click"]}
+                menu={{
+                  items: [
+                    {
+                      key: "template",
+                      icon: <DownloadOutlined />,
+                      label: "Download Template",
+                      onClick: handleDownloadTemplate,
+                      disabled: downloading,
+                    },
+                    {
+                      key: "upload",
+                      icon: <UploadOutlined />,
+                      label: "Upload File",
+                      onClick: handleImportClick,
+                      disabled: previewing,
+                    },
+                  ] as MenuProps["items"],
+                }}
               >
-                Import
-              </Button>
-            </Dropdown>
+                <Button
+                  icon={<UploadOutlined />}
+                  loading={previewing || downloading}
+                >
+                  Import
+                </Button>
+              </Dropdown>
+            </PermissionGate>
             <PermissionGate permission="Workforce Setup:Create">
               <Button
                 type="primary"

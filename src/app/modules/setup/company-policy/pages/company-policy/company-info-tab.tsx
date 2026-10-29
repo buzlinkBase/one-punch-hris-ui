@@ -43,6 +43,7 @@ import { ImageUpload } from "@/shared/components/image-upload/image-upload";
 import { CompanyClassificationFields } from "@/shared/components/company-classification-fields/company-classification-fields";
 import { CLASSIFICATION_LABEL } from "@/shared/industry/constants/classification.const";
 import { BankOutlined } from "@ant-design/icons";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 // The reason the API gave for refusing the save (its ProblemDetails "detail", or a plain string),
 // so the notification says what to fix rather than only that it failed.
@@ -61,10 +62,12 @@ const toDateInput = (value?: string | null) =>
 export default function CompanyInfoTab() {
   const { data: company, isLoading } = useCompanyInfo();
   const { mutateAsync: update, isPending } = useUpdateCompanyInfo();
+  // No right to change these settings (or a closed company): every field locked, no Save.
+  const readOnly = !useHasPermission("Organization Setup:Edit");
   const { mutateAsync: uploadLogo } = useUploadCompanyLogo();
   const { mutateAsync: removeLogo } = useRemoveCompanyLogo();
   // Same gate as the logo endpoints (Organization Setup:Edit).
-  const canEditLogo = authStorage.hasAnyPermission("Organization Setup:Edit");
+  const canEditLogo = useHasPermission("Organization Setup:Edit");
 
   const {
     control,
@@ -269,6 +272,7 @@ export default function CompanyInfoTab() {
 
   return (
     <Form
+      disabled={readOnly}
       layout="vertical"
       onFinish={handleSubmit(onSubmit)}
       className="form-page-body"
@@ -754,9 +758,11 @@ export default function CompanyInfoTab() {
 
       <div className="form-action-footer">
         <Space className="form-action-footer-row">
-          <Button type="primary" htmlType="submit" loading={isPending}>
-            Save Settings
-          </Button>
+          {!readOnly && (
+            <Button type="primary" htmlType="submit" loading={isPending}>
+              Save Settings
+            </Button>
+          )}
         </Space>
       </div>
     </Form>

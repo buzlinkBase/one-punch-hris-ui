@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input, Tag } from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { SearchOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import type { HolidayResponse } from "../../models/api/response/holiday-response.model";
 import { HOLIDAY_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 
 interface Props {
   data: HolidayResponse[];
@@ -44,6 +42,8 @@ const getHolDateSortKey = (val: string): number => {
 
 export default function HolidayTable({ data, loading, onDelete }: Props) {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Holiday Setup:Edit");
+  const canDelete = useHasPermission("Holiday Setup:Delete");
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
@@ -203,13 +203,11 @@ export default function HolidayTable({ data, loading, onDelete }: Props) {
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            aria-label="Edit"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => navigate({ to: `/setup/holiday/${record.id}` })}
+          <RecordOpenAction
+            canEdit={canEdit}
+            onOpen={() => navigate({ to: `/setup/holiday/${record.id}` })}
           />
-          {onDelete && (
+          {onDelete && canDelete && (
             <Popconfirm
               title="Delete this holiday?"
               onConfirm={() => onDelete(record.id)}

@@ -5,6 +5,7 @@ import {
   describeDelegationDates,
   describeDelegationType,
 } from "../../services/delegation-describe.util";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 interface Props {
   rows: ApprovalDelegationResponse[];
@@ -36,6 +37,7 @@ export function DelegationTable({
   onDeactivate,
   deactivatingId,
 }: Props) {
+  const closed = useCompanyClosed();
   const columns: ColumnsType<ApprovalDelegationResponse> = [
     ...(showDelegator
       ? [
@@ -74,7 +76,8 @@ export function DelegationTable({
       ),
     },
     { title: "Status", key: "status", render: (_, d) => statusTag(d) },
-    ...(onDeactivate
+    // A closed company (read-only, suspended, on hold) switches nothing off.
+    ...(onDeactivate && !closed
       ? [
           {
             title: "",

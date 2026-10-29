@@ -108,7 +108,10 @@ import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
 import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
 import type { FeatureLock } from "@/app/modules/billing/utils/feature-lock";
 import { CompanyLocked } from "@/app/modules/billing/components/company-locked";
-import { isCompanyLocked } from "@/app/modules/billing/utils/company-lock";
+import {
+  isCompanyClosed,
+  isCompanyLocked,
+} from "@/app/modules/billing/utils/company-lock";
 import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import type { MenuProps } from "antd";
@@ -651,6 +654,9 @@ export default function MainLayout() {
     subscription.snapshot,
     subscription.canViewBilling,
   );
+  // Read-only, suspended or on hold: the header keeps only the company switcher, theme and
+  // sign-out -- no search, help, notifications, Company Settings or New company.
+  const companyClosed = isCompanyClosed(subscription.snapshot);
   // Recent and pinned pages, limited to what this user can still open.
   const userKey = authUser?.email;
   const palettePages = useMemo(() => collectPalettePages(navItems), [navItems]);
@@ -744,6 +750,7 @@ export default function MainLayout() {
   }, [hrDb.known, hrDb.ready, location.pathname, navigate]);
 
   useEffect(() => {
+    if (companyClosed) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -752,7 +759,7 @@ export default function MainLayout() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [companyClosed]);
 
   // Accordion: opening a top-level group closes the others, so the menu stays short.
   const handleOpenChange = (keys: string[]) => {
@@ -1049,34 +1056,38 @@ export default function MainLayout() {
             </div>
 
             <div className="header-search-wrap">
-              <button
-                type="button"
-                className="header-search"
-                aria-label="Search pages and employees"
-                onClick={() => setPaletteOpen(true)}
-              >
-                <SearchOutlined />
-                <span>Search…</span>
-                <kbd>Ctrl K</kbd>
-              </button>
-              <button
-                type="button"
-                className="header-collapse-trigger header-search-icon"
-                aria-label="Search pages and employees"
-                onClick={() => setPaletteOpen(true)}
-              >
-                <SearchOutlined />
-              </button>
-              <Tooltip title="Help for this screen">
-                <button
-                  type="button"
-                  className="header-collapse-trigger max-md:hidden!"
-                  aria-label="Help"
-                  onClick={() => setHelpOpen(true)}
-                >
-                  <QuestionCircleOutlined />
-                </button>
-              </Tooltip>
+              {!companyClosed && (
+                <>
+                  <button
+                    type="button"
+                    className="header-search"
+                    aria-label="Search pages and employees"
+                    onClick={() => setPaletteOpen(true)}
+                  >
+                    <SearchOutlined />
+                    <span>Search…</span>
+                    <kbd>Ctrl K</kbd>
+                  </button>
+                  <button
+                    type="button"
+                    className="header-collapse-trigger header-search-icon"
+                    aria-label="Search pages and employees"
+                    onClick={() => setPaletteOpen(true)}
+                  >
+                    <SearchOutlined />
+                  </button>
+                  <Tooltip title="Help for this screen">
+                    <button
+                      type="button"
+                      className="header-collapse-trigger max-md:hidden!"
+                      aria-label="Help"
+                      onClick={() => setHelpOpen(true)}
+                    >
+                      <QuestionCircleOutlined />
+                    </button>
+                  </Tooltip>
+                </>
+              )}
               <CommandPalette
                 open={paletteOpen}
                 onClose={() => setPaletteOpen(false)}
@@ -1090,70 +1101,73 @@ export default function MainLayout() {
                 open={helpOpen}
                 onClose={() => setHelpOpen(false)}
               />
-              <Dropdown
-                trigger={["click"]}
-                placement="bottomRight"
-                open={bellOpen}
-                rootClassName="bell-dropdown"
-                onOpenChange={(open) => {
-                  setBellOpen(open);
-                  if (open) markAllRead();
-                }}
-                menu={{
-                  className: "min-w-80 max-w-96 max-h-none! overflow-visible!",
-                  items: bellItems,
-                }}
-                popupRender={(menu) => (
-                  <div className="flex flex-col overflow-hidden rounded-lg bg-(--ant-color-bg-elevated) shadow-lg max-sm:h-dvh max-sm:rounded-none">
-                    <div className="flex items-center justify-between border-b border-(--ant-color-split) px-4 py-2 sm:hidden">
-                      <span className="font-semibold">Notifications</span>
-                      <Button
-                        type="text"
-                        aria-label="Close notifications"
-                        icon={<CloseOutlined />}
-                        onClick={() => setBellOpen(false)}
-                      />
-                    </div>
-                    <div className="max-h-[min(24rem,calc(100vh-10rem))] overflow-y-auto max-sm:max-h-none max-sm:flex-1">
-                      {menu}
-                    </div>
-                    {hasBellEntries && (
-                      <div className="flex items-center justify-between border-t border-(--ant-color-split) px-2 py-1">
+              {!companyClosed && (
+                <Dropdown
+                  trigger={["click"]}
+                  placement="bottomRight"
+                  open={bellOpen}
+                  rootClassName="bell-dropdown"
+                  onOpenChange={(open) => {
+                    setBellOpen(open);
+                    if (open) markAllRead();
+                  }}
+                  menu={{
+                    className:
+                      "min-w-80 max-w-96 max-h-none! overflow-visible!",
+                    items: bellItems,
+                  }}
+                  popupRender={(menu) => (
+                    <div className="flex flex-col overflow-hidden rounded-lg bg-(--ant-color-bg-elevated) shadow-lg max-sm:h-dvh max-sm:rounded-none">
+                      <div className="flex items-center justify-between border-b border-(--ant-color-split) px-4 py-2 sm:hidden">
+                        <span className="font-semibold">Notifications</span>
                         <Button
-                          type="link"
-                          size="small"
-                          onClick={() => {
-                            setBellOpen(false);
-                            navigate({ to: "/notifications" });
-                          }}
-                        >
-                          View all notifications
-                        </Button>
-                        {activityItems.length > 0 && (
-                          <Button
-                            type="text"
-                            size="small"
-                            onClick={clearAllNotifications}
-                          >
-                            Clear all
-                          </Button>
-                        )}
+                          type="text"
+                          aria-label="Close notifications"
+                          icon={<CloseOutlined />}
+                          onClick={() => setBellOpen(false)}
+                        />
                       </div>
-                    )}
-                  </div>
-                )}
-              >
-                <button
-                  type="button"
-                  className="header-collapse-trigger"
-                  aria-label="Notifications"
-                  title="Notifications"
+                      <div className="max-h-[min(24rem,calc(100vh-10rem))] overflow-y-auto max-sm:max-h-none max-sm:flex-1">
+                        {menu}
+                      </div>
+                      {hasBellEntries && (
+                        <div className="flex items-center justify-between border-t border-(--ant-color-split) px-2 py-1">
+                          <Button
+                            type="link"
+                            size="small"
+                            onClick={() => {
+                              setBellOpen(false);
+                              navigate({ to: "/notifications" });
+                            }}
+                          >
+                            View all notifications
+                          </Button>
+                          {activityItems.length > 0 && (
+                            <Button
+                              type="text"
+                              size="small"
+                              onClick={clearAllNotifications}
+                            >
+                              Clear all
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 >
-                  <Badge count={unreadCount} size="small" offset={[-2, 2]}>
-                    <BellOutlined />
-                  </Badge>
-                </button>
-              </Dropdown>
+                  <button
+                    type="button"
+                    className="header-collapse-trigger"
+                    aria-label="Notifications"
+                    title="Notifications"
+                  >
+                    <Badge count={unreadCount} size="small" offset={[-2, 2]}>
+                      <BellOutlined />
+                    </Badge>
+                  </button>
+                </Dropdown>
+              )}
               {sessionUser.tenants.length > 0 && (
                 <Tooltip
                   title={
@@ -1222,7 +1236,7 @@ export default function MainLayout() {
                             ),
                           };
                         }),
-                        ...(canCreateCompany
+                        ...(canCreateCompany && !companyClosed
                           ? [
                               { type: "divider" as const },
                               {
@@ -1281,7 +1295,7 @@ export default function MainLayout() {
                   {themeMode === "dark" ? <SunOutlined /> : <MoonOutlined />}
                 </button>
               </Tooltip>
-              {canOpenCompanySettings && (
+              {canOpenCompanySettings && !companyClosed && (
                 <Tooltip title="Company Settings">
                   <button
                     type="button"
@@ -1298,11 +1312,15 @@ export default function MainLayout() {
                 placement="bottomRight"
                 menu={{
                   items: [
-                    {
-                      key: "help",
-                      icon: <QuestionCircleOutlined />,
-                      label: "Help for this screen",
-                    },
+                    ...(companyClosed
+                      ? []
+                      : [
+                          {
+                            key: "help",
+                            icon: <QuestionCircleOutlined />,
+                            label: "Help for this screen",
+                          },
+                        ]),
                     {
                       key: "theme",
                       icon:
@@ -1316,7 +1334,7 @@ export default function MainLayout() {
                           ? "Switch to light mode"
                           : "Switch to dark mode",
                     },
-                    ...(canOpenCompanySettings
+                    ...(canOpenCompanySettings && !companyClosed
                       ? [
                           {
                             key: "policy",

@@ -13,6 +13,7 @@ import {
 } from "./image-file";
 import { CROP_PRESETS, type CropPresetName } from "./image-processing";
 import { ImageCropModal } from "./image-crop-modal";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 interface ImageUploadProps {
   /** What to show now: a link or inline image; empty for none. */
@@ -58,12 +59,15 @@ export function ImageUpload({
   placeholder,
   onUpload,
   onRemove,
-  disabled,
+  disabled: disabledProp,
   hint,
   label,
   compact,
   crop,
 }: ImageUploadProps) {
+  // A closed company (read-only, suspended, on hold) shows the image but takes no change.
+  const closed = useCompanyClosed();
+  const disabled = disabledProp || closed;
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   // The file waiting in the crop dialog, its preview URL, and a new key per pick so the dialog

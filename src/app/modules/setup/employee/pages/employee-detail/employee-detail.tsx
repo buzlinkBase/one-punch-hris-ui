@@ -21,6 +21,7 @@ import {
   notification,
   Badge,
   AutoComplete,
+  ConfigProvider,
 } from "antd";
 import {
   buildJobLevelOptions,
@@ -47,6 +48,7 @@ import { useRouteParams } from "@/shared/hooks/use-route-params";
 import { openPdfInNewTab } from "@/shared/utils/download-file.util";
 import { employeeApi } from "../../services/employee.api";
 import { authStorage } from "@/core/auth/auth-storage";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { useIsMobile } from "@/shared/hooks/use-is-mobile";
 import {
   useForm,
@@ -248,9 +250,13 @@ export default function EmployeeDetail() {
   // A new employee's photo waits here until the record exists.
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   // Same gate as the photo endpoint: anyone who may edit -- or, while creating, add -- employees.
-  const canEditPhoto = authStorage.hasAnyPermission(
+  const canEditPhoto = useHasPermission(
     "Workforce Setup:Edit",
     ...(isEdit ? [] : ["Workforce Setup:Create"]),
+  );
+  // No right to save (or a read-only company): the 201 file opens as View, every field locked.
+  const readOnly = !useHasPermission(
+    isEdit ? "Workforce Setup:Edit" : "Workforce Setup:Create",
   );
   const { data: departments = [], isLoading: isDepartmentsLoading } =
     useDepartments();
@@ -818,6 +824,7 @@ export default function EmployeeDetail() {
         // The browser's own checks would stop Save silently when the bad field is on another
         // tab; the form's validation names it and opens that tab instead.
         noValidate
+        disabled={readOnly}
         onFinish={handleSubmit(onSubmit, handleInvalid)}
       >
         {/* ── 201 File Header ── */}
@@ -2548,9 +2555,12 @@ export default function EmployeeDetail() {
 
         <div className="form-action-footer">
           <Space className="form-action-footer-row">
-            <Button onClick={() => navigate({ to: "/setup/employee" })}>
-              {NAVIGATION_BUTTON_LABEL.BACK}
-            </Button>
+            {/* Back stays usable when the form is locked read-only. */}
+            <ConfigProvider componentDisabled={false}>
+              <Button onClick={() => navigate({ to: "/setup/employee" })}>
+                {NAVIGATION_BUTTON_LABEL.BACK}
+              </Button>
+            </ConfigProvider>
             <PermissionGate
               permission={
                 isEdit ? "Workforce Setup:Edit" : "Workforce Setup:Create"

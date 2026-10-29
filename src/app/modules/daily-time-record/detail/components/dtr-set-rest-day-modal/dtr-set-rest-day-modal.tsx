@@ -18,6 +18,7 @@ import {
   useRestDayDatesByEmployee,
 } from "@/app/modules/change-schedule/rest-day-date/hooks/use-rest-day-date-queries";
 import { getNotify } from "@/shared/utils/notify";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 interface Props {
   open: boolean;
@@ -143,24 +144,25 @@ export default function DtrSetRestDayModal({
           renderItem={(item) => (
             <List.Item
               actions={[
-                <Popconfirm
-                  key="delete"
-                  title="Remove rest day"
-                  description={`Remove ${dayjs(item.payrollDate).format("MMM DD, YYYY")} as a rest day?`}
-                  okText="Remove"
-                  okButtonProps={{ danger: true }}
-                  cancelText="Cancel"
-                  onConfirm={() => handleDelete(item.id, item.payrollDate)}
-                >
-                  <Button
-                    aria-label="Delete"
-                    type="text"
-                    danger
-                    size="small"
-                    icon={<DeleteOutlined />}
-                    loading={isDeleting}
-                  />
-                </Popconfirm>,
+                <WriteGate key="delete">
+                  <Popconfirm
+                    title="Remove rest day"
+                    description={`Remove ${dayjs(item.payrollDate).format("MMM DD, YYYY")} as a rest day?`}
+                    okText="Remove"
+                    okButtonProps={{ danger: true }}
+                    cancelText="Cancel"
+                    onConfirm={() => handleDelete(item.id, item.payrollDate)}
+                  >
+                    <Button
+                      aria-label="Delete"
+                      type="text"
+                      danger
+                      size="small"
+                      icon={<DeleteOutlined />}
+                      loading={isDeleting}
+                    />
+                  </Popconfirm>
+                </WriteGate>,
               ]}
             >
               {dayjs(item.payrollDate).format("MMM DD, YYYY (ddd)")}
@@ -209,9 +211,11 @@ function SetRestDayForm({
 
       <div className="flex justify-end gap-2 mt-5">
         <Button onClick={onCancel}>Cancel</Button>
-        <Button type="primary" loading={isSubmitting} onClick={handleOk}>
-          Save
-        </Button>
+        <WriteGate>
+          <Button type="primary" loading={isSubmitting} onClick={handleOk}>
+            Save
+          </Button>
+        </WriteGate>
       </div>
     </>
   );

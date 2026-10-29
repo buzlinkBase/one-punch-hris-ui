@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { Popconfirm } from "antd";
 import { buildConfirmCopy } from "@/shared/utils/confirm-copy.util";
+import { useCompanyClosed } from "@/app/modules/billing/hooks/use-company-closed";
 
 interface ConfirmActionProps {
   /** Imperative verb shown in the title and on the OK button. Defaults to "Delete". */
@@ -15,7 +16,10 @@ interface ConfirmActionProps {
   children: ReactElement;
 }
 
-/** Popconfirm with specific wording (see buildConfirmCopy) and a destructive OK button. */
+/**
+ * Popconfirm with specific wording (see buildConfirmCopy) and a destructive OK button. Renders
+ * nothing -- the action included -- while the company is closed (read-only, suspended, on hold).
+ */
 export function ConfirmAction({
   verb = "Delete",
   subject,
@@ -25,7 +29,9 @@ export function ConfirmAction({
   onConfirm,
   children,
 }: ConfirmActionProps) {
+  const closed = useCompanyClosed();
   const { title, okText } = buildConfirmCopy({ verb, subject, name });
+  if (closed) return null;
   return (
     <Popconfirm
       title={title}

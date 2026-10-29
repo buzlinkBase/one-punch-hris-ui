@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { Table, Button, Space, Popconfirm, Input } from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { SearchOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -12,6 +8,8 @@ import type { MinimumWageRateResponse } from "../../models/api/response/minimum-
 import { MINIMUM_WAGE_RATE_LABEL } from "../../constants/label.const";
 import { ResizableTitle } from "@/shared/components/resizable-title";
 import { useResizableColumns } from "@/shared/hooks/use-resizable-columns";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { RecordOpenAction } from "@/shared/components/record-open-action";
 import { formatMoney } from "@/shared/utils/money.util";
 
 interface Props {
@@ -26,6 +24,8 @@ export default function MinimumWageRateTable({
   onDelete,
 }: Props) {
   const navigate = useNavigate();
+  const canEdit = useHasPermission("Minimum Wage Setup:Edit");
+  const canDelete = useHasPermission("Minimum Wage Setup:Delete");
   const [search, setSearch] = useState("");
 
   const { widths, handleResize } = useResizableColumns({
@@ -119,15 +119,13 @@ export default function MinimumWageRateTable({
       width: 80,
       render: (_, record) => (
         <Space>
-          <Button
-            aria-label="Edit"
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
+          <RecordOpenAction
+            canEdit={canEdit}
+            onOpen={() =>
               navigate({ to: `/setup/minimum-wage-rate/${record.id}` })
             }
           />
-          {onDelete && (
+          {onDelete && canDelete && (
             <Popconfirm
               title="Delete this minimum wage rate?"
               onConfirm={() => onDelete(record.id)}

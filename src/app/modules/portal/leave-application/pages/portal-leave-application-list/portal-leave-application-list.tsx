@@ -13,6 +13,7 @@ import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/app
 import { PortalApplicationRowActions } from "../../../shared/components/portal-application-row-actions";
 import { ApprovalTabs } from "@/shared/components/approval-tabs/approval-tabs";
 import { useApprovalTabs } from "@/shared/hooks/use-approval-tabs";
+import { WriteGate } from "@/shared/components/write-gate/write-gate";
 
 const { Title } = Typography;
 
@@ -97,15 +98,17 @@ export default function PortalLeaveApplicationList() {
               Every leave application you've filed and its current status.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              navigate({ to: "/portal/leave-applications/create" })
-            }
-          >
-            New Leave Request
-          </Button>
+          <WriteGate>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/portal/leave-applications/create" })
+              }
+            >
+              New Leave Request
+            </Button>
+          </WriteGate>
         </div>
       </div>
 

@@ -81,11 +81,17 @@ export const payrollReportsApi = {
       to,
       clientId,
     }),
-  bankDisbursement: (from: string, to: string, clientId?: string) =>
+  bankDisbursement: (
+    from: string,
+    to: string,
+    clientId?: string,
+    departmentId?: string,
+  ) =>
     get<BankDisbursementResponse>("bank-disbursement", {
       from,
       to,
       clientId,
+      departmentId,
     }),
   deductionLedger: (asOf: string, clientId?: string) =>
     get<DeductionLedgerResponse>("deduction-ledger", { asOf, clientId }),

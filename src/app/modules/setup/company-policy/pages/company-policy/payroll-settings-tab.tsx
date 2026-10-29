@@ -22,6 +22,7 @@ import {
   usePayrollSettings,
   useUpdatePayrollSettings,
 } from "@/app/modules/setup/payroll-settings/hooks/use-payroll-settings-queries";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 const { Text } = Typography;
 
@@ -114,6 +115,8 @@ const PORTAL_PAGE_GROUPS = [
 export default function PayrollSettingsTab() {
   const { data, isLoading } = usePayrollSettings();
   const { mutateAsync: update, isPending } = useUpdatePayrollSettings();
+  // No right to change these settings (or a closed company): every field locked, no Save.
+  const readOnly = !useHasPermission("Organization Setup:Edit");
 
   const {
     control,
@@ -150,6 +153,7 @@ export default function PayrollSettingsTab() {
 
   return (
     <Form
+      disabled={readOnly}
       layout="vertical"
       onFinish={handleSubmit(onSubmit)}
       className="form-page-body"
@@ -382,14 +386,16 @@ export default function PayrollSettingsTab() {
 
       <div className="form-action-footer">
         <Space className="form-action-footer-row">
-          <Button
-            type="primary"
-            htmlType="submit"
-            icon={<SaveOutlined />}
-            loading={isPending || isLoading}
-          >
-            Save Settings
-          </Button>
+          {!readOnly && (
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={<SaveOutlined />}
+              loading={isPending || isLoading}
+            >
+              Save Settings
+            </Button>
+          )}
         </Space>
       </div>
     </Form>

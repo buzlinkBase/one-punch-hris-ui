@@ -276,6 +276,7 @@ export default function UniformAllowancePolicyTab({
                 canEdit && p.id && !p.isLocked && p.effectiveFrom >= today ? (
                   <Space size={4}>
                     <IconAction
+                      write
                       title="Edit"
                       icon={<EditOutlined />}
                       onClick={() => setEditor({ mode: "edit", policy: p })}
@@ -288,6 +289,7 @@ export default function UniformAllowancePolicyTab({
                     >
                       <span>
                         <IconAction
+                          write
                           title="Delete"
                           danger
                           icon={<DeleteOutlined />}
