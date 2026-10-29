@@ -998,7 +998,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
     summary:
       "Allow images and PDFs on employee documents, assets, leave, pass slips and other records, one feature at a time.",
     purpose: [
-      "Attachments let employees and HR keep proof with a record, such as a medical certificate on a sick leave. They are off by default, so you switch on only what you need.",
+      "Attachments let employees and HR keep proof with a record, such as a medical certificate on a sick leave. They are on by default for every feature; switch off any you do not need.",
       "Example: switch on Leave and Pass Slips. Employees can now attach a medical certificate (PDF, up to 5 MB) when filing sick leave.",
     ],
     permission: ["Organization Setup:View", "Tenant Members:Manage"],

@@ -1157,6 +1157,17 @@ export default function LeaveApplicationDetail() {
             </Form.Item>
           )}
 
+          {isEdit && selected && (
+            <Card size="small" title="Approval Progress" className="mt-4">
+              <ApprovalTimeline
+                applicationType="Leave"
+                applicationId={selected.id}
+                resolveEmployeeName={(empId) => employeeMap.get(empId)}
+                readOnly={readOnly}
+              />
+            </Card>
+          )}
+
           <div className="form-action-footer">
             <Space className="form-action-footer-row">
               <Button onClick={() => navigate({ to: "/applications/leave" })}>
@@ -1176,16 +1187,6 @@ export default function LeaveApplicationDetail() {
             </Space>
           </div>
         </Form>
-
-        {isEdit && selected && (
-          <Card size="small" title="Approval Progress" className="mt-4">
-            <ApprovalTimeline
-              applicationType="Leave"
-              applicationId={selected.id}
-              resolveEmployeeName={(empId) => employeeMap.get(empId)}
-            />
-          </Card>
-        )}
       </div>
     </div>
   );

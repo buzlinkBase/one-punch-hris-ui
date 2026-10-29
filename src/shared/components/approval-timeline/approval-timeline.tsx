@@ -35,6 +35,8 @@ interface ApprovalTimelineProps {
   applicationId: string | undefined;
   /** Resolves an actor's employee id to a display name — falls back to a shortened id. */
   resolveEmployeeName?: (employeeId: string) => string | undefined;
+  /** View-only screens hide mutating actions such as Reassign. */
+  readOnly?: boolean;
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -54,6 +56,7 @@ export function ApprovalTimeline({
   applicationType,
   applicationId,
   resolveEmployeeName,
+  readOnly = false,
 }: ApprovalTimelineProps) {
   const [reassignOpen, setReassignOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
@@ -178,6 +181,7 @@ export function ApprovalTimeline({
   }
 
   const canReassign =
+    !readOnly &&
     instance.status === "InProgress" &&
     authStorage.hasAnyRole("Owner", "Admin");
 
