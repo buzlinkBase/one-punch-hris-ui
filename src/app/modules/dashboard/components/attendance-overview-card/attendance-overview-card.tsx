@@ -1,3 +1,4 @@
+import { CARD_EDGE_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import { useState } from "react";
 import { Card, Skeleton, Typography, theme } from "antd";
 import type { AttendanceTrendPoint } from "../../models/api/response/dashboard-response.model";
@@ -78,7 +79,7 @@ export default function AttendanceOverviewCard({
   const canDrill = actions.some(Boolean);
 
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS.primary}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
           <Title level={5} className="mb-0!">

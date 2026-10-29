@@ -1,3 +1,4 @@
+import { CARD_EDGE_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import { Card, Progress, Skeleton, Typography, theme } from "antd";
 import type { DepartmentHeadcount } from "../../models/api/response/dashboard-response.model";
 import { DASHBOARD_LABEL } from "../../constants/label.const";
@@ -22,7 +23,7 @@ export default function DepartmentHeadcountCard({
   const max = Math.max(1, ...data.map((d) => d.headcount));
 
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS.primary}`}>
       <Title level={5} className="mb-4!">
         {DASHBOARD_LABEL.DEPARTMENT_HEADCOUNT}
       </Title>

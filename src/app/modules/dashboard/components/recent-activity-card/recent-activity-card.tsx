@@ -1,3 +1,4 @@
+import { CARD_EDGE_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import type { ReactNode } from "react";
 import { Card, Empty, Skeleton, Typography, theme } from "antd";
 import {
@@ -49,7 +50,7 @@ export default function RecentActivityCard({
 }: RecentActivityCardProps) {
   const { token } = theme.useToken();
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS.info}`}>
       <Title level={5} className="mb-4!">
         {DASHBOARD_LABEL.RECENT_ACTIVITY}
       </Title>

@@ -1,3 +1,4 @@
+import { CARD_EDGE_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import type { ReactNode } from "react";
 import { Card, Empty, Skeleton, Tag, Typography, theme } from "antd";
 import {
@@ -64,7 +65,7 @@ export default function PendingRequestsCard({
 }: PendingRequestsCardProps) {
   const { token } = theme.useToken();
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS.warning}`}>
       <Title level={5} className="mb-4!">
         {DASHBOARD_LABEL.PENDING_APPROVALS}
       </Title>

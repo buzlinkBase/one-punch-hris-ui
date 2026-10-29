@@ -10,6 +10,10 @@ import {
   YAxis,
 } from "recharts";
 import { useChartTheme } from "@/app/modules/analytics/components/charts/chart-theme";
+import {
+  CARD_EDGE_TONE_CLASS,
+  type CardTone,
+} from "@/shared/constants/card-tone.const";
 import { DRILL_HINT } from "@/shared/drilldown/drill-props";
 import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import type { DashboardCount } from "../../models/api/response/dashboard-response.model";
@@ -26,6 +30,8 @@ interface CountBarCardProps {
   formatLabel?: (label: string) => string;
   /** What clicking a bar opens; bars without an action stay plain. */
   drillAction?: (row: DashboardCount) => DrillAction;
+  /** The card's accent color. */
+  tone?: CardTone;
 }
 
 /** A titled bar chart of a few labelled counts. */
@@ -36,6 +42,7 @@ export default function CountBarCard({
   horizontal,
   formatLabel = (l) => l,
   drillAction,
+  tone = "primary",
 }: CountBarCardProps) {
   const chart = useChartTheme();
   const rows = data.map((d) => ({
@@ -77,7 +84,7 @@ export default function CountBarCard({
   );
 
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS[tone]}`}>
       <Title level={5} className="mb-3!">
         {title}
       </Title>

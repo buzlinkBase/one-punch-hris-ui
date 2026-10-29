@@ -1,4 +1,8 @@
 import { Card, Skeleton } from "antd";
+import {
+  CARD_EDGE_TONE_CLASS,
+  type CardTone,
+} from "@/shared/constants/card-tone.const";
 import { DRILL_CLASS, drillProps } from "@/shared/drilldown/drill-props";
 import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import type { DashboardStats } from "../../models/api/response/dashboard-response.model";
@@ -11,41 +15,53 @@ interface StatTilesProps {
   drillAction?: (key: keyof DashboardStats) => DrillAction;
 }
 
-const TILES: { key: keyof DashboardStats; label: string; accent: string }[] = [
+const TILES: {
+  key: keyof DashboardStats;
+  label: string;
+  accent: string;
+  tone: CardTone;
+}[] = [
   {
     key: "totalEmployees",
     label: DASHBOARD_LABEL.TOTAL_EMPLOYEES,
     accent: "text-(--ant-color-primary)",
+    tone: "primary",
   },
   {
     key: "presentToday",
     label: DASHBOARD_LABEL.PRESENT_TODAY,
     accent: "text-(--ant-color-success)",
+    tone: "success",
   },
   {
     key: "lateToday",
     label: DASHBOARD_LABEL.LATE_TODAY,
     accent: "text-(--ant-color-warning)",
+    tone: "warning",
   },
   {
     key: "absentToday",
     label: DASHBOARD_LABEL.ABSENT_TODAY,
     accent: "text-(--ant-color-error)",
+    tone: "error",
   },
   {
     key: "onLeaveToday",
     label: DASHBOARD_LABEL.ON_LEAVE_TODAY,
     accent: "text-(--ant-color-info)",
+    tone: "info",
   },
   {
     key: "pendingRequests",
     label: DASHBOARD_LABEL.PENDING_REQUESTS,
     accent: "text-(--ant-color-warning)",
+    tone: "warning",
   },
   {
     key: "newHiresThisMonth",
     label: DASHBOARD_LABEL.NEW_HIRES,
     accent: "text-(--ant-color-primary)",
+    tone: "primary",
   },
 ];
 
@@ -63,7 +79,7 @@ export default function StatTiles({
           <Card
             key={tile.key}
             size="small"
-            className={`h-full ${action ? DRILL_CLASS : ""}`}
+            className={`h-full ${CARD_EDGE_TONE_CLASS[tile.tone]} ${action ? DRILL_CLASS : ""}`}
             {...drillProps(action)}
           >
             {loading || !stats ? (

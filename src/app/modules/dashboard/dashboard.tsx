@@ -106,6 +106,7 @@ export default function Dashboard() {
         />
         <CountBarCard
           title={DASHBOARD_LABEL.BRANCH_HEADCOUNT}
+          tone="info"
           data={data?.workforce?.branches ?? []}
           loading={isLoading}
           horizontal
@@ -113,6 +114,7 @@ export default function Dashboard() {
         />
         <CountBarCard
           title={DASHBOARD_LABEL.SITE_HEADCOUNT}
+          tone="success"
           data={data?.workforce?.sites ?? []}
           loading={isLoading}
           horizontal
@@ -123,6 +125,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <CountBarCard
           title={DASHBOARD_LABEL.EMPLOYMENT_STATUS}
+          tone="warning"
           data={data?.workforce?.employmentStatus ?? []}
           loading={isLoading}
           formatLabel={spaceWords}

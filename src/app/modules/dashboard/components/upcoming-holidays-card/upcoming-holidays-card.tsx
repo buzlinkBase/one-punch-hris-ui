@@ -1,3 +1,4 @@
+import { CARD_EDGE_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import { Card, Empty, Skeleton, Tag, Typography, theme } from "antd";
 import { CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -17,7 +18,7 @@ export default function UpcomingHolidaysCard({
 }: UpcomingHolidaysCardProps) {
   const { token } = theme.useToken();
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS.info}`}>
       <Title level={5} className="mb-4!">
         {DASHBOARD_LABEL.UPCOMING_HOLIDAYS}
       </Title>

@@ -4,6 +4,10 @@ import {
   ArrowUpOutlined,
   MinusOutlined,
 } from "@ant-design/icons";
+import {
+  CARD_EDGE_TONE_CLASS,
+  type CardTone,
+} from "@/shared/constants/card-tone.const";
 import { DRILL_CLASS, drillProps } from "@/shared/drilldown/drill-props";
 import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import type { AnalyticsKpi } from "../models/analytics.model";
@@ -21,6 +25,14 @@ const TONE_TYPE: Record<KpiTone, "success" | "danger" | "secondary"> = {
   bad: "danger",
   flat: "secondary",
   neutral: "secondary",
+};
+
+// A tile's edge shows how the figure moved: green better, red worse, brand color otherwise.
+const CHANGE_TONE_CARD: Record<KpiTone, CardTone> = {
+  good: "success",
+  bad: "error",
+  flat: "primary",
+  neutral: "primary",
 };
 
 interface KpiTileProps {
@@ -52,7 +64,7 @@ export function KpiTile({ kpi, direction, loading, action }: KpiTileProps) {
   return (
     <Card
       size="small"
-      className={`h-full ${action ? DRILL_CLASS : ""}`}
+      className={`h-full ${CARD_EDGE_TONE_CLASS[CHANGE_TONE_CARD[change.tone]]} ${action ? DRILL_CLASS : ""}`}
       {...drillProps(action)}
     >
       <div className="text-xs text-(--ant-color-text-secondary)">

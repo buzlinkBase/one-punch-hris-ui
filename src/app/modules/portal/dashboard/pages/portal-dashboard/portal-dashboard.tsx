@@ -103,6 +103,7 @@ export default function PortalDashboard() {
         {showLeaveCredits && (
           <DashboardCard
             title={L.leaveBalance}
+            tone="success"
             loading={leaves.isLoading}
             drillAction={action({ to: "/portal/leave-credits" })}
           >
@@ -124,6 +125,7 @@ export default function PortalDashboard() {
         {showThirteenth && (
           <DashboardCard
             title={`${L.thirteenthMonth} (${year})`}
+            tone="primary"
             loading={thirteenth.isLoading}
             drillAction={action({ to: "/portal/thirteenth-month" })}
           >
@@ -138,6 +140,7 @@ export default function PortalDashboard() {
         {showCashBond && (
           <DashboardCard
             title={L.cashBond}
+            tone="info"
             loading={cashBond.isLoading}
             drillAction={action({ to: "/portal/cash-bond" })}
           >
@@ -154,6 +157,7 @@ export default function PortalDashboard() {
         {showSchedule && (
           <DashboardCard
             title={L.schedule}
+            tone="primary"
             loading={schedule.isLoading}
             drillAction={action({ to: "/portal/shift-schedule" })}
           >
@@ -180,6 +184,7 @@ export default function PortalDashboard() {
         {showIncomplete && (
           <DashboardCard
             title={L.incompleteLogs}
+            tone="error"
             loading={incomplete.isLoading}
             drillAction={action({ to: "/portal/incomplete-punches" })}
           >
@@ -199,6 +204,7 @@ export default function PortalDashboard() {
         {showDeductions && (
           <DashboardCard
             title={L.loanBalance}
+            tone="warning"
             loading={loans.isLoading}
             drillAction={action({ to: "/portal/deductions" })}
           >
@@ -212,6 +218,7 @@ export default function PortalDashboard() {
         {requestsPath && (
           <DashboardCard
             title={L.pendingRequests}
+            tone="warning"
             loading={pendingLoading}
             drillAction={action({ to: requestsPath })}
           >
@@ -222,6 +229,7 @@ export default function PortalDashboard() {
         {showAnnouncements && (
           <DashboardCard
             title={L.announcements}
+            tone="info"
             loading={latest.isLoading}
             drillAction={action({ to: "/portal/announcements" })}
           >

@@ -1,3 +1,4 @@
+import { CARD_EDGE_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import { Card, Empty, Skeleton, Tag, Typography } from "antd";
 import { GiftOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -23,7 +24,7 @@ export default function UpcomingBirthdaysCard({
   loading,
 }: UpcomingBirthdaysCardProps) {
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS.primary}`}>
       <Title level={5} className="mb-4!">
         {DASHBOARD_LABEL.UPCOMING_BIRTHDAYS}
       </Title>

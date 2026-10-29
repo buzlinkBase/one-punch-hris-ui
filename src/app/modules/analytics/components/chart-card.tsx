@@ -6,6 +6,7 @@ import type {
 } from "../models/analytics.model";
 import { formatValue } from "../utils/analytics-format";
 import { formatPeriod } from "../utils/analytics-filter";
+import { CARD_HEAD_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import type { DrillAction } from "@/shared/drilldown/use-drill-down";
 import { TrendChart, type TrendChartKind } from "./charts/trend-chart";
 
@@ -52,7 +53,7 @@ export function ChartCard({
           ]}
         />
       }
-      className={`h-full ${className ?? ""}`}
+      className={`h-full ${CARD_HEAD_TONE_CLASS.primary} ${className ?? ""}`}
     >
       {loading ? (
         <Skeleton active paragraph={{ rows: 6 }} />

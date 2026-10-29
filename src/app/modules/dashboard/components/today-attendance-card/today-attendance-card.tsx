@@ -1,3 +1,4 @@
+import { CARD_EDGE_TONE_CLASS } from "@/shared/constants/card-tone.const";
 import { Card, Empty, Skeleton, Typography } from "antd";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useChartTheme } from "@/app/modules/analytics/components/charts/chart-theme";
@@ -55,7 +56,7 @@ export default function TodayAttendanceCard({
   const total = parts.reduce((sum, p) => sum + p.count, 0);
 
   return (
-    <Card size="small" className="h-full">
+    <Card size="small" className={`h-full ${CARD_EDGE_TONE_CLASS.success}`}>
       <Title level={5} className="mb-3!">
         {DASHBOARD_LABEL.TODAY_ATTENDANCE}
       </Title>
