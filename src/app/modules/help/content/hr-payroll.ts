@@ -337,6 +337,40 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         },
       },
       {
+        heading: "Schedule many people at once (Quick Schedule)",
+        steps: [
+          {
+            text: "In Work Rotation Plan, click Quick Schedule. Pick the dates, then load the employees (a supervisor sees their own team automatically).",
+            link: {
+              label: "Work Rotation Plan",
+              to: "/change-schedule/work-rotation",
+            },
+          },
+          {
+            text: "Pick a shift in the palette (or press its number key), then click or drag across the grid to paint it. Click a date at the top to paint that day for everyone.",
+          },
+          {
+            text: "To give one cell a different shift without changing your palette pick, right-click the cell (or click the small arrow that appears on it) and choose a shift or Clear.",
+          },
+          {
+            text: "For repeating cycles, use Repeat a pattern (e.g. 5 on / 2 off) on the selected rows, and tick the stagger option for rotating crews. Copy previous period carries last period's shifts forward.",
+          },
+          {
+            text: 'You can also copy shift names from Excel, click a cell, and paste. Use "-" for a day to clear.',
+          },
+          {
+            text: "Review the cells with a ring (unsaved), then click Save schedule. Undo puts every saved day back the way it was.",
+          },
+        ],
+        tips: [
+          "Choose a Project Site or Client above the grid to tag every painted day with it.",
+          "Clear removes the schedule from a day, so the employee goes back to their regular schedule (fixed schedule or permanent shift). It is not a rest day; use Change Rest Day for that.",
+          "Saving replaces whatever the employee already had on those days.",
+          "Supervisors with the Manage Own Team permission can only schedule employees who report to them.",
+          "To let a supervisor also schedule the employees at certain project sites (for example a supervisor over several sites), use Supervisor Sites on the Work Rotation page. They can then only send people to those sites.",
+        ],
+      },
+      {
         heading: "Send someone to another project site for the day",
         steps: [
           {
@@ -458,6 +492,12 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           {
             text: "An approved batch is what payroll runs on. To remove one, request deletion. That also needs approval (Approve Deletion / Decline Deletion).",
           },
+          {
+            text: "To recalculate just one employee in a batch that is not approved yet, open the batch with the eye button and click the undo icon beside their name. Only their days are removed; you can then calculate them again from the Generate tab.",
+          },
+        ],
+        tips: [
+          "Removing an employee is not allowed once the batch is approved, or when a payroll run has already paid any of that employee's days. Unsave them from the payroll run first.",
         ],
       },
     ],
@@ -540,7 +580,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Everyone Ready is selected for you. Tick or untick employees, or use Add partly ready to also pay their approved days now.",
           },
           {
-            text: "Click Preview. The results open in a full-screen window. Check earnings, deductions and net pay there. Click an amount shown as a link, such as Basic, Allowances, Bonuses or Other Income, to see what it is made of, including adjustments. Click OT, ND, Rest Day or Holiday to see the day-by-day pay.",
+            text: "Click Preview. The results open in a full-screen window. Check earnings, deductions and net pay there. Click an amount shown as a link, such as Basic, Allowances, Bonuses, Other Income or Other Deductions, to see what it is made of. Each deduction and other income is listed by name with the date it is scheduled for, next to any adjustments. Click OT, ND, Rest Day or Holiday to see the day-by-day pay.",
           },
           {
             text: "Click Save Payroll, add Remarks if needed, and click Save. The payroll goes For Approval.",
@@ -632,6 +672,22 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           },
         ],
       },
+      {
+        heading: "Unsave one employee from a saved run",
+        steps: [
+          {
+            text: "Open the run with the eye button, then click the undo icon at the end of the employee's row and confirm.",
+          },
+          {
+            text: "Only that employee is removed. Their DTR days, loan installments, other income and salary adjustments become available again, so you can fix the cause and generate them again from Payroll Run. Everyone else in the run is untouched.",
+          },
+        ],
+        tips: [
+          "This is only for a run that has not been posted (approved) yet. For a posted run, request deletion of the whole run, which needs approval.",
+          "If you unsave the last employee in the run, the run itself is removed.",
+          "The action needs the Create permission for that run type, and a locked year blocks it.",
+        ],
+      },
     ],
     related: ["payroll-summary", "special-runs", "loans-income"],
   },
@@ -662,6 +718,9 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
           },
           {
             text: "The Deductions tab lists every deduction per employee (contributions, tax, each loan and other deduction, late, under time, absent). By default it shows only employees who have deductions; switch to All employees to include everyone. Use Export Excel on that tab to download what is shown.",
+          },
+          {
+            text: "Click a Loans, Other Deductions or Other Income total shown as a link to see each deduction or income by name with the date it was scheduled for. It reads the current schedule records, and any part without its own record (such as a salary adjustment) is listed as Other (not itemized).",
           },
           {
             text: "Print the summary or individual payslips. They open as a PDF in a new tab.",

@@ -1,9 +1,14 @@
-import { Button, Tag, Tooltip } from "antd";
+import { Button, Popconfirm, Space, Tag, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { CheckCircleOutlined, PrinterOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  PrinterOutlined,
+  RollbackOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { PayrollRunResult } from "../../../models/api/response/payroll-run-result.model";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { RUN_TYPE_FEATURE } from "../../../constants/label.const";
 
 export const statusColumn: ColumnsType<PayrollRunResult>[number] = {
   title: "Status",
@@ -39,29 +44,57 @@ export const acknowledgedColumn: ColumnsType<PayrollRunResult>[number] = {
     ) : null,
 };
 
-// Print is the only per-row action left — Approve/Decline/Delete are run-level transactions
-// handled from the Saved Payroll Runs tab (see PayrollBatchesTab).
+// Print, and Unsave for a draft run's rows. Approve/Decline/Delete stay run-level transactions
+// handled from the Saved Payroll Runs tab (see PayrollBatchesTab); Unsave is the one per-employee
+// exception: it takes a single employee out of a run that has not been posted yet.
 export const actionsColumn = (
   onPrint: (r: PayrollRunResult) => void,
+  onUnsave?: (r: PayrollRunResult) => void,
 ): ColumnsType<PayrollRunResult>[number] => ({
   title: "",
   key: "actions",
-  width: 48,
+  width: onUnsave ? 80 : 48,
   fixed: "right",
   render: (_, r) => (
-    <PermissionGate permission="Payroll Summary:Export">
-      <Tooltip
-        title={r.id ? "Print payslip" : "Not yet available for this record"}
-      >
-        <Button
-          aria-label="Print"
-          type="text"
-          size="small"
-          icon={<PrinterOutlined />}
-          disabled={!r.id}
-          onClick={() => onPrint(r)}
-        />
-      </Tooltip>
-    </PermissionGate>
+    <Space size={0}>
+      <PermissionGate permission="Payroll Summary:Export">
+        <Tooltip
+          title={r.id ? "Print payslip" : "Not yet available for this record"}
+        >
+          <Button
+            aria-label="Print"
+            type="text"
+            size="small"
+            icon={<PrinterOutlined />}
+            disabled={!r.id}
+            onClick={() => onPrint(r)}
+          />
+        </Tooltip>
+      </PermissionGate>
+      {onUnsave && r.id && r.payrollBatchId && !r.isPosted && (
+        <PermissionGate
+          permission={`${RUN_TYPE_FEATURE[r.payrollType ?? "Regular"] ?? "Payroll Run"}:Create`}
+        >
+          <Popconfirm
+            title={`Unsave ${r.fullName ?? "this employee"}?`}
+            description="Removes only this employee from the run. Their DTR days, loans, other income and adjustments become available again so they can be generated again; everyone else stays."
+            okText="Unsave"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+            onConfirm={() => onUnsave(r)}
+          >
+            <Tooltip title="Unsave this employee from the run">
+              <Button
+                aria-label="Unsave"
+                type="text"
+                danger
+                size="small"
+                icon={<RollbackOutlined />}
+              />
+            </Tooltip>
+          </Popconfirm>
+        </PermissionGate>
+      )}
+    </Space>
   ),
 });

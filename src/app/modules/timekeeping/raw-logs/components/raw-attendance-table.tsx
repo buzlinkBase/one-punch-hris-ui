@@ -33,6 +33,7 @@ const SOURCE_COLOR: Record<string, string> = {
   SYNC: "cyan",
   MOBILE: "purple",
   GEOFENCE: "magenta",
+  PORTAL: "volcano",
 };
 
 const EMPTY_CELL = <span className="text-gray-300">—</span>;

@@ -1,6 +1,6 @@
 // The permission each attendance log source needs to be edited or removed -- mirrors
 // AttendanceLogSourcePolicy in hrms-api. A source not listed (biometric, mobile, geofence,
-// other) can't be changed by anyone.
+// portal, other) can't be changed by anyone.
 export const ATTENDANCE_LOG_PERMISSIONS: Record<
   string,
   { edit: string; delete: string }

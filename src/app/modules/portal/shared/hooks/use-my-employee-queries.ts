@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { meApi } from "../services/me.api";
+import type {
+  PortalPunchStatus,
+  PortalPunchStatusResponse,
+} from "../models/api/response/portal-punch-status-response.model";
 import type { EmployeeFullResponse } from "@/app/modules/setup/employee/models/api/response/employee-response.model";
 import type { CreateLeaveApplication } from "@/app/modules/applications/leave-application/models/api/request/create-leave-application.model";
 import type { CreateOvertimeApplication } from "@/app/modules/applications/overtime-application/models/api/request/create-overtime-application.model";
@@ -205,6 +209,39 @@ export function useMyRawAttendance(params: { from?: string; to?: string }) {
     queryFn: () =>
       meApi.getMyRawAttendance({ from: params.from!, to: params.to! }),
     enabled: !!params.from && !!params.to,
+  });
+}
+
+const stampPunchStatus = (
+  status: PortalPunchStatusResponse,
+): PortalPunchStatus => ({ ...status, receivedAt: performance.now() });
+
+export const MY_PUNCH_STATUS_QUERY_KEY = ["me", "punch-status"];
+
+export function useMyPunchStatus(enabled = true) {
+  return useQuery({
+    queryKey: MY_PUNCH_STATUS_QUERY_KEY,
+    queryFn: async () => stampPunchStatus(await meApi.getMyPunchStatus()),
+    enabled,
+    // The page counts down locally; the cached 5-minute default would show a stale wait.
+    staleTime: 0,
+  });
+}
+
+export function useMyPunch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => meApi.punch(),
+    onSuccess: (status) => {
+      queryClient.setQueryData(
+        MY_PUNCH_STATUS_QUERY_KEY,
+        stampPunchStatus(status),
+      );
+      queryClient.invalidateQueries({ queryKey: ["me", "raw-attendance"] });
+    },
+    // A refused punch (cooldown) may mean another device punched meanwhile.
+    onError: () =>
+      queryClient.invalidateQueries({ queryKey: MY_PUNCH_STATUS_QUERY_KEY }),
   });
 }
 

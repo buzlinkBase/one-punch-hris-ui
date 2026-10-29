@@ -32,6 +32,7 @@ import {
   acknowledgedColumn,
   actionsColumn,
 } from "./shared.columns";
+import { totalCell, type OpenSource } from "./source-link";
 
 const { Text } = Typography;
 
@@ -47,6 +48,8 @@ export interface ColumnContext {
   results: PayrollRunResult[];
   expanded: Record<ExpandableGroup, boolean>;
   onToggle: (group: ExpandableGroup) => void;
+  // Opens the breakdown popup behind a total (omit to keep totals as plain money).
+  onOpenSource?: OpenSource;
 }
 
 // Plain right-aligned money column over any row figure.
@@ -197,7 +200,7 @@ const breakdownGroup = (
   label: string,
   key: string,
   spec: BreakdownSpec,
-  { results, expanded, onToggle }: ColumnContext,
+  { results, expanded, onToggle, onOpenSource }: ColumnContext,
 ): Column =>
   collapsibleGroup({
     label,
@@ -206,7 +209,12 @@ const breakdownGroup = (
     onToggle: () => onToggle(group),
     expandedHint: `Show ${label} per type — Adjustments covers Salary Adjustments and runs saved before types were recorded`,
     children: breakdownColumns(results, spec, key),
-    total: (title) => money(title, key, spec.total),
+    total: (title) => ({
+      title,
+      key,
+      align: "right",
+      render: (_, r) => totalCell(r, spec, label, onOpenSource),
+    }),
   });
 
 const earningsColumns = (ctx: ColumnContext): Column[] => [
@@ -334,12 +342,15 @@ const carrierColumn: Column = {
 
 export interface PayrollColumnsOptions extends ColumnContext {
   onPrint: (r: PayrollRunResult) => void;
+  // Takes one employee out of a draft run (omit to hide the action).
+  onUnsave?: (r: PayrollRunResult) => void;
 }
 
 // One row reads earnings -> Gross -> deductions -> Net. Employee is pinned left and Net Pay +
 // print pinned right so the figures stay readable while scrolling the wide middle.
 export const payrollColumns = ({
   onPrint,
+  onUnsave,
   ...ctx
 }: PayrollColumnsOptions): ColumnsType<PayrollRunResult> => [
   ...identityColumns,
@@ -368,5 +379,5 @@ export const payrollColumns = ({
       </Text>
     ),
   },
-  actionsColumn(onPrint),
+  actionsColumn(onPrint, onUnsave),
 ];

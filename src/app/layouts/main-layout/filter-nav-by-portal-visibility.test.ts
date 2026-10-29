@@ -30,6 +30,7 @@ const allOn: PortalVisibilityResponse = {
   showOfficialBusiness: true,
   showPassSlip: true,
   showLoanApplications: true,
+  showPunch: true,
 };
 
 const allOff = Object.fromEntries(

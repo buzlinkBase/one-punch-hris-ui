@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import dayjs from "dayjs";
-import { Button, Space, Table, Tooltip, theme } from "antd";
+import { Button, Popconfirm, Space, Table, Tooltip, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   CalendarOutlined,
   EyeOutlined,
   PushpinOutlined,
+  RollbackOutlined,
   SwapOutlined,
 } from "@ant-design/icons";
 import type { DtrDetailResponse } from "../../models/api/response/dtr-detail-response.model";
@@ -29,6 +30,8 @@ interface Props {
   dateTo?: string;
   /** Adds a Grand Total row under the table (reports; off where rows are one employee's days). */
   showGrandTotal?: boolean;
+  /** Adds a "remove from batch" action beside each employee's name (an unposted batch's view). */
+  onRemoveEmployee?: (employeeId: string, name?: string) => void;
 }
 
 function rowKey(r: DtrDetailResponse) {
@@ -84,11 +87,20 @@ export default function DtrDetailTable({
   dateFrom,
   dateTo,
   showGrandTotal,
+  onRemoveEmployee,
 }: Props) {
   const { token } = theme.useToken();
   const groupHeader = (): object => ({
     style: { fontWeight: 600 },
   });
+  // The row that carries each employee's remove action: their first one in the list.
+  const firstRowOfEmployee = useMemo(() => {
+    const first = new Map<string, string>();
+    for (const r of data) {
+      if (!first.has(r.employeeId)) first.set(r.employeeId, rowKey(r));
+    }
+    return first;
+  }, [data]);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [shiftModalOpen, setShiftModalOpen] = useState(false);
@@ -234,6 +246,33 @@ export default function DtrDetailTable({
       key: "fullName",
       width: widths.fullName,
       align: L,
+      render: (name: string | undefined, r: DtrDetailResponse) =>
+        onRemoveEmployee &&
+        firstRowOfEmployee.get(r.employeeId) === rowKey(r) ? (
+          <Space size={4}>
+            <span>{name}</span>
+            <Popconfirm
+              title={`Remove ${name ?? "this employee"} from the batch?`}
+              description="Deletes only this employee's days so they can be calculated again. Everyone else stays."
+              okText="Remove"
+              okButtonProps={{ danger: true }}
+              cancelText="Cancel"
+              onConfirm={() => onRemoveEmployee(r.employeeId, name)}
+            >
+              <Tooltip title="Remove this employee from the batch">
+                <Button
+                  aria-label="Remove employee"
+                  type="text"
+                  danger
+                  size="small"
+                  icon={<RollbackOutlined />}
+                />
+              </Tooltip>
+            </Popconfirm>
+          </Space>
+        ) : (
+          name
+        ),
       onHeaderCell: () =>
         ({
           width: widths.fullName,

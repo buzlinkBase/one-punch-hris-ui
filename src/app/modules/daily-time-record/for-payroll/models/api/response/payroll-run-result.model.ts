@@ -296,6 +296,10 @@ export interface PayrollRunResult {
   // What each complex amount is made of, keyed by that amount's field name (e.g. "basicPay",
   // "totalRegularAllowances"). Only returned by the Calculate/Generate preview, not by GET /payrolls.
   sources?: Record<string, PayrollSourceItem[]>;
+  // What a saved run's Loans / Other Deductions / Other Income totals are made of, one line per
+  // scheduled installment with its date, keyed "loans", "otherDeductions", "totalOtherIncome".
+  // Only returned by GET /payrolls; a total can exceed its lines' sum (Salary Adjustments).
+  savedSources?: Record<string, PayrollSourceItem[]>;
 }
 
 // One day's contribution to a payroll line — mirrors backend DTRPayModel, using the same

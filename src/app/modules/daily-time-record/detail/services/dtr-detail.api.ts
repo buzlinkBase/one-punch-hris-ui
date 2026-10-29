@@ -108,6 +108,17 @@ export const dtrDetailApi = {
     });
   },
 
+  // Takes one employee out of a batch that hasn't been posted yet, so just their days can be
+  // calculated again. Refused server-side for a posted batch or days payroll already paid.
+  deleteEmployeeFromBatch(
+    batchCode: string,
+    employeeId: string,
+  ): Promise<void> {
+    return httpClient.delete<void>(`${SAVE_ENDPOINT}/employee`, {
+      params: { batchCode, employeeId },
+    });
+  },
+
   // Approve/Decline route through the shared Dtr approval engine instance (started at Save
   // Draft time) rather than posting directly — see DailyRecordService.ApproveBatchAsync /
   // DeclineBatchAsync. batchId is the DTRBatch header row's own id (BatchesModel.id).

@@ -23,6 +23,7 @@ export const PORTAL_NAV_VISIBILITY_KEYS: Record<string, PortalVisibilityKey> = {
   "portal-official-business": "showOfficialBusiness",
   "portal-pass-slip": "showPassSlip",
   "portal-loan-applications": "showLoanApplications",
+  "portal-punch": "showPunch",
 };
 
 /**

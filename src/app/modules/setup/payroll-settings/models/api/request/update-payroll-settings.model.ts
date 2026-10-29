@@ -20,4 +20,6 @@ export interface UpdatePayrollSettings {
   portalShowOfficialBusiness: boolean;
   portalShowPassSlip: boolean;
   portalShowLoanApplications: boolean;
+  portalShowPunch: boolean;
+  portalPunchCooldownMinutes: number;
 }

@@ -272,6 +272,19 @@ export function useUnreleaseBatch() {
   });
 }
 
+export function useUnsaveEmployee() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { batchId: string; payrollId: string }) =>
+      forPayrollApi.unsaveEmployee(v.batchId, v.payrollId),
+    onSuccess: () => {
+      invalidatePayrollResults(queryClient);
+      // The employee's DTR days are free to be paid again, which gives their leave days back.
+      invalidateLeaveBalances(queryClient);
+    },
+  });
+}
+
 export function useDeletePayrollBatch() {
   const queryClient = useQueryClient();
   return useMutation({

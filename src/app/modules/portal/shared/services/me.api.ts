@@ -31,6 +31,7 @@ import type { PortalProfileUpdateRequestResponse } from "../models/api/response/
 import type { CoworkerBirthdayResponse } from "../models/api/response/coworker-birthday-response.model";
 
 import type { PortalVisibilityResponse } from "../models/api/response/portal-visibility-response.model";
+import type { PortalPunchStatusResponse } from "../models/api/response/portal-punch-status-response.model";
 
 import type {
   AnniversaryResponse,
@@ -166,6 +167,20 @@ export const meApi = {
     return httpClient.getUnwrapped<RawColumnarAttendanceLog[]>(
       `${BASE_URL}/raw-attendance`,
       { params },
+    );
+  },
+
+  getMyPunchStatus(): Promise<PortalPunchStatusResponse> {
+    return httpClient.getUnwrapped<PortalPunchStatusResponse>(
+      `${BASE_URL}/punch/status`,
+    );
+  },
+
+  /** Punches now (the server's time, never the client's) and returns the refreshed status. */
+  punch(): Promise<PortalPunchStatusResponse> {
+    return httpClient.postUnwrapped<PortalPunchStatusResponse>(
+      `${BASE_URL}/punch`,
+      {},
     );
   },
 

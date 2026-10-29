@@ -15,12 +15,14 @@ export function countLogs(row: CleanAttendanceLogColumnar): number {
  * The incomplete-log rule shared by the admin Incomplete Punches screen and the Employee
  * Portal's My Incomplete Logs: a real employee row (not the processor's placeholder) whose day
  * has no punches, or an odd number of them (a time-in without its time-out, or vice versa).
+ * The placeholder is recognised by its empty employeeId only -- an employee without an
+ * Employee No. is still a real row.
  */
 export function filterIncompletePunches(
   rows: CleanAttendanceLogColumnar[],
 ): CleanAttendanceLogColumnar[] {
   return rows
-    .filter((r) => r.employeeId !== EMPTY_GUID && r.empNo !== "")
+    .filter((r) => r.employeeId !== EMPTY_GUID)
     .filter((r) => {
       const count = countLogs(r);
       return count === 0 || count % 2 !== 0;

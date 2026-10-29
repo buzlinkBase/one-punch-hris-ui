@@ -19,6 +19,8 @@ import {
   EditOutlined,
   PlusOutlined,
   SearchOutlined,
+  TeamOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -37,6 +39,7 @@ import type { WorkRotationFilter } from "../../models/api/request/work-rotation-
 import type { WorkRotationResponse } from "../../models/api/response/work-rotation-response.model";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { SupervisorSitesModal } from "../../components/supervisor-sites-modal";
 
 const { Title, Text } = Typography;
 
@@ -81,15 +84,15 @@ const DEFAULT_FILTER = currentSemiMonthlyRange();
 
 export default function WorkRotationList() {
   const navigate = useNavigate();
+  const [supervisorSitesOpen, setSupervisorSitesOpen] = useState(false);
   const [outerTab, setOuterTab] = useState("work-rotation");
   const [activeTab, setActiveTab] = useState("entries");
   const [pending, setPending] = useState<WorkRotationFilter>(DEFAULT_FILTER);
   const [committed, setCommitted] =
     useState<WorkRotationFilter>(DEFAULT_FILTER);
   const [searchKey, setSearchKey] = useState(0);
-  // Employees the user folded shut; everyone else is shown expanded, so a fresh search opens with
-  // every employee's dates visible.
-  const [collapsedEmployees, setCollapsedEmployees] = useState<string[]>([]);
+  // Employees the user opened; everyone else stays collapsed, so a fresh search starts folded.
+  const [expandedEmployees, setExpandedEmployees] = useState<string[]>([]);
 
   const {
     data: records = [],
@@ -172,7 +175,7 @@ export default function WorkRotationList() {
   }, [records]);
 
   const handleSearch = () => {
-    setCollapsedEmployees([]);
+    setExpandedEmployees([]);
     setCommitted({ ...pending });
     setSearchKey((k) => k + 1);
   };
@@ -482,15 +485,33 @@ export default function WorkRotationList() {
               Manage employee work rotation plans and time shift assignments.
             </p>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() =>
-              navigate({ to: "/change-schedule/work-rotation/create" })
-            }
-          >
-            Add Work Rotation Plan
-          </Button>
+          <Space wrap>
+            <PermissionGate permission="Work Rotation:Create">
+              <Button
+                icon={<TeamOutlined />}
+                onClick={() => setSupervisorSitesOpen(true)}
+              >
+                Supervisor Sites
+              </Button>
+            </PermissionGate>
+            <Button
+              icon={<ThunderboltOutlined />}
+              onClick={() =>
+                navigate({ to: "/change-schedule/work-rotation/quick" })
+              }
+            >
+              Quick Schedule
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() =>
+                navigate({ to: "/change-schedule/work-rotation/create" })
+              }
+            >
+              Add Work Rotation Plan
+            </Button>
+          </Space>
         </div>
       </div>
 
@@ -586,14 +607,14 @@ export default function WorkRotationList() {
                           scroll={{ x: "max-content" }}
                           sticky
                           expandable={{
-                            expandedRowKeys: employeeGroups
-                              .map((g) => g.employeeId)
-                              .filter((id) => !collapsedEmployees.includes(id)),
+                            expandedRowKeys: expandedEmployees,
                             onExpand: (expanded, group) =>
-                              setCollapsedEmployees((prev) =>
+                              setExpandedEmployees((prev) =>
                                 expanded
-                                  ? prev.filter((id) => id !== group.employeeId)
-                                  : [...prev, group.employeeId],
+                                  ? [...prev, group.employeeId]
+                                  : prev.filter(
+                                      (id) => id !== group.employeeId,
+                                    ),
                               ),
                             expandedRowRender: (group) => (
                               <div className="pl-8 py-2">
@@ -685,6 +706,11 @@ export default function WorkRotationList() {
             children: <RosterList embedded />,
           },
         ]}
+      />
+
+      <SupervisorSitesModal
+        open={supervisorSitesOpen}
+        onClose={() => setSupervisorSitesOpen(false)}
       />
     </div>
   );

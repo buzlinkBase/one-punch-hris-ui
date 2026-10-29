@@ -227,6 +227,10 @@ const WorkRotationDetail = lazy(
   () =>
     import("@/app/modules/change-schedule/work-rotation/pages/work-rotation-detail"),
 );
+const QuickSchedule = lazy(
+  () =>
+    import("@/app/modules/change-schedule/work-rotation/pages/quick-schedule"),
+);
 const SelectTenant = lazy(
   () => import("@/app/modules/auth/select-tenant/select-tenant"),
 );
@@ -843,6 +847,12 @@ const workRotationCreateRoute = createRoute({
   getParentRoute: () => workRotationRoute,
   path: "create",
   component: withSuspense(WorkRotationDetail),
+});
+
+const workRotationQuickRoute = createRoute({
+  getParentRoute: () => workRotationRoute,
+  path: "quick",
+  component: withSuspense(QuickSchedule),
 });
 
 const workRotationDetailRoute = createRoute({
@@ -1703,6 +1713,7 @@ const routeTree = rootRoute.addChildren([
   workRotationRoute.addChildren([
     workRotationIndexRoute,
     workRotationCreateRoute,
+    workRotationQuickRoute,
     workRotationDetailRoute,
   ]),
   changeRestDayRoute.addChildren([

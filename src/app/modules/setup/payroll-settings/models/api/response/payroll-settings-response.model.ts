@@ -23,4 +23,6 @@ export interface PayrollSettingsResponse {
   portalShowOfficialBusiness: boolean;
   portalShowPassSlip: boolean;
   portalShowLoanApplications: boolean;
+  portalShowPunch: boolean;
+  portalPunchCooldownMinutes: number;
 }

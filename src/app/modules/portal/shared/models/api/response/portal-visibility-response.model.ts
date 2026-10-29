@@ -17,6 +17,8 @@ export interface PortalVisibilityResponse {
   showOfficialBusiness: boolean;
   showPassSlip: boolean;
   showLoanApplications: boolean;
+  /** Opt-in: off until the company turns Punch In/Out on. */
+  showPunch: boolean;
 }
 
 export type PortalVisibilityKey = keyof PortalVisibilityResponse;

@@ -103,6 +103,19 @@ export function useDeleteDtrBatch() {
   });
 }
 
+export function useDeleteDtrBatchEmployee() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { batchCode: string; employeeId: string }) =>
+      dtrDetailApi.deleteEmployeeFromBatch(v.batchCode, v.employeeId),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      invalidateLeaveBalances(queryClient);
+      invalidateCoverage(queryClient);
+    },
+  });
+}
+
 export function useDtrDetailBatchCodes(from?: string, to?: string) {
   return useQuery<BatchesModel[]>({
     queryKey: [...BATCH_CODES_KEY, from, to],

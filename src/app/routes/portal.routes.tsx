@@ -64,6 +64,10 @@ const PortalRawAttendance = gatedPage(
     import("@/app/modules/portal/raw-attendance/pages/portal-raw-attendance"),
   "showRawAttendance",
 );
+const PortalPunch = gatedPage(
+  () => import("@/app/modules/portal/punch/pages/portal-punch"),
+  "showPunch",
+);
 const PortalShiftSchedule = gatedPage(
   () =>
     import("@/app/modules/portal/shift-schedule/pages/portal-shift-schedule"),
@@ -150,6 +154,7 @@ export const portalRoutes: SetupRouteConfig[] = [
   { path: "dtr", component: PortalDtr },
   { path: "incomplete-punches", component: PortalIncompletePunches },
   { path: "raw-attendance", component: PortalRawAttendance },
+  { path: "punch", component: PortalPunch },
   { path: "shift-schedule", component: PortalShiftSchedule },
   { path: "leave-credits", component: PortalLeaveCredits },
   { path: "leave-applications", component: PortalLeaveApplicationList },

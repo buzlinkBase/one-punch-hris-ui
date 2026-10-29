@@ -80,22 +80,27 @@ export interface BreakdownSpec {
   items: (r: PayrollRunResult) => PayrollBreakdownItem[] | undefined;
   include: (item: PayrollBreakdownItem) => boolean;
   total: (r: PayrollRunResult) => number;
+  // The savedSources key behind the total, when the breakdown popup can itemize it.
+  sourceKey?: string;
 }
 
 export const loansBreakdown: BreakdownSpec = {
   items: (r) => r.deductionItems,
   include: (i) => !!i.isLoan,
   total: (r) => r.totalLoans,
+  sourceKey: "loans",
 };
 export const otherDeductionsBreakdown: BreakdownSpec = {
   items: (r) => r.deductionItems,
   include: (i) => !i.isLoan,
   total: (r) => r.otherDeductions - r.totalLoans,
+  sourceKey: "otherDeductions",
 };
 export const otherIncomeBreakdown: BreakdownSpec = {
   items: (r) => r.incomeItems,
   include: () => true,
   total: (r) => r.totalOtherIncome,
+  sourceKey: "totalOtherIncome",
 };
 
 const itemsOf = (r: PayrollRunResult, spec: BreakdownSpec) =>

@@ -24,6 +24,15 @@ export const PERMISSION_HINTS: Record<string, Record<string, string>> = {
     Delete:
       "Remove synced logs. The original is kept and can be restored, and a device re-sync won't add it back.",
   },
+  "Work Rotation": {
+    View: "See the Work Rotation Plan list and its rostering report.",
+    Create:
+      "Schedule shifts for any employee, in the Work Rotation form and Quick Schedule. Also edits entries. Gives full reach, so ManageOwnTeam adds nothing alongside it.",
+    ManageOwnTeam:
+      "For supervisors: schedule shifts only for the employees who report to them (their direct reports), plus the employees at any project sites an admin grants them under Work Rotation > Supervisor Sites. Once sites are granted, they can only send people to those sites. Edits are limited the same way. Pair it with View so they can open the screen, and leave Create off, because Create lifts the limit.",
+    Delete: "Delete work rotation entries and whole batches.",
+    Approve: "Reserved. Work rotation entries take effect without approval.",
+  },
   "Confidential Records": {
     "": "Employees marked Confidential (for example, executives) are hidden from everyone, Admins included, except the Owner and roles given one of these. Choose the one that matches what the role needs to see.",
     Access:

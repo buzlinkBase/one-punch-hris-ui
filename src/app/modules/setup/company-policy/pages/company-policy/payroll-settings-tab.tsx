@@ -61,6 +61,8 @@ const DEFAULTS: PayrollSettingsFormValues = {
   portalShowOfficialBusiness: true,
   portalShowPassSlip: true,
   portalShowLoanApplications: true,
+  portalShowPunch: false,
+  portalPunchCooldownMinutes: 5,
 };
 
 // Grouped like the My Portal menu. My Dashboard and My Profile are always available.
@@ -78,6 +80,7 @@ const PORTAL_PAGE_GROUPS = [
       { name: "portalShowDtr", label: "My Daily Time Record" },
       { name: "portalShowIncompletePunches", label: "My Incomplete Punches" },
       { name: "portalShowRawAttendance", label: "My Raw Attendance" },
+      { name: "portalShowPunch", label: "Punch In / Out" },
       { name: "portalShowShiftSchedule", label: "My Shift Schedule" },
     ],
   },
@@ -131,6 +134,7 @@ export default function PayrollSettingsTab() {
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const startMonth = watch("fiscalYearStartMonth");
+  const punchEnabled = watch("portalShowPunch");
   const endMonthLabel =
     MONTH_OPTIONS[(((startMonth - 2) % 12) + 12) % 12]?.label;
 
@@ -325,6 +329,31 @@ export default function PayrollSettingsTab() {
               ))}
             </div>
           ))}
+
+          {punchEnabled && (
+            <Form.Item
+              label="Minutes between portal punches"
+              extra="An employee can't punch again from My Portal until this many minutes after their last punch (from any source)."
+              validateStatus={errors.portalPunchCooldownMinutes ? "error" : ""}
+              help={errors.portalPunchCooldownMinutes?.message}
+              className="mb-0"
+            >
+              <Controller
+                name="portalPunchCooldownMinutes"
+                control={control}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    className="w-full"
+                    min={1}
+                    max={120}
+                    precision={0}
+                    addonAfter="minutes"
+                  />
+                )}
+              />
+            </Form.Item>
+          )}
         </div>
       </Card>
 

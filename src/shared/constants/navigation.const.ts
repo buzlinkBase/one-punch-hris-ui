@@ -204,6 +204,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
             path: "/portal/dtr",
           },
           {
+            key: "portal-punch",
+            label: "Punch In / Out",
+            path: "/portal/punch",
+          },
+          {
             key: "portal-incomplete-punches",
             label: "My Incomplete Logs",
             path: "/portal/incomplete-punches",

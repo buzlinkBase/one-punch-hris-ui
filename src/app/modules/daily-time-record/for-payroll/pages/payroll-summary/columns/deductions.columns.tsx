@@ -11,6 +11,7 @@ import {
   loansBreakdown,
   otherDeductionsBreakdown,
 } from "../utils/payroll-summary.util";
+import { totalCell, type OpenSource } from "./source-link";
 
 const { Text } = Typography;
 
@@ -35,6 +36,7 @@ const breakdownGroup = (
   key: string,
   spec: BreakdownSpec,
   results: PayrollRunResult[],
+  onOpenSource?: OpenSource,
 ): Column => ({
   title: label,
   key: `${key}Group`,
@@ -47,7 +49,12 @@ const breakdownGroup = (
     ...(hasBreakdownRemainder(results, spec)
       ? [money("Adjustments", `${key}:adj`, (r) => breakdownRemainder(r, spec))]
       : []),
-    money("Total", key, spec.total),
+    {
+      title: "Total",
+      key,
+      align: "right",
+      render: (_, r) => totalCell(r, spec, label, onOpenSource),
+    },
   ],
 });
 
@@ -55,6 +62,7 @@ const breakdownGroup = (
 // type, then attendance deductions, ending in Total Deductions.
 export const deductionsColumns = (
   results: PayrollRunResult[],
+  onOpenSource?: OpenSource,
 ): ColumnsType<PayrollRunResult> => [
   {
     title: "Employee",
@@ -68,12 +76,13 @@ export const deductionsColumns = (
   money("Pag-IBIG", "hdmf", (r) => r.pagIbigContribution),
   money("W-Tax", "tax", (r) => r.withholdingTax),
   money("Cash Bond", "cashBond", (r) => r.cashBondDeduction),
-  breakdownGroup("Loans", "loans", loansBreakdown, results),
+  breakdownGroup("Loans", "loans", loansBreakdown, results, onOpenSource),
   breakdownGroup(
     "Other Deductions",
     "otherDed",
     otherDeductionsBreakdown,
     results,
+    onOpenSource,
   ),
   money("Late", "late", (r) => r.lateAmount),
   money("Undertime", "ut", (r) => r.underTimeAmount),

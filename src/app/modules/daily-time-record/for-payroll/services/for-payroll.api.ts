@@ -246,6 +246,14 @@ export const forPayrollApi = {
     return httpClient.delete<void>(`${PAYROLL_ENDPOINT}/batch/${batchId}`);
   },
 
+  // Takes one employee out of a saved run that hasn't been posted yet, so just they can be
+  // generated again (the batch-level delete above would drop every employee in the run).
+  unsaveEmployee(batchId: string, payrollId: string): Promise<void> {
+    return httpClient.delete<void>(
+      `${PAYROLL_ENDPOINT}/batch/${batchId}/employee/${payrollId}`,
+    );
+  },
+
   // Withdraws one employee's released 13th month / last pay payout (the batch-level delete
   // above would drop every employee in the run).
   unreleasePayout(payrollId: string): Promise<void> {

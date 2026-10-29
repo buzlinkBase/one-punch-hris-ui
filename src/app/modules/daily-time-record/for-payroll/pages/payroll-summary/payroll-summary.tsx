@@ -32,10 +32,14 @@ import { useSearch } from "@tanstack/react-router";
 import {
   usePayrolls,
   usePayrollBatches,
+  useUnsaveEmployee,
 } from "../../hooks/use-for-payroll-queries";
+import { apiErrorMessage } from "@/core/http/api-error";
 import type { PayrollRunResult } from "../../models/api/response/payroll-run-result.model";
 import type { PayrollBatchListModel } from "../../models/api/response/payroll-batch-list.model";
 import { otPay, ndPay } from "../../utils/ot-nd-pay.util";
+import PayrollSourceModal from "../../components/payroll-source-modal/payroll-source-modal";
+import type { SourceView } from "./columns/source-link";
 import { MobileRangePicker } from "@/shared/components/mobile-range-picker";
 import { QUICK_RANGES } from "@/shared/utils/quick-date-ranges.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
@@ -258,7 +262,9 @@ export function PayrollSummaryContent({
         : results,
     [results, deductionsView],
   );
-  const deductionTableColumns = deductionsColumns(deductionRows);
+  // The Loans / Other Deductions / Other Income total whose installments are being listed.
+  const [sourceView, setSourceView] = useState<SourceView | null>(null);
+  const deductionTableColumns = deductionsColumns(deductionRows, setSourceView);
 
   // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
   // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
@@ -281,11 +287,31 @@ export function PayrollSummaryContent({
     otherDeductions: false,
     otherIncome: false,
   });
+  const { mutateAsync: unsaveEmployee } = useUnsaveEmployee();
+  const handleUnsave = async (record: PayrollRunResult) => {
+    if (!record.id || !record.payrollBatchId) return;
+    try {
+      await unsaveEmployee({
+        batchId: record.payrollBatchId,
+        payrollId: record.id,
+      });
+      message.success(`${record.fullName ?? "Employee"} was unsaved.`);
+    } catch (err) {
+      message.error(
+        apiErrorMessage(
+          err,
+          "Failed to unsave this employee. Please try again.",
+        ),
+      );
+    }
+  };
   const payrollTableColumns = payrollColumns({
     onPrint: handlePrintPayslip,
+    onUnsave: handleUnsave,
     results,
     expanded,
     onToggle: (group) => setExpanded((e) => ({ ...e, [group]: !e[group] })),
+    onOpenSource: setSourceView,
   });
 
   // Sends the selected batch plus the on-screen filter, so the PDF lists exactly the rows in
@@ -765,6 +791,15 @@ export function PayrollSummaryContent({
           ]}
         />
       </Card>
+
+      <PayrollSourceModal
+        open={!!sourceView}
+        onClose={() => setSourceView(null)}
+        employeeName={sourceView?.row.fullName}
+        title={sourceView?.title ?? ""}
+        amount={sourceView?.amount ?? 0}
+        items={sourceView?.items ?? []}
+      />
     </div>
   );
 }

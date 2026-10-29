@@ -69,6 +69,7 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
       "/portal/dtr",
       "/portal/incomplete-punches",
       "/portal/raw-attendance",
+      "/portal/punch",
       "/portal/shift-schedule",
     ],
     sections: [
@@ -87,8 +88,12 @@ export const EMPLOYEE_ARTICLES: HelpArticle[] = [
             },
           },
           {
-            text: "My Attendance Logs: every punch the biometric device recorded.",
+            text: "My Attendance Logs: every punch recorded for you, whether from the biometric device or from Punch In / Out.",
             link: { label: "My Attendance Logs", to: "/portal/raw-attendance" },
+          },
+          {
+            text: "Punch In / Out (only if your company turned it on): press Punch Now to record your time from the browser. The time saved is the server's, not your device's. After each punch the button waits a few minutes (5 by default) before you can punch again, and a punch from the biometric device counts too.",
+            link: { label: "Punch In / Out", to: "/portal/punch" },
           },
           {
             text: "My Shift Schedule: the shift you're scheduled for each day.",

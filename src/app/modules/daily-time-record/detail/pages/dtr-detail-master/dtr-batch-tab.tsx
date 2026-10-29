@@ -29,6 +29,7 @@ import {
   useDtrDetailBatchCodes,
   useDtrDetailMaster,
   useDeleteDtrBatch,
+  useDeleteDtrBatchEmployee,
   useApproveDtrBatch,
   useDeclineDtrBatch,
   useRequestDtrBatchDeletion,
@@ -65,6 +66,8 @@ import {
   toPayrollGroupOptions,
 } from "@/shared/utils/payroll-group-options.util";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { useHasPermission } from "@/shared/hooks/use-has-permission";
+import { apiErrorMessage } from "@/core/http/api-error";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
@@ -107,6 +110,14 @@ export default function DtrBatchTab() {
   );
 
   const viewingBatch = batches.find((b) => b.code === viewingBatchCode);
+  // One employee can be taken out of a batch that hasn't been posted or paid by a payroll run
+  // (the server enforces the same rules).
+  const canRemoveEmployees =
+    useHasPermission("DTR Master:Manage") &&
+    !!viewingBatch &&
+    !viewingBatch.isPosted &&
+    !viewingBatch.isPayrollGenerated &&
+    !viewingBatch.pendingDeletion;
 
   const { data: payrollGroups = [] } = usePayrollGroups();
   const payrollGroupLabel = (id?: string | null) =>
@@ -124,6 +135,7 @@ export default function DtrBatchTab() {
 
   const { mutateAsync: deleteBatch, isPending: isDeleting } =
     useDeleteDtrBatch();
+  const { mutateAsync: removeEmployee } = useDeleteDtrBatchEmployee();
   const { mutateAsync: approveBatch, isPending: isApproving } =
     useApproveDtrBatch();
   const { mutateAsync: declineBatch, isPending: isDeclining } =
@@ -161,6 +173,21 @@ export default function DtrBatchTab() {
     queryClient.invalidateQueries({
       queryKey: ["daily-time-record", "detail", "batch-codes"],
     });
+  };
+
+  const handleRemoveEmployee = async (employeeId: string, name?: string) => {
+    if (!viewingBatchCode) return;
+    try {
+      await removeEmployee({ batchCode: viewingBatchCode, employeeId });
+      messageApi.success(`${name ?? "Employee"} was removed from the batch.`);
+    } catch (err) {
+      messageApi.error(
+        apiErrorMessage(
+          err,
+          "Failed to remove this employee. Please try again.",
+        ),
+      );
+    }
   };
 
   const handleRequestDeletion = async (batchId?: string | null) => {
@@ -599,7 +626,14 @@ export default function DtrBatchTab() {
               </Button>
             </Dropdown>
           </div>
-          <DtrDetailTable data={records} loading={isLoadingDetail} readOnly />
+          <DtrDetailTable
+            data={records}
+            loading={isLoadingDetail}
+            readOnly
+            onRemoveEmployee={
+              canRemoveEmployees ? handleRemoveEmployee : undefined
+            }
+          />
         </div>
       </Modal>
 
