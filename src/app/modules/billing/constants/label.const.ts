@@ -37,7 +37,6 @@ export const BILLING_LABEL = {
   NO_PAYMENTS: "No payments recorded yet.",
   MONTHLY: "Monthly",
   ANNUAL: "Annual",
-  ANNUAL_SAVING: "2 months free",
   PER_MONTH: "/ month",
   PER_YEAR: "/ year",
   VAT_INCLUSIVE: "Prices include 12% VAT.",

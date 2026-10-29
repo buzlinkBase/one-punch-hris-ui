@@ -17,7 +17,7 @@ interface ShiftPaletteProps {
 }
 
 const CHIP_BASE =
-  "flex cursor-pointer items-center gap-1 rounded-md border px-3 py-1.5 text-sm transition";
+  "flex cursor-pointer items-center gap-1 rounded-md border px-2.5 py-1 text-sm transition";
 
 // Shifts arrive already ordered by type, so each group is a run of neighbours. The number on a
 // chip is its place in the whole list, which is what the 1-9 shortcut keys follow.
@@ -36,17 +36,17 @@ function groupShifts(shifts: PaletteShift[]) {
 
 export function ShiftPalette({ shifts, brush, onChange }: ShiftPaletteProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <div className="text-xs text-gray-500">
         <span className="font-semibold text-(--primary)">Tip:</span> press the
         number on a shift (1-9) to select it, 0 to clear.
       </div>
-      {groupShifts(shifts).map((group) => (
-        <div key={group.name} className="flex flex-col gap-1.5">
-          <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-            {group.name} ({group.items.length})
-          </div>
-          <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        {groupShifts(shifts).map((group) => (
+          <div key={group.name} className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {group.name} ({group.items.length})
+            </span>
             {group.items.map(({ shift: s, index }) => (
               <Tooltip key={s.id} title={s.title}>
                 <button
@@ -68,13 +68,11 @@ export function ShiftPalette({ shifts, brush, onChange }: ShiftPaletteProps) {
               </Tooltip>
             ))}
           </div>
-        </div>
-      ))}
-      <div className="flex flex-col gap-1.5">
-        <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Other
-        </div>
-        <div>
+        ))}
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Other
+          </span>
           <Tooltip title="Remove the schedule from the day. The employee goes back to their regular schedule.">
             <button
               type="button"

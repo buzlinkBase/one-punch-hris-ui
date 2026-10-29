@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import { Checkbox, Dropdown, Tooltip, type MenuProps } from "antd";
-import { DownOutlined } from "@ant-design/icons";
+import { useEffect, useRef, type MouseEvent } from "react";
+import { Checkbox, Tooltip } from "antd";
 import dayjs from "dayjs";
-import type { PaletteShift } from "../shift-palette";
 import {
   cellKey,
   isChange,
@@ -26,10 +24,11 @@ interface ScheduleGridProps {
   server: Map<string, CellPaint>;
   edits: Map<string, CellPaint>;
   shifts: Map<string, ShiftChip>;
-  // Offered in the right-click / cell-button menu.
-  menuShifts: PaletteShift[];
-  // Paints one cell with a shift, or null to clear it, without touching the brush.
-  onPickShift: (key: string, shiftId: string | null) => void;
+  // Right-click: opens the per-day editor (shift, client, project site) for one cell.
+  // fromDoubleClick: the cell was just painted by the first click of the double-click.
+  onEditCell: (key: string, fromDoubleClick?: boolean) => void;
+  // Ctrl+C on the focused cell: its settings become the template for the next cells painted.
+  onCopyCell: (key: string) => void;
   selectedIds: Set<string>;
   focusKey: string | null;
   onToggleEmployee: (employeeId: string) => void;
@@ -55,8 +54,8 @@ export function ScheduleGrid({
   server,
   edits,
   shifts,
-  menuShifts,
-  onPickShift,
+  onEditCell,
+  onCopyCell,
   selectedIds,
   focusKey,
   onToggleEmployee,
@@ -68,6 +67,8 @@ export function ScheduleGrid({
   onPasteText,
 }: ScheduleGridProps) {
   const dragging = useRef(false);
+  // The cell the press or drag last acted on.
+  const lastCell = useRef<string | null>(null);
 
   useEffect(() => {
     const stop = () => {
@@ -84,54 +85,35 @@ export function ScheduleGrid({
     if (e.button !== 0) return;
     const key = keyOf(e);
     if (!key) return;
-    dragging.current = true;
     onFocusCell(key);
+    // The second press of a double-click opens the editor; the page undoes the first press's paint.
+    if (e.detail >= 2) {
+      dragging.current = false;
+      onEditCell(key, true);
+      return;
+    }
+    dragging.current = true;
+    lastCell.current = key;
     onClickCell(key);
   };
 
   const handleEnter = (e: MouseEvent<HTMLElement>) => {
     if (!dragging.current) return;
     const key = keyOf(e);
-    if (key) onPaint([key]);
+    // An emptied cell's label collapses under the pointer, which fires a mouseover on the same
+    // cell; without this check that would repaint the cell the click just undid.
+    if (!key || key === lastCell.current) return;
+    lastCell.current = key;
+    onPaint([key]);
   };
 
-  // One shared menu serves every cell. antd places it at the pointer for a contextmenu event;
-  // the cell's arrow button re-dispatches one from itself so both paths open the same menu.
-  const menuCell = useRef<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const menuItems = useMemo<MenuProps["items"]>(() => {
-    const groups = new Map<string, PaletteShift[]>();
-    for (const s of menuShifts) {
-      groups.set(s.group, [...(groups.get(s.group) ?? []), s]);
-    }
-    return [
-      ...[...groups].map(([group, items]) => ({
-        type: "group" as const,
-        key: group,
-        label: group,
-        children: items.map((s) => ({
-          key: s.id,
-          label: s.title,
-        })),
-      })),
-      { type: "divider" as const },
-      { key: "clear", label: "Clear", danger: true },
-    ];
-  }, [menuShifts]);
-
-  const handleMenuPick: MenuProps["onClick"] = ({ key }) => {
-    setMenuOpen(false);
-    if (menuCell.current) {
-      onPickShift(menuCell.current, key === "clear" ? null : key);
-    }
-  };
-
-  const handleContextMenuCapture = (e: MouseEvent<HTMLElement>) => {
+  // Right-clicking a cell opens the per-day editor instead of the browser menu.
+  const handleContextMenu = (e: MouseEvent<HTMLElement>) => {
     const key = keyOf(e);
-    menuCell.current = key ?? null;
-    if (key) onFocusCell(key);
-    else e.stopPropagation();
+    if (!key) return;
+    e.preventDefault();
+    onFocusCell(key);
+    onEditCell(key);
   };
 
   const allSelected =
@@ -142,6 +124,17 @@ export function ScheduleGrid({
     <div
       tabIndex={0}
       className="max-h-[65vh] overflow-auto rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-teal-600/30"
+      onKeyDown={(e) => {
+        if (
+          (e.ctrlKey || e.metaKey) &&
+          e.key.toLowerCase() === "c" &&
+          focusKey &&
+          !(e.target instanceof HTMLInputElement)
+        ) {
+          e.preventDefault();
+          onCopyCell(focusKey);
+        }
+      }}
       onPaste={(e) => {
         e.preventDefault();
         onPasteText(e.clipboardData.getData("text"));
@@ -181,84 +174,55 @@ export function ScheduleGrid({
             })}
           </tr>
         </thead>
-        <Dropdown
-          trigger={["contextMenu"]}
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-          menu={{
-            items: menuItems,
-            onClick: handleMenuPick,
-            className: "max-h-80 overflow-auto",
-          }}
+        <tbody
+          onMouseDown={handleDown}
+          onMouseOver={handleEnter}
+          onContextMenu={handleContextMenu}
         >
-          <tbody
-            onMouseDown={handleDown}
-            onMouseOver={handleEnter}
-            onContextMenuCapture={handleContextMenuCapture}
-          >
-            {employees.map((emp) => (
-              <tr key={emp.id}>
-                <td className="sticky left-0 z-10 min-w-52 max-w-52 border border-gray-200 bg-white px-2 text-xs">
-                  <Checkbox
-                    checked={selectedIds.has(emp.id)}
-                    onChange={() => onToggleEmployee(emp.id)}
+          {employees.map((emp) => (
+            <tr key={emp.id}>
+              <td className="sticky left-0 z-10 min-w-52 max-w-52 border border-gray-200 bg-white px-2 text-xs">
+                <Checkbox
+                  checked={selectedIds.has(emp.id)}
+                  onChange={() => onToggleEmployee(emp.id)}
+                >
+                  <span className="block max-w-40 truncate">{emp.name}</span>
+                </Checkbox>
+              </td>
+              {dates.map((date) => {
+                const key = cellKey(emp.id, date);
+                const saved = server.get(key);
+                const edit = edits.get(key);
+                const paint = edit ?? saved;
+                const changed = !!edit && isChange(edit, saved);
+                const chip = paint?.shiftId ? shifts.get(paint.shiftId) : null;
+                const cleared = !!edit && edit.shiftId === null && changed;
+
+                let tone = "bg-white hover:bg-gray-50";
+                if (chip) tone = chip.colorClass;
+                if (cleared) tone = "bg-red-50 text-red-600 line-through";
+
+                return (
+                  <td
+                    key={date}
+                    data-cell={key}
+                    title={chip?.title}
+                    className={`${CELL_BASE} relative ${tone} ${
+                      key === focusKey ? "outline-2 outline-teal-600" : ""
+                    } ${changed ? "font-semibold ring-2 ring-inset ring-teal-600" : ""}`}
                   >
-                    <span className="block max-w-40 truncate">{emp.name}</span>
-                  </Checkbox>
-                </td>
-                {dates.map((date) => {
-                  const key = cellKey(emp.id, date);
-                  const saved = server.get(key);
-                  const edit = edits.get(key);
-                  const paint = edit ?? saved;
-                  const changed = !!edit && isChange(edit, saved);
-                  const chip = paint?.shiftId
-                    ? shifts.get(paint.shiftId)
-                    : null;
-                  const cleared = !!edit && edit.shiftId === null && changed;
-
-                  let tone = "bg-white hover:bg-gray-50";
-                  if (chip) tone = chip.colorClass;
-                  if (cleared) tone = "bg-red-50 text-red-600 line-through";
-
-                  return (
-                    <td
-                      key={date}
-                      data-cell={key}
-                      title={chip?.title}
-                      className={`${CELL_BASE} group relative ${tone} ${
-                        key === focusKey ? "outline-2 outline-teal-600" : ""
-                      } ${changed ? "font-semibold ring-2 ring-inset ring-teal-600" : ""}`}
-                    >
-                      <span className="block truncate px-1">
-                        {cleared ? "clear" : (chip?.label ?? "")}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="Choose a shift for this day"
-                        className="absolute right-0 top-0 hidden h-4 w-4 items-center justify-center rounded-bl bg-white/80 text-[10px] text-gray-600 hover:bg-white group-hover:flex"
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          e.currentTarget.dispatchEvent(
-                            new MouseEvent("contextmenu", {
-                              bubbles: true,
-                              cancelable: true,
-                              clientX: rect.left,
-                              clientY: rect.bottom,
-                            }),
-                          );
-                        }}
-                      >
-                        <DownOutlined />
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </Dropdown>
+                    <span className="block truncate px-1">
+                      {cleared ? "clear" : (chip?.label ?? "")}
+                    </span>
+                    {!cleared && (paint?.areaId || paint?.clientId) && (
+                      <span className="absolute bottom-0.5 left-0.5 h-1.5 w-1.5 rounded-full bg-current opacity-60" />
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
       </table>
     </div>
   );

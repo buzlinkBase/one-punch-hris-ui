@@ -44,7 +44,7 @@ const { Title } = Typography;
 const CYCLE_OPTIONS = [
   { label: BILLING_LABEL.MONTHLY, value: "Monthly" },
   {
-    label: `${BILLING_LABEL.ANNUAL} (${BILLING_LABEL.ANNUAL_SAVING})`,
+    label: BILLING_LABEL.ANNUAL,
     value: "Annual",
   },
 ];

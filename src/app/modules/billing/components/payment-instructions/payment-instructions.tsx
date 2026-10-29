@@ -1,5 +1,5 @@
 import { Descriptions } from "antd";
-import { BILLING_LABEL } from "../../constants/label.const";
+import { BILLING_LABEL, STORAGE_LABEL } from "../../constants/label.const";
 import type { PlanChangeQuoteResponse } from "../../models/api/response/subscription-response.model";
 import { formatMoney } from "../../utils/format";
 
@@ -32,6 +32,16 @@ export function PaymentInstructions({
         <Descriptions.Item label="Plan">
           {quote.planName} ({quote.billingCycle.toLowerCase()})
         </Descriptions.Item>
+        {quote.addOnsAmount > 0 && (
+          <>
+            <Descriptions.Item label="Plan price">
+              {formatMoney(quote.subtotal - quote.addOnsAmount, quote.currency)}
+            </Descriptions.Item>
+            <Descriptions.Item label={STORAGE_LABEL.ADD_ONS_LINE}>
+              {formatMoney(quote.addOnsAmount, quote.currency)}
+            </Descriptions.Item>
+          </>
+        )}
         {hasCredit && (
           <>
             <Descriptions.Item label={BILLING_LABEL.UPGRADE_SUBTOTAL}>

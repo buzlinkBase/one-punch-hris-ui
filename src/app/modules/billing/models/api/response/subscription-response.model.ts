@@ -73,6 +73,8 @@ export interface PlanResponse {
   features: Record<string, boolean>;
   limits: Record<string, number>;
   supportTier: string | null;
+  /** Badge beside the annual price; null shows none. */
+  annualPromoLabel: string | null;
 }
 
 export interface PendingChangeResponse {

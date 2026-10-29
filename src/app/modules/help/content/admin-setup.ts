@@ -883,7 +883,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Choose or change a plan",
         steps: [
           {
-            text: "Click Choose a plan (or Change plan). Pick Monthly or Annual; annual gives two months free. One price covers your whole account, not each employee.",
+            text: "Click Choose a plan (or Change plan). Pick Monthly or Annual; annual plans are usually cheaper per year, and a plan may carry a badge showing the saving. One price covers your whole account, not each employee.",
           },
           {
             text: "Open a plan card to see its Systems (such as HRMS) and its HRMS features. A feature your plan doesn't include shows a lock on its menu item.",

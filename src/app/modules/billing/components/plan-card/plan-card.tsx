@@ -146,9 +146,9 @@ export function PlanCard({
           <span className="text-sm text-(--ant-color-text-secondary)">
             {annual ? BILLING_LABEL.PER_YEAR : BILLING_LABEL.PER_MONTH}
           </span>
-          {annual && (
+          {annual && plan.annualPromoLabel && (
             <Tag color="gold" className="ml-1">
-              {BILLING_LABEL.ANNUAL_SAVING}
+              {plan.annualPromoLabel}
             </Tag>
           )}
         </div>

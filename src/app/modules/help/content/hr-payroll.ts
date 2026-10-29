@@ -350,7 +350,10 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Pick a shift in the palette (or press its number key), then click or drag across the grid to paint it. Click a date at the top to paint that day for everyone.",
           },
           {
-            text: "To give one cell a different shift without changing your palette pick, right-click the cell (or click the small arrow that appears on it) and choose a shift or Clear.",
+            text: "To set a shift, client and project site for one day on its own, double-click or right-click the cell. Picking a client narrows the project sites to that client's, and picking a site fills in its client. Client and site are optional, and Clear Day sends the day back to the regular schedule. Cells with a client or site show a small dot.",
+          },
+          {
+            text: 'To reuse a day\'s settings, click the cell and press Ctrl+C (or click "Use as template" in the day editor). Its shift, client and project site become your active template, so the next cells you click or drag get the same settings.',
           },
           {
             text: "For repeating cycles, use Repeat a pattern (e.g. 5 on / 2 off) on the selected rows, and tick the stagger option for rotating crews. Copy previous period carries last period's shifts forward.",

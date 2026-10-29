@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   App,
@@ -11,11 +11,13 @@ import {
 } from "antd";
 import {
   CopyOutlined,
+  DownOutlined,
   LeftOutlined,
   ReloadOutlined,
   RetweetOutlined,
   SaveOutlined,
   SearchOutlined,
+  UpOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -48,7 +50,16 @@ import {
   ShiftPalette,
   type PaletteShift,
 } from "../../components/shift-palette";
+import {
+  clientAfterSiteChange,
+  siteAfterClientChange,
+  siteOptionGroups,
+} from "../../utils/site-client-options.util";
 import { PatternModal } from "../../components/pattern-modal";
+import {
+  CellEditorModal,
+  type CellEditTarget,
+} from "../../components/cell-editor-modal";
 import type { ApplyScheduleGridEntry } from "../../models/api/request/apply-schedule-grid.model";
 import {
   shiftGroupLabel,
@@ -90,6 +101,37 @@ const SHIFT_COLORS = [
   "border-orange-300 bg-orange-100 text-orange-800",
   "border-indigo-300 bg-indigo-100 text-indigo-800",
 ];
+
+// [action, what it does] -- shown as a quick reference under the palette.
+const GRID_TIPS: [string, string][] = [
+  ["Click / drag", "Paint with the shift, client and site picked above"],
+  ["Click a date", "Paint that day for every employee"],
+  ["Double-click / right-click", "Set one day's shift, client and site"],
+  ["Click a cell, Ctrl+C", "Use its settings as the template for next cells"],
+  ["Click a cell, paste", 'Paste shift names from Excel ("-" clears)'],
+  ["Ring on a day", "Unsaved until you click Save schedule"],
+  ["Clear", "Sends the day back to the regular schedule"],
+];
+
+const TIPS_STORAGE_KEY = "quick-schedule-tips-open";
+const PALETTE_STORAGE_KEY = "quick-schedule-palette-open";
+
+const readOpen = (storageKey: string, defaultOpen = true) => {
+  try {
+    const stored = localStorage.getItem(storageKey);
+    return stored === null ? defaultOpen : stored === "1";
+  } catch {
+    return defaultOpen;
+  }
+};
+
+const writeOpen = (storageKey: string, open: boolean) => {
+  try {
+    localStorage.setItem(storageKey, open ? "1" : "0");
+  } catch {
+    // Storage unavailable: the choice just lasts for this visit.
+  }
+};
 
 interface EmployeeFilterState {
   branchId?: string;
@@ -228,6 +270,21 @@ export default function QuickSchedule() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const [patternOpen, setPatternOpen] = useState(false);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  // Remembered per browser so a closed reference stays closed next visit.
+  const [tipsOpen, setTipsOpen] = useState(() => readOpen(TIPS_STORAGE_KEY));
+  const changeTipsOpen = (open: boolean) => {
+    setTipsOpen(open);
+    writeOpen(TIPS_STORAGE_KEY, open);
+  };
+  // Collapsing the palette card leaves a one-line summary and gives the grid the room.
+  const [paletteOpen, setPaletteOpen] = useState(() =>
+    readOpen(PALETTE_STORAGE_KEY, false),
+  );
+  const changePaletteOpen = (open: boolean) => {
+    setPaletteOpen(open);
+    writeOpen(PALETTE_STORAGE_KEY, open);
+  };
   const [lastSave, setLastSave] = useState<LastSave | null>(null);
 
   const entries = useMemo(() => buildEntries(edits, server), [edits, server]);
@@ -302,9 +359,30 @@ export default function QuickSchedule() {
   };
 
   // Clicking a cell that already holds the brush's unsaved paint puts back what was saved.
+  // What the cell held before the last click, so a double-click can open the editor on the cell's
+  // real values instead of the paint the first click just applied.
+  const lastPress = useRef<{ key: string; prev: CellPaint | undefined } | null>(
+    null,
+  );
+
+  const openEditor = (key: string, fromDoubleClick = false) => {
+    const press = lastPress.current;
+    if (fromDoubleClick && press?.key === key) {
+      setEdits((prev) => {
+        const next = new Map(prev);
+        if (press.prev) next.set(key, press.prev);
+        else next.delete(key);
+        return next;
+      });
+    }
+    lastPress.current = null;
+    setEditingKey(key);
+  };
+
   const clickCell = (key: string) => {
     const paint = paintFor(brush);
     const cur = edits.get(key);
+    lastPress.current = { key, prev: cur };
     if (
       cur &&
       cur.shiftId === paint.shiftId &&
@@ -319,6 +397,30 @@ export default function QuickSchedule() {
       return;
     }
     applyPaints([[key, paint]]);
+  };
+
+  // The copied cell's settings become the brush, so the next cells painted get the same shift,
+  // client and project site.
+  const adoptTemplate = (paint: CellPaint) => {
+    setPickedBrush(paint.shiftId);
+    setSiteId(paint.areaId);
+    setClientId(paint.clientId);
+  };
+
+  const copyCell = (key: string) => {
+    const paint = edits.get(key) ?? server.get(key);
+    adoptTemplate(paint ?? { shiftId: null, areaId: null, clientId: null });
+    const parts = [
+      paint?.shiftId ? shiftChips.get(paint.shiftId)?.title : "Clear",
+      paint?.clientId
+        ? clients.find((c) => c.id === paint.clientId)?.name
+        : null,
+      paint?.areaId ? allAreas.find((a) => a.id === paint.areaId)?.name : null,
+    ].filter(Boolean);
+    getNotify().info({
+      message: "Template copied",
+      description: `${parts.join(" · ")}. The next cells you paint use it.`,
+    });
   };
 
   const fillDay = (date: string) =>
@@ -501,6 +603,68 @@ export default function QuickSchedule() {
     items: { id: string; code: string; name: string }[],
   ) => items.map((i) => ({ value: i.id, label: `${i.code} - ${i.name}` }));
 
+  // The per-day editor narrows sites by client, so it needs each site's own client.
+  const editorSites = areas.map((a) => ({
+    id: a.id,
+    code: a.code,
+    name: a.name,
+    clientId: a.clientId ?? null,
+    clientName: a.clientName ?? null,
+  }));
+  const clientNameOf = (id: string) =>
+    clients.find((c) => c.id === id)?.name ?? "this client";
+  // A site belongs to one client: picking a client narrows the sites, picking a site fills in its
+  // client. Same rule as the per-day editor.
+  const changeBrushClient = (next: string | null) => {
+    setClientId(next);
+    setSiteId(siteAfterClientChange(editorSites, next, siteId));
+  };
+  const changeBrushSite = (next: string | null) => {
+    setSiteId(next);
+    setClientId(clientAfterSiteChange(editorSites, next, clientId));
+  };
+  const brushChip = brush ? shiftChips.get(brush) : undefined;
+  const actionButtons = (
+    <Space wrap>
+      <Button
+        disabled={visibleEmployees.length === 0}
+        onClick={fillSelectedRows}
+      >
+        Paint {selectedIds.size ? "selected rows" : "all rows"}
+      </Button>
+      <Button
+        icon={<RetweetOutlined />}
+        disabled={visibleEmployees.length === 0}
+        onClick={() => setPatternOpen(true)}
+      >
+        Repeat a pattern
+      </Button>
+      <Button
+        icon={<CopyOutlined />}
+        loading={isCopying}
+        disabled={visibleEmployees.length === 0}
+        onClick={copyPreviousPeriod}
+      >
+        Copy previous period
+      </Button>
+    </Space>
+  );
+  const shiftOptions = paletteShifts.map((s) => ({
+    value: s.id,
+    label: s.title,
+  }));
+  let editTarget: CellEditTarget | null = null;
+  if (editingKey) {
+    const { employeeId, date } = splitCellKey(editingKey);
+    editTarget = {
+      key: editingKey,
+      employeeName:
+        allEmployees.find((e) => e.id === employeeId)?.name ?? employeeId,
+      date,
+      paint: edits.get(editingKey) ?? server.get(editingKey) ?? null,
+    };
+  }
+
   const setFilterField = (field: keyof EmployeeFilterState, value?: string) =>
     setFilter((prev) => ({ ...prev, [field]: value }));
 
@@ -617,8 +781,48 @@ export default function QuickSchedule() {
         </div>
       </Card>
 
-      <Card size="small" title="2. Pick a shift, then paint the grid">
-        <div className="flex flex-col gap-3">
+      <Card
+        size="small"
+        title={
+          <button
+            type="button"
+            className="w-full cursor-pointer text-left"
+            aria-expanded={paletteOpen}
+            onClick={() => changePaletteOpen(!paletteOpen)}
+          >
+            2. Pick a shift, then paint the grid
+          </button>
+        }
+        extra={
+          <Button
+            type="link"
+            size="small"
+            icon={paletteOpen ? <UpOutlined /> : <DownOutlined />}
+            onClick={() => changePaletteOpen(!paletteOpen)}
+          >
+            {paletteOpen ? "Collapse" : "Expand"}
+          </Button>
+        }
+      >
+        {!paletteOpen && (
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={`rounded-md border px-3 py-1 text-sm ${
+                brushChip?.colorClass ?? "border-red-300 bg-red-50 text-red-700"
+              }`}
+            >
+              {brushChip?.label ?? "Clear"}
+            </span>
+            {clientId && <Text type="secondary">{clientNameOf(clientId)}</Text>}
+            {siteId && (
+              <Text type="secondary">
+                {allAreas.find((a) => a.id === siteId)?.name}
+              </Text>
+            )}
+            {actionButtons}
+          </div>
+        )}
+        <div className={`flex flex-col gap-3 ${paletteOpen ? "" : "hidden"}`}>
           {isShiftsLoading ? (
             <Text type="secondary">Loading shifts…</Text>
           ) : (
@@ -631,52 +835,63 @@ export default function QuickSchedule() {
           <div className="flex flex-wrap items-center gap-3">
             <Select
               className="w-60"
-              placeholder="Project site for painted days"
-              allowClear
-              showSearch={{ filterOption: filterByLabel }}
-              options={codeNameOptions(areas)}
-              value={siteId ?? undefined}
-              onChange={(v?: string) => setSiteId(v ?? null)}
-            />
-            <Select
-              className="w-60"
               placeholder="Client for painted days"
               allowClear
               showSearch={{ filterOption: filterByLabel }}
               options={codeNameOptions(clients)}
               value={clientId ?? undefined}
-              onChange={(v?: string) => setClientId(v ?? null)}
+              onChange={(v?: string) => changeBrushClient(v ?? null)}
+            />
+            <Select
+              className="w-60"
+              placeholder="Project site for painted days"
+              allowClear
+              showSearch={{ filterOption: filterByLabel }}
+              options={siteOptionGroups(
+                editorSites,
+                clientId,
+                clientNameOf,
+                siteId,
+              )}
+              value={siteId ?? undefined}
+              onChange={(v?: string) => changeBrushSite(v ?? null)}
             />
           </div>
-          <Space wrap>
+          {clientId && (
+            <Text type="secondary" className="text-xs">
+              Showing only this client&apos;s project sites.
+            </Text>
+          )}
+          {actionButtons}
+          {tipsOpen ? (
+            <Alert
+              type="info"
+              closable
+              onClose={() => changeTipsOpen(false)}
+              title="Shortcuts"
+              description={
+                <ul className="m-0 grid list-none grid-cols-1 gap-x-8 gap-y-1.5 p-0 text-xs md:grid-cols-2">
+                  {GRID_TIPS.map(([action, effect]) => (
+                    <li key={action} className="flex items-baseline gap-2">
+                      <span className="shrink-0 rounded border border-gray-200 bg-white px-1.5 py-0.5 font-medium text-gray-700">
+                        {action}
+                      </span>
+                      <span>{effect}</span>
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
+          ) : (
             <Button
-              disabled={visibleEmployees.length === 0}
-              onClick={fillSelectedRows}
+              type="link"
+              size="small"
+              className="self-start p-0!"
+              onClick={() => changeTipsOpen(true)}
             >
-              Paint {selectedIds.size ? "selected rows" : "all rows"}
+              Show shortcuts
             </Button>
-            <Button
-              icon={<RetweetOutlined />}
-              disabled={visibleEmployees.length === 0}
-              onClick={() => setPatternOpen(true)}
-            >
-              Repeat a pattern
-            </Button>
-            <Button
-              icon={<CopyOutlined />}
-              loading={isCopying}
-              disabled={visibleEmployees.length === 0}
-              onClick={copyPreviousPeriod}
-            >
-              Copy previous period
-            </Button>
-          </Space>
-          <Text type="secondary" className="text-xs">
-            Click or drag to paint. Click a date to paint that day for everyone.
-            Click a cell and paste from Excel (shift names, "-" to clear).
-            Painted days with a ring are unsaved. Clear sends the day back to
-            the employee&apos;s regular schedule.
-          </Text>
+          )}
         </div>
       </Card>
 
@@ -708,10 +923,8 @@ export default function QuickSchedule() {
             server={server}
             edits={edits}
             shifts={shiftChips}
-            menuShifts={paletteShifts}
-            onPickShift={(key, shiftId) =>
-              applyPaints([[key, paintFor(shiftId)]])
-            }
+            onEditCell={openEditor}
+            onCopyCell={copyCell}
             selectedIds={selectedIds}
             focusKey={focusKey}
             onToggleEmployee={toggleEmployee}
@@ -756,6 +969,28 @@ export default function QuickSchedule() {
           </Button>
         </Space>
       </div>
+
+      <CellEditorModal
+        target={editTarget}
+        shiftOptions={shiftOptions}
+        clientOptions={codeNameOptions(clients)}
+        sites={editorSites}
+        clientNameOf={clientNameOf}
+        onApply={(key, paint) => {
+          applyPaints([[key, paint]]);
+          setEditingKey(null);
+        }}
+        onUseTemplate={(key, paint) => {
+          applyPaints([[key, paint]]);
+          adoptTemplate(paint);
+          setEditingKey(null);
+        }}
+        onClear={(key) => {
+          applyPaints([[key, { shiftId: null, areaId: null, clientId: null }]]);
+          setEditingKey(null);
+        }}
+        onCancel={() => setEditingKey(null)}
+      />
 
       <PatternModal
         open={patternOpen}
