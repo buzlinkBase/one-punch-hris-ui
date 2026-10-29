@@ -6,6 +6,7 @@ import {
   type OperationAreaFormValues,
 } from "@/app/modules/setup/operation-area/models/forms/operation-area-form.schema";
 import { useCreateOperationArea } from "@/app/modules/setup/operation-area/hooks/use-operation-area-queries";
+import { FOLLOW_BRANCH_PUNCH_MODE } from "@/shared/constants/mobile-punch-mode.const";
 
 interface Props {
   open: boolean;
@@ -38,14 +39,21 @@ export default function QuickAddOperationAreaModal({
       address: "",
       boundary: null,
       status: "ACTIVE",
+      punchMode: FOLLOW_BRANCH_PUNCH_MODE,
     },
   });
 
   const { mutateAsync: create, isPending } = useCreateOperationArea();
 
-  const onSubmit = async (values: OperationAreaFormValues) => {
+  const onSubmit = async ({
+    punchMode,
+    ...values
+  }: OperationAreaFormValues) => {
     try {
-      const created = await create(values);
+      const created = await create({
+        ...values,
+        punchMode: punchMode === FOLLOW_BRANCH_PUNCH_MODE ? null : punchMode,
+      });
       reset();
       onCreated(created.id);
     } catch {

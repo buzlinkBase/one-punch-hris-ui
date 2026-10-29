@@ -22,4 +22,5 @@ export interface UpdatePayrollSettings {
   portalShowLoanApplications: boolean;
   portalShowPunch: boolean;
   portalPunchCooldownMinutes: number;
+  mobilePunchModesEnabled: boolean;
 }

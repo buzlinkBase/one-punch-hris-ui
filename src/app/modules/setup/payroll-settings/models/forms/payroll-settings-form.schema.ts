@@ -24,6 +24,7 @@ export const payrollSettingsFormSchema = z.object({
   portalShowLoanApplications: z.boolean(),
   portalShowPunch: z.boolean(),
   portalPunchCooldownMinutes: z.number().int().min(1).max(120),
+  mobilePunchModesEnabled: z.boolean(),
 });
 
 export type PayrollSettingsFormValues = z.infer<

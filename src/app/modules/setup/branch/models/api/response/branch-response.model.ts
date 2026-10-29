@@ -1,4 +1,5 @@
 import type { GeoJsonPolygon } from "@/shared/types/geo.types";
+import type { MobilePunchMode } from "@/shared/constants/mobile-punch-mode.const";
 
 export interface BranchResponse {
   id: string;
@@ -10,4 +11,5 @@ export interface BranchResponse {
   regionCode?: string | null;
   wageOrderClass?: string | null;
   headEmployeeId?: string | null;
+  punchMode?: MobilePunchMode;
 }

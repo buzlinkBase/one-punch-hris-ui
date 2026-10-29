@@ -25,4 +25,5 @@ export interface PayrollSettingsResponse {
   portalShowLoanApplications: boolean;
   portalShowPunch: boolean;
   portalPunchCooldownMinutes: number;
+  mobilePunchModesEnabled: boolean;
 }

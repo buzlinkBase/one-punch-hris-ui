@@ -194,6 +194,15 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "Mobile Punch Mode (how employees punch from the mobile app)",
+        body: [
+          "This is off until you turn it on under Setup › Company Policy › Payroll Settings › Mobile App Punching. While it is off, mobile punching is open everywhere and the field is hidden.",
+          "Each branch and project site then has a Mobile Punch Mode: Open (tap Punch anytime, like My Portal), Geofence (inside the boundary drawn on the map), QR code (scan the location's QR), NFC (tap the location's tag), Geofence + QR code, or Geofence + NFC. The combined modes need both to pass.",
+          "A project site can have its own mode, or be set to Follow branch to use its branch's. The site's own mode always wins, so one strict branch can still have an Open site, and the other way around.",
+          "Geofence modes need a boundary drawn on that branch or site. Without one, punching there is blocked, so draw it before you switch the mode on.",
+        ],
+      },
+      {
         heading: "Payroll group cutoffs and statutory deductions",
         body: [
           "A payroll group's cutoff days decide which cutoff of the month a payroll is. The cutoff it ends on counts, not the day it starts.",

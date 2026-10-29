@@ -1,4 +1,5 @@
 import type { GeoJsonPolygon } from "@/shared/types/geo.types";
+import type { MobilePunchMode } from "@/shared/constants/mobile-punch-mode.const";
 
 export interface CreateBranch {
   code: string;
@@ -16,4 +17,6 @@ export interface CreateBranch {
   wageOrderClass?: string | null;
   /** The employee who heads this branch (what an approval step "Applicant's branch head" resolves to). */
   headEmployeeId?: string | null;
+  /** How employees may punch from the mobile app; a project site can override it. */
+  punchMode?: MobilePunchMode;
 }

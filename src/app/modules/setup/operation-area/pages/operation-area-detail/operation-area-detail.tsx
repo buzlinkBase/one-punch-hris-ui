@@ -26,8 +26,14 @@ import { OPERATION_AREA_LABEL } from "../../constants/label.const";
 import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { useBranches } from "@/app/modules/setup/branch/hooks/use-branch-queries";
 import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
+import { usePayrollSettings } from "@/app/modules/setup/payroll-settings/hooks/use-payroll-settings-queries";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
+import {
+  FOLLOW_BRANCH_PUNCH_MODE,
+  MOBILE_PUNCH_MODE_HELP,
+  MOBILE_PUNCH_MODE_OPTIONS,
+} from "@/shared/constants/mobile-punch-mode.const";
 
 const PolygonMapPicker = lazy(() =>
   import("@/shared/components/polygon-map-picker").then((m) => ({
@@ -78,6 +84,8 @@ export default function OperationAreaDetail() {
   const { mutateAsync: update, isPending: isUpdating } =
     useUpdateOperationArea();
   const { data: branches } = useBranches();
+  const { data: payrollSettings } = usePayrollSettings();
+  const punchModesEnabled = payrollSettings?.mobilePunchModesEnabled ?? false;
   const branchOptions =
     branches?.map((b) => ({ value: b.id, label: `${b.code} - ${b.name}` })) ??
     [];
@@ -99,6 +107,7 @@ export default function OperationAreaDetail() {
       status: "ACTIVE",
       branchId: "",
       headEmployeeId: null,
+      punchMode: FOLLOW_BRANCH_PUNCH_MODE,
     },
   });
   const { allowNavigation } = useUnsavedChangesGuard(isDirty);
@@ -113,13 +122,21 @@ export default function OperationAreaDetail() {
         status: selected.status,
         branchId: selected.branchId ?? "",
         headEmployeeId: selected.headEmployeeId ?? null,
+        punchMode: selected.punchMode ?? FOLLOW_BRANCH_PUNCH_MODE,
       });
     }
   }, [selected, isEdit, reset]);
 
-  const onSubmit = async (values: OperationAreaFormValues) => {
-    if (isEdit && id) await update({ id, ...values });
-    else await add(values);
+  const onSubmit = async ({
+    punchMode,
+    ...values
+  }: OperationAreaFormValues) => {
+    const payload = {
+      ...values,
+      punchMode: punchMode === FOLLOW_BRANCH_PUNCH_MODE ? null : punchMode,
+    };
+    if (isEdit && id) await update({ id, ...payload });
+    else await add(payload);
     allowNavigation();
     navigate({ to: "/setup/project-site" });
   };
@@ -257,6 +274,30 @@ export default function OperationAreaDetail() {
                   )}
                 />
               </Form.Item>
+
+              {punchModesEnabled && (
+                <Form.Item
+                  label="Mobile Punch Mode"
+                  extra={`${MOBILE_PUNCH_MODE_HELP} Follow branch uses the mode set on this site's branch.`}
+                >
+                  <Controller
+                    name="punchMode"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={[
+                          {
+                            value: FOLLOW_BRANCH_PUNCH_MODE,
+                            label: "Follow branch",
+                          },
+                          ...MOBILE_PUNCH_MODE_OPTIONS,
+                        ]}
+                      />
+                    )}
+                  />
+                </Form.Item>
+              )}
 
               <Form.Item
                 label={OPERATION_AREA_LABEL.STATUS}

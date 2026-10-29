@@ -27,7 +27,12 @@ import { NAVIGATION_BUTTON_LABEL } from "@/shared/constants/navigation.const";
 import { PH_REGION_OPTIONS } from "@/shared/constants/ph-regions.const";
 import { useMinimumWageRates } from "@/app/modules/setup/minimum-wage-rate/hooks/use-minimum-wage-rate-queries";
 import { EmployeeSelect } from "@/shared/components/employee-select/employee-select";
+import { usePayrollSettings } from "@/app/modules/setup/payroll-settings/hooks/use-payroll-settings-queries";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import {
+  MOBILE_PUNCH_MODE_HELP,
+  MOBILE_PUNCH_MODE_OPTIONS,
+} from "@/shared/constants/mobile-punch-mode.const";
 import { useUnsavedChangesGuard } from "@/shared/hooks/use-unsaved-changes-guard";
 
 // Lazy-load the map to avoid SSR/leaflet issues
@@ -51,6 +56,8 @@ export default function BranchDetail() {
   const { data: selected } = useBranch(isEdit ? id : undefined);
   const { mutateAsync: add, isPending: isCreating } = useCreateBranch();
   const { mutateAsync: update, isPending: isUpdating } = useUpdateBranch();
+  const { data: payrollSettings } = usePayrollSettings();
+  const punchModesEnabled = payrollSettings?.mobilePunchModesEnabled ?? false;
 
   const {
     control,
@@ -70,6 +77,7 @@ export default function BranchDetail() {
       regionCode: null,
       wageOrderClass: null,
       headEmployeeId: null,
+      punchMode: "OPEN",
     },
   });
   const { allowNavigation } = useUnsavedChangesGuard(isDirty);
@@ -85,6 +93,7 @@ export default function BranchDetail() {
         regionCode: selected.regionCode ?? null,
         wageOrderClass: selected.wageOrderClass ?? null,
         headEmployeeId: selected.headEmployeeId ?? null,
+        punchMode: selected.punchMode ?? "OPEN",
       });
     }
   }, [selected, isEdit, reset]);
@@ -265,6 +274,21 @@ export default function BranchDetail() {
                   )}
                 />
               </Form.Item>
+
+              {punchModesEnabled && (
+                <Form.Item
+                  label="Mobile Punch Mode"
+                  extra={`${MOBILE_PUNCH_MODE_HELP} Project sites can override this.`}
+                >
+                  <Controller
+                    name="punchMode"
+                    control={control}
+                    render={({ field }) => (
+                      <Select {...field} options={MOBILE_PUNCH_MODE_OPTIONS} />
+                    )}
+                  />
+                </Form.Item>
+              )}
 
               <Form.Item
                 label={BRANCH_LABEL.STATUS}

@@ -1,4 +1,5 @@
 import type { GeoJsonPolygon } from "@/shared/types/geo.types";
+import type { MobilePunchMode } from "@/shared/constants/mobile-punch-mode.const";
 
 export interface CreateOperationArea {
   code: string;
@@ -9,4 +10,6 @@ export interface CreateOperationArea {
   branchId: string | null;
   /** The employee who heads this site (what an approval step "Applicant's project site head" resolves to). */
   headEmployeeId?: string | null;
+  /** How employees may punch from the mobile app. Null = follow the site's branch. */
+  punchMode?: MobilePunchMode | null;
 }

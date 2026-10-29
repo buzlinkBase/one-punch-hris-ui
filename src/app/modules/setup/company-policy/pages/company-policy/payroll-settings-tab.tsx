@@ -63,6 +63,7 @@ const DEFAULTS: PayrollSettingsFormValues = {
   portalShowLoanApplications: true,
   portalShowPunch: false,
   portalPunchCooldownMinutes: 5,
+  mobilePunchModesEnabled: false,
 };
 
 // Grouped like the My Portal menu. My Dashboard and My Profile are always available.
@@ -354,6 +355,28 @@ export default function PayrollSettingsTab() {
               />
             </Form.Item>
           )}
+        </div>
+      </Card>
+
+      <Card size="small" title="Mobile App Punching" className="mb-4">
+        <div className="flex items-center justify-between gap-4">
+          <Text className="text-sm">
+            Let each branch and project site choose how employees punch from the
+            mobile app: geofence, QR code, NFC, or open. While this is off,
+            mobile punching is open everywhere.
+          </Text>
+          <Controller
+            name="mobilePunchModesEnabled"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                checked={field.value}
+                onChange={field.onChange}
+                checkedChildren="On"
+                unCheckedChildren="Off"
+              />
+            )}
+          />
         </div>
       </Card>
 
