@@ -30,6 +30,14 @@ import { NotFoundPage } from "./not-found-page";
 
 const Login = lazy(() => import("@/app/modules/auth/login/login"));
 const Register = lazy(() => import("@/app/modules/auth/register"));
+const Impersonate = lazy(
+  () =>
+    import("@/app/modules/auth/impersonation/pages/impersonate/impersonate"),
+);
+const ImpersonationEnded = lazy(
+  () =>
+    import("@/app/modules/auth/impersonation/pages/impersonation-ended/impersonation-ended"),
+);
 const ForgotPassword = lazy(
   () => import("@/app/modules/auth/forgot-password/forgot-password"),
 );
@@ -309,6 +317,8 @@ const PUBLIC_PATHS = [
   "/account-confirmation/success",
   "/account-confirmation/error",
   "/accept-invite",
+  "/impersonate",
+  "/impersonation-ended",
 ];
 const TENANT_FLOW_PATHS = [
   "/select-tenant",
@@ -411,6 +421,31 @@ const loginIndexRoute = createRoute({
   getParentRoute: () => loginRoute,
   path: "/",
   component: withSuspense(Login),
+});
+
+// Public: where the support console sends an operator with a one-time code (see impersonate.tsx).
+const impersonateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "impersonate",
+  component: AuthLayout,
+});
+
+const impersonateIndexRoute = createRoute({
+  getParentRoute: () => impersonateRoute,
+  path: "/",
+  component: withSuspense(Impersonate),
+});
+
+const impersonationEndedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "impersonation-ended",
+  component: AuthLayout,
+});
+
+const impersonationEndedIndexRoute = createRoute({
+  getParentRoute: () => impersonationEndedRoute,
+  path: "/",
+  component: withSuspense(ImpersonationEnded),
 });
 
 const registerRoute = createRoute({
@@ -1680,6 +1715,8 @@ const routeTree = rootRoute.addChildren([
   rootIndexRoute,
   loginRoute.addChildren([loginIndexRoute]),
   registerRoute.addChildren([registerIndexRoute]),
+  impersonateRoute.addChildren([impersonateIndexRoute]),
+  impersonationEndedRoute.addChildren([impersonationEndedIndexRoute]),
   forgotPasswordRoute.addChildren([forgotPasswordIndexRoute]),
   resetPasswordRoute.addChildren([resetPasswordIndexRoute]),
   selectTenantRoute.addChildren([selectTenantIndexRoute]),

@@ -94,6 +94,17 @@ body {
   box-shadow: 0 8px 28px rgba(29, 160, 129, 0.08);
 }
 
+/* Support sign-in as a user: the red bar (impersonation-banner.tsx) is fixed 2.5rem tall above everything. */
+body.impersonating {
+  padding-top: 2.5rem;
+}
+
+body.impersonating .app-sider {
+  top: 2.5rem;
+  height: calc(100vh - 2.5rem) !important;
+  max-height: calc(100vh - 2.5rem);
+}
+
 /* Mobile nav drawer */
 .ant-drawer.app-mobile-drawer .ant-drawer-content {
   background: var(--bg-sider);

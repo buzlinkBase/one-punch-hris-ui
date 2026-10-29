@@ -64,6 +64,13 @@ export const FAQ_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "A red bar says a support session is active",
+        body: [
+          "A One Punch support member can sign in as a user of your company, only when you or your team ask for help, to see what you see. A red bar across the top shows who the session is for and who is behind it, with the time left and a Stop button.",
+          "Everything they do is done with that user's access, and each request is recorded with the support member's name next to the user's. The session ends by itself after 30 minutes, cannot be extended, and can't change passwords, security settings or billing details. Stop ends it at once.",
+        ],
+      },
+      {
         heading: "I don't get notifications",
         body: [
           "Open My Profile and check Notification Preferences. Push must be on for the request types you want in the bell.",

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { authStorage, mergeTenants, type AuthUser } from "./auth-storage";
 import { authApi } from "@/app/modules/auth/login/services/auth.api";
+import { ImpersonationEndedError, leaveImpersonation } from "./impersonation";
 
 // True only when the server actually rejected the refresh token itself (401) -- a network
 // blip, timeout, or 5xx must not log the user out; the next request just retries the refresh
@@ -90,6 +91,13 @@ async function refreshOnce(force: boolean): Promise<string> {
 let inFlight: Promise<string> | null = null;
 
 export async function refreshAccessToken(force = false): Promise<string> {
+  // An impersonation session is never refreshed: the refresh cookie belongs to whoever is really
+  // signed in on this browser, so using it would swap their session in. It just ends.
+  if (authStorage.isImpersonating()) {
+    leaveImpersonation();
+    throw new ImpersonationEndedError();
+  }
+
   if (inFlight) return inFlight;
 
   inFlight = (async () => {

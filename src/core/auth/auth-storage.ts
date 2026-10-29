@@ -8,6 +8,34 @@ const KEYS = {
 
 const EXPIRY_BUFFER_MS = 60_000;
 
+/** Present only in a tab that is a support operator's impersonation session (sessionStorage, so it dies with the tab). */
+const IMPERSONATION_KEY = "auth_impersonation";
+
+export interface ImpersonationInfo {
+  sessionId: string;
+  operatorEmail: string;
+  /** ISO time the session hard-ends; it is never refreshed. */
+  expiresAt: string;
+}
+
+function readImpersonation(): ImpersonationInfo | null {
+  try {
+    const raw = sessionStorage.getItem(IMPERSONATION_KEY);
+    return raw ? (JSON.parse(raw) as ImpersonationInfo) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Where the session lives. A normal session is shared by every tab in localStorage; an impersonation
+ * session stays in this tab's sessionStorage only -- never written to localStorage, so it can't leak
+ * into (or overwrite) the real session in other tabs, and closing the tab wipes it.
+ */
+function store(): Storage {
+  return readImpersonation() ? sessionStorage : localStorage;
+}
+
 /** hrms-api ConfidentialAccessScope.ClearancePermission. */
 export const CONFIDENTIAL_CLEARANCE_PERMISSION = "Confidential Records:Access";
 /** Partial clearances: day-to-day records / money entries, never pay figures. */
@@ -104,18 +132,31 @@ export const authStorage = {
     return userSnapshot;
   },
 
+  isImpersonating(): boolean {
+    return readImpersonation() !== null;
+  },
+
+  getImpersonation(): ImpersonationInfo | null {
+    return readImpersonation();
+  },
+
+  /** Makes this tab the impersonated user's session. Call before save(), which then goes to sessionStorage. */
+  startImpersonation(info: ImpersonationInfo) {
+    sessionStorage.setItem(IMPERSONATION_KEY, JSON.stringify(info));
+  },
+
   save(token: string, user: AuthUser) {
-    localStorage.setItem(KEYS.token, token);
-    localStorage.setItem(KEYS.user, JSON.stringify(user));
+    store().setItem(KEYS.token, token);
+    store().setItem(KEYS.user, JSON.stringify(user));
     notify();
   },
 
   getToken(): string | null {
-    return localStorage.getItem(KEYS.token);
+    return store().getItem(KEYS.token);
   },
 
   getUser(): AuthUser | null {
-    const raw = localStorage.getItem(KEYS.user);
+    const raw = store().getItem(KEYS.user);
     if (!raw) return null;
     let parsed: AuthUser & { role?: string };
     try {
@@ -202,7 +243,7 @@ export const authStorage = {
   setTenant(tenantId: string, tenantName?: string | null) {
     const user = this.getUser();
     if (!user) return;
-    localStorage.setItem(
+    store().setItem(
       KEYS.user,
       JSON.stringify({ ...user, tenantId, tenantName: tenantName ?? null }),
     );
@@ -224,7 +265,7 @@ export const authStorage = {
       ),
       tenantName: user.tenantId === tenantId ? name : user.tenantName,
     };
-    localStorage.setItem(KEYS.user, JSON.stringify(nextUser));
+    store().setItem(KEYS.user, JSON.stringify(nextUser));
     notify();
   },
 
@@ -247,7 +288,7 @@ export const authStorage = {
       roles: wasActiveTenant ? [] : user.roles,
       permissions: wasActiveTenant ? [] : user.permissions,
     };
-    localStorage.setItem(KEYS.user, JSON.stringify(nextUser));
+    store().setItem(KEYS.user, JSON.stringify(nextUser));
     notify();
   },
 
@@ -287,7 +328,7 @@ export const authStorage = {
       hrDbReady,
       state: hrDbReady ? "Created" : current.state,
     };
-    localStorage.setItem(KEYS.user, JSON.stringify({ ...user, tenants }));
+    store().setItem(KEYS.user, JSON.stringify({ ...user, tenants }));
     notify();
   },
 
@@ -303,7 +344,7 @@ export const authStorage = {
   },
 
   isAccessTokenExpired(): boolean {
-    const token = localStorage.getItem(KEYS.token);
+    const token = store().getItem(KEYS.token);
     if (!token) return true;
 
     const payload = decodeJwt(token);
@@ -315,7 +356,12 @@ export const authStorage = {
   },
 
   clear() {
-    Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
+    Object.values(KEYS).forEach((key) => store().removeItem(key));
+    try {
+      sessionStorage.removeItem(IMPERSONATION_KEY);
+    } catch {
+      // Storage blocked: nothing to remove.
+    }
     notify();
   },
 };

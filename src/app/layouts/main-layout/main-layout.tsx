@@ -68,6 +68,8 @@ import {
 } from "@/core/stores/nav-shortcuts.util";
 import { collectPalettePages } from "./command-palette/palette-search";
 import { authStorage, mergeTenants } from "@/core/auth/auth-storage";
+import { stopImpersonation } from "@/core/auth/impersonation";
+import { ImpersonationBanner } from "@/shared/components/impersonation-banner/impersonation-banner";
 import { resolveFallbackLanding } from "@/core/auth/tenant-routing";
 import { filterNavByPermission } from "./filter-nav-by-permission";
 import { filterNavByPortalVisibility } from "./filter-nav-by-portal-visibility";
@@ -777,6 +779,11 @@ export default function MainLayout() {
   };
 
   const handleLogout = async () => {
+    // Signing out of an impersonation session is Stop: it must not revoke the real refresh cookie.
+    if (authStorage.isImpersonating()) {
+      await stopImpersonation();
+      return;
+    }
     // Gives the server a moment to revoke the refresh-token cookie (authApi.logout): navigating
     // away immediately usually aborts that request, leaving the cookie valid. Capped, so a
     // failed/slow revoke still never blocks the client-side logout the user is waiting on.
@@ -969,6 +976,7 @@ export default function MainLayout() {
 
   return (
     <Layout style={{ minHeight: "100vh" }} className="app-shell">
+      <ImpersonationBanner />
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>

@@ -91,6 +91,10 @@ function readSessionSafely(): AuthUser | null {
 
 /** Starts following the shared session. Call once at app start; returns a stop function. */
 export function startAuthSessionSync(): () => void {
+  // An impersonation tab keeps its session in sessionStorage, which no other tab can change; the
+  // shared session changing under it (the operator's own sign-in) must not reset it.
+  if (authStorage.isImpersonating()) return () => {};
+
   let known = readSessionSafely();
   // This tab's own saves/clears don't raise `storage` events here, but they do change what the
   // tab knows -- keep up with them so the next external change is compared against the truth.
