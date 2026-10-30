@@ -106,6 +106,7 @@ import { useSubscriptionState } from "@/app/modules/billing/hooks/use-subscripti
 import { useSubscriptionBoundaryRefresh } from "@/app/modules/billing/hooks/use-subscription-boundary-refresh";
 import { StorageBanner } from "@/app/modules/billing/components/storage-banner";
 import { SubscriptionBanner } from "@/app/modules/billing/components/subscription-banner";
+import { ConnectionStatusBanner } from "@/shared/components/connection-status-banner/connection-status-banner";
 import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
 import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
 import type { FeatureLock } from "@/app/modules/billing/utils/feature-lock";
@@ -1372,6 +1373,7 @@ export default function MainLayout() {
           </div>
         </Header>
 
+        <ConnectionStatusBanner />
         {hrDb.ready && !companyLocked && <SubscriptionBanner />}
         {hrDb.ready && !companyLocked && <StorageBanner />}
 

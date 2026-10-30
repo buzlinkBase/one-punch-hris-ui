@@ -54,22 +54,14 @@ export function ConnectionStatusBanner() {
   if (!isOffline && !isServerUnreachable) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 2000,
-      }}
-    >
+    <div>
       <Alert
         banner
         type={isOffline ? "error" : "warning"}
         icon={isOffline ? <DisconnectOutlined /> : <CloudSyncOutlined spin />}
         showIcon
         message={
-          <Space size="middle" wrap style={{ width: "100%" }}>
+          <Space size="middle" wrap className="w-full">
             <span>
               {isOffline
                 ? "You're offline — check your internet connection."
