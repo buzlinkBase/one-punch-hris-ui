@@ -19,9 +19,16 @@ export function useGoogleLoginMutation() {
   });
 }
 
+/** The Google code, and the Terms of Service version the person agreed to on the sign-up page. */
+interface GoogleSignUpArgs {
+  code: string;
+  termsVersion?: number;
+}
+
 export function useGoogleSignUpMutation() {
   return useMutation({
-    mutationFn: (code: string) => authApi.signUpWithGoogle(code),
+    mutationFn: ({ code, termsVersion }: GoogleSignUpArgs) =>
+      authApi.signUpWithGoogle(code, termsVersion),
   });
 }
 

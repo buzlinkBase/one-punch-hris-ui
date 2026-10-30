@@ -9,6 +9,10 @@ import type {
 } from "../models/api/response/subscription-response.model";
 
 export const BILLING_LABEL = {
+  TERMS_AGREEMENT_PREFIX: "By confirming, you agree to the",
+  TERMS_AGREEMENT_LINK: "Terms of Service",
+  TERMS_AGREEMENT_SUFFIX:
+    ", including the fees, automatic renewal and no-refund terms.",
   TITLE: "Billing",
   SUBTITLE: "Your plan, what it includes, and your payments.",
   PLANS_TITLE: "Choose a plan",

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { isDeviationAckCancelled } from "@/core/http/deviation-ack";
 import {
   Button,
   Card,
@@ -87,7 +88,9 @@ export default function RateMultipliersTab() {
       );
 
       message.success("Rate multipliers saved.");
-    } catch {
+    } catch (err) {
+      // Not acknowledged: nothing was saved, and the admin chose that.
+      if (isDeviationAckCancelled(err)) return;
       message.error("Failed to save. Please try again.");
     }
   };

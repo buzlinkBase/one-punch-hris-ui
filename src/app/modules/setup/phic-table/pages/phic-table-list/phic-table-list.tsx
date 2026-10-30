@@ -8,6 +8,7 @@ import {
 import PhicTableTable from "../../components/phic-table-table";
 import { PHIC_TABLE_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { StatutoryTableNotice } from "@/shared/components/statutory-table-notice";
 
 const { Title } = Typography;
 
@@ -24,6 +25,7 @@ export default function PhicTableList() {
 
   return (
     <div className="content-page">
+      <StatutoryTableNotice />
       <div className="page-toolbar">
         <div className="page-toolbar-row">
           <div>

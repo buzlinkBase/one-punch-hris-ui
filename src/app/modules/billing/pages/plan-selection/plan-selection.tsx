@@ -38,6 +38,8 @@ import type {
 } from "../../models/api/response/subscription-response.model";
 import { formatManilaDate, formatMoney } from "../../utils/format";
 import { formatStorage } from "../../utils/storage";
+import { TermsLink } from "@/app/modules/legal/components/terms-link";
+import { useTermsLive } from "@/app/modules/legal/hooks/use-terms-queries";
 
 const { Title } = Typography;
 
@@ -84,6 +86,7 @@ function errorDetail(error: unknown): string {
  */
 export default function PlanSelection() {
   const navigate = useNavigate();
+  const termsLive = useTermsLive();
   const search = useSearch({ strict: false }) as Record<string, unknown>;
   const focusFeature =
     typeof search.feature === "string" ? search.feature : undefined;
@@ -277,6 +280,15 @@ export default function PlanSelection() {
             {isPaidActive &&
               !startsAtPeriodEnd(confirming) &&
               ` ${BILLING_LABEL.UPGRADE_CREDIT_NOTE}`}
+          </p>
+        )}
+        {termsLive && (
+          <p className="mt-3 mb-0 text-xs text-(--ant-color-text-secondary)">
+            {BILLING_LABEL.TERMS_AGREEMENT_PREFIX}{" "}
+            <TermsLink section={9}>
+              {BILLING_LABEL.TERMS_AGREEMENT_LINK}
+            </TermsLink>
+            {BILLING_LABEL.TERMS_AGREEMENT_SUFFIX}
           </p>
         )}
       </Modal>

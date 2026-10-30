@@ -23,6 +23,12 @@ import { authErrorMessage } from "@/core/auth/auth-error-message";
 import { useGoogleSignUpMutation } from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { authStorage } from "@/core/auth/auth-storage";
 import { resolveTenantDestination } from "@/core/auth/tenant-routing";
+import { TermsAgreementCheckbox } from "@/app/modules/legal/components/terms-agreement";
+import {
+  usePublishedTerms,
+  useTermsLive,
+} from "@/app/modules/legal/hooks/use-terms-queries";
+import { TERMS_LABEL } from "@/app/modules/legal/constants/label.const";
 
 const { Title, Text } = Typography;
 
@@ -53,29 +59,37 @@ export default function Register() {
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const [googleSigningUp, setGoogleSigningUp] = useState(false);
   const { mutateAsync: signUpWithGoogle } = useGoogleSignUpMutation();
+  const { data: terms } = usePublishedTerms();
+  const termsLive = useTermsLive();
 
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerFormSchema),
+    resolver: zodResolver(registerFormSchema(termsLive)),
     defaultValues: {
       name: "",
       email: "",
       password: "",
       confirmPassword: "",
+      agreeToTerms: false,
     },
   });
 
   const password = useWatch({ control, name: "password" });
+  const agreeToTerms = useWatch({ control, name: "agreeToTerms" });
 
   const onSubmit = async ({
     confirmPassword: _,
+    agreeToTerms: __,
     ...values
   }: RegisterFormValues) => {
     try {
-      const result = await register(values);
+      const result = await register({
+        ...values,
+        termsVersion: terms?.version,
+      });
       setSubmittedEmail(result.email ?? values.email);
     } catch (err) {
       notification.error({
@@ -94,7 +108,10 @@ export default function Register() {
     onSuccess: async ({ code }) => {
       setGoogleSigningUp(true);
       try {
-        const result = await signUpWithGoogle(code);
+        const result = await signUpWithGoogle({
+          code,
+          termsVersion: terms?.version,
+        });
         const claims = authStorage.getTenantClaims(result.accessToken);
         authStorage.save(result.accessToken, {
           email: result.email,
@@ -244,6 +261,20 @@ export default function Register() {
           />
         </Form.Item>
 
+        {termsLive && (
+          <Controller
+            name="agreeToTerms"
+            control={control}
+            render={({ field }) => (
+              <TermsAgreementCheckbox
+                checked={field.value}
+                onChange={field.onChange}
+                error={errors.agreeToTerms?.message}
+              />
+            )}
+          />
+        )}
+
         <Form.Item className="mb-0!">
           <Button
             type="primary"
@@ -263,7 +294,12 @@ export default function Register() {
           size="large"
           icon={<GoogleIcon />}
           loading={googleSigningUp}
-          onClick={handleGoogleSignUp}
+          // Google skips the form, so the Terms box must be ticked first (while the Terms are live).
+          disabled={termsLive && !agreeToTerms}
+          title={
+            termsLive && !agreeToTerms ? TERMS_LABEL.AGREE_REQUIRED : undefined
+          }
+          onClick={() => handleGoogleSignUp()}
           className="flex items-center justify-center gap-2 mb-4!"
         >
           Sign up with Google

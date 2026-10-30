@@ -257,4 +257,50 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
       },
     ],
   },
+  {
+    id: "terms-of-service",
+    title: "Terms of Service and your company's responsibilities",
+    audience: "start",
+    chapter: "Start here",
+    summary:
+      "What you agree to when you sign up or set up a company, how updated Terms are accepted, and what your company is responsible for.",
+    purpose: [
+      "The Terms of Service are the agreement between your company and One Punch HRIS. Your company is the employer: it decides its pay rules and is responsible for following labor, tax and contribution laws. The system computes what you configure.",
+      "The Terms, the agreement boxes and the DOLE confirmations below apply once One Punch HRIS has put the Terms in effect. Until then you won't see them.",
+      "Example: if your company chooses the Additive overtime method, payroll pays exactly that. Whether it is allowed for your employees is your company's call, not the system's.",
+    ],
+    sections: [
+      {
+        heading: "Agreeing to the Terms",
+        steps: [
+          {
+            text: "When you create an account, tick I have read and agree to the Terms of Service. Sign up with Google stays disabled until you do.",
+          },
+          {
+            text: "When you set up a company, the owner ticks the box on behalf of the company. The acceptance is recorded for the company as soon as it is ready.",
+          },
+          {
+            text: "Read the Terms any time from the menu at the top right (Terms of Service) or the link under the sign-in page.",
+            link: { label: "Terms of Service", to: "/terms" },
+          },
+        ],
+      },
+      {
+        heading: "When the Terms are updated",
+        body: [
+          "When a new version asks for acceptance, the next owner or admin who opens the system sees it with a summary of what changed. They read it, tick the box and click Accept on behalf of the company. Until then the Terms stay on screen. Other users aren't asked.",
+          "Each acceptance is recorded with the version, the person, the date and time, and where it came from.",
+        ],
+      },
+      {
+        heading: "What your company is responsible for",
+        body: [
+          "Your pay rules, rate multipliers, statutory tables, leave rules and every other setting, and the payroll they produce. Review each DTR and payroll before releasing pay or filing with the government.",
+          "Settings that differ from DOLE standards must be confirmed by an admin and are recorded. See Company Settings, section Settings that differ from DOLE standards.",
+          "Your employees' personal data: your company is the Personal Information Controller under the Data Privacy Act, and One Punch HRIS processes the data for you.",
+        ],
+      },
+    ],
+    related: ["company-settings", "statutory-tables", "billing-plans"],
+  },
 ];

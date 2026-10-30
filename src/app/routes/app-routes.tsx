@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-router";
 import { Spin } from "antd";
 import AuthLayout from "@/app/layouts/auth-layout";
+import LegalLayout from "@/app/layouts/legal-layout";
 import { setupRoutes } from "./setup.routes";
 import { portalRoutes } from "./portal.routes";
 import { communicationRoutes } from "./communication.routes";
@@ -41,6 +42,7 @@ const ImpersonationEnded = lazy(
 const ForgotPassword = lazy(
   () => import("@/app/modules/auth/forgot-password/forgot-password"),
 );
+const TermsPage = lazy(() => import("@/app/modules/legal/pages/terms"));
 const ResetPassword = lazy(
   () => import("@/app/modules/auth/reset-password/reset-password"),
 );
@@ -319,6 +321,7 @@ const PUBLIC_PATHS = [
   "/accept-invite",
   "/impersonate",
   "/impersonation-ended",
+  "/terms",
 ];
 const TENANT_FLOW_PATHS = [
   "/select-tenant",
@@ -463,6 +466,19 @@ const registerIndexRoute = createRoute({
   getParentRoute: () => registerRoute,
   path: "/",
   component: withSuspense(Register),
+});
+
+// The Terms of Service: public, for signed-in users and visitors alike (linked from sign-up).
+const termsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "terms",
+  component: LegalLayout,
+});
+
+const termsIndexRoute = createRoute({
+  getParentRoute: () => termsRoute,
+  path: "/",
+  component: withSuspense(TermsPage),
 });
 
 const forgotPasswordRoute = createRoute({
@@ -1718,6 +1734,7 @@ const routeTree = rootRoute.addChildren([
   impersonateRoute.addChildren([impersonateIndexRoute]),
   impersonationEndedRoute.addChildren([impersonationEndedIndexRoute]),
   forgotPasswordRoute.addChildren([forgotPasswordIndexRoute]),
+  termsRoute.addChildren([termsIndexRoute]),
   resetPasswordRoute.addChildren([resetPasswordIndexRoute]),
   selectTenantRoute.addChildren([selectTenantIndexRoute]),
   createTenantRoute.addChildren([createTenantIndexRoute]),

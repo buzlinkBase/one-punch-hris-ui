@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Only the company name is required; everything else is optional and can be completed later
 // in Company Settings.
-export const createTenantFormSchema = z.object({
+const baseCreateTenantFormSchema = z.object({
   tenantName: z.string().trim().min(1, "Company name is required"),
   address: z.string().optional(),
   contact: z.string().optional(),
@@ -20,6 +20,20 @@ export const createTenantFormSchema = z.object({
   companySize: z.string().optional(),
   acquisitionSource: z.string().optional(),
   acquisitionSourceOther: z.string().max(200).optional(),
+  // The owner agrees to the Terms of Service for the company being created (never sent with it:
+  // see toRequest; the acceptance is recorded once the company exists -- TermsAcceptanceGate).
+  agreeToTerms: z.boolean(),
 });
 
-export type CreateTenantFormValues = z.infer<typeof createTenantFormSchema>;
+/** The Terms box is required only while the Terms of Service are live (useTermsLive). */
+export function createTenantFormSchema(termsRequired: boolean) {
+  return baseCreateTenantFormSchema.refine(
+    (data) => !termsRequired || data.agreeToTerms,
+    {
+      message: "Please agree to the Terms of Service to continue.",
+      path: ["agreeToTerms"],
+    },
+  );
+}
+
+export type CreateTenantFormValues = z.infer<typeof baseCreateTenantFormSchema>;

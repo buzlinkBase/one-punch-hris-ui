@@ -124,6 +124,19 @@ export const COMPANY_POLICY_LABEL = {
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
   TAB_RATE_MULTIPLIERS: "Rate Multipliers",
+  TAB_ACKNOWLEDGED_DEVIATIONS: "Acknowledged Deviations",
+  ACK_INTRO:
+    "Each time an admin confirmed a setting that differs from the Philippine labor-standard (DOLE) defaults, it is recorded here with who confirmed it and when. Your company is responsible for these choices.",
+  ACK_TERMS_LINK: "Read Terms of Service, Section 4",
+  ACK_EMPTY:
+    "No settings differing from the DOLE defaults have been confirmed.",
+  ACK_COL_WHEN: "Confirmed",
+  ACK_COL_SETTING: "Setting",
+  ACK_COL_DEFAULT: "DOLE default",
+  ACK_COL_VALUE: "Chosen value",
+  ACK_COL_BY: "Confirmed by",
+  ACK_CLIENT_OVERRIDE: "Client override",
+  ADDITIVE_TERMS_LINK: "See Terms of Service, Section 4",
   TAB_ATTACHMENTS: "Attachments",
   TAB_PAYROLL_SETTINGS: "Payroll Settings",
 };

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { isDeviationAckCancelled } from "@/core/http/deviation-ack";
 import {
   Alert,
   Button,
@@ -40,6 +41,8 @@ import CompanyInfoTab from "./company-info-tab";
 import RateMultipliersTab from "./rate-multipliers-tab";
 import PayrollSettingsTab from "./payroll-settings-tab";
 import AttachmentsTab from "./attachments-tab";
+import ComplianceAcknowledgmentsTab from "./compliance-acknowledgments-tab";
+import { TermsLink } from "@/app/modules/legal/components/terms-link";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 function GeneralPolicyTab() {
@@ -134,7 +137,9 @@ function GeneralPolicyTab() {
         description: "Company policy settings have been updated.",
         placement: "topRight",
       });
-    } catch {
+    } catch (err) {
+      // Not acknowledged: nothing was saved, and the admin chose that.
+      if (isDeviationAckCancelled(err)) return;
       notification.error({
         message: "Save failed",
         description: "Failed to update company policy. Please try again.",
@@ -218,6 +223,11 @@ function GeneralPolicyTab() {
                 showIcon
                 className="sm:col-span-2"
                 message="Additive pays each hour bucket at one rate: regular hours at the day rate, overtime at the OT rate (no day-type multiplier), and night hours at the night-differential premium only. Night-shift overtime (NDOT) is split into OT plus the night premium. This pays less than the DOLE-standard Compounded formula on rest days and holidays, so use it only if your company or client agreement allows it."
+                description={
+                  <TermsLink section={4}>
+                    {COMPANY_POLICY_LABEL.ADDITIVE_TERMS_LINK}
+                  </TermsLink>
+                }
               />
             )}
           </div>
@@ -647,6 +657,10 @@ const POLICY_SECTION_GROUPS: SectionNavGroup[] = [
         key: "rate-multipliers",
         label: COMPANY_POLICY_LABEL.TAB_RATE_MULTIPLIERS,
       },
+      {
+        key: "acknowledged-deviations",
+        label: COMPANY_POLICY_LABEL.TAB_ACKNOWLEDGED_DEVIATIONS,
+      },
     ],
   },
 ];
@@ -657,6 +671,7 @@ const POLICY_PANES = {
   general: <GeneralPolicyTab />,
   "payroll-settings": <PayrollSettingsTab />,
   "rate-multipliers": <RateMultipliersTab />,
+  "acknowledged-deviations": <ComplianceAcknowledgmentsTab />,
 };
 
 // Each section is its own form, so the editable ones stay mounted and keep unsaved edits when

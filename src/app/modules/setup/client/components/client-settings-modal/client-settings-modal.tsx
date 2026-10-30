@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { isDeviationAckCancelled } from "@/core/http/deviation-ack";
 import {
   Modal,
   Form,
@@ -226,16 +227,22 @@ export default function ClientSettingsModal({
       (type) => vals[type] !== null && vals[type] !== undefined,
     ).map((type) => ({ type, rate: vals[type] as number }));
 
-    await Promise.all([
-      updatePolicy({
+    // One after the other, not together: each may stop to ask for a DOLE-deviation
+    // acknowledgment, and two modals at once would cancel the first.
+    try {
+      await updatePolicy({
         otEligibility: policyValues.otEligibility ?? null,
         otInclusionPolicy: policyValues.otInclusionPolicy ?? null,
         maxSSSCapping: policyValues.maxSSSCapping ?? null,
         maxPhilHealthCapping: policyValues.maxPhilHealthCapping ?? null,
         maxPagIbigCapping: policyValues.maxPagIbigCapping ?? null,
-      }),
-      bulkReplaceRates(rateEntries),
-    ]);
+      });
+      await bulkReplaceRates(rateEntries);
+    } catch (err) {
+      // Not acknowledged: the admin stays on the form to change the values.
+      if (isDeviationAckCancelled(err)) return;
+      throw err;
+    }
     onClose();
   };
 

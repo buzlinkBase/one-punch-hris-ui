@@ -131,6 +131,7 @@ describe("help content integrity", () => {
     "/profile",
     "/setup/company-policy",
     "/daily-time-record/detail",
+    "/terms", // public page, outside the menu
   ]);
   const isKnownRoute = (path: string) => knownRoutes.has(path);
   const coversKnownRoute = (path: string) =>

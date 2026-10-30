@@ -37,6 +37,7 @@
     "react-easy-crop": "^6.2.3",
     "react-hook-form": "^7.73.1",
     "react-leaflet": "^5.0.0",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.10.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.6.6",

@@ -160,8 +160,24 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           "OT/ND Calculation Method starts on Additive, the most common setup: each hour type is paid at one rate and added up. Switch to Compounded (the DOLE standard) if your company or client agreement requires it. Payroll runs already saved keep the method they were generated with.",
         ],
       },
+      {
+        heading: "Settings that differ from DOLE standards",
+        body: [
+          "The system supports rules that differ from the Philippine labor-standard (DOLE) defaults, because companies work under different arrangements and client contracts. When you save one for the first time, a confirmation lists each setting, the DOLE default and your value. The change is saved only after an admin ticks the box and clicks Confirm and save. Don't save leaves everything as it was.",
+          "This is asked for: the Additive OT/ND method, any rate multiplier below the DOLE minimum (for example overtime below 1.25 or night differential below 1.10), a client's rate override below the minimum, and a client's SSS, PhilHealth or Pag-IBIG employee share cap.",
+          "Each confirmation is recorded with who confirmed it, when, and the values. Saving the same value again doesn't ask again; a different value does.",
+        ],
+        steps: [
+          {
+            text: "Open Company Settings › Acknowledged Deviations to see every confirmation, newest first.",
+            link: { label: "Company Settings", to: "/setup/company-policy" },
+          },
+        ],
+        warning:
+          "Your company, as the employer, is responsible for making sure these settings follow the Labor Code and DOLE rules for your employees. See Terms of Service, Section 4.",
+      },
     ],
-    related: ["setup-checklist"],
+    related: ["setup-checklist", "terms-of-service"],
   },
   {
     id: "organization-setup",
@@ -449,8 +465,16 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           ],
         },
       },
+      {
+        heading: "Keeping the tables current",
+        body: [
+          "Your company maintains these tables. When SSS, PhilHealth, Pag-IBIG or the BIR issues new rates, add the new brackets with the date they take effect, before the first payroll that needs them. Every statutory table page shows this reminder.",
+        ],
+        warning:
+          "Payroll deducts exactly what your tables say. An outdated table means wrong deductions and remittances, which are your company's responsibility (Terms of Service, Section 5).",
+      },
     ],
-    related: ["loans-income"],
+    related: ["loans-income", "terms-of-service"],
   },
   {
     id: "employees",
@@ -919,8 +943,15 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         warning:
           "A company left unpaid for a long time is eventually locked and its data archived. Renew before then.",
       },
+      {
+        heading: "Fees, refunds and the Terms of Service",
+        body: [
+          "Confirming a plan means agreeing to the Terms of Service, including the fees, automatic renewal (when you turn it on) and the no-refund rule: payments aren't refunded for unused time, features or storage unless we agree otherwise in writing or the law requires it.",
+          "The grace period, read-only mode and the date a locked company's data may be deleted are set out in the Terms, and the dates that apply to your account are shown on the Billing page. Export anything you need before then.",
+        ],
+      },
     ],
-    related: ["storage-manager", "faq"],
+    related: ["storage-manager", "faq", "terms-of-service"],
   },
   {
     id: "storage-manager",

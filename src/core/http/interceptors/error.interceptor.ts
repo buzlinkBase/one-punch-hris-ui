@@ -10,6 +10,7 @@ import { usePlanRestrictionStore } from "@/core/stores/plan-restriction.store";
 import { queryClient } from "@/core/query-client";
 import { SUBSCRIPTION_PROBLEM_TYPES } from "@/shared/constants/entitlement-keys.const";
 import { toPlanRestriction } from "./plan-restriction";
+import { deviationsOf } from "../deviation-ack";
 
 declare module "axios" {
   interface AxiosRequestConfig {
@@ -69,7 +70,9 @@ export function applyErrorInterceptor(instance: AxiosInstance): void {
         return Promise.reject(error);
       }
 
-      if (error.config?._skipErrorNotification) {
+      // A setting that differs from the DOLE defaults: withDeviationAck asks the admin to
+      // acknowledge it and resends -- not an error to toast.
+      if (error.config?._skipErrorNotification || deviationsOf(error)) {
         return Promise.reject(error);
       }
 

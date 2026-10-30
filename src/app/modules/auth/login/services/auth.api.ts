@@ -65,10 +65,13 @@ export const authApi = {
       { _skipErrorNotification: true },
     );
   },
-  signUpWithGoogle(code: string): Promise<LoginResponse> {
+  signUpWithGoogle(
+    code: string,
+    termsVersion?: number,
+  ): Promise<LoginResponse> {
     return httpClient.postUnwrapped<LoginResponse>(
       `${USERS_URL}/signup-google-callback`,
-      { code },
+      { code, termsVersion },
       { _skipErrorNotification: true },
     );
   },

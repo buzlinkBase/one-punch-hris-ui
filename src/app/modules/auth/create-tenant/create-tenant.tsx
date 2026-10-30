@@ -22,6 +22,12 @@ import {
   useFetchTenantCreationStatus,
 } from "@/app/modules/auth/login/hooks/use-auth-mutations";
 import { authStorage } from "@/core/auth/auth-storage";
+import { TermsAgreementCheckbox } from "@/app/modules/legal/components/terms-agreement";
+import {
+  usePublishedTerms,
+  useTermsLive,
+} from "@/app/modules/legal/hooks/use-terms-queries";
+import { pendingTermsAcceptance } from "@/app/modules/legal/utils/pending-acceptance";
 import { tenantHub } from "@/core/signalr/tenant-hub.connection";
 import { TENANT_FAILED_STATUSES } from "@/core/signalr/tenant-hub.types";
 import type { CreateTenantRequest } from "@/app/modules/auth/login/models/api/request/create-tenant-request.model";
@@ -48,7 +54,7 @@ const CLASSIFICATION_FIELDS = [
 
 type OptionalFieldName = Exclude<
   keyof CreateTenantFormValues,
-  "tenantName" | (typeof CLASSIFICATION_FIELDS)[number]
+  "tenantName" | "agreeToTerms" | (typeof CLASSIFICATION_FIELDS)[number]
 >;
 
 interface OptionalField {
@@ -136,6 +142,8 @@ export default function CreateTenant() {
   const [provisioning, setProvisioning] = useState(false);
   const { mutateAsync: createTenant } = useCreateTenantMutation();
   const fetchCreationStatus = useFetchTenantCreationStatus();
+  const { data: terms } = usePublishedTerms();
+  const termsLive = useTermsLive();
 
   const {
     control,
@@ -143,8 +151,8 @@ export default function CreateTenant() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateTenantFormValues>({
-    resolver: zodResolver(createTenantFormSchema),
-    defaultValues: { tenantName: "" },
+    resolver: zodResolver(createTenantFormSchema(termsLive)),
+    defaultValues: { tenantName: "", agreeToTerms: false },
   });
   const [
     industryCode,
@@ -254,6 +262,8 @@ export default function CreateTenant() {
 
   const onSubmit = async (values: CreateTenantFormValues) => {
     try {
+      // Recorded against the company on the first screen after setup (TermsAcceptanceGate).
+      if (terms) pendingTermsAcceptance.set(terms.version);
       const result = await createTenant(toRequest(values));
       const claims = authStorage.getTenantClaims(result.accessToken);
       const currentUser = authStorage.getUser()!;
@@ -494,6 +504,21 @@ export default function CreateTenant() {
             ...sectionItems.slice(1),
           ]}
         />
+
+        {termsLive && (
+          <Controller
+            name="agreeToTerms"
+            control={control}
+            render={({ field }) => (
+              <TermsAgreementCheckbox
+                checked={field.value}
+                onChange={field.onChange}
+                onBehalfOfCompany
+                error={errors.agreeToTerms?.message}
+              />
+            )}
+          />
+        )}
 
         <Form.Item className="mb-0!">
           <Button

@@ -8,6 +8,7 @@ import {
 import SssTableTable from "../../components/sss-table-table";
 import { SSS_TABLE_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { StatutoryTableNotice } from "@/shared/components/statutory-table-notice";
 
 const { Title } = Typography;
 
@@ -19,6 +20,7 @@ export default function SssTableList() {
 
   return (
     <div className="content-page">
+      <StatutoryTableNotice />
       <div className="page-toolbar">
         <div className="page-toolbar-row">
           <div>

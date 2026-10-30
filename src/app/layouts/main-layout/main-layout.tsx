@@ -15,6 +15,7 @@ import {
 } from "antd";
 import {
   EllipsisOutlined,
+  FileTextOutlined,
   BankOutlined,
   BellOutlined,
   CloseOutlined,
@@ -109,6 +110,9 @@ import { SubscriptionBanner } from "@/app/modules/billing/components/subscriptio
 import { ConnectionStatusBanner } from "@/shared/components/connection-status-banner/connection-status-banner";
 import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
 import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
+import { TermsAcceptanceGate } from "@/app/modules/legal/components/terms-acceptance-gate";
+import { useTermsLive } from "@/app/modules/legal/hooks/use-terms-queries";
+import { DeviationAckModal } from "@/shared/components/deviation-ack-modal";
 import type { FeatureLock } from "@/app/modules/billing/utils/feature-lock";
 import { CompanyLocked } from "@/app/modules/billing/components/company-locked";
 import {
@@ -378,6 +382,7 @@ export default function MainLayout() {
   const [switchingTenant, setSwitchingTenant] = useState<string | null>(null);
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
   const navigate = useNavigate();
+  const termsLive = useTermsLive();
   const { mutateAsync: logout } = useLogoutMutation();
   const { mutateAsync: selectTenant } = useSelectTenantMutation();
   const location = useLocation();
@@ -1352,10 +1357,21 @@ export default function MainLayout() {
                           },
                         ]
                       : []),
+                    ...(termsLive
+                      ? [
+                          {
+                            key: "terms",
+                            icon: <FileTextOutlined />,
+                            label: "Terms of Service",
+                          },
+                        ]
+                      : []),
                   ],
                   onClick: ({ key }) => {
                     if (key === "help") setHelpOpen(true);
                     else if (key === "theme") toggleTheme();
+                    else if (key === "terms")
+                      window.open("/terms", "_blank", "noopener");
                     else if (key === "policy")
                       navigate({ to: COMPANY_SETTINGS_PATH });
                   },
@@ -1410,6 +1426,8 @@ export default function MainLayout() {
           )}
           <AcknowledgementGate />
           <PlanRestrictionModal />
+          <TermsAcceptanceGate />
+          <DeviationAckModal />
         </Content>
       </Layout>
     </Layout>

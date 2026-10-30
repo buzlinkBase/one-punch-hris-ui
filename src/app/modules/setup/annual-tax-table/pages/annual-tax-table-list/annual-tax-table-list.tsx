@@ -8,6 +8,7 @@ import {
 import AnnualTaxTableTable from "../../components/annual-tax-table-table";
 import { ANNUAL_TAX_TABLE_LABEL } from "../../constants/label.const";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
+import { StatutoryTableNotice } from "@/shared/components/statutory-table-notice";
 
 const { Title } = Typography;
 
@@ -24,6 +25,7 @@ export default function AnnualTaxTableList() {
 
   return (
     <div className="content-page">
+      <StatutoryTableNotice />
       <div className="page-toolbar">
         <div className="page-toolbar-row">
           <div>
