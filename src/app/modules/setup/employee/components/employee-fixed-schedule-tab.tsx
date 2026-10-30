@@ -20,17 +20,17 @@ const DAYS: DayName[] = [
 
 const RESOLUTION_STEPS = [
   {
-    title: "A special change for that exact day?",
+    title: "First: Work Rotation Plan",
     detail:
-      "If someone moved their schedule for just one date (Work Rotation), that wins.",
+      "If a Work Rotation Plan sets a shift for that exact date, that wins.",
   },
   {
-    title: "Then, this weekly schedule",
+    title: "Then: Fixed Schedule (this weekly schedule)",
     detail:
       "Otherwise, whatever shift you pick above for that day of the week is used.",
   },
   {
-    title: "Then, their Permanent Shift",
+    title: "Then: Permanent Shift",
     detail:
       "If that day is left blank here, we fall back to their one regular default shift.",
   },

@@ -32,9 +32,9 @@ interface PlanCardProps {
   isCurrent: boolean;
   /** A feature to draw attention to (the one the user tried to open). */
   focusFeature?: string;
-  /** The open accordion section: one value for every card, so plans stay comparable. */
-  openSection?: string;
-  onOpenSectionChange: (section?: string) => void;
+  /** The open sections: one value for every card, so plans stay comparable. */
+  openSections: string[];
+  onOpenSectionsChange: (sections: string[]) => void;
   canChoose: boolean;
   choosing: boolean;
   onChoose: (plan: PlanResponse) => void;
@@ -64,8 +64,8 @@ export function PlanCard({
   highlighted,
   isCurrent,
   focusFeature,
-  openSection,
-  onOpenSectionChange,
+  openSections,
+  onOpenSectionsChange,
   canChoose,
   choosing,
   onChoose,
@@ -205,13 +205,12 @@ export function PlanCard({
         </div>
 
         <Collapse
-          accordion
           ghost
           size="small"
           className="flex-1"
-          activeKey={openSection}
+          activeKey={openSections}
           onChange={(keys) =>
-            onOpenSectionChange(Array.isArray(keys) ? keys[0] : keys)
+            onOpenSectionsChange(Array.isArray(keys) ? keys : [keys])
           }
           items={[
             {

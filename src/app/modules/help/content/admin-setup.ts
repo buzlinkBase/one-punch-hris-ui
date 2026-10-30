@@ -919,7 +919,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
             text: "Click Choose a plan (or Change plan). Pick Monthly or Annual; annual plans are usually cheaper per year, and a plan may carry a badge showing the saving. One price covers your whole account, not each employee.",
           },
           {
-            text: "Open a plan card to see its Systems (such as HRMS) and its HRMS features. A feature your plan doesn't include shows a lock on its menu item.",
+            text: "Each plan card lists its Systems (such as HRMS) and its HRMS features. A feature your plan doesn't include shows a lock on its menu item.",
           },
           {
             text: "Upgrading in the middle of a period credits the unused days of your current plan against the new price. The checkout shows the credit, and any excess extends your new plan by extra days.",

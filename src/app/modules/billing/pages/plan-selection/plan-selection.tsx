@@ -21,7 +21,6 @@ import {
   BILLING_LABEL,
   LIMIT_LABELS,
   PLAN_SECTION,
-  SYSTEM_FEATURE_KEYS,
 } from "../../constants/label.const";
 import {
   useBilling,
@@ -101,13 +100,11 @@ export default function PlanSelection() {
   const [cycle, setCycle] = useState<BillingCycle>(
     () => billing?.billingCycle ?? "Monthly",
   );
-  // One accordion section open at a time, the same on every card: the one holding the feature
-  // the user was sent here for, else the systems.
-  const [openSection, setOpenSection] = useState<string | undefined>(
-    focusFeature && !SYSTEM_FEATURE_KEYS.includes(focusFeature)
-      ? PLAN_SECTION.FEATURES
-      : PLAN_SECTION.SYSTEMS,
-  );
+  // Open sections are the same on every card so plans stay comparable; both start expanded.
+  const [openSections, setOpenSections] = useState<string[]>([
+    PLAN_SECTION.SYSTEMS,
+    PLAN_SECTION.FEATURES,
+  ]);
   const [confirming, setConfirming] = useState<PlanResponse | null>(null);
   const [quote, setQuote] = useState<PlanChangeQuoteResponse | null>(null);
   const [violations, setViolations] = useState<LimitViolation[]>([]);
@@ -241,8 +238,8 @@ export default function PlanSelection() {
               cycle === billing?.billingCycle
             }
             focusFeature={focusFeature}
-            openSection={openSection}
-            onOpenSectionChange={setOpenSection}
+            openSections={openSections}
+            onOpenSectionsChange={setOpenSections}
             canChoose={canManage}
             choosing={requestChange.isPending && confirming?.code === plan.code}
             onChoose={setConfirming}
