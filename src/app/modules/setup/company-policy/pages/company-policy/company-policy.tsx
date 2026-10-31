@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { isDeviationAckCancelled } from "@/core/http/deviation-ack";
 import {
   Alert,
   Button,
@@ -27,6 +26,7 @@ import {
   OT_ELIGIBILITY_OPTIONS,
   OT_ND_CALCULATION_METHOD_OPTIONS,
   DEFAULT_OT_ND_CALCULATION_METHOD,
+  ADDITIVE_OT_ND_CALCULATION_METHOD,
   HOURLY_RATE_DIVISOR_OPTIONS,
   DEFAULT_HOURLY_RATE_DIVISOR,
   DEDUCTION_CARRIER_MODE_OPTIONS,
@@ -42,7 +42,6 @@ import RateMultipliersTab from "./rate-multipliers-tab";
 import PayrollSettingsTab from "./payroll-settings-tab";
 import AttachmentsTab from "./attachments-tab";
 import ComplianceAcknowledgmentsTab from "./compliance-acknowledgments-tab";
-import { TermsLink } from "@/app/modules/legal/components/terms-link";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 
 function GeneralPolicyTab() {
@@ -137,9 +136,7 @@ function GeneralPolicyTab() {
         description: "Company policy settings have been updated.",
         placement: "topRight",
       });
-    } catch (err) {
-      // Not acknowledged: nothing was saved, and the admin chose that.
-      if (isDeviationAckCancelled(err)) return;
+    } catch {
       notification.error({
         message: "Save failed",
         description: "Failed to update company policy. Please try again.",
@@ -217,17 +214,12 @@ function GeneralPolicyTab() {
                 )}
               />
             </Form.Item>
-            {otNdCalculationMethod === "Additive" && (
+            {otNdCalculationMethod === ADDITIVE_OT_ND_CALCULATION_METHOD && (
               <Alert
                 type="warning"
                 showIcon
                 className="sm:col-span-2"
-                message="Additive pays each hour bucket at one rate: regular hours at the day rate, overtime at the OT rate (no day-type multiplier), and night hours at the night-differential premium only. Night-shift overtime (NDOT) is split into OT plus the night premium. This pays less than the DOLE-standard Compounded formula on rest days and holidays, so use it only if your company or client agreement allows it."
-                description={
-                  <TermsLink section={4}>
-                    {COMPANY_POLICY_LABEL.ADDITIVE_TERMS_LINK}
-                  </TermsLink>
-                }
+                message={COMPANY_POLICY_LABEL.ADDITIVE_WARNING}
               />
             )}
           </div>

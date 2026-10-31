@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { isDeviationAckCancelled } from "@/core/http/deviation-ack";
 import {
   Modal,
   Form,
@@ -227,22 +226,14 @@ export default function ClientSettingsModal({
       (type) => vals[type] !== null && vals[type] !== undefined,
     ).map((type) => ({ type, rate: vals[type] as number }));
 
-    // One after the other, not together: each may stop to ask for a DOLE-deviation
-    // acknowledgment, and two modals at once would cancel the first.
-    try {
-      await updatePolicy({
-        otEligibility: policyValues.otEligibility ?? null,
-        otInclusionPolicy: policyValues.otInclusionPolicy ?? null,
-        maxSSSCapping: policyValues.maxSSSCapping ?? null,
-        maxPhilHealthCapping: policyValues.maxPhilHealthCapping ?? null,
-        maxPagIbigCapping: policyValues.maxPagIbigCapping ?? null,
-      });
-      await bulkReplaceRates(rateEntries);
-    } catch (err) {
-      // Not acknowledged: the admin stays on the form to change the values.
-      if (isDeviationAckCancelled(err)) return;
-      throw err;
-    }
+    await updatePolicy({
+      otEligibility: policyValues.otEligibility ?? null,
+      otInclusionPolicy: policyValues.otInclusionPolicy ?? null,
+      maxSSSCapping: policyValues.maxSSSCapping ?? null,
+      maxPhilHealthCapping: policyValues.maxPhilHealthCapping ?? null,
+      maxPagIbigCapping: policyValues.maxPagIbigCapping ?? null,
+    });
+    await bulkReplaceRates(rateEntries);
     onClose();
   };
 
@@ -378,12 +369,6 @@ export default function ClientSettingsModal({
                       )}
                     />
                   </Form.Item>
-                  <Alert
-                    type="warning"
-                    showIcon
-                    className="mt-2"
-                    message="Warning: Manually capping a value below the mandatory minimum specified by government contribution tables may violate Philippine statutory guidelines. Ensure your configuration aligns with your corporate legal compliance rules before saving."
-                  />
                 </Form>
               ),
             },

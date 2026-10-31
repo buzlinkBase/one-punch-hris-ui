@@ -1,5 +1,4 @@
 import httpClient from "@/core/http/http-client";
-import { withDeviationAck } from "@/core/http/deviation-ack";
 import { API_PREFIX, buildApiUrl } from "@/core/http/api-url.util";
 import type { PayrollRateResponse } from "../models/api/response/payroll-rate-response.model";
 import type { CreatePayrollRate } from "../models/api/request/create-payroll-rate.model";
@@ -26,10 +25,7 @@ export const payrollRateApi = {
   clearAll(): Promise<void> {
     return httpClient.delete<void>(ENDPOINT);
   },
-  /** Rates below the DOLE minimums are acknowledged first (withDeviationAck). */
   bulkReplace(data: CreatePayrollRate[]): Promise<void> {
-    return withDeviationAck((config) =>
-      httpClient.postUnwrapped<void>(`${ENDPOINT}/bulk`, data, config),
-    );
+    return httpClient.postUnwrapped<void>(`${ENDPOINT}/bulk`, data);
   },
 };

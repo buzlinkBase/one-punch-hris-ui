@@ -18,6 +18,7 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         heading: "Why the order matters",
         body: [
           "Most records depend on earlier ones. An employee needs a payroll group, department and shift, and payroll needs statutory tables and holidays. Follow the steps in order and each form will have what it needs.",
+          "When you create the company, the optional Payroll policy section sets how overtime and night differential are paid. Leave it on Compounded (the DOLE standard) unless your company or client agreement says otherwise; you can change it later in Company Settings.",
         ],
       },
       {
@@ -157,20 +158,30 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
         warning:
           "These rules change how every DTR and payroll is computed. Change them before a cutoff, not in the middle of one, and re-run any DTR you already generated for that period.",
         tips: [
-          "OT/ND Calculation Method starts on Additive, the most common setup: each hour type is paid at one rate and added up. Switch to Compounded (the DOLE standard) if your company or client agreement requires it. Payroll runs already saved keep the method they were generated with.",
+          "The OT/ND Calculation Method defaults to Compounded, the DOLE standard. Additive pays each hour type at one rate and adds them up; choosing it is logged with who chose it and when. You can also pick the method when you create the company (Payroll policy). Payroll runs already saved keep the method they were generated with.",
+          "Payslips show the hours and amount for each kind of pay (regular, overtime, night differential, holidays) under either method, and the lines add up to the Gross Income.",
         ],
       },
       {
         heading: "Settings that differ from DOLE standards",
         body: [
-          "The system supports rules that differ from the Philippine labor-standard (DOLE) defaults, because companies work under different arrangements and client contracts. When you save one for the first time, a confirmation lists each setting, the DOLE default and your value. The change is saved only after an admin ticks the box and clicks Confirm and save. Don't save leaves everything as it was.",
-          "This is asked for: the Additive OT/ND method, any rate multiplier below the DOLE minimum (for example overtime below 1.25 or night differential below 1.10), a client's rate override below the minimum, and a client's SSS, PhilHealth or Pag-IBIG employee share cap.",
-          "Each confirmation is recorded with who confirmed it, when, and the values. Saving the same value again doesn't ask again; a different value does.",
+          "The system supports rules that differ from the Philippine labor-standard (DOLE) defaults, because companies work under different arrangements and client contracts. They save like any other setting, with no extra confirmation: accepting the Terms of Service covers them. Each change is logged with who made it and when.",
+          "Company Settings: the Additive OT/ND method, the shift-hours divisor, OT that offsets late or undertime, half-day or whole-day late penalties, a night differential threshold, a minimum take-home floor (it stops PhilHealth, Pag-IBIG, withholding tax and loans once reached), the Manual deduction carrier, and any rate multiplier below the DOLE minimum (for example overtime below 1.25 or night differential below 1.10).",
+          "Clients: a rate override below the minimum, an SSS, PhilHealth or Pag-IBIG employee share cap, OT that offsets late or undertime, and a retirement accrual below 22.5 days a year.",
+          "Employees: a contribution or withholding tax set to None or a fixed amount, turning off overtime, regular holiday, night differential, leave credits or 13th month eligibility, and a daily rate below the regional minimum wage for the employee's branch. An upload is logged once for all its rows.",
+          "Time shifts: a minimum OT before it counts, an OT cap, a night differential threshold, or an unpaid AM/PM break. Leave types: a Service Incentive Leave (code SIL) with fewer than 5 days a year, more than 12 months' required service, or unused days not converted to cash at 100%.",
+          "Each log entry records who made the change, when, the DOLE default and the value chosen, for the company or the client. Saving the same value again adds nothing; changing it to a different value adds a new entry.",
         ],
         steps: [
           {
-            text: "Open Company Settings › Acknowledged Deviations to see every confirmation, newest first.",
+            text: "Open Company Settings › DOLE Deviation Log to see every logged change, newest first.",
             link: { label: "Company Settings", to: "/setup/company-policy" },
+          },
+          {
+            text: "Settings that differ from the DOLE defaults but have no log entry (for example, saved before changes were logged) are listed above it under Not logged, with where each is set: the company policy, a client, a shift, a leave type or an employee. An admin can click Log all to record them under their name.",
+          },
+          {
+            text: "Changes are only logged while the Terms of Service are in effect. If they aren't, or the system can't check, a notice at the top of the page says so; changes still save, without a log entry.",
           },
         ],
         warning:

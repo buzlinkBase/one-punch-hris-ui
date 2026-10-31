@@ -484,7 +484,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Saved DTR",
         steps: [
           {
-            text: "The Saved DTR tab lists saved batches and their status: For Approval, Approved, Declined or Cancelled.",
+            text: "The Saved DTR tab lists saved batches and their status: For Approval, Approved, Declined or Cancelled. A pending batch shows who it's with and its step. Under the status, each step already decided lists who approved or declined it. Click the status line to see the full Approval Progress.",
           },
           {
             text: "The list opens on the current cutoff. Change it with the quick date buttons (Current cutoff, This month, Last month...) or the date range, and narrow it with the search box and the Status, Payroll Group and Stage filters. Click Clear filters to start over.",
@@ -662,7 +662,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
         heading: "Saved Payroll Runs",
         steps: [
           {
-            text: "The Saved Payroll Runs tab lists each run with its period, payout date, run type, employees and status.",
+            text: "The Saved Payroll Runs tab lists each run with its period, payout date, run type, employees and status. Like the Applications lists, a pending run shows who it's with and its step, and each step already decided lists who approved or declined it. Click the status line to see the full Approval Progress.",
           },
           {
             text: "The list opens on the current cutoff. Change it with the quick date buttons (Current cutoff, This month, Last month...) or the date range, and narrow it with the search box and the Status and Run Type filters. Click Clear filters to start over.",
@@ -726,7 +726,7 @@ export const HR_PAYROLL_ARTICLES: HelpArticle[] = [
             text: "Click a Loans, Other Deductions or Other Income total shown as a link to see each deduction or income by name with the date it was scheduled for. It reads the current schedule records, and any part without its own record (such as a salary adjustment) is listed as Other (not itemized).",
           },
           {
-            text: "Print the summary or individual payslips. They open as a PDF in a new tab.",
+            text: "Print the summary or individual payslips. They open as a PDF in a new tab. A payslip lists the hours and amount for each kind of pay, and the lines add up to the Gross Income.",
           },
         ],
         example: {

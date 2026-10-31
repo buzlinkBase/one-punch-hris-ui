@@ -124,19 +124,34 @@ export const COMPANY_POLICY_LABEL = {
   TAB_COMPANY_INFO: "Company Info",
   TAB_GENERAL: "Attendance & Payroll Policy",
   TAB_RATE_MULTIPLIERS: "Rate Multipliers",
-  TAB_ACKNOWLEDGED_DEVIATIONS: "Acknowledged Deviations",
+  TAB_ACKNOWLEDGED_DEVIATIONS: "DOLE Deviation Log",
   ACK_INTRO:
-    "Each time an admin confirmed a setting that differs from the Philippine labor-standard (DOLE) defaults, it is recorded here with who confirmed it and when. Your company is responsible for these choices.",
+    "Each change to a setting that differs from the Philippine labor-standard (DOLE) defaults is logged here with who made it and when. Your company is responsible for these choices under the Terms of Service.",
   ACK_TERMS_LINK: "Read Terms of Service, Section 4",
   ACK_EMPTY:
-    "No settings differing from the DOLE defaults have been confirmed.",
-  ACK_COL_WHEN: "Confirmed",
+    "No changes to settings that differ from the DOLE defaults have been logged.",
+  ACK_COL_WHEN: "Changed",
   ACK_COL_SETTING: "Setting",
   ACK_COL_DEFAULT: "DOLE default",
   ACK_COL_VALUE: "Chosen value",
-  ACK_COL_BY: "Confirmed by",
+  ACK_COL_BY: "Changed by",
   ACK_CLIENT_OVERRIDE: "Client override",
-  ADDITIVE_TERMS_LINK: "See Terms of Service, Section 4",
+  ACK_TERMS_NOT_LIVE:
+    "Changes aren't being logged right now because the Terms of Service aren't in effect yet. Settings that differ from the DOLE defaults still save, without a log entry.",
+  ACK_TERMS_UNREACHABLE:
+    "Changes aren't being logged right now: the system couldn't check whether the Terms of Service are in effect. Settings that differ from the DOLE defaults still save, without a log entry. Please contact One Punch support.",
+  ACK_OUTSTANDING_TITLE: "Not logged",
+  ACK_OUTSTANDING_INTRO:
+    "These settings differ from the DOLE defaults and are in effect, but have no log entry, usually because they were saved before changes were logged.",
+  ACK_CONFIRMED_TITLE: "Log",
+  ACK_COL_WHERE: "Where",
+  ACK_CONFIRM_ALL: "Log all",
+  ACK_CONFIRM_ALL_TITLE: "Log these settings?",
+  ACK_CONFIRM_ALL_CONTENT:
+    "They will be logged under your name. Your company is responsible for these choices under the Terms of Service.",
+  ACK_CONFIRM_ALL_DONE: "Settings logged.",
+  ADDITIVE_WARNING:
+    "Additive pays each hour bucket at one rate: regular hours at the day rate, overtime at the OT rate (no day-type multiplier), and night hours at the night-differential premium only. Night-shift overtime (NDOT) is split into OT plus the night premium. This pays less than the DOLE-standard Compounded formula on rest days and holidays, so use it only if your company or client agreement allows it.",
   TAB_ATTACHMENTS: "Attachments",
   TAB_PAYROLL_SETTINGS: "Payroll Settings",
 };
@@ -247,20 +262,21 @@ export const HOLIDAY_TIME_BASIS_OPTIONS = [
 ];
 
 // How OT / night-differential hours are priced -- each is its own pay calculator on the backend
-// (hrms-api Hrms.Core/Calculators/DtrPay). Additive (the default, most common) prices the DTR's
-// display hours one rate each (Hrs x day rate, OT x OT rate, ND x ND premium); Compounded is the
-// DOLE-standard formula (day x OT x ND). Additive pays LESS than Compounded for such hours, so
-// the screen shows a compliance warning while it's selected.
-export const DEFAULT_OT_ND_CALCULATION_METHOD = "Additive";
+// (hrms-api Hrms.Core/Calculators/DtrPay). Compounded (the default) is the DOLE-standard formula
+// (day x OT x ND); Additive prices the DTR's display hours one rate each (Hrs x day rate, OT x OT
+// rate, ND x ND premium). Additive pays LESS than Compounded for such hours, so the screen shows
+// a compliance warning while it's selected. Payslips print the hours breakdown for both.
+export const DEFAULT_OT_ND_CALCULATION_METHOD = "Compounded";
+export const ADDITIVE_OT_ND_CALCULATION_METHOD = "Additive";
 
 export const OT_ND_CALCULATION_METHOD_OPTIONS = [
   {
-    value: "Additive",
-    label: "Additive (most common)",
-  },
-  {
     value: "Compounded",
     label: "Compounded (DOLE-standard)",
+  },
+  {
+    value: ADDITIVE_OT_ND_CALCULATION_METHOD,
+    label: "Additive",
   },
 ];
 

@@ -18,3 +18,25 @@ export interface ComplianceAcknowledgmentPage {
   page: number;
   pageSize: number;
 }
+
+/** A setting in effect that differs from the DOLE default but that no admin has confirmed yet. */
+export interface OutstandingDeviationResponse {
+  /** "company", or "client:{clientId}" for a client's own override. */
+  scope: string;
+  settingKey: string;
+  settingLabel: string;
+  statutoryValue: string;
+  configuredValue: string;
+  note: string;
+  /** Where it is set (up to 10), e.g. "Shift: Night" or "Client: Acme". */
+  sources: string[];
+  sourceCount: number;
+}
+
+/** Whether confirmations are being asked for and recorded (only while the Terms are live). */
+export type TermsLivenessState = "Live" | "NotLive" | "Unreachable";
+
+export interface OutstandingDeviationsResponse {
+  termsState: TermsLivenessState;
+  items: OutstandingDeviationResponse[];
+}

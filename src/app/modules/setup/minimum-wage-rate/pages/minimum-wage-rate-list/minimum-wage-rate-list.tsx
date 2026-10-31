@@ -1,4 +1,5 @@
 import { Button, Space, Typography } from "antd";
+import { StatutoryTableNotice } from "@/shared/components/statutory-table-notice";
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -23,6 +24,7 @@ export default function MinimumWageRateList() {
 
   return (
     <div className="content-page">
+      <StatutoryTableNotice />
       <div className="page-toolbar">
         <div className="page-toolbar-row">
           <div>

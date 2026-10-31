@@ -125,8 +125,9 @@ export default function EmployeeList() {
         messageApi.success("Employees imported successfully.");
         closePreview();
       },
-      onError: () =>
-        messageApi.error("Import failed. Please check the file and try again."),
+      onError: () => {
+        messageApi.error("Import failed. Please check the file and try again.");
+      },
     });
   };
 

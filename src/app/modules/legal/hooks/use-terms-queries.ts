@@ -18,7 +18,8 @@ export function usePublishedTerms(version?: number) {
         return null;
       }
     },
-    staleTime: 1000 * 60 * 30,
+    // "Not live / nothing published" isn't kept: the Terms may go live while the user is signed in.
+    staleTime: (query) => (query.state.data == null ? 0 : 1000 * 60 * 30),
   });
 }
 
@@ -32,7 +33,13 @@ export function useTermsLive(): boolean {
   return data != null;
 }
 
-/** Whether the current company must accept a newer version. */
+const STATUS_RECHECK_MS = 1000 * 60 * 5;
+
+/**
+ * Whether the current company must accept a newer version. Re-checked every few minutes (and on
+ * tab focus) so a version published -- or the Terms going live -- reaches users already signed in,
+ * not only at their next sign-in.
+ */
 export function useTermsStatus(enabled = true) {
   useAuthUser(); // re-key when the session switches company
   const tenantId = authStorage.getTenantId();
@@ -40,7 +47,8 @@ export function useTermsStatus(enabled = true) {
     queryKey: [...TERMS_QUERY_KEY, "status", tenantId],
     queryFn: () => termsApi.getStatus(),
     enabled: enabled && !!tenantId && !!authStorage.getToken(),
-    staleTime: 1000 * 60 * 30,
+    staleTime: STATUS_RECHECK_MS,
+    refetchInterval: STATUS_RECHECK_MS,
     retry: false,
   });
 }

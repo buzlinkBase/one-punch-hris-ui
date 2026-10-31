@@ -266,10 +266,9 @@ export function PayrollSummaryContent({
   const [sourceView, setSourceView] = useState<SourceView | null>(null);
   const deductionTableColumns = deductionsColumns(deductionRows, setSourceView);
 
-  // Format (Standard vs Hours Breakdown) is no longer user-selectable — the server picks it
-  // based on the OT/ND Calculation Method actually recorded on this payroll run (Compounded ->
-  // Standard, Additive -> Hours Breakdown), so the printed itemization always matches how the
-  // employee was actually paid. See PayrollsController.PrintPayslip.
+  // Format isn't user-selectable — the server prints the Hours Breakdown for every regular run and
+  // prices its rows by the OT/ND Calculation Method recorded on this payroll run, so the printed
+  // itemization always matches how the employee was actually paid. See PayrollsController.PrintPayslip.
   const handlePrintPayslip = async (record: PayrollRunResult) => {
     if (!record.id) {
       message.error("This payroll record has no printable payslip yet.");

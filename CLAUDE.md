@@ -136,4 +136,4 @@ Write code that would pass tsc, lint and prettier; the user runs those manually.
 
 ## Related Docs
 
-`BRANCHING.md`, `DEPLOYMENT.md`, `PROXY-SETUP.md`, `auth.spec.md`.
+`BRANCHING.md`, `DEPLOYMENT.md`, `PROXY-SETUP.md`, `auth.spec.md`, `tos.md` (the Terms of Service text to publish from the console's `/legal` page; keep it in step with `TermsOfServiceTemplate.cs` in tenantstore) and `tos-changes.md` (that version's "What changed" summary, under 2000 characters).

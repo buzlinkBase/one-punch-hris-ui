@@ -16,4 +16,6 @@ export interface CreateTenantRequest {
   companySize?: string;
   acquisitionSource?: string;
   acquisitionSourceOther?: string;
+  // Omitted = the HRIS default (Compounded).
+  otNdCalculationMethod?: string;
 }

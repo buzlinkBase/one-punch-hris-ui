@@ -45,7 +45,7 @@ export const APPROVER_ARTICLES: HelpArticle[] = [
             link: { label: "My Approvals", to: "/portal/approvals" },
           },
           {
-            text: "Click Approve or Decline on the row. Add a note if asked, then confirm.",
+            text: "Click the check (Approve) or the X (Decline) on the row. Add a note if asked, then confirm.",
           },
           {
             text: "The In Progress tab lists requests still with another approver. These are ones that will reach your step later, or ones you already approved, so only requests you take part in as an approver. Owners and Admins see every request still in flight. Everyone else can see the full list of a type on its own page under Applications. It's view only. A request moves to For Approval once it reaches your step.",

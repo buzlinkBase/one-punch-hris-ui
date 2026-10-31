@@ -20,6 +20,9 @@ const baseCreateTenantFormSchema = z.object({
   companySize: z.string().optional(),
   acquisitionSource: z.string().optional(),
   acquisitionSourceOther: z.string().max(200).optional(),
+  // Payroll policy: the OT/ND method the company starts on. Additive is a DOLE deviation,
+  // covered by the Terms of Service and logged against the owner (DOLE Deviation Log).
+  otNdCalculationMethod: z.string(),
   // The owner agrees to the Terms of Service for the company being created (never sent with it:
   // see toRequest; the acceptance is recorded once the company exists -- TermsAcceptanceGate).
   agreeToTerms: z.boolean(),

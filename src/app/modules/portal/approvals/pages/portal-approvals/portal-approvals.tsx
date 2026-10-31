@@ -235,25 +235,27 @@ export default function PortalApprovals() {
   const actionsColumn: ColumnsType<MyApproval>[number] = {
     title: "",
     key: "actions",
-    width: 220,
+    width: 100,
     render: (_, r) => (
       <Space>
-        <Button
-          size="small"
-          type="primary"
-          icon={<CheckOutlined />}
-          onClick={() => setPending({ item: r, action: "Approved" })}
-        >
-          Approve
-        </Button>
-        <Button
-          size="small"
-          danger
-          icon={<CloseOutlined />}
-          onClick={() => setPending({ item: r, action: "Declined" })}
-        >
-          Decline
-        </Button>
+        <Tooltip title="Approve">
+          <Button
+            type="text"
+            aria-label="Approve"
+            className="text-green-600!"
+            icon={<CheckOutlined />}
+            onClick={() => setPending({ item: r, action: "Approved" })}
+          />
+        </Tooltip>
+        <Tooltip title="Decline">
+          <Button
+            type="text"
+            danger
+            aria-label="Decline"
+            icon={<CloseOutlined />}
+            onClick={() => setPending({ item: r, action: "Declined" })}
+          />
+        </Tooltip>
       </Space>
     ),
   };

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Card,
   Collapse,
   Form,
@@ -31,7 +32,12 @@ import { pendingTermsAcceptance } from "@/app/modules/legal/utils/pending-accept
 import { tenantHub } from "@/core/signalr/tenant-hub.connection";
 import { TENANT_FAILED_STATUSES } from "@/core/signalr/tenant-hub.types";
 import type { CreateTenantRequest } from "@/app/modules/auth/login/models/api/request/create-tenant-request.model";
-import { COMPANY_POLICY_LABEL } from "@/app/modules/setup/company-policy/constants/label.const";
+import {
+  ADDITIVE_OT_ND_CALCULATION_METHOD,
+  COMPANY_POLICY_LABEL,
+  DEFAULT_OT_ND_CALCULATION_METHOD,
+  OT_ND_CALCULATION_METHOD_OPTIONS,
+} from "@/app/modules/setup/company-policy/constants/label.const";
 import type { TenantSummary } from "@/app/modules/auth/login/models/api/response/tenant-summary.model";
 import { CompanyClassificationFields } from "@/shared/components/company-classification-fields/company-classification-fields";
 import {
@@ -54,7 +60,10 @@ const CLASSIFICATION_FIELDS = [
 
 type OptionalFieldName = Exclude<
   keyof CreateTenantFormValues,
-  "tenantName" | "agreeToTerms" | (typeof CLASSIFICATION_FIELDS)[number]
+  | "tenantName"
+  | "agreeToTerms"
+  | "otNdCalculationMethod"
+  | (typeof CLASSIFICATION_FIELDS)[number]
 >;
 
 interface OptionalField {
@@ -125,6 +134,10 @@ const toRequest = (values: CreateTenantFormValues): CreateTenantRequest => {
   if (request.acquisitionSource !== ACQUISITION_OTHER_SOURCE) {
     delete request.acquisitionSourceOther;
   }
+  // The default (Compounded) is what the company gets anyway.
+  if (values.otNdCalculationMethod !== DEFAULT_OT_ND_CALCULATION_METHOD) {
+    request.otNdCalculationMethod = values.otNdCalculationMethod;
+  }
   return request;
 };
 
@@ -152,7 +165,15 @@ export default function CreateTenant() {
     formState: { errors, isSubmitting },
   } = useForm<CreateTenantFormValues>({
     resolver: zodResolver(createTenantFormSchema(termsLive)),
-    defaultValues: { tenantName: "", agreeToTerms: false },
+    defaultValues: {
+      tenantName: "",
+      agreeToTerms: false,
+      otNdCalculationMethod: DEFAULT_OT_ND_CALCULATION_METHOD,
+    },
+  });
+  const otNdCalculationMethod = useWatch({
+    control,
+    name: "otNdCalculationMethod",
   });
   const [
     industryCode,
@@ -432,6 +453,44 @@ export default function CreateTenant() {
     ),
   };
 
+  const payrollPolicyItem = {
+    key: "payrollPolicy",
+    label: (
+      <span>
+        Payroll policy <Text type="secondary">(Optional)</Text>
+      </span>
+    ),
+    forceRender: true,
+    children: (
+      <div className="grid grid-cols-1 gap-x-4">
+        <Form.Item
+          label={L.OT_ND_CALCULATION_METHOD}
+          extra="Compounded is the DOLE standard. You can change this later in Company Settings."
+        >
+          <Controller
+            name="otNdCalculationMethod"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                disabled={provisioning}
+                options={OT_ND_CALCULATION_METHOD_OPTIONS}
+              />
+            )}
+          />
+        </Form.Item>
+        {otNdCalculationMethod === ADDITIVE_OT_ND_CALCULATION_METHOD && (
+          <Alert
+            type="warning"
+            showIcon
+            className="mb-3"
+            message={L.ADDITIVE_WARNING}
+          />
+        )}
+      </div>
+    ),
+  };
+
   return (
     <Card className="auth-card login-card border-0">
       {hasExistingTenants && (
@@ -502,6 +561,7 @@ export default function CreateTenant() {
             ...sectionItems.slice(0, 1),
             classificationItem,
             ...sectionItems.slice(1),
+            payrollPolicyItem,
           ]}
         />
 

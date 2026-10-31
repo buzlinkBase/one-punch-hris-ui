@@ -280,6 +280,9 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
             text: "When you set up a company, the owner ticks the box on behalf of the company. The acceptance is recorded for the company as soon as it is ready.",
           },
           {
+            text: "If you choose the Additive overtime method under Payroll policy while setting up the company, it is logged under your name in Company Settings > DOLE Deviation Log.",
+          },
+          {
             text: "Read the Terms any time from the menu at the top right (Terms of Service) or the link under the sign-in page.",
             link: { label: "Terms of Service", to: "/terms" },
           },
@@ -288,7 +291,7 @@ export const GETTING_STARTED_ARTICLES: HelpArticle[] = [
       {
         heading: "When the Terms are updated",
         body: [
-          "When a new version asks for acceptance, the next owner or admin who opens the system sees it with a summary of what changed. They read it, tick the box and click Accept on behalf of the company. Until then the Terms stay on screen. Other users aren't asked.",
+          "When a new version asks for acceptance, owners and admins see it with a summary of what changed, within a few minutes even if they are already signed in (or as soon as they come back to the tab). They read it, tick the box and click Accept on behalf of the company. Until then the Terms stay on screen. Other users aren't asked.",
           "Each acceptance is recorded with the version, the person, the date and time, and where it came from.",
         ],
       },

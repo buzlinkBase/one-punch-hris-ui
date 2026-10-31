@@ -49,6 +49,7 @@ import {
 import { BatchListFilters } from "@/shared/components/batch-list-filters/batch-list-filters";
 import { PermissionGate } from "@/shared/components/permission-gate/permission-gate";
 import { ApprovalActionModal } from "@/shared/components/approval-action-modal/approval-action-modal";
+import { ApprovalStatusCell } from "@/shared/components/approval-status-cell/approval-status-cell";
 import { ApprovalTimeline } from "@/shared/components/approval-timeline/approval-timeline";
 import { useApprovalInstance } from "@/shared/hooks/use-approval-queries";
 import { useEmployees } from "@/app/modules/setup/employee/hooks/use-employee-queries";
@@ -249,13 +250,34 @@ export default function PayrollBatchesTab() {
     {
       title: "Status",
       key: "status",
+      // Same display as the Applications lists: the status, who approved each step, and who a
+      // pending run waits on, with the full timeline a click away.
       render: (_, g) =>
         g.pendingDeletion ? (
-          <Tag color="volcano">Pending Deletion</Tag>
+          <ApprovalStatusCell
+            applicationType="PayrollPostingDeletion"
+            applicationId={g.id}
+            approvalStatus="ForApproval"
+            statusTag={
+              <Tag color="volcano" className="me-0!">
+                Pending Deletion
+              </Tag>
+            }
+          />
         ) : (
-          <Tag color={APPROVAL_STATUS_COLOR[g.approvalStatus] ?? "default"}>
-            {APPROVAL_STATUS_LABEL[g.approvalStatus] ?? g.approvalStatus}
-          </Tag>
+          <ApprovalStatusCell
+            applicationType="PayrollPosting"
+            applicationId={g.id}
+            approvalStatus={g.approvalStatus}
+            statusTag={
+              <Tag
+                color={APPROVAL_STATUS_COLOR[g.approvalStatus] ?? "default"}
+                className="me-0!"
+              >
+                {APPROVAL_STATUS_LABEL[g.approvalStatus] ?? g.approvalStatus}
+              </Tag>
+            }
+          />
         ),
     },
     {

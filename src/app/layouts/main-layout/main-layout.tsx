@@ -112,7 +112,6 @@ import { FeatureLocked } from "@/app/modules/billing/components/feature-locked";
 import { PlanRestrictionModal } from "@/app/modules/billing/components/plan-restriction-modal";
 import { TermsAcceptanceGate } from "@/app/modules/legal/components/terms-acceptance-gate";
 import { useTermsLive } from "@/app/modules/legal/hooks/use-terms-queries";
-import { DeviationAckModal } from "@/shared/components/deviation-ack-modal";
 import type { FeatureLock } from "@/app/modules/billing/utils/feature-lock";
 import { CompanyLocked } from "@/app/modules/billing/components/company-locked";
 import {
@@ -1427,7 +1426,6 @@ export default function MainLayout() {
           <AcknowledgementGate />
           <PlanRestrictionModal />
           <TermsAcceptanceGate />
-          <DeviationAckModal />
         </Content>
       </Layout>
     </Layout>
