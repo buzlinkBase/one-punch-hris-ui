@@ -961,6 +961,35 @@ export const ADMIN_ARTICLES: HelpArticle[] = [
           "The grace period, read-only mode and the date a locked company's data may be deleted are set out in the Terms, and the dates that apply to your account are shown on the Billing page. Export anything you need before then.",
         ],
       },
+      {
+        heading: "Close my account",
+        body: [
+          "Only the owner of the account can ask to close it. Nothing is deleted straight away, and you can change your mind.",
+        ],
+        steps: [
+          {
+            text: "Export what you need first: payroll reports, DTR and employee records are under Reports.",
+          },
+          {
+            text: "Open Billing and click Close my account…, then type your email and tick that you have exported your data. We email you a confirmation link.",
+            link: { label: "Close my account", to: "/billing/close" },
+          },
+          {
+            text: "Open the link in the email and press Confirm. Nothing happens until you do, and the link expires after a day.",
+          },
+          {
+            text: 'After you confirm, you have a few days to change your mind. Click Cancel the request on the Close my account page, or use the "This wasn\'t me" link in the first email.',
+          },
+          {
+            text: "Then our team reviews the request. Once approved, your account becomes read-only and we email you the date your company records are removed. You can still view and export your data until then.",
+          },
+        ],
+        tips: [
+          "If you pay for a plan again before the removal date, your account is restored.",
+        ],
+        warning:
+          "After the removal date, your company records are removed from the live system. Records the law requires us to keep are held in a read-only archive, as described in the Terms of Service. Fees already paid are not refunded.",
+      },
     ],
     related: ["storage-manager", "faq", "terms-of-service"],
   },

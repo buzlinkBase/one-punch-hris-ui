@@ -12,9 +12,11 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useNavigate } from "@tanstack/react-router";
+import { useAuthUser } from "@/core/auth/use-auth-user";
 import { LIMIT_KEYS } from "@/shared/constants/entitlement-keys.const";
 import { useHasPermission } from "@/shared/hooks/use-has-permission";
 import { PaymentDueAlert } from "../../components/payment-due-alert";
+import { CLOSURE_LABEL } from "../../constants/closure-label.const";
 import { StorageCard } from "../../components/storage-card";
 import {
   BILLING_LABEL,
@@ -253,6 +255,8 @@ function UsageCard({
 export default function BillingOverview() {
   const navigate = useNavigate();
   const canManage = useHasPermission(BILLING_PERMISSION.MANAGE);
+  // Only the account's own owner may close it (the server checks again).
+  const isOwner = !!useAuthUser()?.roles?.includes("Owner");
   const { data: billing, isLoading } = useBilling();
   const withdraw = useWithdrawPlanChange();
   const cancel = useCancelSubscription();
@@ -419,6 +423,22 @@ export default function BillingOverview() {
             scroll={{ x: "max-content" }}
           />
         </Card>
+
+        {isOwner && (
+          <Card title={CLOSURE_LABEL.LINK_TITLE}>
+            <p className="mt-0 text-sm text-(--ant-color-text-secondary)">
+              {CLOSURE_LABEL.LINK_TEXT}
+            </p>
+            <Button
+              className="mt-2"
+              danger
+              type="default"
+              onClick={() => navigate({ to: "/billing/close" })}
+            >
+              {CLOSURE_LABEL.LINK_BUTTON}
+            </Button>
+          </Card>
+        )}
       </div>
     </div>
   );

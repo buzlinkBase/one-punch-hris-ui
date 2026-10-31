@@ -322,6 +322,7 @@ const PUBLIC_PATHS = [
   "/impersonate",
   "/impersonation-ended",
   "/terms",
+  "/account-closure",
 ];
 const TENANT_FLOW_PATHS = [
   "/select-tenant",
@@ -1426,6 +1427,12 @@ const PaymentResult = lazy(
 const StorageManager = lazy(
   () => import("@/app/modules/billing/pages/storage-manager"),
 );
+const CloseAccount = lazy(
+  () => import("@/app/modules/billing/pages/close-account"),
+);
+const ClosureLink = lazy(
+  () => import("@/app/modules/billing/pages/closure-link"),
+);
 const AuditDetail = lazy(
   () => import("@/app/modules/security/audit/pages/audit-detail"),
 );
@@ -1691,6 +1698,26 @@ const billingStorageRoute = createRoute({
   component: withSuspense(StorageManager),
 });
 
+// The account owner asks to close the account (nothing is deleted straight away).
+const billingCloseRoute = createRoute({
+  getParentRoute: () => billingRoute,
+  path: "close",
+  component: withSuspense(CloseAccount),
+});
+
+// The two links in an account-closure email (confirm / "this wasn't me"): public, works signed out.
+const accountClosureRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "account-closure",
+  component: LegalLayout,
+});
+
+const accountClosureIndexRoute = createRoute({
+  getParentRoute: () => accountClosureRoute,
+  path: "/",
+  component: withSuspense(ClosureLink),
+});
+
 const enrollBiometricsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "enroll-biometrics",
@@ -1735,6 +1762,7 @@ const routeTree = rootRoute.addChildren([
   impersonationEndedRoute.addChildren([impersonationEndedIndexRoute]),
   forgotPasswordRoute.addChildren([forgotPasswordIndexRoute]),
   termsRoute.addChildren([termsIndexRoute]),
+  accountClosureRoute.addChildren([accountClosureIndexRoute]),
   resetPasswordRoute.addChildren([resetPasswordIndexRoute]),
   selectTenantRoute.addChildren([selectTenantIndexRoute]),
   createTenantRoute.addChildren([createTenantIndexRoute]),
@@ -1841,6 +1869,7 @@ const routeTree = rootRoute.addChildren([
     billingPlansRoute,
     billingPaymentRoute,
     billingStorageRoute,
+    billingCloseRoute,
   ]),
   leaveApplicationRoute.addChildren([
     leaveApplicationIndexRoute,

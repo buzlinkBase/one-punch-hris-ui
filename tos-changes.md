@@ -1,13 +1,1 @@
-- 4.2 and 4.4: We now name every pay setting that differs from DOLE standards, such as late penalties, OT thresholds and caps, unpaid breaks, Service Incentive Leave, minimum take-home, contribution caps and methods, benefit exclusions, pay below minimum wage, the 13th month tax ceiling, retirement accrual and final pay items. Saving one no longer asks for a separate confirmation. Accepting these Terms covers it, and each change is logged with who made it and when.
-- 6.5: Before you give a client access to employee data, you need a lawful basis and any agreement the law requires.
-- 6.6: An announcement acknowledgment shows the employee opened or confirmed it. Whether it counts as legal notice is up to your company.
-- 7.5: Your data may be stored outside the Philippines by our service providers. A list of them is available on request.
-- 7.7: Support staff who sign in as a user to help you need a recorded reason. The session is time-limited, every action is logged, and they cannot accept these Terms for you.
-- 7.8: Archived records are read-only and are destroyed at the end of the retention period.
-- 7.9: Fingerprint and face templates are sensitive personal information. They are moved between your devices only when you instruct it.
-- 7.10: How long audit logs are kept.
-- 9.3: Your card details are held by the payment gateway. A failed renewal may be retried.
-- 9.5: An approved refund goes back to the original payment method.
-- 9.7: Uploads may be blocked when you run out of storage. Files deleted in Storage Manager cannot be recovered.
-- 10.5 and 10.6: You can ask us to permanently erase your account or a single company. A deletion may be put on hold while there is a pending audit, dispute or legal order.
-- 13.3: Notifications and emails may be delayed or not arrive, so don't rely on them alone.
+- 10.7: The account owner can now ask to close the account in the app. You confirm by email and can cancel for several days. Once approved, the account becomes read-only and its data is removed after notice, with records the law requires us to keep held in an archive. Paying again before the removal date restores it.

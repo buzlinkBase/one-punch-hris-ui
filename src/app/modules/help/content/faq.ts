@@ -58,6 +58,12 @@ export const FAQ_ARTICLES: HelpArticle[] = [
         ],
       },
       {
+        heading: "How do I close my account?",
+        body: [
+          "The owner of the account can ask to close it under Billing › Close my account. Nothing is deleted straight away: you confirm from an email, then have a few days to change your mind, and our team reviews the request. After it is approved the account is read-only until your company records are removed on the date we email you. Records the law requires us to keep are held in a read-only archive. Export anything you need first.",
+        ],
+      },
+      {
         heading: "I can't upload a photo or file",
         body: [
           "Your company's storage may be full. An owner or admin can free space or add storage in Administration › Subscription › Storage. Files can be PNG, JPG, WebP or PDF up to 5 MB, and the feature must have attachments switched on in Company Settings.",

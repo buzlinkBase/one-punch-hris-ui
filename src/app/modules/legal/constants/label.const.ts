@@ -21,6 +21,9 @@ export const TERMS_LABEL = {
   GATE_INTRO:
     "Please review and accept the Terms of Service on behalf of your company to keep using One Punch HRIS.",
   GATE_CHANGES: "What changed",
+  GATE_CHANGES_NOTICE: "These Terms have been updated since you last accepted.",
+  GATE_CHANGES_VIEW: "See what changed",
+  GATE_CHANGES_CLOSE: "Close",
   GATE_CHECKBOX:
     "I have read and accept these Terms on behalf of my company, and I am authorized to do so.",
   GATE_ACCEPT: "Accept",
